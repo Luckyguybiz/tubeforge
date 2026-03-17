@@ -63,13 +63,33 @@ export const billingRouter = router({
         }
       }
 
-      const priceId = input.plan === 'PRO' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_STUDIO;
+      const envRef = input.plan === 'PRO' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_STUDIO;
+
+      // Support both price IDs (price_...) and product IDs (prod_...)
+      let resolvedPriceId: string;
+      if (envRef.startsWith('price_')) {
+        resolvedPriceId = envRef;
+      } else if (envRef.startsWith('prod_')) {
+        // Lookup the default price from the product
+        const prices = await stripe.prices.list({ product: envRef, active: true, limit: 1 });
+        if (!prices.data[0]) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не найдена цена для продукта в Stripe' });
+        }
+        resolvedPriceId = prices.data[0].id;
+      } else {
+        resolvedPriceId = envRef;
+      }
+
+      const appUrl = env.NEXT_PUBLIC_APP_URL.startsWith('http')
+        ? env.NEXT_PUBLIC_APP_URL
+        : `https://${env.NEXT_PUBLIC_APP_URL}`;
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: 'subscription',
-        line_items: [{ price: priceId, quantity: 1 }],
-        success_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
-        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard`,
+        line_items: [{ price: resolvedPriceId, quantity: 1 }],
+        success_url: `${appUrl}/dashboard?upgraded=true`,
+        cancel_url: `${appUrl}/dashboard`,
       });
       return { url: session.url };
     }),
@@ -82,9 +102,12 @@ export const billingRouter = router({
     });
     if (!user?.stripeId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Stripe-аккаунт не найден' });
     const stripe = getStripe();
+    const appUrl = env.NEXT_PUBLIC_APP_URL.startsWith('http')
+      ? env.NEXT_PUBLIC_APP_URL
+      : `https://${env.NEXT_PUBLIC_APP_URL}`;
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeId,
-      return_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      return_url: `${appUrl}/dashboard`,
     });
     return { url: session.url };
   }),
