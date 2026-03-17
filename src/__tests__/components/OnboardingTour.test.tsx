@@ -25,6 +25,30 @@ vi.mock('@/lib/constants', () => ({
   },
 }));
 
+// Mock the locale store — return Russian translations (the default locale)
+const ruTranslations: Record<string, string> = {
+  'onboarding.welcome': 'Добро пожаловать в TubeForge',
+  'onboarding.welcomeDesc': 'Ваша ИИ-студия для YouTube. Создавайте видео, обложки и метаданные — всё в одном месте. Давайте покажем, как всё устроено!',
+  'onboarding.dashboardTitle': 'Обзор дашборда',
+  'onboarding.dashboardDesc': 'Здесь отображается статистика канала, последние видео и быстрые действия. Всё начинается с вашего дашборда.',
+  'onboarding.projectTitle': 'Создайте первый проект',
+  'onboarding.projectDesc': 'В основной области вы работаете над видео, редактируете метаданные и управляете проектами. Начните с создания нового проекта!',
+  'onboarding.aiTitle': 'ИИ-инструменты',
+  'onboarding.aiDesc': 'Используйте боковое меню для доступа к ИИ-генерации видео, редактору обложек, оптимизатору метаданных и другим инструментам.',
+  'onboarding.next': 'Далее',
+  'onboarding.start': 'Начать',
+  'onboarding.back': 'Назад',
+  'onboarding.skip': 'Пропустить',
+};
+
+vi.mock('@/stores/useLocaleStore', () => ({
+  useLocaleStore: (selector: (s: unknown) => unknown) =>
+    selector({
+      locale: 'ru',
+      t: (key: string) => ruTranslations[key] ?? key,
+    }),
+}));
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
