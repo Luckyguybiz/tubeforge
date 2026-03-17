@@ -1,11 +1,20 @@
 /**
  * AUTH_URL is NOT needed when trustHost:true is set — NextAuth auto-detects
  * the URL from request headers (x-forwarded-host, x-forwarded-proto).
- * Having AUTH_URL set causes reqWithEnvURL() to access req.nextUrl which
- * can crash on Next.js 16. Clear it before NextAuth initializes.
+ * Having AUTH_URL set causes PKCE cookie domain mismatch: the cookie is set
+ * on the user's current domain, but AUTH_URL overrides redirect_uri to a
+ * different domain, so the callback can't read the cookie → "Configuration" error.
  */
+const _hadAuthUrl = process.env.AUTH_URL;
+const _hadNextAuthUrl = process.env.NEXTAUTH_URL;
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
+if (_hadAuthUrl || _hadNextAuthUrl) {
+  console.warn('[auth][init] Deleted env vars to prevent PKCE cookie mismatch:',
+    _hadAuthUrl ? `AUTH_URL=${_hadAuthUrl}` : '',
+    _hadNextAuthUrl ? `NEXTAUTH_URL=${_hadNextAuthUrl}` : '',
+  );
+}
 
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
