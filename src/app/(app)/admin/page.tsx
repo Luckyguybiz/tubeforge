@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/stores/useNotificationStore';
 import type { Theme } from '@/lib/types';
 

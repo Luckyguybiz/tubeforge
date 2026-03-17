@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { fmtTime, fmtDur, pluralRu } from '@/lib/utils';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
 
@@ -149,31 +149,30 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const p = project.data;
   if (!p) return null;
 
-  /* ── Derived data ─────────────────────────────────── */
-  const scenes = p.scenes ?? [];
-  const readyScenes = scenes.filter(s => s.status === 'READY');
-  const scenesWithVideo = scenes.filter(s => s.videoUrl);
-  const totalDuration = scenes.reduce((sum, sc) => sum + sc.duration, 0);
+  /* ── Derived data (memoized) ─────────────────────── */
+  const scenes = useMemo(() => p.scenes ?? [], [p.scenes]);
+  const readyScenes = useMemo(() => scenes.filter(s => s.status === 'READY'), [scenes]);
+  const scenesWithVideo = useMemo(() => scenes.filter(s => s.videoUrl), [scenes]);
+  const totalDuration = useMemo(() => scenes.reduce((sum, sc) => sum + sc.duration, 0), [scenes]);
   const hasVideo = scenesWithVideo.length > 0;
-  const currentVideoUrl = scenesWithVideo.length > 0
-    ? (scenesWithVideo.find((_s, i) => {
-        // Map activeSceneIdx (index in all scenes) to scenesWithVideo
-        const sceneAtIdx = scenes[activeSceneIdx];
-        return sceneAtIdx?.videoUrl && _s.id === sceneAtIdx.id;
-      })?.videoUrl ?? scenesWithVideo[0]?.videoUrl ?? null)
-    : null;
+  const currentVideoUrl = useMemo(() => {
+    if (scenesWithVideo.length === 0) return null;
+    const sceneAtIdx = scenes[activeSceneIdx];
+    const found = scenesWithVideo.find((_s) => sceneAtIdx?.videoUrl && _s.id === sceneAtIdx.id);
+    return found?.videoUrl ?? scenesWithVideo[0]?.videoUrl ?? null;
+  }, [scenesWithVideo, scenes, activeSceneIdx]);
   const videoUrl = scenesWithVideo[0]?.videoUrl ?? null;
-  const tags = (p.tags as string[]) ?? [];
+  const tags = useMemo(() => (p.tags as string[]) ?? [], [p.tags]);
 
-  /* ── Checklist ────────────────────────────────────── */
-  const checklist = [
+  /* ── Checklist (memoized) ──────────────────────────── */
+  const checklist = useMemo(() => [
     { label: 'Видео готово', done: scenes.length > 0 && scenes.every(s => s.status === 'READY'), href: `/editor?projectId=${projectId}`, hint: 'Перейти в редактор' },
     { label: 'Метаданные заполнены', done: (p.title?.length ?? 0) > 0 && (p.description?.length ?? 0) > 0, href: `/metadata?projectId=${projectId}`, hint: 'Перейти к метаданным' },
     { label: 'Обложка создана', done: !!(p.thumbnailUrl || p.thumbnailData), href: `/thumbnails?projectId=${projectId}`, hint: 'Перейти к обложкам' },
     { label: 'Канал подключён', done: (channels.data?.length ?? 0) > 0, href: '/dashboard', hint: 'Подключить YouTube' },
-  ];
-  const checklistDone = checklist.filter(c => c.done).length;
-  const allReady = checklist.every(c => c.done);
+  ], [scenes, p.title, p.description, p.thumbnailUrl, p.thumbnailData, projectId, channels.data?.length]);
+  const checklistDone = useMemo(() => checklist.filter(c => c.done).length, [checklist]);
+  const allReady = useMemo(() => checklist.every(c => c.done), [checklist]);
 
   /* ── Handlers ─────────────────────────────────────── */
   const handleSceneEnded = useCallback(() => {
@@ -274,26 +273,26 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   };
 
   /* ── Card style helper ────────────────────────────── */
-  const cardStyle: React.CSSProperties = {
+  const cardStyle = useMemo<React.CSSProperties>(() => ({
     background: C.card,
     border: `1px solid ${C.border}`,
     borderRadius: 16,
     overflow: 'hidden',
-  };
+  }), [C.card, C.border]);
 
-  const cardPadded: React.CSSProperties = {
+  const cardPadded = useMemo<React.CSSProperties>(() => ({
     ...cardStyle,
     padding: 20,
-  };
+  }), [cardStyle]);
 
-  const sectionTitle: React.CSSProperties = {
+  const sectionTitle = useMemo<React.CSSProperties>(() => ({
     fontSize: 13,
     fontWeight: 700,
     color: C.text,
     letterSpacing: '0.01em',
     textTransform: 'uppercase' as const,
     marginBottom: 14,
-  };
+  }), [C.text]);
 
   /* ── RENDER ───────────────────────────────────────── */
   return (

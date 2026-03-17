@@ -6,7 +6,7 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { signOut, useSession } from 'next-auth/react';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import type { Theme } from '@/lib/types';
 
 /* ── Plan feature lists ──────────────────────────── */

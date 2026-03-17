@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from '@/stores/useNotificationStore';
 

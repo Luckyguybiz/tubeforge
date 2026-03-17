@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useMetadataStore } from '@/stores/useMetadataStore';
 import type { YouTubeCategory } from '@/stores/useMetadataStore';
 import { useShallow } from 'zustand/react/shallow';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
 import type { Theme } from '@/lib/types';
@@ -223,17 +223,18 @@ function CharCounter({
   );
 }
 
-/* ─── Tag chip ───────────────────────────────────────── */
-function TagChip({
+/* ─── Tag chip (memoized — avoids re-render when sibling tags change) ── */
+const TagChip = memo(function TagChip({
   tag,
   C,
   onRemove,
 }: {
   tag: string;
   C: Theme;
-  onRemove: () => void;
+  onRemove: (tag: string) => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const handleRemove = useCallback(() => onRemove(tag), [onRemove, tag]);
   return (
     <span
       onMouseEnter={() => setHovered(true)}
@@ -254,11 +255,11 @@ function TagChip({
     >
       {tag}
       <span
-        onClick={onRemove}
+        onClick={handleRemove}
         role="button"
         tabIndex={0}
         aria-label={`Удалить тег ${tag}`}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Backspace') onRemove(); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Backspace') handleRemove(); }}
         style={{
           width: 18,
           height: 18,
@@ -279,7 +280,7 @@ function TagChip({
       </span>
     </span>
   );
-}
+});
 
 /* ─── AI suggestion chip ─────────────────────────────── */
 function SuggestionChip({
@@ -747,7 +748,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
   const descWarning = desc.length > 5000;
   const descCaution = desc.length >= 4500;
 
-  const inputBase: React.CSSProperties = {
+  const inputBase = useMemo<React.CSSProperties>(() => ({
     width: '100%',
     padding: '12px 16px',
     background: C.surface,
@@ -761,7 +762,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
     lineHeight: 1.5,
     outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
-  };
+  }), [C.surface, C.border, C.text]);
 
   const currentProject = projectsList.data?.items?.find((p) => p.id === projectId);
 
@@ -1346,7 +1347,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               }}
             >
               {tags.map((t) => (
-                <TagChip key={t} tag={t} C={C} onRemove={() => removeTag(t)} />
+                <TagChip key={t} tag={t} C={C} onRemove={removeTag} />
               ))}
               {showTagInput ? (
                 <input

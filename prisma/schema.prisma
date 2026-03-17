@@ -98,6 +98,8 @@ model Project {
   updatedAt     DateTime      @updatedAt
 
   @@index([userId])
+  @@index([userId, status])
+  @@index([userId, updatedAt])
   @@index([teamId])
 }
 
@@ -116,6 +118,7 @@ model Scene {
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([projectId, order])
   @@index([taskId])
 }
 
@@ -191,6 +194,7 @@ model Asset {
   createdAt DateTime      @default(now())
 
   @@index([userId])
+  @@index([userId, folderId])
   @@index([folderId])
 }
 
@@ -206,5 +210,6 @@ model DesignFolder {
   createdAt DateTime       @default(now())
 
   @@index([userId])
+  @@index([userId, parentId])
   @@index([parentId])
 }

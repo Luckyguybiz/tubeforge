@@ -1,23 +1,32 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { toast } from '@/stores/useNotificationStore';
 
 export function useVideoGeneration(sceneId: string | null) {
-  const scene = useEditorStore((s) => s.scenes.find((sc) => sc.id === sceneId));
+  const sceneStatus = useEditorStore((s) => {
+    const sc = s.scenes.find((sc) => sc.id === sceneId);
+    return sc?.status ?? null;
+  });
+  const sceneTaskId = useEditorStore((s) => {
+    const sc = s.scenes.find((sc) => sc.id === sceneId);
+    return sc?.taskId ?? null;
+  });
   const updScene = useEditorStore((s) => s.updScene);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
   const updateScene = trpc.scene.update.useMutation();
+  const updateSceneRef = useRef(updateScene);
+  updateSceneRef.current = updateScene;
 
   // On mount, restore taskId from DB if scene is still generating
   useEffect(() => {
-    if (sceneId && scene?.status === 'generating' && scene.taskId && !activeTaskId) {
-      setActiveTaskId(scene.taskId);
+    if (sceneId && sceneStatus === 'generating' && sceneTaskId && !activeTaskId) {
+      setActiveTaskId(sceneTaskId);
     }
-  }, [sceneId, scene?.status, scene?.taskId, activeTaskId]);
+  }, [sceneId, sceneStatus, sceneTaskId, activeTaskId]);
 
   const generateVideo = trpc.ai.generateVideo.useMutation({
     onSuccess: (data) => {
@@ -25,7 +34,7 @@ export function useVideoGeneration(sceneId: string | null) {
         setActiveTaskId(data.taskId);
         updScene(sceneId, { status: 'generating', taskId: data.taskId });
         // Persist taskId to DB so polling survives page refresh
-        updateScene.mutate({ id: sceneId, taskId: data.taskId, status: 'GENERATING' });
+        updateSceneRef.current.mutate({ id: sceneId, taskId: data.taskId, status: 'GENERATING' });
       }
     },
     onError: (err) => {
@@ -38,7 +47,7 @@ export function useVideoGeneration(sceneId: string | null) {
   const taskStatus = trpc.videoTask.checkStatus.useQuery(
     { taskId: activeTaskId! },
     {
-      enabled: !!activeTaskId && scene?.status === 'generating',
+      enabled: !!activeTaskId && sceneStatus === 'generating',
       refetchInterval: 3000,
     },
   );
@@ -51,17 +60,17 @@ export function useVideoGeneration(sceneId: string | null) {
       updScene(sceneId, { status: 'ready', videoUrl: output, taskId: null });
       setActiveTaskId(null);
       // Persist videoUrl and clear taskId in DB
-      updateScene.mutate({ id: sceneId, videoUrl: output, status: 'READY', taskId: null });
+      updateSceneRef.current.mutate({ id: sceneId, videoUrl: output, status: 'READY', taskId: null });
       toast.success('Видео сгенерировано!');
     }
 
     if (taskStatus.data.status === 'FAILED') {
       updScene(sceneId, { status: 'error', taskId: null });
       setActiveTaskId(null);
-      updateScene.mutate({ id: sceneId, status: 'ERROR', taskId: null });
+      updateSceneRef.current.mutate({ id: sceneId, status: 'ERROR', taskId: null });
       toast.error(taskStatus.data.error || 'Ошибка генерации видео');
     }
-  }, [taskStatus.data, sceneId, updScene, updateScene]);
+  }, [taskStatus.data, sceneId, updScene]);
 
   const start = (prompt: string, model: string, duration: number) => {
     if (!sceneId) return;
@@ -75,7 +84,7 @@ export function useVideoGeneration(sceneId: string | null) {
 
   return {
     start,
-    isGenerating: generateVideo.isPending || scene?.status === 'generating',
+    isGenerating: generateVideo.isPending || sceneStatus === 'generating',
     progress: taskStatus.data?.progress,
     taskStatus: taskStatus.data?.status,
   };

@@ -1,16 +1,8 @@
 'use client';
 
+import { useState, useEffect, type ComponentType } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts';
 
 interface AnalyticsChartProps {
   data: Array<{ day: string; views: number; subscribers: number; watchTime: number }>;
@@ -23,8 +15,24 @@ const METRIC_LABELS: Record<string, string> = {
   watchTime: 'Время просмотра (мин)',
 };
 
+/**
+ * Recharts is ~200KB — lazy-load it only when this component actually renders.
+ */
+let rechartsCache: typeof import('recharts') | null = null;
+
 export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
   const C = useThemeStore((s) => s.theme);
+  const [recharts, setRecharts] = useState(rechartsCache);
+
+  useEffect(() => {
+    if (rechartsCache) return;
+    let cancelled = false;
+    import('recharts').then((mod) => {
+      rechartsCache = mod;
+      if (!cancelled) setRecharts(mod);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   if (!data || data.length === 0) {
     return (
@@ -33,6 +41,16 @@ export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
       </div>
     );
   }
+
+  if (!recharts) {
+    return (
+      <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.dim, fontSize: 13 }}>
+        Загрузка графика...
+      </div>
+    );
+  }
+
+  const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = recharts;
 
   return (
     <div aria-label={`Аналитика: ${METRIC_LABELS[metric]}`}>

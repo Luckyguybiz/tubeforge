@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { pluralRu } from '@/lib/utils';
 
 /* ─── Role helpers ──────────────────────────────── */

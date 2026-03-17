@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import type { CanvasElement } from '@/lib/types';
@@ -10,16 +11,24 @@ import { ToolBar } from './ToolBar';
 import { PropertiesPanel } from './PropertiesPanel';
 import { LeftSidebar } from './LeftSidebar';
 import { trpc } from '@/lib/trpc';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
 import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } from '@/lib/constants';
 
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
-  const store = useThumbnailStore();
+  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, history, future } = useThumbnailStore(
+    useShallow((s) => ({
+      step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
+      drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
+      canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
+      zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
+      drag: s.drag, history: s.history, future: s.future,
+    }))
+  );
+  const store = useThumbnailStore.getState;
   useCanvasKeyboard();
-  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY } = store;
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const sel = useMemo(() => els.find((e) => e.id === selId), [els, selId]);
   const loadedRef = useRef(false);
@@ -38,7 +47,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 
   useEffect(() => {
     if (project.data && !loadedRef.current) {
-      store.loadFromProject(project.data.thumbnailData as { els?: CanvasElement[]; canvasBg?: string; canvasW?: number; canvasH?: number } | null);
+      store().loadFromProject(project.data.thumbnailData as { els?: CanvasElement[]; canvasBg?: string; canvasW?: number; canvasH?: number } | null);
       loadedRef.current = true;
     }
   }, [project.data, store]);
@@ -47,22 +56,27 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const saveCanvas = trpc.project.update.useMutation({
     onError: (err) => { console.error('[ThumbnailEditor] Auto-save failed:', err.message); },
   });
-  const elsJson = JSON.stringify(els);
+  // Lightweight fingerprint instead of JSON.stringify(els) on every render
+  const elsFingerprint = useMemo(
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1), ''),
+    [els],
+  );
   useEffect(() => {
     if (!loadedRef.current || !projectId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveCanvas.mutate({ id: projectId, thumbnailData: store.exportState() });
+      saveCanvas.mutate({ id: projectId, thumbnailData: store().exportState() });
     }, CANVAS_SAVE_DEBOUNCE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [elsJson, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [elsFingerprint, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ctrl+Scroll zoom
   const onWheelZoom = useCallback((e: WheelEvent) => {
     if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    store.setZoom(store.zoom + delta);
+    const s = store();
+    s.setZoom(s.zoom + delta);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -77,13 +91,14 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (e.button !== 1) return;
     e.preventDefault();
     isPanning.current = true;
-    panStart.current = { x: e.clientX, y: e.clientY, px: store.panX, py: store.panY };
+    const s = store();
+    panStart.current = { x: e.clientX, y: e.clientY, px: s.panX, py: s.panY };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const onMiddleMove = useCallback((e: React.MouseEvent) => {
     if (!isPanning.current) return;
     const dx = e.clientX - panStart.current.x;
     const dy = e.clientY - panStart.current.y;
-    store.setPan(panStart.current.px + dx, panStart.current.py + dy);
+    store().setPan(panStart.current.px + dx, panStart.current.py + dy);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const onMiddleUp = useCallback(() => { isPanning.current = false; }, []);
 
@@ -107,38 +122,40 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 
   const onCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const { x, y } = getCanvasCoords(e);
-    if (tool === 'draw') { store.setDrawing(true); store.setDrawPts([{ x, y }]); return; }
-    if (tool === 'line' || tool === 'arrow') { store.setLinePreview({ x1: x, y1: y, x2: x, y2: y }); return; }
-    if (tool === 'stickyNote') { store.addStickyNote(x - 100, y - 75); return; }
+    if (tool === 'draw') { store().setDrawing(true); store().setDrawPts([{ x, y }]); return; }
+    if (tool === 'line' || tool === 'arrow') { store().setLinePreview({ x1: x, y1: y, x2: x, y2: y }); return; }
+    if (tool === 'stickyNote') { store().addStickyNote(x - 100, y - 75); return; }
     if (tool === 'eraser') {
       const hit = hitTestElement(els, x, y);
-      if (hit) store.delEl(hit.id);
+      if (hit) store().delEl(hit.id);
       return;
     }
     if (tool !== 'select') return;
     const clicked = hitTestElement(els, x, y);
     if (clicked) {
-      e.shiftKey ? store.addToSelection(clicked.id) : store.setSelId(clicked.id);
-      store.setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
-    } else { store.setSelId(null); }
+      e.shiftKey ? store().addToSelection(clicked.id) : store().setSelId(clicked.id);
+      store().setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
+    } else { store().setSelId(null); }
   };
 
   const onCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { x, y } = getCanvasCoords(e);
-    if (drawing && tool === 'draw') { store.setDrawPts((p) => [...p, { x, y }]); return; }
-    if (linePreview && (tool === 'line' || tool === 'arrow')) { store.setLinePreview({ ...linePreview, x2: x, y2: y }); return; }
-    if (store.resize) {
-      const el = els.find((e) => e.id === store.resize!.id);
+    if (drawing && tool === 'draw') { store().setDrawPts((p) => [...p, { x, y }]); return; }
+    if (linePreview && (tool === 'line' || tool === 'arrow')) { store().setLinePreview({ ...linePreview, x2: x, y2: y }); return; }
+    const curResize = store().resize;
+    if (curResize) {
+      const el = els.find((e) => e.id === curResize.id);
       if (!el) return;
       let nw = x - el.x, nh = y - el.y;
       if (nw < 20) nw = 20; if (nh < 20) nh = 20;
-      store.updEl(store.resize.id, { w: Math.round(nw), h: Math.round(nh) });
+      store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
       return;
     }
-    if (!store.drag) return;
-    let nx = Math.round(x - store.drag.ox), ny = Math.round(y - store.drag.oy);
+    const curDrag = store().drag;
+    if (!curDrag) return;
+    let nx = Math.round(x - curDrag.ox), ny = Math.round(y - curDrag.oy);
     // Snap guides
-    const dragEl = els.find((e) => e.id === store.drag!.id);
+    const dragEl = els.find((e) => e.id === curDrag.id);
     if (dragEl) {
       const SNAP = 5;
       const snapThreshold = SNAP / zoom;
@@ -150,7 +167,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       if (Math.abs(dCx - ccx) < snapThreshold) { nx = ccx - dragEl.w / 2; gx.push(ccx); }
       if (Math.abs(dCy - ccy) < snapThreshold) { ny = ccy - dragEl.h / 2; gy.push(ccy); }
       for (const other of els) {
-        if (other.id === store.drag!.id || other.type === 'line' || other.type === 'arrow' || other.type === 'path') continue;
+        if (other.id === curDrag.id || other.type === 'line' || other.type === 'arrow' || other.type === 'path') continue;
         const oCx = other.x + other.w / 2, oCy = other.y + other.h / 2;
         // Left edge → left/right edge
         if (Math.abs(nx - other.x) < snapThreshold) { nx = other.x; gx.push(other.x); }
@@ -169,25 +186,25 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         // Center Y → center Y
         if (Math.abs(dCy - oCy) < snapThreshold) { ny = oCy - dragEl.h / 2; gy.push(oCy); }
       }
-      store.setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
+      store().setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
     }
-    store.updEl(store.drag.id, { x: nx, y: ny });
+    store().updEl(curDrag.id, { x: nx, y: ny });
   };
 
   const onCanvasMouseUp = () => {
     if (drawing && drawPts.length > 1) {
       const path = drawPts.map((p, i) => i === 0 ? ('M' + p.x + ' ' + p.y) : ('L' + p.x + ' ' + p.y)).join(' ');
-      store.addPath(path, drawColor, drawSize);
+      store().addPath(path, drawColor, drawSize);
     }
     if (linePreview && (tool === 'line' || tool === 'arrow')) {
       const dx = Math.abs(linePreview.x2 - linePreview.x1), dy = Math.abs(linePreview.y2 - linePreview.y1);
       if (dx > 5 || dy > 5) {
-        tool === 'line' ? store.addLine(linePreview.x1, linePreview.y1, linePreview.x2, linePreview.y2)
-          : store.addArrow(linePreview.x1, linePreview.y1, linePreview.x2, linePreview.y2);
+        tool === 'line' ? store().addLine(linePreview.x1, linePreview.y1, linePreview.x2, linePreview.y2)
+          : store().addArrow(linePreview.x1, linePreview.y1, linePreview.x2, linePreview.y2);
       }
-      store.setLinePreview(null);
+      store().setLinePreview(null);
     }
-    store.setDrawing(false); store.setDrawPts([]); store.setDrag(null); store.setResize(null); store.setGuides({ x: [], y: [] });
+    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] });
   };
 
   // ===== Download =====
@@ -273,22 +290,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.visible === false) return null;
     const isSel = selIds.includes(el.id);
     const resizeHandle = isSel && (
-      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store.setResize({ id: el.id }); }}
+      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().setResize({ id: el.id }); }}
         style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, background: C.accent, borderRadius: 2, cursor: 'nwse-resize', zIndex: 5 }} />
     );
     const elDrag = (e: React.MouseEvent) => {
-      e.stopPropagation(); store.setSelId(el.id);
+      e.stopPropagation(); store().setSelId(el.id);
       const rect = (e.currentTarget as HTMLElement).closest('[data-canvas]')?.getBoundingClientRect() ?? (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
       const sx = canvasW / rect.width;
       const sy = canvasH / rect.height;
-      store.setDrag({ id: el.id, ox: (e.clientX - rect.left) * sx - el.x, oy: (e.clientY - rect.top) * sy - el.y });
+      store().setDrag({ id: el.id, ox: (e.clientX - rect.left) * sx - el.x, oy: (e.clientY - rect.top) * sy - el.y });
     };
 
     if (el.type === 'text') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         contentEditable={isSel} suppressContentEditableWarning
-        onBlur={(e) => store.updEl(el.id, { text: (e.target as HTMLElement).innerText })}
-        onMouseDown={(e) => { if (!isSel) { e.stopPropagation(); store.setSelId(el.id); } }}>
+        onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
+        onMouseDown={(e) => { if (!isSel) { e.stopPropagation(); store().setSelId(el.id); } }}>
         {el.text}{resizeHandle}
       </div>
     );
@@ -329,7 +346,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         })()}
         <line x1={el.x} y1={el.y} x2={el.x2 ?? el.x} y2={el.y2 ?? el.y} stroke="transparent" strokeWidth={12}
           style={{ pointerEvents: 'stroke', cursor: 'move' }}
-          onMouseDown={(e) => { e.stopPropagation(); store.setSelId(el.id); }} />
+          onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
         {isSel && <>
           <circle cx={el.x} cy={el.y} r={5} fill={C.accent} style={{ pointerEvents: 'auto', cursor: 'crosshair' }} />
           <circle cx={el.x2 ?? el.x} cy={el.y2 ?? el.y} r={5} fill={C.accent} style={{ pointerEvents: 'auto', cursor: 'crosshair' }} />
@@ -340,7 +357,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'stickyNote') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         contentEditable={isSel} suppressContentEditableWarning
-        onBlur={(e) => store.updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
+        onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}>
         {el.noteText ?? 'Заметка'}{resizeHandle}
       </div>
@@ -360,7 +377,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   const data = JSON.parse(JSON.stringify(el.cellData ?? Array.from({ length: rows }, () => Array(cols).fill(''))));
                   if (!data[r]) data[r] = Array(cols).fill('');
                   data[r][c] = (ev.target as HTMLElement).innerText;
-                  store.updEl(el.id, { cellData: data });
+                  store().updEl(el.id, { cellData: data });
                 }}>
                 {el.cellData?.[r]?.[c] ?? ''}
               </div>
@@ -398,7 +415,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => store.addImage(ev.target!.result as string);
+    reader.onload = (ev) => store().addImage(ev.target!.result as string);
     reader.readAsDataURL(file); e.target.value = '';
   };
 
@@ -407,8 +424,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     e.preventDefault();
     const { x, y } = getCanvasCoords(e);
     const hitEl = hitTestElement(els, x, y);
-    store.setContextMenu({ x: e.clientX, y: e.clientY, elId: hitEl?.id ?? null });
-    if (hitEl) store.setSelId(hitEl.id);
+    store().setContextMenu({ x: e.clientX, y: e.clientY, elId: hitEl?.id ?? null });
+    if (hitEl) store().setSelId(hitEl.id);
   };
 
   const onCanvasDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
@@ -423,18 +440,18 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     })();
     // Asset image drop
     const assetUrl = e.dataTransfer.getData('application/x-tubeforge-asset');
-    if (assetUrl) { store.addImage(assetUrl); return; }
+    if (assetUrl) { store().addImage(assetUrl); return; }
     // Preset element drop
     const presetJson = e.dataTransfer.getData('application/x-tubeforge-preset');
     if (presetJson) {
       try {
         const preset = JSON.parse(presetJson);
         if (preset.type === 'rect' || preset.type === 'circle' || preset.type === 'triangle' || preset.type === 'star') {
-          store.addShape(preset.type, x, y);
-        } else if (preset.type === 'line') { store.addLine(x, y, x + 200, y); }
-        else if (preset.type === 'arrow') { store.addArrow(x, y, x + 200, y); }
-        else if (preset.type === 'stickyNote') { store.addStickyNote(x, y); }
-        else if (preset.type === 'table') { store.addTable(preset.props?.rows ?? 3, preset.props?.cols ?? 3, x, y); }
+          store().addShape(preset.type, x, y);
+        } else if (preset.type === 'line') { store().addLine(x, y, x + 200, y); }
+        else if (preset.type === 'arrow') { store().addArrow(x, y, x + 200, y); }
+        else if (preset.type === 'stickyNote') { store().addStickyNote(x, y); }
+        else if (preset.type === 'table') { store().addTable(preset.props?.rows ?? 3, preset.props?.cols ?? 3, x, y); }
       } catch { /* invalid JSON */ }
       return;
     }
@@ -444,7 +461,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       Array.from(files).forEach((file) => {
         if (!file.type.startsWith('image/')) return;
         const reader = new FileReader();
-        reader.onload = (ev) => store.addImage(ev.target!.result as string);
+        reader.onload = (ev) => store().addImage(ev.target!.result as string);
         reader.readAsDataURL(file);
       });
     }
@@ -484,8 +501,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>Создайте обложку как в Canva или перейдите к ИИ-генерации</p>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button onClick={() => store.undo()} disabled={store.history.length === 0} title="Отменить (Ctrl+Z)" style={{ ...headerBtn, padding: '7px 8px', color: store.history.length === 0 ? C.dim : C.sub, cursor: store.history.length === 0 ? 'default' : 'pointer', opacity: store.history.length === 0 ? 0.3 : 1 }}>{undoIcon}</button>
-          <button onClick={() => store.redo()} disabled={store.future.length === 0} title="Повторить (Ctrl+Y)" style={{ ...headerBtn, padding: '7px 8px', color: store.future.length === 0 ? C.dim : C.sub, cursor: store.future.length === 0 ? 'default' : 'pointer', opacity: store.future.length === 0 ? 0.3 : 1 }}>{redoIcon}</button>
+          <button onClick={() => store().undo()} disabled={history.length === 0} title="Отменить (Ctrl+Z)" style={{ ...headerBtn, padding: '7px 8px', color: history.length === 0 ? C.dim : C.sub, cursor: history.length === 0 ? 'default' : 'pointer', opacity: history.length === 0 ? 0.3 : 1 }}>{undoIcon}</button>
+          <button onClick={() => store().redo()} disabled={future.length === 0} title="Повторить (Ctrl+Y)" style={{ ...headerBtn, padding: '7px 8px', color: future.length === 0 ? C.dim : C.sub, cursor: future.length === 0 ? 'default' : 'pointer', opacity: future.length === 0 ? 0.3 : 1 }}>{redoIcon}</button>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* Size presets */}
           <div style={{ position: 'relative' }}>
@@ -495,8 +512,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             {showSizeMenu && (
               <div style={{ ...dropdownPanel, minWidth: 200 }}>
                 {SIZE_PRESETS.map((p) => (
-                  <div key={p.label} role="menuitem" tabIndex={0} aria-label={`${p.label} ${p.w}×${p.h}`} onClick={() => { store.setCanvasSize(p.w, p.h); setShowSizeMenu(false); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); store.setCanvasSize(p.w, p.h); setShowSizeMenu(false); } }}
+                  <div key={p.label} role="menuitem" tabIndex={0} aria-label={`${p.label} ${p.w}×${p.h}`} onClick={() => { store().setCanvasSize(p.w, p.h); setShowSizeMenu(false); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); store().setCanvasSize(p.w, p.h); setShowSizeMenu(false); } }}
                     style={{ ...menuItem, color: canvasW === p.w && canvasH === p.h ? C.accent : C.text, background: canvasW === p.w && canvasH === p.h ? C.accentDim : 'transparent' }}
                     onMouseEnter={(e) => { if (canvasW !== p.w || canvasH !== p.h) (e.currentTarget as HTMLElement).style.background = C.surface; }}
                     onMouseLeave={(e) => { if (canvasW !== p.w || canvasH !== p.h) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
@@ -527,8 +544,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* AI reference + AI generate */}
-          <button onClick={() => { const img = captureCanvas(); if (img) { store.setAiReferenceImage(img); store.setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} По фото</button>
-          <button onClick={() => store.setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} ИИ-генерация</button>
+          <button onClick={() => { const img = captureCanvas(); if (img) { store().setAiReferenceImage(img); store().setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} По фото</button>
+          <button onClick={() => store().setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} ИИ-генерация</button>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 12 }}>
@@ -561,34 +578,34 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Floating zoom controls */}
           <div title="Ctrl+Scroll для зума" style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
-            <button onClick={() => store.zoomOut()} title="Уменьшить (Ctrl+-)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => store().zoomOut()} title="Уменьшить (Ctrl+-)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => store.zoomIn()} title="Увеличить (Ctrl++)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => store().zoomIn()} title="Увеличить (Ctrl++)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomInIcon}</button>
             <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-            <button onClick={() => store.fitToScreen()} title="Вместить (Ctrl+0)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+            <button onClick={() => store().fitToScreen()} title="Вместить (Ctrl+0)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{fitIcon} По размеру</button>
           </div>
         </div>
         {/* D8: Context menu */}
-        {store.contextMenu && (
+        {contextMenu && (
           <div
-            onClick={() => store.setContextMenu(null)}
+            onClick={() => store().setContextMenu(null)}
             style={{ position: 'fixed', inset: 0, zIndex: Z_INDEX.MODAL_BACKDROP }}
           >
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
                 position: 'fixed',
-                left: Math.min(store.contextMenu.x, window.innerWidth - 180),
-                top: Math.min(store.contextMenu.y, window.innerHeight - 180),
+                left: Math.min(contextMenu.x, window.innerWidth - 180),
+                top: Math.min(contextMenu.y, window.innerHeight - 180),
                 background: C.card,
                 border: `1px solid ${C.border}`,
                 borderRadius: 10,
@@ -598,9 +615,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                 zIndex: Z_INDEX.CONTEXT_MENU,
               }}
             >
-              {store.contextMenu.elId ? (
+              {contextMenu.elId ? (
                 <div role="menu" onKeyDown={(e) => {
-                  if (e.key === 'Escape') store.setContextMenu(null);
+                  if (e.key === 'Escape') store().setContextMenu(null);
                   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                     e.preventDefault();
                     const items = (e.currentTarget as HTMLElement).querySelectorAll('[role="menuitem"]');
@@ -611,18 +628,18 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   }
                 }}>
                   {[
-                    { label: 'Дублировать', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store.duplicateSelected() },
-                    { label: 'На передний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => store.bringFront(store.contextMenu!.elId!) },
-                    { label: 'На задний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => store.sendBack(store.contextMenu!.elId!) },
-                    { label: 'Удалить', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => store.delEl(store.contextMenu!.elId!), danger: true },
+                    { label: 'Дублировать', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
+                    { label: 'На передний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => store().bringFront(store().contextMenu!.elId!) },
+                    { label: 'На задний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => store().sendBack(store().contextMenu!.elId!) },
+                    { label: 'Удалить', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => store().delEl(store().contextMenu!.elId!), danger: true },
                   ].map((item, i) => (
                     <div
                       key={item.label}
                       role="menuitem"
                       tabIndex={-1}
                       ref={i === 0 ? (el) => el?.focus() : undefined}
-                      onClick={() => { item.action(); store.setContextMenu(null); }}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.action(); store.setContextMenu(null); } }}
+                      onClick={() => { item.action(); store().setContextMenu(null); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.action(); store().setContextMenu(null); } }}
                       style={{
                         padding: '7px 12px',
                         borderRadius: 6,

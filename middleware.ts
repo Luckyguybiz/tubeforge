@@ -13,7 +13,7 @@ export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Public routes that don't require auth
-  const publicPaths = ['/', '/login', '/register', '/api/auth', '/api/stripe/webhook', '/privacy', '/terms'];
+  const publicPaths = ['/', '/login', '/register', '/api/auth', '/api/stripe/webhook', '/api/webhooks', '/privacy', '/terms'];
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
   // Static assets

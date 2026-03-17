@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, memo } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -606,10 +606,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
   }, []);
 
-  /* --- Computed --- */
-  const gc = (k: string) => (C[k as keyof Theme] as string) || C.accent;
-  const sel = scenes.find((s) => s.id === selId);
-  const totalDur = scenes.reduce((a, s) => a + s.duration, 0);
+  /* --- Computed (memoized) --- */
+  const gc = useCallback((k: string) => (C[k as keyof Theme] as string) || C.accent, [C]);
+  const sel = useMemo(() => scenes.find((s) => s.id === selId), [scenes, selId]);
+  const totalDur = useMemo(() => scenes.reduce((a, s) => a + s.duration, 0), [scenes]);
 
   const isGenerating = videoGen.isGenerating;
   const progress = videoGen.progress;

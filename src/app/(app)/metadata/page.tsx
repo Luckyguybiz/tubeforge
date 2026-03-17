@@ -2,7 +2,8 @@
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import { Skeleton, ErrorBoundary } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 const Metadata = dynamic(
   () => import('@/views/Metadata/Metadata').then((m) => ({ default: m.Metadata })),
