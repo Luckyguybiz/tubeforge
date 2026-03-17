@@ -54,6 +54,40 @@ export const TopBar = memo(function TopBar() {
   const [bellOpen, setBellOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
 
+  /* ── Search ─────────────────────────────────────── */
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const openSearch = useCallback(() => {
+    setSearchExpanded(true);
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  }, []);
+
+  const closeSearch = useCallback(() => {
+    setSearchExpanded(false);
+    setSearchQuery('');
+  }, []);
+
+  // Listen for sidebar search click
+  useEffect(() => {
+    const handler = () => openSearch();
+    window.addEventListener('tubeforge:open-search', handler);
+    return () => window.removeEventListener('tubeforge:open-search', handler);
+  }, [openSearch]);
+
+  // Cmd/Ctrl+K global shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        openSearch();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [openSearch]);
+
   // Close notification dropdown on outside click
   useEffect(() => {
     if (!bellOpen) return;
@@ -138,6 +172,44 @@ export const TopBar = memo(function TopBar() {
         </span>
       )}
       <div style={{ flex: 1 }} />
+
+      {/* Search input */}
+      {searchExpanded && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
+            placeholder={t('sidebar.search')}
+            style={{
+              width: 220,
+              height: 28,
+              padding: '0 10px',
+              borderRadius: 7,
+              border: `1px solid ${C.borderActive}`,
+              background: C.bg,
+              color: C.text,
+              fontSize: 12,
+              fontFamily: 'inherit',
+              outline: 'none',
+              transition: 'border-color .15s',
+            }}
+          />
+          <button
+            onClick={closeSearch}
+            style={{
+              ...btnBase,
+              width: 22,
+              height: 22,
+              fontSize: 10,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Keyboard shortcuts hint button */}
       <button
