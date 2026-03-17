@@ -77,6 +77,9 @@ export async function GET() {
   try {
     const { auth } = await import('@/server/auth');
     checks['auth_module'] = 'OK: loaded';
+    // After auth module loads, AUTH_URL should be deleted
+    checks['env_AUTH_URL_after_auth_init'] = process.env.AUTH_URL ? `STILL SET (${process.env.AUTH_URL.length} chars) — BUG!` : 'DELETED (correct)';
+    checks['env_NEXTAUTH_URL_after_auth_init'] = process.env.NEXTAUTH_URL ? `STILL SET — BUG!` : 'DELETED (correct)';
   } catch (e) {
     checks['auth_module'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }

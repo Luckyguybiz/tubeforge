@@ -14,9 +14,19 @@ function ensureNextRequest(req: NextRequest): NextRequest {
 }
 
 async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
+  // Safety: ensure AUTH_URL stays deleted even if module cache is stale
+  delete process.env.AUTH_URL;
+  delete process.env.NEXTAUTH_URL;
+
   const safeReq = ensureNextRequest(req);
   const url = new URL(req.url);
   const isCallback = url.pathname.includes('/callback/');
+
+  // Log domain info on callbacks so we can verify cookie domain matches
+  if (isCallback) {
+    console.log('[auth-route] Callback domain:', url.hostname,
+      'cookies:', req.cookies.getAll().map(c => c.name).filter(n => n.includes('auth')).join(', ') || 'none');
+  }
 
   try {
     const response = await handlers[method](safeReq);
