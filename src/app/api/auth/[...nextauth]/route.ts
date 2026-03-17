@@ -2,34 +2,39 @@ import { handlers, getLastAuthError } from '@/server/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Wrap NextAuth handlers to capture and expose the real error
- * instead of the opaque "Configuration" redirect.
- *
- * Once auth is working, this can be simplified back to:
- *   export const { GET, POST } = handlers;
+ * Ensure the request is a proper NextRequest with nextUrl.
+ * Next.js 16 may pass different request types to route handlers,
+ * and NextAuth's reqWithEnvURL() requires nextUrl.
  */
+function ensureNextRequest(req: NextRequest): NextRequest {
+  if (req.nextUrl) return req;
+  // Wrap plain Request as NextRequest to add nextUrl
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new NextRequest(req.url, req as any);
+}
 
 async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
+  const safeReq = ensureNextRequest(req);
   const url = new URL(req.url);
   const isCallback = url.pathname.includes('/callback/');
 
   try {
-    const response = await handlers[method](req);
+    const response = await handlers[method](safeReq);
 
-    // If this is a callback and it redirected to error=Configuration,
-    // intercept and show the real error for debugging
+    // If callback redirected to error, intercept and show real error for debugging
     if (isCallback) {
       const location = response.headers.get('location') ?? '';
       if (location.includes('error=Configuration') || location.includes('error=InvalidCheck')) {
         const lastError = getLastAuthError();
         console.error('[auth-route] Callback failed. Location:', location, 'Last error:', lastError);
 
-        // In development or if ?debug is present, show the real error
-        if (process.env.NODE_ENV !== 'production' || url.searchParams.has('debug')) {
+        // Show real error in non-production or with ?debug param
+        if (process.env.VERCEL_ENV !== 'production' || url.searchParams.has('debug')) {
           return NextResponse.json({
             error: 'Auth callback failed',
             redirect: location,
             lastAuthError: lastError,
+            hasNextUrl: !!req.nextUrl,
             cookies: Object.fromEntries(
               req.cookies.getAll().map(c => [c.name, c.value.substring(0, 20) + '...'])
             ),
@@ -40,13 +45,14 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
 
     return response;
   } catch (error) {
-    // NextAuth internal error that escaped the catch block
     console.error('[auth-route] Unhandled error:', error);
     const lastError = getLastAuthError();
     return NextResponse.json({
       error: 'Auth handler threw',
       message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5) : undefined,
       lastAuthError: lastError,
+      hasNextUrl: !!req.nextUrl,
     }, { status: 500 });
   }
 }

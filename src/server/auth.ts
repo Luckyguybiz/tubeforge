@@ -1,3 +1,12 @@
+/**
+ * AUTH_URL is NOT needed when trustHost:true is set — NextAuth auto-detects
+ * the URL from request headers (x-forwarded-host, x-forwarded-proto).
+ * Having AUTH_URL set causes reqWithEnvURL() to access req.nextUrl which
+ * can crash on Next.js 16. Clear it before NextAuth initializes.
+ */
+delete process.env.AUTH_URL;
+delete process.env.NEXTAUTH_URL;
+
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
