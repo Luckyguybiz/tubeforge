@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge-luckyguybizs-projects.vercel.app',
+    canonical: 'https://tubeforge.ai',
   },
   twitter: {
     card: 'summary_large_image',
@@ -34,9 +34,30 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'TubeForge',
+  description: 'ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных.',
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Web',
+  url: 'https://tubeforge.ai',
+  offers: [
+    { '@type': 'Offer', price: '0', priceCurrency: 'RUB', name: 'Free' },
+    { '@type': 'Offer', price: '990', priceCurrency: 'RUB', name: 'Pro' },
+    { '@type': 'Offer', price: '2490', priceCurrency: 'RUB', name: 'Studio' },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>

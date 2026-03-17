@@ -813,6 +813,8 @@ export default function SettingsPage() {
           {([
             { code: 'ru' as const, label: 'Русский', flag: 'RU' },
             { code: 'en' as const, label: 'English', flag: 'EN' },
+            { code: 'kk' as const, label: 'Қазақша', flag: 'KZ' },
+            { code: 'es' as const, label: 'Español', flag: 'ES' },
           ]).map(({ code, label, flag }) => (
             <button
               key={code}

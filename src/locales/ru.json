@@ -4,7 +4,8 @@
     "editor": "Редактор",
     "metadata": "Метаданные",
     "thumbnails": "Обложки",
-    "preview": "Превью"
+    "preview": "Превью",
+    "tools": "Инструменты"
   },
   "dashboard": {
     "greeting": "Добро пожаловать! Вот ваша статистика",
@@ -122,5 +123,23 @@
     "noResults": "Ничего не найдено",
     "retry": "Повторить",
     "close": "Закрыть"
+  },
+  "tools": {
+    "title": "Tools Studio",
+    "subtitle": "Choose the right tool for your task",
+    "search": "Search by name or description...",
+    "available": "Available",
+    "comingSoon": "Coming soon",
+    "open": "Open",
+    "all": "All tools",
+    "creation": "Creation",
+    "optimization": "Optimization",
+    "audio": "Audio & Voice",
+    "publishing": "Publishing",
+    "free": "Free Tools",
+    "downloaders": "Downloaders",
+    "aiTools": "AI Tools",
+    "videoTools": "Video Tools",
+    "getStarted": "Get Started"
   }
 }

@@ -282,32 +282,32 @@ const TESTIMONIALS = [
 
 const FAQ_DATA = [
   {
-    q: 'What is TubeForge?',
-    a: 'TubeForge is an AI-powered studio for YouTube creators. It combines AI video generation, a professional web editor, thumbnail creation, SEO metadata optimization, and channel analytics — all in one browser-based platform.',
+    q: 'Что такое TubeForge?',
+    a: 'TubeForge — это ИИ-студия для YouTube-креаторов. Платформа объединяет ИИ-генерацию видео, профессиональный веб-редактор, создание обложек, SEO-оптимизацию метаданных и аналитику канала — всё в одном браузерном приложении.',
   },
   {
-    q: 'How much does TubeForge cost?',
-    a: 'TubeForge offers a free plan with 3 videos per month, basic editing, and 1 GB of storage. The Pro plan is 990 RUB/month with 30 videos, 4K export, and YouTube integration. The Studio plan at 2490 RUB/month includes unlimited videos, team collaboration, and API access.',
+    q: 'Как работает ИИ-генерация видео?',
+    a: 'Вы вводите текстовое описание или сценарий, выбираете стиль и язык озвучки, а ИИ автоматически создаёт видеоряд, переходы, озвучку и субтитры. Весь процесс занимает 3-5 минут, после чего вы можете доработать результат во встроенном веб-редакторе.',
   },
   {
-    q: 'How does the AI video generation work?',
-    a: 'You provide a text description or script, choose a style and voiceover language, and the AI automatically generates video footage, transitions, voiceover, and subtitles. The entire process takes 3-5 minutes, and you can fine-tune the result in the built-in web editor.',
+    q: 'Сколько стоит TubeForge?',
+    a: 'У TubeForge есть бесплатный тариф: 3 видео в месяц, базовый редактор и 1 ГБ хранилища. Тариф Pro — 990\u20BD/мес с 30 видео, 4K-экспортом и YouTube-интеграцией. Тариф Studio — 2490\u20BD/мес с безлимитом видео, командной работой и API-доступом.',
   },
   {
-    q: 'Which platforms and languages are supported?',
-    a: 'TubeForge is optimized for YouTube but the videos can be used anywhere. AI voiceover supports 30+ languages including English, Russian, Spanish, French, German, Chinese, Japanese, and more. The platform interface is available in Russian and English.',
+    q: 'Какие языки и форматы поддерживаются?',
+    a: 'TubeForge оптимизирован для YouTube, но видео можно использовать на любой платформе. ИИ-озвучка поддерживает 30+ языков, включая русский, английский, испанский, французский, немецкий, китайский и японский. Экспорт доступен в форматах MP4, WebM и MOV с разрешением до 4K.',
   },
   {
-    q: 'Is my data secure?',
-    a: 'Yes. TubeForge uses enterprise-grade encryption for data at rest and in transit. Your videos, projects, and account data are stored securely. We do not share your content with third parties. OAuth tokens for YouTube integration are encrypted and can be revoked at any time.',
+    q: 'Мои данные в безопасности?',
+    a: 'Да. TubeForge использует шифрование корпоративного уровня для данных при хранении и передаче. Ваши видео, проекты и данные аккаунта хранятся в защищённом виде. Мы не передаём ваш контент третьим лицам. OAuth-токены для YouTube-интеграции зашифрованы и могут быть отозваны в любой момент.',
   },
   {
-    q: 'Can I monetize videos created with TubeForge?',
-    a: 'Absolutely. All videos created in TubeForge are fully owned by you. You can monetize them on YouTube, use them in commercial projects, or sell them — there are no licensing restrictions on your output.',
+    q: 'Могу ли я монетизировать видео, созданные в TubeForge?',
+    a: 'Безусловно. Все видео, созданные в TubeForge, полностью принадлежат вам. Вы можете монетизировать их на YouTube, использовать в коммерческих проектах или продавать — никаких лицензионных ограничений на ваш контент.',
   },
   {
-    q: 'What is the refund policy?',
-    a: 'We offer a 14-day money-back guarantee for all paid plans. If you are not satisfied, contact our support team and we will issue a full refund — no questions asked.',
+    q: 'Есть ли возможность командной работы?',
+    a: 'Да, тариф Studio поддерживает командную работу до 10 человек. Каждый участник получает собственный доступ с настраиваемыми правами. Вы можете совместно редактировать проекты, управлять несколькими каналами и использовать общие брендированные шаблоны.',
   },
 ];
 
@@ -417,11 +417,35 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [heroVisible, setHeroVisible] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* Trigger hero entrance */
+  useEffect(() => {
+    const t = setTimeout(() => setHeroVisible(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* Intersection Observer for scroll-triggered reveals */
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('tf-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -60px 0px' },
+    );
+    document.querySelectorAll('.tf-reveal').forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -455,7 +479,7 @@ export default function LandingPage() {
             description: 'AI-powered studio for YouTube creators. Video generation, thumbnail editing, SEO metadata optimization, and channel analytics.',
             applicationCategory: 'MultimediaApplication',
             operatingSystem: 'Web',
-            url: 'https://tubeforge-luckyguybizs-projects.vercel.app',
+            url: 'https://tubeforge.ai',
             offers: [
               {
                 '@type': 'Offer',
@@ -613,8 +637,10 @@ export default function LandingPage() {
 
       {/* ========== HERO ========== */}
       <section style={{ paddingTop: 160, paddingBottom: 100, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Animated gradient orbs */}
         <div
           aria-hidden="true"
+          className="tf-float"
           style={{
             position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
             width: 800, height: 800, borderRadius: '50%',
@@ -622,28 +648,65 @@ export default function LandingPage() {
             pointerEvents: 'none',
           }}
         />
+        <div
+          aria-hidden="true"
+          className="tf-float-slow"
+          style={{
+            position: 'absolute', top: 100, right: -200, width: 500, height: 500, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="tf-float-reverse"
+          style={{
+            position: 'absolute', bottom: -100, left: -200, width: 500, height: 500, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
 
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
+        <div style={{
+          maxWidth: 800, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1,
+          opacity: heroVisible ? 1 : 0,
+          transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
+          transition: 'opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1)',
+        }}>
           <div
+            className="tf-badge-pulse"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: INDIGO_50, border: '1px solid rgba(99,102,241,0.2)',
               borderRadius: 50, padding: '8px 20px', marginBottom: 32,
+              opacity: heroVisible ? 1 : 0,
+              transform: heroVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.9)',
+              transition: 'all 0.6s cubic-bezier(.4,0,.2,1) 0.1s',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z" fill={INDIGO_600} /></svg>
             <span style={{ fontSize: 14, fontWeight: 600, color: INDIGO_600 }}>Запущено в 2026 году</span>
           </div>
 
-          <h1 style={{ fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 24px', color: GRAY_900 }}>
+          <h1 style={{
+            fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 24px', color: GRAY_900,
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
+            transition: 'all 0.8s cubic-bezier(.4,0,.2,1) 0.2s',
+          }}>
             Создавайте<br />
-            <span style={{ display: 'inline-block', background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, color: WHITE, padding: '4px 20px', borderRadius: 14, margin: '8px 0' }}>
+            <span className="tf-gradient-text" style={{ display: 'inline-block', background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500}, #ec4899, ${INDIGO_600})`, backgroundSize: '300% 100%', color: WHITE, padding: '4px 20px', borderRadius: 14, margin: '8px 0' }}>
               #1 ИИ-Студия
             </span><br />
             Вирусные Видео для YouTube
           </h1>
 
-          <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: GRAY_500, lineHeight: 1.6, maxWidth: 600, margin: '0 auto 40px', fontWeight: 400 }}>
+          <p style={{
+            fontSize: 'clamp(16px, 2vw, 20px)', color: GRAY_500, lineHeight: 1.6, maxWidth: 600, margin: '0 auto 40px', fontWeight: 400,
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.8s cubic-bezier(.4,0,.2,1) 0.35s',
+          }}>
             Ваш универсальный инструмент для создания видео с ИИ-озвучкой, обложками, метаданными и аналитикой.
           </p>
 
@@ -681,7 +744,7 @@ export default function LandingPage() {
 
       {/* ========== FEATURES ========== */}
       <section id="features" style={{ padding: '100px 24px', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+        <div className="tf-reveal" style={{ textAlign: 'center', marginBottom: 64 }}>
           <h2 style={sectionHeadingStyle}>Инструменты для Вирального Роста</h2>
           <p style={sectionSubStyle}>Всё что нужно для YouTube — в одном месте</p>
         </div>
@@ -689,11 +752,12 @@ export default function LandingPage() {
           {FEATURES.map((feature, i) => (
             <div
               key={i}
-              style={{ background: WHITE, border: `1px solid ${GRAY_100}`, borderRadius: 20, padding: 32, transition: 'transform 0.25s ease, box-shadow 0.25s ease', cursor: 'default' }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              className="tf-reveal tf-card-hover"
+              style={{ background: WHITE, border: `1px solid ${GRAY_100}`, borderRadius: 20, padding: 32, transition: 'transform 0.25s ease, box-shadow 0.25s ease', cursor: 'default', transitionDelay: `${i * 100}ms` }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.1)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
             >
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: feature.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+              <div className="tf-icon-bounce" style={{ width: 56, height: 56, borderRadius: 14, background: feature.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, transition: 'transform 0.3s ease' }}>
                 {feature.icon}
               </div>
               <h3 style={{ fontSize: 19, fontWeight: 700, color: GRAY_900, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{feature.title}</h3>
@@ -706,13 +770,13 @@ export default function LandingPage() {
       {/* ========== HOW IT WORKS ========== */}
       <section style={{ padding: '100px 24px', background: GRAY_50 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <div className="tf-reveal" style={{ textAlign: 'center', marginBottom: 64 }}>
             <h2 style={sectionHeadingStyle}>Как это работает</h2>
             <p style={sectionSubStyle}>Три простых шага до вирусного видео</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32, maxWidth: 900, margin: '0 auto' }}>
             {STEPS.map((step, i) => (
-              <div key={i} style={{ textAlign: 'center', position: 'relative' }}>
+              <div key={i} className="tf-reveal" style={{ textAlign: 'center', position: 'relative', transitionDelay: `${i * 150}ms` }}>
                 {i < STEPS.length - 1 && (
                   <div aria-hidden="true" className="step-connector" style={{ position: 'absolute', top: 32, left: 'calc(50% + 40px)', width: 'calc(100% - 80px)', height: 2, background: 'linear-gradient(90deg, rgba(99,102,241,0.3), rgba(99,102,241,0.1))' }} />
                 )}
@@ -728,7 +792,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== WEB EDITOR ========== */}
-      <section id="editor" style={{ padding: '100px 24px' }}>
+      <section id="editor" className="tf-reveal" style={{ padding: '100px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }} className="editor-grid">
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: INDIGO_50, borderRadius: 50, padding: '6px 16px', marginBottom: 20 }}>
@@ -796,7 +860,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== AI TOOLS GRID ========== */}
-      <section id="tools" style={{ padding: '100px 24px', background: GRAY_50 }}>
+      <section id="tools" className="tf-reveal" style={{ padding: '100px 24px', background: GRAY_50 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <h2 style={sectionHeadingStyle}>Бесчисленные ИИ-Инструменты</h2>
@@ -822,7 +886,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== SOCIAL PROOF ========== */}
-      <section style={{ padding: '100px 24px' }}>
+      <section className="tf-reveal" style={{ padding: '100px 24px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', color: GRAY_900, margin: '0 0 20px', lineHeight: 1.15 }}>
             TubeForge помогает креаторам создавать вирусный контент
@@ -833,10 +897,10 @@ export default function LandingPage() {
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
             {[
-              { num: '2026', label: 'Launched' },
-              { num: 'Next-Gen', label: 'AI Technology' },
+              { num: '2026', label: 'Год запуска' },
+              { num: 'Next-Gen', label: 'ИИ-технологии' },
               { num: '99.9%', label: 'Uptime SLA' },
-              { num: 'Enterprise', label: 'Grade Security' },
+              { num: 'Enterprise', label: 'Безопасность' },
             ].map((stat, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 36, fontWeight: 800, background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>
@@ -852,7 +916,7 @@ export default function LandingPage() {
       {/* ========== TESTIMONIALS ========== */}
       <section style={{ padding: '100px 24px', background: GRAY_50 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <div className="tf-reveal" style={{ textAlign: 'center', marginBottom: 64 }}>
             <h2 style={sectionHeadingStyle}>Что говорят креаторы</h2>
             <p style={sectionSubStyle}>Отзывы наших пользователей</p>
           </div>
@@ -888,7 +952,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== PRICING ========== */}
-      <section id="pricing" style={{ padding: '100px 24px' }}>
+      <section id="pricing" className="tf-reveal" style={{ padding: '100px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <h2 style={sectionHeadingStyle}>Простые и прозрачные тарифы</h2>
@@ -950,8 +1014,8 @@ export default function LandingPage() {
       <section id="faq" style={{ padding: '100px 24px', background: GRAY_50 }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <h2 style={sectionHeadingStyle}>Frequently Asked Questions</h2>
-            <p style={sectionSubStyle}>Everything you need to know about TubeForge</p>
+            <h2 style={sectionHeadingStyle}>Частые вопросы</h2>
+            <p style={sectionSubStyle}>Всё, что нужно знать о TubeForge</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {FAQ_DATA.map((item, i) => {
@@ -978,7 +1042,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== BOTTOM CTA ========== */}
-      <section style={{ padding: '100px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section className="tf-reveal" style={{ padding: '100px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden="true" style={{ position: 'absolute', bottom: -200, left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', color: GRAY_900, margin: '0 0 14px', lineHeight: 1.15 }}>
@@ -1048,6 +1112,65 @@ export default function LandingPage() {
 
       {/* ========== RESPONSIVE STYLES ========== */}
       <style>{`
+        /* ═══ Keyframes ═══ */
+        @keyframes tf-float {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50% { transform: translateX(-50%) translateY(-30px); }
+        }
+        @keyframes tf-float-slow {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(3deg); }
+        }
+        @keyframes tf-float-reverse {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(20px) rotate(-3deg); }
+        }
+        @keyframes tf-gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes tf-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); }
+          50% { box-shadow: 0 0 0 12px rgba(99,102,241,0); }
+        }
+        @keyframes tf-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        /* ═══ Floating background orbs ═══ */
+        .tf-float { animation: tf-float 8s ease-in-out infinite; }
+        .tf-float-slow { animation: tf-float-slow 12s ease-in-out infinite; }
+        .tf-float-reverse { animation: tf-float-reverse 10s ease-in-out infinite; }
+
+        /* ═══ Gradient text shimmer ═══ */
+        .tf-gradient-text { animation: tf-gradient-shift 4s ease infinite; }
+
+        /* ═══ Badge pulse ═══ */
+        .tf-badge-pulse { animation: tf-pulse 3s ease-in-out infinite 1s; }
+
+        /* ═══ Scroll reveal ═══ */
+        .tf-reveal {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: opacity 0.7s cubic-bezier(.4,0,.2,1), transform 0.7s cubic-bezier(.4,0,.2,1);
+        }
+        .tf-reveal.tf-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* ═══ Card hover effects ═══ */
+        .tf-card-hover:hover .tf-icon-bounce {
+          transform: scale(1.1) rotate(-3deg);
+        }
+
+        /* ═══ Responsive ═══ */
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: block !important; }
@@ -1068,6 +1191,20 @@ export default function LandingPage() {
         }
         ::selection {
           background: rgba(99,102,241,0.2);
+        }
+
+        /* ═══ Smooth scrollbar ═══ */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+        /* ═══ Prefers reduced motion ═══ */
+        @media (prefers-reduced-motion: reduce) {
+          .tf-float, .tf-float-slow, .tf-float-reverse { animation: none; }
+          .tf-gradient-text { animation: none; }
+          .tf-badge-pulse { animation: none; }
+          .tf-reveal { opacity: 1; transform: none; transition: none; }
         }
       `}</style>
     </div>

@@ -9,7 +9,7 @@ import type { Theme } from '@/lib/types';
    TOOL DEFINITIONS
    ═══════════════════════════════════════════════════════════════════ */
 
-type ToolCategory = 'all' | 'creation' | 'optimization' | 'audio' | 'publishing';
+type ToolCategory = 'all' | 'creation' | 'optimization' | 'audio' | 'publishing' | 'ai' | 'video' | 'free' | 'downloaders';
 
 interface ToolDef {
   id: string;
@@ -24,6 +24,7 @@ interface ToolDef {
 }
 
 const TOOLS: ToolDef[] = [
+  /* ── Core Studio Tools ─────────────────────────────── */
   {
     id: 'video',
     name: 'Видео генерация',
@@ -65,6 +66,230 @@ const TOOLS: ToolDef[] = [
     available: true,
     gradient: ['#f59e0b', '#f97316'],
   },
+
+  /* ── AI Tools ──────────────────────────────────────── */
+  {
+    id: 'image-generator',
+    name: 'AI Image Generator',
+    subtitle: 'DALL-E 3 · ИИ',
+    description: 'Генерируйте высококачественные изображения с помощью ИИ за секунды. Пресеты, стили, промпт-генератор.',
+    category: 'ai',
+    route: '/tools/image-generator',
+    available: true,
+    gradient: ['#6366f1', '#8b5cf6'],
+  },
+  {
+    id: 'voiceover-generator',
+    name: 'AI Voiceover Generator',
+    subtitle: '50+ голосов · ИИ',
+    description: 'Создавайте качественную озвучку с 50+ нарраторами за секунды. Мультиязычная поддержка.',
+    category: 'ai',
+    route: '/tools/voiceover-generator',
+    available: true,
+    gradient: ['#3b82f6', '#6366f1'],
+  },
+  {
+    id: 'speech-enhancer',
+    name: 'AI Speech Enhancer',
+    subtitle: 'Аудио · ИИ',
+    description: 'Улучшите качество любого аудио или видео файла с помощью ИИ. Удаление шума, эхо, нормализация.',
+    category: 'ai',
+    route: '/tools/speech-enhancer',
+    available: true,
+    badge: 'New',
+    gradient: ['#10b981', '#06b6d4'],
+  },
+  {
+    id: 'veo3-generator',
+    name: 'AI Video Generator',
+    subtitle: 'VEO3 · ИИ',
+    description: 'Создавайте видео с помощью ИИ. Промпт → видеоклип за секунды. Кинематографичный стиль.',
+    category: 'ai',
+    route: '/tools/veo3-generator',
+    available: true,
+    gradient: ['#ef4444', '#f97316'],
+  },
+  {
+    id: 'brainstormer',
+    name: 'AI Brainstormer',
+    subtitle: 'Идеи · GPT',
+    description: 'Генерируйте идеи для контента с помощью ИИ. Анализ трендов, целевая аудитория, оценка потенциала.',
+    category: 'ai',
+    route: '/tools/brainstormer',
+    available: true,
+    gradient: ['#8b5cf6', '#a78bfa'],
+  },
+  {
+    id: 'vocal-remover',
+    name: 'AI Vocal Remover',
+    subtitle: 'Разделение · ИИ',
+    description: 'Разделите вокал и инструментал из любого аудиофайла. Высокое качество разделения.',
+    category: 'ai',
+    route: '/tools/vocal-remover',
+    available: true,
+    gradient: ['#d946ef', '#c026d3'],
+  },
+  {
+    id: 'ai-creator',
+    name: 'AI Creator',
+    subtitle: 'Аватар · ИИ',
+    description: 'Станьте ИИ-контент-креатором за 3 шага. Загрузите фото, выберите голос, напишите скрипт.',
+    category: 'ai',
+    route: '/tools/ai-creator',
+    available: true,
+    gradient: ['#f59e0b', '#f97316'],
+  },
+
+  /* ── Video Tools ───────────────────────────────────── */
+  {
+    id: 'autoclip',
+    name: 'AutoClip',
+    subtitle: 'Вирусные клипы · ИИ',
+    description: 'Превратите длинные видео в вирусные клипы автоматически. ИИ находит самые интересные моменты.',
+    category: 'video',
+    route: '/tools/autoclip',
+    available: true,
+    badge: 'Популярное',
+    gradient: ['#6366f1', '#ec4899'],
+  },
+  {
+    id: 'cut-crop',
+    name: 'Cut & Crop',
+    subtitle: 'Обрезка · Склейка',
+    description: 'Обрезайте и склеивайте видео. Кроп под любой формат — YouTube, Shorts, TikTok, Instagram.',
+    category: 'video',
+    route: '/tools/cut-crop',
+    available: true,
+    gradient: ['#3b82f6', '#06b6d4'],
+  },
+  {
+    id: 'subtitle-editor',
+    name: 'Subtitle Editor',
+    subtitle: 'Стили · Анимация',
+    description: 'Полный редактор субтитров. 12+ стилей текста, покадровая анимация, экспорт SRT. One-word mode.',
+    category: 'video',
+    route: '/tools/subtitle-editor',
+    available: true,
+    gradient: ['#6366f1', '#8b5cf6'],
+  },
+  {
+    id: 'subtitle-remover',
+    name: 'Subtitle Remover',
+    subtitle: 'Удаление · ИИ',
+    description: 'Удалите субтитры из любого видео с помощью ИИ. Автоматическое определение и восстановление фона.',
+    category: 'video',
+    route: '/tools/subtitle-remover',
+    available: true,
+    gradient: ['#ef4444', '#f97316'],
+  },
+  {
+    id: 'reddit-video',
+    name: 'Reddit Video Generator',
+    subtitle: 'Reddit · Shorts',
+    description: 'Генерируйте Reddit-стиль видео для Shorts/TikTok. Озвучка, фоновое видео, автоматический монтаж.',
+    category: 'video',
+    route: '/tools/reddit-video',
+    available: true,
+    gradient: ['#f97316', '#ef4444'],
+  },
+  {
+    id: 'fake-texts',
+    name: 'Fake Texts Video',
+    subtitle: 'Чат · Видео',
+    description: 'Создайте видео с фейковой перепиской. iMessage, WhatsApp, Telegram стили. Анимация печатания.',
+    category: 'video',
+    route: '/tools/fake-texts',
+    available: true,
+    gradient: ['#8b5cf6', '#6366f1'],
+  },
+
+  /* ── Downloaders ───────────────────────────────────── */
+  {
+    id: 'youtube-downloader',
+    name: 'YouTube Downloader',
+    subtitle: 'Скачивание · YouTube',
+    description: 'Скачивайте видео с YouTube. 4K, 1080p, 720p, только аудио. MP4 и MP3 форматы.',
+    category: 'downloaders',
+    route: '/tools/youtube-downloader',
+    available: true,
+    gradient: ['#ef4444', '#dc2626'],
+  },
+  {
+    id: 'tiktok-downloader',
+    name: 'TikTok Downloader',
+    subtitle: 'Скачивание · TikTok',
+    description: 'Скачивайте видео из TikTok без водяного знака. HD качество, MP4 и MP3.',
+    category: 'downloaders',
+    route: '/tools/tiktok-downloader',
+    available: true,
+    gradient: ['#010101', '#333333'],
+  },
+
+  /* ── Free Tools ────────────────────────────────────── */
+  {
+    id: 'audio-balancer',
+    name: 'Audio Balancer',
+    subtitle: 'Баланс · Каналы',
+    description: 'Балансируйте левый и правый аудиоканалы. Контроль громкости каждого канала отдельно.',
+    category: 'free',
+    route: '/tools/audio-balancer',
+    available: true,
+    gradient: ['#3b82f6', '#6366f1'],
+  },
+  {
+    id: 'video-compressor',
+    name: 'Video Compressor',
+    subtitle: 'Сжатие · Оптимизация',
+    description: 'Сжимайте видеофайлы без потери качества. Выбор разрешения и целевого размера.',
+    category: 'free',
+    route: '/tools/video-compressor',
+    available: true,
+    gradient: ['#06b6d4', '#0ea5e9'],
+  },
+  {
+    id: 'mp3-converter',
+    name: 'MP3 Converter',
+    subtitle: 'Конвертер · Аудио',
+    description: 'Конвертируйте любой медиафайл в MP3. Выбор битрейта, обрезка, настройка качества.',
+    category: 'free',
+    route: '/tools/mp3-converter',
+    available: true,
+    gradient: ['#10b981', '#059669'],
+  },
+
+  /* ── More Tools ────────────────────────────────────── */
+  {
+    id: 'background-remover',
+    name: 'Background Remover',
+    subtitle: 'Фон · ИИ',
+    description: 'Удалите фон с любого изображения. Замена на прозрачный, сплошной цвет, градиент или своё изображение.',
+    category: 'ai',
+    route: '/tools/background-remover',
+    available: true,
+    gradient: ['#8b5cf6', '#7c3aed'],
+  },
+  {
+    id: 'voice-changer',
+    name: 'Voice Changer',
+    subtitle: 'Голос · Эффекты',
+    description: 'Измените голос в любом аудио или видео файле. 11+ эффектов: робот, эхо, шёпот, и другие.',
+    category: 'audio',
+    route: '/tools/voice-changer',
+    available: true,
+    gradient: ['#d946ef', '#a855f7'],
+  },
+  {
+    id: 'face-swap',
+    name: 'AI Face Swap',
+    subtitle: 'Лицо · ИИ',
+    description: 'Замените лицо на фото или видео с помощью ИИ. Высокое качество, естественный результат.',
+    category: 'ai',
+    route: '/tools/face-swap',
+    available: true,
+    gradient: ['#f97316', '#ef4444'],
+  },
+
+  /* ── Coming Soon ───────────────────────────────────── */
   {
     id: 'scenario',
     name: 'Сценарий с ИИ',
@@ -75,33 +300,6 @@ const TOOLS: ToolDef[] = [
     gradient: ['#8b5cf6', '#a78bfa'],
   },
   {
-    id: 'voice',
-    name: 'Voice Changer',
-    subtitle: 'Аудио · ИИ',
-    description: 'Измените голос в любом аудио или видео файле. Клонирование голоса, эффекты, мультиязычная озвучка.',
-    category: 'audio',
-    available: false,
-    gradient: ['#3b82f6', '#6366f1'],
-  },
-  {
-    id: 'subtitles',
-    name: 'AI Субтитры',
-    subtitle: 'Whisper · Авто',
-    description: 'Автоматическая генерация субтитров с помощью Whisper. Поддержка 50+ языков, стилизация, экспорт SRT.',
-    category: 'audio',
-    available: false,
-    gradient: ['#10b981', '#34d399'],
-  },
-  {
-    id: 'montage',
-    name: 'Монтаж видео',
-    subtitle: 'Редактор · Таймлайн',
-    description: 'Склеивайте, обрезайте и монтируйте видео на таймлайне. Переходы, эффекты, цветокоррекция.',
-    category: 'creation',
-    available: false,
-    gradient: ['#ef4444', '#f97316'],
-  },
-  {
     id: 'translate',
     name: 'Автоперевод',
     subtitle: 'ИИ · Мультиязычный',
@@ -109,15 +307,6 @@ const TOOLS: ToolDef[] = [
     category: 'audio',
     available: false,
     gradient: ['#06b6d4', '#0ea5e9'],
-  },
-  {
-    id: 'music',
-    name: 'Музыка и звуки',
-    subtitle: 'ИИ · Генерация',
-    description: 'Генерация фоновой музыки и звуковых эффектов для видео. Настройка настроения, жанра, темпа.',
-    category: 'audio',
-    available: false,
-    gradient: ['#d946ef', '#c026d3'],
   },
   {
     id: 'analytics',
@@ -137,40 +326,17 @@ const TOOLS: ToolDef[] = [
     available: false,
     gradient: ['#0ea5e9', '#38bdf8'],
   },
-  {
-    id: 'templates',
-    name: 'Шаблоны видео',
-    subtitle: 'Библиотека · Готовые',
-    description: 'Библиотека готовых шаблонов для разных форматов: Shorts, обзоры, туториалы, рекламные ролики.',
-    category: 'creation',
-    available: false,
-    gradient: ['#a855f7', '#7c3aed'],
-  },
-  {
-    id: 'ab-test',
-    name: 'A/B Тестирование',
-    subtitle: 'Оптимизация · ИИ',
-    description: 'Тестируйте разные обложки и названия. ИИ анализирует CTR и рекомендует лучшие варианты.',
-    category: 'optimization',
-    available: false,
-    gradient: ['#84cc16', '#65a30d'],
-  },
-  {
-    id: 'collaboration',
-    name: 'Совместная работа',
-    subtitle: 'Команда · Realtime',
-    description: 'Работайте над проектом вместе с командой в реальном времени. Комментарии, версии, права доступа.',
-    category: 'publishing',
-    available: false,
-    gradient: ['#f59e0b', '#d97706'],
-  },
 ];
 
 const CATEGORIES: { key: ToolCategory; label: string }[] = [
   { key: 'all', label: 'Все инструменты' },
-  { key: 'creation', label: 'Создание' },
-  { key: 'optimization', label: 'Оптимизация' },
+  { key: 'ai', label: 'ИИ-инструменты' },
+  { key: 'video', label: 'Видео' },
   { key: 'audio', label: 'Аудио и голос' },
+  { key: 'creation', label: 'Создание' },
+  { key: 'downloaders', label: 'Загрузчики' },
+  { key: 'free', label: 'Бесплатные' },
+  { key: 'optimization', label: 'Оптимизация' },
   { key: 'publishing', label: 'Публикация' },
 ];
 
@@ -256,6 +422,119 @@ const TOOL_ICONS: Record<string, (color: string) => React.ReactNode> = {
   collaboration: (c) => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
+    </svg>
+  ),
+  /* ── New tool icons ────────────── */
+  'image-generator': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
+    </svg>
+  ),
+  'voiceover-generator': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+  ),
+  'speech-enhancer': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 10v3" /><path d="M6 6v11" /><path d="M10 3v18" /><path d="M14 8v7" /><path d="M18 5v13" /><path d="M22 10v3" />
+    </svg>
+  ),
+  'veo3-generator': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" />
+      <path d="M12 2l1 3h3l-2.5 2 1 3L12 8l-2.5 2 1-3L8 5h3l1-3z" fill={c} stroke="none" opacity=".4" />
+    </svg>
+  ),
+  brainstormer: (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+  ),
+  'vocal-remover': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+      <line x1="2" y1="2" x2="22" y2="22" strokeWidth="2" />
+    </svg>
+  ),
+  'ai-creator': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 10-16 0" />
+      <path d="M12 2l1 2h2l-1.5 1.5.5 2L12 6l-2 1.5.5-2L9 4h2l1-2z" fill={c} stroke="none" opacity=".5" />
+    </svg>
+  ),
+  autoclip: (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M10 4v16" /><polygon points="14 10 18 12.5 14 15" fill={c} stroke="none" opacity=".6" />
+    </svg>
+  ),
+  'cut-crop': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6.13 1L6 16a2 2 0 002 2h15" /><path d="M1 6.13L16 6a2 2 0 012 2v15" />
+    </svg>
+  ),
+  'subtitle-editor': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" /><line x1="6" y1="14" x2="10" y2="14" /><line x1="12" y1="14" x2="18" y2="14" /><line x1="6" y1="18" x2="14" y2="18" />
+    </svg>
+  ),
+  'subtitle-remover': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" /><line x1="6" y1="16" x2="18" y2="16" opacity=".3" /><line x1="4" y1="8" x2="20" y2="20" strokeWidth="2.5" />
+    </svg>
+  ),
+  'reddit-video': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8">
+      <circle cx="12" cy="12" r="10" /><circle cx="8" cy="11" r="1.5" fill={c} stroke="none" /><circle cx="16" cy="11" r="1.5" fill={c} stroke="none" />
+      <path d="M8 15c1.5 1.5 6.5 1.5 8 0" strokeLinecap="round" />
+    </svg>
+  ),
+  'fake-texts': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="13" y2="13" />
+    </svg>
+  ),
+  'youtube-downloader': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  'tiktok-downloader': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 12a4 4 0 104 4V4c1.5 2 4 3 6 3" />
+    </svg>
+  ),
+  'audio-balancer': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" />
+    </svg>
+  ),
+  'video-compressor': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 4v16" /><path d="M15 4v16" /><path d="M4 12h16" />
+    </svg>
+  ),
+  'mp3-converter': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+      <path d="M10 13v4" /><path d="M14 11v6" /><path d="M8 15v2" /><path d="M16 14v3" />
+    </svg>
+  ),
+  'background-remover': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="12" cy="12" r="4" /><path d="M3 3l18 18" opacity=".3" />
+    </svg>
+  ),
+  'voice-changer': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" />
+      <path d="M5 3l14 14" strokeWidth="2" />
+    </svg>
+  ),
+  'face-swap': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="9" r="5" /><circle cx="15" cy="15" r="5" /><path d="M16 8l2-2 2 2" /><path d="M8 16l-2 2-2-2" />
     </svg>
   ),
 };

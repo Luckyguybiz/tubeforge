@@ -516,10 +516,13 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       if (data.tags && Array.isArray(data.tags)) {
         const currentTags = useMetadataStore.getState().tags;
         // Filter out tags that already exist in the current tag list (case-insensitive)
+        const isExisting = (t: string) => currentTags.some((ct) => ct.toLowerCase() === t.toLowerCase());
         const newTags = data.tags.filter(
-          (t: string) => !currentTags.some((ct) => ct.toLowerCase() === t.toLowerCase())
+          (t: string) => !isExisting(t)
         );
-        const merged = [...new Set([...newTags, ...(aiSuggestions.tags || [])])].slice(0, 20);
+        // Also prune old AI suggestions that the user has since accepted
+        const oldFiltered = (aiSuggestions.tags || []).filter((t) => !isExisting(t));
+        const merged = [...new Set([...newTags, ...oldFiltered])].slice(0, 20);
         setAISuggestions({ tags: merged });
       }
       toast.success('Теги подобраны');
