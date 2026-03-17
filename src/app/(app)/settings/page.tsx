@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { signOut, useSession } from 'next-auth/react';
@@ -50,13 +51,8 @@ export default function SettingsPage() {
   const isDark = useThemeStore((s) => s.isDark);
   const toggle = useThemeStore((s) => s.toggle);
 
-  const [language, setLanguage] = useState<'ru' | 'en'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('tubeforge-lang');
-      if (saved === 'en') return 'en';
-    }
-    return 'ru';
-  });
+  const language = useLocaleStore((s) => s.locale);
+  const setLanguage = useLocaleStore((s) => s.setLocale);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
 
@@ -822,7 +818,6 @@ export default function SettingsPage() {
               key={code}
               onClick={() => {
                 setLanguage(code);
-                localStorage.setItem('tubeforge-lang', code);
               }}
               aria-pressed={language === code}
               style={{
