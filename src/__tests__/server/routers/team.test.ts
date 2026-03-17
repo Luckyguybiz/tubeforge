@@ -21,8 +21,8 @@ type Session = {
   expires: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MockDb = Record<string, Record<string, vi.Mock<any>>>;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type MockDb = Record<string, any>;
 
 type TRPCContext = { db: MockDb; session: Session };
 

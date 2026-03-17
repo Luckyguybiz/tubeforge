@@ -54,3 +54,10 @@ jobs:
         env:
           DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
           AUTH_SECRET: "fake-secret-for-build"
+          AUTH_GOOGLE_ID: "fake-google-id"
+          AUTH_GOOGLE_SECRET: "fake-google-secret"
+          STRIPE_SECRET_KEY: "sk_test_fake"
+          STRIPE_WEBHOOK_SECRET: "whsec_fake"
+          STRIPE_PRICE_PRO: "price_fake_pro"
+          STRIPE_PRICE_STUDIO: "price_fake_studio"
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
