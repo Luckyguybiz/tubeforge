@@ -115,8 +115,8 @@ export function UploadsPanel() {
           marginBottom: 14,
         }}
       >
-        <div style={{ fontSize: 30, marginBottom: 6, opacity: 0.5 }}>
-          {uploading ? '...' : '⬆'}
+        <div style={{ marginBottom: 6, opacity: 0.5, display: 'flex', justifyContent: 'center' }}>
+          {uploading ? <span style={{ fontSize: 24 }}>...</span> : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
         </div>
         <div style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>
           {uploading ? 'Загрузка...' : 'Перетащите или нажмите'}
@@ -129,7 +129,7 @@ export function UploadsPanel() {
       {/* Assets grid */}
       {assets.isError ? (
         <div style={{ textAlign: 'center', padding: '20px 0', color: C.dim, fontSize: 12 }}>
-          <div style={{ fontSize: 24, marginBottom: 8, opacity: 0.3 }}>⚠</div>
+          <div style={{ marginBottom: 8, opacity: 0.3, display: 'flex', justifyContent: 'center' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
           <div style={{ marginBottom: 10, color: C.accent }}>Не удалось загрузить ассеты</div>
           <button
             onClick={() => assets.refetch()}
@@ -229,7 +229,7 @@ export function UploadsPanel() {
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '20px 0', color: C.dim, fontSize: 12 }}>
-          <div style={{ fontSize: 24, marginBottom: 8, opacity: 0.3 }}>🖼</div>
+          <div style={{ marginBottom: 8, opacity: 0.3, display: 'flex', justifyContent: 'center' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
           <div style={{ marginBottom: 10 }}>Нет загруженных изображений</div>
           <button
             onClick={() => fileRef.current?.click()}

@@ -58,7 +58,7 @@ export function ProjectsPanel() {
         </h4>
         {projects.isError ? (
           <div style={{ textAlign: 'center', padding: '16px 8px', color: C.dim, fontSize: 12 }}>
-            <div style={{ fontSize: 20, marginBottom: 6, opacity: 0.4 }}>⚠</div>
+            <div style={{ marginBottom: 6, opacity: 0.4, display: 'flex', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
             <div style={{ color: C.accent, marginBottom: 8 }}>Ошибка загрузки</div>
             <button onClick={() => projects.refetch()} style={btnStyle}>Повторить</button>
           </div>
@@ -107,7 +107,7 @@ export function ProjectsPanel() {
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '16px 8px', color: C.dim, fontSize: 12 }}>
-            <div style={{ fontSize: 20, marginBottom: 6, opacity: 0.4 }}>📂</div>
+            <div style={{ marginBottom: 6, opacity: 0.4, display: 'flex', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
             <div>Нет проектов</div>
             <div style={{ fontSize: 10, marginTop: 4 }}>Создайте проект на главной странице</div>
           </div>
@@ -227,7 +227,7 @@ export function ProjectsPanel() {
                 ) : (
                   <>
                     <span role="button" tabIndex={0} aria-label={`Открыть папку ${folder.name}`} onClick={() => setFolderId(folder.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFolderId(folder.id); } }} style={{ flex: 1, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                      {'\uD83D\uDCC1'} {folder.name}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> {folder.name}
                     </span>
                     <span style={{ fontSize: 9, color: C.dim }}>
                       {folder._count.assets}
@@ -238,15 +238,15 @@ export function ProjectsPanel() {
                       title="Переименовать"
                       aria-label={`Переименовать папку ${folder.name}`}
                     >
-                      &#x270E;
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteFolder.mutate({ id: folder.id }); }}
-                      style={{ ...btnStyle, padding: '2px 6px', fontSize: 10, border: 'none', background: 'transparent', color: C.accent }}
+                      style={{ ...btnStyle, padding: '2px 6px', border: 'none', background: 'transparent', color: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       title="Удалить"
                       aria-label={`Удалить папку ${folder.name}`}
                     >
-                      &times;
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                     </button>
                   </>
                 )}
@@ -255,7 +255,7 @@ export function ProjectsPanel() {
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '12px 8px', color: C.dim, fontSize: 12 }}>
-            <div style={{ fontSize: 18, marginBottom: 4, opacity: 0.4 }}>📁</div>
+            <div style={{ marginBottom: 4, opacity: 0.4, display: 'flex', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
             <div>Нет папок</div>
             <div style={{ fontSize: 10, marginTop: 3 }}>Создайте папку для организации ассетов</div>
           </div>
