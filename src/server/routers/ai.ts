@@ -1,0 +1,228 @@
+import { z } from 'zod';
+import { router, protectedProcedure } from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { rateLimit } from '@/lib/rate-limit';
+import { API_ENDPOINTS, RATE_LIMIT_ERROR } from '@/lib/constants';
+import { env } from '@/lib/env';
+import type { PrismaClient } from '@prisma/client';
+
+const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
+
+async function checkRateLimit(userId: string) {
+  const { success } = await rateLimit({ identifier: `ai:${userId}`, limit: 10, window: 60 });
+  if (!success) {
+    throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
+  }
+}
+
+async function checkAILimit(userId: string, db: PrismaClient) {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { plan: true, aiUsage: true, aiResetAt: true },
+  });
+  if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+
+  // Reset monthly counter
+  const now = new Date();
+  const resetAt = new Date(user.aiResetAt);
+  if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+    await db.user.update({ where: { id: userId }, data: { aiUsage: 0, aiResetAt: now }, select: { id: true } });
+    return;
+  }
+
+  const limit = AI_LIMITS[user.plan];
+  if (user.aiUsage >= limit) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: `Лимит ИИ исчерпан (${limit}/мес). Обновите тарифный план.` });
+  }
+}
+
+async function incrementAIUsage(userId: string, db: PrismaClient) {
+  await db.user.update({ where: { id: userId }, data: { aiUsage: { increment: 1 } }, select: { id: true } });
+}
+
+export const aiRouter = router({
+  generateThumbnail: protectedProcedure
+    .input(z.object({
+      prompt: z.string().min(1).max(1000),
+      style: z.enum(['realistic', 'anime', 'cinematic', 'minimalist', '3d', 'popart']).default('realistic'),
+      count: z.number().min(1).max(6).default(4),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRateLimit(ctx.session.user.id);
+      await checkAILimit(ctx.session.user.id, ctx.db);
+
+      const res = await fetch(API_ENDPOINTS.OPENAI_IMAGES, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: `YouTube thumbnail: ${input.prompt}. Style: ${input.style}. High quality, eye-catching, 16:9 aspect ratio.`,
+          n: 1,
+          size: '1792x1024',
+          quality: 'hd',
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
+      }
+
+      await incrementAIUsage(ctx.session.user.id, ctx.db);
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ DALL-E API' }); });
+      return { images: data.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [] };
+    }),
+
+  generateFromImage: protectedProcedure
+    .input(z.object({
+      imageBase64: z.string().min(1),
+      prompt: z.string().max(1000).default(''),
+      style: z.enum(['realistic', 'anime', 'cinematic', 'minimalist', '3d', 'popart']).default('realistic'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRateLimit(ctx.session.user.id);
+      await checkAILimit(ctx.session.user.id, ctx.db);
+
+      // Step 1: GPT-4o Vision describes the canvas image
+      const visionRes = await fetch(API_ENDPOINTS.OPENAI_CHAT, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          max_tokens: 300,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Describe this YouTube thumbnail design in detail for image generation. Focus on layout, colors, text placement, shapes, and overall composition. Be concise but specific.',
+              },
+              {
+                type: 'image_url',
+                image_url: { url: input.imageBase64, detail: 'low' },
+              },
+            ],
+          }],
+        }),
+      });
+
+      if (!visionRes.ok) {
+        const err = await visionRes.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка GPT-4o Vision API' });
+      }
+
+      const visionData = await visionRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ GPT-4o Vision API' }); });
+      const description = visionData.choices?.[0]?.message?.content ?? '';
+
+      // Step 2: DALL-E 3 generates based on description + user prompt
+      const fullPrompt = `YouTube thumbnail based on this design: ${description}. ${input.prompt ? `Additional requirements: ${input.prompt}.` : ''} Style: ${input.style}. High quality, eye-catching, 16:9 aspect ratio.`;
+
+      const dalleRes = await fetch(API_ENDPOINTS.OPENAI_IMAGES, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: fullPrompt.slice(0, 4000),
+          n: 1,
+          size: '1792x1024',
+          quality: 'hd',
+        }),
+      });
+
+      if (!dalleRes.ok) {
+        const err = await dalleRes.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
+      }
+
+      await incrementAIUsage(ctx.session.user.id, ctx.db);
+      const dalleData = await dalleRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ DALL-E API' }); });
+      return {
+        description,
+        images: dalleData.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [],
+      };
+    }),
+
+  generateMetadata: protectedProcedure
+    .input(z.object({
+      topic: z.string().min(1).max(500),
+      language: z.enum(['ru', 'en']).default('ru'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRateLimit(ctx.session.user.id);
+      await checkAILimit(ctx.session.user.id, ctx.db);
+
+      const res = await fetch(API_ENDPOINTS.ANTHROPIC_MESSAGES, {
+        method: 'POST',
+        headers: {
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'content-type': 'application/json',
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
+          messages: [{
+            role: 'user',
+            content: `Generate SEO-optimized YouTube video metadata in ${input.language === 'ru' ? 'Russian' : 'English'} for the topic: "${input.topic}".
+Return JSON with: { "title": "...", "description": "...", "tags": ["...", "..."] }
+Title: max 100 chars, catchy, with keywords.
+Description: 200-500 chars with CTA and timestamps placeholder.
+Tags: 10-15 relevant tags.
+Return ONLY valid JSON, no markdown.`,
+          }],
+        }),
+      });
+
+      if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Claude API' });
+
+      await incrementAIUsage(ctx.session.user.id, ctx.db);
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Claude API' }); });
+      const text = data.content?.[0]?.text ?? '';
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { title: '', description: text, tags: [] };
+      }
+    }),
+
+  generateVideo: protectedProcedure
+    .input(z.object({
+      prompt: z.string().min(1).max(1000),
+      model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).default('standard'),
+      duration: z.number().min(1).max(30).default(5),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRateLimit(ctx.session.user.id);
+      await checkAILimit(ctx.session.user.id, ctx.db);
+
+      // Runway ML Gen-3 Alpha API
+      const res = await fetch(API_ENDPOINTS.RUNWAY_VIDEO, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.RUNWAY_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          promptText: input.prompt,
+          model: 'gen3a_turbo',
+          duration: input.duration,
+          ratio: '16:9',
+        }),
+      });
+
+      if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Runway API' });
+
+      await incrementAIUsage(ctx.session.user.id, ctx.db);
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Runway API' }); });
+      return { taskId: data.id, status: 'processing' };
+    }),
+});

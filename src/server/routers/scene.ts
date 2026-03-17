@@ -1,0 +1,121 @@
+import { z } from 'zod';
+import { router, protectedProcedure } from '../trpc';
+import { TRPCError } from '@trpc/server';
+
+import type { Prisma } from '@prisma/client';
+
+/** Validated scene metadata — transformed to Prisma InputJsonValue after validation */
+const sceneMetadataSchema = z.object({
+  ck: z.string().optional(),
+  sf: z.string().nullish(),
+  ef: z.string().nullish(),
+  enh: z.boolean().optional(),
+  snd: z.boolean().optional(),
+  chars: z.array(z.string()).optional(),
+}).transform((v) => v as unknown as Prisma.InputJsonValue);
+
+export const sceneRouter = router({
+  create: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        prompt: z.string().max(2000).default(''),
+        label: z.string().max(100).default(''),
+        model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).default('standard'),
+        duration: z.number().min(1).max(60).default(5),
+        order: z.number().optional(),
+        metadata: sceneMetadataSchema.optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.projectId, userId: ctx.session.user.id },
+        select: { id: true, _count: { select: { scenes: true } } },
+      });
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'Проект не найден' });
+
+      const order = input.order ?? project._count.scenes;
+      return ctx.db.scene.create({
+        data: {
+          projectId: input.projectId,
+          prompt: input.prompt,
+          label: input.label,
+          model: input.model,
+          duration: input.duration,
+          order,
+          metadata: input.metadata ?? undefined,
+        },
+        select: { id: true, projectId: true, prompt: true, label: true, model: true, duration: true, order: true, status: true },
+      });
+    }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        prompt: z.string().max(2000).optional(),
+        label: z.string().max(100).optional(),
+        model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).optional(),
+        duration: z.number().min(1).max(60).optional(),
+        status: z.enum(['EMPTY', 'EDITING', 'GENERATING', 'READY', 'ERROR']).optional(),
+        videoUrl: z.string().url().nullish(),
+        metadata: sceneMetadataSchema.optional(),
+        taskId: z.string().nullish(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scene = await ctx.db.scene.findFirst({
+        where: { id: input.id },
+        select: { id: true, project: { select: { userId: true } } },
+      });
+      if (!scene || scene.project.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+      const { id, ...data } = input;
+      return ctx.db.scene.update({ where: { id }, data, select: { id: true, prompt: true, label: true, model: true, duration: true, order: true, status: true, videoUrl: true } });
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const scene = await ctx.db.scene.findFirst({
+        where: { id: input.id },
+        select: { id: true, project: { select: { userId: true } } },
+      });
+      if (!scene || scene.project.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+      await ctx.db.scene.delete({ where: { id: input.id } });
+      return { success: true };
+    }),
+
+  reorder: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        sceneIds: z.array(z.string()).max(200),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.projectId, userId: ctx.session.user.id },
+        select: { id: true },
+      });
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      // Verify all scene IDs belong to this project
+      const sceneCount = await ctx.db.scene.count({
+        where: { id: { in: input.sceneIds }, projectId: project.id },
+      });
+      if (sceneCount !== input.sceneIds.length) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Некорректные ID сцен' });
+      }
+
+      await ctx.db.$transaction(
+        input.sceneIds.map((id, index) =>
+          ctx.db.scene.update({ where: { id }, data: { order: index }, select: { id: true } }),
+        ),
+      );
+      return { success: true };
+    }),
+});
