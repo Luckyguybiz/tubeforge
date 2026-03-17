@@ -30,14 +30,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   logger: {
     error(error: Error) {
+      // AuthError stores cause as { err: Error, ...rest }
+      const cause = (error as any)?.cause;
+      const innerErr = cause?.err;
       _lastAuthError = {
         name: error?.name,
         message: error?.message,
-        cause: (error as any)?.cause?.message,
+        causeMessage: innerErr?.message ?? cause?.message,
+        causeName: innerErr?.name ?? innerErr?.constructor?.name,
+        causeStack: innerErr?.stack?.split('\n').slice(0, 4),
+        causeDetails: cause ? JSON.stringify(cause, Object.getOwnPropertyNames(cause)).substring(0, 500) : undefined,
         stack: error?.stack?.split('\n').slice(0, 6),
         time: new Date().toISOString(),
       };
       console.error('[auth][error]', error);
+      if (innerErr) console.error('[auth][cause]', innerErr);
     },
     warn(code: string) {
       console.warn('[auth][warn]', code);
