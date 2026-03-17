@@ -1,530 +1,836 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
-import { useThemeStore } from '@/stores/useThemeStore';
 
-/* ── Feature data ───────────────────────────────────── */
+/* ── Color constants ──────────────────────────────────────── */
+
+const INDIGO_600 = '#4f46e5';
+const INDIGO_500 = '#6366f1';
+const INDIGO_50 = '#eef2ff';
+const GRAY_50 = '#f9fafb';
+const GRAY_100 = '#f3f4f6';
+const GRAY_200 = '#e5e7eb';
+const GRAY_400 = '#9ca3af';
+const GRAY_500 = '#6b7280';
+const GRAY_600 = '#4b5563';
+const GRAY_700 = '#374151';
+const GRAY_800 = '#1f2937';
+const GRAY_900 = '#111827';
+const WHITE = '#ffffff';
+
+/* ── Shared icon component ────────────────────────────────── */
+
+const LightningIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z" fill="currentColor" />
+  </svg>
+);
+
+/* ── Shared button style helpers ──────────────────────────── */
+
+const primaryBtnStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  textDecoration: 'none',
+  color: WHITE,
+  fontSize: 17,
+  fontWeight: 700,
+  padding: '14px 36px',
+  borderRadius: 50,
+  background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`,
+  boxShadow: '0 4px 24px rgba(79,70,229,0.35)',
+  transition: 'transform 0.2s, box-shadow 0.2s',
+  border: 'none',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+};
+
+const primaryHoverIn = (e: React.MouseEvent<HTMLElement>) => {
+  e.currentTarget.style.transform = 'translateY(-2px)';
+  e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,70,229,0.5)';
+};
+const primaryHoverOut = (e: React.MouseEvent<HTMLElement>) => {
+  e.currentTarget.style.transform = 'translateY(0)';
+  e.currentTarget.style.boxShadow = '0 4px 24px rgba(79,70,229,0.35)';
+};
+
+const outlineBtnStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  textDecoration: 'none',
+  color: GRAY_900,
+  fontSize: 17,
+  fontWeight: 700,
+  padding: '14px 36px',
+  borderRadius: 50,
+  background: WHITE,
+  border: `1px solid ${GRAY_200}`,
+  transition: 'background 0.2s, transform 0.2s',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+};
+
+const sectionHeadingStyle: CSSProperties = {
+  fontSize: 'clamp(28px, 4vw, 44px)',
+  fontWeight: 800,
+  letterSpacing: '-0.02em',
+  color: GRAY_900,
+  margin: '0 0 14px',
+  lineHeight: 1.15,
+};
+
+const sectionSubStyle: CSSProperties = {
+  fontSize: 18,
+  color: GRAY_500,
+  fontWeight: 400,
+  margin: 0,
+  lineHeight: 1.6,
+};
+
+/* ── Data ─────────────────────────────────────────────────── */
+
+const NAV_LINKS = [
+  { label: 'Возможности', href: '#features' },
+  { label: 'Инструменты', href: '#tools' },
+  { label: 'Тарифы', href: '#pricing' },
+  { label: 'FAQ', href: '#faq' },
+];
 
 const FEATURES = [
   {
-    icon: '\uD83C\uDFAC',
-    title: 'Видеоредактор',
-    desc: 'Создавайте видео сцена за сценой с ИИ-режиссёром. Автомонтаж, переходы, цветокоррекция и генерация контента за минуты.',
-    colorKey: 'accent' as const,
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7" />
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </svg>
+    ),
+    title: 'ИИ-Генерация Видео',
+    desc: 'Создавайте видео за минуты с помощью ИИ. Автоматический монтаж, переходы и озвучка из текста.',
+    color: '#eef2ff',
   },
   {
-    icon: '\uD83D\uDDBC',
-    title: 'Обложки',
-    desc: 'Canva-style редактор обложек с ИИ-генерацией. Анализ трендов, A/B тесты и шаблоны для максимального CTR.',
-    colorKey: 'pink' as const,
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+    ),
+    title: 'Умные Обложки',
+    desc: 'ИИ-генерация и редактирование обложек в стиле Canva. A/B тесты для максимального CTR.',
+    color: '#fdf2f8',
   },
   {
-    icon: '\uD83D\uDCCA',
-    title: 'Метаданные',
-    desc: 'ИИ генерирует заголовки, описания и теги, оптимизированные под SEO. Рост охватов и ранжирования на автопилоте.',
-    colorKey: 'green' as const,
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    ),
+    title: 'SEO Метаданные',
+    desc: 'Автоматическая генерация заголовков, описаний и тегов. Оптимизация для алгоритмов YouTube.',
+    color: '#ecfdf5',
   },
   {
-    icon: '\uD83D\uDE80',
-    title: 'Публикация',
-    desc: 'Публикуйте видео на YouTube прямо из платформы. Планирование, премьеры и полный контроль из одного окна.',
-    colorKey: 'orange' as const,
-  },
-  {
-    icon: '\uD83E\uDD16',
-    title: 'ИИ-ассистент',
-    desc: 'Искусственный интеллект помогает на каждом этапе: от идеи до публикации. Рекомендации, автозаполнение, анализ.',
-    colorKey: 'purple' as const,
-  },
-  {
-    icon: '\uD83D\uDCC8',
-    title: 'Аналитика',
-    desc: 'Глубокая аналитика канала: просмотры, CTR, удержание, рост подписчиков. Принимайте решения на основе данных.',
-    colorKey: 'blue' as const,
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+    title: 'Аналитика Канала',
+    desc: 'Глубокая аналитика: просмотры, CTR, удержание, рост подписчиков. Данные для решений.',
+    color: '#eff6ff',
   },
 ];
 
-/* ── Pricing data ───────────────────────────────────── */
+const STEPS = [
+  { num: '1', title: 'Создайте проект', desc: 'Опишите идею видео или вставьте текст — ИИ всё сделает сам' },
+  { num: '2', title: 'ИИ сгенерирует', desc: 'Видео, обложка, озвучка и метаданные создаются за минуты' },
+  { num: '3', title: 'Публикуйте', desc: 'Загрузите на YouTube прямо из TubeForge в один клик' },
+];
 
-const PLANS = [
+const TOOLS = [
   {
-    name: 'Free',
-    price: '$0',
-    period: 'навсегда',
-    desc: 'Для начинающих креаторов',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7" />
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </svg>
+    ),
+    title: 'ИИ-Генерация видео',
+    desc: 'Из текста — в готовое видео с монтажом и переходами',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+        <line x1="8" y1="23" x2="16" y2="23" />
+      </svg>
+    ),
+    title: 'ИИ-Озвучка',
+    desc: 'Реалистичные голоса на 30+ языках с настройкой тона и скорости',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+    ),
+    title: 'ИИ-Изображения',
+    desc: 'Генерация уникальных изображений и обложек по текстовому описанию',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 3l14 9-14 9V3z" />
+        <line x1="19" y1="3" x2="19" y2="21" />
+      </svg>
+    ),
+    title: 'Удаление фона',
+    desc: 'Мгновенное удаление фона из изображений и видеокадров',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+    ),
+    title: 'Скачивание видео',
+    desc: 'Скачивайте видео с любых платформ для использования в проектах',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+    ),
+    title: 'Генератор идей',
+    desc: 'ИИ предложит трендовые темы и заголовки для вашей ниши',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    ),
+    title: 'Улучшение речи',
+    desc: 'Шумоподавление, выравнивание громкости и улучшение качества аудио',
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 18V5l12-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="16" r="3" />
+      </svg>
+    ),
+    title: 'Удаление вокала',
+    desc: 'Отделяйте голос от музыки для создания фоновых дорожек',
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    name: 'Алексей К.',
+    role: 'YouTube блогер',
+    avatar: { initials: 'АК', bg: '#6366f1' },
+    quote: 'TubeForge полностью изменил мой рабочий процесс. Раньше на одно видео уходил целый день, теперь я делаю 3 видео за то же время. Рост канала — 400% за полгода.',
+  },
+  {
+    name: 'Мария С.',
+    role: 'Контент-менеджер',
+    avatar: { initials: 'МС', bg: '#ec4899' },
+    quote: 'Управляю 5 каналами одновременно, и без TubeForge это было бы невозможно. ИИ-обложки и автоматические метаданные экономят часы каждый день.',
+  },
+  {
+    name: 'Дмитрий В.',
+    role: 'Стример',
+    avatar: { initials: 'ДВ', bg: '#f59e0b' },
+    quote: 'Лучший инструмент для нарезки стримов в клипы. ИИ сам находит лучшие моменты, добавляет субтитры и оптимизирует для Shorts. Мой Shorts-канал вырос до 50К подписчиков.',
+  },
+  {
+    name: 'Елена П.',
+    role: 'Маркетолог',
+    avatar: { initials: 'ЕП', bg: '#10b981' },
+    quote: 'Используем TubeForge для видео-маркетинга клиентов. Генерация видео из текста — это магия. Клиенты довольны, а мы экономим бюджет на продакшн.',
+  },
+  {
+    name: 'Игорь Н.',
+    role: 'Видеограф',
+    avatar: { initials: 'ИН', bg: '#8b5cf6' },
+    quote: 'Как профессиональный видеограф, я скептически относился к ИИ-инструментам. Но TubeForge реально ускоряет рутину — цветокоррекция, субтитры, обложки за секунды.',
+  },
+  {
+    name: 'Ольга Т.',
+    role: 'SMM-специалист',
+    avatar: { initials: 'ОТ', bg: '#ef4444' },
+    quote: 'Перепробовала десяток инструментов, TubeForge — единственный, где всё в одном месте. Генерация, монтаж, SEO, аналитика. Рекомендую всем коллегам.',
+  },
+];
+
+const FAQ_DATA = [
+  {
+    q: 'Можно ли отменить подписку?',
+    a: 'Да, вы можете отменить подписку в любой момент из личного кабинета. После отмены вы сохраните доступ до конца оплаченного периода. Никаких скрытых комиссий или штрафов за отмену.',
+  },
+  {
+    q: 'Что входит в бесплатный план?',
+    a: 'Бесплатный план включает 3 видео в месяц, базовый ИИ-редактор, генерацию обложек, SEO-оптимизацию метаданных и 1 ГБ облачного хранилища. Этого достаточно, чтобы попробовать все основные функции платформы.',
+  },
+  {
+    q: 'Как работает ИИ-генерация видео?',
+    a: 'Вы вводите текст или описание идеи, выбираете стиль и голос озвучки. Наш ИИ автоматически генерирует видеоряд, добавляет переходы, озвучку и субтитры. Весь процесс занимает 3-5 минут. Результат можно отредактировать в веб-редакторе.',
+  },
+  {
+    q: 'Можно ли монетизировать созданные видео?',
+    a: 'Да, все видео, созданные в TubeForge, полностью принадлежат вам. Вы можете монетизировать их на YouTube, продавать или использовать в коммерческих проектах без ограничений.',
+  },
+  {
+    q: 'Поддерживаются ли другие языки?',
+    a: 'TubeForge поддерживает более 30 языков для ИИ-озвучки, включая русский, английский, испанский, французский, немецкий, китайский, японский и другие. Интерфейс платформы доступен на русском и английском.',
+  },
+  {
+    q: 'Есть ли политика возврата?',
+    a: 'Мы предоставляем 14-дневную гарантию возврата средств для всех платных планов. Если вы не удовлетворены сервисом, просто напишите в поддержку — мы вернём 100% оплаты без лишних вопросов.',
+  },
+  {
+    q: 'Как загрузить видео на YouTube?',
+    a: 'Подключите свой YouTube-канал через OAuth авторизацию в настройках. После этого вы сможете загружать видео прямо из TubeForge в один клик — с автоматической заполненной информацией: заголовок, описание, теги и обложка.',
+  },
+  {
+    q: 'Можно ли работать в команде?',
+    a: 'Да, план Studio поддерживает командную работу до 10 участников. Вы можете назначать роли (администратор, редактор, зритель), делиться проектами и управлять доступом к каналам. Все изменения синхронизируются в реальном времени.',
+  },
+];
+
+const PRICING_PLANS = [
+  {
+    name: 'Бесплатный',
+    price: '0\u20BD',
+    period: '',
+    desc: 'Для тех, кто хочет попробовать',
     features: [
       '3 видео в месяц',
-      'Базовый ИИ-монтаж',
-      '5 обложек в месяц',
-      'SEO-подсказки',
-      'Аналитика за 7 дней',
+      'Базовый ИИ-редактор',
+      'Генерация обложек',
+      'SEO-оптимизация',
+      '1 ГБ хранилища',
+      '720p экспорт',
     ],
-    cta: 'Начать бесплатно',
-    href: '/register',
     highlighted: false,
+    badge: null as string | null,
+    accent: null as string | null,
   },
   {
     name: 'Pro',
-    price: '$19',
+    price: '990\u20BD',
     period: '/мес',
-    desc: 'Для активных авторов',
+    desc: 'Для активных креаторов',
     features: [
-      'Безлимитные видео',
-      'Продвинутый ИИ-монтаж',
-      'Безлимитные обложки',
-      'Полная SEO-оптимизация',
-      'Аналитика за 90 дней',
-      'Публикация в 1 клик',
-      'Приоритетная поддержка',
+      '30 видео в месяц',
+      'Продвинутый ИИ-редактор',
+      'Приоритетная ИИ-озвучка',
+      'Безлимит обложек',
+      'A/B тесты обложек',
+      '50 ГБ хранилища',
+      '1080p / 4K экспорт',
+      'YouTube-интеграция',
+      'Аналитика канала',
     ],
-    cta: 'Выбрать Pro',
-    href: '/register?plan=PRO',
     highlighted: true,
+    badge: 'Популярный',
+    accent: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`,
   },
   {
     name: 'Studio',
-    price: '$49',
+    price: '2490\u20BD',
     period: '/мес',
-    desc: 'Для команд и студий',
+    desc: 'Для команд и агентств',
     features: [
-      'Все из Pro',
-      'До 10 участников',
-      'Командные роли и доступ',
-      'A/B тесты обложек',
-      'API доступ',
-      'Аналитика без ограничений',
-      'Персональный менеджер',
-      'SLA 99.9%',
+      'Безлимит видео',
+      'Все Pro-функции',
+      'Командная работа до 10 чел.',
+      'Брендированные шаблоны',
+      'API-доступ',
+      '500 ГБ хранилища',
+      '4K + HDR экспорт',
+      'Выделенная поддержка',
+      'Приоритетная генерация',
+      'Мульти-канальность',
     ],
-    cta: 'Выбрать Studio',
-    href: '/register?plan=STUDIO',
     highlighted: false,
+    badge: null,
+    accent: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
   },
 ];
 
-/* ── FAQ data ──────────────────────────────────────── */
-
-const FAQ_ITEMS = [
+const FOOTER_COLUMNS = [
   {
-    q: 'Что такое TubeForge?',
-    a: 'TubeForge — это ИИ-платформа для создания YouTube-контента. Мы объединяем видеоредактор, генерацию обложек, SEO-оптимизацию метаданных и аналитику в одном удобном интерфейсе.',
+    title: 'Продукт',
+    links: [
+      { label: 'Возможности', href: '#features' },
+      { label: 'Тарифы', href: '#pricing' },
+      { label: 'Редактор', href: '#editor' },
+      { label: 'ИИ-Инструменты', href: '#tools' },
+    ],
   },
   {
-    q: 'Нужна ли кредитная карта для бесплатного плана?',
-    a: 'Нет, бесплатный план не требует привязки кредитной карты. Вы можете начать пользоваться платформой сразу после регистрации.',
+    title: 'Инструменты',
+    links: [
+      { label: 'Генерация видео', href: '#tools' },
+      { label: 'ИИ-Озвучка', href: '#tools' },
+      { label: 'Обложки', href: '#tools' },
+      { label: 'SEO-оптимизация', href: '#tools' },
+    ],
   },
   {
-    q: 'Какие форматы видео поддерживаются?',
-    a: 'Мы поддерживаем экспорт в MP4 в разрешениях Full HD (1080p) и 4K (2160p). Также доступны вертикальные форматы для Shorts.',
+    title: 'Юридическое',
+    links: [
+      { label: 'Условия использования', href: '#' },
+      { label: 'Конфиденциальность', href: '#' },
+      { label: 'Возврат средств', href: '#' },
+      { label: 'Cookie-политика', href: '#' },
+    ],
   },
   {
-    q: 'Как работает ИИ-генерация обложек?',
-    a: 'Мы используем передовые модели DALL-E и Claude для генерации обложек. Вы описываете идею, а ИИ создаёт несколько вариантов, которые можно доработать в встроенном редакторе.',
-  },
-  {
-    q: 'Могу ли я отменить подписку?',
-    a: 'Да, вы можете отменить подписку в любой момент в настройках аккаунта. После отмены вы сохраните доступ до конца оплаченного периода.',
-  },
-  {
-    q: 'Поддерживается ли русский язык?',
-    a: 'Да, платформа полностью локализована на русский язык, включая интерфейс, ИИ-генерацию контента и поддержку.',
+    title: 'Соцсети',
+    links: [
+      { label: 'YouTube', href: '#' },
+      { label: 'Telegram', href: '#' },
+      { label: 'Twitter / X', href: '#' },
+      { label: 'ВКонтакте', href: '#' },
+    ],
   },
 ];
 
-/* ── Main component ─────────────────────────────────── */
+/* ── Main component ───────────────────────────────────────── */
 
 export default function LandingPage() {
-  const C = useThemeStore((s) => s.theme);
-  const isDark = useThemeStore((s) => s.isDark);
-  const toggle = useThemeStore((s) => s.toggle);
-  const { status } = useSession();
-  const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const [navScrolled, setNavScrolled] = useState(false);
-  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
-  const [hoveredPlan, setHoveredPlan] = useState<number | null>(null);
-  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
   useEffect(() => {
-    if (status === 'authenticated') router.replace('/dashboard');
-  }, [status, router]);
-
-  /* Scroll listener for navbar glass effect */
-  useEffect(() => {
-    const handleScroll = () => setNavScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (status === 'loading' || status === 'authenticated') {
-    return (
-      <div style={{ width: '100%', height: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.sub }}>
-        <div style={{ width: 24, height: 24, border: `2px solid ${C.border}`, borderTopColor: C.accent, borderRadius: '50%', animation: 'spin .8s linear infinite' }} />
-      </div>
-    );
-  }
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    return () => {
+      document.documentElement.style.scrollBehavior = '';
+    };
+  }, []);
 
-  const getColor = (key: string) => (C as unknown as Record<string, string>)[key] ?? C.accent;
+  const toggleFaq = (index: number) => {
+    setOpenFaq((prev) => (prev === index ? null : index));
+  };
 
   return (
     <div
       style={{
+        background: WHITE,
+        color: GRAY_900,
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
         minHeight: '100vh',
-        background: C.bg,
-        color: C.text,
-        fontFamily: "'Instrument Sans', sans-serif",
-        overflowX: 'hidden',
       }}
     >
-      {/* ── Navbar ──────────────────────────────────────── */}
-      <nav
+      {/* ========== HEADER ========== */}
+      <header
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          padding: '0 20px',
-          transition: 'all .3s cubic-bezier(.4,0,.2,1)',
-          background: navScrolled
-            ? (isDark ? 'rgba(6,6,11,.82)' : 'rgba(243,243,247,.82)')
-            : 'transparent',
-          backdropFilter: navScrolled ? 'blur(20px) saturate(1.8)' : 'none',
-          WebkitBackdropFilter: navScrolled ? 'blur(20px) saturate(1.8)' : 'none',
-          borderBottom: navScrolled ? `1px solid ${C.border}` : '1px solid transparent',
+          background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : '1px solid transparent',
+          transition: 'all 0.3s ease',
         }}
       >
         <div
           style={{
             maxWidth: 1200,
             margin: '0 auto',
+            padding: '16px 24px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: 64,
           }}
         >
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <div
               style={{
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 15,
+                color: WHITE,
                 fontWeight: 800,
-                color: '#fff',
-                boxShadow: `0 4px 16px ${C.accent}44`,
+                fontSize: 14,
+                letterSpacing: -0.5,
               }}
             >
               TF
             </div>
-            <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-.02em' }}>
-              TubeForge
-            </span>
-          </div>
+            <span style={{ fontSize: 20, fontWeight: 700, color: GRAY_900, letterSpacing: -0.5 }}>TubeForge</span>
+          </Link>
 
-          {/* Right side */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Theme toggle */}
-            <button
-              title={isDark ? 'Светлая тема' : 'Тёмная тема'}
-              aria-label={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
-              onClick={toggle}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                border: `1px solid ${C.border}`,
-                background: 'transparent',
-                color: C.sub,
-                fontSize: 15,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all .2s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.sub; }}
-            >
-              {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'}
-            </button>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="desktop-nav">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, transition: 'color 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_900; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_600; }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
 
-            <Link
-              href="/login"
-              style={{
-                color: C.sub,
-                textDecoration: 'none',
-                fontSize: 14,
-                fontWeight: 600,
-                padding: '8px 16px',
-                borderRadius: 10,
-                transition: 'color .2s',
-              }}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.color = C.text; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = C.sub; }}
-            >
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link href="/login" style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, padding: '8px 16px', transition: 'color 0.2s' }}>
               Войти
             </Link>
             <Link
               href="/register"
-              style={{
-                padding: '9px 20px',
-                borderRadius: 10,
-                background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-                color: '#fff',
-                textDecoration: 'none',
-                fontSize: 14,
-                fontWeight: 600,
-                transition: 'transform .2s, box-shadow .2s',
-                boxShadow: `0 2px 12px ${C.accent}33`,
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget;
-                el.style.transform = 'translateY(-1px)';
-                el.style.boxShadow = `0 4px 20px ${C.accent}55`;
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget;
-                el.style.transform = 'translateY(0)';
-                el.style.boxShadow = `0 2px 12px ${C.accent}33`;
-              }}
+              style={{ ...primaryBtnStyle, fontSize: 15, padding: '10px 24px' }}
+              onMouseEnter={primaryHoverIn}
+              onMouseLeave={primaryHoverOut}
             >
-              Начать бесплатно
+              <LightningIcon /> Начать бесплатно
             </Link>
           </div>
-        </div>
-      </nav>
 
-      {/* ── Hero ────────────────────────────────────────── */}
-      <section
-        style={{
-          position: 'relative',
-          textAlign: 'center',
-          paddingTop: 160,
-          paddingBottom: 120,
-          paddingLeft: 20,
-          paddingRight: 20,
-          maxWidth: 1000,
-          margin: '0 auto',
-          overflow: 'visible',
-        }}
-      >
-        {/* Background glow orbs */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Открыть меню"
+            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GRAY_700} strokeWidth="2" strokeLinecap="round">
+              {mobileMenuOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="mobile-menu-dropdown" style={{ background: WHITE, borderTop: `1px solid ${GRAY_100}`, padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {NAV_LINKS.map((link) => (
+              <a key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>
+                {link.label}
+              </a>
+            ))}
+            <div style={{ borderTop: `1px solid ${GRAY_100}`, paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Link href="/login" style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>Войти</Link>
+              <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 16, padding: '12px 24px', justifyContent: 'center' }}>
+                <LightningIcon /> Начать бесплатно
+              </Link>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* ========== HERO ========== */}
+      <section style={{ paddingTop: 160, paddingBottom: 100, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div
+          aria-hidden="true"
           style={{
-            position: 'absolute',
-            top: 60,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 800,
-            height: 600,
+            position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
+            width: 800, height: 800, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)',
             pointerEvents: 'none',
-            zIndex: 0,
           }}
-        >
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: '20%',
-            width: 400,
-            height: 400,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${C.accent}15 0%, transparent 70%)`,
-            filter: 'blur(40px)',
-            animation: 'landing-glow-pulse 4s ease-in-out infinite',
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: 80,
-            right: '15%',
-            width: 350,
-            height: 350,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${C.pink}12 0%, transparent 70%)`,
-            filter: 'blur(40px)',
-            animation: 'landing-glow-pulse 5s ease-in-out infinite 1s',
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: 200,
-            left: '40%',
-            width: 300,
-            height: 300,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${C.purple}10 0%, transparent 70%)`,
-            filter: 'blur(40px)',
-            animation: 'landing-glow-pulse 6s ease-in-out infinite 2s',
-          }} />
-        </div>
+        />
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Badge */}
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
           <div
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '7px 18px 7px 10px',
-              borderRadius: 100,
-              border: `1px solid ${C.border}`,
-              background: isDark ? 'rgba(17,17,25,.7)' : 'rgba(255,255,255,.7)',
-              backdropFilter: 'blur(12px)',
-              fontSize: 13,
-              color: C.sub,
-              fontWeight: 500,
-              marginBottom: 36,
-              animation: 'landing-fade-up .6s ease-out both',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: INDIGO_50, border: '1px solid rgba(99,102,241,0.2)',
+              borderRadius: 50, padding: '8px 20px', marginBottom: 32,
             }}
           >
-            <span style={{
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: C.green,
-              boxShadow: `0 0 8px ${C.green}88`,
-            }} />
-            Запущено в 2026 — уже в продакшене
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z" fill={INDIGO_600} /></svg>
+            <span style={{ fontSize: 14, fontWeight: 600, color: INDIGO_600 }}>Запущено в 2026 году</span>
           </div>
 
-          {/* Headline */}
-          <h1
-            style={{
-              fontSize: 'clamp(40px, 7.5vw, 76px)',
-              fontWeight: 800,
-              lineHeight: 1.05,
-              letterSpacing: '-.04em',
-              marginBottom: 28,
-              animation: 'landing-fade-up .6s ease-out .1s both',
-            }}
-          >
-            <span style={{ display: 'block', color: C.text }}>ИИ-студия для</span>
-            <span
-              style={{
-                display: 'block',
-                background: `linear-gradient(135deg, ${C.accent} 0%, ${C.pink} 40%, ${C.purple} 80%)`,
-                backgroundSize: '200% 200%',
-                animation: 'landing-gradient-shift 6s ease infinite',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              YouTube-креаторов
-            </span>
+          <h1 style={{ fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 24px', color: GRAY_900 }}>
+            Создавайте<br />
+            <span style={{ display: 'inline-block', background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, color: WHITE, padding: '4px 20px', borderRadius: 14, margin: '8px 0' }}>
+              #1 ИИ-Студия
+            </span><br />
+            Вирусные Видео для YouTube
           </h1>
 
-          {/* Subtitle */}
-          <p
-            style={{
-              fontSize: 'clamp(16px, 2vw, 20px)',
-              color: C.sub,
-              lineHeight: 1.7,
-              maxWidth: 580,
-              margin: '0 auto 44px',
-              animation: 'landing-fade-up .6s ease-out .2s both',
-            }}
-          >
-            Монтаж, обложки, SEO, аналитика и публикация — всё в одном месте. Искусственный интеллект помогает на каждом этапе создания контента.
+          <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: GRAY_500, lineHeight: 1.6, maxWidth: 600, margin: '0 auto 40px', fontWeight: 400 }}>
+            Ваш универсальный инструмент для создания видео с ИИ-озвучкой, обложками, метаданными и аналитикой.
           </p>
 
-          {/* CTA buttons */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 14,
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-              animation: 'landing-fade-up .6s ease-out .3s both',
-            }}
-          >
-            <Link
-              href="/register"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = `0 8px 32px ${C.accent}44`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = `0 4px 20px ${C.accent}33`;
-              }}
-              style={{
-                padding: '16px 40px',
-                borderRadius: 14,
-                background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-                color: '#fff',
-                textDecoration: 'none',
-                fontSize: 16,
-                fontWeight: 700,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                boxShadow: `0 4px 20px ${C.accent}33`,
-                transition: 'transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s cubic-bezier(.4,0,.2,1)',
-              }}
-            >
-              Начать бесплатно
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 2 }}>
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 18, padding: '16px 40px' }} onMouseEnter={primaryHoverIn} onMouseLeave={primaryHoverOut}>
+              <LightningIcon /> Попробовать бесплатно
             </Link>
-            <Link
-              href="#features"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = C.accent;
-                e.currentTarget.style.background = isDark ? 'rgba(17,17,25,.9)' : 'rgba(255,255,255,.9)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = C.border;
-                e.currentTarget.style.background = isDark ? 'rgba(17,17,25,.5)' : 'rgba(255,255,255,.5)';
-              }}
-              style={{
-                padding: '16px 36px',
-                borderRadius: 14,
-                border: `1px solid ${C.border}`,
-                background: isDark ? 'rgba(17,17,25,.5)' : 'rgba(255,255,255,.5)',
-                backdropFilter: 'blur(12px)',
-                color: C.text,
-                textDecoration: 'none',
-                fontSize: 16,
-                fontWeight: 600,
-                display: 'inline-block',
-                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-              }}
+            <a
+              href="#editor"
+              style={{ ...outlineBtnStyle, fontSize: 18, padding: '16px 40px' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = GRAY_50; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = WHITE; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
-              Узнать больше
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+              Смотреть демо
+            </a>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginTop: 56, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Бесплатный старт' },
+              { label: 'Не нужна карта' },
+              { label: 'Отмена в любой момент' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GRAY_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span style={{ fontSize: 14, color: GRAY_500, fontWeight: 500 }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ========== FEATURES ========== */}
+      <section id="features" style={{ padding: '100px 24px', maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <h2 style={sectionHeadingStyle}>Инструменты для Вирального Роста</h2>
+          <p style={sectionSubStyle}>Всё что нужно для YouTube — в одном месте</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+          {FEATURES.map((feature, i) => (
+            <div
+              key={i}
+              style={{ background: WHITE, border: `1px solid ${GRAY_100}`, borderRadius: 20, padding: 32, transition: 'transform 0.25s ease, box-shadow 0.25s ease', cursor: 'default' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: feature.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                {feature.icon}
+              </div>
+              <h3 style={{ fontSize: 19, fontWeight: 700, color: GRAY_900, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{feature.title}</h3>
+              <p style={{ fontSize: 15, color: GRAY_500, lineHeight: 1.6, margin: 0 }}>{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ========== HOW IT WORKS ========== */}
+      <section style={{ padding: '100px 24px', background: GRAY_50 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <h2 style={sectionHeadingStyle}>Как это работает</h2>
+            <p style={sectionSubStyle}>Три простых шага до вирусного видео</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32, maxWidth: 900, margin: '0 auto' }}>
+            {STEPS.map((step, i) => (
+              <div key={i} style={{ textAlign: 'center', position: 'relative' }}>
+                {i < STEPS.length - 1 && (
+                  <div aria-hidden="true" className="step-connector" style={{ position: 'absolute', top: 32, left: 'calc(50% + 40px)', width: 'calc(100% - 80px)', height: 2, background: 'linear-gradient(90deg, rgba(99,102,241,0.3), rgba(99,102,241,0.1))' }} />
+                )}
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, color: WHITE, fontSize: 26, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 4px 16px rgba(79,70,229,0.25)', position: 'relative', zIndex: 2 }}>
+                  {step.num}
+                </div>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: GRAY_900, margin: '0 0 8px' }}>{step.title}</h3>
+                <p style={{ fontSize: 15, color: GRAY_500, lineHeight: 1.6, margin: 0, maxWidth: 260, marginLeft: 'auto', marginRight: 'auto' }}>{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ========== WEB EDITOR ========== */}
+      <section id="editor" style={{ padding: '100px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }} className="editor-grid">
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: INDIGO_50, borderRadius: 50, padding: '6px 16px', marginBottom: 20 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={INDIGO_600} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: INDIGO_600 }}>Веб-редактор</span>
+            </div>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, letterSpacing: '-0.02em', color: GRAY_900, margin: '0 0 16px', lineHeight: 1.15 }}>Полный контроль</h2>
+            <p style={{ fontSize: 17, color: GRAY_500, lineHeight: 1.7, margin: '0 0 12px' }}>
+              Мощный веб-редактор, который работает прямо в браузере. Не нужно скачивать ПО — просто откройте TubeForge и начните создавать.
+            </p>
+            <p style={{ fontSize: 17, color: GRAY_500, lineHeight: 1.7, margin: '0 0 32px' }}>
+              Таймлайн, слои, эффекты, субтитры, обрезка, цветокоррекция — все инструменты профессионального редактора доступны в интуитивном интерфейсе.
+            </p>
+            <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 16, padding: '14px 32px' }} onMouseEnter={primaryHoverIn} onMouseLeave={primaryHoverOut}>
+              <LightningIcon /> Попробовать редактор <span aria-hidden="true" style={{ marginLeft: 2 }}>{'\u2192'}</span>
             </Link>
           </div>
 
-          {/* Trust signals */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 48,
-              marginTop: 64,
-              flexWrap: 'wrap',
-              animation: 'landing-fade-up .6s ease-out .5s both',
-            }}
-          >
+          {/* Mock editor UI */}
+          <div style={{ background: GRAY_900, borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', border: `1px solid ${GRAY_800}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${GRAY_800}` }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e' }} />
+              <span style={{ flex: 1, textAlign: 'center', fontSize: 12, color: GRAY_400, fontWeight: 500 }}>TubeForge Editor — Мой_проект.mp4</span>
+            </div>
+            <div style={{ display: 'flex', height: 280 }}>
+              <div style={{ width: 50, borderRight: `1px solid ${GRAY_800}`, padding: '12px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                {['T', '\u25A1', '\u25EF', '\u2702', '\u266A'].map((icon, idx) => (
+                  <div key={idx} style={{ width: 28, height: 28, borderRadius: 6, background: idx === 0 ? 'rgba(99,102,241,0.3)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: idx === 0 ? INDIGO_500 : GRAY_500, fontSize: 13, cursor: 'default' }}>
+                    {icon}
+                  </div>
+                ))}
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flex: 1, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                    </div>
+                    <div style={{ fontSize: 11, color: GRAY_500 }}>1920 x 1080 {'\u2022'} 00:04:32</div>
+                  </div>
+                </div>
+                <div style={{ height: 72, borderTop: `1px solid ${GRAY_800}`, padding: '8px 12px' }}>
+                  <div style={{ display: 'flex', gap: 4, height: '100%' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ height: 18, borderRadius: 4, background: 'rgba(99,102,241,0.4)', position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: 4, top: 2, fontSize: 9, color: WHITE, fontWeight: 600 }}>Видео</div>
+                      </div>
+                      <div style={{ height: 18, borderRadius: 4, background: 'rgba(16,185,129,0.4)', position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: 4, top: 2, fontSize: 9, color: WHITE, fontWeight: 600 }}>Аудио</div>
+                      </div>
+                      <div style={{ height: 12, borderRadius: 4, background: 'rgba(245,158,11,0.3)', position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: 4, top: 1, fontSize: 8, color: WHITE, fontWeight: 600 }}>Субтитры</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========== AI TOOLS GRID ========== */}
+      <section id="tools" style={{ padding: '100px 24px', background: GRAY_50 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <h2 style={sectionHeadingStyle}>Бесчисленные ИИ-Инструменты</h2>
+            <p style={sectionSubStyle}>Все инструменты для создания контента — на одной платформе</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+            {TOOLS.map((tool, i) => (
+              <div
+                key={i}
+                style={{ background: WHITE, border: `1px solid ${GRAY_100}`, borderRadius: 16, padding: 28, transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease', cursor: 'default' }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = GRAY_100; }}
+              >
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: INDIGO_50, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  {tool.icon}
+                </div>
+                <h3 style={{ fontSize: 17, fontWeight: 700, color: GRAY_900, margin: '0 0 8px' }}>{tool.title}</h3>
+                <p style={{ fontSize: 14, color: GRAY_500, lineHeight: 1.6, margin: 0 }}>{tool.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ========== SOCIAL PROOF ========== */}
+      <section style={{ padding: '100px 24px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', color: GRAY_900, margin: '0 0 20px', lineHeight: 1.15 }}>
+            TubeForge помогает креаторам создавать вирусный контент
+          </h2>
+          <p style={{ fontSize: 18, color: GRAY_500, lineHeight: 1.7, margin: '0 auto', maxWidth: 650 }}>
+            Наша платформа объединяет ИИ-генерацию видео, профессиональный редактор, SEO-оптимизацию и аналитику.
+            Всё, что нужно для роста на YouTube — в одном окне браузера.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
             {[
-              { icon: '\u2728', label: 'ИИ нового поколения' },
-              { icon: '\u26A1', label: 'Мгновенная генерация' },
-              { icon: '\uD83D\uDEE1\uFE0F', label: '99.9% uptime' },
-            ].map((stat) => (
-              <div key={stat.label} style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 22 }}>{stat.icon}</span>
-                <div style={{ fontSize: 14, color: C.sub, fontWeight: 600 }}>
-                  {stat.label}
+              { num: '30+', label: 'ИИ-инструментов' },
+              { num: '30+', label: 'Языков озвучки' },
+              { num: '4K', label: 'Экспорт видео' },
+              { num: '99.9%', label: 'Аптайм платформы' },
+            ].map((stat, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 36, fontWeight: 800, background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>
+                  {stat.num}
+                </div>
+                <div style={{ fontSize: 14, color: GRAY_500, fontWeight: 500, marginTop: 4 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ========== TESTIMONIALS ========== */}
+      <section style={{ padding: '100px 24px', background: GRAY_50 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <h2 style={sectionHeadingStyle}>Что говорят креаторы</h2>
+            <p style={sectionSubStyle}>Отзывы наших пользователей</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
+            {TESTIMONIALS.map((t, i) => (
+              <div
+                key={i}
+                style={{ background: WHITE, borderRadius: 16, padding: 28, border: `1px solid ${GRAY_100}`, transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.06)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div style={{ display: 'flex', gap: 2, marginBottom: 16 }}>
+                  {Array.from({ length: 5 }).map((_, si) => (
+                    <svg key={si} width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                  ))}
+                </div>
+                <p style={{ fontSize: 15, color: GRAY_700, lineHeight: 1.65, margin: '0 0 20px' }}>
+                  {'\u201C'}{t.quote}{'\u201D'}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: t.avatar.bg, color: WHITE, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {t.avatar.initials}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: GRAY_900 }}>{t.name}</div>
+                    <div style={{ fontSize: 13, color: GRAY_400 }}>{t.role}</div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -532,774 +838,189 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature grid ────────────────────────────────── */}
-      <section
-        id="features"
-        style={{
-          padding: '80px 20px 100px',
-          maxWidth: 1200,
-          margin: '0 auto',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{
-            display: 'inline-block',
-            padding: '6px 16px',
-            borderRadius: 100,
-            background: C.accentDim,
-            color: C.accent,
-            fontSize: 13,
-            fontWeight: 600,
-            marginBottom: 20,
-          }}>
-            Возможности
+      {/* ========== PRICING ========== */}
+      <section id="pricing" style={{ padding: '100px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <h2 style={sectionHeadingStyle}>Простые и прозрачные тарифы</h2>
+            <p style={sectionSubStyle}>Начните бесплатно, масштабируйтесь когда будете готовы</p>
           </div>
-          <h2
-            style={{
-              fontSize: 'clamp(30px, 5vw, 48px)',
-              fontWeight: 800,
-              letterSpacing: '-.03em',
-              marginBottom: 16,
-              lineHeight: 1.15,
-            }}
-          >
-            Всё для YouTube-канала
-          </h2>
-          <p style={{
-            fontSize: 17,
-            color: C.sub,
-            maxWidth: 520,
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}>
-            Мощные ИИ-инструменты, которые помогут вырастить канал и сэкономить часы работы
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {FEATURES.map((f, i) => {
-            const color = getColor(f.colorKey);
-            const isHovered = hoveredFeature === i;
-            return (
-              <div
-                key={f.title}
-                onMouseEnter={() => setHoveredFeature(i)}
-                onMouseLeave={() => setHoveredFeature(null)}
-                style={{
-                  position: 'relative',
-                  background: isHovered ? C.cardHover : C.surface,
-                  border: `1px solid ${isHovered ? C.borderActive : C.border}`,
-                  borderRadius: 20,
-                  padding: '36px 32px',
-                  cursor: 'default',
-                  transition: 'all .3s cubic-bezier(.4,0,.2,1)',
-                  transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-                  boxShadow: isHovered
-                    ? `0 20px 40px ${isDark ? 'rgba(0,0,0,.4)' : 'rgba(0,0,0,.08)'}, 0 0 0 1px ${color}22`
-                    : 'none',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Hover glow */}
-                <div style={{
-                  position: 'absolute',
-                  top: -1,
-                  left: -1,
-                  right: -1,
-                  height: 3,
-                  background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-                  opacity: isHovered ? 1 : 0,
-                  transition: 'opacity .3s',
-                  borderRadius: '20px 20px 0 0',
-                }} />
-
-                <div
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 14,
-                    background: `${color}14`,
-                    border: `1px solid ${color}22`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 24,
-                    marginBottom: 22,
-                    transition: 'transform .3s, box-shadow .3s',
-                    transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-                    boxShadow: isHovered ? `0 4px 16px ${color}22` : 'none',
-                  }}
-                >
-                  {f.icon}
-                </div>
-                <h3
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    marginBottom: 10,
-                    letterSpacing: '-.01em',
-                  }}
-                >
-                  {f.title}
-                </h3>
-                <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.7 }}>{f.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Social proof ────────────────────────────────── */}
-      <section
-        id="social-proof"
-        style={{
-          padding: '60px 20px 80px',
-          maxWidth: 900,
-          margin: '0 auto',
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            background: isDark
-              ? `linear-gradient(135deg, rgba(12,12,20,.8), rgba(17,17,25,.8))`
-              : `linear-gradient(135deg, rgba(255,255,255,.8), rgba(238,238,243,.8))`,
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${C.border}`,
-            borderRadius: 24,
-            padding: '56px 40px',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Decorative gradient strip */}
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 2,
-            background: `linear-gradient(90deg, ${C.accent}, ${C.pink}, ${C.purple}, ${C.blue})`,
-          }} />
-
-          <div style={{
-            fontSize: 'clamp(32px, 6vw, 48px)',
-            fontWeight: 800,
-            letterSpacing: '-.04em',
-            background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            marginBottom: 12,
-            animation: 'landing-counter .6s ease-out',
-          }}>
-            Присоединяйтесь к сообществу креаторов
-          </div>
-          <p style={{
-            fontSize: 15,
-            color: C.sub,
-            maxWidth: 440,
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}>
-            Присоединяйтесь к растущему сообществу авторов, которые создают контент быстрее с помощью ИИ
-          </p>
-
-          {/* Avatar row */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: 28,
-            gap: 0,
-          }}>
-            {[C.accent, C.pink, C.purple, C.blue, C.green].map((color, i) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, maxWidth: 1060, margin: '0 auto' }}>
+            {PRICING_PLANS.map((plan, i) => (
               <div
                 key={i}
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${color}, ${color}88)`,
-                  border: `3px solid ${C.bg}`,
-                  marginLeft: i === 0 ? 0 : -10,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  color: '#fff',
-                  fontWeight: 700,
-                  zIndex: 5 - i,
+                  background: WHITE, borderRadius: 20, padding: 36,
+                  border: plan.highlighted ? `2px solid ${INDIGO_500}` : `1px solid ${GRAY_100}`,
+                  position: 'relative', transition: 'transform 0.25s ease, box-shadow 0.25s ease', overflow: 'hidden',
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = plan.highlighted ? '0 16px 48px rgba(79,70,229,0.2)' : '0 12px 40px rgba(0,0,0,0.08)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                {['\uD83D\uDE0A', '\uD83D\uDE80', '\uD83C\uDFAC', '\u2B50', '\uD83D\uDC4D'][i]}
+                {plan.accent && !plan.highlighted && (
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: plan.accent }} />
+                )}
+                {plan.badge && (
+                  <div style={{ position: 'absolute', top: 16, right: 16, background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, color: WHITE, fontSize: 12, fontWeight: 700, padding: '4px 14px', borderRadius: 50 }}>
+                    {plan.badge}
+                  </div>
+                )}
+                <div style={{ fontSize: 18, fontWeight: 700, color: GRAY_900, marginBottom: 8 }}>{plan.name}</div>
+                <div style={{ fontSize: 13, color: GRAY_500, marginBottom: 20 }}>{plan.desc}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 28 }}>
+                  <span style={{ fontSize: 44, fontWeight: 800, color: GRAY_900, letterSpacing: '-0.02em', lineHeight: 1 }}>{plan.price}</span>
+                  {plan.period && <span style={{ fontSize: 16, color: GRAY_400, fontWeight: 500 }}>{plan.period}</span>}
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {plan.features.map((feat, fi) => (
+                    <li key={fi} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: GRAY_700 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={plan.highlighted ? INDIGO_600 : '#22c55e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/register"
+                  style={plan.highlighted ? { ...primaryBtnStyle, width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px 28px' } : { ...outlineBtnStyle, width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px 28px' }}
+                  onMouseEnter={plan.highlighted ? primaryHoverIn : (e) => { e.currentTarget.style.background = GRAY_50; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                  onMouseLeave={plan.highlighted ? primaryHoverOut : (e) => { e.currentTarget.style.background = WHITE; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {plan.highlighted && <LightningIcon />}
+                  {plan.highlighted ? 'Начать с Pro' : plan.price === '0\u20BD' ? 'Начать бесплатно' : 'Выбрать Studio'}
+                  {plan.highlighted && <span aria-hidden="true">{'\u2192'}</span>}
+                </Link>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Pricing ─────────────────────────────────────── */}
-      <section
-        id="pricing"
-        style={{
-          padding: '80px 20px 100px',
-          maxWidth: 1200,
-          margin: '0 auto',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{
-            display: 'inline-block',
-            padding: '6px 16px',
-            borderRadius: 100,
-            background: `${C.green}14`,
-            color: C.green,
-            fontSize: 13,
-            fontWeight: 600,
-            marginBottom: 20,
-          }}>
-            Тарифы
+      {/* ========== FAQ ========== */}
+      <section id="faq" style={{ padding: '100px 24px', background: GRAY_50 }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <h2 style={sectionHeadingStyle}>Часто задаваемые вопросы</h2>
+            <p style={sectionSubStyle}>Ответы на популярные вопросы о TubeForge</p>
           </div>
-          <h2
-            style={{
-              fontSize: 'clamp(30px, 5vw, 48px)',
-              fontWeight: 800,
-              letterSpacing: '-.03em',
-              marginBottom: 16,
-              lineHeight: 1.15,
-            }}
-          >
-            Простые и прозрачные цены
-          </h2>
-          <p style={{
-            fontSize: 17,
-            color: C.sub,
-            maxWidth: 480,
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}>
-            Начните бесплатно. Переходите на Pro, когда будете готовы масштабироваться.
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 20,
-            alignItems: 'start',
-          }}
-        >
-          {PLANS.map((plan, idx) => {
-            const isHovered = hoveredPlan === idx;
-            const isHighlighted = plan.highlighted;
-            return (
-              <div
-                key={plan.name}
-                onMouseEnter={() => setHoveredPlan(idx)}
-                onMouseLeave={() => setHoveredPlan(null)}
-                style={{
-                  position: 'relative',
-                  background: isHighlighted
-                    ? (isDark
-                        ? `linear-gradient(180deg, ${C.surface} 0%, rgba(12,12,20,.95) 100%)`
-                        : `linear-gradient(180deg, ${C.surface} 0%, rgba(238,238,243,.95) 100%)`)
-                    : C.surface,
-                  border: `1px solid ${isHighlighted ? C.accent + '55' : (isHovered ? C.borderActive : C.border)}`,
-                  borderRadius: 24,
-                  padding: '40px 36px',
-                  transition: 'all .3s cubic-bezier(.4,0,.2,1)',
-                  transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-                  boxShadow: isHighlighted
-                    ? `0 0 60px ${C.accent}18, 0 20px 40px ${isDark ? 'rgba(0,0,0,.3)' : 'rgba(0,0,0,.06)'}`
-                    : (isHovered
-                        ? `0 20px 40px ${isDark ? 'rgba(0,0,0,.3)' : 'rgba(0,0,0,.06)'}`
-                        : 'none'),
-                }}
-              >
-                {/* Top gradient bar for highlighted */}
-                {isHighlighted && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -1,
-                    left: 24,
-                    right: 24,
-                    height: 3,
-                    background: `linear-gradient(90deg, ${C.accent}, ${C.pink})`,
-                    borderRadius: '0 0 4px 4px',
-                  }} />
-                )}
-
-                {/* Badge */}
-                {isHighlighted && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: -14,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      padding: '5px 20px',
-                      borderRadius: 100,
-                      background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-                      color: '#fff',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      whiteSpace: 'nowrap',
-                      boxShadow: `0 4px 12px ${C.accent}33`,
-                      letterSpacing: '.02em',
-                    }}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {FAQ_DATA.map((item, i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div key={i} style={{ background: WHITE, borderRadius: 14, border: `1px solid ${isOpen ? 'rgba(99,102,241,0.3)' : GRAY_100}`, overflow: 'hidden', transition: 'border-color 0.2s ease' }}>
+                  <button
+                    onClick={() => toggleFaq(i)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '20px 24px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
                   >
-                    Популярный выбор
+                    <span style={{ fontSize: 16, fontWeight: 600, color: GRAY_900 }}>{item.q}</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GRAY_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transition: 'transform 0.3s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                  <div style={{ maxHeight: isOpen ? 300 : 0, overflow: 'hidden', transition: 'max-height 0.3s ease, padding 0.3s ease', padding: isOpen ? '0 24px 20px' : '0 24px 0' }}>
+                    <p style={{ fontSize: 15, color: GRAY_500, lineHeight: 1.65, margin: 0 }}>{item.a}</p>
                   </div>
-                )}
-
-                <h3
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    marginBottom: 4,
-                    color: C.sub,
-                    textTransform: 'uppercase',
-                    letterSpacing: '.06em',
-                  }}
-                >
-                  {plan.name}
-                </h3>
-                <p style={{ fontSize: 13, color: C.dim, marginBottom: 24 }}>{plan.desc}</p>
-
-                <div style={{ marginBottom: 28, display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                  <span style={{
-                    fontSize: 52,
-                    fontWeight: 800,
-                    letterSpacing: '-.04em',
-                    lineHeight: 1,
-                    background: isHighlighted
-                      ? `linear-gradient(135deg, ${C.accent}, ${C.pink})`
-                      : `linear-gradient(135deg, ${C.text}, ${C.sub})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}>
-                    {plan.price}
-                  </span>
-                  <span style={{ fontSize: 15, color: C.dim, fontWeight: 500 }}>{plan.period}</span>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-                <Link
-                  href={plan.href}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget;
-                    if (isHighlighted) {
-                      el.style.boxShadow = `0 6px 24px ${C.accent}44`;
-                      el.style.transform = 'translateY(-1px)';
-                    } else {
-                      el.style.borderColor = C.accent;
-                      el.style.color = C.accent;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget;
-                    if (isHighlighted) {
-                      el.style.boxShadow = `0 2px 12px ${C.accent}22`;
-                      el.style.transform = 'translateY(0)';
-                    } else {
-                      el.style.borderColor = C.border;
-                      el.style.color = C.text;
-                    }
-                  }}
-                  style={{
-                    display: 'block',
-                    textAlign: 'center',
-                    padding: '14px 24px',
-                    borderRadius: 14,
-                    background: isHighlighted
-                      ? `linear-gradient(135deg, ${C.accent}, ${C.pink})`
-                      : 'transparent',
-                    border: isHighlighted ? 'none' : `1px solid ${C.border}`,
-                    color: isHighlighted ? '#fff' : C.text,
-                    textDecoration: 'none',
-                    fontSize: 15,
-                    fontWeight: 700,
-                    marginBottom: 32,
-                    transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-                    boxShadow: isHighlighted ? `0 2px 12px ${C.accent}22` : 'none',
-                  }}
-                >
-                  {plan.cta}
-                </Link>
+      {/* ========== BOTTOM CTA ========== */}
+      <section style={{ padding: '100px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', bottom: -200, left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', color: GRAY_900, margin: '0 0 14px', lineHeight: 1.15 }}>
+            Готовы создать вирусное видео?
+          </h2>
+          <p style={{ fontSize: 18, color: GRAY_500, fontWeight: 400, margin: '0 0 40px', lineHeight: 1.6 }}>
+            Присоединяйтесь к TubeForge и начните создавать контент, который смотрят миллионы
+          </p>
+          <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 18, padding: '16px 40px' }} onMouseEnter={primaryHoverIn} onMouseLeave={primaryHoverOut}>
+            <LightningIcon /> Создать аккаунт <span aria-hidden="true">{'\u2192'}</span>
+          </Link>
+        </div>
+      </section>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {plan.features.map((feat) => (
-                    <div
-                      key={feat}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        fontSize: 14,
-                        color: C.sub,
-                      }}
-                    >
-                      <div style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 6,
-                        background: isHighlighted ? `${C.accent}18` : `${C.green}14`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path
-                            d="M2.5 6L5 8.5L9.5 3.5"
-                            stroke={isHighlighted ? C.accent : C.green}
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                      {feat}
-                    </div>
+      {/* ========== FOOTER ========== */}
+      <footer style={{ borderTop: `1px solid ${GRAY_100}`, padding: '64px 24px 40px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr repeat(4, 1fr)', gap: 40, marginBottom: 48 }} className="footer-grid">
+            <div>
+              <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 16 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #ef4444, #dc2626)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: WHITE, fontWeight: 800, fontSize: 12 }}>TF</div>
+                <span style={{ fontSize: 18, fontWeight: 700, color: GRAY_900 }}>TubeForge</span>
+              </Link>
+              <p style={{ fontSize: 14, color: GRAY_400, lineHeight: 1.6, margin: '0 0 20px', maxWidth: 240 }}>
+                ИИ-платформа для YouTube-креаторов. Создавайте, оптимизируйте и публикуйте видео быстрее.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <a href="#" aria-label="YouTube" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+                </a>
+                <a href="#" aria-label="Telegram" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>
+                </a>
+                <a href="#" aria-label="Twitter" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                </a>
+                <a href="#" aria-label="ВКонтакте" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.598-.188 1.368 1.259 2.184 1.814.617.42 1.085.328 1.085.328l2.181-.03s1.14-.071.6-.97c-.045-.074-.32-.666-1.64-1.88-1.383-1.272-1.197-1.066.468-3.27.732-.965 1.532-2.166 1.396-2.453-.128-.27-.914-.198-.914-.198l-2.455.015s-.182-.025-.317.056c-.133.08-.218.265-.218.265s-.39 1.04-.911 1.926c-1.098 1.871-1.537 1.97-1.716 1.854-.416-.272-.312-1.092-.312-1.674 0-1.82.276-2.58-.537-2.777-.27-.065-.468-.108-1.155-.115-.881-.01-1.627.003-2.05.21-.28.137-.497.443-.365.46.163.022.532.1.728.364.253.342.244 1.108.244 1.108s.145 2.14-.34 2.404c-.332.182-.787-.19-1.765-1.893-.5-.872-.878-1.836-.878-1.836s-.073-.179-.203-.275c-.158-.116-.378-.153-.378-.153l-2.334.015s-.35.01-.478.162c-.114.135-.009.414-.009.414s1.839 4.302 3.921 6.468c1.91 1.987 4.078 1.857 4.078 1.857h.983z" /></svg>
+                </a>
+              </div>
+            </div>
+            {FOOTER_COLUMNS.map((col, ci) => (
+              <div key={ci}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: GRAY_900, marginBottom: 16, letterSpacing: '-0.01em' }}>{col.title}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {col.links.map((link, li) => (
+                    <a key={li} href={link.href} style={{ textDecoration: 'none', color: GRAY_400, fontSize: 14, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_600; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                      {link.label}
+                    </a>
                   ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── FAQ ──────────────────────────────────────────── */}
-      <section
-        id="faq"
-        style={{
-          padding: '80px 20px 100px',
-          maxWidth: 800,
-          margin: '0 auto',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{
-            display: 'inline-block',
-            padding: '6px 16px',
-            borderRadius: 100,
-            background: `${C.purple}14`,
-            color: C.purple,
-            fontSize: 13,
-            fontWeight: 600,
-            marginBottom: 20,
-          }}>
-            Вопросы и ответы
-          </div>
-          <h2
-            style={{
-              fontSize: 'clamp(30px, 5vw, 48px)',
-              fontWeight: 800,
-              letterSpacing: '-.03em',
-              marginBottom: 16,
-              lineHeight: 1.15,
-            }}
-          >
-            Часто задаваемые вопросы
-          </h2>
-          <p style={{
-            fontSize: 17,
-            color: C.sub,
-            maxWidth: 480,
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}>
-            Не нашли ответ? Напишите нам — мы всегда на связи.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {FAQ_ITEMS.map((item, idx) => {
-            const isOpen = activeFaq === idx;
-            return (
-              <div
-                key={idx}
-                style={{
-                  border: `1px solid ${isOpen ? C.borderActive : C.border}`,
-                  borderRadius: 16,
-                  background: C.surface,
-                  overflow: 'hidden',
-                  transition: 'border-color .3s',
-                }}
-              >
-                <button
-                  onClick={() => setActiveFaq(isOpen ? null : idx)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '20px 24px',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: C.text,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    textAlign: 'left',
-                    gap: 16,
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  <span>{item.q}</span>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    style={{
-                      flexShrink: 0,
-                      transition: 'transform .3s cubic-bezier(.4,0,.2,1)',
-                      transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    }}
-                  >
-                    <path d="M5 7.5L10 12.5L15 7.5" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                <div
-                  className="faq-answer"
-                  style={{
-                    maxHeight: isOpen ? 200 : 0,
-                    opacity: isOpen ? 1 : 0,
-                    overflow: 'hidden',
-                    transition: 'max-height .3s cubic-bezier(.4,0,.2,1), opacity .3s ease',
-                  }}
-                >
-                  <p style={{
-                    padding: '0 24px 20px',
-                    fontSize: 15,
-                    color: C.sub,
-                    lineHeight: 1.7,
-                  }}>
-                    {item.a}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Final CTA ───────────────────────────────────── */}
-      <section
-        style={{
-          padding: '40px 20px 100px',
-          maxWidth: 900,
-          margin: '0 auto',
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            position: 'relative',
-            background: isDark
-              ? `linear-gradient(135deg, rgba(12,12,20,.9), rgba(17,17,25,.9))`
-              : `linear-gradient(135deg, rgba(255,255,255,.9), rgba(238,238,243,.9))`,
-            border: `1px solid ${C.border}`,
-            borderRadius: 28,
-            padding: '72px 48px',
-            overflow: 'hidden',
-            backdropFilter: 'blur(20px)',
-          }}
-        >
-          {/* Top gradient bar */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 3,
-              background: `linear-gradient(90deg, ${C.accent}, ${C.pink}, ${C.purple})`,
-              backgroundSize: '200% 100%',
-              animation: 'landing-gradient-shift 4s ease infinite',
-            }}
-          />
-          {/* Background glow */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 500,
-              height: 300,
-              background: `radial-gradient(ellipse, ${C.accent}10 0%, transparent 70%)`,
-              pointerEvents: 'none',
-            }}
-          />
-
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <h2
-              style={{
-                fontSize: 'clamp(28px, 5vw, 44px)',
-                fontWeight: 800,
-                letterSpacing: '-.03em',
-                marginBottom: 16,
-                lineHeight: 1.15,
-              }}
-            >
-              Готовы создавать с ИИ?
-            </h2>
-            <p
-              style={{
-                fontSize: 17,
-                color: C.sub,
-                lineHeight: 1.7,
-                maxWidth: 480,
-                margin: '0 auto 36px',
-              }}
-            >
-              Присоединяйтесь к креаторам, которые уже используют TubeForge для роста своих YouTube-каналов.
-            </p>
-            <Link
-              href="/register"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = `0 8px 32px ${C.accent}44`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = `0 4px 20px ${C.accent}33`;
-              }}
-              style={{
-                padding: '18px 44px',
-                borderRadius: 14,
-                background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-                color: '#fff',
-                textDecoration: 'none',
-                fontSize: 17,
-                fontWeight: 700,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                boxShadow: `0 4px 20px ${C.accent}33`,
-                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-              }}
-            >
-              Начать бесплатно
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
-            <p style={{ fontSize: 13, color: C.dim, marginTop: 20 }}>
-              Не нужна кредитная карта
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── JSON-LD Structured Data ────────────────────── */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "TubeForge",
-        "applicationCategory": "MultimediaApplication",
-        "operatingSystem": "Web",
-        "offers": [
-          { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
-          { "@type": "Offer", "price": "19", "priceCurrency": "USD", "name": "Pro" },
-          { "@type": "Offer", "price": "49", "priceCurrency": "USD", "name": "Studio" },
-        ],
-        "description": "ИИ-студия для YouTube-креаторов. Создавайте видео, обложки и метаданные с помощью искусственного интеллекта.",
-        "url": "https://tubeforge.app",
-      }) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": FAQ_ITEMS.map((item) => ({
-          "@type": "Question",
-          "name": item.q,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": item.a,
-          },
-        })),
-      }) }} />
-
-      {/* ── Footer ──────────────────────────────────────── */}
-      <footer
-        style={{
-          padding: '40px 20px',
-          maxWidth: 1200,
-          margin: '0 auto',
-          borderTop: `1px solid ${C.border}`,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 20,
-          }}
-        >
-          {/* Left: Logo + copyright */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 6,
-                  background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 9,
-                  fontWeight: 800,
-                  color: '#fff',
-                }}
-              >
-                TF
-              </div>
-              <span style={{ fontWeight: 700, fontSize: 14, color: C.sub }}>TubeForge</span>
-            </div>
-            <span style={{ fontSize: 13, color: C.dim }}>
-              {'\u00A9'} {new Date().getFullYear()} Все права защищены.
-            </span>
-          </div>
-
-          {/* Right: Links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            {[
-              { href: '/privacy', label: 'Конфиденциальность' },
-              { href: '/terms', label: 'Условия' },
-              { href: 'https://github.com', label: 'GitHub', external: true },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                onMouseEnter={(e) => setHoveredNav(link.href)}
-                onMouseLeave={() => setHoveredNav(null)}
-                style={{
-                  fontSize: 13,
-                  color: hoveredNav === link.href ? C.text : C.dim,
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                  transition: 'color .2s',
-                }}
-              >
-                {link.label}
-              </Link>
             ))}
+          </div>
+          <div style={{ borderTop: `1px solid ${GRAY_100}`, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <span style={{ fontSize: 13, color: GRAY_400 }}>{'\u00A9'} 2026 TubeForge. Все права защищены.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              {['Условия использования', 'Конфиденциальность', 'Cookie'].map((text, idx) => (
+                <a key={idx} href="#" style={{ textDecoration: 'none', color: GRAY_400, fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_600; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                  {text}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </footer>
+
+      {/* ========== RESPONSIVE STYLES ========== */}
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+          .editor-grid { grid-template-columns: 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .step-connector { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-menu-dropdown { display: none !important; }
+        }
+        a:focus-visible {
+          outline: 2px solid ${INDIGO_500};
+          outline-offset: 2px;
+          border-radius: 4px;
+        }
+        ::selection {
+          background: rgba(99,102,241,0.2);
+        }
+      `}</style>
     </div>
   );
 }
