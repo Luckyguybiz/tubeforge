@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id             String       @id @default(cuid())
+  name           String?
+  email          String?      @unique
+  emailVerified  DateTime?
+  image          String?
+  plan           Plan         @default(FREE)
+  role           Role         @default(USER)
+  stripeId       String?      @unique
+  accounts       Account[]
+  sessions       Session[]
+  channels       Channel[]
+  projects       Project[]
+  assets         Asset[]
+  designFolders  DesignFolder[]
+  ownedTeams     Team[]       @relation("teamOwner")
+  teamMembers    TeamMember[]
+  aiUsage        Int          @default(0)
+  aiResetAt      DateTime     @default(now())
+  onboardingDone Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Channel {
+  id          String   @id
+  title       String
+  thumbnail   String?
+  subscribers Int      @default(0)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  title         String        @default("Без названия")
+  description   String?       @db.Text
+  tags          String[]
+  thumbnailUrl  String?
+  thumbnailData Json?
+  characters    Json?
+  status        ProjectStatus @default(DRAFT)
+  scenes        Scene[]
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId        String?
+  team          Team?         @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([teamId])
+}
+
+model Scene {
+  id        String      @id @default(cuid())
+  prompt    String?     @db.Text
+  label     String      @default("")
+  duration  Int         @default(5)
+  order     Int
+  status    SceneStatus @default(EMPTY)
+  model     String      @default("standard")
+  videoUrl  String?
+  metadata  Json?
+  taskId    String?
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([taskId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+  STUDIO
+}
+
+enum ProjectStatus {
+  DRAFT
+  RENDERING
+  READY
+  PUBLISHED
+}
+
+enum SceneStatus {
+  EMPTY
+  EDITING
+  GENERATING
+  READY
+  ERROR
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User         @relation("teamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members   TeamMember[]
+  projects  Project[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  role     TeamRole @default(EDITOR)
+  teamId   String
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model Asset {
+  id        String        @id @default(cuid())
+  url       String
+  filename  String
+  type      String        @default("image")
+  size      Int           @default(0)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    DesignFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  createdAt DateTime      @default(now())
+
+  @@index([userId])
+  @@index([folderId])
+}
+
+model DesignFolder {
+  id        String         @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    DesignFolder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  DesignFolder[] @relation("FolderTree")
+  assets    Asset[]
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@index([userId])
+  @@index([parentId])
+}

@@ -1,0 +1,126 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "editor": "Editor",
+    "metadata": "Metadata",
+    "thumbnails": "Thumbnails",
+    "preview": "Preview"
+  },
+  "dashboard": {
+    "greeting": "Hey! Here are your stats",
+    "channel": "Channel",
+    "last28": "Last 28 days",
+    "views": "Views",
+    "subscribers": "Subscribers",
+    "watchTime": "Watch Time",
+    "ctr": "CTR",
+    "myVideos": "My Videos",
+    "newVideo": "+ New Video",
+    "published": "Published",
+    "draft": "Draft"
+  },
+  "metadata": {
+    "title": "Video Metadata",
+    "subtitle": "Title, description, tags — AI optimized",
+    "name": "Title",
+    "description": "Description",
+    "tags": "Tags",
+    "addTag": "+ add",
+    "viewerView": "Viewer perspective",
+    "videoThumbnail": "Video thumbnail"
+  },
+  "thumbnails": {
+    "title": "Thumbnail Editor",
+    "subtitle": "Create a thumbnail like in Canva or try AI generation",
+    "download": "Download PNG",
+    "aiGenerate": "AI Generate",
+    "properties": "Properties",
+    "selectElement": "Select an element on canvas",
+    "layers": "Layers",
+    "text": "Text",
+    "font": "Font",
+    "size": "Size",
+    "color": "Color",
+    "shadow": "Shadow",
+    "opacity": "Opacity",
+    "bringFront": "Bring Front",
+    "sendBack": "Send Back",
+    "delete": "Delete"
+  },
+  "editor": {
+    "scene": "Scene",
+    "characters": "Characters",
+    "model": "Model",
+    "frames": "Frames",
+    "prompt": "Prompt",
+    "duration": "Duration",
+    "split": "Split",
+    "duplicate": "Duplicate",
+    "generate": "Generate",
+    "newCharacter": "+ New Character",
+    "save": "Save",
+    "create": "Create"
+  },
+  "preview": {
+    "title": "Final Preview",
+    "subtitle": "Check how everything looks and save",
+    "checklist": "Checklist",
+    "save": "Save to cabinet",
+    "publish": "Publish to YouTube"
+  },
+  "auth": {
+    "login": "Sign in to studio",
+    "subtitle": "AI platform for YouTube creators",
+    "google": "Sign in with Google",
+    "disclaimer": "By connecting your account, you grant access to YouTube API for analytics and video uploads"
+  },
+  "pricing": {
+    "free": "Free",
+    "pro": "Pro",
+    "studio": "Studio",
+    "month": "/mo",
+    "upgrade": "Upgrade plan",
+    "current": "Current plan",
+    "projects": "Projects",
+    "aiGenerations": "AI generations",
+    "channels": "YouTube channels",
+    "resolution": "Resolution",
+    "unlimited": "Unlimited"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "billing": "Billing",
+    "theme": "Theme",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "language": "Language",
+    "notifications": "Notifications",
+    "danger": "Danger zone",
+    "deleteAccount": "Delete account"
+  },
+  "uploads": {
+    "dropzone": "Drag & drop or click",
+    "uploading": "Uploading...",
+    "formats": "PNG, JPG, WebP up to 10 MB",
+    "noImages": "No uploaded images",
+    "upload": "Upload",
+    "delete": "Delete"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "delete": "Delete",
+    "create": "Create",
+    "edit": "Edit",
+    "search": "Search",
+    "noResults": "No results found",
+    "retry": "Retry",
+    "close": "Close"
+  }
+}

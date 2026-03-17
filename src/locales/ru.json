@@ -1,0 +1,126 @@
+{
+  "nav": {
+    "dashboard": "Дашборд",
+    "editor": "Редактор",
+    "metadata": "Метаданные",
+    "thumbnails": "Обложки",
+    "preview": "Превью"
+  },
+  "dashboard": {
+    "greeting": "Добро пожаловать! Вот ваша статистика",
+    "channel": "Канал",
+    "last28": "Последние 28 дней",
+    "views": "Просмотры",
+    "subscribers": "Подписчики",
+    "watchTime": "Время просмотра",
+    "ctr": "CTR",
+    "myVideos": "Мои видео",
+    "newVideo": "+ Новое видео",
+    "published": "Опубликовано",
+    "draft": "Черновик"
+  },
+  "metadata": {
+    "title": "Метаданные видео",
+    "subtitle": "Заголовок, описание, теги — оптимизировано ИИ",
+    "name": "Название",
+    "description": "Описание",
+    "tags": "Теги",
+    "addTag": "+ добавить",
+    "viewerView": "Как видят зрители",
+    "videoThumbnail": "Обложка видео"
+  },
+  "thumbnails": {
+    "title": "Редактор обложек",
+    "subtitle": "Создайте обложку как в Canva или перейдите к ИИ-генерации",
+    "download": "Скачать PNG",
+    "aiGenerate": "ИИ-генерация",
+    "properties": "Свойства",
+    "selectElement": "Выберите элемент на холсте",
+    "layers": "Слои",
+    "text": "Текст",
+    "font": "Шрифт",
+    "size": "Размер",
+    "color": "Цвет",
+    "shadow": "Тень",
+    "opacity": "Прозрачность",
+    "bringFront": "Вперёд",
+    "sendBack": "Назад",
+    "delete": "Удалить"
+  },
+  "editor": {
+    "scene": "Сцена",
+    "characters": "Персонажи",
+    "model": "Модель",
+    "frames": "Кадры",
+    "prompt": "Промпт",
+    "duration": "Длительность",
+    "split": "Разделить",
+    "duplicate": "Дублировать",
+    "generate": "Сгенерировать",
+    "newCharacter": "+ Новый персонаж",
+    "save": "Сохранить",
+    "create": "Создать"
+  },
+  "preview": {
+    "title": "Финальное превью",
+    "subtitle": "Посмотрите как всё выглядит и сохраните",
+    "checklist": "Чеклист",
+    "save": "Сохранить в кабинет",
+    "publish": "Опубликовать на YouTube"
+  },
+  "auth": {
+    "login": "Войти в студию",
+    "subtitle": "ИИ-платформа для YouTube-креаторов",
+    "google": "Войти через Google",
+    "disclaimer": "Подключая аккаунт, вы даёте доступ к YouTube API для аналитики и загрузки видео"
+  },
+  "pricing": {
+    "free": "Free",
+    "pro": "Pro",
+    "studio": "Studio",
+    "month": "/мес",
+    "upgrade": "Улучшить план",
+    "current": "Текущий план",
+    "projects": "Проекты",
+    "aiGenerations": "ИИ-генерации",
+    "channels": "YouTube каналов",
+    "resolution": "Разрешение",
+    "unlimited": "Безлимит"
+  },
+  "settings": {
+    "title": "Настройки",
+    "profile": "Профиль",
+    "billing": "Подписка",
+    "theme": "Тема",
+    "darkMode": "Тёмная тема",
+    "lightMode": "Светлая тема",
+    "language": "Язык",
+    "notifications": "Уведомления",
+    "danger": "Опасная зона",
+    "deleteAccount": "Удалить аккаунт"
+  },
+  "uploads": {
+    "dropzone": "Перетащите или нажмите",
+    "uploading": "Загрузка...",
+    "formats": "PNG, JPG, WebP до 10 МБ",
+    "noImages": "Нет загруженных изображений",
+    "upload": "Загрузить",
+    "delete": "Удалить"
+  },
+  "common": {
+    "back": "Назад",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "create": "Создать",
+    "edit": "Редактировать",
+    "search": "Поиск",
+    "noResults": "Ничего не найдено",
+    "retry": "Повторить",
+    "close": "Закрыть"
+  }
+}
