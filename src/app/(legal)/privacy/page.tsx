@@ -26,7 +26,7 @@ export default function PrivacyPage() {
       </p>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>1. Сбор данных</h2>
+        <h2 id="sbor-dannyh" style={headingStyle}>1. Сбор данных</h2>
         <p style={paraStyle}>
           TubeForge собирает следующие категории данных при использовании платформы:
         </p>
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>2. Использование данных</h2>
+        <h2 id="ispolzovanie-dannyh" style={headingStyle}>2. Использование данных</h2>
         <p style={paraStyle}>
           Мы используем собранные данные для следующих целей:
         </p>
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>3. Файлы cookie</h2>
+        <h2 id="faily-cookie" style={headingStyle}>3. Файлы cookie</h2>
         <p style={paraStyle}>
           TubeForge использует следующие типы файлов cookie:
         </p>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>4. Сторонние сервисы</h2>
+        <h2 id="storonnie-servisy" style={headingStyle}>4. Сторонние сервисы</h2>
         <p style={paraStyle}>
           TubeForge интегрируется со следующими сторонними сервисами:
         </p>
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>5. Права пользователей</h2>
+        <h2 id="prava-polzovateley" style={headingStyle}>5. Права пользователей</h2>
         <p style={paraStyle}>
           В соответствии с применимым законодательством, вы имеете следующие права:
         </p>
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>6. Удаление данных</h2>
+        <h2 id="udalenie-dannyh" style={headingStyle}>6. Удаление данных</h2>
         <p style={paraStyle}>
           Вы можете запросить полное удаление ваших данных, связавшись с нами по электронной почте
           или через настройки аккаунта. При удалении аккаунта мы:
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>7. Контактная информация</h2>
+        <h2 id="kontaktnaya-informatsiya" style={headingStyle}>7. Контактная информация</h2>
         <p style={paraStyle}>
           По всем вопросам, связанным с конфиденциальностью и обработкой персональных данных,
           обращайтесь:

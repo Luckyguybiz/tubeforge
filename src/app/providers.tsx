@@ -20,7 +20,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
         refetchOnWindowFocus: false,
       },
       mutations: {
-        retry: false, // Never auto-retry mutations
+        retry: false, // Никогда не повторять мутации автоматически
+        onError: (error: unknown) => {
+          // Логировать только неожиданные ошибки, не перенаправления по авторизации
+          const message = (error as { message?: string })?.message;
+          if (message && !message.includes('UNAUTHORIZED')) {
+            console.error('[mutation error]', message);
+          }
+        },
       },
     },
   }));

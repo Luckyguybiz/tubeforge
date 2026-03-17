@@ -8,12 +8,18 @@ export function UpgradePrompt({ feature }: { feature: string }) {
   const C = useThemeStore((s) => s.theme);
   const createCheckout = trpc.billing.createCheckout.useMutation({
     onSuccess: (data) => {
-      if (data.url) window.location.href = data.url;
+      if (data.url && data.url.startsWith('https://')) {
+        window.location.href = data.url;
+      } else {
+        toast.error('Не удалось создать сессию оплаты');
+      }
     },
     onError: (err) => toast.error(err.message),
   });
 
   return (
+    <>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     <div style={{
       background: C.card,
       border: `1px solid ${C.border}`,
@@ -46,8 +52,24 @@ export function UpgradePrompt({ feature }: { feature: string }) {
           boxShadow: `0 4px 20px ${C.accent}33`,
         }}
       >
-        {createCheckout.isPending ? 'Загрузка...' : 'Обновить до Pro'}
+        {createCheckout.isPending ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                display: 'inline-block',
+                width: 14,
+                height: 14,
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: '#fff',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+            Загрузка...
+          </span>
+        ) : 'Обновить до Pro'}
       </button>
     </div>
+    </>
   );
 }

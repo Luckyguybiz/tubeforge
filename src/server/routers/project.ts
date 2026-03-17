@@ -38,7 +38,15 @@ export const projectRouter = router({
       const [items, total] = await Promise.all([
         ctx.db.project.findMany({
           where,
-          include: { _count: { select: { scenes: true } } },
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            thumbnailUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: { select: { scenes: true } },
+          },
           orderBy: { [sortBy]: sortOrder },
           skip: (page - 1) * limit,
           take: limit,

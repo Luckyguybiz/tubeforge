@@ -1,27 +1,29 @@
-import { auth } from '@/server/auth';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 /**
- * NextAuth v5 middleware — protects app routes from unauthenticated access.
+ * Lightweight middleware — checks session cookie directly instead of using
+ * the `auth()` wrapper (which requires Prisma / Node runtime).
  *
- * Public routes (landing, auth, legal, API, static assets) are excluded
- * via the `matcher` config below. Everything else requires a valid session.
+ * NOTE: Next.js uses the ROOT middleware.ts when both exist.
+ * This file is kept as reference; the root copy is the active one.
  */
-export default auth((req) => {
-  if (!req.auth) {
+export default function middleware(req: NextRequest) {
+  const hasSession =
+    req.cookies.has('authjs.session-token') ||
+    req.cookies.has('__Secure-authjs.session-token') ||
+    req.cookies.has('next-auth.session-token') ||
+    req.cookies.has('__Secure-next-auth.session-token');
+
+  if (!hasSession) {
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
-    return Response.redirect(loginUrl);
+    return NextResponse.redirect(loginUrl);
   }
-});
+}
 
 export const config = {
   matcher: [
-    /*
-     * Match only /dashboard, /editor, /thumbnails, /metadata,
-     * /preview, /settings, /team, /admin — the protected app routes.
-     *
-     * Everything else (landing, auth, legal, API, static assets) is public.
-     */
     '/dashboard/:path*',
     '/editor/:path*',
     '/thumbnails/:path*',

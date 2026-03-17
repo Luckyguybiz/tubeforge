@@ -101,7 +101,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const target = (e.currentTarget as HTMLElement).closest('[data-canvas]') as HTMLElement ?? e.currentTarget;
     const rect = target.getBoundingClientRect();
     const sx = canvasW / rect.width;
-    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sx };
+    const sy = canvasH / rect.height;
+    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
   };
 
   const onCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -140,32 +141,33 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const dragEl = els.find((e) => e.id === store.drag!.id);
     if (dragEl) {
       const SNAP = 5;
+      const snapThreshold = SNAP / zoom;
       const gx: number[] = [], gy: number[] = [];
       const dCx = nx + dragEl.w / 2, dCy = ny + dragEl.h / 2;
       const dR = nx + dragEl.w, dB = ny + dragEl.h;
       // Canvas center guides
       const ccx = canvasW / 2, ccy = canvasH / 2;
-      if (Math.abs(dCx - ccx) < SNAP) { nx = ccx - dragEl.w / 2; gx.push(ccx); }
-      if (Math.abs(dCy - ccy) < SNAP) { ny = ccy - dragEl.h / 2; gy.push(ccy); }
+      if (Math.abs(dCx - ccx) < snapThreshold) { nx = ccx - dragEl.w / 2; gx.push(ccx); }
+      if (Math.abs(dCy - ccy) < snapThreshold) { ny = ccy - dragEl.h / 2; gy.push(ccy); }
       for (const other of els) {
         if (other.id === store.drag!.id || other.type === 'line' || other.type === 'arrow' || other.type === 'path') continue;
         const oCx = other.x + other.w / 2, oCy = other.y + other.h / 2;
         // Left edge → left/right edge
-        if (Math.abs(nx - other.x) < SNAP) { nx = other.x; gx.push(other.x); }
-        if (Math.abs(nx - (other.x + other.w)) < SNAP) { nx = other.x + other.w; gx.push(other.x + other.w); }
+        if (Math.abs(nx - other.x) < snapThreshold) { nx = other.x; gx.push(other.x); }
+        if (Math.abs(nx - (other.x + other.w)) < snapThreshold) { nx = other.x + other.w; gx.push(other.x + other.w); }
         // Right edge → left/right edge
-        if (Math.abs(dR - other.x) < SNAP) { nx = other.x - dragEl.w; gx.push(other.x); }
-        if (Math.abs(dR - (other.x + other.w)) < SNAP) { nx = other.x + other.w - dragEl.w; gx.push(other.x + other.w); }
+        if (Math.abs(dR - other.x) < snapThreshold) { nx = other.x - dragEl.w; gx.push(other.x); }
+        if (Math.abs(dR - (other.x + other.w)) < snapThreshold) { nx = other.x + other.w - dragEl.w; gx.push(other.x + other.w); }
         // Center → center
-        if (Math.abs(dCx - oCx) < SNAP) { nx = oCx - dragEl.w / 2; gx.push(oCx); }
+        if (Math.abs(dCx - oCx) < snapThreshold) { nx = oCx - dragEl.w / 2; gx.push(oCx); }
         // Top edge → top/bottom edge
-        if (Math.abs(ny - other.y) < SNAP) { ny = other.y; gy.push(other.y); }
-        if (Math.abs(ny - (other.y + other.h)) < SNAP) { ny = other.y + other.h; gy.push(other.y + other.h); }
+        if (Math.abs(ny - other.y) < snapThreshold) { ny = other.y; gy.push(other.y); }
+        if (Math.abs(ny - (other.y + other.h)) < snapThreshold) { ny = other.y + other.h; gy.push(other.y + other.h); }
         // Bottom edge → top/bottom edge
-        if (Math.abs(dB - other.y) < SNAP) { ny = other.y - dragEl.h; gy.push(other.y); }
-        if (Math.abs(dB - (other.y + other.h)) < SNAP) { ny = other.y + other.h - dragEl.h; gy.push(other.y + other.h); }
+        if (Math.abs(dB - other.y) < snapThreshold) { ny = other.y - dragEl.h; gy.push(other.y); }
+        if (Math.abs(dB - (other.y + other.h)) < snapThreshold) { ny = other.y + other.h - dragEl.h; gy.push(other.y + other.h); }
         // Center Y → center Y
-        if (Math.abs(dCy - oCy) < SNAP) { ny = oCy - dragEl.h / 2; gy.push(oCy); }
+        if (Math.abs(dCy - oCy) < snapThreshold) { ny = oCy - dragEl.h / 2; gy.push(oCy); }
       }
       store.setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
     }
@@ -204,7 +206,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
       } else if (el.type === 'text') {
         ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
-        if (el.shadow && el.shadow !== 'none') { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } }
+        if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
         ctx.fillText(el.text ?? '', el.x + 8, el.y + (el.size ?? 32)); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
       } else if (el.type === 'path') {
         ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
@@ -278,7 +280,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       e.stopPropagation(); store.setSelId(el.id);
       const rect = (e.currentTarget as HTMLElement).closest('[data-canvas]')?.getBoundingClientRect() ?? (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
       const sx = canvasW / rect.width;
-      store.setDrag({ id: el.id, ox: (e.clientX - rect.left) * sx - el.x, oy: (e.clientY - rect.top) * sx - el.y });
+      const sy = canvasH / rect.height;
+      store.setDrag({ id: el.id, ox: (e.clientX - rect.left) * sx - el.x, oy: (e.clientY - rect.top) * sy - el.y });
     };
 
     if (el.type === 'text') return (
@@ -415,7 +418,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const target = (e.currentTarget as HTMLElement).closest('[data-canvas]') as HTMLElement ?? e.currentTarget;
       const rect = target.getBoundingClientRect();
       const sx = canvasW / rect.width;
-      return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sx };
+      const sy = canvasH / rect.height;
+      return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
     })();
     // Asset image drop
     const assetUrl = e.dataTransfer.getData('application/x-tubeforge-asset');

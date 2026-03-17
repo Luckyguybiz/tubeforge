@@ -12,11 +12,26 @@
 /** True during `next build` — env vars may be missing during static analysis */
 const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
     // During build, skip validation — vars will be checked at runtime
     if (isBuildPhase) return '';
+    throw new Error(
+      `[env] Missing required environment variable: ${name}. ` +
+      'Check your .env file or deployment configuration.'
+    );
+  }
+  return value;
+}
+
+/** Like requireEnv but returns empty string in dev if missing */
+function optionalInDev(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    if (isBuildPhase || isDev) return '';
     throw new Error(
       `[env] Missing required environment variable: ${name}. ` +
       'Check your .env file or deployment configuration.'
@@ -36,9 +51,9 @@ export const env = {
 
   // Stripe
   STRIPE_SECRET_KEY: requireEnv('STRIPE_SECRET_KEY'),
-  STRIPE_WEBHOOK_SECRET: requireEnv('STRIPE_WEBHOOK_SECRET'),
-  STRIPE_PRICE_PRO: requireEnv('STRIPE_PRICE_PRO'),
-  STRIPE_PRICE_STUDIO: requireEnv('STRIPE_PRICE_STUDIO'),
+  STRIPE_WEBHOOK_SECRET: optionalInDev('STRIPE_WEBHOOK_SECRET'),
+  STRIPE_PRICE_PRO: optionalInDev('STRIPE_PRICE_PRO'),
+  STRIPE_PRICE_STUDIO: optionalInDev('STRIPE_PRICE_STUDIO'),
 
   // App URL
   NEXT_PUBLIC_APP_URL: requireEnv('NEXT_PUBLIC_APP_URL'),

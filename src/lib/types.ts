@@ -68,6 +68,8 @@ export interface Scene {
   ef: string | null;
   enh: boolean;
   snd: boolean;
+  taskId?: string | null;
+  videoUrl?: string | null;
 }
 
 export interface Character {

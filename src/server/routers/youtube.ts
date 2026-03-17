@@ -5,6 +5,20 @@ import { API_ENDPOINTS } from '@/lib/constants';
 import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
 
+/** YouTube channel ID validation schema */
+const channelIdSchema = z.string().regex(/^UC[\w-]{22}$/, 'Invalid channel ID format');
+
+/** Fetch wrapper with AbortController timeout */
+async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 30000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getYouTubeToken(userId: string, db: PrismaClient) {
   const account = await db.account.findFirst({
     where: { userId, provider: 'google' },
@@ -14,7 +28,7 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
 
   // Refresh expired token
   if (account.expires_at && account.expires_at * 1000 < Date.now() && account.refresh_token) {
-    const res = await fetch(API_ENDPOINTS.GOOGLE_OAUTH_TOKEN, {
+    const res = await fetchWithTimeout(API_ENDPOINTS.GOOGLE_OAUTH_TOKEN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -27,17 +41,23 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
     if (res.ok) {
       const data = await res.json().catch(() => null);
       if (data?.access_token) {
+        // Validate expires_in is a positive number; default to 3600 if invalid
+        const expiresIn = typeof data.expires_in === 'number' && data.expires_in > 0
+          ? data.expires_in
+          : 3600;
         await db.account.update({
           where: { id: account.id },
           data: {
             access_token: data.access_token,
-            expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
+            expires_at: Math.floor(Date.now() / 1000) + expiresIn,
           },
           select: { id: true },
         });
         return data.access_token as string;
       }
     }
+    // Token was expired and refresh failed — do not fall back to the old expired token
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не удалось обновить токен YouTube. Переподключите аккаунт Google.' });
   }
 
   return account.access_token;
@@ -57,7 +77,7 @@ async function verifyChannelOwnership(channelId: string, userId: string, db: Pri
 export const youtubeRouter = router({
   getChannels: protectedProcedure.query(async ({ ctx }) => {
     const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
-    const res = await fetch(`${API_ENDPOINTS.YOUTUBE_CHANNELS}?part=snippet,statistics&mine=true`, {
+    const res = await fetchWithTimeout(`${API_ENDPOINTS.YOUTUBE_CHANNELS}?part=snippet,statistics&mine=true`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка YouTube API' });
@@ -89,11 +109,11 @@ export const youtubeRouter = router({
   }),
 
   getVideos: protectedProcedure
-    .input(z.object({ channelId: z.string(), maxResults: z.number().min(1).max(50).default(10) }))
+    .input(z.object({ channelId: channelIdSchema, maxResults: z.number().min(1).max(50).default(10) }))
     .query(async ({ ctx, input }) => {
       await verifyChannelOwnership(input.channelId, ctx.session.user.id, ctx.db);
       const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
-      const searchRes = await fetch(
+      const searchRes = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_SEARCH}?part=snippet&channelId=${input.channelId}&maxResults=${input.maxResults}&order=date&type=video`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -101,7 +121,7 @@ export const youtubeRouter = router({
       const searchData = await searchRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ YouTube API' }); });
       const videoIds = (searchData.items ?? []).map((i: { id: { videoId?: string } }) => i.id.videoId).filter(Boolean).join(',');
       if (!videoIds) return [];
-      const statsRes = await fetch(
+      const statsRes = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_VIDEOS}?part=statistics,snippet&id=${videoIds}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -112,7 +132,7 @@ export const youtubeRouter = router({
 
   getAnalytics: protectedProcedure
     .input(z.object({
-      channelId: z.string(),
+      channelId: channelIdSchema,
       period: z.enum(['7', '28', '90', '365']).default('28'),
     }))
     .query(async ({ ctx, input }) => {
@@ -120,7 +140,7 @@ export const youtubeRouter = router({
       const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - parseInt(input.period) * 86400000).toISOString().split('T')[0];
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_ANALYTICS}?ids=channel==${input.channelId}&startDate=${startDate}&endDate=${endDate}&metrics=views,subscribersGained,estimatedMinutesWatched,averageViewPercentage&dimensions=day`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -140,7 +160,7 @@ export const youtubeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
       // Upload video metadata
-      const metadataRes = await fetch(
+      const metadataRes = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_UPLOAD}?uploadType=resumable&part=snippet,status`,
         {
           method: 'POST',

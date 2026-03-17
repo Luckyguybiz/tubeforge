@@ -35,7 +35,7 @@ export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
   }
 
   return (
-    <div>
+    <div aria-label={`Аналитика: ${METRIC_LABELS[metric]}`}>
       <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 12 }}>
         {METRIC_LABELS[metric]}
       </div>

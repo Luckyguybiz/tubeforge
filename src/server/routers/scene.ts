@@ -92,14 +92,14 @@ export const sceneRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await checkSceneRate(ctx.session.user.id);
-      const scene = await ctx.db.scene.findFirst({
-        where: { id: input.id },
-        select: { id: true, project: { select: { userId: true } } },
+      await ctx.db.$transaction(async (tx) => {
+        const scene = await tx.scene.findFirst({
+          where: { id: input.id, project: { userId: ctx.session.user.id } },
+          select: { id: true },
+        });
+        if (!scene) throw new TRPCError({ code: 'NOT_FOUND', message: 'Сцена не найдена' });
+        await tx.scene.delete({ where: { id: input.id } });
       });
-      if (!scene || scene.project.userId !== ctx.session.user.id) {
-        throw new TRPCError({ code: 'NOT_FOUND' });
-      }
-      await ctx.db.scene.delete({ where: { id: input.id } });
       return { success: true };
     }),
 
@@ -124,6 +124,14 @@ export const sceneRouter = router({
       });
       if (sceneCount !== input.sceneIds.length) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Некорректные ID сцен' });
+      }
+
+      // Verify all scenes in the project are included
+      const totalScenes = await ctx.db.scene.count({
+        where: { projectId: project.id },
+      });
+      if (totalScenes !== input.sceneIds.length) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Необходимо указать все сцены проекта' });
       }
 
       await ctx.db.$transaction(

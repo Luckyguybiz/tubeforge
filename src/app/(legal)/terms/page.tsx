@@ -26,7 +26,7 @@ export default function TermsPage() {
       </p>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>1. Принятие условий</h2>
+        <h2 id="prinyatie-usloviy" style={headingStyle}>1. Принятие условий</h2>
         <p style={paraStyle}>
           Используя платформу TubeForge (далее — «Сервис»), вы подтверждаете, что ознакомились с
           настоящими Условиями использования и принимаете их в полном объёме. Если вы не согласны
@@ -41,7 +41,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>2. Ответственность за аккаунт</h2>
+        <h2 id="otvetstvennost-za-akkaunt" style={headingStyle}>2. Ответственность за аккаунт</h2>
         <p style={paraStyle}>
           При создании аккаунта вы обязуетесь:
         </p>
@@ -59,7 +59,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>3. Подписка и биллинг</h2>
+        <h2 id="podpiska-i-billing" style={headingStyle}>3. Подписка и биллинг</h2>
         <p style={paraStyle}>
           TubeForge предлагает бесплатный и платные тарифные планы:
         </p>
@@ -90,7 +90,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>4. Допустимое использование</h2>
+        <h2 id="dopustimoe-ispolzovanie" style={headingStyle}>4. Допустимое использование</h2>
         <p style={paraStyle}>
           При использовании TubeForge запрещается:
         </p>
@@ -111,7 +111,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>5. Интеллектуальная собственность</h2>
+        <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>5. Интеллектуальная собственность</h2>
         <p style={paraStyle}>
           Платформа TubeForge, включая дизайн, код, логотипы и документацию, является
           интеллектуальной собственностью TubeForge и защищена законодательством об авторском
@@ -129,7 +129,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>6. Ограничение ответственности</h2>
+        <h2 id="ogranichenie-otvetstvennosti" style={headingStyle}>6. Ограничение ответственности</h2>
         <p style={paraStyle}>
           Сервис предоставляется «как есть» (as is) без каких-либо гарантий, явных или
           подразумеваемых. TubeForge не гарантирует:
@@ -148,7 +148,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>7. Прекращение действия</h2>
+        <h2 id="prekrashchenie-deystviya" style={headingStyle}>7. Прекращение действия</h2>
         <p style={paraStyle}>
           TubeForge оставляет за собой право приостановить или прекратить доступ к вашему аккаунту
           в следующих случаях:
@@ -168,7 +168,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>8. Применимое право</h2>
+        <h2 id="primenimoe-pravo" style={headingStyle}>8. Применимое право</h2>
         <p style={paraStyle}>
           Настоящие Условия регулируются и толкуются в соответствии с действующим
           законодательством. Все споры, возникающие из настоящих Условий или в связи с ними,
@@ -179,7 +179,7 @@ export default function TermsPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 style={headingStyle}>9. Контакты</h2>
+        <h2 id="kontakty" style={headingStyle}>9. Контакты</h2>
         <p style={paraStyle}>
           По всем вопросам, связанным с настоящими Условиями использования, обращайтесь:
         </p>

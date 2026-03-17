@@ -65,6 +65,17 @@ export const assetRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       await checkAssetRate(ctx.session.user.id);
+
+      if (input.folderId) {
+        const folder = await ctx.db.designFolder.findFirst({
+          where: { id: input.folderId, userId: ctx.session.user.id },
+          select: { id: true },
+        });
+        if (!folder) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Папка назначения не найдена' });
+        }
+      }
+
       return ctx.db.asset.update({
         where: { id: input.id, userId: ctx.session.user.id },
         data: { folderId: input.folderId ?? null },

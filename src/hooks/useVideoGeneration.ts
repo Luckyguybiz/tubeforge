@@ -10,12 +10,22 @@ export function useVideoGeneration(sceneId: string | null) {
   const updScene = useEditorStore((s) => s.updScene);
   const taskIdRef = useRef<string | null>(null);
 
+  const updateScene = trpc.scene.update.useMutation();
+
+  // On mount, restore taskId from DB if scene is still generating
+  useEffect(() => {
+    if (sceneId && scene?.status === 'generating' && scene.taskId && !taskIdRef.current) {
+      taskIdRef.current = scene.taskId;
+    }
+  }, [sceneId, scene?.status, scene?.taskId]);
+
   const generateVideo = trpc.ai.generateVideo.useMutation({
     onSuccess: (data) => {
       if (sceneId) {
         taskIdRef.current = data.taskId;
-        // Store taskId in scene metadata for server-side tracking
-        updScene(sceneId, { status: 'generating' });
+        updScene(sceneId, { status: 'generating', taskId: data.taskId });
+        // Persist taskId to DB so polling survives page refresh
+        updateScene.mutate({ id: sceneId, taskId: data.taskId, status: 'GENERATING' });
       }
     },
     onError: (err) => {
@@ -37,17 +47,21 @@ export function useVideoGeneration(sceneId: string | null) {
     if (!taskStatus.data || !sceneId) return;
 
     if (taskStatus.data.status === 'SUCCEEDED' && taskStatus.data.output) {
-      updScene(sceneId, { status: 'ready' });
+      const output = taskStatus.data.output;
+      updScene(sceneId, { status: 'ready', videoUrl: output, taskId: null });
       taskIdRef.current = null;
+      // Persist videoUrl and clear taskId in DB
+      updateScene.mutate({ id: sceneId, videoUrl: output, status: 'READY', taskId: null });
       toast.success('Видео сгенерировано!');
     }
 
     if (taskStatus.data.status === 'FAILED') {
-      updScene(sceneId, { status: 'error' });
+      updScene(sceneId, { status: 'error', taskId: null });
       taskIdRef.current = null;
+      updateScene.mutate({ id: sceneId, status: 'ERROR', taskId: null });
       toast.error(taskStatus.data.error || 'Ошибка генерации видео');
     }
-  }, [taskStatus.data, sceneId, updScene]);
+  }, [taskStatus.data, sceneId, updScene, updateScene]);
 
   const start = (prompt: string, model: string, duration: number) => {
     if (!sceneId) return;

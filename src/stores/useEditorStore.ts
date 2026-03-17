@@ -5,6 +5,8 @@ import type { Scene, Character } from '@/lib/types';
 
 /** Track generation timeouts by scene ID so they can be cancelled */
 const genTimers = new Map<string, ReturnType<typeof setTimeout>>();
+/** Track generation versions to prevent stale timeout callbacks */
+const genVersions = new Map<string, number>();
 
 function clearGenTimer(sceneId: string) {
   const t = genTimers.get(sceneId);
@@ -50,6 +52,8 @@ interface EditorState {
   dragOv: string | null;
   confirmDel: string | null;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  history: Scene[][];
+  future: Scene[][];
 
   loadProject: (project: ProjectData) => void;
   setFormat: (f: string) => void;
@@ -64,6 +68,10 @@ interface EditorState {
   setDragOv: (id: string | null) => void;
   setConfirmDel: (id: string | null) => void;
   setSaveStatus: (s: 'idle' | 'saving' | 'saved' | 'error') => void;
+
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
 
   updScene: (id: string, patch: Partial<Scene>) => void;
   addScene: (afterId?: string) => Scene;
@@ -94,6 +102,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   dragOv: null,
   confirmDel: null,
   saveStatus: 'idle',
+  history: [],
+  future: [],
 
   loadProject: (project) => {
     clearAllGenTimers();
@@ -112,6 +122,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         enh: (meta.enh as boolean) ?? true,
         snd: (meta.snd as boolean) ?? true,
         chars: (meta.chars as string[]) ?? [],
+        taskId: (s as Record<string, unknown>).taskId as string | null | undefined,
+        videoUrl: s.videoUrl,
       };
     });
     const chars = (project.characters ?? []) as Character[];
@@ -139,12 +151,47 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setConfirmDel: (id) => set({ confirmDel: id }),
   setSaveStatus: (s) => set({ saveStatus: s }),
 
-  updScene: (id, patch) =>
+  pushHistory: () => {
+    const { scenes, history } = get();
+    const snap: Scene[] = JSON.parse(JSON.stringify(scenes));
+    set({ history: [...history.slice(-49), snap], future: [] });
+  },
+
+  undo: () => {
+    const { history, scenes, future, selId } = get();
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    set({
+      history: history.slice(0, -1),
+      future: [...future, JSON.parse(JSON.stringify(scenes))],
+      scenes: prev,
+      selId: prev.find((s) => s.id === selId)?.id ?? prev[0]?.id ?? null,
+    });
+  },
+
+  redo: () => {
+    const { history, scenes, future, selId } = get();
+    if (future.length === 0) return;
+    const next = future[future.length - 1];
+    set({
+      future: future.slice(0, -1),
+      history: [...history, JSON.parse(JSON.stringify(scenes))],
+      scenes: next,
+      selId: next.find((s) => s.id === selId)?.id ?? next[0]?.id ?? null,
+    });
+  },
+
+  updScene: (id, patch) => {
+    if (patch.duration !== undefined) {
+      patch = { ...patch, duration: Math.max(1, Math.min(30, patch.duration)) };
+    }
     set((s) => ({
       scenes: s.scenes.map((sc) => (sc.id === id ? { ...sc, ...patch } : sc)),
-    })),
+    }));
+  },
 
   addScene: (afterId) => {
+    get().pushHistory();
     const s = get();
     const ns: Scene = {
       id: uid(),
@@ -171,14 +218,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   delScene: (id) => {
+    get().pushHistory();
     clearGenTimer(id);
     set((s) => {
+      const i = s.scenes.findIndex((sc) => sc.id === id);
       const n = s.scenes.filter((sc) => sc.id !== id);
-      return { scenes: n, selId: s.selId === id ? (n[0]?.id || null) : s.selId };
+      return {
+        scenes: n,
+        selId: s.selId === id ? (n[Math.min(i, n.length - 1)]?.id ?? null) : s.selId,
+      };
     });
   },
 
-  dupScene: (id) =>
+  dupScene: (id) => {
+    get().pushHistory();
     set((s) => {
       const i = s.scenes.findIndex((sc) => sc.id === id);
       if (i === -1) return s;
@@ -186,9 +239,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const n = [...s.scenes];
       n.splice(i + 1, 0, c);
       return { scenes: n };
-    }),
+    });
+  },
 
-  splitScene: (id) =>
+  splitScene: (id) => {
+    get().pushHistory();
     set((s) => {
       const i = s.scenes.findIndex((sc) => sc.id === id);
       if (i === -1) return s;
@@ -200,7 +255,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const n = [...s.scenes];
       n.splice(i, 1, a, b);
       return { scenes: n };
-    }),
+    });
+  },
 
   regenScene: (id, newPrompt) => {
     const patch: Partial<Scene> = { status: 'generating' };
@@ -208,8 +264,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     get().updScene(id, patch);
     // Cancel any existing timeout for this scene before setting a new one
     clearGenTimer(id);
+    const version = (genVersions.get(id) ?? 0) + 1;
+    genVersions.set(id, version);
     const timer = setTimeout(() => {
       genTimers.delete(id);
+      // Only set error if version still matches (no newer regen started)
+      if (genVersions.get(id) !== version) return;
       const current = get().scenes.find((sc) => sc.id === id);
       if (current?.status === 'generating') {
         get().updScene(id, { status: 'error' });
@@ -248,7 +308,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       editCh: null,
     })),
 
-  reorderScenes: (fromId, toId) =>
+  reorderScenes: (fromId, toId) => {
+    get().pushHistory();
     set((s) => {
       const n = [...s.scenes];
       const fi = n.findIndex((sc) => sc.id === fromId);
@@ -256,7 +317,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const [m] = n.splice(fi, 1);
       n.splice(ti, 0, m);
       return { scenes: n };
-    }),
+    });
+  },
 
   addSceneFromPrompt: (prompt) => {
     const s = get();

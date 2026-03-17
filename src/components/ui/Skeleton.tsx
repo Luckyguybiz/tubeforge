@@ -3,6 +3,11 @@
 import { memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 
+/**
+ * Shimmer animation depends on the `@keyframes shimmer` rule defined in globals.css.
+ * If globals.css is not loaded (e.g. in isolation tests), the skeleton renders as a
+ * static colored block, which is an acceptable graceful fallback.
+ */
 export const Skeleton = memo(function Skeleton({
   width,
   height,

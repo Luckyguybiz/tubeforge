@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { dark, light } from '@/lib/constants';
 import type { Theme } from '@/lib/types';
 
+
 interface ThemeState {
   isDark: boolean;
   theme: Theme;
@@ -31,3 +32,33 @@ export const useThemeStore = create<ThemeState>()(
     }
   )
 );
+
+/**
+ * Селектор для получения конкретного цвета из текущей темы.
+ * Рекомендуется использовать вместо `useThemeStore((s) => s.theme)`,
+ * чтобы избежать лишних перерисовок компонентов при смене темы —
+ * подписчик обновится только если значение конкретного цвета изменилось.
+ *
+ * @example
+ * ```tsx
+ * const bg = useThemeColor('bg');
+ * const accent = useThemeColor('accent');
+ * ```
+ */
+export function useThemeColor<K extends keyof Theme>(key: K) {
+  return useThemeStore((s) => s.theme[key]);
+}
+
+/**
+ * Селектор для получения текущего состояния тёмной темы.
+ * Позволяет компонентам подписаться только на флаг isDark,
+ * не перерисовываясь при изменении объекта theme.
+ *
+ * @example
+ * ```tsx
+ * const isDark = useIsDark();
+ * ```
+ */
+export function useIsDark() {
+  return useThemeStore((s) => s.isDark);
+}

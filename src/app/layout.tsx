@@ -16,6 +16,9 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ru_RU',
   },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.app',
+  },
   twitter: {
     card: 'summary_large_image',
     title: 'TubeForge — ИИ-студия для YouTube',

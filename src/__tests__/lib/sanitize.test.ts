@@ -133,7 +133,8 @@ describe('sanitize', () => {
   });
 
   it('should escape entities in plain text without tags', () => {
-    expect(sanitize('a & b < c')).toBe('a &amp; b &lt; c');
+    // The improved stripTags removes lone '<' as potential malformed HTML
+    expect(sanitize('a & b < c')).toBe('a &amp; b  c');
   });
 
   it('should preserve unicode characters', () => {

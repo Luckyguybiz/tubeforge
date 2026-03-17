@@ -101,6 +101,18 @@ export const STICKY_NOTE_COLOR = '#fef08a';
 export const STICKY_NOTE_TEXT_COLOR = '#1a1a2e';
 export const STICKY_NOTE_PRESETS = ['#fef08a', '#fecdd3', '#bfdbfe', '#bbf7d0', '#e9d5ff', '#fed7aa'] as const;
 
+/* ── Keyboard shortcuts ──────────────────────────── */
+
+export const KEYBOARD_SHORTCUTS = [
+  { keys: 'Ctrl+Z', label: 'Отменить' },
+  { keys: 'Ctrl+Shift+Z', label: 'Повторить' },
+  { keys: 'Ctrl+S', label: 'Сохранить' },
+  { keys: 'Ctrl+D', label: 'Дублировать' },
+  { keys: 'Delete', label: 'Удалить' },
+  { keys: 'Ctrl+Enter', label: 'Генерировать' },
+  { keys: '?', label: 'Горячие клавиши' },
+] as const;
+
 /* ── Upload limits ────────────────────────────────── */
 
 export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -131,6 +143,7 @@ export const Z_INDEX = {
   TOOLBAR_POPOVER: 100,
   MODAL_BACKDROP: 999,
   CONTEXT_MENU: 1000,
+  DROPDOWN: 1100,
   TOAST: 9999,
   SKIP_LINK: 9999,
   ONBOARDING_OVERLAY: 10000,

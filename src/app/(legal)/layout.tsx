@@ -7,7 +7,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   const C = useThemeStore((s) => s.theme);
 
   return (
-    <div
+    <main
+      role="main"
       style={{
         minHeight: '100vh',
         background: C.bg,
@@ -38,7 +39,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <span style={{ fontSize: 18 }}>{'\u2190'}</span>
           Назад на главную
         </Link>
-        <div
+        <article
           style={{
             background: C.surface,
             border: `1px solid ${C.border}`,
@@ -47,7 +48,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           }}
         >
           {children}
-        </div>
+        </article>
         <div
           style={{
             textAlign: 'center',
@@ -56,9 +57,9 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             color: C.dim,
           }}
         >
-          {'\u00A9'} 2026 TubeForge. Все права защищены.
+          {'\u00A9'} {new Date().getFullYear()} TubeForge. Все права защищены.
         </div>
       </div>
-    </div>
+    </main>
   );
 }

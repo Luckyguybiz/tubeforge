@@ -49,17 +49,17 @@ describe('feature-flags module', () => {
 
   /* ── Environment override ──────────────────────────────────── */
 
-  it('enables only specified flags via NEXT_PUBLIC_FLAGS', async () => {
+  it('enables specified flags via NEXT_PUBLIC_FLAGS while keeping defaults', async () => {
     process.env.NEXT_PUBLIC_FLAGS = 'teamCollaboration,advancedAnalytics';
 
     const { flags } = await import('@/lib/feature-flags');
 
     expect(flags.teamCollaboration).toBe(true);
     expect(flags.advancedAnalytics).toBe(true);
-    // Not listed flags become false (overrides defaults)
-    expect(flags.aiVideoGeneration).toBe(false);
-    expect(flags.aiThumbnails).toBe(false);
-    expect(flags.aiMetadata).toBe(false);
+    // Non-listed flags keep their defaults (AI flags default to true)
+    expect(flags.aiVideoGeneration).toBe(true);
+    expect(flags.aiThumbnails).toBe(true);
+    expect(flags.aiMetadata).toBe(true);
     expect(flags.scheduledPublish).toBe(false);
   });
 
@@ -84,7 +84,8 @@ describe('feature-flags module', () => {
 
     expect(flags.aiThumbnails).toBe(true);
     expect(flags.scheduledPublish).toBe(true);
-    expect(flags.aiVideoGeneration).toBe(false);
+    // aiVideoGeneration keeps its default (true)
+    expect(flags.aiVideoGeneration).toBe(true);
   });
 
   it('ignores unknown flag names in the environment variable', async () => {
@@ -93,7 +94,8 @@ describe('feature-flags module', () => {
     const { flags } = await import('@/lib/feature-flags');
 
     expect(flags.aiThumbnails).toBe(true);
-    expect(flags.aiVideoGeneration).toBe(false);
+    // aiVideoGeneration keeps its default (true)
+    expect(flags.aiVideoGeneration).toBe(true);
     // Unknown flags should not appear at all
     expect((flags as unknown as Record<string, boolean>)['unknownFlag']).toBeUndefined();
   });
@@ -115,7 +117,8 @@ describe('feature-flags module', () => {
     const { flags } = await import('@/lib/feature-flags');
 
     expect(flags.scheduledPublish).toBe(true);
-    expect(flags.aiVideoGeneration).toBe(false);
+    // aiVideoGeneration keeps its default (true)
+    expect(flags.aiVideoGeneration).toBe(true);
     expect(flags.teamCollaboration).toBe(false);
   });
 
@@ -157,7 +160,8 @@ describe('feature-flags module', () => {
     const { isFeatureEnabled } = await import('@/lib/feature-flags');
 
     expect(isFeatureEnabled('teamCollaboration')).toBe(true);
-    expect(isFeatureEnabled('aiVideoGeneration')).toBe(false);
+    // aiVideoGeneration keeps its default (true)
+    expect(isFeatureEnabled('aiVideoGeneration')).toBe(true);
   });
 
   it('handles trailing commas in NEXT_PUBLIC_FLAGS gracefully', async () => {
@@ -166,6 +170,7 @@ describe('feature-flags module', () => {
     const { flags } = await import('@/lib/feature-flags');
 
     expect(flags.aiThumbnails).toBe(true);
-    expect(flags.aiVideoGeneration).toBe(false);
+    // aiVideoGeneration keeps its default (true)
+    expect(flags.aiVideoGeneration).toBe(true);
   });
 });

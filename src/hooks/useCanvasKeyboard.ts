@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 
 export function useCanvasKeyboard() {
   useEffect(() => {
@@ -26,6 +27,13 @@ export function useCanvasKeyboard() {
       if (ctrl && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
         e.preventDefault();
         store.redo();
+        return;
+      }
+
+      // `?` key toggles keyboard shortcuts modal (only when not editing text)
+      if (e.key === '?' && !isEditing) {
+        const ns = useNotificationStore.getState();
+        ns.setShowShortcuts(!ns.showShortcuts);
         return;
       }
 

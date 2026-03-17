@@ -26,14 +26,7 @@ function loadFlags(): FeatureFlags {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const result: FeatureFlags = {
-    aiVideoGeneration: false,
-    aiThumbnails: false,
-    aiMetadata: false,
-    teamCollaboration: false,
-    advancedAnalytics: false,
-    scheduledPublish: false,
-  };
+  const result: FeatureFlags = { ...defaultFlags };
 
   for (const key of enabled) {
     if (key in result) {

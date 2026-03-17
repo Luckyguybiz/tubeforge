@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
@@ -22,6 +23,7 @@ interface ProjectPickerProps {
 export function ProjectPicker({ target, title }: ProjectPickerProps) {
   const C = useThemeStore((s) => s.theme);
   const router = useRouter();
+  const [displayCount, setDisplayCount] = useState(10);
   const projects = trpc.project.list.useQuery({ page: 1, limit: 50 });
 
   const statusColor = (key: string) => {
@@ -65,7 +67,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
         </div>
       ) : (
         <div style={{ width: 380, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {projects.data.items.map((p) => {
+          {projects.data.items.slice(0, displayCount).map((p) => {
             const st = STATUS_LABEL[p.status] ?? { l: p.status, c: 'dim' };
             return (
               <button
@@ -112,6 +114,30 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
               </button>
             );
           })}
+          {projects.data.items.length > displayCount && (
+            <button
+              onClick={() => setDisplayCount((c) => c + 20)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: `1px solid ${C.border}`,
+                background: C.surface,
+                color: C.sub,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                marginTop: 4,
+              }}
+            >
+              Показать ещё ({projects.data.items.length - displayCount})
+            </button>
+          )}
+          {projects.data.total > projects.data.items.length && displayCount >= projects.data.items.length && (
+            <div style={{ fontSize: 11, color: C.dim, textAlign: 'center', marginTop: 4 }}>
+              Показано {projects.data.items.length} из {projects.data.total} проектов
+            </div>
+          )}
         </div>
       )}
     </div>

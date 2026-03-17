@@ -49,9 +49,18 @@ export const billingRouter = router({
       const stripe = getStripe();
       let customerId = user.stripeId;
       if (!customerId) {
-        const customer = await stripe.customers.create({ email: user.email ?? undefined });
-        customerId = customer.id;
-        await ctx.db.user.update({ where: { id: ctx.session.user.id }, data: { stripeId: customerId } });
+        let newCustomerId: string | undefined;
+        try {
+          const customer = await stripe.customers.create({ email: user.email ?? undefined });
+          newCustomerId = customer.id;
+          await ctx.db.user.update({ where: { id: ctx.session.user.id }, data: { stripeId: newCustomerId } });
+          customerId = newCustomerId;
+        } catch (err) {
+          if (newCustomerId) {
+            try { await stripe.customers.del(newCustomerId); } catch { /* best effort */ }
+          }
+          throw err;
+        }
       }
 
       const priceId = input.plan === 'PRO' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_STUDIO;
@@ -78,5 +87,27 @@ export const billingRouter = router({
       return_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard`,
     });
     return { url: session.url };
+  }),
+
+  getInvoices: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { stripeId: true },
+    });
+    if (!user?.stripeId) return [];
+    try {
+      const stripe = getStripe();
+      const invoices = await stripe.invoices.list({ customer: user.stripeId, limit: 12 });
+      return invoices.data.map((inv) => ({
+        id: inv.id,
+        date: inv.created,
+        amount: inv.amount_paid,
+        currency: inv.currency,
+        status: inv.status,
+        pdf: inv.invoice_pdf,
+      }));
+    } catch {
+      return [];
+    }
   }),
 });

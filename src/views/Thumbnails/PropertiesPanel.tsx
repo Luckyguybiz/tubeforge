@@ -349,16 +349,26 @@ function ShadowControl({ C, value, onChange, inputStyle, labelStyle }: { C: Them
   const [cAlpha, setCAlpha] = useState(0.5);
 
   const parseShadow = (s: string) => {
-    if (s === 'none') { setCX(0); setCY(2); setCBlur(8); setCColor('#000000'); setCAlpha(0.5); return; }
-    const m = s.match(/(-?\d+)(?:px)?\s+(-?\d+)(?:px)?\s+(\d+)(?:px)?\s+(.+)/);
-    if (m) {
-      setCX(parseInt(m[1])); setCY(parseInt(m[2])); setCBlur(parseInt(m[3]));
-      const rgba = m[4].match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-      if (rgba) {
-        const [, r, g, b, a] = rgba;
-        setCColor(`#${(+r).toString(16).padStart(2, '0')}${(+g).toString(16).padStart(2, '0')}${(+b).toString(16).padStart(2, '0')}`);
-        setCAlpha(parseFloat(a ?? '1'));
+    const defaults = { x: 0, y: 2, blur: 8, color: '#000000', alpha: 0.5 };
+    if (s === 'none') { setCX(defaults.x); setCY(defaults.y); setCBlur(defaults.blur); setCColor(defaults.color); setCAlpha(defaults.alpha); return; }
+    try {
+      const m = s.match(/(-?\d+)(?:px)?\s+(-?\d+)(?:px)?\s+(\d+)(?:px)?\s+(.+)/);
+      if (m) {
+        setCX(parseInt(m[1])); setCY(parseInt(m[2])); setCBlur(parseInt(m[3]));
+        const rgba = m[4].match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (rgba) {
+          const [, r, g, b, a] = rgba;
+          setCColor(`#${(+r).toString(16).padStart(2, '0')}${(+g).toString(16).padStart(2, '0')}${(+b).toString(16).padStart(2, '0')}`);
+          setCAlpha(parseFloat(a ?? '1'));
+        } else {
+          setCColor(defaults.color); setCAlpha(defaults.alpha);
+        }
+      } else {
+        setCX(defaults.x); setCY(defaults.y); setCBlur(defaults.blur); setCColor(defaults.color); setCAlpha(defaults.alpha);
       }
+    } catch {
+      // Use sensible defaults if parsing fails
+      setCX(defaults.x); setCY(defaults.y); setCBlur(defaults.blur); setCColor(defaults.color); setCAlpha(defaults.alpha);
     }
   };
 

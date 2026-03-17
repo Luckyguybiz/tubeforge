@@ -182,6 +182,13 @@ export function useProjectSync(projectId: string | null) {
       }
     },
 
+    updateProjectTitle: (title: string) => {
+      if (projectId) {
+        useEditorStore.getState().setSaveStatus('saving');
+        updateProjectMut.mutate({ id: projectId, title });
+      }
+    },
+
     refetch: () => {
       loadedRef.current = false;
       project.refetch();

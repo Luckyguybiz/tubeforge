@@ -15,10 +15,22 @@ export const Sidebar = memo(function Sidebar() {
   const current = pathname.split('/').filter(Boolean)[0] || 'dashboard';
 
   const shouldAutoCollapse = COLLAPSE_PAGES.includes(current);
-  const [collapsed, setCollapsed] = useState(shouldAutoCollapse);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('tf-sidebar');
+      if (stored !== null) return stored === '1';
+    }
+    return shouldAutoCollapse;
+  });
 
   useEffect(() => {
-    setCollapsed(shouldAutoCollapse);
+    localStorage.setItem('tf-sidebar', collapsed ? '1' : '0');
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('tf-sidebar') === null) {
+      setCollapsed(shouldAutoCollapse);
+    }
   }, [shouldAutoCollapse]);
 
   const userName = session?.user?.name ?? 'Пользователь';
@@ -73,18 +85,18 @@ export const Sidebar = memo(function Sidebar() {
           </button>
         ))}
         {plan === 'STUDIO' && (
-          <button onClick={() => router.push('/team')} title={collapsed ? 'Команда' : undefined} style={navBtnStyle('team')}>
+          <button aria-current={current === 'team' ? 'page' : undefined} onClick={() => router.push('/team')} title={collapsed ? 'Команда' : undefined} style={navBtnStyle('team')}>
             <span style={{ fontSize: 16, width: collapsed ? 'auto' : 20, textAlign: 'center', flexShrink: 0 }}>&#128101;</span>
             {!collapsed && 'Команда'}
           </button>
         )}
         <div style={{ height: 1, background: C.border, margin: '8px 2px' }} />
-        <button onClick={() => router.push('/settings')} title={collapsed ? 'Настройки' : undefined} style={navBtnStyle('settings')}>
+        <button aria-current={current === 'settings' ? 'page' : undefined} onClick={() => router.push('/settings')} title={collapsed ? 'Настройки' : undefined} style={navBtnStyle('settings')}>
           <span style={{ fontSize: 16, width: collapsed ? 'auto' : 20, textAlign: 'center', flexShrink: 0 }}>&#9881;</span>
           {!collapsed && 'Настройки'}
         </button>
         {role === 'ADMIN' && (
-          <button onClick={() => router.push('/admin')} title={collapsed ? 'Админка' : undefined} style={navBtnStyle('admin')}>
+          <button aria-current={current === 'admin' ? 'page' : undefined} onClick={() => router.push('/admin')} title={collapsed ? 'Админка' : undefined} style={navBtnStyle('admin')}>
             <span style={{ fontSize: 16, width: collapsed ? 'auto' : 20, textAlign: 'center', flexShrink: 0 }}>&#9878;</span>
             {!collapsed && 'Админка'}
           </button>

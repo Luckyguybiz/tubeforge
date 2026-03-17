@@ -20,7 +20,7 @@ export function ToastProvider() {
       `}</style>
       <div
         role="status"
-        aria-live="polite"
+        aria-live={toasts.some((t) => t.type === 'error') ? 'assertive' : 'polite'}
         aria-label="Уведомления"
         style={{
           position: 'fixed',

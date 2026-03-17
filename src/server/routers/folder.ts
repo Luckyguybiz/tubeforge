@@ -36,6 +36,17 @@ export const folderRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       await checkFolderRate(ctx.session.user.id);
+
+      if (input.parentId) {
+        const parent = await ctx.db.designFolder.findFirst({
+          where: { id: input.parentId, userId: ctx.session.user.id },
+          select: { id: true },
+        });
+        if (!parent) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Родительская папка не найдена' });
+        }
+      }
+
       return ctx.db.designFolder.create({
         data: {
           name: stripTags(input.name),

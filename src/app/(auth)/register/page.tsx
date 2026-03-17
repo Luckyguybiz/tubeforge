@@ -9,6 +9,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 function RegisterContent() {
   const C = useThemeStore((s) => s.theme);
   const searchParams = useSearchParams();
+  const error = searchParams.get('error');
   const planParam = searchParams.get('plan');
   const validPlans = ['PRO', 'STUDIO'] as const;
   const safePlan = planParam && validPlans.includes(planParam as typeof validPlans[number]) ? planParam : null;
@@ -55,12 +56,12 @@ function RegisterContent() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 16,
+              fontSize: 11,
               fontWeight: 800,
               color: '#fff',
             }}
           >
-            Y
+            TF
           </div>
           <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em' }}>TubeForge</span>
         </div>
@@ -68,6 +69,13 @@ function RegisterContent() {
         <p style={{ color: C.sub, fontSize: 14, marginBottom: 28 }}>
           ИИ-платформа для YouTube-креаторов
         </p>
+        {error && (
+          <div style={{ background: '#ef444414', border: '1px solid #ef444433', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#ef4444', fontSize: 13, textAlign: 'left' }}>
+            {error === 'OAuthAccountNotLinked'
+              ? 'Этот email уже привязан к другому аккаунту'
+              : 'Не удалось войти через Google. Попробуйте снова.'}
+          </div>
+        )}
         <button
           onClick={() => signIn('google', { callbackUrl })}
           style={{
@@ -81,14 +89,17 @@ function RegisterContent() {
             fontWeight: 600,
             cursor: 'pointer',
             fontFamily: 'inherit',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
             marginBottom: 16,
+            transition: 'border-color .2s, background .2s',
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = C.surface; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card; }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
             <path
               fill="#4285f4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -106,7 +117,7 @@ function RegisterContent() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Зарегистрироваться через Google
+          Войти через Google
         </button>
         <p style={{ color: C.sub, fontSize: 13, marginTop: 20 }}>
           Уже есть аккаунт?{' '}

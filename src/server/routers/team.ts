@@ -197,7 +197,7 @@ export const teamRouter = router({
       if (!team) throw new TRPCError({ code: 'NOT_FOUND', message: 'Создайте команду' });
 
       return ctx.db.project.update({
-        where: { id: input.projectId },
+        where: { id: input.projectId, userId: ctx.session.user.id },
         data: { teamId: team.id },
         select: { id: true, teamId: true },
       });

@@ -36,6 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
       return (
         <div
+          role="alert"
           style={{
             display: 'flex',
             flexDirection: 'column',

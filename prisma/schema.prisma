@@ -23,6 +23,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -31,6 +32,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -90,7 +93,7 @@ model Project {
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   teamId        String?
-  team          Team?         @relation(fields: [teamId], references: [id])
+  team          Team?         @relation(fields: [teamId], references: [id], onDelete: SetNull)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -113,6 +116,7 @@ model Scene {
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([taskId])
 }
 
 enum Role {
@@ -152,7 +156,7 @@ model Team {
   id        String       @id @default(cuid())
   name      String
   ownerId   String
-  owner     User         @relation("teamOwner", fields: [ownerId], references: [id])
+  owner     User         @relation("teamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members   TeamMember[]
   projects  Project[]
   createdAt DateTime     @default(now())
@@ -167,7 +171,7 @@ model TeamMember {
   teamId   String
   team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId   String
-  user     User     @relation(fields: [userId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   joinedAt DateTime @default(now())
 
   @@unique([teamId, userId])
