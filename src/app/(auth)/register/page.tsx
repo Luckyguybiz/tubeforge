@@ -119,25 +119,25 @@ function RegisterContent() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Войти через Google
+          {t('auth.register.google')}
         </button>
         <p style={{ color: C.sub, fontSize: 13, marginTop: 20 }}>
-          Уже есть аккаунт?{' '}
+          {t('auth.register.hasAccount')}{' '}
           <Link
             href="/login"
             style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}
           >
-            Войти
+            {t('auth.register.login')}
           </Link>
         </p>
         <p style={{ color: C.dim, fontSize: 11, marginTop: 16 }}>
-          Регистрируясь, вы соглашаетесь с{' '}
+          {t('auth.register.terms')}{' '}
           <Link href="/terms" style={{ color: C.dim, textDecoration: 'underline' }}>
-            Условиями использования
+            {t('auth.register.termsLink')}
           </Link>{' '}
-          и{' '}
+          {t('auth.register.and')}{' '}
           <Link href="/privacy" style={{ color: C.dim, textDecoration: 'underline' }}>
-            Политикой конфиденциальности
+            {t('auth.register.privacyLink')}
           </Link>
         </p>
       </div>
