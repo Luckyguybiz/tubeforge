@@ -34,6 +34,19 @@ export const useThemeStore = create<ThemeState>()(
 );
 
 /**
+ * Generic selector helper — subscribe to any slice of the theme store.
+ * Components re-render only when the selected value changes (shallow equality).
+ *
+ * @example
+ * ```tsx
+ * const isDark = useThemeValue((s) => s.isDark);
+ * const bg = useThemeValue((s) => s.theme.bg);
+ * ```
+ */
+export const useThemeValue = <T>(selector: (state: ThemeState) => T): T =>
+  useThemeStore(selector);
+
+/**
  * Селектор для получения конкретного цвета из текущей темы.
  * Рекомендуется использовать вместо `useThemeStore((s) => s.theme)`,
  * чтобы избежать лишних перерисовок компонентов при смене темы —

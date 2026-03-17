@@ -104,14 +104,26 @@ export const STICKY_NOTE_PRESETS = ['#fef08a', '#fecdd3', '#bfdbfe', '#bbf7d0', 
 /* ── Keyboard shortcuts ──────────────────────────── */
 
 export const KEYBOARD_SHORTCUTS = [
-  { keys: 'Ctrl+Z', label: 'Отменить' },
-  { keys: 'Ctrl+Shift+Z', label: 'Повторить' },
-  { keys: 'Ctrl+S', label: 'Сохранить' },
-  { keys: 'Ctrl+D', label: 'Дублировать' },
-  { keys: 'Delete', label: 'Удалить' },
-  { keys: 'Ctrl+Enter', label: 'Генерировать' },
-  { keys: '?', label: 'Горячие клавиши' },
+  { keys: 'Ctrl+Z', label: 'Отменить', key: 'Ctrl+Z', description: 'Undo last action', category: 'editing' },
+  { keys: 'Ctrl+Shift+Z', label: 'Повторить', key: 'Ctrl+Shift+Z', description: 'Redo last undone action', category: 'editing' },
+  { keys: 'Ctrl+S', label: 'Сохранить', key: 'Ctrl+S', description: 'Save current project', category: 'general' },
+  { keys: 'Ctrl+D', label: 'Дублировать', key: 'Ctrl+D', description: 'Duplicate selected element', category: 'editing' },
+  { keys: 'Delete', label: 'Удалить', key: 'Delete', description: 'Remove selected element', category: 'editing' },
+  { keys: 'Ctrl+C', label: 'Копировать', key: 'Ctrl+C', description: 'Copy selected element', category: 'editing' },
+  { keys: 'Ctrl+V', label: 'Вставить', key: 'Ctrl+V', description: 'Paste from clipboard', category: 'editing' },
+  { keys: 'Ctrl+X', label: 'Вырезать', key: 'Ctrl+X', description: 'Cut selected element', category: 'editing' },
+  { keys: 'Ctrl+A', label: 'Выделить все', key: 'Ctrl+A', description: 'Select all elements', category: 'editing' },
+  { keys: 'Ctrl+Enter', label: 'Генерировать', key: 'Ctrl+Enter', description: 'Start AI generation', category: 'general' },
+  { keys: 'Ctrl+K', label: 'Поиск', key: 'Ctrl+K', description: 'Open search', category: 'navigation' },
+  { keys: 'Escape', label: 'Снять выделение', key: 'Escape', description: 'Deselect / close menu', category: 'navigation' },
+  { keys: '?', label: 'Горячие клавиши', key: '?', description: 'Show keyboard shortcuts help', category: 'navigation' },
 ] as const;
+
+export const SHORTCUT_CATEGORIES: Record<string, string> = {
+  editing: 'Редактирование',
+  general: 'Общие',
+  navigation: 'Навигация',
+};
 
 /* ── Upload limits ────────────────────────────────── */
 

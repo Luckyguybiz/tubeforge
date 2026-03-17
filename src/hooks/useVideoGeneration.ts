@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { toast } from '@/stores/useNotificationStore';
@@ -8,21 +8,21 @@ import { toast } from '@/stores/useNotificationStore';
 export function useVideoGeneration(sceneId: string | null) {
   const scene = useEditorStore((s) => s.scenes.find((sc) => sc.id === sceneId));
   const updScene = useEditorStore((s) => s.updScene);
-  const taskIdRef = useRef<string | null>(null);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
   const updateScene = trpc.scene.update.useMutation();
 
   // On mount, restore taskId from DB if scene is still generating
   useEffect(() => {
-    if (sceneId && scene?.status === 'generating' && scene.taskId && !taskIdRef.current) {
-      taskIdRef.current = scene.taskId;
+    if (sceneId && scene?.status === 'generating' && scene.taskId && !activeTaskId) {
+      setActiveTaskId(scene.taskId);
     }
-  }, [sceneId, scene?.status, scene?.taskId]);
+  }, [sceneId, scene?.status, scene?.taskId, activeTaskId]);
 
   const generateVideo = trpc.ai.generateVideo.useMutation({
     onSuccess: (data) => {
       if (sceneId) {
-        taskIdRef.current = data.taskId;
+        setActiveTaskId(data.taskId);
         updScene(sceneId, { status: 'generating', taskId: data.taskId });
         // Persist taskId to DB so polling survives page refresh
         updateScene.mutate({ id: sceneId, taskId: data.taskId, status: 'GENERATING' });
@@ -36,9 +36,9 @@ export function useVideoGeneration(sceneId: string | null) {
 
   // Poll task status every 3 seconds while generating
   const taskStatus = trpc.videoTask.checkStatus.useQuery(
-    { taskId: taskIdRef.current! },
+    { taskId: activeTaskId! },
     {
-      enabled: !!taskIdRef.current && scene?.status === 'generating',
+      enabled: !!activeTaskId && scene?.status === 'generating',
       refetchInterval: 3000,
     },
   );
@@ -49,7 +49,7 @@ export function useVideoGeneration(sceneId: string | null) {
     if (taskStatus.data.status === 'SUCCEEDED' && taskStatus.data.output) {
       const output = taskStatus.data.output;
       updScene(sceneId, { status: 'ready', videoUrl: output, taskId: null });
-      taskIdRef.current = null;
+      setActiveTaskId(null);
       // Persist videoUrl and clear taskId in DB
       updateScene.mutate({ id: sceneId, videoUrl: output, status: 'READY', taskId: null });
       toast.success('Видео сгенерировано!');
@@ -57,7 +57,7 @@ export function useVideoGeneration(sceneId: string | null) {
 
     if (taskStatus.data.status === 'FAILED') {
       updScene(sceneId, { status: 'error', taskId: null });
-      taskIdRef.current = null;
+      setActiveTaskId(null);
       updateScene.mutate({ id: sceneId, status: 'ERROR', taskId: null });
       toast.error(taskStatus.data.error || 'Ошибка генерации видео');
     }

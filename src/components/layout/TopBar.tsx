@@ -1,7 +1,7 @@
 'use client';
 import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { NAV, KEYBOARD_SHORTCUTS, Z_INDEX } from '@/lib/constants';
+import { NAV, KEYBOARD_SHORTCUTS, SHORTCUT_CATEGORIES, Z_INDEX } from '@/lib/constants';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
@@ -20,6 +20,16 @@ const NOTIF_ICONS: Record<Notification['type'], string> = {
   info: '\u2139\uFE0F',
   warning: '\u26A0\uFE0F',
 };
+
+/** SVG bell icon – replaces emoji for consistent cross-platform rendering */
+function BellIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
 
 function timeAgo(ts: number): string {
   const diff = Math.max(0, Date.now() - ts);
@@ -166,11 +176,44 @@ export const TopBar = memo(function TopBar() {
           <span style={{ fontWeight: 700, fontSize: 12 }}>Студия</span>
         </div>
       )}
-      {!isEditor && pageLabel && (
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-          {pageLabel}
-        </span>
-      )}
+      {/* Breadcrumbs */}
+      {!isEditor && (() => {
+        const segments = pathname.split('/').filter(Boolean);
+        if (segments.length === 0) segments.push('dashboard');
+        return (
+          <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 0, fontSize: 13 }}>
+            <span
+              role="link"
+              tabIndex={0}
+              onClick={() => router.push('/dashboard')}
+              onKeyDown={(e) => { if (e.key === 'Enter') router.push('/dashboard'); }}
+              style={{ color: segments.length > 1 ? C.sub : C.text, fontWeight: segments.length > 1 ? 500 : 600, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
+            >
+              {t('nav.dashboard')}
+            </span>
+            {segments.length > 1 && segments.slice(1).map((seg, i) => {
+              const isLast = i === segments.length - 2;
+              const href = '/' + segments.slice(0, i + 2).join('/');
+              const labelKey = `nav.${seg}`;
+              const label = t(labelKey) !== labelKey ? t(labelKey) : seg.charAt(0).toUpperCase() + seg.slice(1);
+              return (
+                <span key={seg + i} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                  <span style={{ color: C.dim, margin: '0 6px', fontSize: 11 }}>/</span>
+                  <span
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => { if (!isLast) router.push(href); }}
+                    onKeyDown={(e) => { if (!isLast && e.key === 'Enter') router.push(href); }}
+                    style={{ color: isLast ? C.text : C.sub, fontWeight: isLast ? 600 : 500, cursor: isLast ? 'default' : 'pointer', transition: 'color 0.15s' }}
+                  >
+                    {label}
+                  </span>
+                </span>
+              );
+            })}
+          </nav>
+        );
+      })()}
       <div style={{ flex: 1 }} />
 
       {/* Search input */}
@@ -235,7 +278,7 @@ export const TopBar = memo(function TopBar() {
           onMouseLeave={(e) => handleBtnHover(e, false)}
           style={btnBase}
         >
-          {'\uD83D\uDD14'}
+          <BellIcon size={14} color={C.sub} />
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16,
@@ -346,19 +389,30 @@ export const TopBar = memo(function TopBar() {
                 {'\u2715'}
               </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {KEYBOARD_SHORTCUTS.map((sc) => (
-                <div key={sc.keys} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
-                  <span style={{ fontSize: 13, color: C.text }}>{sc.label}</span>
-                  <kbd style={{
-                    fontSize: 11, fontWeight: 600, color: C.sub,
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 5, padding: '3px 8px', fontFamily: 'inherit',
-                  }}>
-                    {sc.keys}
-                  </kbd>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {Object.entries(SHORTCUT_CATEGORIES).map(([catKey, catLabel]) => {
+                const items = KEYBOARD_SHORTCUTS.filter((sc) => sc.category === catKey);
+                if (items.length === 0) return null;
+                return (
+                  <div key={catKey} style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.dim, marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${C.border}` }}>
+                      {catLabel}
+                    </div>
+                    {items.map((sc) => (
+                      <div key={sc.keys} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0' }}>
+                        <span style={{ fontSize: 13, color: C.text }}>{sc.label}</span>
+                        <kbd style={{
+                          fontSize: 11, fontWeight: 600, color: C.sub,
+                          background: C.surface, border: `1px solid ${C.border}`,
+                          borderRadius: 5, padding: '3px 8px', fontFamily: 'inherit',
+                        }}>
+                          {sc.keys}
+                        </kbd>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

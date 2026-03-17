@@ -62,10 +62,10 @@ function emergencyCleanup(): void {
       }
     }
 
-    // Шаг 2: если размер всё ещё >= MAX_ENTRIES, удалить старейшие 20%
+    // Шаг 2: если размер всё ещё >= MAX_ENTRIES, удалить старейшую половину
     if (store.size >= MAX_ENTRIES) {
       const entries = [...store.entries()].sort((a, b) => a[1].resetTime - b[1].resetTime);
-      const toDelete = Math.ceil(entries.length * 0.2);
+      const toDelete = Math.ceil(entries.length * 0.5);
       for (let i = 0; i < toDelete; i++) {
         store.delete(entries[i][0]);
       }

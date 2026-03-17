@@ -27,8 +27,11 @@ interface NotificationState {
   notifications: Notification[];
   addNotification: (type: Notification['type'], title: string, message: string) => void;
   markRead: (id: string) => void;
+  markAsRead: (id: string) => void;
   markAllRead: () => void;
+  markAllAsRead: () => void;
   clearNotifications: () => void;
+  clearAll: () => void;
   unreadCount: () => number;
 
   showShortcuts: boolean;
@@ -73,13 +76,29 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }));
   },
 
+  markAsRead: (id) => {
+    set((s) => ({
+      notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    }));
+  },
+
   markAllRead: () => {
     set((s) => ({
       notifications: s.notifications.map((n) => (n.read ? n : { ...n, read: true })),
     }));
   },
 
+  markAllAsRead: () => {
+    set((s) => ({
+      notifications: s.notifications.map((n) => (n.read ? n : { ...n, read: true })),
+    }));
+  },
+
   clearNotifications: () => {
+    set({ notifications: [] });
+  },
+
+  clearAll: () => {
     set({ notifications: [] });
   },
 

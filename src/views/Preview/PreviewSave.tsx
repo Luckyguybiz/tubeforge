@@ -60,6 +60,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [activeSceneIdx, setActiveSceneIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -192,8 +193,22 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       }, 50);
     } else {
       setIsPlaying(false);
+      setIsPlayingAll(false);
     }
   }, [activeSceneIdx, scenes]);
+
+  const handlePlayAll = useCallback(() => {
+    if (scenesWithVideo.length < 2) return;
+    // Find the first scene index that has a video
+    const firstIdx = scenes.findIndex(s => s.videoUrl);
+    if (firstIdx === -1) return;
+    setActiveSceneIdx(firstIdx);
+    setIsPlayingAll(true);
+    setIsPlaying(true);
+    setTimeout(() => {
+      videoRef.current?.play();
+    }, 50);
+  }, [scenes, scenesWithVideo.length]);
 
   const handlePlayPause = () => {
     if (!hasVideo) return;
@@ -439,8 +454,32 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               <div style={{
                 display: 'flex', gap: 6, padding: '12px 16px',
                 overflowX: 'auto', borderTop: `1px solid ${C.border}`,
-                background: C.surface,
+                background: C.surface, alignItems: 'center',
               }}>
+                {/* Play All button — shown when multiple scenes have video */}
+                {scenesWithVideo.length > 1 && (
+                  <button
+                    onClick={isPlayingAll ? () => { videoRef.current?.pause(); setIsPlaying(false); setIsPlayingAll(false); } : handlePlayAll}
+                    title={isPlayingAll ? 'Остановить воспроизведение всех сцен' : 'Воспроизвести все сцены последовательно'}
+                    style={{
+                      flexShrink: 0, height: 68, padding: '0 14px', borderRadius: 8,
+                      border: `2px solid ${isPlayingAll ? C.accent : C.border}`,
+                      background: isPlayingAll ? `${C.accent}12` : C.card,
+                      cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center', gap: 4,
+                      fontFamily: 'inherit', transition: 'all .15s',
+                    }}
+                    onMouseEnter={e => { if (!isPlayingAll) e.currentTarget.style.borderColor = C.accent; }}
+                    onMouseLeave={e => { if (!isPlayingAll) e.currentTarget.style.borderColor = C.border; }}
+                  >
+                    <span style={{ fontSize: 16, color: isPlayingAll ? C.accent : C.sub }}>
+                      {isPlayingAll ? '\u23F9' : '\u23EF'}
+                    </span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isPlayingAll ? C.accent : C.sub, whiteSpace: 'nowrap' }}>
+                      {isPlayingAll ? 'Стоп' : 'Все сцены'}
+                    </span>
+                  </button>
+                )}
                 {scenes.map((scene, idx) => {
                   const isActive = idx === activeSceneIdx;
                   const isReady = scene.status === 'READY';
@@ -450,6 +489,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       key={scene.id}
                       onClick={() => {
                         setActiveSceneIdx(idx);
+                        setIsPlayingAll(false);
                         if (videoRef.current) {
                           videoRef.current.currentTime = 0;
                           // Will auto-update via src change; pause current

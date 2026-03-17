@@ -6,14 +6,41 @@ import { useThemeStore } from '@/stores/useThemeStore';
 
 function getSuggestions(error: Error): string[] {
   const msg = error.message?.toLowerCase() ?? '';
-  if (msg.includes('unauthorized') || msg.includes('unauthenticated'))
-    return ['Попробуйте войти заново', 'Возможно, сессия истекла'];
-  if (msg.includes('too_many_requests') || msg.includes('rate'))
-    return ['Подождите минуту и попробуйте снова'];
-  if (msg.includes('not_found'))
+  const name = error.name?.toLowerCase() ?? '';
+
+  // Auth / session errors
+  if (msg.includes('unauthorized') || msg.includes('unauthenticated') || msg.includes('401') || msg.includes('403') || msg.includes('forbidden'))
+    return ['Попробуйте войти заново', 'Возможно, сессия истекла', 'Проверьте, что у вас есть доступ к этому ресурсу'];
+
+  // Rate limiting
+  if (msg.includes('too_many_requests') || msg.includes('rate') || msg.includes('429'))
+    return ['Подождите минуту и попробуйте снова', 'Вы отправили слишком много запросов'];
+
+  // Not found
+  if (msg.includes('not_found') || msg.includes('404'))
     return ['Проверьте URL', 'Возможно, ресурс был удалён'];
-  if (msg.includes('network') || msg.includes('fetch'))
-    return ['Проверьте подключение к интернету', 'Попробуйте обновить страницу'];
+
+  // Server errors (5xx)
+  if (msg.includes('500') || msg.includes('502') || msg.includes('503') || msg.includes('504') || msg.includes('internal server') || msg.includes('bad gateway') || msg.includes('service unavailable'))
+    return ['Ошибка на сервере — попробуйте обновить страницу через несколько секунд', 'Если ошибка повторяется, сервис может быть временно недоступен'];
+
+  // Timeout errors
+  if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('aborted') || name.includes('abort'))
+    return ['Запрос занял слишком много времени', 'Проверьте подключение к интернету и попробуйте снова'];
+
+  // Network / fetch errors
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch') || msg.includes('err_connection') || msg.includes('offline'))
+    return ['Проверьте подключение к интернету', 'Попробуйте обновить страницу', 'Убедитесь, что VPN или прокси не блокирует соединение'];
+
+  // Chunk / lazy-load errors (common in Next.js)
+  if (msg.includes('chunk') || msg.includes('loading chunk') || msg.includes('dynamically imported module'))
+    return ['Приложение было обновлено — обновите страницу', 'Очистите кэш браузера, если ошибка повторяется'];
+
+  // Storage errors
+  if (msg.includes('quota') || msg.includes('storage') || msg.includes('localstorage'))
+    return ['Хранилище браузера переполнено', 'Очистите данные сайта в настройках браузера'];
+
+  // Generic fallback
   return ['Обновите страницу', 'Если проблема повторяется, напишите в поддержку'];
 }
 
