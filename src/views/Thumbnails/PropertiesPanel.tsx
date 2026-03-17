@@ -53,9 +53,14 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
   // ===== Multi-select panel =====
   if (multiSel) {
     return (
-      <div style={{ width: 260, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14, flexShrink: 0, overflow: 'auto', maxHeight: 520 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Свойства</div>
-        <div style={{ fontSize: 11, color: C.sub, marginBottom: 12 }}>{selIds.length} элементов выбрано</div>
+      <div style={{ width: 260, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, flexShrink: 0, overflow: 'auto', maxHeight: 520 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Свойства
+        </div>
+        <div style={{ fontSize: 11, color: C.sub, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ background: C.accent + '18', color: C.accent, padding: '1px 6px', borderRadius: 4, fontWeight: 600, fontSize: 10 }}>{selIds.length}</span> элементов выбрано
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Batch opacity */}
@@ -113,9 +118,15 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
   }
 
   return (
-    <div style={{ width: 260, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14, flexShrink: 0, overflow: 'auto', maxHeight: 520 }}>
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Свойства</div>
-      {!sel && <div style={{ color: C.dim, fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Выберите элемент<br />на холсте</div>}
+    <div style={{ width: 260, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, flexShrink: 0, overflow: 'auto', maxHeight: 520 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Свойства
+      </div>
+      {!sel && <div style={{ color: C.dim, fontSize: 12, textAlign: 'center', padding: '28px 0', lineHeight: 1.6 }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto 8px', opacity: 0.3 }}><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+        Выберите элемент<br />на холсте
+      </div>}
 
       {sel && sel.type === 'text' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -460,11 +471,14 @@ const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChang
           border: `1px solid ${proportionLocked ? C.blue + '55' : C.border}`,
           background: proportionLocked ? C.blue + '14' : 'transparent',
           color: proportionLocked ? C.blue : C.dim,
-          fontSize: 12, cursor: 'pointer',
+          cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}
       >
-        {proportionLocked ? '🔗' : '⛓'}
+        {proportionLocked
+          ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        }
       </button>
       <div style={{ flex: 1 }}><div style={labelStyle}>Высота</div><input type="number" value={Math.round(h)} onChange={(e) => handleH(+e.target.value)} style={inputStyle} /></div>
     </div>
@@ -472,13 +486,26 @@ const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChang
 });
 
 const OrderButtons = memo(function OrderButtons({ C, id, bringFront, sendBack, delEl }: { C: Theme; id: string; bringFront: (id: string) => void; sendBack: (id: string) => void; delEl: (id: string) => void }) {
+  const orderBtnStyle: React.CSSProperties = { flex: 1, padding: '5px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all .12s' };
+  const upIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>;
+  const downIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+  const trashIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>;
   return (
     <>
-      <div style={{ display: 'flex', gap: 4, borderTop: `1px solid ${C.border}`, paddingTop: 6 }}>
-        <button onClick={() => bringFront(id)} style={{ flex: 1, padding: '4px', borderRadius: 5, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>▲ Вперёд</button>
-        <button onClick={() => sendBack(id)} style={{ flex: 1, padding: '4px', borderRadius: 5, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>▼ Назад</button>
+      <div style={{ display: 'flex', gap: 4, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+        <button onClick={() => bringFront(id)} style={orderBtnStyle}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '44'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+        >{upIcon} Вперёд</button>
+        <button onClick={() => sendBack(id)} style={orderBtnStyle}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '44'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+        >{downIcon} Назад</button>
       </div>
-      <button onClick={() => delEl(id)} style={{ width: '100%', padding: '5px', borderRadius: 5, border: `1px solid ${C.accent}33`, background: 'transparent', color: C.accent, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: .6 }}>✕ Удалить</button>
+      <button onClick={() => delEl(id)} style={{ width: '100%', padding: '6px', borderRadius: 6, border: `1px solid ${C.accent}22`, background: 'transparent', color: C.accent, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: .65, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all .12s' }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.65'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+      >{trashIcon} Удалить</button>
     </>
   );
 });
@@ -493,6 +520,28 @@ const ColorPresets = memo(function ColorPresets({ C, value, onChange }: { C: The
   );
 });
 
+// Layer type SVG icons (clean, consistent 14x14)
+const LAYER_ICONS: Record<string, React.ReactNode> = {
+  text: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>,
+  rect: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>,
+  circle: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>,
+  triangle: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 22h20L12 2z"/></svg>,
+  star: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  image: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  path: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>,
+  line: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>,
+  arrow: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+  stickyNote: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="14 3 14 8 21 8"/></svg>,
+  table: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
+};
+
+// Layer action SVG icons (14x14)
+const EYE_ICON = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+const EYE_OFF_ICON = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>;
+const LOCK_ICON = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>;
+const UNLOCK_ICON = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>;
+const TRASH_ICON = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>;
+
 const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, delEl, updEl, C }: {
   els: CanvasElement[];
   selId: string | null;
@@ -502,34 +551,69 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
   updEl: (id: string, patch: Partial<CanvasElement>) => void;
   C: Theme;
 }) {
-  const iconMap: Record<string, string> = {
-    text: 'T', rect: '□', circle: '○', triangle: '△', star: '☆', image: '🖼', path: '✎',
-    line: '╱', arrow: '→', stickyNote: '📝', table: '⊞',
-  };
   const nameMap: Record<string, string> = {
     text: '', rect: 'Прямоугольник', circle: 'Круг', triangle: 'Треугольник', star: 'Звезда', image: 'Картинка', path: 'Рисунок',
     line: 'Линия', arrow: 'Стрелка', stickyNote: 'Заметка', table: 'Таблица',
   };
+
+  const actionBtn: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '2px',
+    borderRadius: 4,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 22,
+    height: 22,
+    flexShrink: 0,
+    transition: 'all .12s',
+  };
+
   return (
-    <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 10, paddingTop: 8 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 8 }}>Слои ({els.length})</div>
+    <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 12, paddingTop: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: C.sub }}>Слои</span>
+        <span style={{ fontSize: 10, color: C.dim, fontWeight: 600, background: C.surface, padding: '1px 6px', borderRadius: 4 }}>{els.length}</span>
+      </div>
       {[...els].reverse().map((el) => {
         const isSel = selIds.includes(el.id);
         return (
-          <div key={el.id} role="button" tabIndex={0} aria-label={`Слой: ${nameMap[el.type] ?? el.type}`} aria-pressed={isSel} onClick={() => setSelId(el.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelId(el.id); } }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, marginBottom: 2, background: isSel ? C.blue + '14' : C.surface, border: `1px solid ${isSel ? C.blue + '44' : C.border}`, cursor: 'pointer', transition: 'all .12s' }}>
-            <span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{iconMap[el.type] ?? '?'}</span>
-            <span style={{ flex: 1, fontSize: 11, color: isSel ? C.text : C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {el.type === 'text' ? (el.text ?? '').slice(0, 18) : el.type === 'stickyNote' ? (el.noteText ?? '').slice(0, 18) : nameMap[el.type] ?? el.type}
+          <div key={el.id} role="button" tabIndex={0} aria-label={`Слой: ${nameMap[el.type] ?? el.type}`} aria-pressed={isSel} onClick={() => setSelId(el.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelId(el.id); } }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px', borderRadius: 8, marginBottom: 2, background: isSel ? C.accentDim : 'transparent', border: `1px solid ${isSel ? C.accent + '33' : 'transparent'}`, cursor: 'pointer', transition: 'all .12s' }}
+            onMouseEnter={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = C.surface; }}
+            onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, flexShrink: 0, color: isSel ? C.accent : C.dim, background: isSel ? C.accent + '14' : C.surface, borderRadius: 5 }}>
+              {LAYER_ICONS[el.type] ?? LAYER_ICONS.rect}
+            </span>
+            <span style={{ flex: 1, fontSize: 11, fontWeight: isSel ? 600 : 500, color: isSel ? C.text : C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {el.type === 'text' ? (el.text ?? '').slice(0, 18) || 'Текст' : el.type === 'stickyNote' ? (el.noteText ?? '').slice(0, 18) : nameMap[el.type] ?? el.type}
             </span>
             {/* Visibility toggle */}
-            <button onClick={(e) => { e.stopPropagation(); updEl(el.id, { visible: el.visible === false ? true : false }); }} style={{ background: 'none', border: 'none', color: el.visible === false ? C.dim : C.sub, fontSize: 14, cursor: 'pointer', padding: '1px 3px', opacity: el.visible === false ? 0.5 : 1 }} title={el.visible === false ? 'Показать' : 'Скрыть'}>
-              {el.visible === false ? '◻' : '👁'}
+            <button onClick={(e) => { e.stopPropagation(); updEl(el.id, { visible: el.visible === false ? true : false }); }}
+              style={{ ...actionBtn, color: el.visible === false ? C.dim : C.sub, opacity: el.visible === false ? 0.4 : 0.7 }}
+              title={el.visible === false ? 'Показать' : 'Скрыть'}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.background = C.surface; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = el.visible === false ? '0.4' : '0.7'; (e.currentTarget as HTMLElement).style.background = 'none'; }}>
+              {el.visible === false ? EYE_OFF_ICON : EYE_ICON}
             </button>
             {/* Lock toggle */}
-            <button onClick={(e) => { e.stopPropagation(); updEl(el.id, { locked: !el.locked }); }} style={{ background: 'none', border: 'none', color: el.locked ? C.blue : C.dim, fontSize: 13, cursor: 'pointer', padding: '1px 3px', opacity: el.locked ? 1 : 0.6 }} title={el.locked ? 'Разблокировать' : 'Заблокировать'}>
-              {el.locked ? '🔒' : '🔓'}
+            <button onClick={(e) => { e.stopPropagation(); updEl(el.id, { locked: !el.locked }); }}
+              style={{ ...actionBtn, color: el.locked ? C.accent : C.dim, opacity: el.locked ? 0.9 : 0.5 }}
+              title={el.locked ? 'Разблокировать' : 'Заблокировать'}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.background = C.surface; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = el.locked ? '0.9' : '0.5'; (e.currentTarget as HTMLElement).style.background = 'none'; }}>
+              {el.locked ? LOCK_ICON : UNLOCK_ICON}
             </button>
-            <button onClick={(e) => { e.stopPropagation(); delEl(el.id); }} title="Удалить слой" style={{ background: 'none', border: 'none', color: C.dim, fontSize: 13, cursor: 'pointer', padding: '1px 3px', opacity: 0.8 }}>✕</button>
+            {/* Delete */}
+            <button onClick={(e) => { e.stopPropagation(); delEl(el.id); }} title="Удалить слой"
+              style={{ ...actionBtn, color: C.dim, opacity: 0.5 }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.color = C.accent; (e.currentTarget as HTMLElement).style.background = C.surface; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; (e.currentTarget as HTMLElement).style.color = C.dim; (e.currentTarget as HTMLElement).style.background = 'none'; }}>
+              {TRASH_ICON}
+            </button>
           </div>
         );
       })}

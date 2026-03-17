@@ -24,6 +24,14 @@ export const metadata: Metadata = {
     title: 'TubeForge — ИИ-студия для YouTube',
     description: 'Создавайте профессиональный YouTube-контент с ИИ.',
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -450,10 +450,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
   };
 
+  // ===== SVG icons for header buttons =====
+  const undoIcon = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>;
+  const redoIcon = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>;
+  const downloadIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+  const cameraIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>;
+  const sparkleIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+  const zoomOutIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>;
+  const zoomInIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>;
+  const fitIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>;
+  const chevronIcon = <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+
   // Shared button styles to reduce duplication
-  const headerBtn: React.CSSProperties = { padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-  const dropdownPanel: React.CSSProperties = { position: 'absolute', top: '100%', right: 0, marginTop: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 6, zIndex: Z_INDEX.TOOLBAR_POPOVER, boxShadow: '0 4px 20px rgba(0,0,0,.3)' };
-  const menuItem: React.CSSProperties = { padding: '8px 12px', borderRadius: 6, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: C.text };
+  const headerBtn: React.CSSProperties = { padding: '7px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' };
+  const dropdownPanel: React.CSSProperties = { position: 'absolute', top: '100%', right: 0, marginTop: 6, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 6, zIndex: Z_INDEX.TOOLBAR_POPOVER, boxShadow: '0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.15)' };
+  const menuItem: React.CSSProperties = { padding: '8px 12px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: C.text, transition: 'background .1s' };
 
   return (
     <div>
@@ -462,19 +473,24 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0' }}>Редактор обложек</h2>
             {project.data?.title && <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>— {project.data.title}</span>}
-            <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s' }}>
-              {saveCanvas.isPending ? '💾 Сохраняется...' : <span style={{ color: C.green }}>✓ Сохранено</span>}
+            <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {saveCanvas.isPending ? (
+                <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Сохраняется...</>
+              ) : (
+                <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 3 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Сохранено</span>
+              )}
             </span>
           </div>
           <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>Создайте обложку как в Canva или перейдите к ИИ-генерации</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button onClick={() => store.undo()} disabled={store.history.length === 0} title="Отменить (Ctrl+Z)" style={{ ...headerBtn, color: store.history.length === 0 ? C.dim : C.text, cursor: store.history.length === 0 ? 'default' : 'pointer', opacity: store.history.length === 0 ? 0.3 : 1 }}>↩</button>
-          <button onClick={() => store.redo()} disabled={store.future.length === 0} title="Повторить (Ctrl+Y)" style={{ ...headerBtn, color: store.future.length === 0 ? C.dim : C.text, cursor: store.future.length === 0 ? 'default' : 'pointer', opacity: store.future.length === 0 ? 0.3 : 1 }}>↪</button>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button onClick={() => store.undo()} disabled={store.history.length === 0} title="Отменить (Ctrl+Z)" style={{ ...headerBtn, padding: '7px 8px', color: store.history.length === 0 ? C.dim : C.sub, cursor: store.history.length === 0 ? 'default' : 'pointer', opacity: store.history.length === 0 ? 0.3 : 1 }}>{undoIcon}</button>
+          <button onClick={() => store.redo()} disabled={store.future.length === 0} title="Повторить (Ctrl+Y)" style={{ ...headerBtn, padding: '7px 8px', color: store.future.length === 0 ? C.dim : C.sub, cursor: store.future.length === 0 ? 'default' : 'pointer', opacity: store.future.length === 0 ? 0.3 : 1 }}>{redoIcon}</button>
+          <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* Size presets */}
           <div style={{ position: 'relative' }}>
-            <button onClick={() => { setShowSizeMenu(!showSizeMenu); setShowDownloadMenu(false); }} title="Размер холста" style={{ ...headerBtn, padding: '8px 14px', fontSize: 11 }}>
-              {canvasW}×{canvasH} ▾
+            <button onClick={() => { setShowSizeMenu(!showSizeMenu); setShowDownloadMenu(false); }} title="Размер холста" style={{ ...headerBtn, padding: '7px 12px', fontSize: 11 }}>
+              {canvasW}x{canvasH} {chevronIcon}
             </button>
             {showSizeMenu && (
               <div style={{ ...dropdownPanel, minWidth: 200 }}>
@@ -493,7 +509,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Download dropdown */}
           <div style={{ position: 'relative' }}>
-            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} title="Скачать обложку" style={{ ...headerBtn, padding: '8px 16px' }}>⬇ Скачать</button>
+            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} title="Скачать обложку" style={{ ...headerBtn, padding: '7px 14px' }}>{downloadIcon} Скачать {chevronIcon}</button>
             {showDownloadMenu && (
               <div style={{ ...dropdownPanel, minWidth: 140 }}>
                 {[{ label: 'PNG', format: 'png' as const, desc: 'Без потерь' }, { label: 'JPG', format: 'jpg' as const, desc: 'Сжатый' }, { label: 'PDF', format: 'pdf' as const, desc: 'Документ' }].map((opt) => (
@@ -509,9 +525,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             )}
           </div>
+          <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* AI reference + AI generate */}
-          <button onClick={() => { const img = captureCanvas(); if (img) { store.setAiReferenceImage(img); store.setStep('ai'); } }} style={{ ...headerBtn, padding: '8px 14px' }}>📷 По фото</button>
-          <button onClick={() => store.setStep('ai')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33` }}>✨ ИИ-генерация →</button>
+          <button onClick={() => { const img = captureCanvas(); if (img) { store.setAiReferenceImage(img); store.setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} По фото</button>
+          <button onClick={() => store.setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} ИИ-генерация</button>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 12 }}>
@@ -543,11 +560,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           </div>
           {/* Floating zoom controls */}
-          <div title="Ctrl+Scroll для зума" style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: '4px 8px', zIndex: Z_INDEX.ZOOM_CONTROLS }}>
-            <button onClick={() => store.zoomOut()} title="Уменьшить (Ctrl+−)" style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: C.surface, color: C.text, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 40, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => store.zoomIn()} title="Увеличить (Ctrl++)" style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: C.surface, color: C.text, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-            <button onClick={() => store.fitToScreen()} title="Вместить (Ctrl+0)" style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: C.surface, color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>По размеру</button>
+          <div title="Ctrl+Scroll для зума" style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
+            <button onClick={() => store.zoomOut()} title="Уменьшить (Ctrl+-)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+            >{zoomOutIcon}</button>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
+            <button onClick={() => store.zoomIn()} title="Увеличить (Ctrl++)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+            >{zoomInIcon}</button>
+            <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+            <button onClick={() => store.fitToScreen()} title="Вместить (Ctrl+0)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+            >{fitIcon} По размеру</button>
           </div>
         </div>
         {/* D8: Context menu */}
@@ -584,10 +611,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   }
                 }}>
                   {[
-                    { label: 'Дублировать', icon: '⊕', shortcut: 'Ctrl+D', action: () => store.duplicateSelected() },
-                    { label: 'На передний план', icon: '▲', shortcut: 'Ctrl+]', action: () => store.bringFront(store.contextMenu!.elId!) },
-                    { label: 'На задний план', icon: '▼', shortcut: 'Ctrl+[', action: () => store.sendBack(store.contextMenu!.elId!) },
-                    { label: 'Удалить', icon: '✕', shortcut: 'Del', action: () => store.delEl(store.contextMenu!.elId!), danger: true },
+                    { label: 'Дублировать', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store.duplicateSelected() },
+                    { label: 'На передний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => store.bringFront(store.contextMenu!.elId!) },
+                    { label: 'На задний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => store.sendBack(store.contextMenu!.elId!) },
+                    { label: 'Удалить', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => store.delEl(store.contextMenu!.elId!), danger: true },
                   ].map((item, i) => (
                     <div
                       key={item.label}
@@ -612,7 +639,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                       onFocus={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
                       onBlur={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                     >
-                      <span style={{ width: 16, textAlign: 'center', fontSize: 11 }}>{item.icon}</span>
+                      <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
                       <span style={{ flex: 1 }}>{item.label}</span>
                       <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{item.shortcut}</span>
                     </div>
