@@ -5,9 +5,11 @@ import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 function RegisterContent() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const planParam = searchParams.get('plan');
@@ -65,15 +67,15 @@ function RegisterContent() {
           </div>
           <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em' }}>TubeForge</span>
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Создать аккаунт</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>{t('auth.register.title')}</h1>
         <p style={{ color: C.sub, fontSize: 14, marginBottom: 28 }}>
-          ИИ-платформа для YouTube-креаторов
+          {t('auth.register.subtitle')}
         </p>
         {error && (
           <div style={{ background: '#ef444414', border: '1px solid #ef444433', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#ef4444', fontSize: 13, textAlign: 'left' }}>
             {error === 'OAuthAccountNotLinked'
-              ? 'Этот email уже привязан к другому аккаунту'
-              : 'Не удалось войти через Google. Попробуйте снова.'}
+              ? t('auth.register.errorLinked')
+              : t('auth.register.errorGeneric')}
           </div>
         )}
         <button
