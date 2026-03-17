@@ -1,8 +1,16 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
-
+import { rateLimit } from '@/lib/rate-limit';
+import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
 import type { Prisma } from '@prisma/client';
+
+/** Mutation rate limit: 30 scene actions per minute per user */
+async function checkSceneRate(userId: string) {
+  const { success } = await rateLimit({ identifier: `scene:${userId}`, limit: 30, window: 60 });
+  if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
+}
 
 /** Validated scene metadata — transformed to Prisma InputJsonValue after validation */
 const sceneMetadataSchema = z.object({
@@ -28,6 +36,7 @@ export const sceneRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await checkSceneRate(ctx.session.user.id);
       const project = await ctx.db.project.findFirst({
         where: { id: input.projectId, userId: ctx.session.user.id },
         select: { id: true, _count: { select: { scenes: true } } },
@@ -38,8 +47,8 @@ export const sceneRouter = router({
       return ctx.db.scene.create({
         data: {
           projectId: input.projectId,
-          prompt: input.prompt,
-          label: input.label,
+          prompt: stripTags(input.prompt),
+          label: stripTags(input.label),
           model: input.model,
           duration: input.duration,
           order,
@@ -64,6 +73,7 @@ export const sceneRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await checkSceneRate(ctx.session.user.id);
       const scene = await ctx.db.scene.findFirst({
         where: { id: input.id },
         select: { id: true, project: { select: { userId: true } } },
@@ -72,12 +82,16 @@ export const sceneRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND' });
       }
       const { id, ...data } = input;
+      // Sanitize text fields
+      if (data.prompt) data.prompt = stripTags(data.prompt);
+      if (data.label) data.label = stripTags(data.label);
       return ctx.db.scene.update({ where: { id }, data, select: { id: true, prompt: true, label: true, model: true, duration: true, order: true, status: true, videoUrl: true } });
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await checkSceneRate(ctx.session.user.id);
       const scene = await ctx.db.scene.findFirst({
         where: { id: input.id },
         select: { id: true, project: { select: { userId: true } } },
@@ -97,6 +111,7 @@ export const sceneRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await checkSceneRate(ctx.session.user.id);
       const project = await ctx.db.project.findFirst({
         where: { id: input.projectId, userId: ctx.session.user.id },
         select: { id: true },

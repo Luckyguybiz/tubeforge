@@ -1,8 +1,11 @@
 import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { uid } from './utils';
 
 const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads');
+
+/** Only allow safe alphanumeric extensions (2-5 chars) */
+const SAFE_EXT_RE = /^[a-zA-Z0-9]{2,5}$/;
 
 /**
  * Upload a buffer to local storage (replace with S3/Supabase in production).
@@ -14,10 +17,16 @@ export async function uploadFile(
   _contentType: string
 ): Promise<string> {
   await mkdir(UPLOAD_DIR, { recursive: true });
-  const ext = filename.split('.').pop() || 'bin';
+  const rawExt = filename.split('.').pop() || 'bin';
+  // Sanitize extension: strip non-alphanumeric chars, fallback to 'bin'
+  const ext = SAFE_EXT_RE.test(rawExt) ? rawExt.toLowerCase() : 'bin';
   const name = `${uid()}.${ext}`;
-  const path = join(UPLOAD_DIR, name);
-  await writeFile(path, buffer);
+  const destPath = join(UPLOAD_DIR, name);
+  // Guard against path traversal: resolved path must stay inside UPLOAD_DIR
+  if (!resolve(destPath).startsWith(resolve(UPLOAD_DIR))) {
+    throw new Error('Invalid file path');
+  }
+  await writeFile(destPath, buffer);
   return `/uploads/${name}`;
 }
 

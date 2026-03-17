@@ -3,6 +3,14 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import Stripe from 'stripe';
 import { env } from '@/lib/env';
+import { rateLimit } from '@/lib/rate-limit';
+import { RATE_LIMIT_ERROR } from '@/lib/constants';
+
+/** Billing rate limit: 5 checkout/portal actions per minute per user */
+async function checkBillingRate(userId: string) {
+  const { success } = await rateLimit({ identifier: `billing:${userId}`, limit: 5, window: 60 });
+  if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
+}
 
 function getStripe() {
   return new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-18.acacia' as Stripe.LatestApiVersion });
@@ -31,6 +39,7 @@ export const billingRouter = router({
   createCheckout: protectedProcedure
     .input(z.object({ plan: z.enum(['PRO', 'STUDIO']) }))
     .mutation(async ({ ctx, input }) => {
+      await checkBillingRate(ctx.session.user.id);
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
         select: { email: true, stripeId: true },
@@ -57,6 +66,7 @@ export const billingRouter = router({
     }),
 
   createPortal: protectedProcedure.mutation(async ({ ctx }) => {
+    await checkBillingRate(ctx.session.user.id);
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: { stripeId: true },

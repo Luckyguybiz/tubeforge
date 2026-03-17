@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
 
 /** Mutation rate limit: 30 asset actions per minute per user */
 async function checkAssetRate(userId: string) {
@@ -47,7 +48,7 @@ export const assetRouter = router({
       return ctx.db.asset.create({
         data: {
           url: input.url,
-          filename: input.filename,
+          filename: stripTags(input.filename),
           type: input.type,
           size: input.size,
           folderId: input.folderId ?? null,

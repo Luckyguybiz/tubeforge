@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
 import type { Prisma } from '@prisma/client';
 
 /** Mutation rate limit: 20 writes per minute per user */
@@ -72,7 +73,7 @@ export const projectRouter = router({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Достигнут лимит проектов. Обновите тарифный план.' });
       }
       return ctx.db.project.create({
-        data: { title: input.title ?? 'Без названия', userId: ctx.session.user.id },
+        data: { title: stripTags(input.title ?? 'Без названия'), userId: ctx.session.user.id },
         select: { id: true, title: true, status: true, createdAt: true },
       });
     }),
@@ -97,6 +98,10 @@ export const projectRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const { id, characters, thumbnailData, ...rest } = input;
+      // Sanitize text fields to prevent stored XSS
+      if (rest.title) rest.title = stripTags(rest.title);
+      if (rest.description) rest.description = stripTags(rest.description);
+      if (rest.tags) rest.tags = rest.tags.map((t) => stripTags(t));
       const data: Prisma.ProjectUpdateInput = { ...rest };
       if (characters !== undefined) data.characters = characters as unknown as Prisma.InputJsonValue;
       if (thumbnailData !== undefined) data.thumbnailData = thumbnailData as unknown as Prisma.InputJsonValue;

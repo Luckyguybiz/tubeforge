@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
 
 /** Mutation rate limit: 20 folder actions per minute per user */
 async function checkFolderRate(userId: string) {
@@ -37,7 +38,7 @@ export const folderRouter = router({
       await checkFolderRate(ctx.session.user.id);
       return ctx.db.designFolder.create({
         data: {
-          name: input.name,
+          name: stripTags(input.name),
           parentId: input.parentId ?? null,
           userId: ctx.session.user.id,
         },
@@ -54,7 +55,7 @@ export const folderRouter = router({
       await checkFolderRate(ctx.session.user.id);
       return ctx.db.designFolder.update({
         where: { id: input.id, userId: ctx.session.user.id },
-        data: { name: input.name },
+        data: { name: stripTags(input.name) },
         select: { id: true, name: true },
       });
     }),

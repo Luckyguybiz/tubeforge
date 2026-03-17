@@ -21,7 +21,7 @@ export const videoTaskRouter = router({
         });
       }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Runway API' }); });
       return {
         status: data.status as 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED',
         progress: data.progress as number | undefined,

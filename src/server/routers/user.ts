@@ -1,5 +1,15 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { rateLimit } from '@/lib/rate-limit';
+import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
+
+/** Mutation rate limit: 10 user actions per minute per user */
+async function checkUserRate(userId: string) {
+  const { success } = await rateLimit({ identifier: `user:${userId}`, limit: 10, window: 60 });
+  if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
+}
 
 export const userRouter = router({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
@@ -23,14 +33,18 @@ export const userRouter = router({
   updateProfile: protectedProcedure
     .input(z.object({ name: z.string().min(1).max(50).optional() }))
     .mutation(async ({ ctx, input }) => {
+      await checkUserRate(ctx.session.user.id);
+      const data = { ...input };
+      if (data.name) data.name = stripTags(data.name);
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
-        data: input,
+        data,
         select: { id: true, name: true },
       });
     }),
 
   deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+    await checkUserRate(ctx.session.user.id);
     const userId = ctx.session.user.id;
 
     // Delete all user data in a single transaction to ensure atomicity.

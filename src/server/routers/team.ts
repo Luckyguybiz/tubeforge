@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
 
 /** Mutation rate limit: 10 team actions per minute per user */
 async function checkTeamRate(userId: string) {
@@ -73,7 +74,7 @@ export const teamRouter = router({
 
       const team = await ctx.db.team.create({
         data: {
-          name: input.name,
+          name: stripTags(input.name),
           ownerId: ctx.session.user.id,
           members: {
             create: {

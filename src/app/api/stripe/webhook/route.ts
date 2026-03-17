@@ -8,26 +8,42 @@ function getStripe() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.text();
+  let body: string;
+  try {
+    body = await req.text();
+  } catch {
+    return NextResponse.json({ error: 'Failed to read request body' }, { status: 400 });
+  }
+
   const sig = req.headers.get('stripe-signature');
   if (!sig) {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
+  const stripe = getStripe();
+
   let event: Stripe.Event;
   try {
-    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, sig, env.STRIPE_WEBHOOK_SECRET);
   } catch {
     return NextResponse.json({ error: 'Webhook signature failed' }, { status: 400 });
   }
 
-  const stripe = getStripe();
-
   /** Safely extract priceId from a subscription's first line item */
   function getPlanFromSub(sub: Stripe.Subscription): 'PRO' | 'STUDIO' {
     const priceId = sub.items?.data?.[0]?.price?.id;
     return priceId === env.STRIPE_PRICE_STUDIO ? 'STUDIO' : 'PRO';
+  }
+
+  /** Update user plan by stripeId — uses updateMany to avoid throwing if user not found */
+  async function updatePlan(stripeId: string, plan: 'FREE' | 'PRO' | 'STUDIO') {
+    const result = await db.user.updateMany({
+      where: { stripeId },
+      data: { plan },
+    });
+    if (result.count === 0) {
+      console.warn(`[Stripe webhook] No user found for stripeId: ${stripeId}`);
+    }
   }
 
   try {
@@ -36,28 +52,19 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         if (!session.subscription || !session.customer) break;
         const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-        await db.user.update({
-          where: { stripeId: session.customer as string },
-          data: { plan: getPlanFromSub(sub) },
-        });
+        await updatePlan(session.customer as string, getPlanFromSub(sub));
         break;
       }
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription;
         if (!sub.customer) break;
-        await db.user.update({
-          where: { stripeId: sub.customer as string },
-          data: { plan: 'FREE' },
-        });
+        await updatePlan(sub.customer as string, 'FREE');
         break;
       }
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;
         if (!sub.customer) break;
-        await db.user.update({
-          where: { stripeId: sub.customer as string },
-          data: { plan: getPlanFromSub(sub) },
-        });
+        await updatePlan(sub.customer as string, getPlanFromSub(sub));
         break;
       }
       case 'invoice.paid': {
@@ -65,7 +72,7 @@ export async function POST(req: NextRequest) {
         break;
       }
       case 'invoice.payment_failed': {
-        console.warn('Payment failed for customer:', (event.data.object as Stripe.Invoice).customer);
+        console.warn('[Stripe webhook] Payment failed for customer:', (event.data.object as Stripe.Invoice).customer);
         break;
       }
     }
