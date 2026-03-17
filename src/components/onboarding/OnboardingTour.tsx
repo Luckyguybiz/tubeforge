@@ -1,38 +1,35 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { Z_INDEX } from '@/lib/constants';
 
-interface TourStep {
-  title: string;
-  description: string;
+interface TourStepDef {
+  titleKey: string;
+  descKey: string;
   position: 'center' | 'left' | 'main' | 'sidebar';
 }
 
-const steps: TourStep[] = [
+const stepDefs: TourStepDef[] = [
   {
-    title: 'Добро пожаловать в TubeForge',
-    description:
-      'Ваша ИИ-студия для YouTube. Создавайте видео, обложки и метаданные — всё в одном месте. Давайте покажем, как всё устроено!',
+    titleKey: 'onboarding.welcome',
+    descKey: 'onboarding.welcomeDesc',
     position: 'center',
   },
   {
-    title: 'Обзор дашборда',
-    description:
-      'Здесь отображается статистика канала, последние видео и быстрые действия. Всё начинается с вашего дашборда.',
+    titleKey: 'onboarding.dashboardTitle',
+    descKey: 'onboarding.dashboardDesc',
     position: 'left',
   },
   {
-    title: 'Создайте первый проект',
-    description:
-      'В основной области вы работаете над видео, редактируете метаданные и управляете проектами. Начните с создания нового проекта!',
+    titleKey: 'onboarding.projectTitle',
+    descKey: 'onboarding.projectDesc',
     position: 'main',
   },
   {
-    title: 'ИИ-инструменты',
-    description:
-      'Используйте боковое меню для доступа к ИИ-генерации видео, редактору обложек, оптимизатору метаданных и другим инструментам.',
+    titleKey: 'onboarding.aiTitle',
+    descKey: 'onboarding.aiDesc',
     position: 'sidebar',
   },
 ];
@@ -41,6 +38,12 @@ const STORAGE_KEY = 'tubeforge_onboarding_done';
 
 export function OnboardingTour() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+  const steps = useMemo(() => stepDefs.map((s) => ({
+    title: t(s.titleKey),
+    description: t(s.descKey),
+    position: s.position,
+  })), [t]);
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -195,7 +198,7 @@ export function OnboardingTour() {
             onClick={skip}
             style={{ ...btnBase, background: 'transparent', color: C.dim, padding: '10px 16px' }}
           >
-            Пропустить
+            {t('onboarding.skip')}
           </button>
           <div style={{ display: 'flex', gap: 8 }}>
             {step > 0 && (
@@ -203,14 +206,14 @@ export function OnboardingTour() {
                 onClick={prev}
                 style={{ ...btnBase, background: C.surface, color: C.sub, border: `1px solid ${C.border}` }}
               >
-                Назад
+                {t('onboarding.back')}
               </button>
             )}
             <button
               onClick={next}
               style={{ ...btnBase, background: C.accent, color: '#fff' }}
             >
-              {step < steps.length - 1 ? 'Далее' : 'Начать'}
+              {step < steps.length - 1 ? t('onboarding.next') : t('onboarding.start')}
             </button>
           </div>
         </div>
