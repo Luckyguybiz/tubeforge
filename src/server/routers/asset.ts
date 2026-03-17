@@ -81,7 +81,7 @@ export const assetRouter = router({
           select: { id: true },
         });
         if (!folder) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Папка назначения не найдена' });
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Папка назначения не найдена' });
         }
       }
 

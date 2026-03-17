@@ -100,6 +100,14 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M10.5 10.5L14 14" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   ),
+  tools: (c) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="2" width="7" height="7" rx="2" fill={c} opacity=".85" />
+      <rect x="11" y="2" width="7" height="7" rx="2" fill={c} opacity=".5" />
+      <rect x="2" y="11" width="7" height="7" rx="2" fill={c} opacity=".5" />
+      <rect x="11" y="11" width="7" height="7" rx="2" fill={c} opacity=".35" />
+    </svg>
+  ),
   billing: (c) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="2" y="4" width="16" height="12" rx="2.5" stroke={c} strokeWidth="1.5" opacity=".85" />
@@ -142,6 +150,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Инструменты',
     items: [
+      { id: 'tools', label: 'Все инструменты' },
       { id: 'thumbnails', label: 'Обложки' },
       { id: 'preview', label: 'Превью' },
     ],
@@ -169,6 +178,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   dashboard: ['accent', 'pink'],
   editor: ['blue', 'cyan'],
   metadata: ['purple', 'blue'],
+  tools: ['accent', 'purple'],
   thumbnails: ['orange', 'pink'],
   preview: ['green', 'cyan'],
   team: ['purple', 'pink'],

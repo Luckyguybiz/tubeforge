@@ -26,6 +26,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/editor/:path*',
+    '/tools/:path*',
     '/thumbnails/:path*',
     '/metadata/:path*',
     '/preview/:path*',

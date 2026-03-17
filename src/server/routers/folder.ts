@@ -47,7 +47,7 @@ export const folderRouter = router({
           select: { id: true },
         });
         if (!parent) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Родительская папка не найдена' });
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Родительская папка не найдена' });
         }
       }
 
