@@ -95,6 +95,16 @@ export const Sidebar = memo(function Sidebar() {
           <span style={{ fontSize: 16, width: collapsed ? 'auto' : 20, textAlign: 'center', flexShrink: 0 }}>&#9881;</span>
           {!collapsed && 'Настройки'}
         </button>
+        <button aria-current={current === 'billing' ? 'page' : undefined} onClick={() => router.push('/billing')} title={collapsed ? 'Оплата' : undefined} style={navBtnStyle('billing')}>
+          <span style={{ fontSize: 16, width: collapsed ? 'auto' : 20, textAlign: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+              <rect x="2" y="4" width="16" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M2 8H18" stroke="currentColor" strokeWidth="1.5" />
+              <rect x="4" y="11" width="5" height="2" rx="1" fill="currentColor" opacity=".5" />
+            </svg>
+          </span>
+          {!collapsed && 'Оплата'}
+        </button>
         {role === 'ADMIN' && (
           <button aria-current={current === 'admin' ? 'page' : undefined} onClick={() => router.push('/admin')} title={collapsed ? 'Админка' : undefined} style={navBtnStyle('admin')}>
             <span style={{ fontSize: 16, width: collapsed ? 'auto' : 20, textAlign: 'center', flexShrink: 0 }}>&#9878;</span>

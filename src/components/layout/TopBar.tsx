@@ -3,14 +3,15 @@ import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { NAV, KEYBOARD_SHORTCUTS, Z_INDEX } from '@/lib/constants';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import type { Notification } from '@/stores/useNotificationStore';
 
-/** Extra page labels not in NAV */
-const PAGE_LABELS: Record<string, string> = {
-  settings: 'Настройки',
-  admin: 'Админка',
-  team: 'Команда',
+/** Translation keys for extra page labels not in NAV */
+const PAGE_LABEL_KEYS: Record<string, string> = {
+  settings: 'nav.settings',
+  admin: 'nav.admin',
+  team: 'nav.team',
 };
 
 const NOTIF_ICONS: Record<Notification['type'], string> = {
@@ -36,6 +37,7 @@ export const TopBar = memo(function TopBar() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
   const toggle = useThemeStore((s) => s.toggle);
+  const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
   const router = useRouter();
   const current = pathname.split('/').filter(Boolean)[0] || 'dashboard';
@@ -99,7 +101,9 @@ export const TopBar = memo(function TopBar() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const pageLabel = NAV.find((n) => n.id === current)?.label ?? PAGE_LABELS[current] ?? '';
+  const pageLabelKey = PAGE_LABEL_KEYS[current];
+  const navItem = NAV.find((n) => n.id === current);
+  const pageLabel = pageLabelKey ? t(pageLabelKey) : navItem ? t(`nav.${navItem.id}`) : '';
 
   const btnBase: React.CSSProperties = { width: 28, height: 28, borderRadius: 7, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease' };
 
@@ -137,8 +141,8 @@ export const TopBar = memo(function TopBar() {
 
       {/* Keyboard shortcuts hint button */}
       <button
-        title="Горячие клавиши (?)"
-        aria-label="Горячие клавиши"
+        title={t('topbar.shortcutsLabel')}
+        aria-label={t('topbar.shortcuts')}
         onClick={() => setShowShortcuts(!showShortcuts)}
         onMouseEnter={(e) => handleBtnHover(e, true)}
         onMouseLeave={(e) => handleBtnHover(e, false)}
@@ -150,8 +154,8 @@ export const TopBar = memo(function TopBar() {
       {/* Notification bell */}
       <div ref={bellRef} style={{ position: 'relative' }}>
         <button
-          title="Уведомления"
-          aria-label="Уведомления"
+          title={t('topbar.notifications')}
+          aria-label={t('topbar.notifications')}
           aria-expanded={bellOpen}
           aria-haspopup="true"
           onClick={() => setBellOpen((v) => !v)}
@@ -184,7 +188,7 @@ export const TopBar = memo(function TopBar() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '10px 14px', borderBottom: `1px solid ${C.border}`,
             }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Уведомления</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{t('topbar.notifications')}</span>
               {unreadCount > 0 && (
                 <button
                   onClick={() => markAllRead()}
@@ -194,7 +198,7 @@ export const TopBar = memo(function TopBar() {
                     padding: '2px 6px', borderRadius: 4,
                   }}
                 >
-                  Отметить все прочитанными
+                  {t('topbar.markAllRead')}
                 </button>
               )}
             </div>
@@ -202,7 +206,7 @@ export const TopBar = memo(function TopBar() {
             <div style={{ maxHeight: 320, overflowY: 'auto' }}>
               {notifications.length === 0 && (
                 <div style={{ padding: '24px 14px', textAlign: 'center', color: C.dim, fontSize: 12 }}>
-                  Нет уведомлений
+                  {t('topbar.noNotifications')}
                 </div>
               )}
               {notifications.map((n) => (
@@ -261,9 +265,9 @@ export const TopBar = memo(function TopBar() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Горячие клавиши</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('topbar.shortcuts')}</span>
               <button
-                aria-label="Закрыть"
+                aria-label={t('topbar.close')}
                 onClick={() => setShowShortcuts(false)}
                 style={{ background: 'none', border: 'none', color: C.dim, fontSize: 16, cursor: 'pointer', padding: '2px 6px', fontFamily: 'inherit' }}
               >
