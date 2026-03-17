@@ -5,15 +5,23 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const checks: Record<string, string> = {};
 
-  // 1. Check env vars
+  // 1. Check ALL auth-related env vars
   const envVars = [
     'AUTH_SECRET',
     'NEXTAUTH_SECRET',
+    'AUTH_URL',
+    'NEXTAUTH_URL',
     'AUTH_GOOGLE_ID',
     'AUTH_GOOGLE_SECRET',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET',
     'DATABASE_URL',
     'STRIPE_SECRET_KEY',
     'NEXT_PUBLIC_APP_URL',
+    'VERCEL_URL',
+    'VERCEL_ENV',
+    'VERCEL_BRANCH_URL',
+    'VERCEL_PROJECT_PRODUCTION_URL',
   ];
   for (const name of envVars) {
     const val = process.env[name];
@@ -29,16 +37,7 @@ export async function GET() {
     checks['db_connection'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  // 3. Check if Session table exists
-  try {
-    const { db } = await import('@/server/db');
-    const count = await db.session.count();
-    checks['db_session_table'] = `OK: ${count} sessions`;
-  } catch (e) {
-    checks['db_session_table'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-  }
-
-  // 4. Check if User table exists
+  // 3. Check if User table exists
   try {
     const { db } = await import('@/server/db');
     const count = await db.user.count();
@@ -47,7 +46,7 @@ export async function GET() {
     checks['db_user_table'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  // 5. Check if Account table exists
+  // 4. Check if Account table exists
   try {
     const { db } = await import('@/server/db');
     const count = await db.account.count();
@@ -56,7 +55,7 @@ export async function GET() {
     checks['db_account_table'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  // 6. Test Google OIDC discovery (can Vercel reach Google?)
+  // 5. Test Google OIDC discovery
   try {
     const res = await fetch('https://accounts.google.com/.well-known/openid-configuration');
     const data = await res.json();
@@ -65,26 +64,21 @@ export async function GET() {
     checks['google_oidc_discovery'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  // 7. Test NextAuth callback handler directly with fake request
+  // 6. Check last auth error (if any)
   try {
-    const { handlers } = await import('@/server/auth');
-    const fakeReq = new Request('https://tubeforge-luckyguybizs-projects.vercel.app/api/auth/callback/google?code=test&state=test');
-    const response = await handlers.GET(fakeReq as any);
-    const location = response.headers.get('location') ?? '';
-    const status = response.status;
-    checks['auth_callback_test'] = `status=${status}, location=${location}`;
-    if (status >= 400 || location.includes('error')) {
-      // Try to read response body
-      try {
-        const body = await response.text();
-        checks['auth_callback_body'] = body.substring(0, 500);
-      } catch { /* */ }
-    }
+    const { getLastAuthError } = await import('@/server/auth');
+    const lastError = getLastAuthError();
+    checks['last_auth_error'] = lastError ? JSON.stringify(lastError) : 'none';
   } catch (e) {
-    checks['auth_callback_test'] = `THREW: ${e instanceof Error ? `${e.name}: ${e.message}` : String(e)}`;
-    if (e instanceof Error && e.stack) {
-      checks['auth_callback_stack'] = e.stack.split('\n').slice(0, 8).join(' | ');
-    }
+    checks['last_auth_error'] = `IMPORT ERROR: ${e instanceof Error ? e.message : String(e)}`;
+  }
+
+  // 7. Check auth module loads
+  try {
+    const { auth } = await import('@/server/auth');
+    checks['auth_module'] = 'OK: loaded';
+  } catch (e) {
+    checks['auth_module'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }
 
   return NextResponse.json(checks, { status: 200 });
