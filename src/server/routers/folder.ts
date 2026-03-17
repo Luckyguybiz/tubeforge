@@ -22,7 +22,11 @@ export const folderRouter = router({
           userId: ctx.session.user.id,
           parentId: input.parentId ?? null,
         },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          parentId: true,
+          createdAt: true,
           _count: { select: { assets: true, children: true } },
         },
         orderBy: { name: 'asc' },

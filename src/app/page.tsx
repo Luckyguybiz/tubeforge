@@ -282,36 +282,32 @@ const TESTIMONIALS = [
 
 const FAQ_DATA = [
   {
-    q: 'Можно ли отменить подписку?',
-    a: 'Да, вы можете отменить подписку в любой момент из личного кабинета. После отмены вы сохраните доступ до конца оплаченного периода. Никаких скрытых комиссий или штрафов за отмену.',
+    q: 'What is TubeForge?',
+    a: 'TubeForge is an AI-powered studio for YouTube creators. It combines AI video generation, a professional web editor, thumbnail creation, SEO metadata optimization, and channel analytics — all in one browser-based platform.',
   },
   {
-    q: 'Что входит в бесплатный план?',
-    a: 'Бесплатный план включает 3 видео в месяц, базовый ИИ-редактор, генерацию обложек, SEO-оптимизацию метаданных и 1 ГБ облачного хранилища. Этого достаточно, чтобы попробовать все основные функции платформы.',
+    q: 'How much does TubeForge cost?',
+    a: 'TubeForge offers a free plan with 3 videos per month, basic editing, and 1 GB of storage. The Pro plan is 990 RUB/month with 30 videos, 4K export, and YouTube integration. The Studio plan at 2490 RUB/month includes unlimited videos, team collaboration, and API access.',
   },
   {
-    q: 'Как работает ИИ-генерация видео?',
-    a: 'Вы вводите текст или описание идеи, выбираете стиль и голос озвучки. Наш ИИ автоматически генерирует видеоряд, добавляет переходы, озвучку и субтитры. Весь процесс занимает 3-5 минут. Результат можно отредактировать в веб-редакторе.',
+    q: 'How does the AI video generation work?',
+    a: 'You provide a text description or script, choose a style and voiceover language, and the AI automatically generates video footage, transitions, voiceover, and subtitles. The entire process takes 3-5 minutes, and you can fine-tune the result in the built-in web editor.',
   },
   {
-    q: 'Можно ли монетизировать созданные видео?',
-    a: 'Да, все видео, созданные в TubeForge, полностью принадлежат вам. Вы можете монетизировать их на YouTube, продавать или использовать в коммерческих проектах без ограничений.',
+    q: 'Which platforms and languages are supported?',
+    a: 'TubeForge is optimized for YouTube but the videos can be used anywhere. AI voiceover supports 30+ languages including English, Russian, Spanish, French, German, Chinese, Japanese, and more. The platform interface is available in Russian and English.',
   },
   {
-    q: 'Поддерживаются ли другие языки?',
-    a: 'TubeForge поддерживает более 30 языков для ИИ-озвучки, включая русский, английский, испанский, французский, немецкий, китайский, японский и другие. Интерфейс платформы доступен на русском и английском.',
+    q: 'Is my data secure?',
+    a: 'Yes. TubeForge uses enterprise-grade encryption for data at rest and in transit. Your videos, projects, and account data are stored securely. We do not share your content with third parties. OAuth tokens for YouTube integration are encrypted and can be revoked at any time.',
   },
   {
-    q: 'Есть ли политика возврата?',
-    a: 'Мы предоставляем 14-дневную гарантию возврата средств для всех платных планов. Если вы не удовлетворены сервисом, просто напишите в поддержку — мы вернём 100% оплаты без лишних вопросов.',
+    q: 'Can I monetize videos created with TubeForge?',
+    a: 'Absolutely. All videos created in TubeForge are fully owned by you. You can monetize them on YouTube, use them in commercial projects, or sell them — there are no licensing restrictions on your output.',
   },
   {
-    q: 'Как загрузить видео на YouTube?',
-    a: 'Подключите свой YouTube-канал через OAuth авторизацию в настройках. После этого вы сможете загружать видео прямо из TubeForge в один клик — с автоматической заполненной информацией: заголовок, описание, теги и обложка.',
-  },
-  {
-    q: 'Можно ли работать в команде?',
-    a: 'Да, план Studio поддерживает командную работу до 10 участников. Вы можете назначать роли (администратор, редактор, зритель), делиться проектами и управлять доступом к каналам. Все изменения синхронизируются в реальном времени.',
+    q: 'What is the refund policy?',
+    a: 'We offer a 14-day money-back guarantee for all paid plans. If you are not satisfied, contact our support team and we will issue a full refund — no questions asked.',
   },
 ];
 
@@ -448,6 +444,59 @@ export default function LandingPage() {
         minHeight: '100vh',
       }}
     >
+      {/* ========== JSON-LD STRUCTURED DATA ========== */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'TubeForge',
+            description: 'AI-powered studio for YouTube creators. Video generation, thumbnail editing, SEO metadata optimization, and channel analytics.',
+            applicationCategory: 'MultimediaApplication',
+            operatingSystem: 'Web',
+            url: 'https://tubeforge-luckyguybizs-projects.vercel.app',
+            offers: [
+              {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'RUB',
+                name: 'Free',
+              },
+              {
+                '@type': 'Offer',
+                price: '990',
+                priceCurrency: 'RUB',
+                name: 'Pro',
+              },
+              {
+                '@type': 'Offer',
+                price: '2490',
+                priceCurrency: 'RUB',
+                name: 'Studio',
+              },
+            ],
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQ_DATA.map((item) => ({
+              '@type': 'Question',
+              name: item.q,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.a,
+              },
+            })),
+          }),
+        }}
+      />
+
       {/* ========== HEADER ========== */}
       <header
         style={{
@@ -784,10 +833,10 @@ export default function LandingPage() {
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
             {[
-              { num: '30+', label: 'ИИ-инструментов' },
-              { num: '30+', label: 'Языков озвучки' },
-              { num: '4K', label: 'Экспорт видео' },
-              { num: '99.9%', label: 'Аптайм платформы' },
+              { num: '2026', label: 'Launched' },
+              { num: 'Next-Gen', label: 'AI Technology' },
+              { num: '99.9%', label: 'Uptime SLA' },
+              { num: 'Enterprise', label: 'Grade Security' },
             ].map((stat, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 36, fontWeight: 800, background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>
@@ -901,8 +950,8 @@ export default function LandingPage() {
       <section id="faq" style={{ padding: '100px 24px', background: GRAY_50 }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <h2 style={sectionHeadingStyle}>Часто задаваемые вопросы</h2>
-            <p style={sectionSubStyle}>Ответы на популярные вопросы о TubeForge</p>
+            <h2 style={sectionHeadingStyle}>Frequently Asked Questions</h2>
+            <p style={sectionSubStyle}>Everything you need to know about TubeForge</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {FAQ_DATA.map((item, i) => {

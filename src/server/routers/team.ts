@@ -13,15 +13,25 @@ async function checkTeamRate(userId: string) {
 
 export const teamRouter = router({
   getTeam: protectedProcedure.query(async ({ ctx }) => {
-    // Find team where user is owner or member
+    const userId = ctx.session.user.id;
+
+    // Single query: find team where user is owner OR member
     const membership = await ctx.db.teamMember.findFirst({
-      where: { userId: ctx.session.user.id },
-      include: {
+      where: { userId },
+      select: {
         team: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            ownerId: true,
+            createdAt: true,
+            updatedAt: true,
             owner: { select: { id: true, name: true, email: true, image: true } },
             members: {
-              include: {
+              select: {
+                id: true,
+                role: true,
+                joinedAt: true,
                 user: { select: { id: true, name: true, email: true, image: true } },
               },
               orderBy: { joinedAt: 'asc' },
@@ -30,24 +40,11 @@ export const teamRouter = router({
           },
         },
       },
+      // Prefer owned team by sorting OWNER role first
+      orderBy: { role: 'asc' },
     });
 
-    // Also check if user owns a team
-    const ownedTeam = await ctx.db.team.findFirst({
-      where: { ownerId: ctx.session.user.id },
-      include: {
-        owner: { select: { id: true, name: true, email: true, image: true } },
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, image: true } },
-          },
-          orderBy: { joinedAt: 'asc' },
-        },
-        _count: { select: { projects: true } },
-      },
-    });
-
-    return ownedTeam ?? membership?.team ?? null;
+    return membership?.team ?? null;
   }),
 
   create: protectedProcedure
@@ -98,7 +95,7 @@ export const teamRouter = router({
       await checkTeamRate(ctx.session.user.id);
       const team = await ctx.db.team.findFirst({
         where: { ownerId: ctx.session.user.id },
-        include: { _count: { select: { members: true } } },
+        select: { id: true, _count: { select: { members: true } } },
       });
       if (!team) throw new TRPCError({ code: 'NOT_FOUND', message: 'Команда не найдена' });
 
@@ -131,7 +128,10 @@ export const teamRouter = router({
           userId: invitee.id,
           role: input.role,
         },
-        include: {
+        select: {
+          id: true,
+          role: true,
+          joinedAt: true,
           user: { select: { id: true, name: true, email: true, image: true } },
         },
       });
@@ -143,7 +143,7 @@ export const teamRouter = router({
       await checkTeamRate(ctx.session.user.id);
       const member = await ctx.db.teamMember.findUnique({
         where: { id: input.memberId },
-        include: { team: { select: { ownerId: true } } },
+        select: { id: true, role: true, team: { select: { ownerId: true } } },
       });
       if (!member || member.team.ownerId !== ctx.session.user.id) {
         throw new TRPCError({ code: 'NOT_FOUND' });
@@ -165,7 +165,7 @@ export const teamRouter = router({
       await checkTeamRate(ctx.session.user.id);
       const member = await ctx.db.teamMember.findUnique({
         where: { id: input.memberId },
-        include: { team: { select: { ownerId: true } } },
+        select: { id: true, role: true, team: { select: { ownerId: true } } },
       });
       if (!member || member.team.ownerId !== ctx.session.user.id) {
         throw new TRPCError({ code: 'NOT_FOUND' });

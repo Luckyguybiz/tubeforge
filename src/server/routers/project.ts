@@ -62,7 +62,36 @@ export const projectRouter = router({
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: { id: input.id, userId: ctx.session.user.id },
-        include: { scenes: { orderBy: { order: 'asc' } } },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          tags: true,
+          thumbnailUrl: true,
+          thumbnailData: true,
+          characters: true,
+          status: true,
+          userId: true,
+          teamId: true,
+          createdAt: true,
+          updatedAt: true,
+          scenes: {
+            select: {
+              id: true,
+              prompt: true,
+              label: true,
+              duration: true,
+              order: true,
+              status: true,
+              model: true,
+              videoUrl: true,
+              metadata: true,
+              taskId: true,
+              projectId: true,
+            },
+            orderBy: { order: 'asc' },
+          },
+        },
       });
       if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
       return project;

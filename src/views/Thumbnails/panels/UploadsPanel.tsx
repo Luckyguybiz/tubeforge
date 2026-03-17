@@ -5,7 +5,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
-import { Skeleton } from '@/components/ui';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { MAX_UPLOAD_SIZE } from '@/lib/constants';
 
 export function UploadsPanel() {

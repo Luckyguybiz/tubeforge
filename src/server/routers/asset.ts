@@ -26,6 +26,15 @@ export const assetRouter = router({
       const [items, total] = await Promise.all([
         ctx.db.asset.findMany({
           where,
+          select: {
+            id: true,
+            url: true,
+            filename: true,
+            type: true,
+            size: true,
+            folderId: true,
+            createdAt: true,
+          },
           orderBy: { createdAt: 'desc' },
           skip: (input.page - 1) * input.limit,
           take: input.limit,

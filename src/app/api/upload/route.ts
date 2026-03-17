@@ -24,7 +24,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Слишком много загрузок. Попробуйте позже.' }, { status: 429 });
   }
 
-  const formData = await req.formData();
+  let formData: FormData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return NextResponse.json({ error: 'Некорректные данные формы' }, { status: 400 });
+  }
   const file = formData.get('file') as File | null;
 
   if (!file) {
@@ -63,7 +68,11 @@ export async function POST(req: NextRequest) {
     if (!url) {
       return NextResponse.json({ error: 'Не удалось загрузить файл' }, { status: 500 });
     }
-    return NextResponse.json({ url });
+    return NextResponse.json({ url }, {
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch (err) {
     console.error('Upload failed:', err instanceof Error ? err.message : err);
     return NextResponse.json({ error: 'Ошибка загрузки файла. Попробуйте снова.' }, { status: 500 });

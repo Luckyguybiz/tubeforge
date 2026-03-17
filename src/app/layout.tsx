@@ -3,13 +3,13 @@ import { Instrument_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const instrumentSans = Instrument_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-sans' });
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
+const instrumentSans = Instrument_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' });
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
   title: { default: 'TubeForge — ИИ-студия для YouTube', template: '%s | TubeForge' },
   description: 'ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge-luckyguybizs-projects.vercel.app'),
   openGraph: {
     title: 'TubeForge — ИИ-студия для YouTube',
     description: 'Создавайте профессиональный YouTube-контент с ИИ. Генерация обложек, оптимизация метаданных, видеомонтаж.',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.app',
+    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge-luckyguybizs-projects.vercel.app',
   },
   twitter: {
     card: 'summary_large_image',

@@ -6,6 +6,8 @@ import { env } from '@/lib/env';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  session: { strategy: 'database' },
   adapter: PrismaAdapter(db),
   providers: [
     Google({

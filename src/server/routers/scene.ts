@@ -118,19 +118,19 @@ export const sceneRouter = router({
       });
       if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      // Verify all scene IDs belong to this project
-      const sceneCount = await ctx.db.scene.count({
-        where: { id: { in: input.sceneIds }, projectId: project.id },
-      });
-      if (sceneCount !== input.sceneIds.length) {
+      // Verify all scene IDs belong to this project and all project scenes are included
+      const [matchingCount, totalCount] = await Promise.all([
+        ctx.db.scene.count({
+          where: { id: { in: input.sceneIds }, projectId: project.id },
+        }),
+        ctx.db.scene.count({
+          where: { projectId: project.id },
+        }),
+      ]);
+      if (matchingCount !== input.sceneIds.length) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Некорректные ID сцен' });
       }
-
-      // Verify all scenes in the project are included
-      const totalScenes = await ctx.db.scene.count({
-        where: { projectId: project.id },
-      });
-      if (totalScenes !== input.sceneIds.length) {
+      if (totalCount !== input.sceneIds.length) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Необходимо указать все сцены проекта' });
       }
 
