@@ -2,24 +2,24 @@ import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { db } from './db';
-import { env } from '@/lib/env';
 
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+/* ------------------------------------------------------------------ */
+/*  Minimal auth config — stripped to debug "Configuration" error      */
+/* ------------------------------------------------------------------ */
 
-if (!authSecret) {
-  console.error('[auth] CRITICAL: AUTH_SECRET is not set! Available env vars:', Object.keys(process.env).filter(k => k.includes('AUTH') || k.includes('SECRET') || k.includes('NEXT')).join(', '));
-}
+const googleId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID ?? '';
+const googleSecret = process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET ?? '';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   debug: true,
-  secret: authSecret,
-  session: { strategy: 'database' },
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(db),
+  session: { strategy: 'database' },
   providers: [
     Google({
-      clientId: env.AUTH_GOOGLE_ID,
-      clientSecret: env.AUTH_GOOGLE_SECRET,
+      clientId: googleId,
+      clientSecret: googleSecret,
     }),
   ],
   callbacks: {
@@ -33,8 +33,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
           session.user.plan = dbUser?.plan ?? 'FREE';
           session.user.role = dbUser?.role ?? 'USER';
-        } catch (e) {
-          console.error('[auth] session callback DB error:', e);
+        } catch {
           session.user.plan = 'FREE';
           session.user.role = 'USER';
         }
@@ -42,15 +41,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
-  logger: {
-    error(code, ...message) {
-      console.error('[next-auth][error]', code, ...message);
-    },
-    warn(code, ...message) {
-      console.warn('[next-auth][warn]', code, ...message);
-    },
-  },
   pages: {
     signIn: '/login',
+    error: '/login',
   },
 });
