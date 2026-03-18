@@ -417,7 +417,7 @@ export function CutCrop() {
   // ---------- Upload screen ----------
   if (!file) {
     return (
-      <ToolPageShell title="Cut & Crop" subtitle="Trim, crop, and stitch video clips with precision" gradient={GRADIENT}>
+      <ToolPageShell title="Обрезка и кадрирование" subtitle="Обрезайте, кадрируйте и склеивайте видеоклипы с точностью" gradient={GRADIENT}>
         <label
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -429,6 +429,8 @@ export function CutCrop() {
             background: dragOver ? `${GRADIENT[0]}10` : C.surface,
             cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
           }}
+          onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.text; e.currentTarget.style.background = C.card; } }}
+          onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; } }}
         >
           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
@@ -436,7 +438,7 @@ export function CutCrop() {
           <span style={{ fontSize: 16, fontWeight: 700, color: C.text, marginTop: 16 }}>
             Перетащите видео сюда
           </span>
-          <span style={{ fontSize: 13, color: C.dim, marginTop: 6 }}>или выберите файл</span>
+          <span style={{ fontSize: 13, color: C.dim, marginTop: 6 }}>или нажмите для выбора файла</span>
           <input type="file" accept="video/*" style={{ display: 'none' }} onChange={(e) => {
             const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '';
           }} />
@@ -452,7 +454,7 @@ export function CutCrop() {
   for (let t = 0; t <= duration; t += markerStep) markers.push(t);
 
   return (
-    <ToolPageShell title="Cut & Crop" subtitle="Trim, crop, and stitch video clips with precision" gradient={GRADIENT}>
+    <ToolPageShell title="Обрезка и кадрирование" subtitle="Обрезайте, кадрируйте и склеивайте видеоклипы с точностью" gradient={GRADIENT}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
         {/* ---- VIDEO PLAYER ---- */}

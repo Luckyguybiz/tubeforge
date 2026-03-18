@@ -40,7 +40,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
             transition: 'all 0.2s ease', fontFamily: 'inherit',
             outline: 'none', flexShrink: 0,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = C.surface; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = C.card; }}
           onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${gradient[0]}44`; }}
           onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
@@ -135,10 +135,10 @@ export function UploadArea({ C, accept, onFile, label }: {
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
       </svg>
       <span style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 12 }}>
-        {label ?? 'Drop file here or click to upload'}
+        {label ?? 'Перетащите файл сюда или нажмите для загрузки'}
       </span>
       <span style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
-        {accept ?? 'All formats supported'}
+        {accept ?? 'Все форматы поддерживаются'}
       </span>
       <input type="file" accept={accept} style={{ display: 'none' }} onChange={(e) => {
         const f = e.target.files?.[0];

@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
-const QUALITIES = ['1080p', '720p', '480p', '360p', 'Audio Only'] as const;
+const QUALITIES = ['1080p', '720p', '480p', '360p', 'Только аудио'] as const;
 const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
 
 interface VideoInfo {
@@ -40,10 +40,10 @@ interface StreamData {
 
 /** Format bytes into a human-readable string */
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} ГБ`;
 }
 
 function isValidYoutubeUrl(url: string): boolean {
@@ -89,13 +89,13 @@ export function YoutubeDownloader() {
       const data = await res.json();
 
       if (!res.ok) {
-        setFetchError(data.error ?? 'Failed to fetch video info');
+        setFetchError(data.error ?? 'Не удалось загрузить информацию о видео');
         return;
       }
 
       setVideoInfo(data as VideoInfo);
     } catch {
-      setFetchError('Network error. Please check your connection.');
+      setFetchError('Ошибка сети. Проверьте подключение к интернету.');
     } finally {
       setFetchingInfo(false);
     }
@@ -123,7 +123,7 @@ export function YoutubeDownloader() {
       return false;
     }
     if (!isValidYoutubeUrl(value)) {
-      setUrlError('Please enter a valid YouTube URL');
+      setUrlError('Введите корректную ссылку YouTube');
       return false;
     }
     setUrlError('');
@@ -175,12 +175,12 @@ export function YoutubeDownloader() {
   // ── Download handler ───────────────────────────────────────────
   const handleDownload = async () => {
     if (!url.trim() || !isValidYoutubeUrl(url)) {
-      setUrlError('Please enter a valid YouTube URL');
+      setUrlError('Введите корректную ссылку YouTube');
       return;
     }
 
     if (!videoInfo) {
-      showToast('Please wait for the video info to load first.');
+      showToast('Подождите, пока загрузится информация о видео.');
       return;
     }
 
@@ -199,7 +199,7 @@ export function YoutubeDownloader() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStreamError(data.error ?? 'Failed to fetch stream URLs');
+        setStreamError(data.error ?? 'Не удалось получить ссылки на потоки');
         setDone(true);
         return;
       }
@@ -211,13 +211,13 @@ export function YoutubeDownloader() {
       if (sd.encrypted) {
         showToast('Скачивание через браузер недоступно для этого видео');
       } else if (sd.formats.length === 0) {
-        showToast('No downloadable streams found for this video.');
+        showToast('Для этого видео не найдены потоки для скачивания.');
       }
 
       // If we have a matching direct URL, trigger a download
       if (sd.formats.length > 0 && !sd.encrypted) {
         // Try to find a format matching user-selected quality
-        const targetQ = quality === 'Audio Only' ? null : quality;
+        const targetQ = quality === 'Только аудио' ? null : quality;
         const targetMime =
           format === 'MP3'
             ? 'audio'
@@ -247,11 +247,11 @@ export function YoutubeDownloader() {
         if (bestMatch?.url) {
           // Open in new tab — direct download via browser
           window.open(bestMatch.url, '_blank', 'noopener');
-          showToast(`Opening ${bestMatch.quality ?? 'stream'} download in new tab`);
+          showToast(`Открываем скачивание ${bestMatch.quality ?? 'потока'} в новой вкладке`);
         }
       }
     } catch {
-      setStreamError('Network error. Please check your connection.');
+      setStreamError('Ошибка сети. Проверьте подключение к интернету.');
     } finally {
       setLoading(false);
     }
@@ -266,8 +266,8 @@ export function YoutubeDownloader() {
 
   return (
     <ToolPageShell
-      title="YouTube Video Downloader"
-      subtitle="Download YouTube videos in any quality and format"
+      title="Скачать видео с YouTube"
+      subtitle="Скачивайте видео с YouTube в любом качестве и формате"
       gradient={['#ef4444', '#dc2626']}
     >
       {/* Toast Notification */}
@@ -339,7 +339,7 @@ export function YoutubeDownloader() {
             onBlur={() => {
               if (url.trim()) validateUrl(url);
             }}
-            placeholder="Paste YouTube URL here..."
+            placeholder="Вставьте ссылку YouTube..."
             style={{
               flex: 1,
               background: 'transparent',
@@ -440,7 +440,7 @@ export function YoutubeDownloader() {
             <rect x="9" y="9" width="13" height="13" rx="2" />
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
           </svg>
-          Paste
+          Вставить
         </button>
       </div>
 
@@ -708,7 +708,7 @@ export function YoutubeDownloader() {
             marginBottom: 8,
           }}
         >
-          Quality
+          Качество
         </label>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {QUALITIES.map((q) => (
@@ -752,7 +752,7 @@ export function YoutubeDownloader() {
             marginBottom: 8,
           }}
         >
-          Format
+          Формат
         </label>
         <div style={{ display: 'flex', gap: 8 }}>
           {FORMATS.map((f) => (
@@ -789,7 +789,7 @@ export function YoutubeDownloader() {
       {loading && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: C.sub }}>Preparing download...</span>
+            <span style={{ fontSize: 12, color: C.sub }}>Подготовка скачивания...</span>
           </div>
           <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
             <div
@@ -901,11 +901,11 @@ export function YoutubeDownloader() {
             }}
           >
             <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-              Available Streams ({streamData.formats.length})
+              Доступные потоки ({streamData.formats.length})
             </span>
             {streamData.duration && (
               <span style={{ fontSize: 12, color: C.sub }}>
-                Duration: {Math.floor(streamData.duration / 60)}:{String(streamData.duration % 60).padStart(2, '0')}
+                Длительность: {Math.floor(streamData.duration / 60)}:{String(streamData.duration % 60).padStart(2, '0')}
               </span>
             )}
           </div>
@@ -959,12 +959,12 @@ export function YoutubeDownloader() {
                     {f.quality}
                     {f.hasVideo && !f.hasAudio && (
                       <span style={{ fontSize: 11, color: C.dim, marginLeft: 6 }}>
-                        (video only)
+                        (только видео)
                       </span>
                     )}
                     {f.hasAudio && !f.hasVideo && (
                       <span style={{ fontSize: 11, color: C.dim, marginLeft: 6 }}>
-                        (audio only)
+                        (только аудио)
                       </span>
                     )}
                   </div>
@@ -1008,7 +1008,7 @@ export function YoutubeDownloader() {
                           <polyline points="7 10 12 15 17 10" />
                           <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
-                        Download
+                        Скачать
                       </button>
                       <button
                         onClick={() => handleCopyUrl(f.url!)}
@@ -1085,10 +1085,10 @@ export function YoutubeDownloader() {
           </svg>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              No downloadable streams found
+              Не найдены потоки для скачивания
             </div>
             <div style={{ fontSize: 12, color: C.sub }}>
-              This video may be age-restricted or region-locked. Try opening directly on YouTube.
+              Это видео может иметь возрастные ограничения или региональную блокировку. Попробуйте открыть напрямую на YouTube.
             </div>
           </div>
           {videoInfo && (
@@ -1131,7 +1131,7 @@ export function YoutubeDownloader() {
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
-              Open on YouTube
+              Открыть на YouTube
             </button>
           )}
         </div>
@@ -1141,12 +1141,12 @@ export function YoutubeDownloader() {
       <ActionButton
         label={
           fetchingInfo
-            ? 'Fetching Info...'
+            ? 'Загрузка информации...'
             : done
-              ? 'Download Again'
+              ? 'Скачать снова'
               : videoInfo
-                ? 'Download'
-                : 'Download'
+                ? 'Скачать'
+                : 'Скачать'
         }
         gradient={['#ef4444', '#dc2626']}
         onClick={handleDownload}

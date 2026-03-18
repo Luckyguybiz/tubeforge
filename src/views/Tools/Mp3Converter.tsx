@@ -238,7 +238,10 @@ export function Mp3Converter() {
             border: `2px dashed ${dragOver ? '#10b981' : C.border}`,
             background: dragOver ? 'rgba(16,185,129,.06)' : C.surface,
             cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
-          }}>
+          }}
+          onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.text; e.currentTarget.style.background = C.card; } }}
+          onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; } }}
+          >
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
             </svg>
