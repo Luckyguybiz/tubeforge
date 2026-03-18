@@ -26,6 +26,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
   const [displayCount, setDisplayCount] = useState(10);
   const projects = trpc.project.list.useQuery({ page: 1, limit: 50 });
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const createProject = trpc.project.create.useMutation({
     onSuccess: (data) => {
       setError(null);
@@ -33,6 +34,16 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
     },
     onError: (err) => {
       setError(err.message || 'Не удалось создать проект');
+    },
+  });
+  const deleteProject = trpc.project.delete.useMutation({
+    onSuccess: () => {
+      setDeletingId(null);
+      projects.refetch();
+    },
+    onError: (err) => {
+      setDeletingId(null);
+      setError(err.message || 'Не удалось удалить проект');
     },
   });
 
@@ -79,7 +90,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
         <div style={{ width: 380, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {/* New project button */}
           <button
-            onClick={() => createProject.mutate({ title: '' })}
+            onClick={() => createProject.mutate({ title: 'Без названия' })}
             disabled={createProject.isPending}
             style={{
               display: 'flex',
@@ -189,7 +200,39 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                     <span style={{ color: statusColor(p.status), fontWeight: 600 }}>{st.l}</span>
                   </div>
                 </div>
-                <span style={{ fontSize: 10, color: C.dim }}>→</span>
+                <span style={{ fontSize: 10, color: C.dim, marginRight: 4 }}>→</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (deletingId === p.id) {
+                      deleteProject.mutate({ id: p.id });
+                    } else {
+                      setDeletingId(p.id);
+                      setTimeout(() => setDeletingId((curr) => curr === p.id ? null : curr), 3000);
+                    }
+                  }}
+                  title={deletingId === p.id ? 'Нажмите ещё раз для удаления' : 'Удалить проект'}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    border: 'none',
+                    background: deletingId === p.id ? C.accent : 'transparent',
+                    color: deletingId === p.id ? '#fff' : C.dim,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: 12,
+                    transition: 'all .15s',
+                    opacity: deleteProject.isPending && deletingId === p.id ? 0.5 : 1,
+                  }}
+                  onMouseEnter={(e) => { if (deletingId !== p.id) e.currentTarget.style.color = C.accent; }}
+                  onMouseLeave={(e) => { if (deletingId !== p.id) e.currentTarget.style.color = C.dim; }}
+                >
+                  {deletingId === p.id ? '✓' : '×'}
+                </button>
               </button>
             );
           })}
