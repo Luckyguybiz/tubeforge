@@ -188,12 +188,36 @@ export function YoutubeDownloader() {
     setDone(false);
     setStreamError('');
 
-    // YouTube blocks all datacenter IPs for direct download.
-    // We show video info and provide helpful alternatives.
-    await new Promise(r => setTimeout(r, 800)); // Brief loading for UX
+    try {
+      const isAudioOnly = quality === 'Только аудио';
+      const res = await fetch('/api/tools/youtube-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoId: videoInfo.videoId,
+          quality,
+          audioOnly: isAudioOnly,
+        }),
+      });
 
-    setDone(true);
-    setLoading(false);
+      const data = await res.json();
+
+      if (!res.ok || !data.downloadUrl) {
+        setStreamError(data.error ?? 'Не удалось получить ссылку на скачивание');
+        setDone(true);
+        return;
+      }
+
+      // Open direct download from VPS
+      window.open(data.downloadUrl, '_blank', 'noopener');
+      showToast('Скачивание началось! Файл загружается с сервера.');
+      setDone(true);
+    } catch {
+      setStreamError('Ошибка сети. Проверьте подключение к интернету.');
+      setDone(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Determine the thumbnail src (fall back to hq/mq if maxres fails)

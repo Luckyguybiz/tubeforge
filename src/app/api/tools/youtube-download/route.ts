@@ -126,11 +126,13 @@ export async function GET(req: NextRequest) {
 /**
  * POST /api/tools/youtube-download
  *
- * Uses cobalt API to get a direct download link for the YouTube video.
- * Cobalt is a free open-source service: https://github.com/imputnet/cobalt
+ * Proxies to our self-hosted yt-dlp API on VPS for real YouTube downloads.
  *
  * Body: { videoId: string, quality?: string, audioOnly?: boolean }
  */
+
+const YT_API_BASE = process.env.YT_DLP_API_URL ?? 'http://57.128.254.111:3333';
+
 export async function POST(req: NextRequest) {
   let body: { videoId?: string; quality?: string; audioOnly?: boolean };
   try {
@@ -145,73 +147,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing or invalid videoId' }, { status: 400 });
   }
 
-  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  try {
+    // Build download URL on our VPS
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const downloadUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
 
-  // Try multiple cobalt API instances (public instances)
-  const COBALT_APIS = [
-    'https://api.cobalt.tools',
-    'https://cobalt-api.kwiatekmiki.com',
-  ];
-
-  for (const apiBase of COBALT_APIS) {
-    try {
-      const cobaltRes = await fetch(`${apiBase}/`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: youtubeUrl,
-          downloadMode: audioOnly ? 'audio' : 'auto',
-          filenameStyle: 'pretty',
-          videoQuality: quality === '4k' ? '2160' : quality === '1080p' ? '1080' : quality === '720p' ? '720' : quality === '480p' ? '480' : '720',
-        }),
-        signal: AbortSignal.timeout(15000),
-      });
-
-      if (!cobaltRes.ok) {
-        const err = await cobaltRes.json().catch(() => ({}));
-        // Try next API instance
-        if (cobaltRes.status >= 500) continue;
-        return NextResponse.json({
-          error: (err as { error?: { code?: string } }).error?.code === 'error.api.youtube.login'
-            ? 'Видео недоступно для скачивания (требуется авторизация YouTube)'
-            : 'Не удалось получить ссылку на скачивание',
-          details: err,
-        }, { status: cobaltRes.status });
-      }
-
-      const data = await cobaltRes.json();
-
-      // Cobalt returns { status: "stream"|"redirect"|"picker", url?: string, ... }
-      if (data.url) {
-        return NextResponse.json({
-          downloadUrl: data.url,
-          filename: data.filename ?? `${videoId}.mp4`,
-          status: data.status,
-        });
-      }
-
-      // "picker" status means multiple options
-      if (data.status === 'picker' && data.picker) {
-        return NextResponse.json({
-          picker: data.picker,
-          audio: data.audio,
-          status: 'picker',
-        });
-      }
-
-      return NextResponse.json({ error: 'Не удалось получить ссылку' }, { status: 400 });
-    } catch (err) {
-      // Timeout or network error — try next instance
-      if (err instanceof Error && err.name === 'TimeoutError') continue;
-      continue;
-    }
+    return NextResponse.json({
+      downloadUrl,
+      filename: `${videoId}.${audioOnly ? 'mp3' : 'mp4'}`,
+      status: 'redirect',
+    });
+  } catch {
+    return NextResponse.json({
+      error: 'Сервис скачивания временно недоступен. Попробуйте позже.',
+    }, { status: 502 });
   }
-
-  // All instances failed
-  return NextResponse.json({
-    error: 'Сервис скачивания временно недоступен. Попробуйте позже.',
-  }, { status: 502 });
 }
