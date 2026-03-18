@@ -53,6 +53,7 @@ export default function SettingsPage() {
 
   const language = useLocaleStore((s) => s.locale);
   const setLanguage = useLocaleStore((s) => s.setLocale);
+  const t = useLocaleStore((s) => s.t);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
 
@@ -172,7 +173,7 @@ export default function SettingsPage() {
       {/* Page subtitle */}
       <div style={{ marginBottom: 32 }}>
         <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
-          Управление аккаунтом, подпиской и предпочтениями
+          {t('settings.subtitle')}
         </p>
       </div>
 
@@ -180,13 +181,13 @@ export default function SettingsPage() {
       {/* SECTION 1: Profile                                     */}
       {/* ====================================================== */}
       <div style={sectionStyle}>
-        <h2 style={sectionHeaderStyle}>Профиль</h2>
-        <p style={sectionDescStyle}>Основная информация вашего аккаунта</p>
+        <h2 style={sectionHeaderStyle}>{t('settings.profile')}</h2>
+        <p style={sectionDescStyle}>{t('settings.profileDesc')}</p>
 
         {profile.isLoading ? (
           <ProfileSkeleton />
         ) : profile.isError ? (
-          <ErrorRow C={C} btnBase={btnBase} message="Не удалось загрузить профиль" onRetry={() => profile.refetch()} />
+          <ErrorRow C={C} btnBase={btnBase} message={t('settings.errorProfile')} onRetry={() => profile.refetch()} />
         ) : (
           <>
             {/* Avatar + Name + Email */}
@@ -224,7 +225,7 @@ export default function SettingsPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 180 }}>
-                    <label htmlFor="settings-name" style={labelStyle}>Имя</label>
+                    <label htmlFor="settings-name" style={labelStyle}>{t('settings.name')}</label>
                     <input
                       id="settings-name"
                       aria-label="Имя пользователя"
@@ -235,11 +236,11 @@ export default function SettingsPage() {
                       onBlur={handleNameBlur}
                     />
                     <span style={{ fontSize: 11, color: C.dim, marginTop: 4, display: 'block' }}>
-                      Сохраняется автоматически
+                      {t('settings.autoSave')}
                     </span>
                   </div>
                   <div style={{ flex: 1, minWidth: 180 }}>
-                    <label htmlFor="settings-email" style={labelStyle}>Почта</label>
+                    <label htmlFor="settings-email" style={labelStyle}>{t('settings.email')}</label>
                     <div style={{ position: 'relative' }}>
                       <input
                         id="settings-email"
@@ -266,7 +267,7 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <span style={{ fontSize: 11, color: C.dim, marginTop: 4, display: 'block' }}>
-                      Привязана к аккаунту {authProvider}
+                      {t('settings.linkedTo')} {authProvider}
                     </span>
                   </div>
                 </div>
@@ -281,7 +282,7 @@ export default function SettingsPage() {
               border: `1px solid ${C.border}`,
             }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 12 }}>
-                Подключённые аккаунты
+                {t('settings.connectedAccounts')}
               </div>
               <div style={{
                 display: 'flex',
@@ -320,7 +321,7 @@ export default function SettingsPage() {
                   fontWeight: 700,
                   letterSpacing: 0.3,
                 }}>
-                  Подключено
+                  {t('settings.connected')}
                 </div>
               </div>
             </div>
@@ -332,13 +333,13 @@ export default function SettingsPage() {
       {/* SECTION 2: Subscription                                */}
       {/* ====================================================== */}
       <div style={sectionStyle}>
-        <h2 style={sectionHeaderStyle}>Подписка</h2>
-        <p style={sectionDescStyle}>Управление вашим тарифным планом</p>
+        <h2 style={sectionHeaderStyle}>{t('settings.subscription')}</h2>
+        <p style={sectionDescStyle}>{t('settings.subscriptionDesc')}</p>
 
         {subscription.isLoading ? (
           <SubscriptionSkeleton />
         ) : subscription.isError ? (
-          <ErrorRow C={C} btnBase={btnBase} message="Не удалось загрузить подписку" onRetry={() => subscription.refetch()} />
+          <ErrorRow C={C} btnBase={btnBase} message={t('settings.errorSubscription')} onRetry={() => subscription.refetch()} />
         ) : (
           <>
             {/* Plan badge + label */}
@@ -394,7 +395,7 @@ export default function SettingsPage() {
                         ? C.blue
                         : C.accent,
                   }}>
-                    {plan === 'FREE' ? 'ТЕКУЩИЙ' : 'АКТИВЕН'}
+                    {plan === 'FREE' ? t('settings.current') : t('settings.active')}
                   </span>
                 </div>
                 <div style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>
@@ -409,18 +410,18 @@ export default function SettingsPage() {
             {plan !== 'STUDIO' && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 12 }}>
-                  Использование
+                  {t('settings.usage')}
                 </div>
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                   <UsageBar
                     C={C}
-                    label="Проекты"
+                    label={t('settings.projects')}
                     used={profile.data?._count?.projects ?? 0}
                     limit={limits.projects}
                   />
                   <UsageBar
                     C={C}
-                    label="ИИ-генерации"
+                    label={t('settings.aiGenerations')}
                     used={profile.data?.aiUsage ?? 0}
                     limit={limits.ai}
                   />
@@ -437,7 +438,7 @@ export default function SettingsPage() {
               marginBottom: 20,
             }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 12 }}>
-                Возможности плана
+                {t('settings.planFeatures')}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px 16px' }}>
                 {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.FREE).map((feature, i) => (
@@ -492,9 +493,9 @@ export default function SettingsPage() {
                 >
                   {createPortal.isPending ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Spinner size={14} color={C.sub} /> Загрузка...
+                      <Spinner size={14} color={C.sub} /> {t('settings.loading')}
                     </span>
-                  ) : 'Управление подпиской'}
+                  ) : t('settings.manageSubscription')}
                 </button>
               )}
               {plan !== 'STUDIO' && (
@@ -510,9 +511,9 @@ export default function SettingsPage() {
                 >
                   {createCheckout.isPending ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Spinner size={14} color="#fff" /> Загрузка...
+                      <Spinner size={14} color="#fff" /> {t('settings.loading')}
                     </span>
-                  ) : `Перейти на ${plan === 'FREE' ? 'Pro' : 'Studio'}`}
+                  ) : `${t('settings.upgradeTo')} ${plan === 'FREE' ? 'Pro' : 'Studio'}`}
                 </button>
               )}
             </div>
@@ -524,8 +525,8 @@ export default function SettingsPage() {
       {/* SECTION 3: YouTube Channels                            */}
       {/* ====================================================== */}
       <div style={sectionStyle}>
-        <h2 style={sectionHeaderStyle}>YouTube-каналы</h2>
-        <p style={sectionDescStyle}>Подключённые каналы для публикации и аналитики</p>
+        <h2 style={sectionHeaderStyle}>{t('settings.youtubeChannels')}</h2>
+        <p style={sectionDescStyle}>{t('settings.youtubeDesc')}</p>
 
         {profile.isLoading ? (
           <ChannelsSkeleton />
@@ -584,7 +585,7 @@ export default function SettingsPage() {
                     {ch.title}
                   </div>
                   <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-                    {(ch.subscribers ?? 0).toLocaleString('ru-RU')} подписчиков
+                    {(ch.subscribers ?? 0).toLocaleString('ru-RU')} {t('settings.subscribers')}
                   </div>
                 </div>
                 <div style={{
@@ -595,7 +596,7 @@ export default function SettingsPage() {
                   fontSize: 11,
                   fontWeight: 700,
                 }}>
-                  Активен
+                  {t('settings.active')}
                 </div>
               </div>
             ))}
@@ -614,10 +615,10 @@ export default function SettingsPage() {
                 cursor: 'not-allowed',
               }}
             >
-              + Подключить ещё канал
+              + {t('settings.connectChannel')}
             </button>
             <div style={{ fontSize: 11, color: C.dim, marginTop: 6, textAlign: 'center' }}>
-              Подключение через Google OAuth
+              {t('settings.viaGoogleOAuth')}
             </div>
           </div>
         ) : (
@@ -643,7 +644,7 @@ export default function SettingsPage() {
               </svg>
             </div>
             <p style={{ color: C.text, fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
-              Каналы пока не подключены
+              {t('settings.noChannels')}
             </p>
             <p style={{ color: C.sub, fontSize: 13, marginBottom: 20, maxWidth: 320, margin: '0 auto 20px' }}>
               Подключите YouTube-канал, чтобы публиковать видео и отслеживать аналитику прямо из TubeForge
@@ -664,11 +665,11 @@ export default function SettingsPage() {
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Подключить канал
+                {t('settings.connectChannel')}
               </span>
             </button>
             <div style={{ fontSize: 11, color: C.dim, marginTop: 8 }}>
-              Подключение через Google OAuth
+              {t('settings.viaGoogleOAuth')}
             </div>
           </div>
         )}
@@ -678,8 +679,8 @@ export default function SettingsPage() {
       {/* SECTION 4: Theme                                       */}
       {/* ====================================================== */}
       <div style={sectionStyle}>
-        <h2 style={sectionHeaderStyle}>Тема оформления</h2>
-        <p style={sectionDescStyle}>Выберите светлую или тёмную тему интерфейса</p>
+        <h2 style={sectionHeaderStyle}>{t('settings.themeTitle')}</h2>
+        <p style={sectionDescStyle}>{t('settings.themeDesc')}</p>
 
         <div style={{ display: 'flex', gap: 12 }}>
           {/* Dark theme option */}
@@ -714,10 +715,10 @@ export default function SettingsPage() {
               </svg>
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-              Тёмная
+              {t('settings.dark')}
             </div>
             <div style={{ fontSize: 11, color: C.sub }}>
-              Комфорт для глаз
+              {t('settings.darkDesc')}
             </div>
             {isDark && (
               <div style={{
@@ -731,7 +732,7 @@ export default function SettingsPage() {
                 display: 'inline-block',
                 letterSpacing: 0.3,
               }}>
-                АКТИВНА
+                {t('settings.activeTheme')}
               </div>
             )}
           </button>
@@ -776,10 +777,10 @@ export default function SettingsPage() {
               </svg>
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-              Светлая
+              {t('settings.light')}
             </div>
             <div style={{ fontSize: 11, color: C.sub }}>
-              Классический стиль
+              {t('settings.lightDesc')}
             </div>
             {!isDark && (
               <div style={{
@@ -793,7 +794,7 @@ export default function SettingsPage() {
                 display: 'inline-block',
                 letterSpacing: 0.3,
               }}>
-                АКТИВНА
+                {t('settings.activeTheme')}
               </div>
             )}
           </button>
@@ -805,9 +806,9 @@ export default function SettingsPage() {
       {/* ====================================================== */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Язык интерфейса</h2>
+          <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.languageTitle')}</h2>
         </div>
-        <p style={sectionDescStyle}>Выберите предпочтительный язык интерфейса</p>
+        <p style={sectionDescStyle}>{t('settings.languageDescFull')}</p>
 
         <div style={{ display: 'flex', gap: 10 }}>
           {([
@@ -820,7 +821,7 @@ export default function SettingsPage() {
               key={code}
               onClick={() => {
                 setLanguage(code);
-                toast.success(`Язык изменён: ${label}`);
+                toast.success(`${t('settings.langChanged')}: ${label}`);
               }}
               aria-pressed={language === code}
               style={{
@@ -861,8 +862,8 @@ export default function SettingsPage() {
         ...sectionStyle,
         borderColor: `${C.accent}30`,
       }}>
-        <h2 style={{ ...sectionHeaderStyle, color: C.accent }}>Аккаунт</h2>
-        <p style={sectionDescStyle}>Выход и управление аккаунтом</p>
+        <h2 style={{ ...sectionHeaderStyle, color: C.accent }}>{t('settings.account')}</h2>
+        <p style={sectionDescStyle}>{t('settings.accountDesc')}</p>
 
         {/* Logout row */}
         <div style={{
@@ -877,10 +878,10 @@ export default function SettingsPage() {
         }}>
           <div style={{ flex: 1, minWidth: 200 }}>
             <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, margin: 0, color: C.text }}>
-              Выйти из аккаунта
+              {t('settings.logout')}
             </p>
             <p style={{ color: C.sub, fontSize: 12, margin: 0, lineHeight: 1.5 }}>
-              Вы сможете войти снова в любое время через Google
+              {t('settings.logoutDesc')}
             </p>
           </div>
           <button
@@ -900,7 +901,7 @@ export default function SettingsPage() {
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            Выйти
+            {t('settings.logoutBtn')}
           </button>
         </div>
 
@@ -914,10 +915,10 @@ export default function SettingsPage() {
         }}>
           <div style={{ flex: 1, minWidth: 200 }}>
             <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, color: C.accent, margin: 0 }}>
-              Удалить аккаунт
+              {t('settings.deleteTitle')}
             </p>
             <p style={{ color: C.sub, fontSize: 12, margin: 0, maxWidth: 360, lineHeight: 1.5, marginTop: 4 }}>
-              Безвозвратное удаление аккаунта, всех проектов, загрузок и данных подписки. Это действие нельзя отменить.
+              {t('settings.deleteDesc')}
             </p>
           </div>
           {showDeleteConfirm ? (
@@ -932,7 +933,7 @@ export default function SettingsPage() {
               border: `1px solid ${C.accent}25`,
             }}>
               <p style={{ fontSize: 12, color: C.accent, margin: 0, fontWeight: 600 }}>
-                Введите DELETE для подтверждения:
+                {t('settings.deleteConfirm')}
               </p>
               <input
                 value={deleteInput}
@@ -968,7 +969,7 @@ export default function SettingsPage() {
                     border: `1px solid ${C.border}`,
                   }}
                 >
-                  Отмена
+                  {t('settings.cancel')}
                 </button>
                 <button
                   onClick={() => { if (deleteInput === 'DELETE') deleteAccount.mutate(); }}
@@ -987,9 +988,9 @@ export default function SettingsPage() {
                 >
                   {deleteAccount.isPending ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                      <Spinner size={12} color="#fff" /> Удаление...
+                      <Spinner size={12} color="#fff" /> {t('settings.loading')}
                     </span>
-                  ) : 'Удалить навсегда'}
+                  ) : t('settings.deleteForever')}
                 </button>
               </div>
             </div>
@@ -1003,7 +1004,7 @@ export default function SettingsPage() {
                 border: `1px solid ${C.accent}60`,
               }}
             >
-              Удалить аккаунт
+              {t('settings.deleteBtn')}
             </button>
           )}
         </div>
@@ -1036,6 +1037,7 @@ function Spinner({ size = 16, color = '#fff' }: { size?: number; color?: string 
 
 /** Usage progress bar */
 function UsageBar({ C, label, used, limit }: { C: Theme; label: string; used: number; limit: number }) {
+  const t = useLocaleStore((s) => s.t);
   const pct = Math.min(100, (used / limit) * 100);
   const isHigh = pct >= 80;
   const isFull = pct >= 100;
@@ -1072,7 +1074,7 @@ function UsageBar({ C, label, used, limit }: { C: Theme; label: string; used: nu
       </div>
       {isFull && (
         <span style={{ fontSize: 10, color: C.accent, marginTop: 4, display: 'block', fontWeight: 600 }}>
-          Лимит исчерпан
+          {t('settings.limitReached')}
         </span>
       )}
     </div>
@@ -1081,6 +1083,7 @@ function UsageBar({ C, label, used, limit }: { C: Theme; label: string; used: nu
 
 /** Error row with retry */
 function ErrorRow({ C, btnBase, message, onRetry }: { C: Theme; btnBase: React.CSSProperties; message: string; onRetry: () => void }) {
+  const t = useLocaleStore((s) => s.t);
   return (
     <div style={{
       padding: '16px 18px',
@@ -1108,7 +1111,7 @@ function ErrorRow({ C, btnBase, message, onRetry }: { C: Theme; btnBase: React.C
           border: `1px solid ${C.border}`,
         }}
       >
-        Повторить
+        {t('settings.retry')}
       </button>
     </div>
   );
