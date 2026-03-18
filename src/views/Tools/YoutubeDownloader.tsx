@@ -190,65 +190,34 @@ export function YoutubeDownloader() {
     setStreamError('');
 
     try {
+      const isAudioOnly = quality === 'Только аудио';
       const res = await fetch('/api/tools/youtube-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId: videoInfo.videoId }),
+        body: JSON.stringify({
+          videoId: videoInfo.videoId,
+          quality,
+          audioOnly: isAudioOnly,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setStreamError(data.error ?? 'Не удалось получить ссылки на потоки');
+        setStreamError(data.error ?? 'Не удалось получить ссылку на скачивание');
         setDone(true);
         return;
       }
 
-      const sd = data as StreamData;
-      setStreamData(sd);
       setDone(true);
 
-      if (sd.encrypted) {
-        showToast('Скачивание через браузер недоступно для этого видео');
-      } else if (sd.formats.length === 0) {
-        showToast('Для этого видео не найдены потоки для скачивания.');
-      }
-
-      // If we have a matching direct URL, trigger a download
-      if (sd.formats.length > 0 && !sd.encrypted) {
-        // Try to find a format matching user-selected quality
-        const targetQ = quality === 'Только аудио' ? null : quality;
-        const targetMime =
-          format === 'MP3'
-            ? 'audio'
-            : format === 'WebM'
-              ? 'webm'
-              : 'mp4';
-
-        let bestMatch = sd.formats.find((f) => {
-          const mimeOk = f.mimeType.toLowerCase().includes(targetMime);
-          const qualOk = targetQ ? f.quality === targetQ : f.hasAudio && !f.hasVideo;
-          return mimeOk && qualOk && f.url;
-        });
-
-        // Fallback: first format with video (or audio) matching the type
-        if (!bestMatch) {
-          bestMatch = sd.formats.find((f) => {
-            const mimeOk = f.mimeType.toLowerCase().includes(targetMime);
-            return mimeOk && f.url;
-          });
-        }
-
-        // Last resort: first available format with a URL
-        if (!bestMatch && sd.formats.length > 0) {
-          bestMatch = sd.formats[0];
-        }
-
-        if (bestMatch?.url) {
-          // Open in new tab — direct download via browser
-          window.open(bestMatch.url, '_blank', 'noopener');
-          showToast(`Открываем скачивание ${bestMatch.quality ?? 'потока'} в новой вкладке`);
-        }
+      // Direct download URL from cobalt
+      if (data.downloadUrl) {
+        window.open(data.downloadUrl, '_blank', 'noopener');
+        showToast('Скачивание началось! Проверьте загрузки.');
+        setStreamData({ videoId: videoInfo.videoId, duration: null, formats: [], encrypted: false });
+      } else {
+        setStreamError('Не удалось получить ссылку на скачивание');
       }
     } catch {
       setStreamError('Ошибка сети. Проверьте подключение к интернету.');
