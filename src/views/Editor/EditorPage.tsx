@@ -63,6 +63,174 @@ function StatusDot({ status, C, size = 6 }: { status: string; C: Theme; size?: n
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   FRAME UPLOAD SLOT — Start / End frame for a scene
+   ═══════════════════════════════════════════════════════════════════ */
+interface FrameSlotProps {
+  label: string;
+  value: string | null;
+  C: Theme;
+  accentCol: string;
+  onChange: (dataUrl: string | null) => void;
+}
+
+function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        onChange(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      // Reset so same file can be re-selected
+      e.target.value = '';
+    },
+    [onChange],
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+        width: 120,
+      }}
+    >
+      <span style={{ fontSize: 9, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '.03em' }}>
+        {label}
+      </span>
+      <div
+        style={{
+          width: 112,
+          height: 72,
+          borderRadius: 8,
+          border: value ? `1.5px solid ${accentCol}30` : `1.5px dashed ${C.border}`,
+          background: value ? 'transparent' : C.card,
+          position: 'relative',
+          cursor: 'pointer',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'border-color .15s, background .15s',
+        }}
+        onClick={() => {
+          if (!value) inputRef.current?.click();
+        }}
+        onMouseEnter={(e) => {
+          if (!value) {
+            (e.currentTarget as HTMLElement).style.borderColor = accentCol + '55';
+            (e.currentTarget as HTMLElement).style.background = accentCol + '06';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!value) {
+            (e.currentTarget as HTMLElement).style.borderColor = C.border;
+            (e.currentTarget as HTMLElement).style.background = C.card;
+          }
+        }}
+      >
+        {value ? (
+          <>
+            <img
+              src={value}
+              alt={label}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: 6,
+              }}
+            />
+            {/* Remove button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(null);
+              }}
+              style={{
+                position: 'absolute',
+                top: 3,
+                right: 3,
+                width: 18,
+                height: 18,
+                borderRadius: 5,
+                border: 'none',
+                background: 'rgba(0,0,0,.55)',
+                color: '#fff',
+                fontSize: 10,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'inherit',
+                lineHeight: 1,
+                backdropFilter: 'blur(4px)',
+                transition: 'background .15s',
+              }}
+              title="Удалить"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(220,50,50,.75)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.55)'; }}
+            >
+              &#10005;
+            </button>
+            {/* Replace button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                inputRef.current?.click();
+              }}
+              style={{
+                position: 'absolute',
+                bottom: 3,
+                right: 3,
+                width: 18,
+                height: 18,
+                borderRadius: 5,
+                border: 'none',
+                background: 'rgba(0,0,0,.45)',
+                color: '#fff',
+                fontSize: 9,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'inherit',
+                lineHeight: 1,
+                backdropFilter: 'blur(4px)',
+                transition: 'background .15s',
+              }}
+              title="Заменить"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.7)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.45)'; }}
+            >
+              &#8635;
+            </button>
+          </>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <span style={{ fontSize: 22, color: C.dim, lineHeight: 1 }}>+</span>
+            <span style={{ fontSize: 8, color: C.dim, fontWeight: 500 }}>Загрузить</span>
+          </div>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFile}
+          style={{ display: 'none' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    SKELETON LOADERS
    ═══════════════════════════════════════════════════════════════════ */
 function EditorSkeleton({ C }: { C: Theme }) {
@@ -813,14 +981,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           onClick={handleGenerate}
           disabled={!sel || !sel.prompt.trim() || isGenerating}
           style={{
-            padding: '6px 20px',
+            padding: '8px 24px',
             borderRadius: 20,
             border: 'none',
             background: (!sel || !sel.prompt.trim() || isGenerating)
               ? C.dim
               : `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
             color: '#fff',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 700,
             cursor: (!sel || !sel.prompt.trim() || isGenerating) ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
@@ -829,10 +997,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             transition: 'all .2s',
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 7,
             boxShadow: (!sel || !sel.prompt.trim() || isGenerating)
               ? 'none'
-              : `0 2px 12px ${C.accent}30`,
+              : `0 4px 16px ${C.accent}40`,
           }}
         >
           {isGenerating ? (
@@ -852,8 +1020,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </>
           ) : (
             <>
-              <span style={{ fontSize: 10 }}>&#9654;</span>
-              Генерировать
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Генерировать видео
             </>
           )}
         </button>
@@ -1218,47 +1388,48 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         Измените промпт и попробуйте снова
                       </span>
                     </div>
-                  ) : !sel.prompt.trim() ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 24px' }}>
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 12,
-                          border: `1.5px dashed ${C.border}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 18,
-                          color: C.dim,
-                        }}
-                      >
-                        &#9998;
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: C.dim }}>
-                        Введите промпт ниже
-                      </span>
-                    </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: '50%',
-                          background: selCol + '10',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 16,
-                          color: selCol,
-                          opacity: 0.6,
-                        }}
-                      >
-                        &#9654;
+                    /* ── Empty / editing state: show frame upload slots ── */
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '16px 24px' }}>
+                      {/* Frame upload row */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <FrameSlot
+                          label="Начальный кадр"
+                          value={sel.sf}
+                          C={C}
+                          accentCol={selCol}
+                          onChange={(v) => updScene(sel.id, { sf: v })}
+                        />
+                        {/* Arrow + duration between frames */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '12px 0 0' }}>
+                          <span style={{ fontSize: 16, color: C.dim, letterSpacing: 2, lineHeight: 1 }}>
+                            &#8594;&#8594;&#8594;
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: selCol,
+                              fontFamily: "'JetBrains Mono', monospace",
+                            }}
+                          >
+                            {sel.duration} сек
+                          </span>
+                        </div>
+                        <FrameSlot
+                          label="Конечный кадр"
+                          value={sel.ef}
+                          C={C}
+                          accentCol={selCol}
+                          onChange={(v) => updScene(sel.id, { ef: v })}
+                        />
                       </div>
-                      <span style={{ fontSize: 11, color: C.dim }}>
-                        Нажмите &laquo;Генерировать&raquo;
+
+                      {/* Hint text */}
+                      <span style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>
+                        {!sel.prompt.trim()
+                          ? 'Введите промпт ниже'
+                          : <>Нажмите &laquo;Генерировать видео&raquo;</>}
                       </span>
                     </div>
                   )}
