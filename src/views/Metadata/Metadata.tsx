@@ -1106,7 +1106,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Введите привлекательное название..."
-              maxLength={120}
+              maxLength={100}
               style={{
                 ...inputBase,
                 fontSize: 18,
@@ -1194,7 +1194,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               onChange={(e) => setDesc(e.target.value)}
               rows={8}
               placeholder="Опишите содержание видео. Первые 2-3 строки особенно важны — они видны в поиске..."
-              maxLength={5200}
+              maxLength={5000}
               style={{
                 ...inputBase,
                 fontSize: 14,
@@ -1995,6 +1995,13 @@ function SEOChecklist({
         label: 'Обложка загружена',
         ok: !!thumbnailUrl,
         tip: !thumbnailUrl ? 'Создайте обложку в редакторе' : 'Обложка есть',
+      },
+      {
+        label: 'Таймкоды в описании',
+        ok: extractValidTimestamps(desc).length >= 2,
+        tip: extractValidTimestamps(desc).length >= 2
+          ? `${extractValidTimestamps(desc).length} таймкодов`
+          : 'Добавьте таймкоды для навигации',
       },
     ];
     return items;

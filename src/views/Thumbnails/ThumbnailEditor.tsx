@@ -213,52 +213,65 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     canvas.width = canvasW; canvas.height = canvasH;
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
-    const promises = els.map((el) => new Promise<void>((resolve) => {
-      ctx.globalAlpha = el.opacity ?? 1;
-      if (el.type === 'rect') {
-        ctx.fillStyle = el.color ?? '#fff';
-        if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
-        else { ctx.fillRect(el.x, el.y, el.w, el.h); }
-      } else if (el.type === 'circle') {
-        ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
-      } else if (el.type === 'text') {
-        ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
-        if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
-        ctx.fillText(el.text ?? '', el.x + 8, el.y + (el.size ?? 32)); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
-      } else if (el.type === 'path') {
-        ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
-      } else if (el.type === 'image') {
-        const img = new Image(); img.crossOrigin = 'anonymous';
-        img.onload = () => { ctx.globalAlpha = el.opacity ?? 1; ctx.drawImage(img, el.x, el.y, el.w, el.h); ctx.globalAlpha = 1; resolve(); };
-        img.onerror = () => resolve(); img.src = el.src ?? ''; ctx.globalAlpha = 1; return;
-      } else if (el.type === 'line' || el.type === 'arrow') {
-        ctx.strokeStyle = el.strokeColor ?? '#fff'; ctx.lineWidth = el.lineWidth ?? 2; ctx.lineCap = 'round';
-        ctx.setLineDash(el.dashStyle === 'dashed' ? [8, 4] : el.dashStyle === 'dotted' ? [2, 4] : []);
-        ctx.beginPath(); ctx.moveTo(el.x, el.y); ctx.lineTo(el.x2 ?? el.x, el.y2 ?? el.y); ctx.stroke();
-        if (el.type === 'arrow' && el.arrowHead !== 'none') {
-          const ax = el.x2 ?? el.x, ay = el.y2 ?? el.y, angle = Math.atan2(ay - el.y, ax - el.x), hs = 12;
-          ctx.fillStyle = el.strokeColor ?? '#fff'; ctx.beginPath(); ctx.moveTo(ax, ay);
-          ctx.lineTo(ax - hs * Math.cos(angle - Math.PI / 6), ay - hs * Math.sin(angle - Math.PI / 6));
-          ctx.lineTo(ax - hs * Math.cos(angle + Math.PI / 6), ay - hs * Math.sin(angle + Math.PI / 6));
-          ctx.closePath(); ctx.fill();
-        }
-        ctx.setLineDash([]);
-      } else if (el.type === 'stickyNote') {
-        ctx.fillStyle = el.noteColor ?? STICKY_NOTE_COLOR; ctx.shadowColor = 'rgba(0,0,0,.15)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
-        ctx.fillRect(el.x, el.y, el.w, el.h); ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-        ctx.fillStyle = STICKY_NOTE_TEXT_COLOR; ctx.font = `${el.size ?? 14}px sans-serif`;
-        (el.noteText ?? 'Заметка').split('\n').forEach((line, i) => ctx.fillText(line, el.x + 10, el.y + 20 + i * ((el.size ?? 14) + 4)));
-      } else if (el.type === 'table') {
-        const rows = el.rows ?? 3, cols = el.cols ?? 3, cw = el.w / cols, ch = el.h / rows;
-        ctx.strokeStyle = el.strokeColor ?? 'rgba(255,255,255,.2)'; ctx.lineWidth = 1;
-        for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(el.x, el.y + r * ch); ctx.lineTo(el.x + el.w, el.y + r * ch); ctx.stroke(); }
-        for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(el.x + c * cw, el.y); ctx.lineTo(el.x + c * cw, el.y + el.h); ctx.stroke(); }
-        ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
-        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
-      }
-      ctx.globalAlpha = 1; resolve();
+
+    // Preload all images first so we can draw elements in correct z-order
+    const imgCache = new Map<string, HTMLImageElement>();
+    const imageEls = els.filter((el) => el.type === 'image' && el.src && el.visible !== false);
+    const imagePromises = imageEls.map((el) => new Promise<void>((resolve) => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => { imgCache.set(el.id, img); resolve(); };
+      img.onerror = () => resolve();
+      img.src = el.src!;
     }));
-    Promise.all(promises).then(async () => {
+
+    Promise.all(imagePromises).then(() => {
+      // Draw all elements in order (correct z-layering)
+      for (const el of els) {
+        if (el.visible === false) continue;
+        ctx.globalAlpha = el.opacity ?? 1;
+        if (el.type === 'rect') {
+          ctx.fillStyle = el.color ?? '#fff';
+          if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
+          else { ctx.fillRect(el.x, el.y, el.w, el.h); }
+        } else if (el.type === 'circle') {
+          ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+        } else if (el.type === 'text') {
+          ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
+          ctx.fillText(el.text ?? '', el.x + 8, el.y + (el.size ?? 32)); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
+        } else if (el.type === 'path') {
+          ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
+        } else if (el.type === 'image') {
+          const img = imgCache.get(el.id);
+          if (img) { ctx.drawImage(img, el.x, el.y, el.w, el.h); }
+        } else if (el.type === 'line' || el.type === 'arrow') {
+          ctx.strokeStyle = el.strokeColor ?? '#fff'; ctx.lineWidth = el.lineWidth ?? 2; ctx.lineCap = 'round';
+          ctx.setLineDash(el.dashStyle === 'dashed' ? [8, 4] : el.dashStyle === 'dotted' ? [2, 4] : []);
+          ctx.beginPath(); ctx.moveTo(el.x, el.y); ctx.lineTo(el.x2 ?? el.x, el.y2 ?? el.y); ctx.stroke();
+          if (el.type === 'arrow' && el.arrowHead !== 'none') {
+            const ax = el.x2 ?? el.x, ay = el.y2 ?? el.y, angle = Math.atan2(ay - el.y, ax - el.x), hs = 12;
+            ctx.fillStyle = el.strokeColor ?? '#fff'; ctx.beginPath(); ctx.moveTo(ax, ay);
+            ctx.lineTo(ax - hs * Math.cos(angle - Math.PI / 6), ay - hs * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(ax - hs * Math.cos(angle + Math.PI / 6), ay - hs * Math.sin(angle + Math.PI / 6));
+            ctx.closePath(); ctx.fill();
+          }
+          ctx.setLineDash([]);
+        } else if (el.type === 'stickyNote') {
+          ctx.fillStyle = el.noteColor ?? STICKY_NOTE_COLOR; ctx.shadowColor = 'rgba(0,0,0,.15)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+          ctx.fillRect(el.x, el.y, el.w, el.h); ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+          ctx.fillStyle = STICKY_NOTE_TEXT_COLOR; ctx.font = `${el.size ?? 14}px sans-serif`;
+          (el.noteText ?? 'Заметка').split('\n').forEach((line, i) => ctx.fillText(line, el.x + 10, el.y + 20 + i * ((el.size ?? 14) + 4)));
+        } else if (el.type === 'table') {
+          const rows = el.rows ?? 3, cols = el.cols ?? 3, cw = el.w / cols, ch = el.h / rows;
+          ctx.strokeStyle = el.strokeColor ?? 'rgba(255,255,255,.2)'; ctx.lineWidth = 1;
+          for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(el.x, el.y + r * ch); ctx.lineTo(el.x + el.w, el.y + r * ch); ctx.stroke(); }
+          for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(el.x + c * cw, el.y); ctx.lineTo(el.x + c * cw, el.y + el.h); ctx.stroke(); }
+          ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
+          for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
+        }
+        ctx.globalAlpha = 1;
+      }
+    }).then(async () => {
       if (format === 'pdf') {
         try {
           const { default: jsPDF } = await import('jspdf');
@@ -309,10 +322,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     };
 
     if (el.type === 'text') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} data-text-el={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
-        onMouseDown={(e) => { if (!isSel) { e.stopPropagation(); store().setSelId(el.id); } }}>
+        onMouseDown={(e) => {
+          if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
+          // When already selected, set up drag (single-click moves, double-click edits text)
+          elDrag(e);
+        }}
+        onDoubleClick={(e) => {
+          // Focus the contentEditable on double-click for text editing
+          e.stopPropagation();
+          (e.currentTarget as HTMLElement).focus();
+        }}>
         {el.text}{resizeHandle}{deleteHandle}
       </div>
     );
@@ -365,7 +387,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
-        onMouseDown={elDrag}>
+        onMouseDown={elDrag}
+        onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
         {el.noteText ?? 'Заметка'}{resizeHandle}{deleteHandle}
       </div>
     );
@@ -410,6 +433,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (!ctx) return null;
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
     for (const el of els) {
+      if (el.visible === false) continue;
       ctx.globalAlpha = el.opacity ?? 1;
       if (el.type === 'rect') {
         ctx.fillStyle = el.color ?? '#fff'; ctx.fillRect(el.x, el.y, el.w, el.h);
@@ -713,6 +737,7 @@ function distToSegment(px: number, py: number, x1: number, y1: number, x2: numbe
 function hitTestElement(els: CanvasElement[], x: number, y: number): CanvasElement | null {
   for (let i = els.length - 1; i >= 0; i--) {
     const el = els[i];
+    if (el.visible === false || el.locked) continue;
     if ((el.type === 'line' || el.type === 'arrow') && distToSegment(x, y, el.x, el.y, el.x2 ?? el.x, el.y2 ?? el.y) < 10) return el;
     if (el.type !== 'line' && el.type !== 'arrow' && x >= el.x && x <= el.x + el.w && y >= el.y && y <= el.y + el.h) return el;
   }
