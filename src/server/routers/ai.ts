@@ -130,7 +130,7 @@ export const aiRouter = router({
               content: [
                 {
                   type: 'text',
-                  text: 'Describe this YouTube thumbnail design in detail for image generation. Focus on layout, colors, text placement, shapes, and overall composition. Be concise but specific.',
+                  text: 'This is a rough sketch/wireframe for a YouTube thumbnail. The user drew an approximate layout of what they want. Interpret the shapes, lines, and text as a BLUEPRINT — not literally. Describe what the final professional thumbnail should look like based on this sketch. Focus on: 1) Main subject/person placement 2) Text areas and what they might say 3) Background style 4) Color scheme 5) Overall composition and mood. Be specific and creative in interpreting the rough drawing into a polished thumbnail concept.',
                 },
                 {
                   type: 'image_url',
@@ -155,7 +155,15 @@ export const aiRouter = router({
       const description = visionData.choices?.[0]?.message?.content ?? '';
 
       // Step 2: DALL-E 3 generates based on description + user prompt
-      const fullPrompt = `YouTube thumbnail based on this design: ${description}. ${input.prompt ? `Additional requirements: ${input.prompt}.` : ''} Style: ${input.style}. High quality, eye-catching, 16:9 aspect ratio.`;
+      const styleMap: Record<string, string> = {
+        realistic: 'photorealistic, professional photography',
+        anime: 'anime/manga art style, vibrant Japanese animation',
+        cinematic: 'cinematic movie poster style, dramatic lighting',
+        minimalist: 'clean minimalist design, simple and modern',
+        '3d': '3D rendered, CGI quality',
+        popart: 'pop art style, bold colors and high contrast',
+      };
+      const fullPrompt = `Professional YouTube thumbnail. Layout and composition based on this sketch: ${description}. ${input.prompt ? `User wants: ${input.prompt}.` : ''} Style: ${styleMap[input.style] ?? input.style}. Must be eye-catching, high quality, 16:9 aspect ratio, suitable for YouTube. No watermarks or text artifacts.`;
 
       let dalleRes: Response;
       try {

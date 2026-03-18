@@ -398,12 +398,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   const captureCanvas = (): string | null => {
+    // Try to capture the visible canvas element first (includes everything rendered)
+    const visibleCanvas = document.querySelector('canvas') as HTMLCanvasElement | null;
+    if (visibleCanvas && visibleCanvas.width > 0) {
+      try { return visibleCanvas.toDataURL('image/png'); } catch { /* tainted canvas, fall through */ }
+    }
+    // Fallback: render manually
     const canvas = document.createElement('canvas');
     canvas.width = canvasW; canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
-    // Synchronous rendering of non-image elements
     for (const el of els) {
       ctx.globalAlpha = el.opacity ?? 1;
       if (el.type === 'rect') {
@@ -413,6 +418,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       } else if (el.type === 'text') {
         ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
         ctx.fillText(el.text ?? '', el.x + 8, el.y + (el.size ?? 32));
+      } else if (el.type === 'image' && el.src) {
+        // Draw loaded images
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = el.src;
+        try { ctx.drawImage(img, el.x, el.y, el.w, el.h); } catch { /* skip if not loaded */ }
       }
       ctx.globalAlpha = 1;
     }
