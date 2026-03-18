@@ -117,8 +117,8 @@ export async function GET(req: NextRequest) {
       .map((v: YouTubeVideo) => {
         const views = parseInt(v.statistics?.viewCount ?? '0', 10);
         const dur = parseDuration(v.contentDetails?.duration ?? '');
-        // Only include actual Shorts (< 180 seconds) - YouTube Shorts can be up to 3 min
-        if (dur > 180) return null;
+        // videoDuration=short already filters < 4 min; skip very long outliers only
+        if (dur > 240) return null;
         return {
           rank: 0,
           videoId: v.id,
