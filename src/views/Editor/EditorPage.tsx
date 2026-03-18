@@ -919,6 +919,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             ref={sceneListRef}
             style={{
               flex: 1,
+              minHeight: 0,
               overflowY: 'auto',
               overflowX: 'hidden',
               padding: '0 8px 8px',
@@ -978,7 +979,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
           {/* Selected scene actions at bottom of left panel */}
           {sel && (
-            <div style={{ padding: '6px 8px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ padding: '8px 10px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
               <button onClick={() => dupScene(sel.id)} title="Дублировать сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
