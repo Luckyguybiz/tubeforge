@@ -920,7 +920,7 @@ export default function LandingPage() {
             <h2 style={sectionHeadingStyle}>Что говорят креаторы</h2>
             <p style={sectionSubStyle}>Отзывы наших пользователей</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={i}
@@ -958,7 +958,7 @@ export default function LandingPage() {
             <h2 style={sectionHeadingStyle}>Простые и прозрачные тарифы</h2>
             <p style={sectionSubStyle}>Начните бесплатно, масштабируйтесь когда будете готовы</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, maxWidth: 1060, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1060, margin: '0 auto' }}>
             {PRICING_PLANS.map((plan, i) => (
               <div
                 key={i}

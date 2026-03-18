@@ -140,7 +140,7 @@ export function AiCreator() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         {/* Left: Step content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Step 1: Upload photo or pick avatar */}

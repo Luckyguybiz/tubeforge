@@ -73,7 +73,7 @@ export function Veo3Generator() {
       subtitle="Generate stunning videos from text prompts using Google VEO3 technology"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         {/* Left: Controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Prompt */}

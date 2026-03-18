@@ -55,7 +55,7 @@ export function RedditVideoGenerator() {
       subtitle="Turn Reddit posts into viral short-form videos with AI narration"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 400px)', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         {/* Left column: controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Input mode toggle */}

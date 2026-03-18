@@ -214,7 +214,7 @@ export function SubtitleEditor() {
       </div>
 
       {/* Main content: left panel + video preview */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 420px)', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         {/* Left: tab content */}
         <div>
           {activeTab === 'Style Subtitles' && (

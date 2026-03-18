@@ -22,12 +22,12 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
     <div style={{ width: '100%', minHeight: '100vh', background: C.bg }}>
       {/* Header */}
       <div style={{
-        padding: '24px 32px',
+        padding: '16px 16px',
         borderBottom: `1px solid ${C.border}`,
         background: C.surface,
         display: 'flex',
         alignItems: 'center',
-        gap: 16,
+        gap: 12,
         flexWrap: 'wrap',
       }}>
         <button
@@ -79,7 +79,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
       {/* Coming Soon Banner */}
       {comingSoon && (
         <div style={{
-          margin: '16px 32px 0',
+          margin: '16px 16px 0',
           padding: '14px 20px',
           borderRadius: 12,
           background: `linear-gradient(135deg, ${gradient[0]}12, ${gradient[1]}12)`,
@@ -107,7 +107,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
 
       {/* Content */}
       <div style={{
-        padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+        padding: '20px 16px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
         ...(comingSoon ? { opacity: 0.5, pointerEvents: 'none' as const, filter: 'grayscale(0.3)' } : {}),
       }}>
         {children}
@@ -160,7 +160,7 @@ export function ActionButton({ label, gradient, onClick, disabled, loading }: {
       disabled={disabled || loading}
       style={{
         padding: '12px 32px', borderRadius: 12, border: 'none',
-        background: (disabled || loading) ? '#555' : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+        background: (disabled || loading) ? 'rgba(128,128,128,.45)' : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
         color: '#fff', fontSize: 15, fontWeight: 700,
         cursor: (disabled || loading) ? 'not-allowed' : 'pointer',
         transition: 'all 0.2s ease', fontFamily: 'inherit',

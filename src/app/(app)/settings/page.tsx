@@ -355,6 +355,7 @@ export default function SettingsPage() {
               background: C.surface,
               borderRadius: 14,
               border: `1px solid ${C.border}`,
+              flexWrap: 'wrap',
             }}>
               {/* Plan icon */}
               <div style={{
@@ -813,7 +814,7 @@ export default function SettingsPage() {
         </div>
         <p style={sectionDescStyle}>{t('settings.languageDescFull')}</p>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {([
             { code: 'ru' as const, label: 'Русский', flag: 'RU' },
             { code: 'en' as const, label: 'English', flag: 'EN' },
@@ -833,7 +834,7 @@ export default function SettingsPage() {
                 alignItems: 'center',
                 gap: 10,
                 padding: '12px 20px',
-                minWidth: 130,
+                minWidth: 110,
                 background: language === code ? `${C.accent}0c` : C.surface,
                 color: language === code ? C.text : C.sub,
                 border: `2px solid ${language === code ? C.accent : C.border}`,

@@ -662,6 +662,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const [titleDraft, setTitleDraft] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [modPick, setModPick] = useState(false);
+  const [scenePanelOpen, setScenePanelOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
+  );
   const [isPlaying, setIsPlaying] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const sceneListRef = useRef<HTMLDivElement>(null);
@@ -893,11 +896,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          padding: '8px 16px',
+          padding: '8px 12px',
           background: C.surface,
           borderBottom: `1px solid ${C.border}`,
           flexShrink: 0,
           minHeight: 42,
+          overflowX: 'auto',
+          overflowY: 'hidden',
         }}
       >
         {/* Project title */}
@@ -949,6 +954,34 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             {sync.project?.title || 'Без названия'}
           </div>
         )}
+
+        {/* Scene panel toggle (useful on mobile) */}
+        <button
+          onClick={() => setScenePanelOpen((v) => !v)}
+          title={scenePanelOpen ? 'Скрыть сцены' : 'Показать сцены'}
+          aria-label={scenePanelOpen ? 'Скрыть сцены' : 'Показать сцены'}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            border: `1px solid ${C.border}`,
+            background: 'transparent',
+            color: C.sub,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: 'inherit',
+            transition: 'all .15s',
+            flexShrink: 0,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {scenePanelOpen
+              ? <><line x1="3" y1="3" x2="3" y2="21" /><line x1="9" y1="3" x2="9" y2="21" /><polyline points="15 8 19 12 15 16" /></>
+              : <><line x1="3" y1="3" x2="3" y2="21" /><line x1="9" y1="3" x2="9" y2="21" /><polyline points="19 8 15 12 19 16" /></>}
+          </svg>
+        </button>
 
         {/* Divider */}
         <div style={{ width: 1, height: 18, background: C.border }} />
@@ -1031,7 +1064,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           onClick={handleGenerate}
           disabled={!sel || !sel.prompt.trim() || isGenerating}
           style={{
-            padding: '8px 24px',
+            padding: '8px 16px',
             borderRadius: 20,
             border: 'none',
             background: (!sel || !sel.prompt.trim() || isGenerating)
@@ -1048,6 +1081,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             display: 'flex',
             alignItems: 'center',
             gap: 7,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
             boxShadow: (!sel || !sel.prompt.trim() || isGenerating)
               ? 'none'
               : `0 4px 16px ${C.accent}40`,
@@ -1083,19 +1118,20 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
         {/* ════════════════════════════════════════════════
-            LEFT PANEL — Scene thumbnails (~200px)
+            LEFT PANEL — Scene thumbnails (~160px), collapsible on mobile
             ════════════════════════════════════════════════ */}
         <div
           style={{
-            width: 160,
-            maxWidth: 160,
+            width: scenePanelOpen ? 160 : 0,
+            maxWidth: scenePanelOpen ? 160 : 0,
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
             background: C.surface,
-            borderRight: `1px solid ${C.border}`,
+            borderRight: scenePanelOpen ? `1px solid ${C.border}` : 'none',
             overflow: 'hidden',
             position: 'relative',
+            transition: 'width .2s ease, max-width .2s ease',
           }}
         >
           {/* Scene list header */}

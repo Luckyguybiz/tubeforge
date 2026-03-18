@@ -261,8 +261,8 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
           style={{
-            flex: '1 1 200px',
-            minWidth: 200,
+            flex: '1 1 180px',
+            minWidth: 160,
             height: 60,
             background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
             borderRadius: 14,
@@ -293,8 +293,8 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
           style={{
-            flex: '1 1 200px',
-            minWidth: 200,
+            flex: '1 1 180px',
+            minWidth: 160,
             height: 60,
             background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
             borderRadius: 14,
@@ -325,8 +325,8 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
           style={{
-            flex: '1 1 200px',
-            minWidth: 200,
+            flex: '1 1 180px',
+            minWidth: 160,
             height: 60,
             background: C.card,
             border: `1px solid ${C.border}`,
@@ -368,8 +368,8 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/autoclip'); } }}
           style={{
-            flex: '1 1 300px',
-            minWidth: 280,
+            flex: '1 1 260px',
+            minWidth: 220,
             minHeight: 180,
             borderRadius: 16,
             padding: 2,
@@ -423,8 +423,8 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/cut-crop'); } }}
           style={{
-            flex: '1 1 300px',
-            minWidth: 280,
+            flex: '1 1 260px',
+            minWidth: 220,
             minHeight: 180,
             borderRadius: 16,
             padding: 2,
@@ -489,7 +489,7 @@ function WelcomeSection({
             {t('dashboard.allTools')}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
           {([
             { title: 'YouTube Downloader', href: '/tools/youtube-downloader', Icon: IconDownload, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', badge: 'Free', badgeColor: '#10b981' },
             { title: 'MP3 Конвертер', href: '/tools/mp3-converter', Icon: IconMusic, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', badge: 'Free', badgeColor: '#10b981' },
@@ -1200,7 +1200,7 @@ export function Dashboard() {
       {/* ── Stat cards ──────────────────────────────── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
         gap: 14,
         marginBottom: 28,
       }}>
@@ -1337,7 +1337,7 @@ export function Dashboard() {
             </select>
 
             {/* Status filter pills */}
-            <div style={{ display: 'flex', gap: 4 }} role="group" aria-label={t('dashboard.filterStatus')}>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }} role="group" aria-label={t('dashboard.filterStatus')}>
               {getFilterOptions(t).map((f) => {
                 const isActive = statusFilter === f.value;
                 return (
@@ -1374,7 +1374,7 @@ export function Dashboard() {
             /* ── Skeleton grid ─────────────── */
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
               gap: 16,
             }}>
               {Array.from({ length: 6 }).map((_, i) => (
@@ -1471,7 +1471,7 @@ export function Dashboard() {
             <>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
                 gap: 16,
               }}>
                 {projects.data!.items.map((p) => (

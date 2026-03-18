@@ -359,7 +359,7 @@ function PeriodUpgradeTooltip({
         textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: isDark ? '#fff' : '#111' }}>
+      <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: isDark ? '#e8e8f0' : '#111' }}>
         Доступно в Pro
       </div>
       <a
@@ -402,7 +402,9 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768,
+  );
 
   const [data, setData] = useState<ShortItem[]>([]);
   const [isMock, setIsMock] = useState(false);
@@ -878,7 +880,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
             borderRadius: '0 6px 6px 0',
             border: `1px solid ${C.border}`,
             borderLeft: 'none',
-            background: isDark ? C.surface : '#fff',
+            background: C.surface,
             color: C.dim,
             cursor: 'pointer',
             display: 'flex',
@@ -933,7 +935,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   position: 'sticky',
                   top: 0,
                   zIndex: 1,
-                  background: isDark ? C.surface : '#fff',
+                  background: C.surface,
                   borderBottom: `1px solid ${C.border}`,
                 }}
               >
@@ -950,7 +952,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       letterSpacing: '.06em',
                       whiteSpace: 'nowrap',
                       borderBottom: `1px solid ${C.border}`,
-                      background: isDark ? C.surface : '#fff',
+                      background: C.surface,
                     }}
                   >
                     {h}
@@ -1103,9 +1105,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                                   width: 120,
                                   height: 68,
                                   borderRadius: 8,
-                                  background: isDark
-                                    ? `linear-gradient(135deg, ${C.card}, ${C.cardHover})`
-                                    : `linear-gradient(135deg, #e8e8ed, #d8d8e0)`,
+                                  background: `linear-gradient(135deg, ${C.card}, ${C.cardHover})`,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
