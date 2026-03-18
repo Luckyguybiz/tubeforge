@@ -25,9 +25,14 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
   const router = useRouter();
   const [displayCount, setDisplayCount] = useState(10);
   const projects = trpc.project.list.useQuery({ page: 1, limit: 50 });
+  const [error, setError] = useState<string | null>(null);
   const createProject = trpc.project.create.useMutation({
     onSuccess: (data) => {
+      setError(null);
       router.push(`${target}?projectId=${data.id}`);
+    },
+    onError: (err) => {
+      setError(err.message || 'Не удалось создать проект');
     },
   });
 
@@ -100,6 +105,44 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
             <span style={{ width: 28, height: 28, borderRadius: 8, background: `${C.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16 }}>+</span>
             {createProject.isPending ? 'Создаём...' : 'Новый проект'}
           </button>
+
+          {error && (
+            <div style={{
+              padding: '10px 14px',
+              borderRadius: 10,
+              background: `${C.accent}10`,
+              border: `1px solid ${C.accent}30`,
+              color: C.accent,
+              fontSize: 12,
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <span>⚠</span>
+              <span>{error}</span>
+              {error.includes('лимит') && (
+                <button
+                  onClick={() => router.push('/billing')}
+                  style={{
+                    marginLeft: 'auto',
+                    padding: '4px 12px',
+                    borderRadius: 6,
+                    border: 'none',
+                    background: C.accent,
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Улучшить план
+                </button>
+              )}
+            </div>
+          )}
 
           <div style={{ height: 1, background: C.border, margin: '4px 0' }} />
 
