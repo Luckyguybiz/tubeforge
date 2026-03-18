@@ -832,8 +832,8 @@ export function YoutubeDownloader() {
         </div>
       )}
 
-      {/* Encrypted / No Direct URL Notice */}
-      {done && !loading && streamData?.encrypted && (
+      {/* Download success message */}
+      {done && !loading && !streamError && (
         <div
           style={{
             display: 'flex',
@@ -841,292 +841,26 @@ export function YoutubeDownloader() {
             gap: 12,
             padding: 16,
             borderRadius: 12,
-            border: '1px solid rgba(245,158,11,.3)',
-            background: 'rgba(245,158,11,.06)',
+            border: '1px solid rgba(34,197,94,.3)',
+            background: 'rgba(34,197,94,.06)',
             marginBottom: 20,
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0110 0v4" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              Скачивание через браузер недоступно для этого видео
+              Скачивание запущено!
             </div>
-            <div style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>
-              Это видео использует защиту подписи. Попробуйте другое видео или используйте сторонний инструмент.
+            <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
+              Файл загружается в новой вкладке. Это может занять несколько секунд.
             </div>
           </div>
         </div>
       )}
 
-      {/* Available Streams List */}
-      {done && !loading && streamData && streamData.formats.length > 0 && !streamData.encrypted && (
-        <div
-          style={{
-            borderRadius: 14,
-            border: `1px solid ${C.border}`,
-            background: C.card,
-            marginBottom: 20,
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              padding: '12px 16px',
-              borderBottom: `1px solid ${C.border}`,
-              background: C.surface,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
-              Доступные потоки ({streamData.formats.length})
-            </span>
-            {streamData.duration && (
-              <span style={{ fontSize: 12, color: C.sub }}>
-                Длительность: {Math.floor(streamData.duration / 60)}:{String(streamData.duration % 60).padStart(2, '0')}
-              </span>
-            )}
-          </div>
-          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-            {streamData.formats.map((f, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 16px',
-                  borderBottom: i < streamData.formats.length - 1 ? `1px solid ${C.border}` : 'none',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = C.surface;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                {/* Type icon */}
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 6,
-                    background: f.hasVideo ? 'rgba(239,68,68,.1)' : 'rgba(59,130,246,.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {f.hasVideo ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18V5l12-2v13" />
-                      <circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-                    </svg>
-                  )}
-                </div>
-
-                {/* Quality + mime info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                    {f.quality}
-                    {f.hasVideo && !f.hasAudio && (
-                      <span style={{ fontSize: 11, color: C.dim, marginLeft: 6 }}>
-                        (только видео)
-                      </span>
-                    )}
-                    {f.hasAudio && !f.hasVideo && (
-                      <span style={{ fontSize: 11, color: C.dim, marginLeft: 6 }}>
-                        (только аудио)
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 11, color: C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {f.mimeType.split(';')[0]}
-                    {f.contentLength ? ` \u2022 ${formatBytes(parseInt(f.contentLength, 10))}` : ''}
-                    {f.width && f.height ? ` \u2022 ${f.width}x${f.height}` : ''}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  {f.url && (
-                    <>
-                      <button
-                        onClick={() => window.open(f.url!, '_blank', 'noopener')}
-                        style={{
-                          padding: '6px 14px',
-                          borderRadius: 8,
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                          color: '#fff',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          fontFamily: 'inherit',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'none';
-                        }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
-                        Скачать
-                      </button>
-                      <button
-                        onClick={() => handleCopyUrl(f.url!)}
-                        title="Копировать ссылку"
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: 8,
-                          border: `1px solid ${C.border}`,
-                          background: copiedUrl === f.url ? 'rgba(34,197,94,.12)' : C.card,
-                          color: copiedUrl === f.url ? '#22c55e' : C.text,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          fontFamily: 'inherit',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                        onMouseEnter={(e) => {
-                          if (copiedUrl !== f.url) e.currentTarget.style.background = C.surface;
-                        }}
-                        onMouseLeave={(e) => {
-                          if (copiedUrl !== f.url) e.currentTarget.style.background = C.card;
-                        }}
-                      >
-                        {copiedUrl === f.url ? (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        ) : (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" />
-                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                          </svg>
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Download Complete — no streams found (non-encrypted) */}
-      {done && !loading && streamData && streamData.formats.length === 0 && !streamData.encrypted && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: 16,
-            borderRadius: 12,
-            border: '1px solid rgba(239,68,68,.3)',
-            background: 'rgba(239,68,68,.06)',
-            marginBottom: 20,
-          }}
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              Не найдены потоки для скачивания
-            </div>
-            <div style={{ fontSize: 12, color: C.sub }}>
-              Это видео может иметь возрастные ограничения или региональную блокировку. Попробуйте открыть напрямую на YouTube.
-            </div>
-          </div>
-          {videoInfo && (
-            <button
-              onClick={() => window.open(videoInfo.watchUrl, '_blank', 'noopener')}
-              style={{
-                padding: '8px 20px',
-                borderRadius: 10,
-                border: `1px solid ${C.border}`,
-                background: C.card,
-                color: C.text,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: 'inherit',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                whiteSpace: 'nowrap',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = C.surface;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = C.card;
-              }}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-              Открыть на YouTube
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Download Button */}
       <ActionButton
