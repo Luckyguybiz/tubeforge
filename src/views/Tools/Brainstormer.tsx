@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -41,24 +41,36 @@ export function Brainstormer() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [hoveredUse, setHoveredUse] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const handleGenerate = () => {
-    if (!topic.trim()) return;
+  const handleGenerate = useCallback(() => {
+    if (!topic.trim() || loading) return;
     setLoading(true);
+    setSavedIds(new Set());
+    setCopiedId(null);
     setTimeout(() => {
       setLoading(false);
       setIdeas(SAMPLE_IDEAS);
     }, 2000);
-  };
+  }, [topic, loading]);
 
-  const handleSave = (idx: number) => {
+  const handleSave = useCallback((idx: number) => {
     setSavedIds((prev) => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx);
       else next.add(idx);
       return next;
     });
-  };
+  }, []);
+
+  const handleUseIdea = useCallback((idx: number) => {
+    setCopiedId(idx);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(ideas[idx]?.title ?? '');
+    }
+    setTimeout(() => setCopiedId(null), 2000);
+  }, [ideas]);
 
   return (
     <ToolPageShell
@@ -78,17 +90,21 @@ export function Brainstormer() {
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
               placeholder="e.g. AI productivity, fitness, personal finance..."
               style={{
                 width: '100%', padding: '12px 14px', borderRadius: 10,
                 border: `1px solid ${C.border}`, background: C.surface,
                 color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none',
+                transition: 'border-color 0.2s ease',
               }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
             />
           </div>
 
           {/* Audience + Content Type row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
             {/* Audience */}
             <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 10 }}>Target Audience</span>
@@ -99,7 +115,10 @@ export function Brainstormer() {
                   width: '100%', padding: '10px 14px', borderRadius: 10,
                   border: `1px solid ${C.border}`, background: C.surface,
                   color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none',
+                  cursor: 'pointer', transition: 'border-color 0.2s ease',
                 }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
               >
                 {AUDIENCES.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
@@ -119,7 +138,8 @@ export function Brainstormer() {
                       background: contentType === ct ? `${GRADIENT[0]}22` : C.surface,
                       color: contentType === ct ? GRADIENT[0] : C.sub,
                       fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      transition: 'all .2s', fontFamily: 'inherit',
+                      transition: 'all 0.2s ease', fontFamily: 'inherit',
+                      outline: 'none',
                     }}
                   >
                     {ct}
@@ -135,7 +155,7 @@ export function Brainstormer() {
         </div>
       </div>
 
-      {/* Ideas list */}
+      {/* Loading state */}
       {loading && (
         <div style={{
           padding: 48, textAlign: 'center', borderRadius: 16,
@@ -149,6 +169,22 @@ export function Brainstormer() {
         </div>
       )}
 
+      {/* Empty state */}
+      {!loading && ideas.length === 0 && (
+        <div style={{
+          padding: 48, textAlign: 'center', borderRadius: 16,
+          border: `1px solid ${C.border}`, background: C.card,
+        }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity={0.4}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <p style={{ fontSize: 14, color: C.dim, marginTop: 16 }}>Enter a topic and click &ldquo;Generate Ideas&rdquo; to get started</p>
+        </div>
+      )}
+
+      {/* Ideas list */}
       {ideas.length > 0 && !loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -164,24 +200,25 @@ export function Brainstormer() {
                 padding: 20, borderRadius: 14,
                 border: `1px solid ${hoveredCard === i ? GRADIENT[0] + '55' : C.border}`,
                 background: hoveredCard === i ? `${GRADIENT[0]}08` : C.card,
-                transition: 'all .2s',
+                transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                     <span style={{
                       width: 24, height: 24, borderRadius: 8,
                       background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
                       color: '#fff', fontSize: 11, fontWeight: 700,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
                     }}>
                       {i + 1}
                     </span>
                     <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{idea.title}</span>
                   </div>
                   <p style={{ fontSize: 13, color: C.sub, margin: '8px 0 0 34px', lineHeight: 1.5 }}>{idea.description}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, marginLeft: 34 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, marginLeft: 34, flexWrap: 'wrap' }}>
                     <span style={{
                       padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
                       background: '#10b98122', color: '#10b981',
@@ -191,7 +228,7 @@ export function Brainstormer() {
                     {idea.tags.map((tag) => (
                       <span key={tag} style={{
                         padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 500,
-                        background: `${C.border}`, color: C.sub,
+                        background: C.border, color: C.sub,
                       }}>
                         {tag}
                       </span>
@@ -200,13 +237,20 @@ export function Brainstormer() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 2 }}>
                   <button
+                    onClick={() => handleUseIdea(i)}
+                    onMouseEnter={() => setHoveredUse(i)}
+                    onMouseLeave={() => setHoveredUse(null)}
                     style={{
                       padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                      border: `1px solid ${GRADIENT[0]}`, background: `${GRADIENT[0]}11`,
-                      color: GRADIENT[0], cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                      border: `1px solid ${GRADIENT[0]}`,
+                      background: copiedId === i ? `${GRADIENT[0]}33` : hoveredUse === i ? `${GRADIENT[0]}22` : `${GRADIENT[0]}11`,
+                      color: GRADIENT[0], cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                      outline: 'none',
                     }}
+                    onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
+                    onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                   >
-                    Use this idea
+                    {copiedId === i ? 'Copied!' : 'Use this idea'}
                   </button>
                   <button
                     onClick={() => handleSave(i)}
@@ -215,8 +259,13 @@ export function Brainstormer() {
                       border: `1px solid ${savedIds.has(i) ? '#10b981' : C.border}`,
                       background: savedIds.has(i) ? '#10b98122' : C.surface,
                       color: savedIds.has(i) ? '#10b981' : C.sub,
-                      cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                      cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                      outline: 'none',
                     }}
+                    onMouseEnter={(e) => { if (!savedIds.has(i)) e.currentTarget.style.borderColor = C.text; }}
+                    onMouseLeave={(e) => { if (!savedIds.has(i)) e.currentTarget.style.borderColor = C.border; }}
+                    onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
+                    onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                   >
                     {savedIds.has(i) ? 'Saved' : 'Save'}
                   </button>

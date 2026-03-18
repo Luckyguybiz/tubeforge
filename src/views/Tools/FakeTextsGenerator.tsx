@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ToolPageShell, ActionButton, ResultPreview } from './ToolPageShell';
+import { useState, useCallback } from 'react';
+import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 const GRADIENT: [string, string] = ['#8b5cf6', '#6366f1'];
@@ -35,35 +35,37 @@ export function FakeTextsGenerator() {
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
 
-  const addMessage = () => {
+  const addMessage = useCallback(() => {
     const lastSender = messages.length > 0 ? messages[messages.length - 1].sender : 2;
     setMessages((prev) => [
       ...prev,
       { id: Date.now(), sender: lastSender === 1 ? 2 : 1, text: '' },
     ]);
-  };
+  }, [messages]);
 
-  const updateMessage = (id: number, text: string) => {
+  const updateMessage = useCallback((id: number, text: string) => {
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, text } : m));
-  };
+  }, []);
 
-  const toggleSender = (id: number) => {
+  const toggleSender = useCallback((id: number) => {
     setMessages((prev) => prev.map((m) =>
       m.id === id ? { ...m, sender: m.sender === 1 ? 2 : 1 } : m,
     ));
-  };
+  }, []);
 
-  const removeMessage = (id: number) => {
+  const removeMessage = useCallback((id: number) => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
-  };
+  }, []);
 
-  const handleGenerate = () => {
+  const handleGenerate = useCallback(() => {
+    if (loading) return;
     setLoading(true);
+    setGenerated(false);
     setTimeout(() => {
       setLoading(false);
       setGenerated(true);
     }, 2500);
-  };
+  }, [loading]);
 
   const activePlatform = PLATFORMS.find((p) => p.id === platform) ?? PLATFORMS[0];
 
@@ -73,7 +75,7 @@ export function FakeTextsGenerator() {
       subtitle="Create viral fake text conversation videos for social media"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 360px)', gap: 24 }}>
         {/* Left column: controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Platform selector */}
@@ -92,12 +94,12 @@ export function FakeTextsGenerator() {
                     background: platform === p.id ? `${p.color}12` : C.card,
                     color: platform === p.id ? p.color : C.text,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', gap: 6,
                   }}
                   onMouseEnter={(e) => { if (platform !== p.id) e.currentTarget.style.background = C.cardHover; }}
-                  onMouseLeave={(e) => { if (platform !== p.id) e.currentTarget.style.background = C.card; }}
+                  onMouseLeave={(e) => { if (platform !== p.id) e.currentTarget.style.background = platform === p.id ? `${p.color}12` : C.card; }}
                 >
                   <span style={{
                     width: 32, height: 32, borderRadius: 10,
@@ -129,6 +131,7 @@ export function FakeTextsGenerator() {
                   border: `1px solid ${C.border}`, background: C.card,
                   color: C.text, fontSize: 13, boxSizing: 'border-box',
                   outline: 'none', fontFamily: 'inherit',
+                  transition: 'border-color 0.2s ease',
                 }}
                 onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -147,6 +150,7 @@ export function FakeTextsGenerator() {
                   border: `1px solid ${C.border}`, background: C.card,
                   color: C.text, fontSize: 13, boxSizing: 'border-box',
                   outline: 'none', fontFamily: 'inherit',
+                  transition: 'border-color 0.2s ease',
                 }}
                 onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -165,6 +169,11 @@ export function FakeTextsGenerator() {
               background: C.surface, border: `1px solid ${C.border}`,
               maxHeight: 340, overflowY: 'auto',
             }}>
+              {messages.length === 0 && (
+                <p style={{ fontSize: 13, color: C.dim, textAlign: 'center', margin: '12px 0' }}>
+                  No messages yet. Add one below.
+                </p>
+              )}
               {messages.map((msg, idx) => (
                 <div key={msg.id} style={{
                   display: 'flex', alignItems: 'center', gap: 8,
@@ -187,7 +196,7 @@ export function FakeTextsGenerator() {
                       background: msg.sender === 1 ? activePlatform.bubbleColor : C.card,
                       color: msg.sender === 1 ? '#fff' : C.text,
                       fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', minWidth: 28, transition: 'all .15s',
+                      fontFamily: 'inherit', minWidth: 28, transition: 'all 0.15s ease',
                       flexShrink: 0,
                     }}
                   >
@@ -203,7 +212,8 @@ export function FakeTextsGenerator() {
                       flex: 1, padding: '8px 12px', borderRadius: 8,
                       border: `1px solid ${C.border}`, background: C.card,
                       color: C.text, fontSize: 13, outline: 'none',
-                      fontFamily: 'inherit',
+                      fontFamily: 'inherit', transition: 'border-color 0.2s ease',
+                      minWidth: 0,
                     }}
                     onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                     onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -216,10 +226,10 @@ export function FakeTextsGenerator() {
                       width: 26, height: 26, borderRadius: 6, border: 'none',
                       background: C.card, color: C.dim, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 14, flexShrink: 0, transition: 'all .15s',
+                      fontSize: 14, flexShrink: 0, transition: 'all 0.15s ease',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = C.dim; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = C.cardHover; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = C.dim; e.currentTarget.style.background = C.card; }}
                   >
                     &times;
                   </button>
@@ -234,7 +244,7 @@ export function FakeTextsGenerator() {
                   border: `1px dashed ${GRADIENT[0]}55`,
                   background: `${GRADIENT[0]}06`, color: GRADIENT[0],
                   fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'inherit', transition: 'all .2s',
+                  fontFamily: 'inherit', transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = `${GRADIENT[0]}12`; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = `${GRADIENT[0]}06`; }}
@@ -265,7 +275,7 @@ export function FakeTextsGenerator() {
                 background: typingAnimation
                   ? `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`
                   : C.border,
-                cursor: 'pointer', position: 'relative', transition: 'all .2s',
+                cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease',
                 flexShrink: 0,
               }}
             >
@@ -273,7 +283,7 @@ export function FakeTextsGenerator() {
                 position: 'absolute',
                 top: 3, left: typingAnimation ? 23 : 3,
                 width: 18, height: 18, borderRadius: '50%',
-                background: '#fff', transition: 'all .2s',
+                background: '#fff', transition: 'all 0.2s ease',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
               }} />
             </button>
@@ -295,8 +305,10 @@ export function FakeTextsGenerator() {
                     background: music === m ? `${GRADIENT[0]}14` : C.card,
                     color: music === m ? GRADIENT[0] : C.text,
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
+                  onMouseEnter={(e) => { if (music !== m) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (music !== m) e.currentTarget.style.background = music === m ? `${GRADIENT[0]}14` : C.card; }}
                 >
                   {m}
                 </button>
@@ -344,11 +356,13 @@ export function FakeTextsGenerator() {
             border: `1px solid ${C.border}`,
             display: 'flex', flexDirection: 'column',
             maxHeight: 580,
+            transition: 'background 0.3s ease',
           }}>
             {/* Status bar mock */}
             <div style={{
               padding: '8px 16px', display: 'flex',
               justifyContent: 'space-between', alignItems: 'center',
+              flexShrink: 0,
             }}>
               <span style={{ color: '#fff', fontSize: 11, fontWeight: 600 }}>9:41</span>
               <div style={{ display: 'flex', gap: 4 }}>
@@ -363,6 +377,7 @@ export function FakeTextsGenerator() {
             <div style={{
               padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)',
               display: 'flex', alignItems: 'center', gap: 10,
+              flexShrink: 0,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5" /><polyline points="12 19 5 12 12 5" />
@@ -371,13 +386,14 @@ export function FakeTextsGenerator() {
                 width: 28, height: 28, borderRadius: '50%',
                 background: activePlatform.bubbleColor,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
               }}>
                 <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>
                   {(person2 || 'P2').charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div>
-                <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0 }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {person2 || 'Person 2'}
                 </p>
                 <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, margin: 0 }}>
@@ -391,7 +407,13 @@ export function FakeTextsGenerator() {
               flex: 1, padding: '16px 12px',
               display: 'flex', flexDirection: 'column',
               gap: 6, overflowY: 'auto',
+              minHeight: 0,
             }}>
+              {messages.filter((m) => m.text.trim()).length === 0 && (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>Messages will appear here</p>
+                </div>
+              )}
               {messages.filter((m) => m.text.trim()).map((msg) => (
                 <div
                   key={msg.id}
@@ -413,6 +435,7 @@ export function FakeTextsGenerator() {
                       : '#333',
                     color: '#fff',
                     fontSize: 13, lineHeight: 1.4,
+                    transition: 'all 0.2s ease',
                   }}>
                     {msg.text}
                   </div>
@@ -444,6 +467,7 @@ export function FakeTextsGenerator() {
             <div style={{
               padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.1)',
               display: 'flex', alignItems: 'center', gap: 8,
+              flexShrink: 0,
             }}>
               <div style={{
                 flex: 1, padding: '8px 14px', borderRadius: 20,
@@ -457,6 +481,7 @@ export function FakeTextsGenerator() {
                 width: 32, height: 32, borderRadius: '50%',
                 background: activePlatform.bubbleColor,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
               }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -473,7 +498,7 @@ export function FakeTextsGenerator() {
                 border: `1px solid ${C.border}`,
                 background: C.card, color: C.text,
                 fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit', transition: 'all .2s',
+                fontFamily: 'inherit', transition: 'all 0.2s ease',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}

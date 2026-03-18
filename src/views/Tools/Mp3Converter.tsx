@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
+import { useState, useRef, useCallback } from 'react';
+import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 const BITRATES = ['128', '192', '256', '320'] as const;
@@ -21,12 +21,42 @@ export function Mp3Converter() {
   const [hoveredBitrate, setHoveredBitrate] = useState<string | null>(null);
   const [hoveredSample, setHoveredSample] = useState<string | null>(null);
   const [downloadHover, setDownloadHover] = useState(false);
+  const [removeHover, setRemoveHover] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleConvert = () => {
     setLoading(true);
     setDone(false);
     setTimeout(() => { setLoading(false); setDone(true); }, 2500);
   };
+
+  const handleDownload = () => {
+    if (!file) return;
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(file);
+    link.download = `${outputName || file.name.replace(/\.[^/.]+$/, '')}.mp3`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setDone(false);
+    setOutputName('');
+    setTrimStart('');
+    setTrimEnd('');
+  };
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f && (f.type.startsWith('audio/') || f.type.startsWith('video/'))) {
+      setFile(f);
+      setDone(false);
+    }
+  }, []);
 
   return (
     <ToolPageShell
@@ -35,7 +65,39 @@ export function Mp3Converter() {
       gradient={['#10b981', '#059669']}
     >
       {!file ? (
-        <UploadArea C={C} accept="audio/*,video/*" onFile={setFile} label="Drop audio or video file here or click to upload" />
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleFileDrop}
+        >
+          <label style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: '48px 24px', borderRadius: 16,
+            border: `2px dashed ${dragOver ? '#10b981' : C.border}`,
+            background: dragOver ? 'rgba(16,185,129,.06)' : C.surface,
+            cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
+          }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 12 }}>
+              Drop audio or video file here or click to upload
+            </span>
+            <span style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
+              MP4, WAV, FLAC, OGG, AAC, WebM, MKV
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*,video/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) { setFile(f); setDone(false); }
+              }}
+            />
+          </label>
+        </div>
       ) : (
         <div>
           {/* File Info */}
@@ -57,11 +119,14 @@ export function Mp3Converter() {
               <div style={{ fontSize: 11, color: C.dim }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
             </div>
             <button
-              onClick={() => { setFile(null); setDone(false); }}
+              onClick={handleReset}
+              onMouseEnter={() => setRemoveHover(true)}
+              onMouseLeave={() => setRemoveHover(false)}
               style={{
                 padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`,
-                background: C.surface, color: C.sub, fontSize: 12, cursor: 'pointer',
-                fontFamily: 'inherit',
+                background: removeHover ? C.surface : C.card,
+                color: C.sub, fontSize: 12, cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.2s ease',
               }}
             >
               Remove
@@ -83,7 +148,7 @@ export function Mp3Converter() {
                     border: bitrate === b ? '2px solid #10b981' : `1px solid ${C.border}`,
                     background: bitrate === b ? 'rgba(16,185,129,.1)' : hoveredBitrate === b ? C.surface : C.card,
                     color: bitrate === b ? '#10b981' : C.text,
-                    cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                    cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
                   {b}
@@ -107,7 +172,7 @@ export function Mp3Converter() {
                     border: sampleRate === s ? '2px solid #10b981' : `1px solid ${C.border}`,
                     background: sampleRate === s ? 'rgba(16,185,129,.1)' : hoveredSample === s ? C.surface : C.card,
                     color: sampleRate === s ? '#10b981' : C.text,
-                    cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                    cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
                   {s}
@@ -179,17 +244,30 @@ export function Mp3Converter() {
             </div>
           </div>
 
+          {/* Done status */}
+          {done && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12,
+              border: '1px solid rgba(16,185,129,.3)', background: 'rgba(16,185,129,.06)', marginBottom: 16,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Conversion complete</span>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: 12 }}>
             <ActionButton
-              label="Convert"
+              label={done ? 'Convert Again' : 'Convert'}
               gradient={['#10b981', '#059669']}
               onClick={handleConvert}
               loading={loading}
             />
             {done && (
               <button
-                onClick={() => {}}
+                onClick={handleDownload}
                 onMouseEnter={() => setDownloadHover(true)}
                 onMouseLeave={() => setDownloadHover(false)}
                 style={{
@@ -197,7 +275,7 @@ export function Mp3Converter() {
                   border: `1px solid ${C.border}`,
                   background: downloadHover ? C.surface : C.card,
                   color: C.text, fontSize: 15, fontWeight: 700,
-                  cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                  cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8,
                 }}
               >

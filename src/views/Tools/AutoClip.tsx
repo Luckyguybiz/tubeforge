@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ToolPageShell, UploadArea, ActionButton, ResultPreview } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -28,9 +28,12 @@ export function AutoClip() {
   const [detection, setDetection] = useState<typeof DETECTION_MODES[number]>('Most engaging moments');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ClipResult[]>([]);
+  const [previewingId, setPreviewingId] = useState<number | null>(null);
 
-  const handleProcess = () => {
+  const handleProcess = useCallback(() => {
+    if (!file || loading) return;
     setLoading(true);
+    setResults([]);
     setTimeout(() => {
       const mock: ClipResult[] = Array.from({ length: numClips }, (_, i) => ({
         id: i + 1,
@@ -43,7 +46,14 @@ export function AutoClip() {
       setResults(mock);
       setLoading(false);
     }, 2000);
-  };
+  }, [file, loading, numClips, clipLength, detection]);
+
+  const handleClipAction = useCallback((action: string, clipId: number) => {
+    if (action === 'Preview') {
+      setPreviewingId((prev) => (prev === clipId ? null : clipId));
+    }
+    // Download and Edit are no-ops in the demo but the button is interactive
+  }, []);
 
   return (
     <ToolPageShell
@@ -53,7 +63,7 @@ export function AutoClip() {
       badge="AI"
       badgeColor="#6366f1"
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 24 }}>
         {/* Left column: controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Upload */}
@@ -74,24 +84,28 @@ export function AutoClip() {
                 width: 48, height: 48, borderRadius: 10,
                 background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
               }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="23 7 16 12 23 17 23 7" />
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, fontWeight: 600, color: C.text, margin: 0 }}>{file.name}</p>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
                 <p style={{ fontSize: 12, color: C.dim, margin: '2px 0 0' }}>
                   {(file.size / (1024 * 1024)).toFixed(1)} MB
                 </p>
               </div>
               <button
-                onClick={() => { setFile(null); setResults([]); }}
+                onClick={() => { setFile(null); setResults([]); setPreviewingId(null); }}
                 style={{
                   background: 'none', border: 'none', color: C.dim,
                   cursor: 'pointer', fontSize: 18, padding: 4,
+                  transition: 'all 0.2s ease', flexShrink: 0,
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.dim; }}
               >
                 &times;
               </button>
@@ -114,8 +128,10 @@ export function AutoClip() {
                     background: numClips === n ? `${GRADIENT[0]}18` : C.card,
                     color: numClips === n ? GRADIENT[0] : C.text,
                     fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
+                  onMouseEnter={(e) => { if (numClips !== n) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (numClips !== n) e.currentTarget.style.background = numClips === n ? `${GRADIENT[0]}18` : C.card; }}
                 >
                   {n}
                 </button>
@@ -139,8 +155,10 @@ export function AutoClip() {
                     background: clipLength === len ? `${GRADIENT[0]}18` : C.card,
                     color: clipLength === len ? GRADIENT[0] : C.text,
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
+                  onMouseEnter={(e) => { if (clipLength !== len) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (clipLength !== len) e.currentTarget.style.background = clipLength === len ? `${GRADIENT[0]}18` : C.card; }}
                 >
                   {len}
                 </button>
@@ -164,8 +182,10 @@ export function AutoClip() {
                     background: platform === p ? `${GRADIENT[1]}18` : C.card,
                     color: platform === p ? GRADIENT[1] : C.text,
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
+                  onMouseEnter={(e) => { if (platform !== p) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (platform !== p) e.currentTarget.style.background = platform === p ? `${GRADIENT[1]}18` : C.card; }}
                 >
                   {p}
                 </button>
@@ -189,15 +209,19 @@ export function AutoClip() {
                     background: detection === mode ? `${GRADIENT[0]}12` : C.card,
                     color: detection === mode ? GRADIENT[0] : C.text,
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                     textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}
+                  onMouseEnter={(e) => { if (detection !== mode) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (detection !== mode) e.currentTarget.style.background = detection === mode ? `${GRADIENT[0]}12` : C.card; }}
                 >
                   <span style={{
                     width: 18, height: 18, borderRadius: '50%',
                     border: detection === mode ? `5px solid ${GRADIENT[0]}` : `2px solid ${C.dim}`,
                     boxSizing: 'border-box',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0,
                   }} />
                   {mode}
                 </button>
@@ -222,7 +246,7 @@ export function AutoClip() {
           </h3>
 
           {results.length === 0 ? (
-            <ResultPreview C={C} label="Clips will appear here after processing" />
+            <ResultPreview C={C} label={loading ? 'Analyzing video for the best moments...' : 'Clips will appear here after processing'} />
           ) : (
             <div style={{
               display: 'grid',
@@ -234,11 +258,14 @@ export function AutoClip() {
                   key={clip.id}
                   style={{
                     borderRadius: 14,
-                    border: `1px solid ${C.border}`,
+                    border: previewingId === clip.id ? `2px solid ${GRADIENT[0]}` : `1px solid ${C.border}`,
                     background: C.card,
                     overflow: 'hidden',
-                    transition: 'all .2s',
+                    transition: 'all 0.2s ease',
+                    cursor: 'default',
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = C.card; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                   {/* Thumbnail placeholder */}
                   <div style={{
@@ -275,18 +302,29 @@ export function AutoClip() {
                       {['Preview', 'Download', 'Edit'].map((action) => (
                         <button
                           key={action}
+                          onClick={() => handleClipAction(action, clip.id)}
                           style={{
                             flex: 1, padding: '6px 0', borderRadius: 8,
-                            border: `1px solid ${C.border}`,
-                            background: C.surface, color: C.text,
+                            border: action === 'Preview' && previewingId === clip.id
+                              ? `1px solid ${GRADIENT[0]}`
+                              : `1px solid ${C.border}`,
+                            background: action === 'Preview' && previewingId === clip.id
+                              ? `${GRADIENT[0]}18`
+                              : C.surface,
+                            color: action === 'Preview' && previewingId === clip.id
+                              ? GRADIENT[0]
+                              : C.text,
                             fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                            transition: 'all .2s', fontFamily: 'inherit',
+                            transition: 'all 0.2s ease', fontFamily: 'inherit',
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = C.cardHover;
+                            e.currentTarget.style.borderColor = GRADIENT[0];
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = C.surface;
+                            const isPreviewing = action === 'Preview' && previewingId === clip.id;
+                            e.currentTarget.style.background = isPreviewing ? `${GRADIENT[0]}18` : C.surface;
+                            e.currentTarget.style.borderColor = isPreviewing ? GRADIENT[0] : C.border;
                           }}
                         >
                           {action}

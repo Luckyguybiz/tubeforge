@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ToolPageShell, UploadArea, ActionButton, ResultPreview } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -22,13 +22,15 @@ export function SubtitleRemover() {
   const [processed, setProcessed] = useState(false);
   const [splitPos, setSplitPos] = useState(50);
 
-  const handleRemove = () => {
+  const handleRemove = useCallback(() => {
+    if (!file || loading) return;
     setLoading(true);
+    setProcessed(false);
     setTimeout(() => {
       setLoading(false);
       setProcessed(true);
     }, 2500);
-  };
+  }, [file, loading]);
 
   return (
     <ToolPageShell
@@ -38,7 +40,7 @@ export function SubtitleRemover() {
       badge="AI"
       badgeColor="#ef4444"
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) minmax(0, 1fr)', gap: 24 }}>
         {/* Left column: controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Upload */}
@@ -59,14 +61,15 @@ export function SubtitleRemover() {
                 width: 44, height: 44, borderRadius: 10,
                 background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
               }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="23 7 16 12 23 17 23 7" />
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>{file.name}</p>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
                 <p style={{ fontSize: 11, color: C.dim, margin: '2px 0 0' }}>
                   {(file.size / (1024 * 1024)).toFixed(1)} MB
                 </p>
@@ -76,7 +79,10 @@ export function SubtitleRemover() {
                 style={{
                   background: 'none', border: 'none', color: C.dim,
                   cursor: 'pointer', fontSize: 18, padding: 4,
+                  transition: 'all 0.2s ease', flexShrink: 0,
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.dim; }}
               >
                 &times;
               </button>
@@ -99,15 +105,19 @@ export function SubtitleRemover() {
                     background: detectionMode === mode ? `${GRADIENT[0]}12` : C.card,
                     color: detectionMode === mode ? GRADIENT[0] : C.text,
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                     textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}
+                  onMouseEnter={(e) => { if (detectionMode !== mode) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (detectionMode !== mode) e.currentTarget.style.background = detectionMode === mode ? `${GRADIENT[0]}12` : C.card; }}
                 >
                   <span style={{
                     width: 18, height: 18, borderRadius: '50%',
                     border: detectionMode === mode ? `5px solid ${GRADIENT[0]}` : `2px solid ${C.dim}`,
                     boxSizing: 'border-box',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0,
                   }} />
                   {mode}
                 </button>
@@ -142,10 +152,12 @@ export function SubtitleRemover() {
                     border: quality === q.key ? `2px solid ${GRADIENT[0]}` : `1px solid ${C.border}`,
                     background: quality === q.key ? `${GRADIENT[0]}12` : C.card,
                     color: C.text, fontSize: 13, fontWeight: 600,
-                    cursor: 'pointer', transition: 'all .2s',
+                    cursor: 'pointer', transition: 'all 0.2s ease',
                     fontFamily: 'inherit', textAlign: 'left',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}
+                  onMouseEnter={(e) => { if (quality !== q.key) e.currentTarget.style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { if (quality !== q.key) e.currentTarget.style.background = quality === q.key ? `${GRADIENT[0]}12` : C.card; }}
                 >
                   <span style={{ color: quality === q.key ? GRADIENT[0] : C.text }}>{q.label}</span>
                   <span style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>{q.desc}</span>
@@ -171,7 +183,7 @@ export function SubtitleRemover() {
                 border: `1px solid ${C.border}`,
                 background: C.card, color: C.text,
                 fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit', transition: 'all .2s',
+                fontFamily: 'inherit', transition: 'all 0.2s ease',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}
@@ -224,6 +236,7 @@ export function SubtitleRemover() {
                   position: 'absolute', bottom: 10, left: '10%', right: '10%',
                   height: 50, border: `2px dashed ${GRADIENT[0]}88`,
                   borderRadius: 4, background: `${GRADIENT[0]}08`,
+                  transition: 'all 0.3s ease',
                 }}>
                   <span style={{
                     position: 'absolute', top: -18, left: 0,
@@ -231,6 +244,22 @@ export function SubtitleRemover() {
                   }}>
                     Auto-detected region
                   </span>
+                </div>
+              )}
+
+              {/* Loading overlay */}
+              {loading && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(0,0,0,0.6)',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: 12,
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 16 16" style={{ animation: 'spin 1s linear infinite' }}>
+                    <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,.3)" strokeWidth="2" fill="none" />
+                    <path d="M8 2a6 6 0 014.47 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </svg>
+                  <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>Analyzing subtitles...</span>
                 </div>
               )}
             </div>
@@ -311,6 +340,7 @@ export function SubtitleRemover() {
                 position: 'absolute', top: 0, bottom: 0,
                 left: `${splitPos}%`, width: 3,
                 background: '#fff', zIndex: 10,
+                transition: 'left 0.05s ease',
               }}>
                 <div style={{
                   position: 'absolute', top: '50%', left: '50%',

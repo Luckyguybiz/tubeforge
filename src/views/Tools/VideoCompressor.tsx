@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
+import { useState, useRef, useCallback } from 'react';
+import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 const PRESETS = [
@@ -25,6 +25,9 @@ export function VideoCompressor() {
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
   const [hoveredRes, setHoveredRes] = useState<string | null>(null);
   const [downloadHover, setDownloadHover] = useState(false);
+  const [removeHover, setRemoveHover] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const originalSize = file ? file.size / 1024 / 1024 : 0;
   const activePreset = PRESETS.find((p) => p.id === preset);
@@ -44,6 +47,35 @@ export function VideoCompressor() {
     }, 300);
   };
 
+  const handleDownload = () => {
+    if (!file) return;
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(file);
+    link.download = `compressed_${file.name}`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setDone(false);
+    setProgress(0);
+    setPreset('medium');
+    setResolution('Keep Original');
+    setTargetSize('');
+  };
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('video/')) {
+      setFile(f);
+      setDone(false);
+      setProgress(0);
+    }
+  }, []);
+
   return (
     <ToolPageShell
       title="Video Compressor"
@@ -51,7 +83,39 @@ export function VideoCompressor() {
       gradient={['#06b6d4', '#0ea5e9']}
     >
       {!file ? (
-        <UploadArea C={C} accept="video/*" onFile={setFile} label="Drop video file here or click to upload" />
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleFileDrop}
+        >
+          <label style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: '48px 24px', borderRadius: 16,
+            border: `2px dashed ${dragOver ? '#06b6d4' : C.border}`,
+            background: dragOver ? 'rgba(6,182,212,.06)' : C.surface,
+            cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
+          }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 12 }}>
+              Drop video file here or click to upload
+            </span>
+            <span style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
+              MP4, WebM, MOV, AVI, MKV
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) { setFile(f); setDone(false); setProgress(0); }
+              }}
+            />
+          </label>
+        </div>
       ) : (
         <div>
           {/* File Info */}
@@ -73,11 +137,14 @@ export function VideoCompressor() {
               <div style={{ fontSize: 11, color: C.dim }}>Original size: {originalSize.toFixed(2)} MB</div>
             </div>
             <button
-              onClick={() => { setFile(null); setDone(false); setProgress(0); }}
+              onClick={handleReset}
+              onMouseEnter={() => setRemoveHover(true)}
+              onMouseLeave={() => setRemoveHover(false)}
               style={{
                 padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`,
-                background: C.surface, color: C.sub, fontSize: 12, cursor: 'pointer',
-                fontFamily: 'inherit',
+                background: removeHover ? C.surface : C.card,
+                color: C.sub, fontSize: 12, cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.2s ease',
               }}
             >
               Remove
@@ -98,7 +165,7 @@ export function VideoCompressor() {
                     padding: 16, borderRadius: 12, textAlign: 'center',
                     border: preset === p.id ? '2px solid #06b6d4' : `1px solid ${C.border}`,
                     background: preset === p.id ? 'rgba(6,182,212,.1)' : hoveredPreset === p.id ? C.surface : C.card,
-                    cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                    cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
                   <div style={{ fontSize: 14, fontWeight: 700, color: preset === p.id ? '#06b6d4' : C.text }}>{p.label}</div>
@@ -145,7 +212,7 @@ export function VideoCompressor() {
                     border: resolution === r ? '2px solid #06b6d4' : `1px solid ${C.border}`,
                     background: resolution === r ? 'rgba(6,182,212,.1)' : hoveredRes === r ? C.surface : C.card,
                     color: resolution === r ? '#06b6d4' : C.text,
-                    cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                    cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
                   {r}
@@ -160,7 +227,9 @@ export function VideoCompressor() {
             marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <span style={{ fontSize: 13, color: C.sub }}>Estimated output size</span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#06b6d4' }}>{estimatedSize.toFixed(2)} MB</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#06b6d4' }}>
+              {isNaN(estimatedSize) ? '---' : `${estimatedSize.toFixed(2)} MB`}
+            </span>
           </div>
 
           {/* Progress Bar */}
@@ -173,7 +242,7 @@ export function VideoCompressor() {
               <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
                 <div style={{
                   width: `${Math.min(100, progress)}%`, height: '100%', borderRadius: 4,
-                  background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', transition: 'width .3s',
+                  background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', transition: 'width 0.3s ease',
                 }} />
               </div>
             </div>
@@ -195,12 +264,14 @@ export function VideoCompressor() {
                   <polyline points="5 12 12 5 19 12" /><line x1="12" y1="5" x2="12" y2="19" />
                 </svg>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#06b6d4' }}>
-                  {Math.round((1 - estimatedSize / originalSize) * 100)}% smaller
+                  {originalSize > 0 ? `${Math.round((1 - estimatedSize / originalSize) * 100)}% smaller` : '---'}
                 </span>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>After</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#06b6d4' }}>{estimatedSize.toFixed(1)} MB</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#06b6d4' }}>
+                  {isNaN(estimatedSize) ? '---' : `${estimatedSize.toFixed(1)} MB`}
+                </div>
               </div>
             </div>
           )}
@@ -208,14 +279,14 @@ export function VideoCompressor() {
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: 12 }}>
             <ActionButton
-              label="Compress"
+              label={done ? 'Compress Again' : 'Compress'}
               gradient={['#06b6d4', '#0ea5e9']}
               onClick={handleCompress}
               loading={loading}
             />
             {done && (
               <button
-                onClick={() => {}}
+                onClick={handleDownload}
                 onMouseEnter={() => setDownloadHover(true)}
                 onMouseLeave={() => setDownloadHover(false)}
                 style={{
@@ -223,7 +294,7 @@ export function VideoCompressor() {
                   border: `1px solid ${C.border}`,
                   background: downloadHover ? C.surface : C.card,
                   color: C.text, fontSize: 15, fontWeight: 700,
-                  cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                  cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8,
                 }}
               >

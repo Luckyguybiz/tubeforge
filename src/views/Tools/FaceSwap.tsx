@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
+import { useState, useRef, useCallback } from 'react';
+import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 export function FaceSwap() {
@@ -13,6 +13,12 @@ export function FaceSwap() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [downloadHover, setDownloadHover] = useState(false);
+  const [sourceDragOver, setSourceDragOver] = useState(false);
+  const [targetDragOver, setTargetDragOver] = useState(false);
+  const [sourceRemoveHover, setSourceRemoveHover] = useState(false);
+  const [targetRemoveHover, setTargetRemoveHover] = useState(false);
+  const sourceInputRef = useRef<HTMLInputElement>(null);
+  const targetInputRef = useRef<HTMLInputElement>(null);
 
   const handleSwap = () => {
     setLoading(true);
@@ -20,70 +26,35 @@ export function FaceSwap() {
     setTimeout(() => { setLoading(false); setDone(true); }, 3000);
   };
 
-  const UploadCard = ({ label, sublabel, file, onFile, onRemove }: {
-    label: string; sublabel: string; file: File | null;
-    onFile: (f: File) => void; onRemove: () => void;
-  }) => (
-    <div style={{ flex: 1 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{label}</label>
-      {!file ? (
-        <label style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 16px', borderRadius: 14,
-          border: `2px dashed ${C.border}`, background: C.surface,
-          cursor: 'pointer', transition: 'all .2s', textAlign: 'center',
-          minHeight: 200,
-        }}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-          </svg>
-          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, marginTop: 12 }}>{sublabel}</span>
-          <span style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>JPG, PNG, WebP</span>
-          <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onFile(f);
-          }} />
-        </label>
-      ) : (
-        <div style={{
-          padding: 16, borderRadius: 14, border: `1px solid ${C.border}`,
-          background: C.card, minHeight: 200, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', position: 'relative',
-        }}>
-          {/* Placeholder face detection preview */}
-          <div style={{
-            width: 100, height: 100, borderRadius: 50,
-            border: `3px dashed #f97316`, background: C.surface,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 12, position: 'relative',
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
-              <circle cx="12" cy="7" r="4" /><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-            </svg>
-            {/* Bounding box corners */}
-            <div style={{ position: 'absolute', top: -4, left: -4, width: 12, height: 12, borderTop: '3px solid #f97316', borderLeft: '3px solid #f97316' }} />
-            <div style={{ position: 'absolute', top: -4, right: -4, width: 12, height: 12, borderTop: '3px solid #f97316', borderRight: '3px solid #f97316' }} />
-            <div style={{ position: 'absolute', bottom: -4, left: -4, width: 12, height: 12, borderBottom: '3px solid #f97316', borderLeft: '3px solid #f97316' }} />
-            <div style={{ position: 'absolute', bottom: -4, right: -4, width: 12, height: 12, borderBottom: '3px solid #f97316', borderRight: '3px solid #f97316' }} />
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{file.name}</div>
-          <div style={{ fontSize: 11, color: '#f97316', marginTop: 4 }}>Face detected</div>
-          <button
-            onClick={onRemove}
-            style={{
-              position: 'absolute', top: 8, right: 8,
-              width: 24, height: 24, borderRadius: 12,
-              border: `1px solid ${C.border}`, background: C.surface,
-              color: C.dim, cursor: 'pointer', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', fontSize: 14,
-            }}
-          >
-            x
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  const handleDownload = () => {
+    // Simulate download of the result
+    if (!targetFile) return;
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(targetFile);
+    link.download = `faceswap_${targetFile.name}`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleSourceDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setSourceDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) {
+      setSourceFile(f);
+      setDone(false);
+    }
+  }, []);
+
+  const handleTargetDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setTargetDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f && (f.type.startsWith('image/') || f.type.startsWith('video/'))) {
+      setTargetFile(f);
+      setDone(false);
+    }
+  }, []);
 
   return (
     <ToolPageShell
@@ -92,14 +63,87 @@ export function FaceSwap() {
       gradient={['#f97316', '#ef4444']}
     >
       {/* Two Upload Areas Side by Side */}
-      <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
-        <UploadCard
-          label="Source Face"
-          sublabel="Upload source face"
-          file={sourceFile}
-          onFile={setSourceFile}
-          onRemove={() => { setSourceFile(null); setDone(false); }}
-        />
+      <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
+        {/* Source Face Upload */}
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Source Face</label>
+          {!sourceFile ? (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setSourceDragOver(true); }}
+              onDragLeave={() => setSourceDragOver(false)}
+              onDrop={handleSourceDrop}
+            >
+              <label style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: '40px 16px', borderRadius: 14,
+                border: `2px dashed ${sourceDragOver ? '#f97316' : C.border}`,
+                background: sourceDragOver ? 'rgba(249,115,22,.06)' : C.surface,
+                cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
+                minHeight: 200,
+              }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.text, marginTop: 12 }}>Upload source face</span>
+                <span style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>JPG, PNG, WebP</span>
+                <input
+                  ref={sourceInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) { setSourceFile(f); setDone(false); }
+                  }}
+                />
+              </label>
+            </div>
+          ) : (
+            <div style={{
+              padding: 16, borderRadius: 14, border: `1px solid ${C.border}`,
+              background: C.card, minHeight: 200, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', position: 'relative',
+            }}>
+              {/* Placeholder face detection preview */}
+              <div style={{
+                width: 100, height: 100, borderRadius: 50,
+                border: '3px dashed #f97316', background: C.surface,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 12, position: 'relative',
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
+                  <circle cx="12" cy="7" r="4" /><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                </svg>
+                {/* Bounding box corners */}
+                <div style={{ position: 'absolute', top: -4, left: -4, width: 12, height: 12, borderTop: '3px solid #f97316', borderLeft: '3px solid #f97316' }} />
+                <div style={{ position: 'absolute', top: -4, right: -4, width: 12, height: 12, borderTop: '3px solid #f97316', borderRight: '3px solid #f97316' }} />
+                <div style={{ position: 'absolute', bottom: -4, left: -4, width: 12, height: 12, borderBottom: '3px solid #f97316', borderLeft: '3px solid #f97316' }} />
+                <div style={{ position: 'absolute', bottom: -4, right: -4, width: 12, height: 12, borderBottom: '3px solid #f97316', borderRight: '3px solid #f97316' }} />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{sourceFile.name}</div>
+              <div style={{ fontSize: 11, color: '#f97316', marginTop: 4 }}>Face detected</div>
+              <button
+                onClick={() => { setSourceFile(null); setDone(false); }}
+                onMouseEnter={() => setSourceRemoveHover(true)}
+                onMouseLeave={() => setSourceRemoveHover(false)}
+                style={{
+                  position: 'absolute', top: 8, right: 8,
+                  width: 24, height: 24, borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  background: sourceRemoveHover ? C.surface : C.card,
+                  color: C.dim, cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Arrow */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -109,13 +153,86 @@ export function FaceSwap() {
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
           </svg>
         </div>
-        <UploadCard
-          label="Target Image / Video"
-          sublabel="Upload target image or video"
-          file={targetFile}
-          onFile={setTargetFile}
-          onRemove={() => { setTargetFile(null); setDone(false); }}
-        />
+
+        {/* Target Image / Video Upload */}
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Target Image / Video</label>
+          {!targetFile ? (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setTargetDragOver(true); }}
+              onDragLeave={() => setTargetDragOver(false)}
+              onDrop={handleTargetDrop}
+            >
+              <label style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: '40px 16px', borderRadius: 14,
+                border: `2px dashed ${targetDragOver ? '#ef4444' : C.border}`,
+                background: targetDragOver ? 'rgba(239,68,68,.06)' : C.surface,
+                cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
+                minHeight: 200,
+              }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.text, marginTop: 12 }}>Upload target image or video</span>
+                <span style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>JPG, PNG, WebP, MP4</span>
+                <input
+                  ref={targetInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) { setTargetFile(f); setDone(false); }
+                  }}
+                />
+              </label>
+            </div>
+          ) : (
+            <div style={{
+              padding: 16, borderRadius: 14, border: `1px solid ${C.border}`,
+              background: C.card, minHeight: 200, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', position: 'relative',
+            }}>
+              {/* Placeholder face detection preview */}
+              <div style={{
+                width: 100, height: 100, borderRadius: 50,
+                border: '3px dashed #f97316', background: C.surface,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 12, position: 'relative',
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
+                  <circle cx="12" cy="7" r="4" /><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                </svg>
+                {/* Bounding box corners */}
+                <div style={{ position: 'absolute', top: -4, left: -4, width: 12, height: 12, borderTop: '3px solid #f97316', borderLeft: '3px solid #f97316' }} />
+                <div style={{ position: 'absolute', top: -4, right: -4, width: 12, height: 12, borderTop: '3px solid #f97316', borderRight: '3px solid #f97316' }} />
+                <div style={{ position: 'absolute', bottom: -4, left: -4, width: 12, height: 12, borderBottom: '3px solid #f97316', borderLeft: '3px solid #f97316' }} />
+                <div style={{ position: 'absolute', bottom: -4, right: -4, width: 12, height: 12, borderBottom: '3px solid #f97316', borderRight: '3px solid #f97316' }} />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{targetFile.name}</div>
+              <div style={{ fontSize: 11, color: '#f97316', marginTop: 4 }}>Face detected</div>
+              <button
+                onClick={() => { setTargetFile(null); setDone(false); }}
+                onMouseEnter={() => setTargetRemoveHover(true)}
+                onMouseLeave={() => setTargetRemoveHover(false)}
+                style={{
+                  position: 'absolute', top: 8, right: 8,
+                  width: 24, height: 24, borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  background: targetRemoveHover ? C.surface : C.card,
+                  color: C.dim, cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Enhancement Toggle */}
@@ -123,6 +240,7 @@ export function FaceSwap() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: 16, borderRadius: 12, border: `1px solid ${C.border}`,
         background: C.card, marginBottom: 24,
+        transition: 'all 0.2s ease',
       }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Enhance Result Quality</div>
@@ -133,15 +251,16 @@ export function FaceSwap() {
           style={{
             width: 44, height: 24, borderRadius: 12, border: 'none',
             background: enhance ? '#f97316' : C.surface,
-            cursor: 'pointer', position: 'relative', transition: 'all .2s',
+            cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease',
             boxShadow: enhance ? '0 0 8px rgba(249,115,22,.3)' : 'none',
+            flexShrink: 0,
           }}
         >
           <div style={{
             width: 18, height: 18, borderRadius: 9, background: '#fff',
             position: 'absolute', top: 3,
             left: enhance ? 23 : 3,
-            transition: 'left .2s',
+            transition: 'left 0.2s ease',
             boxShadow: '0 1px 3px rgba(0,0,0,.2)',
           }} />
         </button>
@@ -173,7 +292,7 @@ export function FaceSwap() {
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
         <ActionButton
-          label="Swap Faces"
+          label={done ? 'Swap Again' : 'Swap Faces'}
           gradient={['#f97316', '#ef4444']}
           onClick={handleSwap}
           disabled={!sourceFile || !targetFile}
@@ -181,7 +300,7 @@ export function FaceSwap() {
         />
         {done && (
           <button
-            onClick={() => {}}
+            onClick={handleDownload}
             onMouseEnter={() => setDownloadHover(true)}
             onMouseLeave={() => setDownloadHover(false)}
             style={{
@@ -189,7 +308,7 @@ export function FaceSwap() {
               border: `1px solid ${C.border}`,
               background: downloadHover ? C.surface : C.card,
               color: C.text, fontSize: 15, fontWeight: 700,
-              cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+              cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 8,
             }}
           >

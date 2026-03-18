@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -30,13 +30,31 @@ export function VoiceoverGenerator() {
   const [language, setLanguage] = useState('English');
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [downloadHover, setDownloadHover] = useState(false);
+  const [hoveredVoice, setHoveredVoice] = useState<string | null>(null);
 
-  const handleGenerate = () => {
-    if (!script.trim()) return;
+  const handleGenerate = useCallback(() => {
+    if (!script.trim() || loading) return;
+    setGenerated(false);
+    setIsPlaying(false);
     setLoading(true);
     setTimeout(() => { setLoading(false); setGenerated(true); }, 2500);
-  };
+  }, [script, loading]);
+
+  const handlePlay = useCallback(() => {
+    setIsPlaying((prev) => !prev);
+  }, []);
+
+  const handleDownload = useCallback(() => {
+    /* Simulate download action */
+  }, []);
+
+  // Generate deterministic waveform bars to avoid hydration issues
+  const waveformBars = Array.from({ length: 40 }, (_, i) => {
+    const h = 15 + Math.sin(i * 0.5) * 25 + ((i * 17 + 7) % 20);
+    return h;
+  });
 
   return (
     <ToolPageShell
@@ -44,7 +62,7 @@ export function VoiceoverGenerator() {
       subtitle="Generate realistic AI voiceovers from your scripts with customizable voices"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
         {/* Left column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Script input */}
@@ -59,7 +77,10 @@ export function VoiceoverGenerator() {
                 border: `1px solid ${C.border}`, background: C.surface,
                 color: C.text, fontSize: 14, fontFamily: 'inherit',
                 resize: 'vertical', outline: 'none',
+                transition: 'border-color 0.2s ease',
               }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
               <span style={{ fontSize: 12, color: C.dim }}>{script.length} characters</span>
@@ -76,7 +97,10 @@ export function VoiceoverGenerator() {
                 width: '100%', padding: '10px 14px', borderRadius: 10,
                 border: `1px solid ${C.border}`, background: C.surface,
                 color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none',
+                cursor: 'pointer', transition: 'border-color 0.2s ease',
               }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
             >
               {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
@@ -91,7 +115,7 @@ export function VoiceoverGenerator() {
             <input
               type="range" min={0.5} max={2} step={0.1} value={speed}
               onChange={(e) => setSpeed(Number(e.target.value))}
-              style={{ width: '100%', accentColor: GRADIENT[0] }}
+              style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>
               <span>0.5x</span><span>1.0x</span><span>1.5x</span><span>2.0x</span>
@@ -107,7 +131,7 @@ export function VoiceoverGenerator() {
             <input
               type="range" min={-5} max={5} step={1} value={pitch}
               onChange={(e) => setPitch(Number(e.target.value))}
-              style={{ width: '100%', accentColor: GRADIENT[0] }}
+              style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>
               <span>-5</span><span>0</span><span>+5</span>
@@ -123,31 +147,41 @@ export function VoiceoverGenerator() {
           <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 16 }}>Select Voice</span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              {VOICES.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => setSelectedVoice(v.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-                    borderRadius: 12, border: `1px solid ${selectedVoice === v.id ? v.color : C.border}`,
-                    background: selectedVoice === v.id ? `${v.color}11` : C.surface,
-                    cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit', textAlign: 'left',
-                  }}
-                >
-                  <div style={{
-                    width: 38, height: 38, borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${v.color}, ${v.color}aa)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0,
-                  }}>
-                    {v.name[0]}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{v.name}</div>
-                    <div style={{ fontSize: 11, color: C.dim }}>{v.desc}</div>
-                  </div>
-                </button>
-              ))}
+              {VOICES.map((v) => {
+                const isSelected = selectedVoice === v.id;
+                const isHovered = hoveredVoice === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => setSelectedVoice(v.id)}
+                    onMouseEnter={() => setHoveredVoice(v.id)}
+                    onMouseLeave={() => setHoveredVoice(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+                      borderRadius: 12,
+                      border: `1px solid ${isSelected ? v.color : isHovered ? `${v.color}88` : C.border}`,
+                      background: isSelected ? `${v.color}11` : isHovered ? `${v.color}08` : C.surface,
+                      cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit', textAlign: 'left',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${v.color}44`; }}
+                    onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div style={{
+                      width: 38, height: 38, borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${v.color}, ${v.color}aa)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0,
+                    }}>
+                      {v.name[0]}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{v.name}</div>
+                      <div style={{ fontSize: 11, color: C.dim }}>{v.desc}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -160,13 +194,13 @@ export function VoiceoverGenerator() {
               alignItems: 'center', justifyContent: 'center', gap: 3, padding: '0 20px',
             }}>
               {generated ? (
-                Array.from({ length: 40 }).map((_, i) => (
+                waveformBars.map((h, i) => (
                   <div key={i} style={{
                     width: 3, borderRadius: 2,
-                    height: `${15 + Math.sin(i * 0.5) * 25 + Math.random() * 20}%`,
+                    height: `${h}%`,
                     background: `linear-gradient(180deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
                     opacity: 0.7,
-                    transition: 'height .3s',
+                    transition: 'height 0.3s ease',
                   }} />
                 ))
               ) : (
@@ -175,18 +209,32 @@ export function VoiceoverGenerator() {
             </div>
             {generated && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
-                <button style={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
-                  border: 'none', cursor: 'pointer', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
+                <button
+                  onClick={handlePlay}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
+                    border: 'none', cursor: 'pointer', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    transition: 'transform 0.2s ease', outline: 'none',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 3px ${GRADIENT[0]}44`; }}
+                  onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  {isPlaying ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+                      <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                  )}
                 </button>
                 <div style={{ flex: 1, height: 4, borderRadius: 2, background: C.border }}>
-                  <div style={{ width: '35%', height: '100%', borderRadius: 2, background: GRADIENT[0] }} />
+                  <div style={{ width: isPlaying ? '35%' : '0%', height: '100%', borderRadius: 2, background: GRADIENT[0], transition: 'width 0.3s ease' }} />
                 </div>
                 <span style={{ fontSize: 12, color: C.dim }}>0:00 / 0:42</span>
               </div>
@@ -196,15 +244,19 @@ export function VoiceoverGenerator() {
           {/* Download */}
           {generated && (
             <button
+              onClick={handleDownload}
               onMouseEnter={() => setDownloadHover(true)}
               onMouseLeave={() => setDownloadHover(false)}
               style={{
                 padding: '14px 24px', borderRadius: 12,
                 border: `1px solid ${C.border}`, background: downloadHover ? C.surface : C.card,
                 color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                transition: 'all .2s', fontFamily: 'inherit',
+                transition: 'all 0.2s ease', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                outline: 'none',
               }}
+              onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
+              onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />

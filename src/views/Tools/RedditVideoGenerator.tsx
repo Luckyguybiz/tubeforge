@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ToolPageShell, UploadArea, ActionButton, ResultPreview } from './ToolPageShell';
+import { useState, useCallback } from 'react';
+import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 const GRADIENT: [string, string] = ['#f97316', '#ef4444'];
@@ -36,13 +36,15 @@ export function RedditVideoGenerator() {
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
 
-  const handleGenerate = () => {
+  const handleGenerate = useCallback(() => {
+    if (loading) return;
     setLoading(true);
+    setGenerated(false);
     setTimeout(() => {
       setLoading(false);
       setGenerated(true);
     }, 3000);
-  };
+  }, [loading]);
 
   const canGenerate = inputMode === 'url' ? redditUrl.trim().length > 0 : manualText.trim().length > 0;
 
@@ -52,7 +54,7 @@ export function RedditVideoGenerator() {
       subtitle="Turn Reddit posts into viral short-form videos with AI narration"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 400px)', gap: 24 }}>
         {/* Left column: controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Input mode toggle */}
@@ -71,8 +73,10 @@ export function RedditVideoGenerator() {
                     : C.card,
                   color: inputMode === mode ? '#fff' : C.sub,
                   fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'inherit', transition: 'all .2s',
+                  fontFamily: 'inherit', transition: 'all 0.2s ease',
                 }}
+                onMouseEnter={(e) => { if (inputMode !== mode) e.currentTarget.style.background = C.cardHover; }}
+                onMouseLeave={(e) => { if (inputMode !== mode) e.currentTarget.style.background = C.card; }}
               >
                 {mode === 'url' ? 'Reddit Post URL' : 'Manual Text Input'}
               </button>
@@ -94,6 +98,7 @@ export function RedditVideoGenerator() {
                   border: `1px solid ${C.border}`, background: C.card,
                   color: C.text, fontSize: 14, boxSizing: 'border-box',
                   outline: 'none', fontFamily: 'inherit',
+                  transition: 'border-color 0.2s ease',
                 }}
                 onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -114,6 +119,7 @@ export function RedditVideoGenerator() {
                     border: `1px solid ${C.border}`, background: C.card,
                     color: C.text, fontSize: 14, boxSizing: 'border-box',
                     outline: 'none', fontFamily: 'inherit',
+                    transition: 'border-color 0.2s ease',
                   }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -133,6 +139,7 @@ export function RedditVideoGenerator() {
                     border: `1px solid ${C.border}`, background: C.card,
                     color: C.text, fontSize: 14, boxSizing: 'border-box',
                     outline: 'none', fontFamily: 'inherit', resize: 'vertical',
+                    transition: 'border-color 0.2s ease',
                   }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -157,12 +164,12 @@ export function RedditVideoGenerator() {
                     background: voice === v.id ? `${GRADIENT[0]}12` : C.card,
                     color: voice === v.id ? GRADIENT[0] : C.text,
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    transition: 'all .2s', fontFamily: 'inherit',
+                    transition: 'all 0.2s ease', fontFamily: 'inherit',
                     textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}
                   onMouseEnter={(e) => { if (voice !== v.id) e.currentTarget.style.background = C.cardHover; }}
-                  onMouseLeave={(e) => { if (voice !== v.id) e.currentTarget.style.background = C.card; }}
+                  onMouseLeave={(e) => { if (voice !== v.id) e.currentTarget.style.background = voice === v.id ? `${GRADIENT[0]}12` : C.card; }}
                 >
                   <span style={{
                     width: 28, height: 28, borderRadius: 8,
@@ -170,6 +177,7 @@ export function RedditVideoGenerator() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 12, fontWeight: 700,
                     color: voice === v.id ? GRADIENT[0] : C.dim,
+                    flexShrink: 0,
                   }}>
                     {v.icon}
                   </span>
@@ -194,17 +202,18 @@ export function RedditVideoGenerator() {
                     border: background === bg.id ? `2px solid ${bg.color}` : `1px solid ${C.border}`,
                     background: background === bg.id ? `${bg.color}12` : C.card,
                     color: C.text, fontSize: 13, fontWeight: 600,
-                    cursor: 'pointer', transition: 'all .2s',
+                    cursor: 'pointer', transition: 'all 0.2s ease',
                     fontFamily: 'inherit', textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 12,
                   }}
                   onMouseEnter={(e) => { if (background !== bg.id) e.currentTarget.style.background = C.cardHover; }}
-                  onMouseLeave={(e) => { if (background !== bg.id) e.currentTarget.style.background = C.card; }}
+                  onMouseLeave={(e) => { if (background !== bg.id) e.currentTarget.style.background = background === bg.id ? `${bg.color}12` : C.card; }}
                 >
                   <span style={{
                     width: 36, height: 36, borderRadius: 10,
                     background: `${bg.color}22`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={bg.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="23 7 16 12 23 17 23 7" />
@@ -249,21 +258,22 @@ export function RedditVideoGenerator() {
                   background: musicEnabled
                     ? `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`
                     : C.border,
-                  cursor: 'pointer', position: 'relative', transition: 'all .2s',
+                  cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease',
+                  flexShrink: 0,
                 }}
               >
                 <span style={{
                   position: 'absolute',
                   top: 3, left: musicEnabled ? 23 : 3,
                   width: 18, height: 18, borderRadius: '50%',
-                  background: '#fff', transition: 'all .2s',
+                  background: '#fff', transition: 'all 0.2s ease',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                 }} />
               </button>
             </div>
 
             {musicEnabled && (
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {MUSIC_GENRES.filter((g) => g !== 'None').map((genre) => (
                   <button
                     key={genre}
@@ -274,8 +284,10 @@ export function RedditVideoGenerator() {
                       background: musicGenre === genre ? `${GRADIENT[0]}14` : C.card,
                       color: musicGenre === genre ? GRADIENT[0] : C.text,
                       fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      transition: 'all .2s', fontFamily: 'inherit',
+                      transition: 'all 0.2s ease', fontFamily: 'inherit',
                     }}
+                    onMouseEnter={(e) => { if (musicGenre !== genre) e.currentTarget.style.background = C.cardHover; }}
+                    onMouseLeave={(e) => { if (musicGenre !== genre) e.currentTarget.style.background = musicGenre === genre ? `${GRADIENT[0]}14` : C.card; }}
                   >
                     {genre}
                   </button>
@@ -306,8 +318,24 @@ export function RedditVideoGenerator() {
               border: `1px solid ${C.border}`, background: C.card,
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
-              maxHeight: 580,
+              maxHeight: 580, position: 'relative', overflow: 'hidden',
             }}>
+              {/* Loading overlay */}
+              {loading && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: C.card,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: 12,
+                  zIndex: 2,
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 16 16" style={{ animation: 'spin 1s linear infinite' }}>
+                    <circle cx="8" cy="8" r="6" stroke={C.border} strokeWidth="2" fill="none" />
+                    <path d="M8 2a6 6 0 014.47 2" stroke={GRADIENT[0]} strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </svg>
+                  <span style={{ fontSize: 13, color: C.sub, fontWeight: 600 }}>Generating video...</span>
+                </div>
+              )}
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" opacity={0.3}>
                 <polygon points="23 7 16 12 23 17 23 7" />
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
@@ -343,7 +371,7 @@ export function RedditVideoGenerator() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                     <div style={{
                       width: 24, height: 24, borderRadius: '50%',
-                      background: GRADIENT[0],
+                      background: GRADIENT[0], flexShrink: 0,
                     }} />
                     <span style={{ color: '#ccc', fontSize: 11, fontWeight: 600 }}>r/AskReddit</span>
                   </div>
@@ -368,6 +396,7 @@ export function RedditVideoGenerator() {
                 background: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(4px)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', transition: 'all 0.2s ease',
               }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -383,7 +412,7 @@ export function RedditVideoGenerator() {
                 border: `1px solid ${C.border}`,
                 background: C.card, color: C.text,
                 fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit', transition: 'all .2s',
+                fontFamily: 'inherit', transition: 'all 0.2s ease',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}

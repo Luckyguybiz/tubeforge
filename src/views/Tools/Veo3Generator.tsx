@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -15,6 +15,13 @@ const STYLE_PRESETS = [
   { id: 'musicvideo', name: 'Music Video', desc: 'Stylized & vibrant', icon: '🎵', color: '#f59e0b' },
 ];
 
+const PROMPT_TEMPLATES = [
+  'A serene mountain lake at golden hour with mist rising',
+  'Drone shot over a neon-lit cyberpunk city at night',
+  'Slow motion close-up of a butterfly emerging from a cocoon',
+  'Timelapse of clouds rolling over a vast desert landscape',
+];
+
 export function Veo3Generator() {
   const C = useThemeStore((s) => s.theme);
   const [prompt, setPrompt] = useState('');
@@ -23,13 +30,31 @@ export function Veo3Generator() {
   const [stylePreset, setStylePreset] = useState('cinematic');
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
+  const [downloadHover, setDownloadHover] = useState(false);
 
-  const handleGenerate = () => {
-    if (!prompt.trim()) return;
+  const handleGenerate = useCallback(() => {
+    if (!prompt.trim() || loading) return;
+    setGenerated(false);
+    setIsPlaying(false);
     setLoading(true);
     setTimeout(() => { setLoading(false); setGenerated(true); }, 3500);
-  };
+  }, [prompt, loading]);
+
+  const handlePromptGen = useCallback(() => {
+    const template = PROMPT_TEMPLATES[Math.floor(Math.random() * PROMPT_TEMPLATES.length)];
+    setPrompt(template);
+  }, []);
+
+  const handlePlay = useCallback(() => {
+    setIsPlaying((prev) => !prev);
+  }, []);
+
+  const handleDownload = useCallback(() => {
+    /* Simulate download */
+  }, []);
 
   const pillStyle = (active: boolean): React.CSSProperties => ({
     padding: '8px 18px', borderRadius: 10,
@@ -37,7 +62,8 @@ export function Veo3Generator() {
     background: active ? `${GRADIENT[0]}22` : C.card,
     color: active ? GRADIENT[0] : C.sub,
     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-    transition: 'all .2s', fontFamily: 'inherit',
+    transition: 'all 0.2s ease', fontFamily: 'inherit',
+    outline: 'none',
   });
 
   return (
@@ -46,7 +72,7 @@ export function Veo3Generator() {
       subtitle="Generate stunning videos from text prompts using Google VEO3 technology"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
         {/* Left: Controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Prompt */}
@@ -54,14 +80,18 @@ export function Veo3Generator() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Text Prompt</span>
               <button
+                onClick={handlePromptGen}
                 style={{
                   padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
                   border: `1px solid ${GRADIENT[0]}55`,
                   background: hoveredBtn === 'promptgen' ? `${GRADIENT[0]}22` : `${GRADIENT[0]}11`,
-                  color: GRADIENT[0], cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit',
+                  color: GRADIENT[0], cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                  outline: 'none',
                 }}
                 onMouseEnter={() => setHoveredBtn('promptgen')}
                 onMouseLeave={() => setHoveredBtn(null)}
+                onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
+                onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
               >
                 + Prompt Generator
               </button>
@@ -75,8 +105,14 @@ export function Veo3Generator() {
                 border: `1px solid ${C.border}`, background: C.surface,
                 color: C.text, fontSize: 14, fontFamily: 'inherit',
                 resize: 'vertical', outline: 'none',
+                transition: 'border-color 0.2s ease',
               }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
             />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+              <span style={{ fontSize: 12, color: C.dim }}>{prompt.length} characters</span>
+            </div>
           </div>
 
           {/* Duration */}
@@ -102,25 +138,35 @@ export function Veo3Generator() {
           {/* Style Presets */}
           <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 14 }}>Style Preset</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {STYLE_PRESETS.map((sp) => (
-                <button
-                  key={sp.id}
-                  onClick={() => setStylePreset(sp.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-                    borderRadius: 12, border: `1px solid ${stylePreset === sp.id ? sp.color : C.border}`,
-                    background: stylePreset === sp.id ? `${sp.color}11` : C.surface,
-                    cursor: 'pointer', transition: 'all .2s', fontFamily: 'inherit', textAlign: 'left',
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>{sp.icon}</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{sp.name}</div>
-                    <div style={{ fontSize: 11, color: C.dim }}>{sp.desc}</div>
-                  </div>
-                </button>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {STYLE_PRESETS.map((sp) => {
+                const isSelected = stylePreset === sp.id;
+                const isHovered = hoveredPreset === sp.id;
+                return (
+                  <button
+                    key={sp.id}
+                    onClick={() => setStylePreset(sp.id)}
+                    onMouseEnter={() => setHoveredPreset(sp.id)}
+                    onMouseLeave={() => setHoveredPreset(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                      borderRadius: 12,
+                      border: `1px solid ${isSelected ? sp.color : isHovered ? `${sp.color}88` : C.border}`,
+                      background: isSelected ? `${sp.color}11` : isHovered ? `${sp.color}08` : C.surface,
+                      cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit', textAlign: 'left',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${sp.color}44`; }}
+                    onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <span style={{ fontSize: 24 }}>{sp.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{sp.name}</div>
+                      <div style={{ fontSize: 11, color: C.dim }}>{sp.desc}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -154,29 +200,41 @@ export function Veo3Generator() {
                   position: 'absolute', inset: 0,
                   background: `linear-gradient(135deg, ${GRADIENT[0]}11, ${GRADIENT[1]}11)`,
                 }} />
-                <button style={{
-                  width: 64, height: 64, borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
-                  border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: `0 8px 24px ${GRADIENT[0]}44`,
-                  transition: 'transform .2s',
-                }}
+                <button
+                  onClick={handlePlay}
+                  style={{
+                    width: 64, height: 64, borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
+                    border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 8px 24px ${GRADIENT[0]}44`,
+                    transition: 'transform 0.2s ease', outline: 'none',
+                  }}
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  onFocus={(e) => { e.currentTarget.style.boxShadow = `0 8px 24px ${GRADIENT[0]}44, 0 0 0 3px ${GRADIENT[0]}44`; }}
+                  onBlur={(e) => { e.currentTarget.style.boxShadow = `0 8px 24px ${GRADIENT[0]}44`; }}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
+                  {isPlaying ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
+                      <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                    </svg>
+                  ) : (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                  )}
                 </button>
-                <span style={{ fontSize: 13, color: C.sub, marginTop: 16, fontWeight: 600 }}>Video ready - click to play</span>
+                <span style={{ fontSize: 13, color: C.sub, marginTop: 16, fontWeight: 600 }}>
+                  {isPlaying ? 'Playing...' : 'Video ready - click to play'}
+                </span>
                 <div style={{
                   position: 'absolute', bottom: 16, left: 16, right: 16,
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
                   <span style={{ fontSize: 11, color: C.dim }}>0:00</span>
                   <div style={{ flex: 1, height: 3, borderRadius: 2, background: C.border }}>
-                    <div style={{ width: '0%', height: '100%', borderRadius: 2, background: GRADIENT[0] }} />
+                    <div style={{ width: isPlaying ? '35%' : '0%', height: '100%', borderRadius: 2, background: GRADIENT[0], transition: 'width 0.3s ease' }} />
                   </div>
                   <span style={{ fontSize: 11, color: C.dim }}>0:{duration.replace('s', '').padStart(2, '0')}</span>
                 </div>
@@ -194,6 +252,32 @@ export function Veo3Generator() {
               </>
             )}
           </div>
+
+          {/* Download button when generated */}
+          {generated && (
+            <button
+              onClick={handleDownload}
+              onMouseEnter={() => setDownloadHover(true)}
+              onMouseLeave={() => setDownloadHover(false)}
+              style={{
+                marginTop: 16, padding: '12px 20px', borderRadius: 12,
+                border: `1px solid ${C.border}`, background: downloadHover ? C.surface : C.card,
+                color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                transition: 'all 0.2s ease', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                outline: 'none',
+              }}
+              onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
+              onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download Video (MP4)
+            </button>
+          )}
         </div>
       </div>
     </ToolPageShell>
