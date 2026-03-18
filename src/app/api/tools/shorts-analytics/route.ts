@@ -40,7 +40,18 @@ export async function GET(req: NextRequest) {
     });
     if (publishedAfter) searchParams.set('publishedAfter', publishedAfter);
     if (country) searchParams.set('regionCode', country);
-    if (category) searchParams.set('videoCategoryId', category);
+    // Note: videoCategoryId in search is unreliable — filter post-fetch instead
+    if (category) {
+      // Add category as a keyword hint to improve relevance
+      const catMap: Record<string, string> = {
+        '1': 'movie film', '2': 'cars auto', '10': 'music', '15': 'pets animals',
+        '17': 'sports', '20': 'gaming', '22': 'people vlog', '23': 'comedy funny',
+        '24': 'entertainment', '25': 'news', '26': 'howto tutorial', '27': 'education', '28': 'science',
+      };
+      if (catMap[category]) {
+        searchParams.set('q', `#shorts ${catMap[category]}`);
+      }
+    }
 
     const searchRes = await fetch(
       `https://www.googleapis.com/youtube/v3/search?${searchParams}`,
