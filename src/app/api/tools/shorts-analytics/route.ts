@@ -32,9 +32,10 @@ export async function GET(req: NextRequest) {
     const searchParams = new URLSearchParams({
       part: 'snippet',
       type: 'video',
-      videoDuration: 'short', // Only short videos (< 4 minutes, includes Shorts)
+      videoDuration: 'short',
       order: 'viewCount',
       maxResults: '50',
+      q: '#shorts',
       key: apiKey,
     });
     if (publishedAfter) searchParams.set('publishedAfter', publishedAfter);
