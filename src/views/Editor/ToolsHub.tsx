@@ -75,7 +75,7 @@ const TOOLS: ToolDef[] = [
     description: 'Генерируйте высококачественные изображения с помощью ИИ за секунды. Пресеты, стили, промпт-генератор.',
     category: 'ai',
     route: '/tools/image-generator',
-    available: true,
+    available: false,
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -85,7 +85,7 @@ const TOOLS: ToolDef[] = [
     description: 'Создавайте качественную озвучку с 50+ нарраторами за секунды. Мультиязычная поддержка.',
     category: 'ai',
     route: '/tools/voiceover-generator',
-    available: true,
+    available: false,
     gradient: ['#3b82f6', '#6366f1'],
   },
   {
@@ -95,8 +95,7 @@ const TOOLS: ToolDef[] = [
     description: 'Улучшите качество любого аудио или видео файла с помощью ИИ. Удаление шума, эхо, нормализация.',
     category: 'ai',
     route: '/tools/speech-enhancer',
-    available: true,
-    badge: 'New',
+    available: false,
     gradient: ['#10b981', '#06b6d4'],
   },
   {
@@ -106,7 +105,7 @@ const TOOLS: ToolDef[] = [
     description: 'Создавайте видео с помощью ИИ. Промпт → видеоклип за секунды. Кинематографичный стиль.',
     category: 'ai',
     route: '/tools/veo3-generator',
-    available: true,
+    available: false,
     gradient: ['#ef4444', '#f97316'],
   },
   {
@@ -116,7 +115,7 @@ const TOOLS: ToolDef[] = [
     description: 'Генерируйте идеи для контента с помощью ИИ. Анализ трендов, целевая аудитория, оценка потенциала.',
     category: 'ai',
     route: '/tools/brainstormer',
-    available: true,
+    available: false,
     gradient: ['#8b5cf6', '#a78bfa'],
   },
   {
@@ -126,7 +125,7 @@ const TOOLS: ToolDef[] = [
     description: 'Разделите вокал и инструментал из любого аудиофайла. Высокое качество разделения.',
     category: 'ai',
     route: '/tools/vocal-remover',
-    available: true,
+    available: false,
     gradient: ['#d946ef', '#c026d3'],
   },
   {
@@ -136,7 +135,7 @@ const TOOLS: ToolDef[] = [
     description: 'Станьте ИИ-контент-креатором за 3 шага. Загрузите фото, выберите голос, напишите скрипт.',
     category: 'ai',
     route: '/tools/ai-creator',
-    available: true,
+    available: false,
     gradient: ['#f59e0b', '#f97316'],
   },
 
@@ -148,7 +147,7 @@ const TOOLS: ToolDef[] = [
     description: 'Превратите длинные видео в вирусные клипы автоматически. ИИ находит самые интересные моменты.',
     category: 'video',
     route: '/tools/autoclip',
-    available: true,
+    available: false,
     badge: 'Популярное',
     gradient: ['#6366f1', '#ec4899'],
   },
@@ -169,7 +168,7 @@ const TOOLS: ToolDef[] = [
     description: 'Полный редактор субтитров. 12+ стилей текста, покадровая анимация, экспорт SRT. One-word mode.',
     category: 'video',
     route: '/tools/subtitle-editor',
-    available: true,
+    available: false,
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -179,7 +178,7 @@ const TOOLS: ToolDef[] = [
     description: 'Удалите субтитры из любого видео с помощью ИИ. Автоматическое определение и восстановление фона.',
     category: 'video',
     route: '/tools/subtitle-remover',
-    available: true,
+    available: false,
     gradient: ['#ef4444', '#f97316'],
   },
   {
@@ -189,7 +188,7 @@ const TOOLS: ToolDef[] = [
     description: 'Генерируйте Reddit-стиль видео для Shorts/TikTok. Озвучка, фоновое видео, автоматический монтаж.',
     category: 'video',
     route: '/tools/reddit-video',
-    available: true,
+    available: false,
     gradient: ['#f97316', '#ef4444'],
   },
   {
@@ -199,7 +198,7 @@ const TOOLS: ToolDef[] = [
     description: 'Создайте видео с фейковой перепиской. iMessage, WhatsApp, Telegram стили. Анимация печатания.',
     category: 'video',
     route: '/tools/fake-texts',
-    available: true,
+    available: false,
     gradient: ['#8b5cf6', '#6366f1'],
   },
 
@@ -221,7 +220,7 @@ const TOOLS: ToolDef[] = [
     description: 'Скачивайте видео из TikTok без водяного знака. HD качество, MP4 и MP3.',
     category: 'downloaders',
     route: '/tools/tiktok-downloader',
-    available: true,
+    available: false,
     gradient: ['#010101', '#333333'],
   },
 
@@ -233,7 +232,7 @@ const TOOLS: ToolDef[] = [
     description: 'Балансируйте левый и правый аудиоканалы. Контроль громкости каждого канала отдельно.',
     category: 'free',
     route: '/tools/audio-balancer',
-    available: true,
+    available: false,
     gradient: ['#3b82f6', '#6366f1'],
   },
   {
@@ -265,7 +264,7 @@ const TOOLS: ToolDef[] = [
     description: 'Удалите фон с любого изображения. Замена на прозрачный, сплошной цвет, градиент или своё изображение.',
     category: 'ai',
     route: '/tools/background-remover',
-    available: true,
+    available: false,
     gradient: ['#8b5cf6', '#7c3aed'],
   },
   {
@@ -275,7 +274,7 @@ const TOOLS: ToolDef[] = [
     description: 'Измените голос в любом аудио или видео файле. 11+ эффектов: робот, эхо, шёпот, и другие.',
     category: 'audio',
     route: '/tools/voice-changer',
-    available: true,
+    available: false,
     gradient: ['#d946ef', '#a855f7'],
   },
   {
@@ -285,7 +284,7 @@ const TOOLS: ToolDef[] = [
     description: 'Замените лицо на фото или видео с помощью ИИ. Высокое качество, естественный результат.',
     category: 'ai',
     route: '/tools/face-swap',
-    available: true,
+    available: false,
     gradient: ['#f97316', '#ef4444'],
   },
 
