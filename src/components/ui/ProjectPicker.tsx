@@ -25,6 +25,11 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
   const router = useRouter();
   const [displayCount, setDisplayCount] = useState(10);
   const projects = trpc.project.list.useQuery({ page: 1, limit: 50 });
+  const createProject = trpc.project.create.useMutation({
+    onSuccess: (data) => {
+      router.push(`${target}?projectId=${data.id}`);
+    },
+  });
 
   const statusColor = (key: string) => {
     const s = STATUS_LABEL[key];
@@ -67,6 +72,37 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
         </div>
       ) : (
         <div style={{ width: 380, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* New project button */}
+          <button
+            onClick={() => createProject.mutate({ title: '' })}
+            disabled={createProject.isPending}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '12px 14px',
+              borderRadius: 10,
+              border: `1.5px dashed ${C.accent}50`,
+              background: `${C.accent}06`,
+              color: C.accent,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: createProject.isPending ? 'wait' : 'pointer',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              width: '100%',
+              transition: 'background .15s, border-color .15s',
+              opacity: createProject.isPending ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = `${C.accent}12`; e.currentTarget.style.borderColor = C.accent; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = `${C.accent}06`; e.currentTarget.style.borderColor = `${C.accent}50`; }}
+          >
+            <span style={{ width: 28, height: 28, borderRadius: 8, background: `${C.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16 }}>+</span>
+            {createProject.isPending ? 'Создаём...' : 'Новый проект'}
+          </button>
+
+          <div style={{ height: 1, background: C.border, margin: '4px 0' }} />
+
           {projects.data.items.slice(0, displayCount).map((p) => {
             const st = STATUS_LABEL[p.status] ?? { l: p.status, c: 'dim' };
             return (
