@@ -162,6 +162,485 @@ function IconArrowRight({ size = 16, color = 'currentColor' }: { size?: number; 
   );
 }
 
+/* ── Additional icons for welcome section ─────────────── */
+
+function IconWrench({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}
+
+function IconSparkles({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+      <path d="M18 14l.67 2 2 .67-2 .67L18 19.33l-.67-2-2-.67 2-.67L18 14z" />
+    </svg>
+  );
+}
+
+function IconFaceSmile({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+      <line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
+    </svg>
+  );
+}
+
+function IconMicrophone({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+      <path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" />
+      <line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+  );
+}
+
+function IconUserX({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+      <circle cx="8.5" cy="7" r="4" />
+      <line x1="18" y1="8" x2="23" y2="13" /><line x1="23" y1="8" x2="18" y2="13" />
+    </svg>
+  );
+}
+
+function IconVideo({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="23 7 16 12 23 17 23 7" />
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </svg>
+  );
+}
+
+function IconDownload({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function IconScissors({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" />
+      <line x1="20" y1="4" x2="8.12" y2="15.88" /><line x1="14.47" y1="14.48" x2="20" y2="20" />
+      <line x1="8.12" y1="8.12" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+/* ── Welcome Hero Section (Crayo-style) ──────────────── */
+
+const HERO_ACTION_CARDS = [
+  {
+    title: 'Видео редактор',
+    subtitle: 'Создавайте видео из текста',
+    href: '/editor',
+    gradient: 'linear-gradient(135deg, #4f46e5, #6366f1, #818cf8)',
+    Icon: IconPlay,
+  },
+  {
+    title: 'Редактор обложек',
+    subtitle: 'Canvas-редактор как в Canva',
+    href: '/thumbnails',
+    gradient: 'linear-gradient(135deg, #e11d48, #ec4899, #f472b6)',
+    Icon: IconImage,
+  },
+  {
+    title: 'Бесплатные инструменты',
+    subtitle: 'Конвертер, компрессор и другое',
+    href: '/tools',
+    gradient: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
+    Icon: IconWrench,
+  },
+];
+
+const FEATURED_CARDS = [
+  {
+    title: 'AutoClip',
+    description: 'Превратите длинные видео в вирусные клипы',
+    href: '/tools/auto-clip',
+    gradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+    borderGradient: 'linear-gradient(135deg, #8b5cf6, #c084fc, #8b5cf6)',
+    Icon: IconScissors,
+  },
+  {
+    title: 'Удалить субтитры',
+    description: 'Удалите субтитры с видео за минуты с помощью ИИ',
+    href: '/tools/subtitle-remover',
+    gradient: 'linear-gradient(135deg, #dc2626, #ef4444)',
+    borderGradient: 'linear-gradient(135deg, #ef4444, #fca5a5, #ef4444)',
+    Icon: IconEraser,
+  },
+];
+
+const QUICK_TOOLS = [
+  { title: 'Image Generator', href: '/tools/image-generator', Icon: IconSparkles, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
+  { title: 'AI Face Swap', href: '/tools/face-swap', Icon: IconFaceSmile, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
+  { title: 'Voiceover Generator', href: '/tools/voiceover-generator', Icon: IconMicrophone, gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)' },
+  { title: 'Background Remover', href: '/tools/background-remover', Icon: IconUserX, gradient: 'linear-gradient(135deg, #ec4899, #f472b6)' },
+  { title: 'VEO3 Generator', href: '/tools/veo3-generator', Icon: IconVideo, gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
+  { title: 'YouTube Downloader', href: '/tools/youtube-downloader', Icon: IconDownload, gradient: 'linear-gradient(135deg, #ef4444, #f87171)' },
+];
+
+function WelcomeHeroSection({
+  userName,
+  router,
+  isLoading,
+}: {
+  userName: string;
+  router: ReturnType<typeof useRouter>;
+  isLoading: boolean;
+}) {
+  const [hoveredHero, setHoveredHero] = useState<number | null>(null);
+  const [hoveredFeatured, setHoveredFeatured] = useState<number | null>(null);
+  const [hoveredQuick, setHoveredQuick] = useState<number | null>(null);
+  const [hoveredAllTools, setHoveredAllTools] = useState(false);
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      {/* ── Greeting ───────────────────────────────── */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{
+          fontSize: 30,
+          fontWeight: 800,
+          margin: '0 0 6px',
+          letterSpacing: '-.03em',
+          lineHeight: 1.2,
+        }}>
+          {isLoading ? (
+            <Skeleton width={300} height={36} />
+          ) : (
+            <>{'Привет, ' + userName + '! \uD83D\uDC4B'}</>
+          )}
+        </h1>
+        <p style={{
+          fontSize: 15,
+          margin: 0,
+          lineHeight: 1.5,
+          opacity: 0.6,
+        }}>
+          Управляйте проектами и используйте инструменты
+        </p>
+      </div>
+
+      {/* ── Hero Action Cards (3 columns) ──────────── */}
+      <div style={{
+        display: 'flex',
+        gap: 14,
+        flexWrap: 'wrap',
+        marginBottom: 20,
+      }}>
+        {HERO_ACTION_CARDS.map((card, i) => {
+          const isHovered = hoveredHero === i;
+          return (
+            <div
+              key={card.href}
+              onClick={() => router.push(card.href)}
+              onMouseEnter={() => setHoveredHero(i)}
+              onMouseLeave={() => setHoveredHero(null)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  router.push(card.href);
+                }
+              }}
+              style={{
+                flex: '1 1 240px',
+                minWidth: 240,
+                background: card.gradient,
+                borderRadius: 16,
+                padding: '20px 22px',
+                cursor: 'pointer',
+                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
+                transform: isHovered ? 'translateY(-2px)' : 'none',
+                boxShadow: isHovered
+                  ? '0 12px 32px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.15)'
+                  : '0 4px 16px rgba(0,0,0,.12)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: 'rgba(255,255,255,.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+              }}>
+                <card.Icon size={22} color="#fff" />
+              </div>
+
+              {/* Text */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: '#fff',
+                  marginBottom: 2,
+                  letterSpacing: '-.01em',
+                }}>
+                  {card.title}
+                </div>
+                <div style={{
+                  fontSize: 13,
+                  color: 'rgba(255,255,255,.75)',
+                  lineHeight: 1.4,
+                }}>
+                  {card.subtitle}
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <div style={{
+                flexShrink: 0,
+                opacity: isHovered ? 1 : 0.5,
+                transition: 'all .2s ease',
+                transform: isHovered ? 'translateX(3px)' : 'none',
+              }}>
+                <IconArrowRight size={18} color="#fff" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Featured Tool Cards (2 columns) ────────── */}
+      <div style={{
+        display: 'flex',
+        gap: 14,
+        flexWrap: 'wrap',
+        marginBottom: 24,
+      }}>
+        {FEATURED_CARDS.map((card, i) => {
+          const isHovered = hoveredFeatured === i;
+          return (
+            <div
+              key={card.href}
+              onClick={() => router.push(card.href)}
+              onMouseEnter={() => setHoveredFeatured(i)}
+              onMouseLeave={() => setHoveredFeatured(null)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  router.push(card.href);
+                }
+              }}
+              style={{
+                flex: '1 1 320px',
+                minWidth: 280,
+                borderRadius: 16,
+                padding: 2,
+                background: card.borderGradient,
+                cursor: 'pointer',
+                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
+                transform: isHovered ? 'translateY(-2px)' : 'none',
+                boxShadow: isHovered
+                  ? '0 12px 32px rgba(0,0,0,.2)'
+                  : '0 2px 8px rgba(0,0,0,.06)',
+              }}
+            >
+              <div style={{
+                background: card.gradient,
+                borderRadius: 14,
+                padding: '24px 22px',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+              }}>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: 'rgba(255,255,255,.18)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}>
+                  <card.Icon size={24} color="#fff" />
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: '#fff',
+                    marginBottom: 6,
+                    letterSpacing: '-.01em',
+                  }}>
+                    {card.title}
+                  </div>
+                  <div style={{
+                    fontSize: 14,
+                    color: 'rgba(255,255,255,.8)',
+                    lineHeight: 1.5,
+                    maxWidth: 320,
+                  }}>
+                    {card.description}
+                  </div>
+                </div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#fff',
+                  marginTop: 'auto',
+                  opacity: isHovered ? 1 : 0.85,
+                  transition: 'opacity .2s ease',
+                }}>
+                  {'Попробовать \u2192'}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Quick Tools Row ────────────────────────── */}
+      <div>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}>
+          <h2 style={{
+            fontSize: 18,
+            fontWeight: 700,
+            margin: 0,
+            letterSpacing: '-.01em',
+          }}>
+            Инструменты TubeForge
+          </h2>
+          <span
+            onClick={() => router.push('/tools')}
+            onMouseEnter={() => setHoveredAllTools(true)}
+            onMouseLeave={() => setHoveredAllTools(false)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                router.push('/tools');
+              }
+            }}
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              opacity: hoveredAllTools ? 1 : 0.6,
+              transition: 'opacity .2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            {'Все инструменты \u2192'}
+          </span>
+        </div>
+
+        {/* Scrollable row */}
+        <div style={{
+          display: 'flex',
+          gap: 14,
+          overflowX: 'auto',
+          paddingBottom: 4,
+          scrollbarWidth: 'thin',
+        }}>
+          {QUICK_TOOLS.map((tool, i) => {
+            const isHovered = hoveredQuick === i;
+            return (
+              <div
+                key={tool.href}
+                onClick={() => router.push(tool.href)}
+                onMouseEnter={() => setHoveredQuick(i)}
+                onMouseLeave={() => setHoveredQuick(null)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    router.push(tool.href);
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 10,
+                  minWidth: 100,
+                  padding: '16px 12px',
+                  borderRadius: 14,
+                  cursor: 'pointer',
+                  transition: 'all .25s cubic-bezier(.4,0,.2,1)',
+                  transform: isHovered ? 'translateY(-2px)' : 'none',
+                  background: isHovered ? 'rgba(128,128,128,.08)' : 'transparent',
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  background: tool.gradient,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'transform .25s ease',
+                  transform: isHovered ? 'scale(1.08)' : 'scale(1)',
+                  boxShadow: isHovered
+                    ? '0 6px 20px rgba(0,0,0,.15)'
+                    : '0 2px 8px rgba(0,0,0,.08)',
+                }}>
+                  <tool.Icon size={22} color="#fff" />
+                </div>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  lineHeight: 1.3,
+                  letterSpacing: '-.01em',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {tool.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Empty state illustration ──────────────────────────── */
 
 function EmptyIllustration({ color, dimColor }: { color: string; dimColor: string }) {
@@ -912,6 +1391,13 @@ export function Dashboard() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+      {/* ── Welcome Hero Section (Crayo-style) ───────── */}
+      <WelcomeHeroSection
+        userName={user?.name ?? 'Создатель'}
+        router={router}
+        isLoading={profile.isLoading}
+      />
+
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div>
