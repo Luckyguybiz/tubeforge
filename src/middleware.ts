@@ -33,5 +33,6 @@ export const config = {
     '/settings/:path*',
     '/team/:path*',
     '/admin/:path*',
+    '/shorts-analytics/:path*',
   ],
 };

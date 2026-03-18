@@ -116,6 +116,20 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <rect x="4.5" y="11" width="5" height="2" rx="1" fill={c} opacity=".4" />
     </svg>
   ),
+  'shorts-analytics': (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="shorts-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="7" y="2" width="6" height="16" rx="3" fill={a ? 'url(#shorts-g)' : c} opacity=".85" />
+      <path d="M8.5 8L12.5 10.5L8.5 13V8Z" fill={c === '#fff' ? '#000' : '#fff'} opacity=".9" />
+      <path d="M2 14L5 10L8 12" stroke={c} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".45" />
+      <path d="M12 11L15 7L18 9" stroke={c} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".45" />
+    </svg>
+  ),
   gear: (c) => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <circle cx="7" cy="7" r="2" stroke={c} strokeWidth="1.2" />
@@ -155,6 +169,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'tools', label: t('nav.tools') },
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'preview', label: t('nav.preview') },
+        { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
       ],
     },
     {
@@ -188,6 +203,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   settings: ['sub', 'dim'],
   billing: ['green', 'cyan'],
   admin: ['accent', 'orange'],
+  'shorts-analytics': ['green', 'cyan'],
 };
 
 /* ── Tooltip Component ─────────────────────────────────────────────── */
