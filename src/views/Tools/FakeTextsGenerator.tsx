@@ -71,6 +71,7 @@ export function FakeTextsGenerator() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Fake Texts Generator"
       subtitle="Create viral fake text conversation videos for social media"
       gradient={GRADIENT}

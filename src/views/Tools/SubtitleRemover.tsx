@@ -34,6 +34,7 @@ export function SubtitleRemover() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Subtitle Remover"
       subtitle="Automatically detect and remove hardcoded subtitles from videos"
       gradient={GRADIENT}

@@ -50,6 +50,7 @@ export function RedditVideoGenerator() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Reddit Video Generator"
       subtitle="Turn Reddit posts into viral short-form videos with AI narration"
       gradient={GRADIENT}

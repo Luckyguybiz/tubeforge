@@ -60,6 +60,7 @@ export function Mp3Converter() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="MP3 Converter"
       subtitle="Convert any audio or video file to MP3 format"
       gradient={['#10b981', '#059669']}

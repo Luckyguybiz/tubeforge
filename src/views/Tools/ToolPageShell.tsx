@@ -10,10 +10,11 @@ interface ToolPageShellProps {
   badge?: string;
   badgeColor?: string;
   gradient: [string, string];
+  comingSoon?: boolean;
   children: React.ReactNode;
 }
 
-export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, children }: ToolPageShellProps) {
+export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, comingSoon, children }: ToolPageShellProps) {
   const C = useThemeStore((s) => s.theme);
   const router = useRouter();
 
@@ -75,8 +76,40 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, ch
         </div>
       </div>
 
+      {/* Coming Soon Banner */}
+      {comingSoon && (
+        <div style={{
+          margin: '16px 32px 0',
+          padding: '14px 20px',
+          borderRadius: 12,
+          background: `linear-gradient(135deg, ${gradient[0]}12, ${gradient[1]}12)`,
+          border: `1px solid ${gradient[0]}30`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Скоро</div>
+            <div style={{ fontSize: 12, color: C.sub }}>Этот инструмент находится в разработке и будет доступен в ближайшее время</div>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
-      <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{
+        padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+        ...(comingSoon ? { opacity: 0.5, pointerEvents: 'none' as const, filter: 'grayscale(0.3)' } : {}),
+      }}>
         {children}
       </div>
     </div>

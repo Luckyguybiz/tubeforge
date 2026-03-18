@@ -77,6 +77,7 @@ export function BackgroundRemover() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Background Remover"
       subtitle="Remove and replace image backgrounds with AI precision"
       gradient={['#8b5cf6', '#7c3aed']}

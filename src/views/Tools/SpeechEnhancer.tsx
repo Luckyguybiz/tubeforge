@@ -123,6 +123,7 @@ export function SpeechEnhancer() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Speech Enhancer"
       subtitle="Remove noise, echo, and enhance clarity of any audio or video speech"
       gradient={GRADIENT}

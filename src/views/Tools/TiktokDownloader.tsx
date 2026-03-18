@@ -62,6 +62,7 @@ export function TiktokDownloader() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="TikTok Video Downloader"
       subtitle="Download TikTok videos without watermark in HD quality"
       gradient={['#000000', '#333333']}

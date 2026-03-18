@@ -67,6 +67,7 @@ export function SubtitleEditor() {
   if (!file) {
     return (
       <ToolPageShell
+      comingSoon
         title="Subtitle Editor"
         subtitle="Add, style, and edit subtitles for your videos"
         gradient={GRADIENT}
@@ -85,6 +86,7 @@ export function SubtitleEditor() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Subtitle Editor"
       subtitle="Add, style, and edit subtitles for your videos"
       gradient={GRADIENT}

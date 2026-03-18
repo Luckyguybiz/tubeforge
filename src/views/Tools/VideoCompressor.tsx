@@ -78,6 +78,7 @@ export function VideoCompressor() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Video Compressor"
       subtitle="Reduce video file size while maintaining quality"
       gradient={['#06b6d4', '#0ea5e9']}

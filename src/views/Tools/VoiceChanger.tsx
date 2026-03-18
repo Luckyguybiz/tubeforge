@@ -107,6 +107,7 @@ export function VoiceChanger() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Voice Changer"
       subtitle="Transform voices with fun effects and adjustments"
       gradient={['#d946ef', '#a855f7']}

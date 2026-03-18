@@ -58,6 +58,7 @@ export function FaceSwap() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Face Swap"
       subtitle="Swap faces between images and videos with AI technology"
       gradient={['#f97316', '#ef4444']}

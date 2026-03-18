@@ -57,6 +57,7 @@ export function AutoClip() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AutoClip"
       subtitle="Transform long videos into viral clips using AI"
       gradient={GRADIENT}

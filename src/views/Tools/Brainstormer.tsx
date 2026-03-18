@@ -74,6 +74,7 @@ export function Brainstormer() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Brainstormer"
       subtitle="Generate creative content ideas tailored to your niche and audience"
       gradient={GRADIENT}

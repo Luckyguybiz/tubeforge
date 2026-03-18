@@ -82,6 +82,7 @@ export function AudioBalancer() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="Audio Balancer"
       subtitle="Adjust stereo balance and channel volumes for your audio"
       gradient={['#3b82f6', '#6366f1']}

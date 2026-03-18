@@ -68,6 +68,7 @@ export function Veo3Generator() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Video Generator (VEO3)"
       subtitle="Generate stunning videos from text prompts using Google VEO3 technology"
       gradient={GRADIENT}

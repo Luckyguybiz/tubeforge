@@ -158,6 +158,7 @@ export function VocalRemover() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Vocal Remover"
       subtitle="Separate vocals and instrumentals from any audio track using AI"
       gradient={GRADIENT}

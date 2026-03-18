@@ -88,6 +88,7 @@ export function AiCreator() {
 
   return (
     <ToolPageShell
+      comingSoon
       title="AI Creator"
       subtitle="Become an AI-powered content creator -- generate videos with your AI avatar"
       gradient={GRADIENT}
