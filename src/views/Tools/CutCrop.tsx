@@ -219,9 +219,9 @@ export function CutCrop() {
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
           </svg>
           <span style={{ fontSize: 16, fontWeight: 700, color: C.text, marginTop: 16 }}>
-            Drag & drop your video here
+            Перетащите видео сюда
           </span>
-          <span style={{ fontSize: 13, color: C.dim, marginTop: 6 }}>or choose a file</span>
+          <span style={{ fontSize: 13, color: C.dim, marginTop: 6 }}>или выберите файл</span>
           <input type="file" accept="video/*" style={{ display: 'none' }} onChange={(e) => {
             const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '';
           }} />

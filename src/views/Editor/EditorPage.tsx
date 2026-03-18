@@ -151,7 +151,7 @@ const SceneThumb = memo(function SceneThumb({
       {/* Color thumbnail area */}
       <div
         style={{
-          height: 44,
+          height: 32,
           background: sc.status === 'ready'
             ? `linear-gradient(135deg, ${col}20, ${col}08)`
             : `linear-gradient(135deg, ${col}12, transparent)`,
@@ -199,7 +199,7 @@ const SceneThumb = memo(function SceneThumb({
       </div>
 
       {/* Scene info */}
-      <div style={{ padding: '5px 8px 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+      <div style={{ padding: '3px 6px 4px', display: 'flex', alignItems: 'center', gap: 3 }}>
         <StatusDot status={sc.status} C={C} size={5} />
         <span
           style={{
@@ -254,7 +254,7 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
       style={{
         position: 'absolute',
         top: 0,
-        left: 208,
+        left: 168,
         width: 280,
         background: C.card,
         border: `1px solid ${C.border}`,
@@ -867,7 +867,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             ════════════════════════════════════════════════ */}
         <div
           style={{
-            width: 200,
+            width: 160,
+            maxWidth: 160,
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
@@ -977,28 +978,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             )}
           </div>
 
-          {/* Selected scene actions at bottom of left panel */}
-          {sel && (
-            <div style={{ padding: '8px 10px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
-              <button onClick={() => dupScene(sel.id)} title="Дублировать сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              </button>
-              <button onClick={() => addScene(sel.id)} title="Добавить сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-              <button onClick={() => setShowSettings(!showSettings)} title="Настройки сцены" style={{ ...tinyBtnStyle(C, showSettings), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-              </button>
-              <div style={{ width: 1, height: 18, background: C.border, margin: '0 2px' }} />
-              <button
-                onClick={() => { if (scenes.length > 1) handleSceneRequestDelete(sel.id); }}
-                title="Удалить сцену"
-                style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, padding: 0, color: scenes.length <= 1 ? C.dim : C.accent, opacity: scenes.length <= 1 ? 0.3 : 1, cursor: scenes.length <= 1 ? 'not-allowed' : 'pointer' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-              </button>
-            </div>
-          )}
+          {/* Scene actions moved to bottom bar */}
 
           {/* Settings popover — positioned next to left panel */}
           {showSettings && sel && (
@@ -1367,90 +1347,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </span>
               </div>
 
-              {/* ── Compact prompt input ── */}
-              <div
-                style={{
-                  padding: '0 32px 12px',
-                  flexShrink: 0,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    gap: 8,
-                    background: C.surface,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 10,
-                    padding: '8px 12px',
-                    transition: 'border-color .15s',
-                  }}
-                  onFocus={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = selCol + '55';
-                  }}
-                  onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                      (e.currentTarget as HTMLElement).style.borderColor = C.border;
-                    }
-                  }}
-                >
-                  <textarea
-                    ref={promptRef}
-                    value={sel.prompt}
-                    rows={1}
-                    onChange={(e) => {
-                      updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
-                      autoResize(e.target);
-                      if (promptHistoryTimer.current) clearTimeout(promptHistoryTimer.current);
-                      promptHistoryTimer.current = setTimeout(() => {
-                        useEditorStore.getState().pushHistory();
-                      }, 1000);
-                    }}
-                    onKeyDown={(e) => {
-                      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                        e.preventDefault();
-                        handleGenerate();
-                      }
-                    }}
-                    placeholder="Опишите, что происходит в сцене..."
-                    maxLength={2000}
-                    style={{
-                      flex: 1,
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      color: C.text,
-                      fontSize: 12,
-                      lineHeight: '20px',
-                      resize: 'none',
-                      fontFamily: 'inherit',
-                      minHeight: 20,
-                      maxHeight: 76,
-                      overflow: 'hidden',
-                    }}
-                  />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, paddingBottom: 1 }}>
-                    <span style={{ fontSize: 8, color: sel.prompt.length > 1800 ? C.accent : C.dim, fontFamily: "'JetBrains Mono', monospace" }}>
-                      {sel.prompt.length > 0 ? `${sel.prompt.length}/2000` : ''}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 7,
-                        color: C.dim,
-                        padding: '1px 4px',
-                        borderRadius: 3,
-                        background: C.card,
-                        border: `1px solid ${C.border}`,
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontWeight: 600,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Ctrl+Enter
-                    </span>
-                  </div>
-                </div>
-              </div>
+              {/* Prompt moved to bottom bar */}
             </>
           ) : (
             /* ── No scene selected ── */
@@ -1508,16 +1405,133 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       </div>
 
       {/* ════════════════════════════════════════════════
-          BOTTOM TIMELINE BAR
+          BOTTOM AREA: Scene actions + prompt row, then timeline
           ════════════════════════════════════════════════ */}
       <div
         style={{
           flexShrink: 0,
           background: C.surface,
           borderTop: `1px solid ${C.border}`,
-          padding: '6px 12px',
+          position: 'relative',
         }}
       >
+        {/* ── Row 1: Scene actions + compact inline prompt ── */}
+        {sel && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              marginBottom: 0,
+              borderBottom: `1px solid ${C.border}`,
+            }}
+          >
+            {/* Scene action buttons */}
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+              <button onClick={() => dupScene(sel.id)} title="Дублировать сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              </button>
+              <button onClick={() => addScene(sel.id)} title="Добавить сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button onClick={() => setShowSettings(!showSettings)} title="Настройки сцены" style={{ ...tinyBtnStyle(C, showSettings), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              </button>
+              <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+              <button
+                onClick={() => { if (scenes.length > 1) handleSceneRequestDelete(sel.id); }}
+                title="Удалить сцену"
+                style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, color: scenes.length <= 1 ? C.dim : C.accent, opacity: scenes.length <= 1 ? 0.3 : 1, cursor: scenes.length <= 1 ? 'not-allowed' : 'pointer' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </button>
+            </div>
+
+            {/* Prompt input area */}
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: 8,
+                background: C.bg,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                padding: '6px 10px',
+                transition: 'border-color .15s',
+                minWidth: 0,
+              }}
+              onFocus={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = selCol + '55';
+              }}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  (e.currentTarget as HTMLElement).style.borderColor = C.border;
+                }
+              }}
+            >
+              <textarea
+                ref={promptRef}
+                value={sel.prompt}
+                rows={1}
+                onChange={(e) => {
+                  updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
+                  autoResize(e.target);
+                  if (promptHistoryTimer.current) clearTimeout(promptHistoryTimer.current);
+                  promptHistoryTimer.current = setTimeout(() => {
+                    useEditorStore.getState().pushHistory();
+                  }, 1000);
+                }}
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleGenerate();
+                  }
+                }}
+                placeholder="Опишите, что происходит в сцене..."
+                maxLength={2000}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: C.text,
+                  fontSize: 13,
+                  lineHeight: '22px',
+                  resize: 'none',
+                  fontFamily: 'inherit',
+                  minHeight: 48,
+                  maxHeight: 96,
+                  overflow: 'hidden',
+                  padding: '4px 0',
+                }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, paddingBottom: 1 }}>
+                <span style={{ fontSize: 9, color: sel.prompt.length > 1800 ? C.accent : C.dim, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {sel.prompt.length > 0 ? `${sel.prompt.length}/2000` : ''}
+                </span>
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: C.sub,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Ctrl+Enter
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Row 2: Timeline tabs ── */}
         <div
           style={{
             display: 'flex',
@@ -1526,6 +1540,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             overflowX: 'auto',
             overflowY: 'hidden',
             minHeight: 40,
+            padding: '6px 12px',
           }}
         >
           {scenes.map((sc, idx) => {
