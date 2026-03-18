@@ -1,11 +1,29 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { toBlobURL, fetchFile } from '@ffmpeg/util';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 const BITRATES = ['128', '192', '256', '320'] as const;
 const SAMPLE_RATES = ['44.1kHz', '48kHz'] as const;
+const OUTPUT_FORMATS = ['mp3', 'wav', 'aac', 'ogg'] as const;
+type OutputFormat = (typeof OUTPUT_FORMATS)[number];
+
+const FORMAT_LABELS: Record<OutputFormat, string> = {
+  mp3: 'MP3',
+  wav: 'WAV',
+  aac: 'AAC',
+  ogg: 'OGG',
+};
+
+const MIME_MAP: Record<OutputFormat, string> = {
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  aac: 'audio/aac',
+  ogg: 'audio/ogg',
+};
 
 function formatSize(bytes: number) {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} МБ`;
@@ -18,6 +36,7 @@ export function Mp3Converter() {
   const [file, setFile] = useState<File | null>(null);
   const [bitrate, setBitrate] = useState<(typeof BITRATES)[number]>('256');
   const [sampleRate, setSampleRate] = useState<(typeof SAMPLE_RATES)[number]>('44.1kHz');
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>('mp3');
   const [trimStart, setTrimStart] = useState('');
   const [trimEnd, setTrimEnd] = useState('');
   const [outputName, setOutputName] = useState('');
@@ -26,12 +45,35 @@ export function Mp3Converter() {
   const [done, setDone] = useState(false);
   const [convertedBlob, setConvertedBlob] = useState<Blob | null>(null);
   const [convertedSize, setConvertedSize] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [hoveredBitrate, setHoveredBitrate] = useState<string | null>(null);
   const [hoveredSample, setHoveredSample] = useState<string | null>(null);
+  const [hoveredFormat, setHoveredFormat] = useState<string | null>(null);
   const [downloadHover, setDownloadHover] = useState(false);
   const [removeHover, setRemoveHover] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // FFmpeg state
+  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const [ffmpegLoading, setFfmpegLoading] = useState(false);
+
+  const loadFFmpeg = useCallback(async () => {
+    if (ffmpegRef.current) return ffmpegRef.current;
+    setFfmpegLoading(true);
+    try {
+      const ffmpeg = new FFmpeg();
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+      });
+      ffmpegRef.current = ffmpeg;
+      return ffmpeg;
+    } finally {
+      setFfmpegLoading(false);
+    }
+  }, []);
 
   const handleConvert = useCallback(async () => {
     if (!file) return;
@@ -39,162 +81,87 @@ export function Mp3Converter() {
     setDone(false);
     setProgress(0);
     setConvertedBlob(null);
+    setConvertedSize(0);
+    setError(null);
 
     try {
-      const isVideo = file.type.startsWith('video/');
-      const isAudio = file.type.startsWith('audio/');
+      const ffmpeg = await loadFFmpeg();
 
-      if (!isVideo && !isAudio) {
-        throw new Error('Unsupported file type');
+      const inputExt = file.name.split('.').pop() || 'mp4';
+      const inputName = `input.${inputExt}`;
+      const outputName_ = `output.${outputFormat}`;
+
+      await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+      const onProgress = ({ progress: p }: { progress: number; time: number }) => {
+        setProgress(Math.round(p * 100));
+      };
+      ffmpeg.on('progress', onProgress);
+
+      const sr = sampleRate === '48kHz' ? '48000' : '44100';
+      const args = ['-i', inputName];
+
+      // Trim args
+      if (trimStart) {
+        args.splice(0, 0, '-ss', trimStart);
+      }
+      if (trimEnd) {
+        args.push('-to', trimEnd);
       }
 
-      // For video files: extract audio via MediaRecorder
-      // For audio files: re-encode via AudioContext + MediaRecorder
-      if (isVideo) {
-        // Create a video element, capture audio stream, re-record as audio-only
-        const video = document.createElement('video');
-        video.muted = false;
-        video.playsInline = true;
-        video.src = URL.createObjectURL(file);
-        await new Promise<void>((res, rej) => {
-          video.onloadedmetadata = () => res();
-          video.onerror = () => rej(new Error('Не удалось загрузить видео'));
-        });
-
-        const audioCtx = new AudioContext();
-        const source = audioCtx.createMediaElementSource(video);
-        const dest = audioCtx.createMediaStreamDestination();
-        source.connect(dest);
-        source.connect(audioCtx.destination);
-
-        const targetBitrateNum = parseInt(bitrate) * 1000;
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : 'audio/webm';
-
-        const recorder = new MediaRecorder(dest.stream, {
-          mimeType,
-          audioBitsPerSecond: targetBitrateNum,
-        });
-
-        const chunks: Blob[] = [];
-        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-
-        const donePromise = new Promise<Blob>((res) => {
-          recorder.onstop = () => res(new Blob(chunks, { type: mimeType }));
-        });
-
-        const totalDuration = video.duration;
-        recorder.start(100);
-        video.currentTime = 0;
-        video.play();
-
-        // Track progress
-        const progressInterval = setInterval(() => {
-          if (totalDuration > 0) {
-            setProgress(Math.min(99, (video.currentTime / totalDuration) * 100));
-          }
-        }, 200);
-
-        video.onended = () => {
-          clearInterval(progressInterval);
-          if (recorder.state === 'recording') recorder.stop();
-        };
-
-        // Safety timeout
-        const safetyTimeout = setTimeout(() => {
-          clearInterval(progressInterval);
-          video.pause();
-          if (recorder.state === 'recording') recorder.stop();
-        }, (totalDuration + 5) * 1000);
-
-        const blob = await donePromise;
-        clearTimeout(safetyTimeout);
-        clearInterval(progressInterval);
-
-        URL.revokeObjectURL(video.src);
-        try { source.disconnect(); } catch { /* noop */ }
-        try { audioCtx.close(); } catch { /* noop */ }
-
-        setConvertedBlob(blob);
-        setConvertedSize(blob.size);
-        setProgress(100);
-        setDone(true);
-      } else {
-        // Audio file: decode and re-encode through AudioContext + MediaRecorder
-        const arrayBuffer = await file.arrayBuffer();
-        const audioCtx = new AudioContext();
-
-        let audioBuffer: AudioBuffer;
-        try {
-          audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        } catch {
-          // If decoding fails, just provide the original file for download
-          setConvertedBlob(new Blob([file], { type: file.type }));
-          setConvertedSize(file.size);
-          setProgress(100);
-          setDone(true);
-          setLoading(false);
-          try { audioCtx.close(); } catch { /* noop */ }
-          return;
-        }
-
-        const targetSampleRate = sampleRate === '48kHz' ? 48000 : 44100;
-        const offlineCtx = new OfflineAudioContext(
-          audioBuffer.numberOfChannels,
-          Math.ceil(audioBuffer.duration * targetSampleRate),
-          targetSampleRate,
-        );
-
-        const bufferSource = offlineCtx.createBufferSource();
-        bufferSource.buffer = audioBuffer;
-        bufferSource.connect(offlineCtx.destination);
-        bufferSource.start(0);
-
-        // Show incremental progress during offline rendering
-        setProgress(20);
-        const renderedBuffer = await offlineCtx.startRendering();
-        setProgress(60);
-
-        // Encode rendered audio to WAV blob
-        const wavBlob = audioBufferToWav(renderedBuffer);
-        setProgress(90);
-
-        try { audioCtx.close(); } catch { /* noop */ }
-
-        setConvertedBlob(wavBlob);
-        setConvertedSize(wavBlob.size);
-        setProgress(100);
-        setDone(true);
+      // Format-specific encoding
+      switch (outputFormat) {
+        case 'mp3':
+          args.push('-vn', '-ar', sr, '-ab', `${bitrate}k`, '-f', 'mp3', outputName_);
+          break;
+        case 'wav':
+          args.push('-vn', '-ar', sr, outputName_);
+          break;
+        case 'aac':
+          args.push('-vn', '-ar', sr, '-ab', `${bitrate}k`, '-c:a', 'aac', outputName_);
+          break;
+        case 'ogg':
+          args.push('-vn', '-ar', sr, '-ab', `${bitrate}k`, '-c:a', 'libvorbis', outputName_);
+          break;
       }
+
+      const exitCode = await ffmpeg.exec(args);
+      ffmpeg.off('progress', onProgress);
+
+      if (exitCode !== 0) {
+        throw new Error(`FFmpeg завершился с кодом ${exitCode}`);
+      }
+
+      const output = await ffmpeg.readFile(outputName_);
+      const rawBytes = output instanceof Uint8Array ? output : new TextEncoder().encode(output);
+      const blob = new Blob([rawBytes.buffer as ArrayBuffer], { type: MIME_MAP[outputFormat] });
+
+      setConvertedBlob(blob);
+      setConvertedSize(blob.size);
+      setProgress(100);
+      setDone(true);
+
+      // Clean up virtual filesystem
+      try { await ffmpeg.deleteFile(inputName); } catch { /* noop */ }
+      try { await ffmpeg.deleteFile(outputName_); } catch { /* noop */ }
     } catch (err) {
       console.error('Conversion error:', err);
-      // Fallback: let user download the original file
-      if (file) {
-        setConvertedBlob(new Blob([file], { type: file.type }));
-        setConvertedSize(file.size);
-        setDone(true);
-        setProgress(100);
-      }
+      setError(err instanceof Error ? err.message : 'Не удалось конвертировать файл');
     } finally {
       setLoading(false);
     }
-  }, [file, bitrate, sampleRate]);
+  }, [file, bitrate, sampleRate, outputFormat, trimStart, trimEnd, loadFFmpeg]);
 
   const handleDownload = useCallback(() => {
     if (!convertedBlob || !file) return;
     const url = URL.createObjectURL(convertedBlob);
     const link = document.createElement('a');
     const baseName = outputName || file.name.replace(/\.[^/.]+$/, '');
-    // If we encoded to WAV, use .wav extension; if webm audio, use .webm
-    const ext = convertedBlob.type.includes('wav') ? '.wav'
-      : convertedBlob.type.includes('webm') ? '.webm'
-        : '.audio';
     link.href = url;
-    link.download = `${baseName}${ext}`;
+    link.download = `${baseName}.${outputFormat}`;
     link.click();
     URL.revokeObjectURL(url);
-  }, [convertedBlob, file, outputName]);
+  }, [convertedBlob, file, outputName, outputFormat]);
 
   const handleReset = useCallback(() => {
     setFile(null);
@@ -205,6 +172,7 @@ export function Mp3Converter() {
     setConvertedBlob(null);
     setConvertedSize(0);
     setProgress(0);
+    setError(null);
   }, []);
 
   const handleFileDrop = useCallback((e: React.DragEvent) => {
@@ -217,8 +185,12 @@ export function Mp3Converter() {
       setConvertedBlob(null);
       setConvertedSize(0);
       setProgress(0);
+      setError(null);
     }
   }, []);
+
+  /* Whether bitrate is relevant for the chosen format */
+  const bitrateRelevant = outputFormat !== 'wav';
 
   return (
     <ToolPageShell
@@ -258,7 +230,7 @@ export function Mp3Converter() {
               style={{ display: 'none' }}
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) { setFile(f); setDone(false); setConvertedBlob(null); setConvertedSize(0); setProgress(0); }
+                if (f) { setFile(f); setDone(false); setConvertedBlob(null); setConvertedSize(0); setProgress(0); setError(null); }
               }}
             />
           </label>
@@ -298,29 +270,55 @@ export function Mp3Converter() {
             </button>
           </div>
 
-          {/* Bitrate Selector */}
+          {/* Output Format Selector */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Битрейт (кбит/с)</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Формат</label>
             <div style={{ display: 'flex', gap: 8 }}>
-              {BITRATES.map((b) => (
+              {OUTPUT_FORMATS.map((fmt) => (
                 <button
-                  key={b}
-                  onClick={() => setBitrate(b)}
-                  onMouseEnter={() => setHoveredBitrate(b)}
-                  onMouseLeave={() => setHoveredBitrate(null)}
+                  key={fmt}
+                  onClick={() => setOutputFormat(fmt)}
+                  onMouseEnter={() => setHoveredFormat(fmt)}
+                  onMouseLeave={() => setHoveredFormat(null)}
                   style={{
                     padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                    border: bitrate === b ? '2px solid #10b981' : `1px solid ${C.border}`,
-                    background: bitrate === b ? 'rgba(16,185,129,.1)' : hoveredBitrate === b ? C.surface : C.card,
-                    color: bitrate === b ? '#10b981' : C.text,
+                    border: outputFormat === fmt ? '2px solid #10b981' : `1px solid ${C.border}`,
+                    background: outputFormat === fmt ? 'rgba(16,185,129,.1)' : hoveredFormat === fmt ? C.surface : C.card,
+                    color: outputFormat === fmt ? '#10b981' : C.text,
                     cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
-                  {b}
+                  {FORMAT_LABELS[fmt]}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Bitrate Selector */}
+          {bitrateRelevant && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Битрейт (кбит/с)</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {BITRATES.map((b) => (
+                  <button
+                    key={b}
+                    onClick={() => setBitrate(b)}
+                    onMouseEnter={() => setHoveredBitrate(b)}
+                    onMouseLeave={() => setHoveredBitrate(null)}
+                    style={{
+                      padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                      border: bitrate === b ? '2px solid #10b981' : `1px solid ${C.border}`,
+                      background: bitrate === b ? 'rgba(16,185,129,.1)' : hoveredBitrate === b ? C.surface : C.card,
+                      color: bitrate === b ? '#10b981' : C.text,
+                      cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                    }}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Sample Rate */}
           <div style={{ marginBottom: 20 }}>
@@ -405,12 +403,28 @@ export function Mp3Converter() {
                   color: C.text, fontSize: 14, padding: '12px 0', fontFamily: 'inherit',
                 }}
               />
-              <span style={{ fontSize: 13, color: C.dim, fontWeight: 600 }}>.wav / .webm</span>
+              <span style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>.{outputFormat}</span>
             </div>
           </div>
 
+          {/* FFmpeg loading state */}
+          {ffmpegLoading && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12,
+              border: `1px solid ${C.border}`, background: C.surface, marginBottom: 16,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                <path d="M21 12a9 9 0 11-6.219-8.56" />
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.sub }}>
+                Загрузка модуля конвертации...
+              </span>
+              <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+
           {/* Progress bar */}
-          {loading && (
+          {loading && !ffmpegLoading && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.sub }}>Конвертация...</span>
@@ -422,6 +436,21 @@ export function Mp3Converter() {
                   background: 'linear-gradient(135deg, #10b981, #059669)', transition: 'width 0.3s ease',
                 }} />
               </div>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12,
+              border: '1px solid rgba(239,68,68,.3)', background: 'rgba(239,68,68,.06)', marginBottom: 16,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                {error}
+              </span>
             </div>
           )}
 
@@ -473,60 +502,4 @@ export function Mp3Converter() {
       )}
     </ToolPageShell>
   );
-}
-
-/** Encode an AudioBuffer as a WAV Blob. */
-function audioBufferToWav(buffer: AudioBuffer): Blob {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM
-  const bitDepth = 16;
-
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  const dataLength = buffer.length * blockAlign;
-  const headerLength = 44;
-  const totalLength = headerLength + dataLength;
-
-  const arrayBuffer = new ArrayBuffer(totalLength);
-  const view = new DataView(arrayBuffer);
-
-  // WAV header
-  writeString(view, 0, 'RIFF');
-  view.setUint32(4, totalLength - 8, true);
-  writeString(view, 8, 'WAVE');
-  writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true); // chunk size
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(view, 36, 'data');
-  view.setUint32(40, dataLength, true);
-
-  // Interleave channels and write PCM samples
-  const channels: Float32Array[] = [];
-  for (let ch = 0; ch < numChannels; ch++) {
-    channels.push(buffer.getChannelData(ch));
-  }
-
-  let offset = headerLength;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let ch = 0; ch < numChannels; ch++) {
-      const sample = Math.max(-1, Math.min(1, channels[ch][i]));
-      const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
-      view.setInt16(offset, int16, true);
-      offset += 2;
-    }
-  }
-
-  return new Blob([arrayBuffer], { type: 'audio/wav' });
-}
-
-function writeString(view: DataView, offset: number, str: string) {
-  for (let i = 0; i < str.length; i++) {
-    view.setUint8(offset + i, str.charCodeAt(i));
-  }
 }
