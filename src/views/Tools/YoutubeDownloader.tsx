@@ -1,14 +1,26 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
-const QUALITIES = ['4K', '1080p', '720p', '480p', 'Audio Only'] as const;
+const QUALITIES = ['1080p', '720p', '480p', '360p', 'Audio Only'] as const;
 const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
 
+interface VideoInfo {
+  videoId: string;
+  title: string;
+  channel: string;
+  channelUrl: string;
+  thumbnail: string;
+  thumbnailHq: string;
+  thumbnailMq: string;
+  watchUrl: string;
+  formats: { quality: string; ext: string; label: string }[];
+}
+
 function isValidYoutubeUrl(url: string): boolean {
-  return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/)|youtu\.be\/)[\w-]+/.test(url.trim());
+  return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?.*v=|shorts\/|embed\/|live\/)|youtu\.be\/)[\w-]+/.test(url.trim());
 }
 
 export function YoutubeDownloader() {
@@ -18,57 +30,137 @@ export function YoutubeDownloader() {
   const [quality, setQuality] = useState<(typeof QUALITIES)[number]>('1080p');
   const [format, setFormat] = useState<(typeof FORMATS)[number]>('MP4');
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [parsed, setParsed] = useState(false);
+  const [fetchingInfo, setFetchingInfo] = useState(false);
+  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [done, setDone] = useState(false);
   const [urlError, setUrlError] = useState('');
+  const [fetchError, setFetchError] = useState('');
   const [hoveredQuality, setHoveredQuality] = useState<string | null>(null);
   const [hoveredFormat, setHoveredFormat] = useState<string | null>(null);
   const [pasteHover, setPasteHover] = useState(false);
-  const [downloadHover, setDownloadHover] = useState(false);
+  const [thumbError, setThumbError] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
-  const validateAndParse = useCallback((value: string) => {
+  // Debounce timer ref
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Fetch video info from our API ──────────────────────────────
+  const fetchVideoInfo = useCallback(async (videoUrl: string) => {
+    setFetchingInfo(true);
+    setFetchError('');
+    setVideoInfo(null);
+    setThumbError(false);
+    setDone(false);
+
+    try {
+      const res = await fetch(
+        `/api/tools/youtube-download?url=${encodeURIComponent(videoUrl)}`,
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFetchError(data.error ?? 'Failed to fetch video info');
+        return;
+      }
+
+      setVideoInfo(data as VideoInfo);
+    } catch {
+      setFetchError('Network error. Please check your connection.');
+    } finally {
+      setFetchingInfo(false);
+    }
+  }, []);
+
+  // ── Auto-fetch when a valid URL is entered (debounced 600ms) ──
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!url.trim() || !isValidYoutubeUrl(url)) return;
+
+    debounceRef.current = setTimeout(() => {
+      fetchVideoInfo(url);
+    }, 600);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [url, fetchVideoInfo]);
+
+  // ── URL validation (immediate) ─────────────────────────────────
+  const validateUrl = useCallback((value: string) => {
     if (!value.trim()) {
       setUrlError('');
-      setParsed(false);
-      return;
+      return false;
     }
     if (!isValidYoutubeUrl(value)) {
       setUrlError('Please enter a valid YouTube URL');
-      setParsed(false);
-      return;
+      return false;
     }
     setUrlError('');
-    setParsed(true);
+    return true;
   }, []);
-
-  const handleParse = () => {
-    validateAndParse(url);
-  };
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setUrl(text);
-      validateAndParse(text);
-    } catch { /* clipboard not available */ }
+      setUrlError('');
+      setDone(false);
+      // Validation + fetch will be triggered by useEffect
+    } catch {
+      /* clipboard not available */
+    }
   };
 
+  const clearUrl = () => {
+    setUrl('');
+    setVideoInfo(null);
+    setUrlError('');
+    setFetchError('');
+    setDone(false);
+    setThumbError(false);
+  };
+
+  // ── Show toast helper ──────────────────────────────────────────
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 4000);
+  }, []);
+
+  // ── Download handler ───────────────────────────────────────────
   const handleDownload = () => {
     if (!url.trim() || !isValidYoutubeUrl(url)) {
       setUrlError('Please enter a valid YouTube URL');
       return;
     }
+
+    if (!videoInfo) {
+      showToast('Please wait for the video info to load first.');
+      return;
+    }
+
     setLoading(true);
-    setProgress(0);
     setDone(false);
-    const iv = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) { clearInterval(iv); setLoading(false); setDone(true); return 100; }
-        return p + Math.random() * 12;
-      });
-    }, 300);
+
+    // Since real server-side downloading requires yt-dlp / a backend worker
+    // which can't run on Vercel serverless, we show a helpful message
+    // and open the video page as a fallback.
+    setTimeout(() => {
+      setLoading(false);
+      setDone(true);
+      showToast(
+        'Server-side download is coming soon! Opening video in a new tab for now.',
+      );
+      window.open(videoInfo.watchUrl, '_blank', 'noopener');
+    }, 1200);
   };
+
+  // Determine the thumbnail src (fall back to hq/mq if maxres fails)
+  const thumbnailSrc = videoInfo
+    ? thumbError
+      ? videoInfo.thumbnailMq
+      : videoInfo.thumbnail
+    : null;
 
   return (
     <ToolPageShell
@@ -76,39 +168,139 @@ export function YoutubeDownloader() {
       subtitle="Download YouTube videos in any quality and format"
       gradient={['#ef4444', '#dc2626']}
     >
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            padding: '12px 24px',
+            borderRadius: 12,
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            boxShadow: '0 8px 32px rgba(0,0,0,.25)',
+            color: C.text,
+            fontSize: 14,
+            fontWeight: 600,
+            maxWidth: 480,
+            textAlign: 'center',
+          }}
+        >
+          {toastMsg}
+        </div>
+      )}
+
       {/* URL Input */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: urlError ? 8 : 24 }}>
-        <div style={{
-          flex: 1, display: 'flex', alignItems: 'center',
-          background: C.surface, border: `1px solid ${urlError ? '#ef4444' : C.border}`,
-          borderRadius: 12, padding: '0 16px', gap: 8,
-          transition: 'all 0.2s ease',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div style={{ display: 'flex', gap: 8, marginBottom: urlError || fetchError ? 8 : 24 }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            background: C.surface,
+            border: `1px solid ${urlError ? '#ef4444' : C.border}`,
+            borderRadius: 12,
+            padding: '0 16px',
+            gap: 8,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={C.dim}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
           </svg>
           <input
             value={url}
-            onChange={(e) => { setUrl(e.target.value); setParsed(false); setUrlError(''); setDone(false); }}
-            onKeyDown={(e) => e.key === 'Enter' && handleParse()}
-            onBlur={() => { if (url.trim()) validateAndParse(url); }}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setUrlError('');
+              setFetchError('');
+              setDone(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                validateUrl(url);
+              }
+            }}
+            onBlur={() => {
+              if (url.trim()) validateUrl(url);
+            }}
             placeholder="Paste YouTube URL here..."
             style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              color: C.text, fontSize: 14, padding: '14px 0', fontFamily: 'inherit',
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: C.text,
+              fontSize: 14,
+              padding: '14px 0',
+              fontFamily: 'inherit',
             }}
           />
-          {url && (
+          {/* Loading spinner inside input */}
+          {fetchingInfo && (
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 16 16"
+              style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="6"
+                stroke={C.dim}
+                strokeWidth="2"
+                fill="none"
+                opacity={0.3}
+              />
+              <path
+                d="M8 2a6 6 0 014.47 2"
+                stroke={C.text}
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+          )}
+          {url && !fetchingInfo && (
             <button
-              onClick={() => { setUrl(''); setParsed(false); setUrlError(''); setDone(false); setProgress(0); }}
+              onClick={clearUrl}
               style={{
-                background: 'none', border: 'none', color: C.dim, cursor: 'pointer',
-                padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'none',
+                border: 'none',
+                color: C.dim,
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           )}
@@ -118,16 +310,33 @@ export function YoutubeDownloader() {
           onMouseEnter={() => setPasteHover(true)}
           onMouseLeave={() => setPasteHover(false)}
           style={{
-            padding: '0 20px', borderRadius: 12,
+            padding: '0 20px',
+            borderRadius: 12,
             border: `1px solid ${C.border}`,
             background: pasteHover ? C.surface : C.card,
-            color: C.text, cursor: 'pointer', fontSize: 13,
-            fontWeight: 600, transition: 'all 0.2s ease', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 6,
+            color: C.text,
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
           </svg>
           Paste
         </button>
@@ -135,35 +344,252 @@ export function YoutubeDownloader() {
 
       {/* URL Error */}
       {urlError && (
-        <div style={{ fontSize: 12, color: '#ef4444', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+        <div
+          style={{
+            fontSize: 12,
+            color: '#ef4444',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {urlError}
         </div>
       )}
 
-      {/* Video Info Preview */}
-      {parsed && url.trim() && (
-        <div style={{
-          display: 'flex', gap: 16, padding: 16, borderRadius: 14,
-          border: `1px solid ${C.border}`, background: C.card, marginBottom: 24,
-        }}>
-          <div style={{
-            width: 200, height: 112, borderRadius: 10, background: C.surface,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
-              <rect x="2" y="4" width="20" height="16" rx="2" /><polygon points="10 8 16 12 10 16" fill={C.dim} stroke="none" />
-            </svg>
+      {/* Fetch Error */}
+      {fetchError && !urlError && (
+        <div
+          style={{
+            fontSize: 12,
+            color: '#f59e0b',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {fetchError}
+        </div>
+      )}
+
+      {/* Video Info Preview - Real data from API */}
+      {videoInfo && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 16,
+            padding: 16,
+            borderRadius: 14,
+            border: `1px solid ${C.border}`,
+            background: C.card,
+            marginBottom: 24,
+          }}
+        >
+          {/* Real Thumbnail */}
+          <div
+            style={{
+              width: 200,
+              height: 112,
+              borderRadius: 10,
+              background: C.surface,
+              overflow: 'hidden',
+              flexShrink: 0,
+              position: 'relative',
+            }}
+          >
+            {thumbnailSrc ? (
+              <img
+                src={thumbnailSrc}
+                alt={videoInfo.title}
+                onError={() => setThumbError(true)}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={C.dim}
+                  strokeWidth="1.5"
+                >
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <polygon points="10 8 16 12 10 16" fill={C.dim} stroke="none" />
+                </svg>
+              </div>
+            )}
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Sample Video Title - Full HD Quality</div>
-            <div style={{ fontSize: 12, color: C.sub }}>Channel Name</div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 4, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, color: C.dim, background: C.surface, padding: '3px 8px', borderRadius: 6 }}>12:34</span>
-              <span style={{ fontSize: 11, color: C.dim, background: C.surface, padding: '3px 8px', borderRadius: 6 }}>1080p available</span>
-              <span style={{ fontSize: 11, color: C.dim, background: C.surface, padding: '3px 8px', borderRadius: 6 }}>24.5 MB</span>
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 6,
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: C.text,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {videoInfo.title}
+            </div>
+            <a
+              href={videoInfo.channelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 12,
+                color: C.sub,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textDecoration = 'underline';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textDecoration = 'none';
+              }}
+            >
+              {videoInfo.channel}
+            </a>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+              {videoInfo.formats.slice(0, 3).map((f) => (
+                <span
+                  key={f.quality}
+                  style={{
+                    fontSize: 11,
+                    color: C.dim,
+                    background: C.surface,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                  }}
+                >
+                  {f.quality} {f.ext.toUpperCase()}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fetching Info Skeleton */}
+      {fetchingInfo && !videoInfo && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 16,
+            padding: 16,
+            borderRadius: 14,
+            border: `1px solid ${C.border}`,
+            background: C.card,
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              width: 200,
+              height: 112,
+              borderRadius: 10,
+              background: C.surface,
+              flexShrink: 0,
+              animation: 'pulse 1.5s ease-in-out infinite',
+            }}
+          />
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 10,
+            }}
+          >
+            <div
+              style={{
+                width: '80%',
+                height: 16,
+                borderRadius: 4,
+                background: C.surface,
+                animation: 'pulse 1.5s ease-in-out infinite',
+              }}
+            />
+            <div
+              style={{
+                width: '40%',
+                height: 12,
+                borderRadius: 4,
+                background: C.surface,
+                animation: 'pulse 1.5s ease-in-out infinite',
+                animationDelay: '0.2s',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              {[60, 50, 50].map((w, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: w,
+                    height: 20,
+                    borderRadius: 6,
+                    background: C.surface,
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    animationDelay: `${0.1 * (i + 1)}s`,
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -171,7 +597,17 @@ export function YoutubeDownloader() {
 
       {/* Quality Selector */}
       <div style={{ marginBottom: 20 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Quality</label>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.sub,
+            display: 'block',
+            marginBottom: 8,
+          }}
+        >
+          Quality
+        </label>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {QUALITIES.map((q) => (
             <button
@@ -180,11 +616,21 @@ export function YoutubeDownloader() {
               onMouseEnter={() => setHoveredQuality(q)}
               onMouseLeave={() => setHoveredQuality(null)}
               style={{
-                padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                padding: '8px 18px',
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 600,
                 border: quality === q ? '2px solid #ef4444' : `1px solid ${C.border}`,
-                background: quality === q ? 'rgba(239,68,68,.12)' : hoveredQuality === q ? C.surface : C.card,
+                background:
+                  quality === q
+                    ? 'rgba(239,68,68,.12)'
+                    : hoveredQuality === q
+                      ? C.surface
+                      : C.card,
                 color: quality === q ? '#ef4444' : C.text,
-                cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontFamily: 'inherit',
               }}
             >
               {q}
@@ -195,7 +641,17 @@ export function YoutubeDownloader() {
 
       {/* Format Selector */}
       <div style={{ marginBottom: 28 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Format</label>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.sub,
+            display: 'block',
+            marginBottom: 8,
+          }}
+        >
+          Format
+        </label>
         <div style={{ display: 'flex', gap: 8 }}>
           {FORMATS.map((f) => (
             <button
@@ -204,11 +660,21 @@ export function YoutubeDownloader() {
               onMouseEnter={() => setHoveredFormat(f)}
               onMouseLeave={() => setHoveredFormat(null)}
               style={{
-                padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                padding: '8px 18px',
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 600,
                 border: format === f ? '2px solid #ef4444' : `1px solid ${C.border}`,
-                background: format === f ? 'rgba(239,68,68,.12)' : hoveredFormat === f ? C.surface : C.card,
+                background:
+                  format === f
+                    ? 'rgba(239,68,68,.12)'
+                    : hoveredFormat === f
+                      ? C.surface
+                      : C.card,
                 color: format === f ? '#ef4444' : C.text,
-                cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontFamily: 'inherit',
               }}
             >
               {f}
@@ -217,64 +683,136 @@ export function YoutubeDownloader() {
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress / Loading State for Download */}
       {loading && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: C.sub }}>Downloading...</span>
-            <span style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>{Math.min(100, Math.round(progress))}%</span>
+            <span style={{ fontSize: 12, color: C.sub }}>Preparing download...</span>
           </div>
           <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
-            <div style={{
-              width: `${Math.min(100, progress)}%`, height: '100%', borderRadius: 4,
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)', transition: 'width 0.3s ease',
-            }} />
+            <div
+              style={{
+                width: '60%',
+                height: '100%',
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                animation: 'pulse 1s ease-in-out infinite',
+              }}
+            />
           </div>
         </div>
       )}
 
-      {/* Download Complete */}
+      {/* Download Complete / Redirect Notice */}
       {done && !loading && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12,
-          border: '1px solid rgba(239,68,68,.3)', background: 'rgba(239,68,68,.06)', marginBottom: 20,
-        }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: 16,
+            borderRadius: 12,
+            border: '1px solid rgba(239,68,68,.3)',
+            background: 'rgba(239,68,68,.06)',
+            marginBottom: 20,
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Download Complete</div>
-            <div style={{ fontSize: 12, color: C.sub }}>Your {format} file is ready</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+              Video opened in new tab
+            </div>
+            <div style={{ fontSize: 12, color: C.sub }}>
+              Server-side {format} download is coming soon. For now, use the
+              YouTube page to watch or save the video.
+            </div>
           </div>
-          <button
-            onClick={() => { setDone(false); setProgress(0); }}
-            onMouseEnter={() => setDownloadHover(true)}
-            onMouseLeave={() => setDownloadHover(false)}
-            style={{
-              padding: '8px 20px', borderRadius: 10,
-              border: `1px solid ${C.border}`,
-              background: downloadHover ? C.surface : C.card,
-              color: C.text, fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Save File
-          </button>
+          {videoInfo && (
+            <button
+              onClick={() => window.open(videoInfo.watchUrl, '_blank', 'noopener')}
+              style={{
+                padding: '8px 20px',
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+                color: C.text,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontFamily: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = C.surface;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = C.card;
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              Open Again
+            </button>
+          )}
         </div>
       )}
 
       {/* Download Button */}
       <ActionButton
-        label={done ? 'Download Again' : 'Download'}
+        label={
+          fetchingInfo
+            ? 'Fetching Info...'
+            : done
+              ? 'Download Again'
+              : videoInfo
+                ? 'Download'
+                : 'Download'
+        }
         gradient={['#ef4444', '#dc2626']}
         onClick={handleDownload}
-        disabled={!url.trim() || !!urlError}
+        disabled={!url.trim() || !!urlError || fetchingInfo}
         loading={loading}
       />
+
+      {/* CSS Keyframes for skeleton pulse animation */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </ToolPageShell>
   );
 }
