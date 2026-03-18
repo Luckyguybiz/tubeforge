@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { trpc } from '@/lib/trpc';
 
 /* ── Types ───────────────────────────────────────────────────────── */
 
@@ -40,6 +41,8 @@ const PERIODS: { key: Period; label: string }[] = [
   { key: '1y', label: 'За год' },
   { key: 'all', label: 'За всё время' },
 ];
+
+const FREE_PERIOD: Period = '7d';
 
 const COUNTRIES: { key: string; label: string }[] = [
   { key: '', label: 'Все' },
@@ -193,11 +196,201 @@ function SkeletonRow({ surface, card }: { surface: string; card: string }) {
   );
 }
 
+/* ── Pro upgrade overlay (below row 10) ──────────────────────────── */
+
+function UpgradeOverlay({
+  isDark,
+  accent,
+  pink,
+  surface,
+  text,
+  sub,
+  bg,
+}: {
+  isDark: boolean;
+  accent: string;
+  pink: string;
+  surface: string;
+  text: string;
+  sub: string;
+  bg: string;
+}) {
+  return (
+    <tr>
+      <td colSpan={5} style={{ padding: 0, position: 'relative', border: 'none' }}>
+        {/* Gradient fade from content to overlay */}
+        <div
+          style={{
+            position: 'relative',
+            background: `linear-gradient(180deg, transparent 0%, ${isDark ? surface : bg} 30%)`,
+            padding: '48px 24px 40px',
+            textAlign: 'center',
+          }}
+        >
+          {/* Lock icon */}
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              background: isDark
+                ? 'rgba(255,255,255,.06)'
+                : 'rgba(0,0,0,.04)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="11" width="18" height="11" rx="2" stroke={accent} strokeWidth="2" fill="none" />
+              <path d="M7 11V7a5 5 0 0110 0v4" stroke={accent} strokeWidth="2" strokeLinecap="round" fill="none" />
+            </svg>
+          </div>
+
+          <h3
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              color: text,
+              margin: '0 0 8px',
+              letterSpacing: '-.02em',
+            }}
+          >
+            Разблокируйте полный доступ
+          </h3>
+
+          <p
+            style={{
+              fontSize: 14,
+              color: sub,
+              margin: '0 0 24px',
+              lineHeight: 1.6,
+              maxWidth: 360,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Смотрите Топ-50 Shorts, все периоды и фильтры
+          </p>
+
+          {/* Upgrade button */}
+          <a
+            href="/billing"
+            style={{
+              display: 'inline-block',
+              padding: '14px 36px',
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${accent}, ${pink})`,
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: `0 4px 24px ${accent}40`,
+              transition: 'transform .15s ease, box-shadow .15s ease',
+              letterSpacing: '-.01em',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 6px 28px ${accent}55`;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 24px ${accent}40`;
+            }}
+          >
+            Перейти на Pro — $9.99/мес
+          </a>
+
+          <p
+            style={{
+              fontSize: 12,
+              color: sub,
+              margin: '14px 0 0',
+              opacity: 0.7,
+            }}
+          >
+            или{' '}
+            <a
+              href="/settings"
+              style={{ color: accent, textDecoration: 'none' }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+            >
+              /settings
+            </a>{' '}
+            чтобы управлять подпиской
+          </p>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/* ── Period upgrade tooltip ───────────────────────────────────────── */
+
+function PeriodUpgradeTooltip({
+  accent,
+  pink,
+  isDark,
+}: {
+  accent: string;
+  pink: string;
+  isDark: boolean;
+}) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        top: '100%',
+        marginTop: 6,
+        zIndex: 10,
+        background: isDark ? '#1e1e24' : '#fff',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.08)'}`,
+        borderRadius: 10,
+        padding: '10px 14px',
+        boxShadow: isDark
+          ? '0 8px 32px rgba(0,0,0,.5)'
+          : '0 8px 32px rgba(0,0,0,.12)',
+        whiteSpace: 'nowrap',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: isDark ? '#fff' : '#111' }}>
+        Доступно в Pro
+      </div>
+      <a
+        href="/billing"
+        style={{
+          display: 'inline-block',
+          padding: '5px 14px',
+          borderRadius: 6,
+          background: `linear-gradient(135deg, ${accent}, ${pink})`,
+          color: '#fff',
+          fontSize: 11,
+          fontWeight: 600,
+          textDecoration: 'none',
+        }}
+      >
+        Обновить
+      </a>
+    </div>
+  );
+}
+
 /* ── Main component ──────────────────────────────────────────────── */
 
 export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+
+  /* ── Subscription check ──────────────────────────── */
+  const subscription = trpc.billing.getSubscription.useQuery();
+  const plan = subscription.data?.plan ?? 'FREE';
+  const isPro = plan === 'PRO' || plan === 'STUDIO';
 
   const [period, setPeriod] = useState<Period>('7d');
   const [filters, setFilters] = useState<Filters>({
@@ -215,17 +408,22 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const [isMock, setIsMock] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Period upgrade tooltip
+  const [periodTooltip, setPeriodTooltip] = useState<Period | null>(null);
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Debounce ref for country/category changes
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch data from API
-  const fetchData = useCallback(async (p: Period, country: string, category: string) => {
+  const fetchData = useCallback(async (p: Period, country: string, category: string, pro: boolean) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({ period: p });
       if (country) params.set('country', country);
       if (category) params.set('category', category);
+      if (!pro) params.set('limit', '10');
 
       const res = await fetch(`/api/tools/shorts-analytics?${params}`);
       if (!res.ok) {
@@ -254,14 +452,14 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   // Fetch on mount and when period changes
   useEffect(() => {
-    fetchData(period, filters.country, filters.category);
-  }, [period, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchData(period, filters.country, filters.category, isPro);
+  }, [period, isPro, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced fetch when country/category changes
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(period, filters.country, filters.category);
+      fetchData(period, filters.country, filters.category, isPro);
     }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -269,8 +467,16 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   }, [filters.country, filters.category]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePeriodChange = useCallback((p: Period) => {
+    if (!isPro && p !== FREE_PERIOD) {
+      // Show tooltip, auto-dismiss after 2.5s
+      setPeriodTooltip(p);
+      if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = setTimeout(() => setPeriodTooltip(null), 2500);
+      return;
+    }
+    setPeriodTooltip(null);
     setPeriod(p);
-  }, []);
+  }, [isPro]);
 
   const handleClearFilters = useCallback(() => {
     setFilters({ country: '', category: '', showMusic: true, showKids: true });
@@ -281,6 +487,11 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   /* ── Styles ──────────────────────────────────────────── */
 
   const sidebarW = sidebarCollapsed ? 0 : 220;
+
+  // Free users: show max 10 rows
+  const FREE_ROW_LIMIT = 10;
+  const visibleData = isPro ? data : data.slice(0, FREE_ROW_LIMIT);
+  const showUpgradeOverlay = !isPro && data.length > 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
@@ -353,6 +564,25 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 Mock data
               </div>
             )}
+
+            {/* Free tier badge */}
+            {!isPro && !subscription.isLoading && (
+              <div
+                style={{
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)',
+                  border: `1px solid ${C.border}`,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: C.sub,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Free
+              </div>
+            )}
           </div>
           <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.5 }}>
             Топ YouTube Shorts по просмотрам — находите тренды и вдохновение
@@ -410,32 +640,48 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 </div>
                 {PERIODS.map((p) => {
                   const isActive = period === p.key;
+                  const isLocked = !isPro && p.key !== FREE_PERIOD;
                   return (
-                    <button
-                      key={p.key}
-                      onClick={() => handlePeriodChange(p.key)}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '8px 12px',
-                        borderRadius: 8,
-                        border: 'none',
-                        background: isActive
-                          ? isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)'
-                          : 'transparent',
-                        color: isActive ? C.text : C.sub,
-                        fontSize: 13,
-                        fontWeight: isActive ? 600 : 400,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
-                        transition: 'all .15s ease',
-                        marginBottom: 1,
-                      }}
-                    >
-                      {p.label}
-                    </button>
+                    <div key={p.key} style={{ position: 'relative' }}>
+                      <button
+                        onClick={() => handlePeriodChange(p.key)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '8px 12px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: isActive
+                            ? isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)'
+                            : 'transparent',
+                          color: isLocked
+                            ? C.dim
+                            : isActive ? C.text : C.sub,
+                          fontSize: 13,
+                          fontWeight: isActive ? 600 : 400,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
+                          transition: 'all .15s ease',
+                          marginBottom: 1,
+                          opacity: isLocked ? 0.65 : 1,
+                        }}
+                      >
+                        <span>{p.label}</span>
+                        {isLocked && (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                            <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" stroke={C.dim} strokeWidth="2" strokeLinecap="round" fill="none" />
+                          </svg>
+                        )}
+                      </button>
+                      {periodTooltip === p.key && (
+                        <PeriodUpgradeTooltip accent={C.accent} pink={C.pink} isDark={isDark} />
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -461,7 +707,15 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     letterSpacing: '.02em',
                   }}
                 >
-                  <span>Фильтры</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    Фильтры
+                    {!isPro && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.6 }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" stroke={C.dim} strokeWidth="2" strokeLinecap="round" fill="none" />
+                      </svg>
+                    )}
+                  </span>
                   <svg
                     width="12"
                     height="12"
@@ -484,8 +738,30 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   }}
                 >
                   <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {/* Free tier filter lock message */}
+                    {!isPro && (
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: C.dim,
+                          padding: '6px 8px',
+                          borderRadius: 6,
+                          background: isDark ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.02)',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        Фильтры доступны в{' '}
+                        <a
+                          href="/billing"
+                          style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}
+                        >
+                          Pro
+                        </a>
+                      </div>
+                    )}
+
                     {/* Country */}
-                    <div>
+                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         Страна
                       </label>
@@ -502,7 +778,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           fontSize: 12.5,
                           fontFamily: 'inherit',
                           outline: 'none',
-                          cursor: 'pointer',
+                          cursor: isPro ? 'pointer' : 'not-allowed',
                           appearance: 'none',
                           WebkitAppearance: 'none',
                         }}
@@ -514,7 +790,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     </div>
 
                     {/* Category */}
-                    <div>
+                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         Категория
                       </label>
@@ -531,7 +807,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           fontSize: 12.5,
                           fontFamily: 'inherit',
                           outline: 'none',
-                          cursor: 'pointer',
+                          cursor: isPro ? 'pointer' : 'not-allowed',
                           appearance: 'none',
                           WebkitAppearance: 'none',
                         }}
@@ -694,242 +970,321 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   </td>
                 </tr>
               ) : (
-                data.map((item, idx) => {
-                  const isHovered = hoveredRow === item.rank;
-                  const isEven = idx % 2 === 0;
-                  return (
-                    <tr
-                      key={`${item.videoId}-${item.rank}`}
-                      onMouseEnter={() => setHoveredRow(item.rank)}
-                      onMouseLeave={() => setHoveredRow(null)}
-                      style={{
-                        background: isHovered
-                          ? isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)'
-                          : isEven
-                            ? 'transparent'
-                            : isDark ? 'rgba(255,255,255,.015)' : 'rgba(0,0,0,.015)',
-                        transition: 'background .15s ease',
-                      }}
-                    >
-                      {/* Rank */}
-                      <td
+                <>
+                  {visibleData.map((item, idx) => {
+                    const isHovered = hoveredRow === item.rank;
+                    const isEven = idx % 2 === 0;
+                    return (
+                      <tr
+                        key={`${item.videoId}-${item.rank}`}
+                        onMouseEnter={() => setHoveredRow(item.rank)}
+                        onMouseLeave={() => setHoveredRow(null)}
                         style={{
-                          padding: '12px 14px',
-                          textAlign: 'center',
-                          fontSize: 14,
-                          fontWeight: 700,
-                          color: item.rank <= 3 ? C.accent : C.sub,
-                          width: 50,
+                          background: isHovered
+                            ? isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)'
+                            : isEven
+                              ? 'transparent'
+                              : isDark ? 'rgba(255,255,255,.015)' : 'rgba(0,0,0,.015)',
+                          transition: 'background .15s ease',
                         }}
                       >
-                        {item.rank}
-                      </td>
+                        {/* Rank */}
+                        <td
+                          style={{
+                            padding: '12px 14px',
+                            textAlign: 'center',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: item.rank <= 3 ? C.accent : C.sub,
+                            width: 50,
+                          }}
+                        >
+                          {item.rank}
+                        </td>
 
-                      {/* Video */}
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          {/* Thumbnail */}
-                          {item.thumbnail ? (
-                            <a
-                              href={`https://youtube.com/shorts/${item.videoId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                width: 120,
-                                height: 68,
-                                borderRadius: 8,
-                                flexShrink: 0,
-                                position: 'relative',
-                                overflow: 'hidden',
-                                display: 'block',
-                              }}
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={item.thumbnail}
-                                alt={item.title}
-                                loading="lazy"
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  borderRadius: 8,
-                                  display: 'block',
-                                }}
-                              />
-                              {/* Shorts badge */}
+                        {/* Video */}
+                        <td style={{ padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                            {/* Thumbnail */}
+                            {item.thumbnail ? (
+                              isPro ? (
+                                <a
+                                  href={`https://youtube.com/shorts/${item.videoId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    width: 120,
+                                    height: 68,
+                                    borderRadius: 8,
+                                    flexShrink: 0,
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    display: 'block',
+                                  }}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={item.thumbnail}
+                                    alt={item.title}
+                                    loading="lazy"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                      borderRadius: 8,
+                                      display: 'block',
+                                    }}
+                                  />
+                                  {/* Shorts badge */}
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      bottom: 4,
+                                      right: 4,
+                                      padding: '2px 5px',
+                                      borderRadius: 4,
+                                      background: 'rgba(255,0,0,.85)',
+                                      color: '#fff',
+                                      fontSize: 8,
+                                      fontWeight: 700,
+                                      letterSpacing: '.03em',
+                                    }}
+                                  >
+                                    SHORTS
+                                  </div>
+                                </a>
+                              ) : (
+                                <div
+                                  style={{
+                                    width: 120,
+                                    height: 68,
+                                    borderRadius: 8,
+                                    flexShrink: 0,
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    display: 'block',
+                                  }}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={item.thumbnail}
+                                    alt={item.title}
+                                    loading="lazy"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                      borderRadius: 8,
+                                      display: 'block',
+                                    }}
+                                  />
+                                  {/* Shorts badge */}
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      bottom: 4,
+                                      right: 4,
+                                      padding: '2px 5px',
+                                      borderRadius: 4,
+                                      background: 'rgba(255,0,0,.85)',
+                                      color: '#fff',
+                                      fontSize: 8,
+                                      fontWeight: 700,
+                                      letterSpacing: '.03em',
+                                    }}
+                                  >
+                                    SHORTS
+                                  </div>
+                                </div>
+                              )
+                            ) : (
                               <div
                                 style={{
-                                  position: 'absolute',
-                                  bottom: 4,
-                                  right: 4,
-                                  padding: '2px 5px',
-                                  borderRadius: 4,
-                                  background: 'rgba(255,0,0,.85)',
-                                  color: '#fff',
-                                  fontSize: 8,
-                                  fontWeight: 700,
-                                  letterSpacing: '.03em',
+                                  width: 120,
+                                  height: 68,
+                                  borderRadius: 8,
+                                  background: isDark
+                                    ? `linear-gradient(135deg, ${C.card}, ${C.cardHover})`
+                                    : `linear-gradient(135deg, #e8e8ed, #d8d8e0)`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                  position: 'relative',
+                                  overflow: 'hidden',
                                 }}
                               >
-                                SHORTS
+                                {/* Play icon */}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.3 }}>
+                                  <path d="M8 5V19L19 12L8 5Z" fill={C.sub} />
+                                </svg>
+                                {/* Shorts badge */}
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 4,
+                                    right: 4,
+                                    padding: '2px 5px',
+                                    borderRadius: 4,
+                                    background: 'rgba(255,0,0,.85)',
+                                    color: '#fff',
+                                    fontSize: 8,
+                                    fontWeight: 700,
+                                    letterSpacing: '.03em',
+                                  }}
+                                >
+                                  SHORTS
+                                </div>
                               </div>
-                            </a>
-                          ) : (
+                            )}
+
+                            {/* Title - clickable only for Pro */}
+                            {isPro ? (
+                              <a
+                                href={`https://youtube.com/shorts/${item.videoId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: 13.5,
+                                  fontWeight: 500,
+                                  color: C.text,
+                                  lineHeight: 1.4,
+                                  maxWidth: 280,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  textDecoration: 'none',
+                                }}
+                                onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                                onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+                              >
+                                {item.title}
+                              </a>
+                            ) : (
+                              <span
+                                style={{
+                                  fontSize: 13.5,
+                                  fontWeight: 500,
+                                  color: C.text,
+                                  lineHeight: 1.4,
+                                  maxWidth: 280,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                }}
+                              >
+                                {item.title}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Views */}
+                        <td
+                          style={{
+                            padding: '12px 14px',
+                            fontSize: 13.5,
+                            fontWeight: 600,
+                            color: C.green,
+                            whiteSpace: 'nowrap',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {formatViews(item.views)}
+                        </td>
+
+                        {/* Uploaded */}
+                        <td
+                          style={{
+                            padding: '12px 14px',
+                            fontSize: 12.5,
+                            color: C.sub,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {item.uploaded}
+                        </td>
+
+                        {/* Channel */}
+                        <td style={{ padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {/* Avatar placeholder */}
                             <div
                               style={{
-                                width: 120,
-                                height: 68,
-                                borderRadius: 8,
-                                background: isDark
-                                  ? `linear-gradient(135deg, ${C.card}, ${C.cardHover})`
-                                  : `linear-gradient(135deg, #e8e8ed, #d8d8e0)`,
+                                width: 28,
+                                height: 28,
+                                borderRadius: '50%',
+                                background: `linear-gradient(135deg, ${C.purple}, ${C.blue})`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: '#fff',
                                 flexShrink: 0,
-                                position: 'relative',
-                                overflow: 'hidden',
                               }}
                             >
-                              {/* Play icon */}
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.3 }}>
-                                <path d="M8 5V19L19 12L8 5Z" fill={C.sub} />
-                              </svg>
-                              {/* Shorts badge */}
-                              <div
+                              {item.channel[0]}
+                            </div>
+                            {/* Channel name - clickable only for Pro */}
+                            {isPro && item.channelId ? (
+                              <a
+                                href={`https://youtube.com/channel/${item.channelId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 style={{
-                                  position: 'absolute',
-                                  bottom: 4,
-                                  right: 4,
-                                  padding: '2px 5px',
-                                  borderRadius: 4,
-                                  background: 'rgba(255,0,0,.85)',
-                                  color: '#fff',
-                                  fontSize: 8,
-                                  fontWeight: 700,
-                                  letterSpacing: '.03em',
+                                  fontSize: 12.5,
+                                  fontWeight: 500,
+                                  color: C.text,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: 140,
+                                  textDecoration: 'none',
+                                }}
+                                onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                                onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+                              >
+                                {item.channel}
+                              </a>
+                            ) : (
+                              <span
+                                style={{
+                                  fontSize: 12.5,
+                                  fontWeight: 500,
+                                  color: C.text,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: 140,
                                 }}
                               >
-                                SHORTS
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Title - clickable */}
-                          <a
-                            href={`https://youtube.com/shorts/${item.videoId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: 13.5,
-                              fontWeight: 500,
-                              color: C.text,
-                              lineHeight: 1.4,
-                              maxWidth: 280,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              textDecoration: 'none',
-                            }}
-                            onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
-                            onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
-                          >
-                            {item.title}
-                          </a>
-                        </div>
-                      </td>
-
-                      {/* Views */}
-                      <td
-                        style={{
-                          padding: '12px 14px',
-                          fontSize: 13.5,
-                          fontWeight: 600,
-                          color: C.green,
-                          whiteSpace: 'nowrap',
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        {formatViews(item.views)}
-                      </td>
-
-                      {/* Uploaded */}
-                      <td
-                        style={{
-                          padding: '12px 14px',
-                          fontSize: 12.5,
-                          color: C.sub,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {item.uploaded}
-                      </td>
-
-                      {/* Channel */}
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          {/* Avatar placeholder */}
-                          <div
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: '50%',
-                              background: `linear-gradient(135deg, ${C.purple}, ${C.blue})`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: '#fff',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {item.channel[0]}
+                                {item.channel}
+                              </span>
+                            )}
                           </div>
-                          {/* Channel name - clickable */}
-                          {item.channelId ? (
-                            <a
-                              href={`https://youtube.com/channel/${item.channelId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                fontSize: 12.5,
-                                fontWeight: 500,
-                                color: C.text,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                maxWidth: 140,
-                                textDecoration: 'none',
-                              }}
-                              onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
-                              onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
-                            >
-                              {item.channel}
-                            </a>
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: 12.5,
-                                fontWeight: 500,
-                                color: C.text,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                maxWidth: 140,
-                              }}
-                            >
-                              {item.channel}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                        </td>
+                      </tr>
+                    );
+                  })}
+
+                  {/* Upgrade overlay for free users */}
+                  {showUpgradeOverlay && (
+                    <UpgradeOverlay
+                      isDark={isDark}
+                      accent={C.accent}
+                      pink={C.pink}
+                      surface={C.surface}
+                      text={C.text}
+                      sub={C.sub}
+                      bg={C.bg}
+                    />
+                  )}
+                </>
               )}
             </tbody>
           </table>

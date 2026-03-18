@@ -9,13 +9,15 @@ export async function GET(req: NextRequest) {
   const period = sp.get('period') ?? '7d';
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';
+  const limitParam = sp.get('limit');
+  const limit = limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50;
 
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     // Return mock data if no API key configured
     return NextResponse.json({
       mock: true,
-      shorts: getMockData(),
+      shorts: getMockData().slice(0, limit),
       message: 'YOUTUBE_API_KEY not configured — showing mock data',
     });
   }
@@ -23,7 +25,8 @@ export async function GET(req: NextRequest) {
   const cacheKey = `${period}:${country}:${category}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
-    return NextResponse.json({ mock: false, shorts: cached.data, cached: true });
+    const cachedShorts = Array.isArray(cached.data) ? cached.data.slice(0, limit) : cached.data;
+    return NextResponse.json({ mock: false, shorts: cachedShorts, cached: true });
   }
 
   try {
@@ -70,7 +73,7 @@ export async function GET(req: NextRequest) {
 
     const allIds = [...idSet];
     if (allIds.length === 0) {
-      return NextResponse.json({ mock: true, shorts: getMockData(), error: 'No shorts found' });
+      return NextResponse.json({ mock: true, shorts: getMockData().slice(0, limit), error: 'No shorts found' });
     }
 
     // YouTube videos.list accepts max 50 IDs per request — batch if needed
@@ -157,12 +160,12 @@ export async function GET(req: NextRequest) {
       for (let i = 0; i < 50; i++) cache.delete(oldest[i][0]);
     }
 
-    return NextResponse.json({ mock: false, shorts, cached: false });
+    return NextResponse.json({ mock: false, shorts: shorts.slice(0, limit), cached: false });
   } catch (err) {
     console.error('[shorts-analytics] Error:', err);
     return NextResponse.json({
       mock: true,
-      shorts: getMockData(),
+      shorts: getMockData().slice(0, limit),
       error: 'Failed to fetch',
     });
   }
