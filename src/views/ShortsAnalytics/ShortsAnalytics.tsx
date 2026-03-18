@@ -1,27 +1,29 @@
 'use client';
 
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 /* ── Types ───────────────────────────────────────────────────────── */
 
 interface ShortItem {
   rank: number;
+  videoId: string;
   title: string;
   views: number;
+  viewsFormatted?: string;
   uploaded: string;
   channel: string;
-  channelAvatar: string | null;
+  channelId?: string;
+  channelAvatar?: string | null;
   thumbnail: string | null;
+  duration?: number;
 }
 
 type Period = 'today' | 'yesterday' | '7d' | '28d' | '3m' | '6m' | '1y' | 'all';
-type Country = 'all' | 'ru' | 'us' | 'kz' | 'in' | 'br' | 'de' | 'fr' | 'jp' | 'kr';
-type Category = 'all' | 'entertainment' | 'music' | 'gaming' | 'education' | 'sport' | 'news' | 'comedy';
 
 interface Filters {
-  country: Country;
-  category: Category;
+  country: string;
+  category: string;
   showMusic: boolean;
   showKids: boolean;
 }
@@ -39,63 +41,35 @@ const PERIODS: { key: Period; label: string }[] = [
   { key: 'all', label: 'За всё время' },
 ];
 
-const COUNTRIES: { key: Country; label: string }[] = [
-  { key: 'all', label: 'Все' },
-  { key: 'ru', label: 'Россия' },
-  { key: 'us', label: 'США' },
-  { key: 'kz', label: 'Казахстан' },
-  { key: 'in', label: 'Индия' },
-  { key: 'br', label: 'Бразилия' },
-  { key: 'de', label: 'Германия' },
-  { key: 'fr', label: 'Франция' },
-  { key: 'jp', label: 'Япония' },
-  { key: 'kr', label: 'Корея' },
+const COUNTRIES: { key: string; label: string }[] = [
+  { key: '', label: 'Все' },
+  { key: 'RU', label: 'Россия' },
+  { key: 'US', label: 'США' },
+  { key: 'KZ', label: 'Казахстан' },
+  { key: 'IN', label: 'Индия' },
+  { key: 'BR', label: 'Бразилия' },
+  { key: 'DE', label: 'Германия' },
+  { key: 'GB', label: 'Великобритания' },
+  { key: 'FR', label: 'Франция' },
+  { key: 'JP', label: 'Япония' },
+  { key: 'KR', label: 'Корея' },
 ];
 
-const CATEGORIES: { key: Category; label: string }[] = [
-  { key: 'all', label: 'Все' },
-  { key: 'entertainment', label: 'Развлечения' },
-  { key: 'music', label: 'Музыка' },
-  { key: 'gaming', label: 'Игры' },
-  { key: 'education', label: 'Образование' },
-  { key: 'sport', label: 'Спорт' },
-  { key: 'news', label: 'Новости' },
-  { key: 'comedy', label: 'Юмор' },
-];
-
-/* ── Mock data ───────────────────────────────────────────────────── */
-
-const MOCK_SHORTS: ShortItem[] = [
-  { rank: 1, title: 'Невероятный трюк на скейтборде', views: 45_234_567, uploaded: '2 дня назад', channel: 'SkateVibes', channelAvatar: null, thumbnail: null },
-  { rank: 2, title: 'Котик просто захотел поспать, но...', views: 38_901_234, uploaded: '1 день назад', channel: 'PetFun', channelAvatar: null, thumbnail: null },
-  { rank: 3, title: 'Рецепт за 30 секунд: паста карбонара', views: 32_456_789, uploaded: '3 дня назад', channel: 'QuickChef', channelAvatar: null, thumbnail: null },
-  { rank: 4, title: 'Этот голос поразил всех зрителей', views: 28_765_432, uploaded: '5 дней назад', channel: 'VoiceTalent', channelAvatar: null, thumbnail: null },
-  { rank: 5, title: 'Лайфхак с телефоном, который ты не знал', views: 25_123_456, uploaded: '4 дня назад', channel: 'TechTips', channelAvatar: null, thumbnail: null },
-  { rank: 6, title: 'Танец, который взорвал TikTok и YouTube', views: 22_987_654, uploaded: '6 дней назад', channel: 'DanceWave', channelAvatar: null, thumbnail: null },
-  { rank: 7, title: 'Сделал невозможный бросок в баскетбол', views: 19_876_543, uploaded: '2 дня назад', channel: 'SportsKing', channelAvatar: null, thumbnail: null },
-  { rank: 8, title: 'Как заработать на YouTube Shorts', views: 17_654_321, uploaded: '7 дней назад', channel: 'MoneyTalk', channelAvatar: null, thumbnail: null },
-  { rank: 9, title: 'Собака решила стать поваром', views: 15_432_109, uploaded: '1 день назад', channel: 'AnimalFun', channelAvatar: null, thumbnail: null },
-  { rank: 10, title: 'Магический фокус с картами в метро', views: 14_321_098, uploaded: '3 дня назад', channel: 'MagicShow', channelAvatar: null, thumbnail: null },
-  { rank: 11, title: 'Реакция мамы на мой новый цвет волос', views: 12_876_543, uploaded: '4 дня назад', channel: 'FamilyVibes', channelAvatar: null, thumbnail: null },
-  { rank: 12, title: 'Что будет, если смешать колу и ментос', views: 11_234_567, uploaded: '5 дней назад', channel: 'ScienceFun', channelAvatar: null, thumbnail: null },
-  { rank: 13, title: 'Спел песню незнакомцам на улице', views: 10_987_654, uploaded: '2 дня назад', channel: 'StreetMusic', channelAvatar: null, thumbnail: null },
-  { rank: 14, title: 'Нейросеть нарисовала мой портрет за 10 сек', views: 9_876_543, uploaded: '6 дней назад', channel: 'AIArt', channelAvatar: null, thumbnail: null },
-  { rank: 15, title: 'Самый быстрый кубик Рубика в России', views: 8_765_432, uploaded: '7 дней назад', channel: 'CubeMaster', channelAvatar: null, thumbnail: null },
-  { rank: 16, title: 'Попробовал корейскую уличную еду', views: 7_654_321, uploaded: '3 дня назад', channel: 'FoodTravel', channelAvatar: null, thumbnail: null },
-  { rank: 17, title: 'Паркур по крышам Москвы', views: 6_543_210, uploaded: '4 дня назад', channel: 'UrbanFly', channelAvatar: null, thumbnail: null },
-  { rank: 18, title: 'Мой кот против робота-пылесоса', views: 5_987_654, uploaded: '1 день назад', channel: 'CatVsWorld', channelAvatar: null, thumbnail: null },
-  { rank: 19, title: 'Тест: угадай песню за 1 секунду', views: 5_432_109, uploaded: '5 дней назад', channel: 'MusicQuiz', channelAvatar: null, thumbnail: null },
-  { rank: 20, title: 'Как я прошёл собеседование в Google', views: 4_876_543, uploaded: '6 дней назад', channel: 'CareerPath', channelAvatar: null, thumbnail: null },
-  { rank: 21, title: 'Фитнес-челлендж: 100 приседаний за минуту', views: 4_321_098, uploaded: '2 дня назад', channel: 'FitLife', channelAvatar: null, thumbnail: null },
-  { rank: 22, title: 'Рисую портрет прохожих за 60 секунд', views: 3_876_543, uploaded: '7 дней назад', channel: 'ArtStreet', channelAvatar: null, thumbnail: null },
-  { rank: 23, title: 'Что на самом деле внутри чёрной дыры', views: 3_456_789, uploaded: '3 дня назад', channel: 'SpaceFact', channelAvatar: null, thumbnail: null },
-  { rank: 24, title: 'Сравнение iPhone 17 vs Samsung S27', views: 3_123_456, uploaded: '4 дня назад', channel: 'GadgetWar', channelAvatar: null, thumbnail: null },
-  { rank: 25, title: 'Дрифт на парковке супермаркета', views: 2_876_543, uploaded: '5 дней назад', channel: 'CarDrift', channelAvatar: null, thumbnail: null },
-  { rank: 26, title: 'Учу бабушку играть в Minecraft', views: 2_345_678, uploaded: '1 день назад', channel: 'GameFamily', channelAvatar: null, thumbnail: null },
-  { rank: 27, title: 'Как звучат языки мира: 30 языков за 60 сек', views: 1_987_654, uploaded: '6 дней назад', channel: 'PolyglotPro', channelAvatar: null, thumbnail: null },
-  { rank: 28, title: 'Ночной Дубай с высоты 500 метров', views: 1_543_210, uploaded: '2 дня назад', channel: 'TravelDrone', channelAvatar: null, thumbnail: null },
-  { rank: 29, title: 'Сделал мини-дом из спичек за 24 часа', views: 987_654, uploaded: '7 дней назад', channel: 'CraftKing', channelAvatar: null, thumbnail: null },
-  { rank: 30, title: 'Пробую самые острые чипсы в мире', views: 654_321, uploaded: '3 дня назад', channel: 'FoodChallenge', channelAvatar: null, thumbnail: null },
+const CATEGORIES: { key: string; label: string }[] = [
+  { key: '', label: 'Все' },
+  { key: '1', label: 'Кино' },
+  { key: '2', label: 'Авто' },
+  { key: '10', label: 'Музыка' },
+  { key: '15', label: 'Животные' },
+  { key: '17', label: 'Спорт' },
+  { key: '20', label: 'Игры' },
+  { key: '22', label: 'Люди и блоги' },
+  { key: '23', label: 'Юмор' },
+  { key: '24', label: 'Развлечения' },
+  { key: '25', label: 'Новости' },
+  { key: '26', label: 'Хау-ту и стиль' },
+  { key: '27', label: 'Образование' },
+  { key: '28', label: 'Наука и технологии' },
 ];
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
@@ -227,29 +201,82 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   const [period, setPeriod] = useState<Period>('7d');
   const [filters, setFilters] = useState<Filters>({
-    country: 'all',
-    category: 'all',
+    country: '',
+    category: '',
     showMusic: true,
     showKids: true,
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const [data, setData] = useState<ShortItem[]>([]);
+  const [isMock, setIsMock] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Debounce ref for country/category changes
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch data from API
+  const fetchData = useCallback(async (p: Period, country: string, category: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ period: p });
+      if (country) params.set('country', country);
+      if (category) params.set('category', category);
+
+      const res = await fetch(`/api/tools/shorts-analytics?${params}`);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const json = await res.json();
+      setIsMock(!!json.mock);
+      setData(
+        (json.shorts ?? []).map((s: ShortItem) => ({
+          ...s,
+          videoId: s.videoId ?? '',
+          channelId: s.channelId ?? '',
+          thumbnail: s.thumbnail ?? null,
+        })),
+      );
+      if (json.error) {
+        setError(json.error);
+      }
+    } catch (err) {
+      console.error('[ShortsAnalytics] fetch error:', err);
+      setError('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch on mount and when period changes
+  useEffect(() => {
+    fetchData(period, filters.country, filters.category);
+  }, [period, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounced fetch when country/category changes
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(period, filters.country, filters.category);
+    }, 400);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [filters.country, filters.category]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handlePeriodChange = useCallback((p: Period) => {
     setPeriod(p);
-    setLoading(true);
-    setTimeout(() => setLoading(false), 600);
   }, []);
 
   const handleClearFilters = useCallback(() => {
-    setFilters({ country: 'all', category: 'all', showMusic: true, showKids: true });
+    setFilters({ country: '', category: '', showMusic: true, showKids: true });
   }, []);
 
   const dateRange = useMemo(() => getPeriodRange(period), [period]);
-
-  const data = MOCK_SHORTS;
 
   /* ── Styles ──────────────────────────────────────────── */
 
@@ -257,6 +284,14 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
+      {/* Shimmer animation keyframes */}
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+
       {/* ── Header ────────────────────────────────────────── */}
       <div
         style={{
@@ -299,6 +334,25 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
             >
               Shorts Аналитика
             </h1>
+
+            {/* Mock data badge */}
+            {isMock && !loading && (
+              <div
+                style={{
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  background: isDark ? 'rgba(255,180,0,.15)' : 'rgba(255,180,0,.12)',
+                  border: '1px solid rgba(255,180,0,.3)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: isDark ? '#ffb400' : '#b37a00',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Mock data
+              </div>
+            )}
           </div>
           <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.5 }}>
             Топ YouTube Shorts по просмотрам — находите тренды и вдохновение
@@ -424,7 +478,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
                 <div
                   style={{
-                    maxHeight: filtersOpen ? 400 : 0,
+                    maxHeight: filtersOpen ? 500 : 0,
                     overflow: 'hidden',
                     transition: 'max-height .3s ease',
                   }}
@@ -437,7 +491,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       </label>
                       <select
                         value={filters.country}
-                        onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value as Country }))}
+                        onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}
                         style={{
                           width: '100%',
                           padding: '7px 10px',
@@ -466,7 +520,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       </label>
                       <select
                         value={filters.category}
-                        onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value as Category }))}
+                        onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
                         style={{
                           width: '100%',
                           padding: '7px 10px',
@@ -572,6 +626,23 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
         {/* ── Main table area ──────────────────────────────── */}
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
+          {/* Error banner */}
+          {error && !loading && (
+            <div
+              style={{
+                margin: '12px 14px 0',
+                padding: '8px 14px',
+                borderRadius: 8,
+                background: isDark ? 'rgba(255,60,60,.1)' : 'rgba(255,60,60,.07)',
+                border: '1px solid rgba(255,60,60,.2)',
+                fontSize: 12,
+                color: isDark ? '#ff8080' : '#cc3333',
+              }}
+            >
+              {error}
+            </div>
+          )}
+
           <table
             style={{
               width: '100%',
@@ -616,13 +687,19 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 Array.from({ length: 10 }).map((_, i) => (
                   <SkeletonRow key={i} surface={C.surface} card={C.card} />
                 ))
+              ) : data.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: '48px 14px', textAlign: 'center', color: C.sub, fontSize: 14 }}>
+                    Нет данных для отображения
+                  </td>
+                </tr>
               ) : (
                 data.map((item, idx) => {
                   const isHovered = hoveredRow === item.rank;
                   const isEven = idx % 2 === 0;
                   return (
                     <tr
-                      key={item.rank}
+                      key={`${item.videoId}-${item.rank}`}
                       onMouseEnter={() => setHoveredRow(item.rank)}
                       onMouseLeave={() => setHoveredRow(null)}
                       style={{
@@ -632,7 +709,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                             ? 'transparent'
                             : isDark ? 'rgba(255,255,255,.015)' : 'rgba(0,0,0,.015)',
                         transition: 'background .15s ease',
-                        cursor: 'pointer',
                       }}
                     >
                       {/* Rank */}
@@ -652,48 +728,99 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       {/* Video */}
                       <td style={{ padding: '12px 14px' }}>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          {/* Thumbnail placeholder */}
-                          <div
-                            style={{
-                              width: 120,
-                              height: 68,
-                              borderRadius: 8,
-                              background: isDark
-                                ? `linear-gradient(135deg, ${C.card}, ${C.cardHover})`
-                                : `linear-gradient(135deg, #e8e8ed, #d8d8e0)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              position: 'relative',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {/* Play icon */}
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.3 }}>
-                              <path d="M8 5V19L19 12L8 5Z" fill={C.sub} />
-                            </svg>
-                            {/* Shorts badge */}
-                            <div
+                          {/* Thumbnail */}
+                          {item.thumbnail ? (
+                            <a
+                              href={`https://youtube.com/shorts/${item.videoId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               style={{
-                                position: 'absolute',
-                                bottom: 4,
-                                right: 4,
-                                padding: '2px 5px',
-                                borderRadius: 4,
-                                background: 'rgba(255,0,0,.85)',
-                                color: '#fff',
-                                fontSize: 8,
-                                fontWeight: 700,
-                                letterSpacing: '.03em',
+                                width: 120,
+                                height: 68,
+                                borderRadius: 8,
+                                flexShrink: 0,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                display: 'block',
                               }}
                             >
-                              SHORTS
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={item.thumbnail}
+                                alt={item.title}
+                                loading="lazy"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  borderRadius: 8,
+                                  display: 'block',
+                                }}
+                              />
+                              {/* Shorts badge */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  bottom: 4,
+                                  right: 4,
+                                  padding: '2px 5px',
+                                  borderRadius: 4,
+                                  background: 'rgba(255,0,0,.85)',
+                                  color: '#fff',
+                                  fontSize: 8,
+                                  fontWeight: 700,
+                                  letterSpacing: '.03em',
+                                }}
+                              >
+                                SHORTS
+                              </div>
+                            </a>
+                          ) : (
+                            <div
+                              style={{
+                                width: 120,
+                                height: 68,
+                                borderRadius: 8,
+                                background: isDark
+                                  ? `linear-gradient(135deg, ${C.card}, ${C.cardHover})`
+                                  : `linear-gradient(135deg, #e8e8ed, #d8d8e0)`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                position: 'relative',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {/* Play icon */}
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.3 }}>
+                                <path d="M8 5V19L19 12L8 5Z" fill={C.sub} />
+                              </svg>
+                              {/* Shorts badge */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  bottom: 4,
+                                  right: 4,
+                                  padding: '2px 5px',
+                                  borderRadius: 4,
+                                  background: 'rgba(255,0,0,.85)',
+                                  color: '#fff',
+                                  fontSize: 8,
+                                  fontWeight: 700,
+                                  letterSpacing: '.03em',
+                                }}
+                              >
+                                SHORTS
+                              </div>
                             </div>
-                          </div>
+                          )}
 
-                          {/* Title */}
-                          <span
+                          {/* Title - clickable */}
+                          <a
+                            href={`https://youtube.com/shorts/${item.videoId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             style={{
                               fontSize: 13.5,
                               fontWeight: 500,
@@ -705,10 +832,13 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                               display: '-webkit-box',
                               WebkitLineClamp: 2,
                               WebkitBoxOrient: 'vertical',
+                              textDecoration: 'none',
                             }}
+                            onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                            onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
                           >
                             {item.title}
-                          </span>
+                          </a>
                         </div>
                       </td>
 
@@ -759,19 +889,42 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           >
                             {item.channel[0]}
                           </div>
-                          <span
-                            style={{
-                              fontSize: 12.5,
-                              fontWeight: 500,
-                              color: C.text,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: 140,
-                            }}
-                          >
-                            {item.channel}
-                          </span>
+                          {/* Channel name - clickable */}
+                          {item.channelId ? (
+                            <a
+                              href={`https://youtube.com/channel/${item.channelId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: 12.5,
+                                fontWeight: 500,
+                                color: C.text,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: 140,
+                                textDecoration: 'none',
+                              }}
+                              onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                              onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+                            >
+                              {item.channel}
+                            </a>
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: 12.5,
+                                fontWeight: 500,
+                                color: C.text,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: 140,
+                              }}
+                            >
+                              {item.channel}
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
