@@ -46,15 +46,17 @@ export async function GET(req: NextRequest) {
       { next: { revalidate: 3600 } },
     );
     if (!searchRes.ok) {
-      const err = await searchRes.json().catch(() => ({}));
-      console.error('[shorts-analytics] Search API error:', err);
+      const errText = await searchRes.text().catch(() => '');
+      console.error('[shorts-analytics] Search API error:', searchRes.status, errText);
       return NextResponse.json({
         mock: true,
         shorts: getMockData(),
-        error: 'YouTube API error',
+        error: `YouTube API error: ${searchRes.status}`,
+        debug: errText.substring(0, 200),
       });
     }
     const searchData = await searchRes.json();
+    console.log('[shorts-analytics] Search returned', searchData.items?.length ?? 0, 'items');
 
     const videoIds = (searchData.items ?? [])
       .map((item: Record<string, unknown>) => {
@@ -65,7 +67,8 @@ export async function GET(req: NextRequest) {
       .join(',');
 
     if (!videoIds) {
-      return NextResponse.json({ mock: false, shorts: [] });
+      console.warn('[shorts-analytics] No video IDs found in search results');
+      return NextResponse.json({ mock: true, shorts: getMockData(), error: 'No shorts found for this period' });
     }
 
     // Step 2: Get video statistics (views, duration)
@@ -102,8 +105,8 @@ export async function GET(req: NextRequest) {
       .map((v: YouTubeVideo) => {
         const views = parseInt(v.statistics?.viewCount ?? '0', 10);
         const dur = parseDuration(v.contentDetails?.duration ?? '');
-        // Only include actual Shorts (< 60 seconds) - filter out longer "short" videos
-        if (dur > 60) return null;
+        // Only include actual Shorts (< 180 seconds) - YouTube Shorts can be up to 3 min
+        if (dur > 180) return null;
         return {
           rank: 0,
           videoId: v.id,
