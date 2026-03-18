@@ -73,16 +73,43 @@ interface FrameSlotProps {
   onChange: (dataUrl: string | null) => void;
 }
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+
 function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFile = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      setError(null);
+
+      // Validate file type
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        setError('Неверный формат');
+        e.target.value = '';
+        return;
+      }
+
+      // Validate file size
+      if (file.size > MAX_IMAGE_SIZE) {
+        setError('Макс. 10 МБ');
+        e.target.value = '';
+        return;
+      }
+
+      setIsLoading(true);
       const reader = new FileReader();
       reader.onload = () => {
         onChange(reader.result as string);
+        setIsLoading(false);
+      };
+      reader.onerror = () => {
+        setError('Ошибка чтения');
+        setIsLoading(false);
       };
       reader.readAsDataURL(file);
       // Reset so same file can be re-selected
@@ -120,7 +147,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
           transition: 'border-color .15s, background .15s',
         }}
         onClick={() => {
-          if (!value) inputRef.current?.click();
+          if (!value && !isLoading) inputRef.current?.click();
         }}
         onMouseEnter={(e) => {
           if (!value) {
@@ -135,7 +162,22 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
           }
         }}
       >
-        {value ? (
+        {isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <span
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                border: `2px solid ${accentCol}33`,
+                borderTopColor: accentCol,
+                animation: 'spin .8s linear infinite',
+                display: 'inline-block',
+              }}
+            />
+            <span style={{ fontSize: 8, color: C.dim, fontWeight: 500 }}>Загрузка...</span>
+          </div>
+        ) : value ? (
           <>
             <img
               src={value}
@@ -152,6 +194,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(null);
+                setError(null);
               }}
               style={{
                 position: 'absolute',
@@ -214,8 +257,8 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
           </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <span style={{ fontSize: 22, color: C.dim, lineHeight: 1 }}>+</span>
-            <span style={{ fontSize: 8, color: C.dim, fontWeight: 500 }}>Загрузить</span>
+            <span style={{ fontSize: 22, color: error ? C.accent : C.dim, lineHeight: 1 }}>{error ? '!' : '+'}</span>
+            <span style={{ fontSize: 8, color: error ? C.accent : C.dim, fontWeight: 500 }}>{error || 'Загрузить'}</span>
           </div>
         )}
         <input
@@ -424,12 +467,13 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
         top: 0,
         left: 168,
         width: 280,
+        maxWidth: 'calc(100vw - 200px)',
         background: C.card,
         border: `1px solid ${C.border}`,
         borderRadius: 12,
         boxShadow: '0 12px 40px rgba(0,0,0,.35)',
         zIndex: 50,
-        overflow: 'hidden',
+        overflow: 'visible',
       }}
     >
       {/* Header */}
@@ -460,7 +504,10 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
             alignItems: 'center',
             justifyContent: 'center',
             fontFamily: 'inherit',
+            transition: 'all .15s',
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; (e.currentTarget as HTMLElement).style.color = C.text; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
         >
           &#10005;
         </button>
@@ -768,10 +815,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Auto-resize prompt textarea
   const autoResize = useCallback((el: HTMLTextAreaElement) => {
     el.style.height = 'auto';
-    const lineHeight = 20;
-    const maxLines = 3;
-    const maxH = lineHeight * maxLines + 16; // padding
-    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    const maxH = 96; // matches maxHeight on the textarea
+    const sh = el.scrollHeight;
+    el.style.height = Math.min(sh, maxH) + 'px';
+    el.style.overflowY = sh > maxH ? 'auto' : 'hidden';
   }, []);
 
   /* --- Computed (memoized) --- */
@@ -927,6 +974,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         {/* Undo / Redo */}
         <div style={{ display: 'flex', gap: 2 }}>
           <button
+            className={historyLen > 0 ? 'ed-action-btn' : undefined}
             onClick={undo}
             disabled={historyLen === 0}
             title="Отменить (Ctrl+Z)"
@@ -951,6 +999,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             &#8617;
           </button>
           <button
+            className={futureLen > 0 ? 'ed-action-btn' : undefined}
             onClick={redo}
             disabled={futureLen === 0}
             title="Повторить (Ctrl+Shift+Z)"
@@ -978,6 +1027,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
         {/* Export / Generate pill */}
         <button
+          className="ed-gen-btn"
           onClick={handleGenerate}
           disabled={!sel || !sel.prompt.trim() || isGenerating}
           style={{
@@ -1088,6 +1138,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           {/* Scrollable scene list */}
           <div
             ref={sceneListRef}
+            className="ed-scene-list"
             style={{
               flex: 1,
               minHeight: 0,
@@ -1097,10 +1148,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
+              scrollBehavior: 'smooth',
             }}
           >
             {scenes.length === 0 ? (
               <div
+                onClick={() => addScene()}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -1108,7 +1161,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   justifyContent: 'center',
                   padding: '32px 12px',
                   gap: 8,
+                  cursor: 'pointer',
+                  borderRadius: 10,
+                  transition: 'background .15s',
                 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
               >
                 <div
                   style={{
@@ -1121,12 +1179,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     justifyContent: 'center',
                     fontSize: 18,
                     color: C.accent,
+                    transition: 'background .15s',
                   }}
                 >
                   +
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, textAlign: 'center' }}>
-                  Добавьте сцену
+                  Нажмите, чтобы добавить сцену
                 </span>
               </div>
             ) : (
@@ -1190,11 +1249,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 }}
               >
                 <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>Удалить сцену?</span>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 10, color: C.sub }}>Это действие нельзя отменить</span>
+                <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                   <button
                     onClick={() => handleSceneConfirmDelete(confirmDel)}
                     style={{
-                      padding: '5px 16px',
+                      padding: '6px 20px',
                       borderRadius: 8,
                       border: 'none',
                       background: C.accent,
@@ -1203,14 +1263,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       fontWeight: 600,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
+                      transition: 'all .15s',
                     }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                   >
-                    Да
+                    Удалить
                   </button>
                   <button
                     onClick={handleSceneCancelDelete}
                     style={{
-                      padding: '5px 16px',
+                      padding: '6px 20px',
                       borderRadius: 8,
                       border: `1px solid ${C.border}`,
                       background: C.card,
@@ -1219,9 +1282,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       fontWeight: 600,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
+                      transition: 'all .15s',
                     }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; (e.currentTarget as HTMLElement).style.color = C.text; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; (e.currentTarget as HTMLElement).style.color = C.sub; }}
                   >
-                    Нет
+                    Отмена
                   </button>
                 </div>
               </div>
@@ -1475,7 +1541,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </div>
               </div>
 
-              {/* ── Playback controls ── */}
+              {/* ── Playback controls / info bar ── */}
               <div
                 style={{
                   display: 'flex',
@@ -1486,29 +1552,34 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   flexShrink: 0,
                 }}
               >
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    border: `1px solid ${C.border}`,
-                    background: C.surface,
-                    color: C.text,
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'inherit',
-                    transition: 'all .15s',
-                  }}
-                  title={isPlaying ? 'Пауза' : 'Воспроизвести'}
-                >
-                  {isPlaying ? '||' : '\u25B6'}
-                </button>
+                {sel.status === 'ready' ? (
+                  <button
+                    className="ed-action-btn"
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      border: `1px solid ${C.border}`,
+                      background: C.surface,
+                      color: C.text,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'inherit',
+                      transition: 'all .15s',
+                    }}
+                    title={isPlaying ? 'Пауза' : 'Воспроизвести'}
+                  >
+                    {isPlaying ? '\u23F8' : '\u25B6'}
+                  </button>
+                ) : (
+                  <StatusDot status={sel.status} C={C} size={7} />
+                )}
                 <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.sub, fontWeight: 500 }}>
-                  00:00 / {fmtDur(sel.duration)}
+                  {sel.status === 'ready' ? `00:00 / ${fmtDur(sel.duration)}` : (STATUS_CFG[sel.status]?.label || 'Пусто')}
                 </span>
                 <div style={{ flex: 1 }} />
                 {/* Model badge */}
@@ -1553,6 +1624,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </span>
               {scenes.length === 0 && (
                 <button
+                  className="ed-gen-btn"
                   onClick={() => addScene()}
                   style={{
                     marginTop: 4,
@@ -1565,6 +1637,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
+                    transition: 'all .2s',
+                    boxShadow: `0 4px 16px ${C.accent}40`,
                   }}
                 >
                   + Добавить сцену
@@ -1600,20 +1674,22 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           >
             {/* Scene action buttons */}
             <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-              <button onClick={() => dupScene(sel.id)} title="Дублировать сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}>
+              <button className="ed-action-btn" onClick={() => dupScene(sel.id)} title="Дублировать сцену" style={tinyBtnStyle(C, false)}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
-              <button onClick={() => addScene(sel.id)} title="Добавить сцену" style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}>
+              <button className="ed-action-btn" onClick={() => addScene(sel.id)} title="Добавить сцену после" style={tinyBtnStyle(C, false)}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
-              <button onClick={() => setShowSettings(!showSettings)} title="Настройки сцены" style={{ ...tinyBtnStyle(C, showSettings), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0 }}>
+              <button className="ed-action-btn" onClick={() => setShowSettings(!showSettings)} title="Настройки сцены" style={tinyBtnStyle(C, showSettings)}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
               </button>
               <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
               <button
-                onClick={() => { if (scenes.length > 1) handleSceneRequestDelete(sel.id); }}
-                title="Удалить сцену"
-                style={{ ...tinyBtnStyle(C, false), display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, padding: 0, color: scenes.length <= 1 ? C.dim : C.accent, opacity: scenes.length <= 1 ? 0.3 : 1, cursor: scenes.length <= 1 ? 'not-allowed' : 'pointer' }}
+                className={scenes.length > 1 && !isGenerating ? 'ed-action-btn' : undefined}
+                onClick={() => { if (scenes.length > 1 && !isGenerating) handleSceneRequestDelete(sel.id); }}
+                disabled={scenes.length <= 1 || isGenerating}
+                title={scenes.length <= 1 ? 'Нельзя удалить единственную сцену' : isGenerating ? 'Нельзя удалить во время генерации' : 'Удалить сцену'}
+                style={{ ...tinyBtnStyle(C, false), color: (scenes.length <= 1 || isGenerating) ? C.dim : C.accent, opacity: (scenes.length <= 1 || isGenerating) ? 0.3 : 1, cursor: (scenes.length <= 1 || isGenerating) ? 'not-allowed' : 'pointer' }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
               </button>
@@ -1660,7 +1736,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     handleGenerate();
                   }
                 }}
-                placeholder="Опишите, что происходит в сцене..."
+                placeholder="Опишите, что должно происходить в сцене: действие, персонажи, атмосфера, стиль..."
                 maxLength={2000}
                 style={{
                   flex: 1,
@@ -1679,8 +1755,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, paddingBottom: 1 }}>
-                <span style={{ fontSize: 9, color: sel.prompt.length > 1800 ? C.accent : C.dim, fontFamily: "'JetBrains Mono', monospace" }}>
-                  {sel.prompt.length > 0 ? `${sel.prompt.length}/2000` : ''}
+                <span style={{ fontSize: 9, color: sel.prompt.length > 1800 ? C.accent : sel.prompt.length > 0 ? C.sub : C.dim, fontFamily: "'JetBrains Mono', monospace", fontWeight: sel.prompt.length > 1800 ? 600 : 400 }}>
+                  {sel.prompt.length}/2000
                 </span>
                 <span
                   style={{
@@ -1721,6 +1797,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             return (
               <div
                 key={sc.id}
+                className="ed-timeline-tab"
                 draggable
                 onDragStart={() => handleSceneDragStart(sc.id)}
                 onDragEnter={() => handleSceneDragEnter(sc.id)}
@@ -1744,7 +1821,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   overflow: 'hidden',
                   opacity: dragId === sc.id ? 0.4 : 1,
                 }}
-                title={`${sc.label} - ${fmtDur(sc.duration)}`}
+                title={`${sc.label} — ${fmtDur(sc.duration)}`}
               >
                 {/* Color bar at bottom */}
                 <div
@@ -1809,9 +1886,19 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         </div>
       </div>
 
-      {/* ── Global hover styles ── */}
+      {/* ── Global hover styles + keyframes ── */}
       <style>{`
-        .scene-thumb:hover { opacity: 0.85; }
+        .scene-thumb:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .scene-thumb { transition: all .15s ease !important; }
+        .ed-action-btn:hover { background: ${C.cardHover} !important; border-color: ${C.borderActive} !important; color: ${C.text} !important; }
+        .ed-timeline-tab:hover { border-color: ${C.borderActive} !important; }
+        .ed-gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px ${C.accent}55 !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .ed-scene-list::-webkit-scrollbar { width: 4px; }
+        .ed-scene-list::-webkit-scrollbar-track { background: transparent; }
+        .ed-scene-list::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
+        .ed-scene-list::-webkit-scrollbar-thumb:hover { background: ${C.dim}; }
       `}</style>
     </div>
   );
@@ -1851,8 +1938,8 @@ function compactInputStyle(C: Theme): React.CSSProperties {
 
 function tinyBtnStyle(C: Theme, active: boolean): React.CSSProperties {
   return {
-    width: 26,
-    height: 26,
+    width: 28,
+    height: 28,
     borderRadius: 6,
     border: `1px solid ${active ? C.accent + '55' : C.border}`,
     background: active ? C.accent + '10' : 'transparent',
@@ -1864,6 +1951,7 @@ function tinyBtnStyle(C: Theme, active: boolean): React.CSSProperties {
     justifyContent: 'center',
     fontFamily: 'inherit',
     lineHeight: 1,
+    padding: 0,
     transition: 'all .15s',
   };
 }
