@@ -298,7 +298,7 @@ export const Sidebar = memo(function Sidebar() {
     }
   }, [shouldAutoCollapse]);
 
-  const userName = session?.user?.name ?? 'Пользователь';
+  const userName = session?.user?.name ?? t('common.user');
   const initials = userName
     .split(' ')
     .map((w) => w[0])
@@ -306,7 +306,7 @@ export const Sidebar = memo(function Sidebar() {
     .slice(0, 2)
     .toUpperCase();
   const plan = session?.user?.plan ?? 'FREE';
-  const planLabel = ({ FREE: 'Бесплатный', PRO: 'Pro', STUDIO: 'Studio' } as Record<string, string>)[plan] ?? plan;
+  const planLabel = ({ FREE: t('common.free'), PRO: t('common.pro'), STUDIO: t('common.studio') } as Record<string, string>)[plan] ?? plan;
   const role = session?.user?.role ?? 'USER';
 
   const W = collapsed ? 68 : 240;
@@ -661,8 +661,8 @@ export const Sidebar = memo(function Sidebar() {
         {!collapsed && (
           <button
             onClick={() => setCollapsed(true)}
-            title="Свернуть"
-            aria-label="Свернуть боковую панель"
+            title={t('sidebar.collapse')}
+            aria-label={t('sidebar.collapseLabel')}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
               e.currentTarget.style.transform = 'scale(1.05)';
@@ -696,8 +696,8 @@ export const Sidebar = memo(function Sidebar() {
         <div style={{ padding: '0 0 4px', display: 'flex', justifyContent: 'center' }}>
           <button
             onClick={() => setCollapsed(false)}
-            title="Развернуть"
-            aria-label="Развернуть боковую панель"
+            title={t('sidebar.expand')}
+            aria-label={t('sidebar.expandLabel')}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
               e.currentTarget.style.transform = 'scale(1.05)';
@@ -746,7 +746,7 @@ export const Sidebar = memo(function Sidebar() {
             }}
             role="button"
             tabIndex={0}
-            aria-label="Поиск (⌘K)"
+            aria-label={t('sidebar.searchLabel')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -771,7 +771,7 @@ export const Sidebar = memo(function Sidebar() {
                 userSelect: 'none',
               }}
             >
-              Поиск...
+              {t('sidebar.search')}
             </span>
             <kbd
               style={{
@@ -856,7 +856,7 @@ export const Sidebar = memo(function Sidebar() {
               letterSpacing: '-.01em',
             }}
           >
-            Перейти на Pro
+            {t('sidebar.upgrade')}
           </div>
           <div
             style={{
@@ -866,7 +866,7 @@ export const Sidebar = memo(function Sidebar() {
               marginBottom: 10,
             }}
           >
-            Безлимитная ИИ-генерация и приоритетная поддержка
+            {t('sidebar.upgradeDesc')}
           </div>
           <button
             onClick={() => navigate('billing')}
@@ -894,14 +894,14 @@ export const Sidebar = memo(function Sidebar() {
               letterSpacing: '-.01em',
             }}
           >
-            Улучшить план
+            {t('sidebar.upgradeCta')}
           </button>
         </div>
       )}
 
       {/* Collapsed upgrade hint */}
       {plan === 'FREE' && collapsed && (
-        <Tooltip label="Перейти на Pro" show={hoveredId === '_upgrade'}>
+        <Tooltip label={t('sidebar.upgrade')} show={hoveredId === '_upgrade'}>
           <div
             style={{
               display: 'flex',
@@ -1073,8 +1073,8 @@ export const Sidebar = memo(function Sidebar() {
             {/* Settings gear */}
             <button
               onClick={() => navigate('settings')}
-              title="Настройки"
-              aria-label="Настройки"
+              title={t('sidebar.settingsLabel')}
+              aria-label={t('sidebar.settingsLabel')}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = isDark
                   ? 'rgba(255,255,255,.08)'
@@ -1106,8 +1106,8 @@ export const Sidebar = memo(function Sidebar() {
             {/* Logout */}
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
-              title="Выйти"
-              aria-label="Выйти из аккаунта"
+              title={t('sidebar.logout')}
+              aria-label={t('sidebar.logoutLabel')}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = isDark
                   ? 'rgba(255,45,85,.12)'
@@ -1140,7 +1140,7 @@ export const Sidebar = memo(function Sidebar() {
 
         {/* Collapsed user actions */}
         {collapsed && (
-          <Tooltip label="Выйти" show={hoveredId === '_logout'}>
+          <Tooltip label={t('sidebar.logout')} show={hoveredId === '_logout'}>
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
               onMouseEnter={() => handleMouseEnter('_logout')}

@@ -165,8 +165,8 @@ export const TopBar = memo(function TopBar() {
   return (
     <div style={{ height: 44, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, background: C.surface, flexShrink: 0 }}>
       {isEditor && (
-        <button title="Вернуться на дашборд" onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-          {'\u2190'} Назад
+        <button title={t('nav.dashboard')} onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          {'\u2190'} {t('common.back')}
         </button>
       )}
       {isEditor && <div style={{ height: 16, width: 1, background: C.border }} />}
@@ -357,7 +357,7 @@ export const TopBar = memo(function TopBar() {
       </div>
 
       {/* Theme toggle */}
-      <button title="Переключить тему" aria-label={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'} onClick={toggle} onMouseEnter={(e) => handleBtnHover(e, true)} onMouseLeave={(e) => handleBtnHover(e, false)} style={btnBase}>
+      <button title={isDark ? t('settings.light') : t('settings.dark')} aria-label={isDark ? t('settings.light') : t('settings.dark')} onClick={toggle} onMouseEnter={(e) => handleBtnHover(e, true)} onMouseLeave={(e) => handleBtnHover(e, false)} style={btnBase}>
         {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'}
       </button>
 

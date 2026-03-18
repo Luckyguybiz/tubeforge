@@ -34,11 +34,14 @@ const PLAN_FEATURES: Record<string, string[]> = {
   ],
 };
 
-const PLAN_LABEL: Record<string, string> = {
-  FREE: 'Бесплатный',
-  PRO: 'Pro',
-  STUDIO: 'Studio',
-};
+function getPlanLabel(plan: string, t: (key: string) => string): string {
+  const map: Record<string, string> = {
+    FREE: t('common.free'),
+    PRO: t('common.pro'),
+    STUDIO: t('common.studio'),
+  };
+  return map[plan] ?? plan;
+}
 
 const PLAN_LIMITS: Record<string, { projects: number; ai: number }> = {
   FREE: { projects: 3, ai: 5 },
@@ -62,7 +65,7 @@ export default function SettingsPage() {
   const subscription = trpc.billing.getSubscription.useQuery();
 
   const updateProfile = trpc.user.updateProfile.useMutation({
-    onSuccess: () => toast.success('Профиль обновлён'),
+    onSuccess: () => toast.success(t('settings.profile') + ' \u2714'),
     onError: (err) => toast.error(err.message),
   });
 
@@ -228,11 +231,11 @@ export default function SettingsPage() {
                     <label htmlFor="settings-name" style={labelStyle}>{t('settings.name')}</label>
                     <input
                       id="settings-name"
-                      aria-label="Имя пользователя"
+                      aria-label={t('settings.name')}
                       maxLength={50}
                       style={inputStyle}
                       defaultValue={userName}
-                      placeholder="Введите имя"
+                      placeholder={t('settings.name')}
                       onBlur={handleNameBlur}
                     />
                     <span style={{ fontSize: 11, color: C.dim, marginTop: 4, display: 'block' }}>
@@ -244,7 +247,7 @@ export default function SettingsPage() {
                     <div style={{ position: 'relative' }}>
                       <input
                         id="settings-email"
-                        aria-label="Электронная почта (только чтение)"
+                        aria-label={t('settings.email')}
                         aria-readonly="true"
                         style={readOnlyInputStyle}
                         value={userEmail}
@@ -376,7 +379,7 @@ export default function SettingsPage() {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 18, fontWeight: 700, color: C.text }}>
-                    {PLAN_LABEL[plan] ?? plan}
+                    {getPlanLabel(plan, t)}
                   </span>
                   <span style={{
                     padding: '3px 10px',
@@ -399,9 +402,9 @@ export default function SettingsPage() {
                   </span>
                 </div>
                 <div style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>
-                  {plan === 'FREE' && '3 проекта, 5 ИИ-генераций в месяц'}
-                  {plan === 'PRO' && '25 проектов, 100 ИИ-генераций в месяц'}
-                  {plan === 'STUDIO' && 'Безлимитные проекты и ИИ-генерации'}
+                  {plan === 'FREE' && t('settings.planDescFree')}
+                  {plan === 'PRO' && t('settings.planDescPro')}
+                  {plan === 'STUDIO' && t('settings.planDescStudio')}
                 </div>
               </div>
             </div>
@@ -466,12 +469,12 @@ export default function SettingsPage() {
               }}>
                 {plan === 'FREE' && (
                   <>
-                    <strong style={{ color: C.blue }}>Pro</strong> — 25 проектов, 100 ИИ-генераций, приоритетная генерация, экспорт без водяного знака.
+                    <strong style={{ color: C.blue }}>Pro</strong> — {t('settings.planDescPro')}
                   </>
                 )}
                 {plan === 'PRO' && (
                   <>
-                    <strong style={{ color: C.purple }}>Studio</strong> — безлимитные проекты и ИИ, командная работа, API-доступ, приоритетная поддержка.
+                    <strong style={{ color: C.purple }}>Studio</strong> — {t('settings.planDescStudio')}
                   </>
                 )}
               </div>
@@ -647,7 +650,7 @@ export default function SettingsPage() {
               {t('settings.noChannels')}
             </p>
             <p style={{ color: C.sub, fontSize: 13, marginBottom: 20, maxWidth: 320, margin: '0 auto 20px' }}>
-              Подключите YouTube-канал, чтобы публиковать видео и отслеживать аналитику прямо из TubeForge
+              {t('settings.noChannelsDesc')}
             </p>
             <button
               disabled={true}
@@ -940,7 +943,7 @@ export default function SettingsPage() {
                 onChange={(e) => setDeleteInput(e.target.value)}
                 placeholder="DELETE"
                 autoFocus
-                aria-label="Введите DELETE для подтверждения удаления"
+                aria-label={t('settings.deleteConfirm')}
                 style={{
                   padding: '10px 14px',
                   borderRadius: 8,

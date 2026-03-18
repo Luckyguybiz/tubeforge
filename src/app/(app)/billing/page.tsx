@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
+import { trpc } from '@/lib/trpc';
+import { toast } from '@/stores/useNotificationStore';
 
 /* ── Icons ─────────────────────────────────────────────────────────── */
 
@@ -52,98 +55,116 @@ interface DealDef {
   highlight?: boolean;
 }
 
-/* ── Data ──────────────────────────────────────────────────────────── */
+/* ── Data (uses t() for translatable labels) ──────────────────────── */
 
-const PLANS: PlanDef[] = [
-  {
-    id: 'FREE',
-    name: 'Бесплатный',
-    price: 0,
-    priceLabel: '0\u20BD/мес',
-    features: [
-      '3 проекта',
-      '5 ИИ-генераций/день',
-      '720p экспорт',
-      'Базовые обложки',
-      'Водяной знак',
-    ],
-    buttonLabel: 'Текущий план',
-  },
-  {
-    id: 'PRO',
-    name: 'Pro',
-    price: 990,
-    priceLabel: '990\u20BD/мес',
-    badge: 'Популярный',
-    badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
-    features: [
-      'Безлимит проектов',
-      '50 ИИ-генераций/день',
-      '1080p экспорт',
-      'Продвинутые обложки',
-      'SEO-оптимизатор',
-      'Без водяного знака',
-      'Приоритетная поддержка',
-    ],
-    buttonLabel: 'Выбрать Pro',
-    buttonGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
-    highlight: true,
-  },
-  {
-    id: 'STUDIO',
-    name: 'Studio',
-    price: 2490,
-    priceLabel: '2490\u20BD/мес',
-    features: [
-      'Всё из Pro',
-      'Безлимит ИИ-генераций',
-      '4K экспорт',
-      'Командный доступ (5 чел.)',
-      'API доступ',
-      'Белый лейбл',
-      'Персональный менеджер',
-    ],
-    buttonLabel: 'Выбрать Studio',
-    buttonGradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-  },
-];
+function getPlans(t: (key: string) => string): PlanDef[] {
+  return [
+    {
+      id: 'FREE',
+      name: t('billing.planFree'),
+      price: 0,
+      priceLabel: '0\u20BD',
+      features: [
+        '3 projects',
+        '5 AI gen/day',
+        '720p export',
+        'Basic thumbnails',
+        'Watermark',
+      ],
+      buttonLabel: t('billing.currentPlanBtn'),
+    },
+    {
+      id: 'PRO',
+      name: 'Pro',
+      price: 990,
+      priceLabel: '990\u20BD',
+      badge: t('billing.popular'),
+      badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
+      features: [
+        '\u221E projects',
+        '50 AI gen/day',
+        '1080p export',
+        'Advanced thumbnails',
+        'SEO optimizer',
+        'No watermark',
+        'Priority support',
+      ],
+      buttonLabel: t('billing.planPro'),
+      buttonGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
+      highlight: true,
+    },
+    {
+      id: 'STUDIO',
+      name: 'Studio',
+      price: 2490,
+      priceLabel: '2490\u20BD',
+      features: [
+        'All Pro features',
+        '\u221E AI generations',
+        '4K export',
+        'Team access (5)',
+        'API access',
+        'White label',
+        'Personal manager',
+      ],
+      buttonLabel: t('billing.planStudio'),
+      buttonGradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    },
+  ];
+}
 
-const DEALS: DealDef[] = [
-  {
-    id: 'lifetime-credits',
-    title: 'Пожизненный Кредит-Пак',
-    description: 'Эти кредиты добавляются к вашей подписке и никогда не истекают.',
-    details: [
-      '100 workflow кредитов',
-      '200 AI Image кредитов',
-      '30 озвучек',
-      '30 экспортов',
-    ],
-    price: 890,
-    originalPrice: 1990,
-    highlight: true,
-  },
-  {
-    id: 'consultation',
-    title: '1:1 Консультация с экспертом',
-    description: 'Персональная видеоконсультация по YouTube-стратегии.',
-    price: 4900,
-    originalPrice: 9900,
-  },
-];
+function getDeals(): DealDef[] {
+  return [
+    {
+      id: 'lifetime-credits',
+      title: 'Lifetime Credit Pack',
+      description: 'Credits added to your subscription that never expire.',
+      details: [
+        '100 workflow credits',
+        '200 AI Image credits',
+        '30 voiceovers',
+        '30 exports',
+      ],
+      price: 890,
+      originalPrice: 1990,
+      highlight: true,
+    },
+    {
+      id: 'consultation',
+      title: '1:1 Expert Consultation',
+      description: 'Personal video consultation on YouTube strategy.',
+      price: 4900,
+      originalPrice: 9900,
+    },
+  ];
+}
 
 /* ── Main Component ────────────────────────────────────────────────── */
 
 export default function BillingPage() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const { data: session } = useSession();
 
   const userPlan: PlanId = (session?.user?.plan as PlanId) ?? 'FREE';
 
+  const createCheckout = trpc.billing.createCheckout.useMutation({
+    onSuccess: (data) => { if (data.url) window.location.href = data.url; },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const createPortal = trpc.billing.createPortal.useMutation({
+    onSuccess: (data) => { if (data.url) window.location.href = data.url; },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const PLANS = useMemo(() => getPlans(t), [t]);
+  const DEALS = useMemo(() => getDeals(), []);
+
   const [selectedPlan, setSelectedPlan] = useState<PlanId>(userPlan);
-  const [selectedDeals, setSelectedDeals] = useState<boolean[]>(DEALS.map(() => false));
+  const [selectedDeals, setSelectedDeals] = useState<boolean[]>(() => DEALS.map(() => false));
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -230,7 +251,7 @@ export default function BillingPage() {
             }}
           >
             <ArrowLeftIcon color={C.sub} />
-            <span>Назад</span>
+            <span>{t('billing.back')}</span>
           </button>
 
           <h1
@@ -242,7 +263,7 @@ export default function BillingPage() {
               color: C.text,
             }}
           >
-            Тарифы и оплата
+            {t('billing.title')}
           </h1>
           <p
             style={{
@@ -252,7 +273,7 @@ export default function BillingPage() {
               lineHeight: 1.5,
             }}
           >
-            Управляйте подпиской, выбирайте тариф и получайте эксклюзивные предложения
+            {t('billing.subtitle')}
           </p>
         </div>
 
@@ -296,7 +317,7 @@ export default function BillingPage() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
-                      Текущий план
+                      {t('billing.currentPlan')}
                     </span>
                     <span
                       style={{
@@ -312,17 +333,16 @@ export default function BillingPage() {
                         letterSpacing: '.02em',
                       }}
                     >
-                      {userPlan === 'FREE' ? 'Бесплатный' : userPlan === 'PRO' ? 'Pro' : 'Studio'}
+                      {userPlan === 'FREE' ? t('billing.planFree') : userPlan === 'PRO' ? t('billing.planPro') : t('billing.planStudio')}
                     </span>
                   </div>
                   {userPlan === 'FREE' ? (
                     <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.6 }}>
-                      Вы на бесплатном плане. Ограничения: 3 проекта, 5 ИИ-генераций/день, 720p экспорт.
+                      {t('billing.freePlanDesc')}
                     </p>
                   ) : (
                     <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.6 }}>
-                      Тариф {userPlan === 'PRO' ? 'Pro' : 'Studio'} — Ежемесячная подписка.
-                      Следующее продление: 17 апреля 2026.
+                      {t('billing.plan')} {userPlan === 'PRO' ? 'Pro' : 'Studio'} — {t('billing.paidPlanDesc')}
                     </p>
                   )}
                 </div>
@@ -330,6 +350,8 @@ export default function BillingPage() {
                 <button
                   onMouseEnter={() => setHoveredBtn('manage')}
                   onMouseLeave={() => setHoveredBtn(null)}
+                  onClick={() => createPortal.mutate()}
+                  disabled={createPortal.isPending}
                   style={{
                     padding: '10px 22px',
                     borderRadius: 50,
@@ -340,13 +362,14 @@ export default function BillingPage() {
                     color: C.text,
                     fontSize: 13,
                     fontWeight: 600,
-                    cursor: 'pointer',
+                    cursor: createPortal.isPending ? 'wait' : 'pointer',
                     fontFamily: 'inherit',
                     transition: 'all .2s ease',
                     whiteSpace: 'nowrap',
+                    opacity: createPortal.isPending ? 0.6 : 1,
                   }}
                 >
-                  Управить подпиской
+                  {t('billing.manageSubscription')}
                 </button>
               </div>
             </div>
@@ -363,7 +386,7 @@ export default function BillingPage() {
                   margin: '0 0 20px',
                 }}
               >
-                Выберите тариф
+                {t('billing.choosePlan')}
               </h2>
 
               <div
@@ -497,7 +520,7 @@ export default function BillingPage() {
                             opacity: 0.6,
                           }}
                         >
-                          Текущий план
+                          {t('billing.currentPlanBtn')}
                         </button>
                       ) : (
                         <button
@@ -506,6 +529,9 @@ export default function BillingPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedPlan(plan.id);
+                            if (plan.id !== 'FREE') {
+                              createCheckout.mutate({ plan: plan.id });
+                            }
                           }}
                           style={{
                             width: '100%',
@@ -551,7 +577,7 @@ export default function BillingPage() {
                   margin: '0 0 20px',
                 }}
               >
-                Эксклюзивные предложения
+                {t('billing.exclusiveDeals')}
               </h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -658,7 +684,7 @@ export default function BillingPage() {
                           {/* Price */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
-                              Получить за {deal.price.toLocaleString()}{'\u20BD'}
+                              {t('billing.getFor')} {deal.price.toLocaleString()}{'\u20BD'}
                             </span>
                             <span
                               style={{
@@ -732,7 +758,7 @@ export default function BillingPage() {
                   <LightningIcon />
                 </span>
                 <span style={{ fontSize: 17, fontWeight: 800, color: C.text, letterSpacing: '-.02em' }}>
-                  Ваш заказ
+                  {t('billing.yourOrder')}
                 </span>
               </div>
 
@@ -746,8 +772,8 @@ export default function BillingPage() {
                   borderBottom: `1px solid ${cardBorder}`,
                 }}
               >
-                Тариф: <strong style={{ color: C.text }}>{selectedPlanDef.name}</strong>
-                {selectedPlan !== 'FREE' && ' — Ежемесячно'}
+                {t('billing.plan')}: <strong style={{ color: C.text }}>{selectedPlanDef.name}</strong>
+                {selectedPlan !== 'FREE' && ` — ${t('billing.monthly')}`}
               </div>
 
               {/* Promo Code */}
@@ -762,12 +788,12 @@ export default function BillingPage() {
                     marginBottom: 10,
                   }}
                 >
-                  Промокод
+                  {t('billing.promoCode')}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input
                     type="text"
-                    placeholder="Введите код"
+                    placeholder={t('billing.enterCode')}
                     value={promoCode}
                     onChange={(e) => {
                       setPromoCode(e.target.value);
@@ -814,7 +840,7 @@ export default function BillingPage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {promoApplied ? 'Применён' : 'Применить'}
+                    {promoApplied ? t('billing.applied') : t('billing.apply')}
                   </button>
                 </div>
               </div>
@@ -840,7 +866,7 @@ export default function BillingPage() {
                     marginBottom: 14,
                   }}
                 >
-                  Итого
+                  {t('billing.total')}
                 </div>
 
                 {/* Plan price line */}
@@ -853,7 +879,7 @@ export default function BillingPage() {
                     fontSize: 14,
                   }}
                 >
-                  <span style={{ color: C.sub }}>Тариф {selectedPlanDef.name}</span>
+                  <span style={{ color: C.sub }}>{t('billing.plan')} {selectedPlanDef.name}</span>
                   <span style={{ fontWeight: 700, color: C.text }}>
                     {planPrice.toLocaleString()}{'\u20BD'}
                   </span>
@@ -870,7 +896,7 @@ export default function BillingPage() {
                       fontSize: 14,
                     }}
                   >
-                    <span style={{ color: C.sub }}>Предложения</span>
+                    <span style={{ color: C.sub }}>{t('billing.deals')}</span>
                     <span style={{ fontWeight: 700, color: C.text }}>
                       {dealsTotal.toLocaleString()}{'\u20BD'}
                     </span>
@@ -891,7 +917,7 @@ export default function BillingPage() {
                       marginBottom: 14,
                     }}
                   >
-                    Не выбрано ни одно предложение! Вы упускаете экономию более 3000{'\u20BD'}!
+                    {t('billing.noDealsWarning')}
                   </div>
                 )}
 
@@ -913,7 +939,7 @@ export default function BillingPage() {
                     fontSize: 18,
                   }}
                 >
-                  <span style={{ fontWeight: 700, color: C.text }}>К оплате</span>
+                  <span style={{ fontWeight: 700, color: C.text }}>{t('billing.toPay')}</span>
                   <span
                     style={{
                       fontWeight: 800,
@@ -931,7 +957,12 @@ export default function BillingPage() {
               <button
                 onMouseEnter={() => setHoveredBtn('checkout')}
                 onMouseLeave={() => setHoveredBtn(null)}
-                disabled={selectedPlan === 'FREE' && dealsTotal === 0}
+                onClick={() => {
+                  if (selectedPlan !== 'FREE') {
+                    createCheckout.mutate({ plan: selectedPlan });
+                  }
+                }}
+                disabled={(selectedPlan === 'FREE' && dealsTotal === 0) || createCheckout.isPending}
                 style={{
                   width: '100%',
                   padding: '16px 24px',
@@ -970,7 +1001,7 @@ export default function BillingPage() {
                 }}
               >
                 <LightningIcon />
-                <span>Оформить подписку</span>
+                <span>{createCheckout.isPending ? '...' : t('billing.checkout')}</span>
                 <span style={{ fontSize: 18 }}>{'\u2192'}</span>
               </button>
 
@@ -985,7 +1016,7 @@ export default function BillingPage() {
                   lineHeight: 1.5,
                 }}
               >
-                Продолжая, вы соглашаетесь с{' '}
+                {t('billing.termsConsent')}{' '}
                 <span
                   style={{
                     color: C.accent,
@@ -994,7 +1025,7 @@ export default function BillingPage() {
                     textUnderlineOffset: 2,
                   }}
                 >
-                  Условиями использования
+                  {t('billing.termsLink')}
                 </span>
               </p>
             </div>
