@@ -834,9 +834,34 @@ export function YoutubeDownloader() {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              {streamError}
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+              Прямое скачивание недоступно
             </div>
+            <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
+              YouTube ограничивает серверные запросы. Вы можете открыть видео на YouTube и скачать через расширение браузера.
+            </div>
+            {videoInfo && (
+              <a
+                href={videoInfo.watchUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 8,
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  background: '#ff0000',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                Открыть на YouTube
+              </a>
+            )}
           </div>
         </div>
       )}
