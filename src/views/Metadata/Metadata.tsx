@@ -129,13 +129,13 @@ function AIButton({
     >
       {isLoading ? (
         <span style={{ display: 'inline-flex', gap: 2 }}>
-          <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>\u2022</span>
-          <span style={{ animation: 'pulse 1s ease-in-out 0.2s infinite' }}>\u2022</span>
-          <span style={{ animation: 'pulse 1s ease-in-out 0.4s infinite' }}>\u2022</span>
+          <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>{'•'}</span>
+          <span style={{ animation: 'pulse 1s ease-in-out 0.2s infinite' }}>{'•'}</span>
+          <span style={{ animation: 'pulse 1s ease-in-out 0.4s infinite' }}>{'•'}</span>
         </span>
       ) : (
         <>
-          <span style={{ fontSize: 11 }}>\u2728</span>
+          <span style={{ fontSize: 11 }}>{'✨'}</span>
           {label}
         </>
       )}

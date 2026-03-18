@@ -465,11 +465,18 @@ export function CutCrop() {
         }}>
           <video
             ref={videoRef}
-            src={videoUrl}
+            src={videoUrl || undefined}
+            preload="auto"
+            playsInline
             onLoadedMetadata={onMetadata}
             onEnded={() => { setIsPlaying(false); cancelAnimationFrame(animRef.current); }}
-            style={{ maxWidth: '100%', maxHeight: '60vh', display: 'block' }}
+            style={{ maxWidth: '100%', maxHeight: '60vh', display: videoUrl ? 'block' : 'none' }}
           />
+          {!videoUrl && (
+            <div style={{ padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center' }}>
+              Загрузите видео для начала работы
+            </div>
+          )}
           {showCrop && (
             <div style={{
               position: 'absolute', top: '15%', left: '20%', width: '60%', height: '70%',

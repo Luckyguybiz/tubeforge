@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -13,32 +14,49 @@ import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 
 /* ── Status config ─────────────────────────────────────── */
 
-const STATUS_MAP: Record<string, { label: string; color: 'green' | 'orange' | 'blue' | 'dim' | 'purple' }> = {
-  PUBLISHED: { label: 'Опубликовано', color: 'green' },
-  READY:     { label: 'Готово',       color: 'blue' },
-  RENDERING: { label: 'Рендер...',    color: 'orange' },
-  DRAFT:     { label: 'Черновик',     color: 'dim' },
+const STATUS_COLOR: Record<string, 'green' | 'orange' | 'blue' | 'dim' | 'purple'> = {
+  PUBLISHED: 'green',
+  READY: 'blue',
+  RENDERING: 'orange',
+  DRAFT: 'dim',
 };
 
-const FILTER_OPTIONS = [
-  { label: 'Все',           value: undefined },
-  { label: 'Черновик',      value: 'DRAFT'     as const },
-  { label: 'Рендер',        value: 'RENDERING' as const },
-  { label: 'Готово',        value: 'READY'     as const },
-  { label: 'Опубликовано',  value: 'PUBLISHED' as const },
-];
+function getStatusLabel(status: string, t: (key: string) => string): string {
+  const map: Record<string, string> = {
+    PUBLISHED: t('dashboard.statusPublished'),
+    READY: t('dashboard.statusReady'),
+    RENDERING: t('dashboard.statusRendering'),
+    DRAFT: t('dashboard.statusDraft'),
+  };
+  return map[status] ?? t('dashboard.statusDraft');
+}
 
-const SORT_OPTIONS = [
-  { label: 'По дате',      value: 'updatedAt'  as const },
-  { label: 'По названию',  value: 'title'      as const },
-  { label: 'По созданию',  value: 'createdAt'  as const },
-];
+function getFilterOptions(t: (key: string) => string) {
+  return [
+    { label: t('dashboard.filterAll'),       value: undefined },
+    { label: t('dashboard.filterDraft'),     value: 'DRAFT'     as const },
+    { label: t('dashboard.filterRendering'), value: 'RENDERING' as const },
+    { label: t('dashboard.filterReady'),     value: 'READY'     as const },
+    { label: t('dashboard.filterPublished'), value: 'PUBLISHED' as const },
+  ];
+}
 
-const PLAN_LABEL: Record<string, string> = {
-  FREE:   'Бесплатный',
-  PRO:    'Pro',
-  STUDIO: 'Studio',
-};
+function getSortOptions(t: (key: string) => string) {
+  return [
+    { label: t('dashboard.sortByDate'),    value: 'updatedAt'  as const },
+    { label: t('dashboard.sortByTitle'),   value: 'title'      as const },
+    { label: t('dashboard.sortByCreated'), value: 'createdAt'  as const },
+  ];
+}
+
+function getPlanLabel(plan: string, t: (key: string) => string): string {
+  const map: Record<string, string> = {
+    FREE: t('common.free'),
+    PRO: t('common.pro'),
+    STUDIO: t('common.studio'),
+  };
+  return map[plan] ?? plan;
+}
 
 /* ── SVG icons (inline, no deps) ───────────────────────── */
 
@@ -221,9 +239,11 @@ function IconChart({ size = 20, color = 'currentColor' }: { size?: number; color
 function WelcomeSection({
   C,
   router,
+  t,
 }: {
   C: ReturnType<typeof useThemeStore.getState>['theme'];
   router: ReturnType<typeof useRouter>;
+  t: (key: string) => string;
 }) {
   const [hov, setHov] = useState<string | null>(null);
 
@@ -258,8 +278,8 @@ function WelcomeSection({
         >
           <IconPlay size={18} color="#fff" />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>Видео редактор</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>Быстрый монтаж и субтитры</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('dashboard.videoEditor')}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>{t('dashboard.videoEditorDesc')}</div>
           </div>
           <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
         </div>
@@ -290,8 +310,8 @@ function WelcomeSection({
         >
           <IconSparkles size={18} color="#fff" />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>AI Генерация</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>Создайте видео из текста</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('dashboard.aiGeneration')}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>{t('dashboard.aiGenerationDesc')}</div>
           </div>
           <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
         </div>
@@ -324,14 +344,14 @@ function WelcomeSection({
           <IconWrench size={18} color={C.text} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>Бесплатные инструменты</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.freeTools')}</span>
               <span style={{
                 fontSize: 10, fontWeight: 700, color: '#fff',
                 background: '#10b981', borderRadius: 4, padding: '1px 5px',
                 lineHeight: '16px', letterSpacing: '.02em',
               }}>FREE</span>
             </div>
-            <div style={{ fontSize: 12, color: C.sub }}>Конвертер, компрессор и другое</div>
+            <div style={{ fontSize: 12, color: C.sub }}>{t('dashboard.freeToolsDesc')}</div>
           </div>
           <IconArrowRight size={14} color={C.dim} />
         </div>
@@ -341,12 +361,12 @@ function WelcomeSection({
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
         {/* AutoClip */}
         <div
-          onClick={() => router.push('/tools/auto-clip')}
+          onClick={() => router.push('/tools/autoclip')}
           onMouseEnter={() => setHov('ft-0')}
           onMouseLeave={() => setHov(null)}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/auto-clip'); } }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/autoclip'); } }}
           style={{
             flex: '1 1 300px',
             minWidth: 280,
@@ -380,7 +400,7 @@ function WelcomeSection({
                 }}>Pro</span>
               </div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5, maxWidth: 340 }}>
-                Превратите длинные видео в вирусные клипы автоматически
+                {t('dashboard.autoClipDesc')}
               </div>
             </div>
             <div style={{
@@ -389,7 +409,7 @@ function WelcomeSection({
               opacity: hov === 'ft-0' ? 1 : 0.8, transition: 'opacity .15s ease',
               marginTop: 14,
             }}>
-              {'Попробовать →'}
+              {t('dashboard.tryIt')}
             </div>
           </div>
         </div>
@@ -432,10 +452,10 @@ function WelcomeSection({
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: '#10b981', borderRadius: 4, padding: '1px 6px',
                   lineHeight: '16px',
-                }}>{'Бесплатно'}</span>
+                }}>{t('common.free')}</span>
               </div>
               <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5, maxWidth: 340 }}>
-                {'Обрежьте и склейте видео в один клип'}
+                {t('dashboard.cutCropDesc')}
               </div>
             </div>
             <div style={{
@@ -444,7 +464,7 @@ function WelcomeSection({
               opacity: hov === 'ft-1' ? 1 : 0.7, transition: 'opacity .15s ease',
               marginTop: 14,
             }}>
-              {'Попробовать →'}
+              {t('dashboard.tryIt')}
             </div>
           </div>
         </div>
@@ -453,7 +473,7 @@ function WelcomeSection({
       {/* ── Row 3: Quick tools strip ─────────────────────── */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>{'Инструменты'}</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>{t('dashboard.tools')}</h2>
           <span
             onClick={() => router.push('/tools')}
             onMouseEnter={() => setHov('all-tools')}
@@ -466,7 +486,7 @@ function WelcomeSection({
               opacity: hov === 'all-tools' ? 1 : 0.5, transition: 'opacity .15s ease',
             }}
           >
-            {'Все →'}
+            {t('dashboard.allTools')}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -536,7 +556,7 @@ function WelcomeSection({
 
 /* ── Empty state illustration ──────────────────────────── */
 
-function EmptyIllustration({ color, dimColor }: { color: string; dimColor: string }) {
+function EmptyIllustration({ color, dimColor, label }: { color: string; dimColor: string; label: string }) {
   return (
     <svg width="160" height="130" viewBox="0 0 160 130" fill="none">
       {/* Film strip */}
@@ -556,7 +576,7 @@ function EmptyIllustration({ color, dimColor }: { color: string; dimColor: strin
       <circle cx="138" cy="65" r="1.5" fill={`${color}30`} />
       <circle cx="45" cy="100" r="1.8" fill={`${color}25`} />
       <text x="80" y="118" textAnchor="middle" fill={dimColor} fontSize="10" fontWeight="500" fontFamily="inherit">
-        Ваша студия ждёт
+        {label}
       </text>
     </svg>
   );
@@ -601,6 +621,7 @@ interface ProjectCardItem {
 interface ProjectCardProps {
   project: ProjectCardItem;
   C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
   isDeleting: boolean;
   isRenaming: boolean;
   renameValue: string;
@@ -620,6 +641,7 @@ interface ProjectCardProps {
 const ProjectCard = memo(function ProjectCard({
   project: p,
   C,
+  t,
   isDeleting,
   isRenaming,
   renameValue,
@@ -638,8 +660,9 @@ const ProjectCard = memo(function ProjectCard({
   const [isHovered, setIsHovered] = useState(false);
   const [hovBtn, setHovBtn] = useState<string | null>(null);
 
-  const st = STATUS_MAP[p.status] ?? STATUS_MAP.DRAFT;
-  const statusColor = C[st.color as keyof typeof C] ?? C.dim;
+  const stColor = STATUS_COLOR[p.status] ?? 'dim';
+  const statusColor = C[stColor as keyof typeof C] ?? C.dim;
+  const statusLabel = getStatusLabel(p.status, t);
 
   return (
     <div
@@ -715,7 +738,7 @@ const ProjectCard = memo(function ProjectCard({
           WebkitBackdropFilter: 'blur(8px)',
           border: `1px solid ${statusColor}30`,
         }}>
-          {st.label}
+          {statusLabel}
         </div>
 
         {/* Scene count badge — bottom-left */}
@@ -765,7 +788,7 @@ const ProjectCard = memo(function ProjectCard({
             ref={renameRef}
             value={renameValue}
             maxLength={100}
-            aria-label="Новое название проекта"
+            aria-label={t('dashboard.renameProject')}
             onChange={(e) => onRenameChange(e.target.value)}
             onBlur={() => onRename(p.id)}
             onKeyDown={(e) => {
@@ -813,7 +836,7 @@ const ProjectCard = memo(function ProjectCard({
                   maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   marginRight: 4,
                 }}>
-                  Удалить?
+                  {t('dashboard.deleteConfirm')}
                 </span>
                 <button
                   onClick={() => onConfirmDelete(p.id)}
@@ -824,7 +847,7 @@ const ProjectCard = memo(function ProjectCard({
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                   }}
                 >
-                  {deleteIsPending ? '...' : 'Да'}
+                  {deleteIsPending ? '...' : t('dashboard.yes')}
                 </button>
                 <button
                   onClick={() => onCancelDelete()}
@@ -835,7 +858,7 @@ const ProjectCard = memo(function ProjectCard({
                     transition: 'all .15s',
                   }}
                 >
-                  Нет
+                  {t('dashboard.no')}
                 </button>
               </>
             ) : (
@@ -845,8 +868,8 @@ const ProjectCard = memo(function ProjectCard({
                     e.stopPropagation();
                     onStartRename(p.id, p.title);
                   }}
-                  title="Переименовать"
-                  aria-label={`Переименовать проект ${p.title}`}
+                  title={t('dashboard.rename')}
+                  aria-label={`${t('dashboard.rename')} ${p.title}`}
                   onMouseEnter={() => setHovBtn(`rename-${p.id}`)}
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
@@ -865,8 +888,8 @@ const ProjectCard = memo(function ProjectCard({
                     e.stopPropagation();
                     onDuplicate(p.title);
                   }}
-                  title="Дублировать"
-                  aria-label={`Дублировать проект ${p.title}`}
+                  title={t('dashboard.duplicate')}
+                  aria-label={`${t('dashboard.duplicate')} ${p.title}`}
                   onMouseEnter={() => setHovBtn(`dup-${p.id}`)}
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
@@ -885,8 +908,8 @@ const ProjectCard = memo(function ProjectCard({
                     e.stopPropagation();
                     onDelete(p.id);
                   }}
-                  title="Удалить проект"
-                  aria-label={`Удалить проект ${p.title}`}
+                  title={t('dashboard.deleteProject')}
+                  aria-label={`${t('dashboard.deleteProject')} ${p.title}`}
                   onMouseEnter={() => setHovBtn(`delete-${p.id}`)}
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
@@ -915,6 +938,7 @@ const ProjectCard = memo(function ProjectCard({
 
 export function Dashboard() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const searchParams = useSearchParams();
   const utils = trpc.useUtils();
@@ -972,7 +996,7 @@ export function Dashboard() {
   /* ── tRPC mutations ───────────────────────────── */
   const createProject = trpc.project.create.useMutation({
     onSuccess: (project) => {
-      toast.success('Проект создан');
+      toast.success(t('dashboard.projectCreated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
       router.push(`/editor?projectId=${project.id}`);
@@ -982,7 +1006,7 @@ export function Dashboard() {
 
   const deleteProject = trpc.project.delete.useMutation({
     onSuccess: () => {
-      toast.success('Проект удалён');
+      toast.success(t('dashboard.projectDeleted'));
       setDeleteId(null);
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -995,7 +1019,7 @@ export function Dashboard() {
 
   const renameProject = trpc.project.update.useMutation({
     onSuccess: () => {
-      toast.success('Переименовано');
+      toast.success(t('dashboard.projectRenamed'));
       setRenameId(null);
       utils.project.list.invalidate();
     },
@@ -1004,7 +1028,7 @@ export function Dashboard() {
 
   const duplicateProject = trpc.project.create.useMutation({
     onSuccess: () => {
-      toast.success('Проект дублирован');
+      toast.success(t('dashboard.projectDuplicated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
     },
@@ -1025,7 +1049,7 @@ export function Dashboard() {
     if (val && val.length <= 100) {
       renameProject.mutate({ id, title: val });
     } else {
-      if (!val) toast.warning('Название не может быть пустым');
+      if (!val) toast.warning(t('dashboard.emptyName'));
       setRenameId(null);
     }
   }, [renameValue, renameProject]);
@@ -1061,8 +1085,8 @@ export function Dashboard() {
   }, []);
 
   const handleDuplicate = useCallback((title: string) => {
-    duplicateProject.mutate({ title: title + ' (копия)' });
-  }, [duplicateProject]);
+    duplicateProject.mutate({ title: title + ` (${t('dashboard.copy')})` });
+  }, [duplicateProject, t]);
 
   /* ── Compute stats ────────────────────────────── */
   const user = profile.data;
@@ -1076,35 +1100,35 @@ export function Dashboard() {
     // counts without separate queries. Keep it simple and useful.
     return [
       {
-        label: 'Всего проектов',
+        label: t('dashboard.totalProjects'),
         value: String(total),
         icon: IconFolder,
         gradient: `linear-gradient(135deg, ${C.accent}18, ${C.accent}08)`,
         iconColor: C.accent,
       },
       {
-        label: 'Тарифный план',
-        value: PLAN_LABEL[plan] ?? plan,
+        label: t('dashboard.plan'),
+        value: getPlanLabel(plan, t),
         icon: IconStar,
         gradient: `linear-gradient(135deg, ${C.purple}18, ${C.purple}08)`,
         iconColor: C.purple,
       },
       {
-        label: 'ИИ-запросов',
+        label: t('dashboard.aiRequests'),
         value: String(user?.aiUsage ?? 0),
         icon: IconFilm,
         gradient: `linear-gradient(135deg, ${C.blue}18, ${C.blue}08)`,
         iconColor: C.blue,
       },
       {
-        label: 'Каналы',
+        label: t('dashboard.channels'),
         value: String(user?.channels?.length ?? 0),
         icon: IconSend,
         gradient: `linear-gradient(135deg, ${C.green}18, ${C.green}08)`,
         iconColor: C.green,
       },
     ];
-  }, [totalProjects.data?.total, user?._count?.projects, plan, user?.aiUsage, user?.channels?.length, C]);
+  }, [totalProjects.data?.total, user?._count?.projects, plan, user?.aiUsage, user?.channels?.length, C, t]);
 
   /* ── Error states ─────────────────────────────── */
   if (profile.isError) {
@@ -1131,19 +1155,19 @@ export function Dashboard() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
       {/* ── Welcome Hero Section (Crayo-style) ───────── */}
-      <WelcomeSection C={C} router={router} />
+      <WelcomeSection C={C} router={router} t={t} />
 
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-.03em', lineHeight: 1.2 }}>
-            {profile.isLoading ? <Skeleton width={260} height={34} /> : `Привет, ${user?.name ?? 'Создатель'}!`}
+            {profile.isLoading ? <Skeleton width={260} height={34} /> : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}!`}
           </h1>
           <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
             {profile.isLoading ? (
               <Skeleton width={160} height={16} style={{ marginTop: 4 }} />
             ) : (
-              <>Управляйте своими видеопроектами</>
+              <>{t('dashboard.manageProjects')}</>
             )}
           </p>
         </div>
@@ -1169,7 +1193,7 @@ export function Dashboard() {
           }}
         >
           <IconPlus size={18} color="#fff" />
-          {createProject.isPending ? 'Создание...' : 'Новый проект'}
+          {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
         </button>
       </div>
 
@@ -1244,7 +1268,7 @@ export function Dashboard() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
-              Мои проекты
+              {t('dashboard.myProjects')}
             </h2>
             {projects.isRefetching && (
               <div style={{
@@ -1275,8 +1299,8 @@ export function Dashboard() {
                 type="search"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Поиск..."
-                aria-label="Поиск проектов"
+                placeholder={t('dashboard.search')}
+                aria-label={t('dashboard.searchProjects')}
                 style={{
                   padding: '9px 14px 9px 32px',
                   background: C.surface,
@@ -1295,7 +1319,7 @@ export function Dashboard() {
             <select
               value={sortBy}
               onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
-              aria-label="Сортировка проектов"
+              aria-label={t('dashboard.sortProjects')}
               style={{
                 padding: '8px 10px',
                 background: C.surface,
@@ -1307,14 +1331,14 @@ export function Dashboard() {
                 cursor: 'pointer',
               }}
             >
-              {SORT_OPTIONS.map((s) => (
+              {getSortOptions(t).map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
 
             {/* Status filter pills */}
-            <div style={{ display: 'flex', gap: 4 }} role="group" aria-label="Фильтр по статусу">
-              {FILTER_OPTIONS.map((f) => {
+            <div style={{ display: 'flex', gap: 4 }} role="group" aria-label={t('dashboard.filterStatus')}>
+              {getFilterOptions(t).map((f) => {
                 const isActive = statusFilter === f.value;
                 return (
                   <button
@@ -1376,10 +1400,10 @@ export function Dashboard() {
                     <IconSearch size={48} color={C.dim} />
                   </div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: C.text }}>
-                    Ничего не найдено
+                    {t('dashboard.nothingFound')}
                   </h3>
                   <p style={{ color: C.sub, fontSize: 14, marginBottom: 20, maxWidth: 320, lineHeight: 1.5 }}>
-                    Попробуйте изменить поисковый запрос или сбросить фильтры
+                    {t('dashboard.tryChangingSearch')}
                   </p>
                   <button
                     onClick={() => { setSearchInput(''); setDebouncedSearch(''); setStatusFilter(undefined); setPage(1); }}
@@ -1398,19 +1422,19 @@ export function Dashboard() {
                       transition: 'all .2s ease',
                     }}
                   >
-                    Сбросить фильтры
+                    {t('dashboard.resetFilters')}
                   </button>
                 </>
               ) : (
                 <>
                   <div style={{ marginBottom: 20 }}>
-                    <EmptyIllustration color={C.accent} dimColor={C.dim} />
+                    <EmptyIllustration color={C.accent} dimColor={C.dim} label={t('dashboard.studioAwaits')} />
                   </div>
                   <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 8px', color: C.text, letterSpacing: '-.02em' }}>
-                    Создайте первый проект
+                    {t('dashboard.createFirstProject')}
                   </h3>
                   <p style={{ color: C.sub, fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6 }}>
-                    Начните создавать видео с помощью ИИ. Добавьте сцены, сгенерируйте визуальный ряд и опубликуйте на YouTube.
+                    {t('dashboard.createFirstDesc')}
                   </p>
                   <button
                     onClick={() => createProject.mutate({})}
@@ -1437,7 +1461,7 @@ export function Dashboard() {
                     }}
                   >
                     <IconPlus size={18} color="#fff" />
-                    {createProject.isPending ? 'Создание...' : 'Создать проект'}
+                    {createProject.isPending ? t('dashboard.creating') : t('dashboard.createProject')}
                   </button>
                 </>
               )}
@@ -1455,6 +1479,7 @@ export function Dashboard() {
                     key={p.id}
                     project={p}
                     C={C}
+                    t={t}
                     isDeleting={deleteId === p.id}
                     isRenaming={renameId === p.id}
                     renameValue={renameValue}
@@ -1476,7 +1501,7 @@ export function Dashboard() {
               {/* ── Pagination ─────────────────── */}
               {totalPages > 1 && (
                 <nav
-                  aria-label="Навигация по страницам"
+                  aria-label={t('dashboard.page')}
                   style={{
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     gap: 6, paddingTop: 24, marginTop: 8,
@@ -1486,7 +1511,7 @@ export function Dashboard() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    aria-label="Предыдущая страница"
+                    aria-label={t('dashboard.prevPage')}
                     onMouseEnter={() => setHoveredBtn('page-prev')}
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
@@ -1521,7 +1546,7 @@ export function Dashboard() {
                       <button
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
-                        aria-label={`Страница ${pageNum}`}
+                        aria-label={`${t('dashboard.page')} ${pageNum}`}
                         aria-current={isCurrent ? 'page' : undefined}
                         onMouseEnter={() => setHoveredBtn(`page-${pageNum}`)}
                         onMouseLeave={() => setHoveredBtn(null)}
@@ -1544,7 +1569,7 @@ export function Dashboard() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
-                    aria-label="Следующая страница"
+                    aria-label={t('dashboard.nextPage')}
                     onMouseEnter={() => setHoveredBtn('page-next')}
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{

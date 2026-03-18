@@ -118,7 +118,7 @@ export const projectRouter = router({
   update: protectedProcedure
     .input(z.object({
       id: z.string(),
-      title: z.string().min(1).max(100).optional(),
+      title: z.string().max(100).optional(),
       description: z.string().max(5000).optional(),
       tags: z.array(z.string()).max(30).optional(),
       status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).optional(),
