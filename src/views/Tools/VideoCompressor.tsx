@@ -139,9 +139,10 @@ export function VideoCompressor() {
 
       // Read output
       const output = await ffmpeg.readFile(`output.${ext}`);
-      const outputBytes = output instanceof Uint8Array ? output : new TextEncoder().encode(output);
       const mimeType = format === 'webm' ? 'video/webm' : 'video/mp4';
-      const blob = new Blob([outputBytes], { type: mimeType });
+      const blob = output instanceof Uint8Array
+        ? new Blob([new Uint8Array(output)], { type: mimeType })
+        : new Blob([output as string], { type: mimeType });
 
       setCompressedBlob(blob);
       setCompressedSize(blob.size);
