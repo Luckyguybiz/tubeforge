@@ -27,63 +27,53 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Step 1: Search for popular shorts
     const publishedAfter = getPublishedAfter(period);
-    const searchParams = new URLSearchParams({
-      part: 'snippet',
-      type: 'video',
-      videoDuration: 'short',
-      order: 'viewCount',
-      maxResults: '50',
-      q: '#shorts',
-      key: apiKey,
+    const catMap: Record<string, string> = {
+      '1': 'movie film', '2': 'cars auto', '10': 'music', '15': 'pets animals',
+      '17': 'sports', '20': 'gaming', '22': 'people vlog', '23': 'comedy funny',
+      '24': 'entertainment', '25': 'news', '26': 'howto tutorial', '27': 'education', '28': 'science',
+    };
+    const catKeyword = category ? (catMap[category] ?? '') : '';
+
+    // Strategy: run 2 parallel searches for better coverage, then merge & dedupe
+    const queries = [
+      `shorts viral ${catKeyword}`.trim(),
+      `#shorts ${catKeyword}`.trim(),
+    ];
+
+    const searchPromises = queries.map((q) => {
+      const sp = new URLSearchParams({
+        part: 'snippet',
+        type: 'video',
+        videoDuration: 'short',
+        order: 'viewCount',
+        maxResults: '50',
+        q,
+        key: apiKey,
+      });
+      if (publishedAfter) sp.set('publishedAfter', publishedAfter);
+      if (country) sp.set('regionCode', country);
+      return fetch(`https://www.googleapis.com/youtube/v3/search?${sp}`).then(r => r.ok ? r.json() : null);
     });
-    if (publishedAfter) searchParams.set('publishedAfter', publishedAfter);
-    if (country) searchParams.set('regionCode', country);
-    // Note: videoCategoryId in search is unreliable — filter post-fetch instead
-    if (category) {
-      // Add category as a keyword hint to improve relevance
-      const catMap: Record<string, string> = {
-        '1': 'movie film', '2': 'cars auto', '10': 'music', '15': 'pets animals',
-        '17': 'sports', '20': 'gaming', '22': 'people vlog', '23': 'comedy funny',
-        '24': 'entertainment', '25': 'news', '26': 'howto tutorial', '27': 'education', '28': 'science',
-      };
-      if (catMap[category]) {
-        searchParams.set('q', `#shorts ${catMap[category]}`);
+
+    const searchResults = await Promise.all(searchPromises);
+
+    // Collect unique video IDs from all searches
+    const idSet = new Set<string>();
+    for (const data of searchResults) {
+      if (!data?.items) continue;
+      for (const item of data.items) {
+        const vid = (item.id as Record<string, unknown>)?.videoId as string | undefined;
+        if (vid) idSet.add(vid);
       }
     }
 
-    const searchRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?${searchParams}`,
-      { next: { revalidate: 3600 } },
-    );
-    if (!searchRes.ok) {
-      const errText = await searchRes.text().catch(() => '');
-      console.error('[shorts-analytics] Search API error:', searchRes.status, errText);
-      return NextResponse.json({
-        mock: true,
-        shorts: getMockData(),
-        error: `YouTube API error: ${searchRes.status}`,
-        debug: errText.substring(0, 200),
-      });
-    }
-    const searchData = await searchRes.json();
-    console.log('[shorts-analytics] Search returned', searchData.items?.length ?? 0, 'items');
-
-    const videoIds = (searchData.items ?? [])
-      .map((item: Record<string, unknown>) => {
-        const id = item.id as Record<string, unknown> | undefined;
-        return id?.videoId;
-      })
-      .filter(Boolean)
-      .join(',');
-
+    const videoIds = [...idSet].join(',');
     if (!videoIds) {
-      console.warn('[shorts-analytics] No video IDs found in search results');
-      return NextResponse.json({ mock: true, shorts: getMockData(), error: 'No shorts found for this period' });
+      return NextResponse.json({ mock: true, shorts: getMockData(), error: 'No shorts found' });
     }
 
-    // Step 2: Get video statistics (views, duration)
+    // Get video statistics (views, duration) — batched in one call
     const statsRes = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,contentDetails&id=${videoIds}&key=${apiKey}`,
     );
