@@ -143,16 +143,6 @@ function IconImage({ size = 20, color = 'currentColor' }: { size?: number; color
     </svg>
   );
 }
-
-function IconEraser({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0L21.4 5.6c.8.8.8 2 0 2.8L10 20" />
-      <path d="M6 11l7 7" />
-    </svg>
-  );
-}
-
 function IconArrowRight({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -180,46 +170,6 @@ function IconSparkles({ size = 20, color = 'currentColor' }: { size?: number; co
     </svg>
   );
 }
-
-function IconFaceSmile({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-      <line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
-    </svg>
-  );
-}
-
-function IconMicrophone({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-      <path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" />
-      <line x1="8" y1="23" x2="16" y2="23" />
-    </svg>
-  );
-}
-
-function IconUserX({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-      <circle cx="8.5" cy="7" r="4" />
-      <line x1="18" y1="8" x2="23" y2="13" /><line x1="23" y1="8" x2="18" y2="13" />
-    </svg>
-  );
-}
-
-function IconVideo({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="23 7 16 12 23 17 23 7" />
-      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-    </svg>
-  );
-}
-
 function IconDownload({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -239,402 +189,345 @@ function IconScissors({ size = 20, color = 'currentColor' }: { size?: number; co
   );
 }
 
-/* ── Welcome Hero Section (Crayo-style) ──────────────── */
+/* ── Additional icons for welcome section tools ── */
 
-const HERO_ACTION_CARDS = [
-  {
-    title: 'Видео редактор',
-    subtitle: 'Создавайте видео из текста',
-    href: '/editor',
-    gradient: 'linear-gradient(135deg, #4f46e5, #6366f1, #818cf8)',
-    Icon: IconPlay,
-  },
-  {
-    title: 'Редактор обложек',
-    subtitle: 'Canvas-редактор как в Canva',
-    href: '/thumbnails',
-    gradient: 'linear-gradient(135deg, #e11d48, #ec4899, #f472b6)',
-    Icon: IconImage,
-  },
-  {
-    title: 'Бесплатные инструменты',
-    subtitle: 'Конвертер, компрессор и другое',
-    href: '/tools',
-    gradient: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
-    Icon: IconWrench,
-  },
-];
+function IconMusic({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+    </svg>
+  );
+}
 
-const FEATURED_CARDS = [
-  {
-    title: 'AutoClip',
-    description: 'Превратите длинные видео в вирусные клипы',
-    href: '/tools/auto-clip',
-    gradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-    borderGradient: 'linear-gradient(135deg, #8b5cf6, #c084fc, #8b5cf6)',
-    Icon: IconScissors,
-  },
-  {
-    title: 'Удалить субтитры',
-    description: 'Удалите субтитры с видео за минуты с помощью ИИ',
-    href: '/tools/subtitle-remover',
-    gradient: 'linear-gradient(135deg, #dc2626, #ef4444)',
-    borderGradient: 'linear-gradient(135deg, #ef4444, #fca5a5, #ef4444)',
-    Icon: IconEraser,
-  },
-];
+function IconCompress({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
+      <line x1="14" y1="10" x2="21" y2="3" /><line x1="3" y1="21" x2="10" y2="14" />
+    </svg>
+  );
+}
 
-const QUICK_TOOLS = [
-  { title: 'Image Generator', href: '/tools/image-generator', Icon: IconSparkles, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
-  { title: 'AI Face Swap', href: '/tools/face-swap', Icon: IconFaceSmile, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
-  { title: 'Voiceover Generator', href: '/tools/voiceover-generator', Icon: IconMicrophone, gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)' },
-  { title: 'Background Remover', href: '/tools/background-remover', Icon: IconUserX, gradient: 'linear-gradient(135deg, #ec4899, #f472b6)' },
-  { title: 'VEO3 Generator', href: '/tools/veo3-generator', Icon: IconVideo, gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
-  { title: 'YouTube Downloader', href: '/tools/youtube-downloader', Icon: IconDownload, gradient: 'linear-gradient(135deg, #ef4444, #f87171)' },
-];
+function IconChart({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  );
+}
 
-function WelcomeHeroSection({
-  userName,
+/* ── Welcome Section (minimalist, Crayo-style) ───────── */
+
+function WelcomeSection({
+  C,
   router,
-  isLoading,
 }: {
-  userName: string;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
   router: ReturnType<typeof useRouter>;
-  isLoading: boolean;
 }) {
-  const [hoveredHero, setHoveredHero] = useState<number | null>(null);
-  const [hoveredFeatured, setHoveredFeatured] = useState<number | null>(null);
-  const [hoveredQuick, setHoveredQuick] = useState<number | null>(null);
-  const [hoveredAllTools, setHoveredAllTools] = useState(false);
+  const [hov, setHov] = useState<string | null>(null);
 
   return (
-    <div style={{ marginBottom: 32 }}>
-      {/* ── Greeting ───────────────────────────────── */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{
-          fontSize: 30,
-          fontWeight: 800,
-          margin: '0 0 6px',
-          letterSpacing: '-.03em',
-          lineHeight: 1.2,
-        }}>
-          {isLoading ? (
-            <Skeleton width={300} height={36} />
-          ) : (
-            <>{'Привет, ' + userName + '! \uD83D\uDC4B'}</>
-          )}
-        </h1>
-        <p style={{
-          fontSize: 15,
-          margin: 0,
-          lineHeight: 1.5,
-          opacity: 0.6,
-        }}>
-          Управляйте проектами и используйте инструменты
-        </p>
-      </div>
+    <div style={{ marginBottom: 28 }}>
 
-      {/* ── Hero Action Cards (3 columns) ──────────── */}
-      <div style={{
-        display: 'flex',
-        gap: 14,
-        flexWrap: 'wrap',
-        marginBottom: 20,
-      }}>
-        {HERO_ACTION_CARDS.map((card, i) => {
-          const isHovered = hoveredHero === i;
-          return (
-            <div
-              key={card.href}
-              onClick={() => router.push(card.href)}
-              onMouseEnter={() => setHoveredHero(i)}
-              onMouseLeave={() => setHoveredHero(null)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  router.push(card.href);
-                }
-              }}
-              style={{
-                flex: '1 1 240px',
-                minWidth: 240,
-                background: card.gradient,
-                borderRadius: 16,
-                padding: '20px 22px',
-                cursor: 'pointer',
-                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-                transform: isHovered ? 'translateY(-2px)' : 'none',
-                boxShadow: isHovered
-                  ? '0 12px 32px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.15)'
-                  : '0 4px 16px rgba(0,0,0,.12)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 16,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Icon */}
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                background: 'rgba(255,255,255,.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-              }}>
-                <card.Icon size={22} color="#fff" />
-              </div>
-
-              {/* Text */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: '#fff',
-                  marginBottom: 2,
-                  letterSpacing: '-.01em',
-                }}>
-                  {card.title}
-                </div>
-                <div style={{
-                  fontSize: 13,
-                  color: 'rgba(255,255,255,.75)',
-                  lineHeight: 1.4,
-                }}>
-                  {card.subtitle}
-                </div>
-              </div>
-
-              {/* Arrow */}
-              <div style={{
-                flexShrink: 0,
-                opacity: isHovered ? 1 : 0.5,
-                transition: 'all .2s ease',
-                transform: isHovered ? 'translateX(3px)' : 'none',
-              }}>
-                <IconArrowRight size={18} color="#fff" />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Featured Tool Cards (2 columns) ────────── */}
-      <div style={{
-        display: 'flex',
-        gap: 14,
-        flexWrap: 'wrap',
-        marginBottom: 24,
-      }}>
-        {FEATURED_CARDS.map((card, i) => {
-          const isHovered = hoveredFeatured === i;
-          return (
-            <div
-              key={card.href}
-              onClick={() => router.push(card.href)}
-              onMouseEnter={() => setHoveredFeatured(i)}
-              onMouseLeave={() => setHoveredFeatured(null)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  router.push(card.href);
-                }
-              }}
-              style={{
-                flex: '1 1 320px',
-                minWidth: 280,
-                borderRadius: 16,
-                padding: 2,
-                background: card.borderGradient,
-                cursor: 'pointer',
-                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-                transform: isHovered ? 'translateY(-2px)' : 'none',
-                boxShadow: isHovered
-                  ? '0 12px 32px rgba(0,0,0,.2)'
-                  : '0 2px 8px rgba(0,0,0,.06)',
-              }}
-            >
-              <div style={{
-                background: card.gradient,
-                borderRadius: 14,
-                padding: '24px 22px',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 14,
-              }}>
-                <div style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  background: 'rgba(255,255,255,.18)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                }}>
-                  <card.Icon size={24} color="#fff" />
-                </div>
-                <div>
-                  <div style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: '#fff',
-                    marginBottom: 6,
-                    letterSpacing: '-.01em',
-                  }}>
-                    {card.title}
-                  </div>
-                  <div style={{
-                    fontSize: 14,
-                    color: 'rgba(255,255,255,.8)',
-                    lineHeight: 1.5,
-                    maxWidth: 320,
-                  }}>
-                    {card.description}
-                  </div>
-                </div>
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#fff',
-                  marginTop: 'auto',
-                  opacity: isHovered ? 1 : 0.85,
-                  transition: 'opacity .2s ease',
-                }}>
-                  {'Попробовать \u2192'}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Quick Tools Row ────────────────────────── */}
-      <div>
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}>
-          <h2 style={{
-            fontSize: 18,
-            fontWeight: 700,
-            margin: 0,
-            letterSpacing: '-.01em',
-          }}>
-            Инструменты TubeForge
-          </h2>
-          <span
-            onClick={() => router.push('/tools')}
-            onMouseEnter={() => setHoveredAllTools(true)}
-            onMouseLeave={() => setHoveredAllTools(false)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                router.push('/tools');
-              }
-            }}
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              opacity: hoveredAllTools ? 1 : 0.6,
-              transition: 'opacity .2s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            {'Все инструменты \u2192'}
-          </span>
+      {/* ── Row 1: Three action cards (compact, horizontal) ── */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+        {/* Card 1: Video Editor */}
+        <div
+          onClick={() => router.push('/editor')}
+          onMouseEnter={() => setHov('ac-0')}
+          onMouseLeave={() => setHov(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
+          style={{
+            flex: '1 1 200px',
+            minWidth: 200,
+            height: 60,
+            background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+            borderRadius: 14,
+            padding: '0 16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            transition: 'all .15s ease',
+            transform: hov === 'ac-0' ? 'translateY(-1px)' : 'none',
+            boxShadow: hov === 'ac-0' ? '0 6px 20px rgba(79,70,229,.3)' : '0 2px 8px rgba(0,0,0,.08)',
+          }}
+        >
+          <IconPlay size={18} color="#fff" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>Видео редактор</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>Быстрый монтаж и субтитры</div>
+          </div>
+          <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
         </div>
 
-        {/* Scrollable row */}
-        <div style={{
-          display: 'flex',
-          gap: 14,
-          overflowX: 'auto',
-          paddingBottom: 4,
-          scrollbarWidth: 'thin',
-        }}>
-          {QUICK_TOOLS.map((tool, i) => {
-            const isHovered = hoveredQuick === i;
-            return (
-              <div
-                key={tool.href}
-                onClick={() => router.push(tool.href)}
-                onMouseEnter={() => setHoveredQuick(i)}
-                onMouseLeave={() => setHoveredQuick(null)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    router.push(tool.href);
-                  }
-                }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 10,
-                  minWidth: 100,
-                  padding: '16px 12px',
-                  borderRadius: 14,
-                  cursor: 'pointer',
-                  transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-                  transform: isHovered ? 'translateY(-2px)' : 'none',
-                  background: isHovered ? 'rgba(128,128,128,.08)' : 'transparent',
-                  flexShrink: 0,
-                }}
-              >
+        {/* Card 2: AI Generation */}
+        <div
+          onClick={() => router.push('/editor')}
+          onMouseEnter={() => setHov('ac-1')}
+          onMouseLeave={() => setHov(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
+          style={{
+            flex: '1 1 200px',
+            minWidth: 200,
+            height: 60,
+            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            borderRadius: 14,
+            padding: '0 16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            transition: 'all .15s ease',
+            transform: hov === 'ac-1' ? 'translateY(-1px)' : 'none',
+            boxShadow: hov === 'ac-1' ? '0 6px 20px rgba(124,58,237,.3)' : '0 2px 8px rgba(0,0,0,.08)',
+          }}
+        >
+          <IconSparkles size={18} color="#fff" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>AI Генерация</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>Создайте видео из текста</div>
+          </div>
+          <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
+        </div>
+
+        {/* Card 3: Free tools */}
+        <div
+          onClick={() => router.push('/tools')}
+          onMouseEnter={() => setHov('ac-2')}
+          onMouseLeave={() => setHov(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
+          style={{
+            flex: '1 1 200px',
+            minWidth: 200,
+            height: 60,
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            padding: '0 16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            transition: 'all .15s ease',
+            transform: hov === 'ac-2' ? 'translateY(-1px)' : 'none',
+            boxShadow: hov === 'ac-2' ? '0 6px 20px rgba(0,0,0,.08)' : '0 1px 4px rgba(0,0,0,.04)',
+          }}
+        >
+          <IconWrench size={18} color={C.text} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>Бесплатные инструменты</span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: '#fff',
+                background: '#10b981', borderRadius: 4, padding: '1px 5px',
+                lineHeight: '16px', letterSpacing: '.02em',
+              }}>FREE</span>
+            </div>
+            <div style={{ fontSize: 12, color: C.sub }}>Конвертер, компрессор и другое</div>
+          </div>
+          <IconArrowRight size={14} color={C.dim} />
+        </div>
+      </div>
+
+      {/* ── Row 2: Two featured tool cards ────────────────── */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+        {/* AutoClip */}
+        <div
+          onClick={() => router.push('/tools/auto-clip')}
+          onMouseEnter={() => setHov('ft-0')}
+          onMouseLeave={() => setHov(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/auto-clip'); } }}
+          style={{
+            flex: '1 1 300px',
+            minWidth: 280,
+            minHeight: 180,
+            borderRadius: 16,
+            padding: 2,
+            background: 'linear-gradient(135deg, #8b5cf6, #c084fc, #8b5cf6)',
+            cursor: 'pointer',
+            transition: 'all .15s ease',
+            transform: hov === 'ft-0' ? 'translateY(-1px)' : 'none',
+            boxShadow: hov === 'ft-0' ? '0 8px 24px rgba(139,92,246,.2)' : '0 2px 8px rgba(0,0,0,.05)',
+          }}
+        >
+          <div style={{
+            background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+            borderRadius: 14,
+            padding: '22px 20px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <IconScissors size={20} color="#fff" />
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>AutoClip</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#fff',
+                  background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
+                  lineHeight: '16px',
+                }}>Pro</span>
+              </div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5, maxWidth: 340 }}>
+                Превратите длинные видео в вирусные клипы автоматически
+              </div>
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 13, fontWeight: 600, color: '#fff',
+              opacity: hov === 'ft-0' ? 1 : 0.8, transition: 'opacity .15s ease',
+              marginTop: 14,
+            }}>
+              {'Попробовать →'}
+            </div>
+          </div>
+        </div>
+
+        {/* Cut & Crop */}
+        <div
+          onClick={() => router.push('/tools/cut-crop')}
+          onMouseEnter={() => setHov('ft-1')}
+          onMouseLeave={() => setHov(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/cut-crop'); } }}
+          style={{
+            flex: '1 1 300px',
+            minWidth: 280,
+            minHeight: 180,
+            borderRadius: 16,
+            padding: 2,
+            background: `linear-gradient(135deg, ${C.border}, ${C.dim}40, ${C.border})`,
+            cursor: 'pointer',
+            transition: 'all .15s ease',
+            transform: hov === 'ft-1' ? 'translateY(-1px)' : 'none',
+            boxShadow: hov === 'ft-1' ? '0 8px 24px rgba(0,0,0,.1)' : '0 2px 8px rgba(0,0,0,.05)',
+          }}
+        >
+          <div style={{
+            background: C.card,
+            borderRadius: 14,
+            padding: '22px 20px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <IconScissors size={20} color={C.text} />
+                <span style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>Cut & Crop</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#fff',
+                  background: '#10b981', borderRadius: 4, padding: '1px 6px',
+                  lineHeight: '16px',
+                }}>{'Бесплатно'}</span>
+              </div>
+              <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5, maxWidth: 340 }}>
+                {'Обрежьте и склейте видео в один клип'}
+              </div>
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 13, fontWeight: 600, color: C.text,
+              opacity: hov === 'ft-1' ? 1 : 0.7, transition: 'opacity .15s ease',
+              marginTop: 14,
+            }}>
+              {'Попробовать →'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 3: Quick tools strip ─────────────────────── */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>{'Инструменты'}</h2>
+          <span
+            onClick={() => router.push('/tools')}
+            onMouseEnter={() => setHov('all-tools')}
+            onMouseLeave={() => setHov(null)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
+            style={{
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              opacity: hov === 'all-tools' ? 1 : 0.5, transition: 'opacity .15s ease',
+            }}
+          >
+            {'Все →'}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {([
+            { title: 'YouTube Downloader', href: '/tools/youtube-downloader', Icon: IconDownload, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', badge: 'Free', badgeColor: '#10b981' },
+            { title: 'MP3 Конвертер', href: '/tools/mp3-converter', Icon: IconMusic, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', badge: 'Free', badgeColor: '#10b981' },
+            { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)', badge: 'Free', badgeColor: '#10b981' },
+            { title: 'AI Обложки', href: '/thumbnails', Icon: IconImage, gradient: 'linear-gradient(135deg, #ec4899, #f472b6)', badge: 'Pro', badgeColor: '#8b5cf6' },
+            { title: 'AI SEO', href: '/metadata', Icon: IconSearch, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', badge: 'Pro', badgeColor: '#8b5cf6' },
+            { title: 'Shorts Аналитика', href: '/shorts-analytics', Icon: IconChart, gradient: 'linear-gradient(135deg, #10b981, #34d399)', badge: 'Free', badgeColor: '#10b981' },
+          ] as const).map((tool) => (
+            <div
+              key={tool.href}
+              onClick={() => router.push(tool.href)}
+              onMouseEnter={() => setHov(`qt-${tool.href}`)}
+              onMouseLeave={() => setHov(null)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(tool.href); } }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                width: 88,
+                padding: '10px 4px',
+                borderRadius: 12,
+                cursor: 'pointer',
+                transition: 'all .15s ease',
+                transform: hov === `qt-${tool.href}` ? 'translateY(-1px)' : 'none',
+                background: hov === `qt-${tool.href}` ? `${C.surface}` : 'transparent',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ position: 'relative' }}>
                 <div style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 14,
+                  width: 48, height: 48, borderRadius: 14,
                   background: tool.gradient,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'transform .25s ease',
-                  transform: isHovered ? 'scale(1.08)' : 'scale(1)',
-                  boxShadow: isHovered
-                    ? '0 6px 20px rgba(0,0,0,.15)'
-                    : '0 2px 8px rgba(0,0,0,.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: hov === `qt-${tool.href}` ? '0 4px 12px rgba(0,0,0,.12)' : '0 1px 4px rgba(0,0,0,.06)',
+                  transition: 'box-shadow .15s ease',
                 }}>
-                  <tool.Icon size={22} color="#fff" />
+                  <tool.Icon size={20} color="#fff" />
                 </div>
                 <span style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  lineHeight: 1.3,
-                  letterSpacing: '-.01em',
-                  whiteSpace: 'nowrap',
+                  position: 'absolute', top: -4, right: -8,
+                  fontSize: 9, fontWeight: 700, color: '#fff',
+                  background: tool.badgeColor, borderRadius: 4, padding: '0px 4px',
+                  lineHeight: '15px', letterSpacing: '.02em',
                 }}>
-                  {tool.title}
+                  {tool.badge}
                 </span>
               </div>
-            );
-          })}
+              <span style={{
+                fontSize: 11, fontWeight: 600, textAlign: 'center',
+                lineHeight: 1.2, color: C.sub,
+              }}>
+                {tool.title}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -1017,160 +910,6 @@ const ProjectCard = memo(function ProjectCard({
   );
 });
 
-/* ── Getting Started Section ───────────────────────────── */
-
-const GETTING_STARTED_TOOLS = [
-  {
-    title: 'Создание видео',
-    description: 'Создайте видео из текстовых промптов с помощью ИИ',
-    href: '/editor',
-    gradient: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-    iconBg: 'linear-gradient(135deg, #8b5cf620, #6366f110)',
-    Icon: IconPlay,
-    iconColor: '#8b5cf6',
-  },
-  {
-    title: 'Редактор обложек',
-    description: 'Создайте привлекательную обложку для видео',
-    href: '/thumbnails',
-    gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-    iconBg: 'linear-gradient(135deg, #ec489920, #f43f5e10)',
-    Icon: IconImage,
-    iconColor: '#ec4899',
-  },
-  {
-    title: 'Удалить субтитры',
-    description: 'Удалите субтитры с видео с помощью ИИ',
-    href: '/tools/subtitle-remover',
-    gradient: 'linear-gradient(135deg, #ef4444, #f97316)',
-    iconBg: 'linear-gradient(135deg, #ef444420, #f9731610)',
-    Icon: IconEraser,
-    iconColor: '#ef4444',
-  },
-];
-
-function GettingStartedSection({ C, router }: { C: ReturnType<typeof useThemeStore.getState>['theme']; router: ReturnType<typeof useRouter> }) {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-
-  return (
-    <div
-      style={{
-        marginTop: 28,
-        background: `linear-gradient(135deg, ${C.card}, ${C.surface})`,
-        border: `1px solid ${C.border}`,
-        borderRadius: 16,
-        padding: '28px 26px 32px',
-      }}
-    >
-      <div style={{ marginBottom: 22 }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 800,
-          margin: '0 0 4px',
-          letterSpacing: '-.02em',
-          lineHeight: 1.2,
-        }}>
-          Начнём работу?
-        </h2>
-        <p style={{
-          color: C.sub,
-          fontSize: 14,
-          margin: 0,
-          lineHeight: 1.5,
-        }}>
-          Популярные инструменты для начала
-        </p>
-      </div>
-
-      <div style={{
-        display: 'flex',
-        gap: 16,
-        flexWrap: 'wrap',
-      }}>
-        {GETTING_STARTED_TOOLS.map((tool, i) => {
-          const isHovered = hoveredCard === i;
-          return (
-            <div
-              key={tool.href}
-              onClick={() => router.push(tool.href)}
-              onMouseEnter={() => setHoveredCard(i)}
-              onMouseLeave={() => setHoveredCard(null)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  router.push(tool.href);
-                }
-              }}
-              style={{
-                flex: '1 1 200px',
-                minWidth: 200,
-                background: C.card,
-                border: `1px solid ${isHovered ? C.borderActive : C.border}`,
-                borderRadius: 14,
-                padding: '20px 18px',
-                cursor: 'pointer',
-                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-                transform: isHovered ? 'translateY(-3px)' : 'none',
-                boxShadow: isHovered
-                  ? '0 8px 30px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06)'
-                  : '0 1px 3px rgba(0,0,0,.04)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}>
-                <div style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: tool.gradient,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  <tool.Icon size={20} color="#fff" />
-                </div>
-                <div style={{
-                  opacity: isHovered ? 1 : 0.4,
-                  transition: 'opacity .2s ease, transform .2s ease',
-                  transform: isHovered ? 'translateX(2px)' : 'none',
-                }}>
-                  <IconArrowRight size={16} color={C.sub} />
-                </div>
-              </div>
-              <div>
-                <div style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  marginBottom: 4,
-                  letterSpacing: '-.01em',
-                  color: C.text,
-                }}>
-                  {tool.title}
-                </div>
-                <div style={{
-                  fontSize: 13,
-                  color: C.sub,
-                  lineHeight: 1.45,
-                }}>
-                  {tool.description}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 /* ── Main Dashboard Component ──────────────────────────── */
 
@@ -1392,11 +1131,7 @@ export function Dashboard() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
       {/* ── Welcome Hero Section (Crayo-style) ───────── */}
-      <WelcomeHeroSection
-        userName={user?.name ?? 'Создатель'}
-        router={router}
-        isLoading={profile.isLoading}
-      />
+      <WelcomeSection C={C} router={router} />
 
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
@@ -1831,9 +1566,6 @@ export function Dashboard() {
           )}
         </div>
       </div>
-
-      {/* ── Getting Started ────────────────────────── */}
-      <GettingStartedSection C={C} router={router} />
     </div>
   );
 }
