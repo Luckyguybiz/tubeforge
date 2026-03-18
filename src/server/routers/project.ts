@@ -98,7 +98,7 @@ export const projectRouter = router({
     }),
 
   create: protectedProcedure
-    .input(z.object({ title: z.string().min(1).max(100).optional() }))
+    .input(z.object({ title: z.string().max(100).optional() }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
       const user = await ctx.db.user.findUnique({
