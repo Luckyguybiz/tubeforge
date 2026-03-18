@@ -21,6 +21,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.settings': 'Настройки',
     'nav.admin': 'Админка',
     'nav.billing': 'Оплата',
+    'nav.tools': 'Все инструменты',
 
     // Sidebar
     'sidebar.search': 'Поиск...',
@@ -177,6 +178,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.settings': 'Settings',
     'nav.admin': 'Admin',
     'nav.billing': 'Billing',
+    'nav.tools': 'All Tools',
 
     // Sidebar
     'sidebar.search': 'Search...',
@@ -333,6 +335,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.settings': 'Баптаулар',
     'nav.admin': 'Әкімші',
     'nav.billing': 'Төлем',
+    'nav.tools': 'Барлық құралдар',
 
     // Sidebar
     'sidebar.search': 'Іздеу...',
@@ -489,6 +492,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.settings': 'Ajustes',
     'nav.admin': 'Admin',
     'nav.billing': 'Facturación',
+    'nav.tools': 'Todas las herramientas',
 
     // Sidebar
     'sidebar.search': 'Buscar...',

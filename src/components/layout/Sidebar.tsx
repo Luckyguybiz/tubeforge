@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const COLLAPSE_PAGES = ['thumbnails'];
 
@@ -138,39 +139,41 @@ interface NavGroup {
   condition?: (plan: string, role: string) => boolean;
 }
 
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'Создание',
-    items: [
-      { id: 'dashboard', label: 'Дашборд' },
-      { id: 'editor', label: 'Редактор' },
-      { id: 'metadata', label: 'Метаданные' },
-    ],
-  },
-  {
-    label: 'Инструменты',
-    items: [
-      { id: 'tools', label: 'Все инструменты' },
-      { id: 'thumbnails', label: 'Обложки' },
-      { id: 'preview', label: 'Превью' },
-    ],
-  },
-  {
-    label: 'Команда',
-    items: [
-      { id: 'team', label: 'Команда' },
-    ],
-    condition: (plan) => plan === 'STUDIO',
-  },
-  {
-    label: 'Система',
-    items: [
-      { id: 'settings', label: 'Настройки' },
-      { id: 'billing', label: 'Оплата' },
-      { id: 'admin', label: 'Админка' },
-    ],
-  },
-];
+function getNavGroups(t: (key: string) => string): NavGroup[] {
+  return [
+    {
+      label: t('sidebar.creation'),
+      items: [
+        { id: 'dashboard', label: t('nav.dashboard') },
+        { id: 'editor', label: t('nav.editor') },
+        { id: 'metadata', label: t('nav.metadata') },
+      ],
+    },
+    {
+      label: t('sidebar.tools'),
+      items: [
+        { id: 'tools', label: t('nav.tools') },
+        { id: 'thumbnails', label: t('nav.thumbnails') },
+        { id: 'preview', label: t('nav.preview') },
+      ],
+    },
+    {
+      label: t('sidebar.team'),
+      items: [
+        { id: 'team', label: t('nav.team') },
+      ],
+      condition: (plan) => plan === 'STUDIO',
+    },
+    {
+      label: t('sidebar.system'),
+      items: [
+        { id: 'settings', label: t('nav.settings') },
+        { id: 'billing', label: t('nav.billing') },
+        { id: 'admin', label: t('nav.admin') },
+      ],
+    },
+  ];
+}
 
 /* ── Icon-to-gradient mapping ──────────────────────────────────────── */
 
@@ -249,6 +252,7 @@ const Tooltip = memo(function Tooltip({
 export const Sidebar = memo(function Sidebar() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
@@ -506,6 +510,7 @@ export const Sidebar = memo(function Sidebar() {
   );
 
   /* ── Filter visible groups ──────────────────────────── */
+  const NAV_GROUPS = getNavGroups(t);
   const visibleGroups = NAV_GROUPS.map((group) => {
     const filteredItems = group.items.filter((item) => {
       if (item.id === 'admin' && role !== 'ADMIN') return false;

@@ -4,7 +4,7 @@ import { db } from '@/server/db';
 import { env } from '@/lib/env';
 
 function getStripe() {
-  return new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-18.acacia' as Stripe.LatestApiVersion });
+  return new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2026-02-25.clover' as Stripe.LatestApiVersion });
 }
 
 export async function POST(req: NextRequest) {

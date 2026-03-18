@@ -820,6 +820,7 @@ export default function SettingsPage() {
               key={code}
               onClick={() => {
                 setLanguage(code);
+                toast.success(`Язык изменён: ${label}`);
               }}
               aria-pressed={language === code}
               style={{
