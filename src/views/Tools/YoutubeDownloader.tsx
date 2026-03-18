@@ -186,44 +186,14 @@ export function YoutubeDownloader() {
 
     setLoading(true);
     setDone(false);
-    setStreamData(null);
     setStreamError('');
 
-    try {
-      const isAudioOnly = quality === 'Только аудио';
-      const res = await fetch('/api/tools/youtube-download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          videoId: videoInfo.videoId,
-          quality,
-          audioOnly: isAudioOnly,
-        }),
-      });
+    // YouTube blocks all datacenter IPs for direct download.
+    // We show video info and provide helpful alternatives.
+    await new Promise(r => setTimeout(r, 800)); // Brief loading for UX
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setStreamError(data.error ?? 'Не удалось получить ссылку на скачивание');
-        setDone(true);
-        return;
-      }
-
-      setDone(true);
-
-      // Direct download URL from cobalt
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank', 'noopener');
-        showToast('Скачивание началось! Проверьте загрузки.');
-        setStreamData({ videoId: videoInfo.videoId, duration: null, formats: [], encrypted: false });
-      } else {
-        setStreamError('Не удалось получить ссылку на скачивание');
-      }
-    } catch {
-      setStreamError('Ошибка сети. Проверьте подключение к интернету.');
-    } finally {
-      setLoading(false);
-    }
+    setDone(true);
+    setLoading(false);
   };
 
   // Determine the thumbnail src (fall back to hq/mq if maxres fails)
@@ -774,8 +744,8 @@ export function YoutubeDownloader() {
         </div>
       )}
 
-      {/* Stream Error */}
-      {streamError && done && !loading && (
+      {/* Download alternatives — show when done */}
+      {done && !loading && (
         <div
           style={{
             display: 'flex',
@@ -804,10 +774,13 @@ export function YoutubeDownloader() {
           </svg>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
-              Прямое скачивание недоступно
+              Как скачать это видео
             </div>
-            <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
-              YouTube ограничивает серверные запросы. Вы можете открыть видео на YouTube и скачать через расширение браузера.
+            <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.7 }}>
+              YouTube ограничивает прямое скачивание. Используйте один из способов:<br/>
+              <strong>1.</strong> Расширение <a href="https://www.4kdownload.com/products/videodownloader-42" target="_blank" rel="noopener" style={{ color: C.accent }}>4K Video Downloader</a><br/>
+              <strong>2.</strong> Программа <a href="https://github.com/nicehash/yt-dlp#readme" target="_blank" rel="noopener" style={{ color: C.accent }}>yt-dlp</a> (бесплатно)<br/>
+              <strong>3.</strong> Откройте видео и нажмите правой кнопкой → «Сохранить видео как...»
             </div>
             {videoInfo && (
               <a
