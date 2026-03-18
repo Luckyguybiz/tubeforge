@@ -10,11 +10,11 @@ export const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",  // Next.js requires unsafe-inline; unsafe-eval intentionally omitted
+      "script-src 'self' 'unsafe-inline' blob:",  // Next.js requires unsafe-inline; blob: needed for FFmpeg WASM
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' blob: data: https://lh3.googleusercontent.com https://i.ytimg.com https://yt3.ggpht.com https://oaidalleapiprodscus.blob.core.windows.net",
       "font-src 'self' data:",
-      "connect-src 'self' https://accounts.google.com https://www.googleapis.com https://api.openai.com https://api.anthropic.com https://api.runwayml.com",
+      "connect-src 'self' https://accounts.google.com https://www.googleapis.com https://api.openai.com https://api.anthropic.com https://api.runwayml.com https://unpkg.com https://cdn.jsdelivr.net",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

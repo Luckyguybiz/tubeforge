@@ -63,16 +63,37 @@ export function VideoCompressor() {
   const loadFFmpeg = useCallback(async () => {
     if (ffmpegRef.current) return ffmpegRef.current;
     setFfmpegLoading(true);
+    setError(null);
     try {
       const ffmpeg = new FFmpeg();
       const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-      });
+      const fallbackURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+
+      let loaded = false;
+      for (const url of [baseURL, fallbackURL]) {
+        try {
+          await ffmpeg.load({
+            coreURL: await toBlobURL(`${url}/ffmpeg-core.js`, 'text/javascript'),
+            wasmURL: await toBlobURL(`${url}/ffmpeg-core.wasm`, 'application/wasm'),
+          });
+          loaded = true;
+          break;
+        } catch {
+          continue;
+        }
+      }
+
+      if (!loaded) {
+        throw new Error('Не удалось загрузить модуль FFmpeg');
+      }
+
       ffmpegRef.current = ffmpeg;
       setFfmpegLoaded(true);
       return ffmpeg;
+    } catch (err) {
+      setError('Не удалось загрузить модуль обработки. Попробуйте обновить страницу.');
+      ffmpegRef.current = null;
+      throw err;
     } finally {
       setFfmpegLoading(false);
     }

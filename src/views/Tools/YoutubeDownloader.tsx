@@ -19,32 +19,6 @@ interface VideoInfo {
   formats: { quality: string; ext: string; label: string }[];
 }
 
-interface StreamFormat {
-  quality: string;
-  mimeType: string;
-  url: string | null;
-  hasAudio: boolean;
-  hasVideo: boolean;
-  contentLength: string | null;
-  bitrate: number | null;
-  width: number | null;
-  height: number | null;
-}
-
-interface StreamData {
-  videoId: string;
-  duration: number | null;
-  formats: StreamFormat[];
-  encrypted: boolean;
-}
-
-/** Format bytes into a human-readable string */
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} Б`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} ГБ`;
-}
 
 function isValidYoutubeUrl(url: string): boolean {
   return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?.*v=|shorts\/|embed\/|live\/)|youtu\.be\/)[\w-]+/.test(url.trim());
@@ -67,9 +41,7 @@ export function YoutubeDownloader() {
   const [pasteHover, setPasteHover] = useState(false);
   const [thumbError, setThumbError] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
-  const [streamData, setStreamData] = useState<StreamData | null>(null);
   const [streamError, setStreamError] = useState('');
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   // Debounce timer ref
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -149,9 +121,7 @@ export function YoutubeDownloader() {
     setFetchError('');
     setDone(false);
     setThumbError(false);
-    setStreamData(null);
     setStreamError('');
-    setCopiedUrl(null);
   };
 
   // ── Show toast helper ──────────────────────────────────────────
@@ -160,17 +130,6 @@ export function YoutubeDownloader() {
     setTimeout(() => setToastMsg(''), 4000);
   }, []);
 
-  // ── Copy URL to clipboard helper ─────────────────────────────
-  const handleCopyUrl = useCallback(async (streamUrl: string) => {
-    try {
-      await navigator.clipboard.writeText(streamUrl);
-      setCopiedUrl(streamUrl);
-      showToast('Ссылка скопирована в буфер обмена');
-      setTimeout(() => setCopiedUrl(null), 3000);
-    } catch {
-      showToast('Не удалось скопировать ссылку');
-    }
-  }, [showToast]);
 
   // ── Download handler ───────────────────────────────────────────
   const handleDownload = async () => {
@@ -768,70 +727,6 @@ export function YoutubeDownloader() {
         </div>
       )}
 
-      {/* Download alternatives — show when done */}
-      {done && !loading && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: 16,
-            borderRadius: 12,
-            border: '1px solid rgba(245,158,11,.3)',
-            background: 'rgba(245,158,11,.06)',
-            marginBottom: 20,
-          }}
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
-              Как скачать это видео
-            </div>
-            <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.7 }}>
-              YouTube ограничивает прямое скачивание. Используйте один из способов:<br/>
-              <strong>1.</strong> Расширение <a href="https://www.4kdownload.com/products/videodownloader-42" target="_blank" rel="noopener" style={{ color: C.accent }}>4K Video Downloader</a><br/>
-              <strong>2.</strong> Программа <a href="https://github.com/nicehash/yt-dlp#readme" target="_blank" rel="noopener" style={{ color: C.accent }}>yt-dlp</a> (бесплатно)<br/>
-              <strong>3.</strong> Откройте видео и нажмите правой кнопкой → «Сохранить видео как...»
-            </div>
-            {videoInfo && (
-              <a
-                href={videoInfo.watchUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  marginTop: 8,
-                  padding: '6px 14px',
-                  borderRadius: 8,
-                  background: '#ff0000',
-                  color: '#fff',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                }}
-              >
-                Открыть на YouTube
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Download success message */}
       {done && !loading && !streamError && (
         <div
@@ -852,11 +747,60 @@ export function YoutubeDownloader() {
           </svg>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              Скачивание запущено!
+              Скачивание началось! Проверьте папку загрузок.
             </div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
               Файл загружается в новой вкладке. Это может занять несколько секунд.
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Download error message */}
+      {done && !loading && streamError && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: 16,
+            borderRadius: 12,
+            border: '1px solid rgba(239,68,68,.3)',
+            background: 'rgba(239,68,68,.06)',
+            marginBottom: 20,
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+              {streamError}
+            </div>
+            {videoInfo && (
+              <a
+                href={videoInfo.watchUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 4,
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  background: '#ff0000',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                Открыть на YouTube
+              </a>
+            )}
           </div>
         </div>
       )}
