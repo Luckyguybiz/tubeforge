@@ -83,7 +83,7 @@ function formatViews(n: number): string {
 
 function getPeriodRange(period: Period): string {
   const now = new Date();
-  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
   switch (period) {
     case 'today': return fmt(now);
     case 'yesterday': { const y = new Date(now); y.setDate(y.getDate() - 1); return fmt(y); }
@@ -92,7 +92,7 @@ function getPeriodRange(period: Period): string {
     case '3m': { const d = new Date(now); d.setMonth(d.getMonth() - 3); return `${fmt(d)} - ${fmt(now)}`; }
     case '6m': { const d = new Date(now); d.setMonth(d.getMonth() - 6); return `${fmt(d)} - ${fmt(now)}`; }
     case '1y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return `${fmt(d)} - ${fmt(now)}`; }
-    case 'all': return 'All time';
+    case 'all': return 'Всё время';
   }
 }
 
@@ -318,7 +318,7 @@ function UpgradeOverlay({
               onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
               onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
             >
-              /settings
+              настройки
             </a>{' '}
             чтобы управлять подпиской
           </p>
@@ -444,7 +444,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       }
     } catch (err) {
       console.error('[ShortsAnalytics] fetch error:', err);
-      setError('Failed to load data');
+      setError('Не удалось загрузить данные');
     } finally {
       setLoading(false);
     }
@@ -561,7 +561,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   flexShrink: 0,
                 }}
               >
-                Mock data
+                Тестовые данные
               </div>
             )}
 
@@ -580,7 +580,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   flexShrink: 0,
                 }}
               >
-                Free
+                Бесплатный
               </div>
             )}
           </div>
@@ -608,7 +608,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       </div>
 
       {/* ── Body ──────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {/* ── Sidebar ──────────────────────────────────────── */}
         <div
           style={{

@@ -476,7 +476,7 @@ export default function LandingPage() {
             '@context': 'https://schema.org',
             '@type': 'SoftwareApplication',
             name: 'TubeForge',
-            description: 'AI-powered studio for YouTube creators. Video generation, thumbnail editing, SEO metadata optimization, and channel analytics.',
+            description: 'ИИ-студия для YouTube-креаторов. Генерация видео, редактирование обложек, SEO-оптимизация метаданных и аналитика канала.',
             applicationCategory: 'MultimediaApplication',
             operatingSystem: 'Web',
             url: 'https://tubeforge.ai',
