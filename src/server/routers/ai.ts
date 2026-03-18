@@ -130,11 +130,21 @@ export const aiRouter = router({
               content: [
                 {
                   type: 'text',
-                  text: 'This is a rough sketch/wireframe for a YouTube thumbnail. The user drew an approximate layout of what they want. Interpret the shapes, lines, and text as a BLUEPRINT — not literally. Describe what the final professional thumbnail should look like based on this sketch. Focus on: 1) Main subject/person placement 2) Text areas and what they might say 3) Background style 4) Color scheme 5) Overall composition and mood. Be specific and creative in interpreting the rough drawing into a polished thumbnail concept.',
+                  text: `This image is a canvas sketch for a YouTube thumbnail. Analyze it and describe the EXACT layout for image generation:
+
+1. POSITION of each element (left/center/right, top/middle/bottom, percentages)
+2. If there's a PHOTO of a person — describe where they are positioned and how large
+3. BACKGROUND: what color/style
+4. TEXT areas: where text should go, approximate size
+5. Any drawn shapes or highlights
+
+${input.prompt ? `The user also wants: "${input.prompt}"` : ''}
+
+Be VERY specific about spatial positioning. Example: "Person photo occupying right 30% of frame, large bold text on left 60%, dark gradient background"`,
                 },
                 {
                   type: 'image_url',
-                  image_url: { url: input.imageBase64, detail: 'low' },
+                  image_url: { url: input.imageBase64, detail: 'high' },
                 },
               ],
             }],
@@ -163,7 +173,7 @@ export const aiRouter = router({
         '3d': '3D rendered, CGI quality',
         popart: 'pop art style, bold colors and high contrast',
       };
-      const fullPrompt = `Professional YouTube thumbnail. Layout and composition based on this sketch: ${description}. ${input.prompt ? `User wants: ${input.prompt}.` : ''} Style: ${styleMap[input.style] ?? input.style}. Must be eye-catching, high quality, 16:9 aspect ratio, suitable for YouTube. No watermarks or text artifacts.`;
+      const fullPrompt = `Create a YouTube thumbnail with this EXACT layout: ${description}. Style: ${styleMap[input.style] ?? input.style}. Requirements: follow the described spatial positioning precisely, 16:9 aspect ratio, professional quality, eye-catching. Do NOT add text/watermarks unless specified in the layout.`;
 
       let dalleRes: Response;
       try {
