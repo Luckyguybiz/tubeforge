@@ -68,23 +68,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const videoIds = [...idSet].join(',');
-    if (!videoIds) {
+    const allIds = [...idSet];
+    if (allIds.length === 0) {
       return NextResponse.json({ mock: true, shorts: getMockData(), error: 'No shorts found' });
     }
 
-    // Get video statistics (views, duration) — batched in one call
-    const statsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,contentDetails&id=${videoIds}&key=${apiKey}`,
-    );
-    if (!statsRes.ok) {
-      return NextResponse.json({
-        mock: true,
-        shorts: getMockData(),
-        error: 'Stats API error',
-      });
+    // YouTube videos.list accepts max 50 IDs per request — batch if needed
+    const batches: string[][] = [];
+    for (let i = 0; i < allIds.length; i += 50) {
+      batches.push(allIds.slice(i, i + 50));
     }
-    const statsData = await statsRes.json();
+
+    const statsPromises = batches.map((batch) =>
+      fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,contentDetails&id=${batch.join(',')}&key=${apiKey}`)
+        .then(r => r.ok ? r.json() : null)
+    );
+    const statsResults = await Promise.all(statsPromises);
+
+    // Merge all items from batches
+    const statsData = { items: statsResults.flatMap(r => r?.items ?? []) };
 
     interface YouTubeVideo {
       id: string;
