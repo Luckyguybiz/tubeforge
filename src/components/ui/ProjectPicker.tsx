@@ -160,9 +160,12 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
           {projects.data.items.slice(0, displayCount).map((p) => {
             const st = STATUS_LABEL[p.status] ?? { l: p.status, c: 'dim' };
             return (
-              <button
+              <div
                 key={p.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => router.push(`${target}?projectId=${p.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter') router.push(`${target}?projectId=${p.id}`); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -179,6 +182,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                   textAlign: 'left',
                   width: '100%',
                   transition: 'background .1s',
+                  boxSizing: 'border-box',
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = C.cardHover)}
                 onMouseLeave={(e) => (e.currentTarget.style.background = C.card)}
@@ -233,7 +237,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                 >
                   {deletingId === p.id ? '✓' : '×'}
                 </button>
-              </button>
+              </div>
             );
           })}
           {projects.data.items.length > displayCount && (
