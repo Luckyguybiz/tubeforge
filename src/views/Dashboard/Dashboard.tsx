@@ -126,6 +126,42 @@ function IconChevronRight({ size = 16, color = 'currentColor' }: { size?: number
   );
 }
 
+function IconPlay({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  );
+}
+
+function IconImage({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
+
+function IconEraser({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0L21.4 5.6c.8.8.8 2 0 2.8L10 20" />
+      <path d="M6 11l7 7" />
+    </svg>
+  );
+}
+
+function IconArrowRight({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  );
+}
+
 /* ── Empty state illustration ──────────────────────────── */
 
 function EmptyIllustration({ color, dimColor }: { color: string; dimColor: string }) {
@@ -501,6 +537,161 @@ const ProjectCard = memo(function ProjectCard({
     </div>
   );
 });
+
+/* ── Getting Started Section ───────────────────────────── */
+
+const GETTING_STARTED_TOOLS = [
+  {
+    title: 'Создание видео',
+    description: 'Создайте видео из текстовых промптов с помощью ИИ',
+    href: '/editor',
+    gradient: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+    iconBg: 'linear-gradient(135deg, #8b5cf620, #6366f110)',
+    Icon: IconPlay,
+    iconColor: '#8b5cf6',
+  },
+  {
+    title: 'Редактор обложек',
+    description: 'Создайте привлекательную обложку для видео',
+    href: '/thumbnails',
+    gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
+    iconBg: 'linear-gradient(135deg, #ec489920, #f43f5e10)',
+    Icon: IconImage,
+    iconColor: '#ec4899',
+  },
+  {
+    title: 'Удалить субтитры',
+    description: 'Удалите субтитры с видео с помощью ИИ',
+    href: '/tools/subtitle-remover',
+    gradient: 'linear-gradient(135deg, #ef4444, #f97316)',
+    iconBg: 'linear-gradient(135deg, #ef444420, #f9731610)',
+    Icon: IconEraser,
+    iconColor: '#ef4444',
+  },
+];
+
+function GettingStartedSection({ C, router }: { C: ReturnType<typeof useThemeStore.getState>['theme']; router: ReturnType<typeof useRouter> }) {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  return (
+    <div
+      style={{
+        marginTop: 28,
+        background: `linear-gradient(135deg, ${C.card}, ${C.surface})`,
+        border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        padding: '28px 26px 32px',
+      }}
+    >
+      <div style={{ marginBottom: 22 }}>
+        <h2 style={{
+          fontSize: 20,
+          fontWeight: 800,
+          margin: '0 0 4px',
+          letterSpacing: '-.02em',
+          lineHeight: 1.2,
+        }}>
+          Начнём работу?
+        </h2>
+        <p style={{
+          color: C.sub,
+          fontSize: 14,
+          margin: 0,
+          lineHeight: 1.5,
+        }}>
+          Популярные инструменты для начала
+        </p>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        gap: 16,
+        flexWrap: 'wrap',
+      }}>
+        {GETTING_STARTED_TOOLS.map((tool, i) => {
+          const isHovered = hoveredCard === i;
+          return (
+            <div
+              key={tool.href}
+              onClick={() => router.push(tool.href)}
+              onMouseEnter={() => setHoveredCard(i)}
+              onMouseLeave={() => setHoveredCard(null)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  router.push(tool.href);
+                }
+              }}
+              style={{
+                flex: '1 1 200px',
+                minWidth: 200,
+                background: C.card,
+                border: `1px solid ${isHovered ? C.borderActive : C.border}`,
+                borderRadius: 14,
+                padding: '20px 18px',
+                cursor: 'pointer',
+                transition: 'all .25s cubic-bezier(.4,0,.2,1)',
+                transform: isHovered ? 'translateY(-3px)' : 'none',
+                boxShadow: isHovered
+                  ? '0 8px 30px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06)'
+                  : '0 1px 3px rgba(0,0,0,.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: tool.gradient,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <tool.Icon size={20} color="#fff" />
+                </div>
+                <div style={{
+                  opacity: isHovered ? 1 : 0.4,
+                  transition: 'opacity .2s ease, transform .2s ease',
+                  transform: isHovered ? 'translateX(2px)' : 'none',
+                }}>
+                  <IconArrowRight size={16} color={C.sub} />
+                </div>
+              </div>
+              <div>
+                <div style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  marginBottom: 4,
+                  letterSpacing: '-.01em',
+                  color: C.text,
+                }}>
+                  {tool.title}
+                </div>
+                <div style={{
+                  fontSize: 13,
+                  color: C.sub,
+                  lineHeight: 1.45,
+                }}>
+                  {tool.description}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 /* ── Main Dashboard Component ──────────────────────────── */
 
@@ -1154,6 +1345,9 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Getting Started ────────────────────────── */}
+      <GettingStartedSection C={C} router={router} />
     </div>
   );
 }

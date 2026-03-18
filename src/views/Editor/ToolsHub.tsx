@@ -762,11 +762,28 @@ const ToolCard = memo(function ToolCard({
             <SparkleIcon size={12} color={tool.gradient[0]} />
             Доступно
           </span>
-          <span style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: C.dim,
-          }}>
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(tool);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpen(tool);
+              }
+            }}
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: hovered ? tool.gradient[0] : C.dim,
+              cursor: 'pointer',
+              transition: 'color .2s',
+            }}
+          >
             Открыть →
           </span>
         </div>

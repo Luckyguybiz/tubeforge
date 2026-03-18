@@ -651,6 +651,23 @@ export function Metadata({ projectId }: { projectId: string | null }) {
     [desc, setDesc]
   );
 
+  // Input style base — must be called before early returns to satisfy Rules of Hooks
+  const inputBase = useMemo<React.CSSProperties>(() => ({
+    width: '100%',
+    padding: '12px 16px',
+    background: C.surface,
+    border: `1px solid ${C.border}`,
+    borderRadius: 10,
+    color: C.text,
+    fontSize: 15,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+    lineHeight: 1.5,
+    outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  }), [C.surface, C.border, C.text]);
+
   /* ─── Project picker ─────────────────────────────── */
   if (!projectId) {
     return <ProjectPicker target="/metadata" title="Метаданные" />;
@@ -750,22 +767,6 @@ export function Metadata({ projectId }: { projectId: string | null }) {
   const titleCaution = title.length >= 70;
   const descWarning = desc.length > 5000;
   const descCaution = desc.length >= 4500;
-
-  const inputBase = useMemo<React.CSSProperties>(() => ({
-    width: '100%',
-    padding: '12px 16px',
-    background: C.surface,
-    border: `1px solid ${C.border}`,
-    borderRadius: 10,
-    color: C.text,
-    fontSize: 15,
-    fontWeight: 500,
-    fontFamily: 'inherit',
-    boxSizing: 'border-box',
-    lineHeight: 1.5,
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-  }), [C.surface, C.border, C.text]);
 
   const currentProject = projectsList.data?.items?.find((p) => p.id === projectId);
 

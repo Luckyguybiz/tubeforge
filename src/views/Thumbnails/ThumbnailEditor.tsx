@@ -293,6 +293,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().setResize({ id: el.id }); }}
         style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, background: C.accent, borderRadius: 2, cursor: 'nwse-resize', zIndex: 5 }} />
     );
+    const deleteHandle = isSel && (
+      <div
+        title="Удалить"
+        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistory(); store().delEl(el.id); }}
+        style={{ position: 'absolute', top: -10, right: -10, width: 20, height: 20, background: '#e53935', borderRadius: '50%', cursor: 'pointer', zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,.3)' }}
+      >&times;</div>
+    );
     const elDrag = (e: React.MouseEvent) => {
       e.stopPropagation(); store().setSelId(el.id);
       const rect = (e.currentTarget as HTMLElement).closest('[data-canvas]')?.getBoundingClientRect() ?? (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
@@ -306,25 +313,25 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
         onMouseDown={(e) => { if (!isSel) { e.stopPropagation(); store().setSelId(el.id); } }}>
-        {el.text}{resizeHandle}
+        {el.text}{resizeHandle}{deleteHandle}
       </div>
     );
 
     if (el.type === 'rect') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
-        onMouseDown={elDrag}>{resizeHandle}</div>
+        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
-        onMouseDown={elDrag}>{resizeHandle}</div>
+        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'image') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         onMouseDown={elDrag}>
         <img src={el.src} alt="Изображение" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
-        {resizeHandle}
+        {resizeHandle}{deleteHandle}
       </div>
     );
 
@@ -359,7 +366,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}>
-        {el.noteText ?? 'Заметка'}{resizeHandle}
+        {el.noteText ?? 'Заметка'}{resizeHandle}{deleteHandle}
       </div>
     );
 
@@ -383,7 +390,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             );
           })}
-          {resizeHandle}
+          {resizeHandle}{deleteHandle}
         </div>
       );
     }

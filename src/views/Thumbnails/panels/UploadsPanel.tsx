@@ -25,6 +25,15 @@ export function UploadsPanel() {
     onError: (err) => toast.error(err.message),
   });
 
+  /** Read a File as a base64 data URL (client-side fallback). */
+  const readAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
   const uploadFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Поддерживаются только изображения (PNG, JPG, WebP)');
@@ -39,13 +48,21 @@ export function UploadsPanel() {
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!res.ok) { toast.error('Ошибка загрузки'); return; }
+      if (!res.ok) {
+        // Server upload failed — fall back to data URL so the image still appears on canvas
+        const dataUrl = await readAsDataUrl(file);
+        addImage(dataUrl);
+        return;
+      }
       const data = await res.json();
       if (data.error) {
-        toast.error(data.error);
+        // Server returned an error payload — fall back to data URL
+        const dataUrl = await readAsDataUrl(file);
+        addImage(dataUrl);
         return;
       }
       if (data.url) {
+        addImage(data.url);
         await createAsset.mutateAsync({
           url: data.url,
           filename: file.name,
@@ -53,8 +70,14 @@ export function UploadsPanel() {
           size: file.size,
         });
       }
-    } catch (err) {
-      toast.error('Не удалось загрузить файл');
+    } catch {
+      // Network / unexpected error — fall back to data URL
+      try {
+        const dataUrl = await readAsDataUrl(file);
+        addImage(dataUrl);
+      } catch {
+        toast.error('Не удалось загрузить файл');
+      }
     } finally {
       setUploading(false);
     }
