@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -24,6 +24,12 @@ export function TiktokDownloader() {
   const [hoveredFormat, setHoveredFormat] = useState<string | null>(null);
   const [pasteHover, setPasteHover] = useState(false);
   const [downloadHover, setDownloadHover] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
 
   const validateUrl = useCallback((value: string) => {
     if (!value.trim()) {
@@ -52,9 +58,10 @@ export function TiktokDownloader() {
     setLoading(true);
     setProgress(0);
     setDone(false);
-    const iv = setInterval(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
       setProgress((p) => {
-        if (p >= 100) { clearInterval(iv); setLoading(false); setDone(true); return 100; }
+        if (p >= 100) { if (intervalRef.current) clearInterval(intervalRef.current); intervalRef.current = null; setLoading(false); setDone(true); return 100; }
         return p + Math.random() * 15;
       });
     }, 250);

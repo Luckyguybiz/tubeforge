@@ -4,7 +4,14 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
-const QUALITIES = ['1080p', '720p', '480p', '360p', 'Только аудио'] as const;
+const QUALITY_VALUES = ['1080p', '720p', '480p', '360p', 'audio'] as const;
+const QUALITY_LABELS: Record<(typeof QUALITY_VALUES)[number], string> = {
+  '1080p': '1080p',
+  '720p': '720p',
+  '480p': '480p',
+  '360p': '360p',
+  audio: 'Только аудио',
+};
 const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
 
 function formatBytes(bytes: number): string {
@@ -40,7 +47,7 @@ export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
 
   const [url, setUrl] = useState('');
-  const [quality, setQuality] = useState<(typeof QUALITIES)[number]>('1080p');
+  const [quality, setQuality] = useState<(typeof QUALITY_VALUES)[number]>('1080p');
   const [format, setFormat] = useState<(typeof FORMATS)[number]>('MP4');
   const [loading, setLoading] = useState(false);
   const [fetchingInfo, setFetchingInfo] = useState(false);
@@ -166,7 +173,7 @@ export function YoutubeDownloader() {
     setDownloadSpeed(0);
 
     try {
-      const isAudioOnly = quality === 'Только аудио';
+      const isAudioOnly = quality === 'audio';
       const res = await fetch('/api/tools/youtube-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -692,7 +699,7 @@ export function YoutubeDownloader() {
           Качество
         </label>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {QUALITIES.map((q) => (
+          {QUALITY_VALUES.map((q) => (
             <button
               key={q}
               onClick={() => setQuality(q)}
@@ -716,7 +723,7 @@ export function YoutubeDownloader() {
                 fontFamily: 'inherit',
               }}
             >
-              {q}
+              {QUALITY_LABELS[q]}
             </button>
           ))}
         </div>

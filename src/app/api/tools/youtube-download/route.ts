@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
     });
   } catch {
     return NextResponse.json({
-      error: 'Сервис скачивания временно недоступен. Попробуйте позже.',
+      error: 'Download service is temporarily unavailable. Please try again later.',
     }, { status: 502 });
   }
 }

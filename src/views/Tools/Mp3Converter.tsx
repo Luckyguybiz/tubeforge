@@ -64,8 +64,8 @@ export function Mp3Converter() {
     setError(null);
     try {
       const ffmpeg = new FFmpeg();
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm';
-      const fallbackURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+      const fallbackURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
 
       let loaded = false;
       for (const url of [baseURL, fallbackURL]) {
@@ -155,7 +155,7 @@ export function Mp3Converter() {
 
       const output = await ffmpeg.readFile(outputName_);
       const rawBytes = output instanceof Uint8Array ? output : new TextEncoder().encode(output);
-      const blob = new Blob([rawBytes.buffer as ArrayBuffer], { type: MIME_MAP[outputFormat] });
+      const blob = new Blob([new Uint8Array(rawBytes) as BlobPart], { type: MIME_MAP[outputFormat] });
 
       setConvertedBlob(blob);
       setConvertedSize(blob.size);

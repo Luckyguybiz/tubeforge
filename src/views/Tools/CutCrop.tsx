@@ -97,6 +97,8 @@ export function CutCrop() {
   const timelineRef = useRef<HTMLDivElement>(null);
   const trimRef = useRef<{ segId: string; edge: 'left' | 'right'; startX: number; origTime: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoUrlRef = useRef(videoUrl);
+  videoUrlRef.current = videoUrl;
 
   /* ---- file handling ---- */
   const loadFile = useCallback((f: File) => {
@@ -115,7 +117,7 @@ export function CutCrop() {
   }, [videoUrl]);
 
   useEffect(() => {
-    return () => { if (videoUrl) URL.revokeObjectURL(videoUrl); };
+    return () => { if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

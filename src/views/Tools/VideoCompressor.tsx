@@ -162,7 +162,7 @@ export function VideoCompressor() {
       const output = await ffmpeg.readFile(`output.${ext}`);
       const mimeType = format === 'webm' ? 'video/webm' : 'video/mp4';
       const blob = output instanceof Uint8Array
-        ? new Blob([new Uint8Array(output)], { type: mimeType })
+        ? new Blob([new Uint8Array(output) as BlobPart], { type: mimeType })
         : new Blob([output as string], { type: mimeType });
 
       setCompressedBlob(blob);
