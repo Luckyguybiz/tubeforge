@@ -7,6 +7,33 @@ const FETCH_TIMEOUT_MS = 10_000;
 // In-memory cache: key = period+country+category, value = { data, timestamp }
 const cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const CACHE_MAX_SIZE = 100;
+
+// Periodic cache cleanup: evict expired entries every 10 minutes
+const CACHE_CLEANUP_INTERVAL = 10 * 60 * 1000;
+let lastCacheCleanup = Date.now();
+
+function cleanupCache() {
+  const now = Date.now();
+  if (now - lastCacheCleanup < CACHE_CLEANUP_INTERVAL && cache.size <= CACHE_MAX_SIZE) return;
+  lastCacheCleanup = now;
+
+  // Remove expired entries
+  for (const [key, entry] of cache) {
+    if (now - entry.ts >= CACHE_TTL) {
+      cache.delete(key);
+    }
+  }
+
+  // If still over limit, evict oldest entries
+  if (cache.size > CACHE_MAX_SIZE) {
+    const entries = [...cache.entries()].sort((a, b) => a[1].ts - b[1].ts);
+    const toDelete = cache.size - CACHE_MAX_SIZE;
+    for (let i = 0; i < toDelete; i++) {
+      cache.delete(entries[i][0]);
+    }
+  }
+}
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -46,6 +73,7 @@ export async function GET(req: NextRequest) {
   }
 
   const cacheKey = `${period}:${country}:${category}:${game}`;
+  cleanupCache();
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     const cachedShorts = Array.isArray(cached.data) ? cached.data.slice(0, limit) : cached.data;
@@ -207,14 +235,9 @@ export async function GET(req: NextRequest) {
       channelAvatar: avatarMap.get(s.channelId) ?? null,
     }));
 
-    // Cache the results
+    // Cache the results and run periodic cleanup
     cache.set(cacheKey, { data: shortsWithAvatars, ts: Date.now() });
-
-    // Cleanup old cache entries
-    if (cache.size > 100) {
-      const oldest = [...cache.entries()].sort((a, b) => a[1].ts - b[1].ts);
-      for (let i = 0; i < 50; i++) cache.delete(oldest[i][0]);
-    }
+    cleanupCache();
 
     return NextResponse.json({ mock: false, shorts: shortsWithAvatars.slice(0, limit), cached: false });
   } catch (err) {

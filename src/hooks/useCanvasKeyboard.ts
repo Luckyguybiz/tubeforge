@@ -75,12 +75,17 @@ export function useCanvasKeyboard() {
         return;
       }
 
-      // Delete: Delete or Backspace (delEl already pushes history internally)
+      // Delete: Delete or Backspace — batch into a single undo step
       if (e.key === 'Delete' || e.key === 'Backspace') {
         const ids = [...store.selIds];
         if (ids.length > 0) {
-          ids.forEach((id) => {
-            useThumbnailStore.getState().delEl(id);
+          store.pushHistory();
+          // Delete all selected elements without pushing history for each one
+          const currentEls = useThumbnailStore.getState().els;
+          const idSet = new Set(ids);
+          useThumbnailStore.setState({
+            els: currentEls.filter((e) => !idSet.has(e.id)),
+            selIds: [],
           });
         }
         return;

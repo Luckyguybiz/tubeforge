@@ -44,6 +44,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Real-time collaboration
   useCollaboration(projectId);
@@ -122,13 +123,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       <div style={{ marginTop: 24 }}><Skeleton width="100%" height="400px" rounded /></div>
     </div>
   );
+  if (project.error) return (
+    <div style={{ padding: 24, textAlign: 'center' }}>
+      <p style={{ color: C.accent, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Не удалось загрузить проект</p>
+      <p style={{ color: C.sub, fontSize: 12, marginBottom: 16 }}>{project.error.message}</p>
+      <button onClick={() => project.refetch()} style={{ padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Повторить</button>
+    </div>
+  );
 
-  const getCanvasCoords = (e: React.MouseEvent<HTMLDivElement | SVGElement>) => {
+  const getCanvasCoords = (e: React.MouseEvent<HTMLDivElement | SVGElement> | React.TouchEvent<HTMLDivElement>) => {
     const target = (e.currentTarget as HTMLElement).closest('[data-canvas]') as HTMLElement ?? e.currentTarget;
     const rect = target.getBoundingClientRect();
     const sx = canvasW / rect.width;
     const sy = canvasH / rect.height;
-    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
+    const clientX = 'touches' in e ? (e.touches[0]?.clientX ?? (e as React.TouchEvent).changedTouches[0]?.clientX ?? 0) : e.clientX;
+    const clientY = 'touches' in e ? (e.touches[0]?.clientY ?? (e as React.TouchEvent).changedTouches[0]?.clientY ?? 0) : e.clientY;
+    return { x: (clientX - rect.left) * sx, y: (clientY - rect.top) * sy };
   };
 
   const onCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -219,11 +229,63 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] });
   };
 
+  // ===== Touch event handlers for mobile support =====
+  const onCanvasTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) return; // ignore multi-touch (pinch zoom etc.)
+    const { x, y } = getCanvasCoords(e);
+    if (tool === 'draw') { store().setDrawing(true); store().setDrawPts([{ x, y }]); return; }
+    if (tool === 'line' || tool === 'arrow') { store().setLinePreview({ x1: x, y1: y, x2: x, y2: y }); return; }
+    if (tool === 'stickyNote') { store().addStickyNote(x - 100, y - 75); return; }
+    if (tool === 'eraser') {
+      const hit = hitTestElement(els, x, y);
+      if (hit) store().delEl(hit.id);
+      return;
+    }
+    if (tool !== 'select') return;
+    const clicked = hitTestElement(els, x, y);
+    if (clicked) {
+      store().setSelId(clicked.id);
+      store().pushHistoryDebounced();
+      store().setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
+    } else { store().setSelId(null); }
+  };
+
+  const onCanvasTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) return;
+    const { x, y } = getCanvasCoords(e);
+    if (drawing && tool === 'draw') { e.preventDefault(); store().setDrawPts((p) => [...p, { x, y }]); return; }
+    if (linePreview && (tool === 'line' || tool === 'arrow')) { e.preventDefault(); store().setLinePreview({ ...linePreview, x2: x, y2: y }); return; }
+    const curResize = store().resize;
+    if (curResize) {
+      e.preventDefault();
+      const el = els.find((e) => e.id === curResize.id);
+      if (!el) return;
+      let nw = x - el.x, nh = y - el.y;
+      if (nw < 20) nw = 20; if (nh < 20) nh = 20;
+      store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
+      return;
+    }
+    const curDrag = store().drag;
+    if (!curDrag) return;
+    e.preventDefault();
+    const nx = Math.round(x - curDrag.ox), ny = Math.round(y - curDrag.oy);
+    store().updEl(curDrag.id, { x: nx, y: ny });
+  };
+
+  const onCanvasTouchEnd = () => {
+    onCanvasMouseUp();
+  };
+
   // ===== Download =====
   const downloadCanvas = (format: 'png' | 'jpg' | 'pdf' = 'png') => {
     const canvas = document.createElement('canvas');
     canvas.width = canvasW; canvas.height = canvasH;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('[ThumbnailEditor] Failed to create canvas 2D context');
+      return;
+    }
+    setIsDownloading(true);
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
 
     // Preload all images first so we can draw elements in correct z-order
@@ -236,11 +298,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       img.src = el.src!;
     }));
 
-    Promise.all(imagePromises).then(() => {
+    Promise.all(imagePromises).then(async () => {
       // Draw all elements in order (correct z-layering)
       for (const el of els) {
         if (el.visible === false) continue;
         ctx.globalAlpha = el.opacity ?? 1;
+        // Apply rotation if present
+        const rot = el.rot ?? 0;
+        if (rot !== 0) {
+          const cx = el.x + el.w / 2, cy = el.y + el.h / 2;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate((rot * Math.PI) / 180);
+          ctx.translate(-cx, -cy);
+        }
         if (el.type === 'rect') {
           ctx.fillStyle = el.color ?? '#fff';
           if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
@@ -281,9 +352,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
           for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
         }
+        // Restore rotation transform if applied
+        if (rot !== 0) { ctx.restore(); }
         ctx.globalAlpha = 1;
       }
-    }).then(async () => {
+
+      // Export in the requested format
       if (format === 'pdf') {
         try {
           const { default: jsPDF } = await import('jspdf');
@@ -299,14 +373,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           link.href = canvas.toDataURL('image/png');
           link.click();
         }
-        return;
+      } else {
+        const link = document.createElement('a');
+        link.download = format === 'jpg' ? 'thumbnail.jpg' : 'thumbnail.png';
+        link.href = format === 'jpg' ? canvas.toDataURL('image/jpeg', 0.92) : canvas.toDataURL('image/png');
+        link.click();
       }
-      const link = document.createElement('a');
-      link.download = format === 'jpg' ? 'thumbnail.jpg' : 'thumbnail.png';
-      link.href = format === 'jpg' ? canvas.toDataURL('image/jpeg', 0.92) : canvas.toDataURL('image/png');
-      link.click();
     }).catch((err) => {
       if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Download failed:', err);
+    }).finally(() => {
+      setIsDownloading(false);
     });
   };
 
@@ -321,7 +397,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const deleteHandle = isSel && (
       <div
         title="Удалить"
-        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistory(); store().delEl(el.id); }}
+        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().delEl(el.id); }}
         style={{ position: 'absolute', top: -10, right: -10, width: 20, height: 20, background: '#e53935', borderRadius: '50%', cursor: 'pointer', zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,.3)' }}
       >&times;</div>
     );
@@ -373,6 +449,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'path') return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
         <path d={el.path} fill="none" stroke={el.color} strokeWidth={el.strokeW} strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity} />
+        {/* Invisible wider hit area for selection */}
+        <path d={el.path} fill="none" stroke="transparent" strokeWidth={Math.max((el.strokeW ?? 3) + 10, 14)} strokeLinecap="round" strokeLinejoin="round"
+          style={{ pointerEvents: 'stroke', cursor: isSel ? 'move' : 'pointer' }}
+          onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
+        {isSel && deleteHandle && (
+          <foreignObject x={el.x + el.w - 10} y={el.y - 10} width={20} height={20}>
+            {deleteHandle}
+          </foreignObject>
+        )}
       </svg>
     );
 
@@ -439,7 +524,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (visibleCanvas && visibleCanvas.width > 0) {
       try { return visibleCanvas.toDataURL('image/png'); } catch { /* tainted canvas, fall through */ }
     }
-    // Fallback: render manually
+    // Fallback: render manually (non-image elements only; images require async loading)
     const canvas = document.createElement('canvas');
     canvas.width = canvasW; canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
@@ -455,13 +540,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       } else if (el.type === 'text') {
         ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
         ctx.fillText(el.text ?? '', el.x + 8, el.y + (el.size ?? 32));
-      } else if (el.type === 'image' && el.src) {
-        // Draw loaded images
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = el.src;
-        try { ctx.drawImage(img, el.x, el.y, el.w, el.h); } catch { /* skip if not loaded */ }
+      } else if (el.type === 'path') {
+        ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
       }
+      // Note: images are skipped in sync capture since they require async loading.
+      // The downloadCanvas() function handles images correctly via Promise.all.
       ctx.globalAlpha = 1;
     }
     return canvas.toDataURL('image/png');
@@ -469,8 +552,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    if (!file.type.startsWith('image/')) { e.target.value = ''; return; }
     const reader = new FileReader();
     reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') store().addImage(result); };
+    reader.onerror = () => { if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Failed to read file:', file.name); };
     reader.readAsDataURL(file); e.target.value = '';
   };
 
@@ -517,6 +602,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (!file.type.startsWith('image/')) return;
         const reader = new FileReader();
         reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') store().addImage(result); };
+        reader.onerror = () => { if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Failed to read dropped file:', file.name); };
         reader.readAsDataURL(file);
       });
     }
@@ -583,7 +669,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Download dropdown */}
           <div style={{ position: 'relative' }}>
-            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} title="Скачать обложку" style={{ ...headerBtn, padding: '7px 14px' }}>{downloadIcon} Скачать {chevronIcon}</button>
+            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} disabled={isDownloading} title="Скачать обложку" style={{ ...headerBtn, padding: '7px 14px', opacity: isDownloading ? 0.5 : 1, cursor: isDownloading ? 'wait' : 'pointer' }}>{downloadIcon} {isDownloading ? 'Скачивание...' : 'Скачать'} {chevronIcon}</button>
             {showDownloadMenu && (
               <div style={{ ...dropdownPanel, minWidth: 140 }}>
                 {[{ label: 'PNG', format: 'png' as const, desc: 'Без потерь' }, { label: 'JPG', format: 'jpg' as const, desc: 'Сжатый' }, { label: 'PDF', format: 'pdf' as const, desc: 'Документ' }].map((opt) => (
@@ -613,7 +699,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           onMouseDown={onMiddleDown} onMouseMove={onMiddleMove} onMouseUp={onMiddleUp} onMouseLeave={onMiddleUp}>
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
-            <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
+            <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
               style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
             {els.map(renderElement)}
             {/* Collaboration cursors overlay */}

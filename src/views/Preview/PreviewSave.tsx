@@ -321,7 +321,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               {t('preview.title')}
             </h1>
             <p style={{ fontSize: 13, color: C.sub, margin: '2px 0 0' }}>
-              {p.title || t('preview.untitled')} &middot; {pluralRu(scenes.length, 'сцена', 'сцены', 'сцен')} &middot; {fmtTime(totalDuration)}
+              {p.title || t('preview.untitled')} &middot; {pluralRu(scenes.length, t('preview.scene.one'), t('preview.scene.few'), t('preview.scene.many'))} &middot; {fmtTime(totalDuration)}
             </p>
           </div>
         </div>

@@ -770,7 +770,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       : saveStatus === 'saved'
         ? { text: t('metadata.save.saved'), color: C.green, icon: '\u2713' }
         : saveStatus === 'error'
-          ? { text: 'Ошибка сохранения', color: C.red, icon: '\u26A0' }
+          ? { text: t('metadata.saveError'), color: C.red, icon: '\u26A0' }
           : null;
 
   const titleWarning = title.length > 100;

@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useRef, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { Theme } from '@/lib/types';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -23,24 +24,25 @@ interface ToolDef {
   gradient: [string, string];
 }
 
-const TOOLS: ToolDef[] = [
+function getTools(t: (key: string) => string): ToolDef[] {
+  return [
   /* ── Core Studio Tools ─────────────────────────────── */
   {
     id: 'video',
-    name: 'Видео генерация',
-    subtitle: 'ИИ · Runway ML',
-    description: 'Создайте видео из текстовых промптов с помощью Runway ML Gen-3 Alpha. Управляйте сценами, моделями и эффектами.',
+    name: t('toolshub.tool.video.name'),
+    subtitle: t('toolshub.tool.video.subtitle'),
+    description: t('toolshub.tool.video.description'),
     category: 'creation',
     route: '/editor',
     available: true,
-    badge: 'Популярное',
+    badge: t('toolshub.popular'),
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
     id: 'thumbnails',
-    name: 'Редактор обложек',
+    name: t('toolshub.tool.thumbnails.name'),
     subtitle: 'Canvas · DALL-E 3',
-    description: 'Полнофункциональный canvas-редактор как в Canva. Текст, фигуры, изображения, ИИ-генерация обложек.',
+    description: t('toolshub.tool.thumbnails.description'),
     category: 'creation',
     route: '/thumbnails',
     available: true,
@@ -48,9 +50,9 @@ const TOOLS: ToolDef[] = [
   },
   {
     id: 'metadata',
-    name: 'SEO Метаданные',
-    subtitle: 'ИИ · Claude',
-    description: 'Оптимизируйте название, описание и теги видео. ИИ анализирует тренды и генерирует SEO-контент.',
+    name: t('toolshub.tool.metadata.name'),
+    subtitle: t('toolshub.tool.metadata.subtitle'),
+    description: t('toolshub.tool.metadata.description'),
     category: 'optimization',
     route: '/metadata',
     available: true,
@@ -58,9 +60,9 @@ const TOOLS: ToolDef[] = [
   },
   {
     id: 'preview',
-    name: 'Превью и публикация',
-    subtitle: 'YouTube · Публикация',
-    description: 'Проверьте финальный результат и загрузите видео напрямую на YouTube. Планирование публикаций.',
+    name: t('toolshub.tool.preview.name'),
+    subtitle: t('toolshub.tool.preview.subtitle'),
+    description: t('toolshub.tool.preview.description'),
     category: 'publishing',
     route: '/preview',
     available: true,
@@ -71,8 +73,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'image-generator',
     name: 'AI Image Generator',
-    subtitle: 'DALL-E 3 · ИИ',
-    description: 'Генерируйте высококачественные изображения с помощью ИИ за секунды. Пресеты, стили, промпт-генератор.',
+    subtitle: t('toolshub.tool.image-generator.subtitle'),
+    description: t('toolshub.tool.image-generator.description'),
     category: 'ai',
     route: '/tools/image-generator',
     available: false,
@@ -81,8 +83,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'voiceover-generator',
     name: 'AI Voiceover Generator',
-    subtitle: '50+ голосов · ИИ',
-    description: 'Создавайте качественную озвучку с 50+ нарраторами за секунды. Мультиязычная поддержка.',
+    subtitle: t('toolshub.tool.voiceover-generator.subtitle'),
+    description: t('toolshub.tool.voiceover-generator.description'),
     category: 'ai',
     route: '/tools/voiceover-generator',
     available: false,
@@ -91,8 +93,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'speech-enhancer',
     name: 'AI Speech Enhancer',
-    subtitle: 'Аудио · ИИ',
-    description: 'Улучшите качество любого аудио или видео файла с помощью ИИ. Удаление шума, эхо, нормализация.',
+    subtitle: t('toolshub.tool.speech-enhancer.subtitle'),
+    description: t('toolshub.tool.speech-enhancer.description'),
     category: 'ai',
     route: '/tools/speech-enhancer',
     available: false,
@@ -101,8 +103,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'veo3-generator',
     name: 'AI Video Generator',
-    subtitle: 'VEO3 · ИИ',
-    description: 'Создавайте видео с помощью ИИ. Промпт → видеоклип за секунды. Кинематографичный стиль.',
+    subtitle: t('toolshub.tool.veo3-generator.subtitle'),
+    description: t('toolshub.tool.veo3-generator.description'),
     category: 'ai',
     route: '/tools/veo3-generator',
     available: false,
@@ -111,8 +113,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'brainstormer',
     name: 'AI Brainstormer',
-    subtitle: 'Идеи · GPT',
-    description: 'Генерируйте идеи для контента с помощью ИИ. Анализ трендов, целевая аудитория, оценка потенциала.',
+    subtitle: t('toolshub.tool.brainstormer.subtitle'),
+    description: t('toolshub.tool.brainstormer.description'),
     category: 'ai',
     route: '/tools/brainstormer',
     available: false,
@@ -121,8 +123,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'vocal-remover',
     name: 'AI Vocal Remover',
-    subtitle: 'Разделение · ИИ',
-    description: 'Разделите вокал и инструментал из любого аудиофайла. Высокое качество разделения.',
+    subtitle: t('toolshub.tool.vocal-remover.subtitle'),
+    description: t('toolshub.tool.vocal-remover.description'),
     category: 'ai',
     route: '/tools/vocal-remover',
     available: false,
@@ -131,8 +133,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'ai-creator',
     name: 'AI Creator',
-    subtitle: 'Аватар · ИИ',
-    description: 'Станьте ИИ-контент-креатором за 3 шага. Загрузите фото, выберите голос, напишите скрипт.',
+    subtitle: t('toolshub.tool.ai-creator.subtitle'),
+    description: t('toolshub.tool.ai-creator.description'),
     category: 'ai',
     route: '/tools/ai-creator',
     available: false,
@@ -143,19 +145,19 @@ const TOOLS: ToolDef[] = [
   {
     id: 'autoclip',
     name: 'AutoClip',
-    subtitle: 'Вирусные клипы · ИИ',
-    description: 'Превратите длинные видео в вирусные клипы автоматически. ИИ находит самые интересные моменты.',
+    subtitle: t('toolshub.tool.autoclip.subtitle'),
+    description: t('toolshub.tool.autoclip.description'),
     category: 'video',
     route: '/tools/autoclip',
     available: false,
-    badge: 'Популярное',
+    badge: t('toolshub.popular'),
     gradient: ['#6366f1', '#ec4899'],
   },
   {
     id: 'cut-crop',
     name: 'Cut & Crop',
-    subtitle: 'Обрезка · Склейка',
-    description: 'Обрезайте и склеивайте видео. Кроп под любой формат — YouTube, Shorts, TikTok, Instagram.',
+    subtitle: t('toolshub.tool.cut-crop.subtitle'),
+    description: t('toolshub.tool.cut-crop.description'),
     category: 'video',
     route: '/tools/cut-crop',
     available: true,
@@ -164,8 +166,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'subtitle-editor',
     name: 'Subtitle Editor',
-    subtitle: 'Стили · Анимация',
-    description: 'Полный редактор субтитров. 12+ стилей текста, покадровая анимация, экспорт SRT. One-word mode.',
+    subtitle: t('toolshub.tool.subtitle-editor.subtitle'),
+    description: t('toolshub.tool.subtitle-editor.description'),
     category: 'video',
     route: '/tools/subtitle-editor',
     available: false,
@@ -174,8 +176,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'subtitle-remover',
     name: 'Subtitle Remover',
-    subtitle: 'Удаление · ИИ',
-    description: 'Удалите субтитры из любого видео с помощью ИИ. Автоматическое определение и восстановление фона.',
+    subtitle: t('toolshub.tool.subtitle-remover.subtitle'),
+    description: t('toolshub.tool.subtitle-remover.description'),
     category: 'video',
     route: '/tools/subtitle-remover',
     available: false,
@@ -185,7 +187,7 @@ const TOOLS: ToolDef[] = [
     id: 'reddit-video',
     name: 'Reddit Video Generator',
     subtitle: 'Reddit · Shorts',
-    description: 'Генерируйте Reddit-стиль видео для Shorts/TikTok. Озвучка, фоновое видео, автоматический монтаж.',
+    description: t('toolshub.tool.reddit-video.description'),
     category: 'video',
     route: '/tools/reddit-video',
     available: false,
@@ -194,8 +196,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'fake-texts',
     name: 'Fake Texts Video',
-    subtitle: 'Чат · Видео',
-    description: 'Создайте видео с фейковой перепиской. iMessage, WhatsApp, Telegram стили. Анимация печатания.',
+    subtitle: t('toolshub.tool.fake-texts.subtitle'),
+    description: t('toolshub.tool.fake-texts.description'),
     category: 'video',
     route: '/tools/fake-texts',
     available: false,
@@ -206,8 +208,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'youtube-downloader',
     name: 'YouTube Downloader',
-    subtitle: 'Скачивание · YouTube',
-    description: 'Скачивайте видео с YouTube. 4K, 1080p, 720p, только аудио. MP4 и MP3 форматы.',
+    subtitle: t('toolshub.tool.youtube-downloader.subtitle'),
+    description: t('toolshub.tool.youtube-downloader.description'),
     category: 'downloaders',
     route: '/tools/youtube-downloader',
     available: true,
@@ -216,8 +218,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'tiktok-downloader',
     name: 'TikTok Downloader',
-    subtitle: 'Скачивание · TikTok',
-    description: 'Скачивайте видео из TikTok без водяного знака. HD качество, MP4 и MP3.',
+    subtitle: t('toolshub.tool.tiktok-downloader.subtitle'),
+    description: t('toolshub.tool.tiktok-downloader.description'),
     category: 'downloaders',
     route: '/tools/tiktok-downloader',
     available: false,
@@ -228,8 +230,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'audio-balancer',
     name: 'Audio Balancer',
-    subtitle: 'Баланс · Каналы',
-    description: 'Балансируйте левый и правый аудиоканалы. Контроль громкости каждого канала отдельно.',
+    subtitle: t('toolshub.tool.audio-balancer.subtitle'),
+    description: t('toolshub.tool.audio-balancer.description'),
     category: 'free',
     route: '/tools/audio-balancer',
     available: false,
@@ -238,8 +240,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'video-compressor',
     name: 'Video Compressor',
-    subtitle: 'Сжатие · Оптимизация',
-    description: 'Сжимайте видеофайлы без потери качества. Выбор разрешения и целевого размера.',
+    subtitle: t('toolshub.tool.video-compressor.subtitle'),
+    description: t('toolshub.tool.video-compressor.description'),
     category: 'free',
     route: '/tools/video-compressor',
     available: true,
@@ -248,8 +250,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'mp3-converter',
     name: 'MP3 Converter',
-    subtitle: 'Конвертер · Аудио',
-    description: 'Конвертируйте любой медиафайл в MP3. Выбор битрейта, обрезка, настройка качества.',
+    subtitle: t('toolshub.tool.mp3-converter.subtitle'),
+    description: t('toolshub.tool.mp3-converter.description'),
     category: 'free',
     route: '/tools/mp3-converter',
     available: true,
@@ -260,8 +262,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'background-remover',
     name: 'Background Remover',
-    subtitle: 'Фон · ИИ',
-    description: 'Удалите фон с любого изображения. Замена на прозрачный, сплошной цвет, градиент или своё изображение.',
+    subtitle: t('toolshub.tool.background-remover.subtitle'),
+    description: t('toolshub.tool.background-remover.description'),
     category: 'ai',
     route: '/tools/background-remover',
     available: false,
@@ -270,8 +272,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'voice-changer',
     name: 'Voice Changer',
-    subtitle: 'Голос · Эффекты',
-    description: 'Измените голос в любом аудио или видео файле. 11+ эффектов: робот, эхо, шёпот, и другие.',
+    subtitle: t('toolshub.tool.voice-changer.subtitle'),
+    description: t('toolshub.tool.voice-changer.description'),
     category: 'audio',
     route: '/tools/voice-changer',
     available: false,
@@ -280,8 +282,8 @@ const TOOLS: ToolDef[] = [
   {
     id: 'face-swap',
     name: 'AI Face Swap',
-    subtitle: 'Лицо · ИИ',
-    description: 'Замените лицо на фото или видео с помощью ИИ. Высокое качество, естественный результат.',
+    subtitle: t('toolshub.tool.face-swap.subtitle'),
+    description: t('toolshub.tool.face-swap.description'),
     category: 'ai',
     route: '/tools/face-swap',
     available: false,
@@ -291,53 +293,56 @@ const TOOLS: ToolDef[] = [
   /* ── Coming Soon ───────────────────────────────────── */
   {
     id: 'scenario',
-    name: 'Сценарий с ИИ',
-    subtitle: 'ИИ · GPT-4o',
-    description: 'Напишите профессиональный сценарий для видео с помощью ИИ. Структура, тайминги, подсказки для съёмки.',
+    name: t('toolshub.tool.scenario.name'),
+    subtitle: t('toolshub.tool.scenario.subtitle'),
+    description: t('toolshub.tool.scenario.description'),
     category: 'creation',
     available: false,
     gradient: ['#8b5cf6', '#a78bfa'],
   },
   {
     id: 'translate',
-    name: 'Автоперевод',
-    subtitle: 'ИИ · Мультиязычный',
-    description: 'Автоматический перевод видео на 30+ языков. Дубляж, субтитры, локализация контента.',
+    name: t('toolshub.tool.translate.name'),
+    subtitle: t('toolshub.tool.translate.subtitle'),
+    description: t('toolshub.tool.translate.description'),
     category: 'audio',
     available: false,
     gradient: ['#06b6d4', '#0ea5e9'],
   },
   {
     id: 'analytics',
-    name: 'Аналитика YouTube',
+    name: t('toolshub.tool.analytics.name'),
     subtitle: 'YouTube · Data API',
-    description: 'Детальная аналитика канала: просмотры, подписчики, CTR, удержание. Сравнение с конкурентами.',
+    description: t('toolshub.tool.analytics.description'),
     category: 'optimization',
     available: false,
     gradient: ['#f43f5e', '#fb7185'],
   },
   {
     id: 'scheduler',
-    name: 'Планировщик контента',
-    subtitle: 'Календарь · Авто',
-    description: 'Планируйте публикации на неделю вперёд. Оптимальное время, серии видео, контент-план.',
+    name: t('toolshub.tool.scheduler.name'),
+    subtitle: t('toolshub.tool.scheduler.subtitle'),
+    description: t('toolshub.tool.scheduler.description'),
     category: 'publishing',
     available: false,
     gradient: ['#0ea5e9', '#38bdf8'],
   },
-];
+  ];
+}
 
-const CATEGORIES: { key: ToolCategory; label: string }[] = [
-  { key: 'all', label: 'Все инструменты' },
-  { key: 'ai', label: 'ИИ-инструменты' },
-  { key: 'video', label: 'Видео' },
-  { key: 'audio', label: 'Аудио и голос' },
-  { key: 'creation', label: 'Создание' },
-  { key: 'downloaders', label: 'Загрузчики' },
-  { key: 'free', label: 'Бесплатные' },
-  { key: 'optimization', label: 'Оптимизация' },
-  { key: 'publishing', label: 'Публикация' },
-];
+function getCategories(t: (key: string) => string): { key: ToolCategory; label: string }[] {
+  return [
+  { key: 'all', label: t('toolshub.cat.all') },
+  { key: 'ai', label: t('toolshub.cat.ai') },
+  { key: 'video', label: t('toolshub.cat.video') },
+  { key: 'audio', label: t('toolshub.cat.audio') },
+  { key: 'creation', label: t('toolshub.cat.creation') },
+  { key: 'downloaders', label: t('toolshub.cat.downloaders') },
+  { key: 'free', label: t('toolshub.cat.free') },
+  { key: 'optimization', label: t('toolshub.cat.optimization') },
+  { key: 'publishing', label: t('toolshub.cat.publishing') },
+  ];
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    SVG ICONS FOR TOOLS
@@ -587,6 +592,7 @@ const ToolCard = memo(function ToolCard({
   C: Theme;
   onOpen: (tool: ToolDef) => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [hovered, setHovered] = useState(false);
   const iconFn = TOOL_ICONS[tool.id];
 
@@ -594,7 +600,7 @@ const ToolCard = memo(function ToolCard({
     <div
       role="button"
       tabIndex={tool.available ? 0 : -1}
-      aria-label={tool.available ? `Открыть ${tool.name}` : `${tool.name} — скоро`}
+      aria-label={tool.available ? `${t('toolshub.openTool')} ${tool.name}` : `${tool.name} — ${t('toolshub.comingSoon')}`}
       onClick={() => tool.available && onOpen(tool)}
       onKeyDown={(e) => {
         if ((e.key === 'Enter' || e.key === ' ') && tool.available) {
@@ -660,7 +666,7 @@ const ToolCard = memo(function ToolCard({
           zIndex: 2,
         }}>
           <LockIcon size={10} color={C.sub} />
-          Скоро
+          {t('toolshub.comingSoonLabel')}
         </div>
       )}
 
@@ -759,7 +765,7 @@ const ToolCard = memo(function ToolCard({
             color: tool.gradient[0],
           }}>
             <SparkleIcon size={12} color={tool.gradient[0]} />
-            Доступно
+            {t('toolshub.availableLabel')}
           </span>
           <span
             role="link"
@@ -783,7 +789,7 @@ const ToolCard = memo(function ToolCard({
               transition: 'color .2s',
             }}
           >
-            Открыть →
+            {t('toolshub.openArrow')}
           </span>
         </div>
       )}
@@ -803,7 +809,7 @@ const ToolCard = memo(function ToolCard({
             color: C.dim,
             letterSpacing: '.02em',
           }}>
-            Скоро будет
+            {t('toolshub.comingSoonSoon')}
           </span>
         </div>
       )}
@@ -859,11 +865,15 @@ const CategoryTab = memo(function CategoryTab({
 
 export function ToolsHub() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<ToolCategory>('all');
+
+  const TOOLS = useMemo(() => getTools(t), [t]);
+  const CATEGORIES = useMemo(() => getCategories(t), [t]);
 
   const filtered = useMemo(() => {
     let list = TOOLS;
@@ -915,7 +925,7 @@ export function ToolsHub() {
           lineHeight: 1.2,
           letterSpacing: '-0.02em',
         }}>
-          Студия инструментов
+          {t('toolshub.title')}
         </h1>
         <p style={{
           fontSize: 16,
@@ -923,7 +933,7 @@ export function ToolsHub() {
           margin: '12px 0 0',
           lineHeight: 1.5,
         }}>
-          Выберите инструмент под вашу задачу — от генерации видео до SEO-оптимизации
+          {t('toolshub.subtitle')}
         </p>
 
         {/* Stats */}
@@ -946,7 +956,7 @@ export function ToolsHub() {
               background: '#22c55e',
             }} />
             <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>
-              {availableCount} доступно
+              {availableCount} {t('toolshub.available')}
             </span>
           </div>
           <div style={{
@@ -961,7 +971,7 @@ export function ToolsHub() {
               background: C.dim,
             }} />
             <span style={{ fontSize: 13, color: C.dim, fontWeight: 500 }}>
-              {comingSoonCount} скоро
+              {comingSoonCount} {t('toolshub.comingSoon')}
             </span>
           </div>
         </div>
@@ -989,7 +999,7 @@ export function ToolsHub() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Поиск по названию или описанию..."
+          placeholder={t('toolshub.searchPlaceholder')}
           style={{
             width: '100%',
             padding: '14px 16px 14px 44px',
@@ -1068,10 +1078,10 @@ export function ToolsHub() {
         }}>
           <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
           <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-            Ничего не найдено
+            {t('toolshub.nothingFound')}
           </div>
           <div style={{ fontSize: 13 }}>
-            Попробуйте изменить запрос или категорию
+            {t('toolshub.tryDifferent')}
           </div>
         </div>
       ) : (

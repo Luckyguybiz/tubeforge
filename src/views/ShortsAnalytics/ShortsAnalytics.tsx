@@ -204,6 +204,7 @@ function SkeletonRow({ surface, card }: { surface: string; card: string }) {
         </div>
       </td>
       <td style={{ padding: '12px 14px' }}><div style={{ width: 90, height: 14, ...shimmerStyle }} /></td>
+      <td style={{ padding: '12px 14px' }}><div style={{ width: 60, height: 14, ...shimmerStyle }} /></td>
       <td style={{ padding: '12px 14px' }}><div style={{ width: 80, height: 14, ...shimmerStyle }} /></td>
       <td style={{ padding: '12px 14px' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -258,7 +259,7 @@ function UpgradeOverlay({
 }) {
   return (
     <tr>
-      <td colSpan={5} style={{ padding: 0, position: 'relative', border: 'none' }}>
+      <td colSpan={6} style={{ padding: 0, position: 'relative', border: 'none' }}>
         {/* Gradient fade from content to overlay */}
         <div
           style={{
@@ -1405,7 +1406,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 ))
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '48px 14px', textAlign: 'center', color: C.sub, fontSize: 14 }}>
+                  <td colSpan={6} style={{ padding: '48px 14px', textAlign: 'center', color: C.sub, fontSize: 14 }}>
                     Нет данных для отображения
                   </td>
                 </tr>
