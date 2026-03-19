@@ -75,10 +75,11 @@ export function VideoCompressor() {
       ffmpegRef.current = ffmpeg;
       setFfmpegLoaded(true);
       return ffmpeg;
-    } catch {
-      setError('Не удалось загрузить модуль обработки. Попробуйте обновить страницу.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Не удалось загрузить модуль обработки: ${msg}`);
       ffmpegRef.current = null;
-      throw new Error('FFmpeg load failed');
+      throw err;
     } finally {
       setFfmpegLoading(false);
     }
