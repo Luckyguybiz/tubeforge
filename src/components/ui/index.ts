@@ -6,4 +6,5 @@ export { ToastProvider } from './ToastProvider';
 export { ErrorBoundary } from './ErrorBoundary';
 export { ErrorFallback } from './ErrorFallback';
 export { Skeleton } from './Skeleton';
+export { LoadingSkeleton } from './LoadingSkeleton';
 export { UpgradePrompt } from './UpgradePrompt';

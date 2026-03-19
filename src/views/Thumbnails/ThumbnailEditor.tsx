@@ -12,19 +12,23 @@ import { PropertiesPanel } from './PropertiesPanel';
 import { LeftSidebar } from './LeftSidebar';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
+import { OnlineUsers } from '@/components/ui/OnlineUsers';
+import { CollaborationCursors } from '@/components/ui/CollaborationCursors';
 import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
+import { useCollaboration, useCollaborationCursor } from '@/hooks/useCollaboration';
 import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } from '@/lib/constants';
 
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
-  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, history, future } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
-      drag: s.drag, history: s.history, future: s.future,
+      drag: s.drag, historyCount: s.historyCount, futureCount: s.futureCount,
     }))
   );
   const store = useThumbnailStore.getState;
@@ -35,8 +39,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0, px: 0, py: 0 });
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
+
+  // Real-time collaboration
+  useCollaboration(projectId);
+  useCollaborationCursor(canvasAreaRef);
 
   useEffect(() => { loadedRef.current = false; }, [projectId]);
 
@@ -134,6 +143,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const clicked = hitTestElement(els, x, y);
     if (clicked) {
       e.shiftKey ? store().addToSelection(clicked.id) : store().setSelId(clicked.id);
+      store().pushHistoryDebounced(); // batch drag into one undo step
       store().setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
     } else { store().setSelId(null); }
   };
@@ -303,7 +313,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.visible === false) return null;
     const isSel = selIds.includes(el.id);
     const resizeHandle = isSel && (
-      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().setResize({ id: el.id }); }}
+      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
         style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, background: C.accent, borderRadius: 2, cursor: 'nwse-resize', zIndex: 5 }} />
     );
     const deleteHandle = isSel && (
@@ -315,6 +325,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     );
     const elDrag = (e: React.MouseEvent) => {
       e.stopPropagation(); store().setSelId(el.id);
+      store().pushHistoryDebounced(); // batch drag into one undo step
       const rect = (e.currentTarget as HTMLElement).closest('[data-canvas]')?.getBoundingClientRect() ?? (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
       const sx = canvasW / rect.width;
       const sy = canvasH / rect.height;
@@ -543,8 +554,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>Создайте обложку как в Canva или перейдите к ИИ-генерации</p>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button onClick={() => store().undo()} disabled={history.length === 0} title="Отменить (Ctrl+Z)" style={{ ...headerBtn, padding: '7px 8px', color: history.length === 0 ? C.dim : C.sub, cursor: history.length === 0 ? 'default' : 'pointer', opacity: history.length === 0 ? 0.3 : 1 }}>{undoIcon}</button>
-          <button onClick={() => store().redo()} disabled={future.length === 0} title="Повторить (Ctrl+Y)" style={{ ...headerBtn, padding: '7px 8px', color: future.length === 0 ? C.dim : C.sub, cursor: future.length === 0 ? 'default' : 'pointer', opacity: future.length === 0 ? 0.3 : 1 }}>{redoIcon}</button>
+          <OnlineUsers />
+          <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
+          <button onClick={() => store().undo()} disabled={historyCount === 0} title={`Отменить (Ctrl+Z)${historyCount > 0 ? ` — ${historyCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: historyCount === 0 ? C.dim : C.sub, cursor: historyCount === 0 ? 'default' : 'pointer', opacity: historyCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{undoIcon}{historyCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>}</button>
+          <button onClick={() => store().redo()} disabled={futureCount === 0} title={`Повторить (Ctrl+Y)${futureCount > 0 ? ` — ${futureCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: futureCount === 0 ? C.dim : C.sub, cursor: futureCount === 0 ? 'default' : 'pointer', opacity: futureCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{redoIcon}{futureCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureCount})</span>}</button>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* Size presets */}
           <div style={{ position: 'relative' }}>
@@ -593,13 +606,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       <div style={{ display: 'flex', gap: 12 }}>
         <ToolBar onFileChange={onFileChange} />
         <LeftSidebar />
+        <ErrorBoundary>
         <div ref={canvasWrapperRef} style={{ flex: 1, position: 'relative', minWidth: 0, overflow: 'hidden', borderRadius: 12, border: `1px solid ${C.border}`, background: C.bg }}
           onMouseDown={onMiddleDown} onMouseMove={onMiddleMove} onMouseUp={onMiddleUp} onMouseLeave={onMiddleUp}>
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
-            <div data-canvas onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
+            <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
               style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
             {els.map(renderElement)}
+            {/* Collaboration cursors overlay */}
+            <CollaborationCursors canvasW={canvasW} canvasH={canvasH} containerW={canvasAreaRef.current?.clientWidth ?? canvasW} containerH={canvasAreaRef.current?.clientHeight ?? canvasH} />
             {drawing && drawPts.length > 1 && (
               <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
                 <path d={drawPts.map((p, i) => i === 0 ? ('M' + p.x + ' ' + p.y) : ('L' + p.x + ' ' + p.y)).join(' ')} fill="none" stroke={drawColor} strokeWidth={drawSize} strokeLinecap="round" strokeLinejoin="round" />
@@ -636,6 +652,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             >{fitIcon} По размеру</button>
           </div>
         </div>
+        </ErrorBoundary>
         {/* D8: Context menu */}
         {contextMenu && (
           <div

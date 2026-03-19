@@ -5,6 +5,8 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 /* ── SVG Icons ─────────────────────────────────────────────────────── */
 
@@ -56,7 +58,7 @@ function GiftIcon({ color }: { color: string }) {
 
 /* ── Main Component ────────────────────────────────────────────────── */
 
-export default function ReferralPage() {
+function ReferralContent() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
   const t = useLocaleStore((s) => s.t);
@@ -372,8 +374,33 @@ export default function ReferralPage() {
             </div>
           )}
 
+          {/* Error state */}
+          {!isLoading && myReferral.isError && (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <div style={{ fontSize: 14, color: C.sub, marginBottom: 16 }}>
+                {'\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435'}
+              </div>
+              <button
+                onClick={() => myReferral.refetch()}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: 10,
+                  border: `1px solid ${C.border}`,
+                  background: C.surface,
+                  color: C.text,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {'\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C'}
+              </button>
+            </div>
+          )}
+
           {/* ── State 1: Not yet activated ─────────────────────── */}
-          {!isLoading && !referralCode && (
+          {!isLoading && !myReferral.isError && !referralCode && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <GiftIcon color="#6366f1" />
@@ -444,7 +471,7 @@ export default function ReferralPage() {
           )}
 
           {/* ── State 2: Dashboard (code exists) ───────────────── */}
-          {!isLoading && referralCode && (
+          {!isLoading && !myReferral.isError && referralCode && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <GiftIcon color="#6366f1" />
@@ -622,5 +649,13 @@ export default function ReferralPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReferralPage() {
+  return (
+    <ErrorBoundary>
+      <ReferralContent />
+    </ErrorBoundary>
   );
 }

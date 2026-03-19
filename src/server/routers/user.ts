@@ -23,10 +23,29 @@ export const userRouter = router({
         plan: true,
         role: true,
         aiUsage: true,
+        onboardingDone: true,
         createdAt: true,
         channels: { select: { id: true, title: true, thumbnail: true, subscribers: true } },
         _count: { select: { projects: true } },
       },
+    });
+  }),
+
+  completeOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+    await checkUserRate(ctx.session.user.id);
+    return ctx.db.user.update({
+      where: { id: ctx.session.user.id },
+      data: { onboardingDone: true },
+      select: { id: true, onboardingDone: true },
+    });
+  }),
+
+  resetOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+    await checkUserRate(ctx.session.user.id);
+    return ctx.db.user.update({
+      where: { id: ctx.session.user.id },
+      data: { onboardingDone: false },
+      select: { id: true, onboardingDone: true },
     });
   }),
 

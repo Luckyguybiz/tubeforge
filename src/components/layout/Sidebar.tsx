@@ -145,6 +145,21 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M12 11L15 7L18 9" stroke={c} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".45" />
     </svg>
   ),
+  analytics: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="analytics-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="12" width="3" height="6" rx="1" fill={a ? 'url(#analytics-g)' : c} opacity=".6" />
+      <rect x="7" y="8" width="3" height="10" rx="1" fill={a ? 'url(#analytics-g)' : c} opacity=".75" />
+      <rect x="12" y="4" width="3" height="14" rx="1" fill={a ? 'url(#analytics-g)' : c} opacity=".85" />
+      <path d="M3 11L8 7L13 3L18 5" stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity=".4" />
+      <circle cx="18" cy="5" r="1.5" fill={c} opacity=".5" />
+    </svg>
+  ),
   gear: (c) => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <circle cx="7" cy="7" r="2" stroke={c} strokeWidth="1.2" />
@@ -185,6 +200,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'preview', label: t('nav.preview') },
         { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
+        { id: 'analytics', label: t('nav.analytics') },
       ],
     },
     {
@@ -221,6 +237,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   referral: ['green', 'cyan'],
   admin: ['accent', 'orange'],
   'shorts-analytics': ['green', 'cyan'],
+  analytics: ['cyan', 'purple'],
 };
 
 /* ── Tooltip Component ─────────────────────────────────────────────── */
@@ -384,10 +401,14 @@ export const Sidebar = memo(function Sidebar() {
       ? C[gradientKeys[1] as keyof typeof C]
       : undefined;
 
+    // data-tour markers for onboarding spotlight
+    const tourId = id === 'tools' ? 'tools-section' : id === 'billing' ? 'billing-section' : undefined;
+
     const btn = (
       <button
         key={id}
         aria-current={isActive ? 'page' : undefined}
+        data-tour={tourId}
         onClick={() => navigate(id)}
         onMouseEnter={() => handleMouseEnter(id)}
         onMouseLeave={handleMouseLeave}
@@ -547,6 +568,7 @@ export const Sidebar = memo(function Sidebar() {
   const visibleGroups = NAV_GROUPS.map((group) => {
     const filteredItems = group.items.filter((item) => {
       if (item.id === 'admin' && role !== 'ADMIN') return false;
+      if (item.id === 'analytics' && plan !== 'PRO' && plan !== 'STUDIO') return false;
       return true;
     });
     if (group.condition && !group.condition(plan, role)) return null;

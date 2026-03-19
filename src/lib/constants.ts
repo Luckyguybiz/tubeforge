@@ -106,6 +106,18 @@ export const STICKY_NOTE_PRESETS = ['#fef08a', '#fecdd3', '#bfdbfe', '#bbf7d0', 
 /* ── Keyboard shortcuts ──────────────────────────── */
 
 export const KEYBOARD_SHORTCUTS = [
+  // Global / Navigation
+  { keys: 'Ctrl+K', label: 'Поиск', key: 'Ctrl+K', description: 'Open search', category: 'navigation' },
+  { keys: '/', label: 'Фокус поиск', key: '/', description: 'Focus search bar', category: 'navigation' },
+  { keys: '?', label: 'Горячие клавиши', key: '?', description: 'Show keyboard shortcuts help', category: 'navigation' },
+  { keys: 'Ctrl+/', label: 'Горячие клавиши', key: 'Ctrl+/', description: 'Show keyboard shortcuts help', category: 'navigation' },
+  { keys: 'Escape', label: 'Закрыть / снять выделение', key: 'Escape', description: 'Close modal / deselect', category: 'navigation' },
+  { keys: 'G then D', label: 'Перейти к Дашборду', key: 'G then D', description: 'Navigate to Dashboard', category: 'navigation' },
+  { keys: 'G then E', label: 'Перейти к Редактору', key: 'G then E', description: 'Navigate to Editor', category: 'navigation' },
+  { keys: 'G then T', label: 'Перейти к Инструментам', key: 'G then T', description: 'Navigate to Tools', category: 'navigation' },
+  { keys: 'G then B', label: 'Перейти к Биллингу', key: 'G then B', description: 'Navigate to Billing', category: 'navigation' },
+  { keys: 'G then S', label: 'Перейти к Настройкам', key: 'G then S', description: 'Navigate to Settings', category: 'navigation' },
+  // Editor / Editing
   { keys: 'Ctrl+Z', label: 'Отменить', key: 'Ctrl+Z', description: 'Undo last action', category: 'editing' },
   { keys: 'Ctrl+Shift+Z', label: 'Повторить', key: 'Ctrl+Shift+Z', description: 'Redo last undone action', category: 'editing' },
   { keys: 'Ctrl+S', label: 'Сохранить', key: 'Ctrl+S', description: 'Save current project', category: 'general' },
@@ -115,16 +127,19 @@ export const KEYBOARD_SHORTCUTS = [
   { keys: 'Ctrl+V', label: 'Вставить', key: 'Ctrl+V', description: 'Paste from clipboard', category: 'editing' },
   { keys: 'Ctrl+X', label: 'Вырезать', key: 'Ctrl+X', description: 'Cut selected element', category: 'editing' },
   { keys: 'Ctrl+A', label: 'Выделить все', key: 'Ctrl+A', description: 'Select all elements', category: 'editing' },
+  { keys: 'Ctrl+=', label: 'Увеличить', key: 'Ctrl+=', description: 'Zoom in', category: 'editing' },
+  { keys: 'Ctrl+-', label: 'Уменьшить', key: 'Ctrl+-', description: 'Zoom out', category: 'editing' },
+  { keys: 'Ctrl+0', label: 'По размеру экрана', key: 'Ctrl+0', description: 'Fit to screen', category: 'editing' },
+  // Tools
   { keys: 'Ctrl+Enter', label: 'Генерировать', key: 'Ctrl+Enter', description: 'Start AI generation', category: 'general' },
-  { keys: 'Ctrl+K', label: 'Поиск', key: 'Ctrl+K', description: 'Open search', category: 'navigation' },
-  { keys: 'Escape', label: 'Снять выделение', key: 'Escape', description: 'Deselect / close menu', category: 'navigation' },
-  { keys: '?', label: 'Горячие клавиши', key: '?', description: 'Show keyboard shortcuts help', category: 'navigation' },
+  { keys: 'Ctrl+]', label: 'На передний план', key: 'Ctrl+]', description: 'Bring to front', category: 'general' },
+  { keys: 'Ctrl+[', label: 'На задний план', key: 'Ctrl+[', description: 'Send to back', category: 'general' },
 ] as const;
 
 export const SHORTCUT_CATEGORIES: Record<string, string> = {
+  navigation: 'Навигация',
   editing: 'Редактирование',
   general: 'Общие',
-  navigation: 'Навигация',
 };
 
 /* ── Upload limits ────────────────────────────────── */

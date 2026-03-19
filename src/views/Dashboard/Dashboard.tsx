@@ -11,6 +11,8 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
 import { pluralRu, timeAgo } from '@/lib/utils';
 import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
+import { ExportButton } from '@/components/project/ExportButton';
+import { ImportModal } from '@/components/project/ImportModal';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -196,6 +198,15 @@ function IconDownload({ size = 20, color = 'currentColor' }: { size?: number; co
     </svg>
   );
 }
+function IconUploadSmall({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
 
 function IconScissors({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
@@ -635,7 +646,7 @@ interface ProjectCardProps {
   onStartRename: (id: string, title: string) => void;
   onCancelRename: () => void;
   onRenameChange: (val: string) => void;
-  onDuplicate: (title: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 const ProjectCard = memo(function ProjectCard({
@@ -886,7 +897,7 @@ const ProjectCard = memo(function ProjectCard({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDuplicate(p.title);
+                    onDuplicate(p.id);
                   }}
                   title={t('dashboard.duplicate')}
                   aria-label={`${t('dashboard.duplicate')} ${p.title}`}
@@ -903,6 +914,7 @@ const ProjectCard = memo(function ProjectCard({
                 >
                   <IconPlus size={13} color={C.sub} />
                 </button>
+                <ExportButton projectId={p.id} projectTitle={p.title} />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -962,6 +974,7 @@ export function Dashboard() {
   const [renameValue, setRenameValue] = useState('');
   const renameRef = useRef<HTMLInputElement>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   /* ── Show toast on successful plan upgrade ───── */
   useEffect(() => {
@@ -1036,7 +1049,7 @@ export function Dashboard() {
     onError: (err) => toast.error(err.message),
   });
 
-  const duplicateProject = trpc.project.create.useMutation({
+  const duplicateProject = trpc.project.duplicate.useMutation({
     onSuccess: () => {
       toast.success(t('dashboard.projectDuplicated'));
       utils.project.list.invalidate();
@@ -1094,8 +1107,8 @@ export function Dashboard() {
     setRenameValue(val);
   }, []);
 
-  const handleDuplicate = useCallback((title: string) => {
-    duplicateProject.mutate({ title: title + ` (${t('dashboard.copy')})` });
+  const handleDuplicate = useCallback((id: string) => {
+    duplicateProject.mutate({ id });
   }, [duplicateProject, t]);
 
   /* ── Compute stats ────────────────────────────── */
@@ -1170,7 +1183,7 @@ export function Dashboard() {
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-.03em', lineHeight: 1.2 }}>
+          <h1 className="tf-dash-heading" style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-.03em', lineHeight: 1.2 }}>
             {profile.isLoading ? <Skeleton width={260} height={34} /> : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}!`}
           </h1>
           <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
@@ -1182,6 +1195,8 @@ export function Dashboard() {
           </p>
         </div>
         <button
+          className="tf-dash-create-btn"
+          data-tour="new-project"
           onClick={() => createProject.mutate({})}
           disabled={createProject.isPending}
           onMouseEnter={() => setHoveredBtn('create-main')}
@@ -1205,10 +1220,30 @@ export function Dashboard() {
           <IconPlus size={18} color="#fff" />
           {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
         </button>
+        <button
+          onClick={() => setImportOpen(true)}
+          onMouseEnter={() => setHoveredBtn('import-main')}
+          onMouseLeave={() => setHoveredBtn(null)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'transparent',
+            color: C.text, border: `1px solid ${C.border}`, borderRadius: 12,
+            padding: '12px 20px', fontSize: 14, fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'all .2s ease',
+            boxShadow: hoveredBtn === 'import-main' ? `0 2px 8px rgba(0,0,0,.08)` : 'none',
+            flexShrink: 0,
+          }}
+        >
+          <IconUploadSmall size={16} color={C.sub} />
+          {t('dashboard.importProject')}
+        </button>
       </div>
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
       {/* ── Stat cards ──────────────────────────────── */}
-      <div style={{
+      <div className="tf-dash-stat-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
         gap: 14,
@@ -1252,7 +1287,7 @@ export function Dashboard() {
                       <div style={{ fontSize: 12, color: C.sub, marginBottom: 2, fontWeight: 500, letterSpacing: '.01em' }}>
                         {s.label}
                       </div>
-                      <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.1 }}>
+                      <div className="tf-dash-stat-value" style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.1 }}>
                         {s.value}
                       </div>
                     </div>
@@ -1270,7 +1305,7 @@ export function Dashboard() {
         overflow: 'hidden',
       }}>
         {/* Toolbar */}
-        <div style={{
+        <div className="tf-dash-toolbar" style={{
           padding: '18px 22px 16px',
           borderBottom: `1px solid ${C.border}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -1296,7 +1331,7 @@ export function Dashboard() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="tf-dash-toolbar-right" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {/* Search */}
             <div style={{ position: 'relative' }}>
               <div style={{
@@ -1306,6 +1341,7 @@ export function Dashboard() {
                 <IconSearch size={15} color={C.dim} />
               </div>
               <input
+                className="tf-dash-search-input"
                 type="search"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -1347,7 +1383,7 @@ export function Dashboard() {
             </select>
 
             {/* Status filter pills */}
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }} role="group" aria-label={t('dashboard.filterStatus')}>
+            <div className="tf-dash-filter-pills" style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }} role="group" aria-label={t('dashboard.filterStatus')}>
               {getFilterOptions(t).map((f) => {
                 const isActive = statusFilter === f.value;
                 return (
@@ -1379,10 +1415,10 @@ export function Dashboard() {
         </div>
 
         {/* Content area */}
-        <div style={{ padding: '20px 22px 24px' }}>
+        <div className="tf-dash-content" style={{ padding: '20px 22px 24px' }}>
           {projects.isLoading ? (
             /* ── Skeleton grid ─────────────── */
-            <div style={{
+            <div className="tf-dash-project-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
               gap: 16,
@@ -1479,7 +1515,7 @@ export function Dashboard() {
           ) : (
             /* ── Project cards grid ────────── */
             <>
-              <div style={{
+              <div className="tf-dash-project-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
                 gap: 16,

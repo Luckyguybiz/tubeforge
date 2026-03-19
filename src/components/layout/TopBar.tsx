@@ -1,12 +1,14 @@
 'use client';
 import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { NAV, KEYBOARD_SHORTCUTS, SHORTCUT_CATEGORIES, Z_INDEX } from '@/lib/constants';
+import { NAV, Z_INDEX } from '@/lib/constants';
 import { useThemeStore } from '@/stores/useThemeStore';
+import type { ThemeMode } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
 import type { Notification } from '@/stores/useNotificationStore';
+import { WhatsNewBadge, WhatsNewModal } from '@/components/ui/WhatsNew';
 
 /** Translation keys for extra page labels not in NAV */
 const PAGE_LABEL_KEYS: Record<string, string> = {
@@ -33,6 +35,38 @@ function BellIcon({ size = 14, color = 'currentColor' }: { size?: number; color?
   );
 }
 
+/** SVG sun icon for light mode */
+function SunIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+/** SVG moon icon for dark mode */
+function MoonIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+/** SVG monitor icon for system mode */
+function MonitorIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+      <line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  );
+}
+
+const THEME_MODE_LABELS: Record<ThemeMode, string> = { dark: 'settings.dark', light: 'settings.light', system: 'settings.system' };
+
 function timeAgo(ts: number): string {
   const diff = Math.max(0, Date.now() - ts);
   const s = Math.floor(diff / 1000);
@@ -48,6 +82,7 @@ function timeAgo(ts: number): string {
 export const TopBar = memo(function TopBar() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const themeMode = useThemeStore((s) => s.mode);
   const toggle = useThemeStore((s) => s.toggle);
   const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
@@ -65,6 +100,9 @@ export const TopBar = memo(function TopBar() {
 
   const [bellOpen, setBellOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
+
+  /* ── What's New ────────────────────────────────── */
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   /* ── Search ─────────────────────────────────────── */
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -122,30 +160,8 @@ export const TopBar = memo(function TopBar() {
     return () => document.removeEventListener('keydown', handler);
   }, [bellOpen]);
 
-  // Close shortcuts modal on Escape
-  useEffect(() => {
-    if (!showShortcuts) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowShortcuts(false);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [showShortcuts, setShowShortcuts]);
-
-  // Global `?` shortcut (for pages that don't use useCanvasKeyboard)
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const tag = (document.activeElement as HTMLElement)?.tagName;
-      const ce = (document.activeElement as HTMLElement)?.getAttribute('contenteditable') === 'true';
-      if (ce || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (e.key === '?') {
-        const ns = useNotificationStore.getState();
-        ns.setShowShortcuts(!ns.showShortcuts);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
+  // Note: `?` shortcut and Escape for shortcuts modal are now handled
+  // by useGlobalShortcuts in AppShell and ShortcutsModal component.
 
   const pageLabelKey = PAGE_LABEL_KEYS[current];
   const navItem = NAV.find((n) => n.id === current);
@@ -258,6 +274,7 @@ export const TopBar = memo(function TopBar() {
             placeholder={t('sidebar.search')}
             style={{
               width: 220,
+              maxWidth: 'calc(100vw - 120px)',
               height: 28,
               padding: '0 10px',
               borderRadius: 7,
@@ -286,6 +303,7 @@ export const TopBar = memo(function TopBar() {
 
       {/* Referral CTA */}
       <button
+        className="tf-topbar-referral"
         onClick={() => router.push('/referral')}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-1px)';
@@ -318,6 +336,7 @@ export const TopBar = memo(function TopBar() {
 
       {/* Keyboard shortcuts hint button */}
       <button
+        className="tf-topbar-shortcuts"
         title={t('topbar.shortcutsLabel')}
         aria-label={t('topbar.shortcuts')}
         onClick={() => setShowShortcuts(!showShortcuts)}
@@ -327,6 +346,9 @@ export const TopBar = memo(function TopBar() {
       >
         ?
       </button>
+
+      {/* What's New badge */}
+      <WhatsNewBadge onClick={() => setShowWhatsNew(true)} />
 
       {/* Notification bell */}
       <div ref={bellRef} style={{ position: 'relative' }}>
@@ -357,6 +379,7 @@ export const TopBar = memo(function TopBar() {
         {bellOpen && (
           <div style={{
             position: 'absolute', top: 36, right: 0, width: 320,
+            maxWidth: 'calc(100vw - 24px)',
             background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
             boxShadow: `0 8px 32px ${C.overlay}`, zIndex: Z_INDEX.DROPDOWN, overflow: 'hidden',
           }}>
@@ -418,67 +441,24 @@ export const TopBar = memo(function TopBar() {
         )}
       </div>
 
-      {/* Theme toggle */}
-      <button title={isDark ? t('settings.light') : t('settings.dark')} aria-label={isDark ? t('settings.light') : t('settings.dark')} onClick={toggle} onMouseEnter={(e) => handleBtnHover(e, true)} onMouseLeave={(e) => handleBtnHover(e, false)} style={btnBase}>
-        {isDark ? '\u2600\uFE0F' : '\uD83C\uDF19'}
+      {/* Theme toggle: cycles dark -> light -> system */}
+      <button
+        title={t(THEME_MODE_LABELS[themeMode])}
+        aria-label={`${t('settings.themeTitle')}: ${t(THEME_MODE_LABELS[themeMode])}`}
+        onClick={toggle}
+        onMouseEnter={(e) => handleBtnHover(e, true)}
+        onMouseLeave={(e) => handleBtnHover(e, false)}
+        style={btnBase}
+      >
+        {themeMode === 'dark' && <MoonIcon size={14} color={C.sub} />}
+        {themeMode === 'light' && <SunIcon size={14} color={C.sub} />}
+        {themeMode === 'system' && <MonitorIcon size={14} color={C.sub} />}
       </button>
 
-      {/* Keyboard shortcuts modal */}
-      {showShortcuts && (
-        <div
-          onClick={() => setShowShortcuts(false)}
-          style={{
-            position: 'fixed', inset: 0, background: C.overlay,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 9999,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 14,
-              padding: '24px 28px', width: 360, maxWidth: '90vw',
-              boxShadow: `0 16px 48px ${C.overlay}`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('topbar.shortcuts')}</span>
-              <button
-                aria-label={t('topbar.close')}
-                onClick={() => setShowShortcuts(false)}
-                style={{ background: 'none', border: 'none', color: C.dim, fontSize: 16, cursor: 'pointer', padding: '2px 6px', fontFamily: 'inherit' }}
-              >
-                {'\u2715'}
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {Object.entries(SHORTCUT_CATEGORIES).map(([catKey, catLabel]) => {
-                const items = KEYBOARD_SHORTCUTS.filter((sc) => sc.category === catKey);
-                if (items.length === 0) return null;
-                return (
-                  <div key={catKey} style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.dim, marginBottom: 6, paddingBottom: 4, borderBottom: `1px solid ${C.border}` }}>
-                      {catLabel}
-                    </div>
-                    {items.map((sc) => (
-                      <div key={sc.keys} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0' }}>
-                        <span style={{ fontSize: 13, color: C.text }}>{sc.label}</span>
-                        <kbd style={{
-                          fontSize: 11, fontWeight: 600, color: C.sub,
-                          background: C.surface, border: `1px solid ${C.border}`,
-                          borderRadius: 5, padding: '3px 8px', fontFamily: 'inherit',
-                        }}>
-                          {sc.keys}
-                        </kbd>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Keyboard shortcuts modal is now rendered by ShortcutsModal in AppShell */}
+
+      {/* What's New modal */}
+      {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
     </div>
   );
 });

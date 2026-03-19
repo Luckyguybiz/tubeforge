@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { PK, GENERATION_TIMEOUT_MS } from '@/lib/constants';
 import { uid } from '@/lib/utils';
+import { HistoryManager } from '@/lib/history';
 import type { Scene, Character } from '@/lib/types';
 
 /** Track generation timeouts by scene ID so they can be cancelled */
@@ -52,6 +53,11 @@ interface EditorState {
   dragOv: string | null;
   confirmDel: string | null;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+
+  // Undo/Redo — exposed counts for UI
+  historyCount: number;
+  futureCount: number;
+  // Backward compat: raw arrays (kept as empty; UI should use historyCount/futureCount)
   history: Scene[][];
   future: Scene[][];
 
@@ -70,6 +76,8 @@ interface EditorState {
   setSaveStatus: (s: 'idle' | 'saving' | 'saved' | 'error') => void;
 
   pushHistory: () => void;
+  /** Debounced push — groups rapid calls into one undo step */
+  pushHistoryDebounced: () => void;
   undo: () => void;
   redo: () => void;
 
@@ -84,6 +92,15 @@ interface EditorState {
   delCh: (id: string) => void;
   reorderScenes: (fromId: string, toId: string) => void;
   addSceneFromPrompt: (prompt: string) => void;
+}
+
+/* ------------------------------------------------------------------ */
+/*  History manager instance (lives outside the store)                 */
+/* ------------------------------------------------------------------ */
+const hm = new HistoryManager<Scene[]>({ maxHistory: 50 });
+
+function histCounts() {
+  return { historyCount: hm.undoCount, futureCount: hm.redoCount };
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -102,11 +119,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   dragOv: null,
   confirmDel: null,
   saveStatus: 'idle',
+
+  historyCount: 0,
+  futureCount: 0,
   history: [],
   future: [],
 
   loadProject: (project) => {
     clearAllGenTimers();
+    hm.clear();
     const scenes: Scene[] = project.scenes.map((s, i) => {
       const meta = (s.metadata ?? {}) as Record<string, unknown>;
       return {
@@ -132,6 +153,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       scenes,
       chars,
       selId: scenes[0]?.id ?? null,
+      ...histCounts(),
     });
   },
 
@@ -152,32 +174,36 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setSaveStatus: (s) => set({ saveStatus: s }),
 
   pushHistory: () => {
-    const { scenes, history } = get();
-    const snap: Scene[] = JSON.parse(JSON.stringify(scenes));
-    set({ history: [...history.slice(-49), snap], future: [] });
+    const { scenes } = get();
+    hm.push(scenes);
+    set(histCounts());
+  },
+
+  pushHistoryDebounced: () => {
+    const { scenes } = get();
+    hm.pushDebounced(scenes, 1000);
+    set(histCounts());
   },
 
   undo: () => {
-    const { history, scenes, future, selId } = get();
-    if (history.length === 0) return;
-    const prev = history[history.length - 1];
+    const { scenes, selId } = get();
+    const prev = hm.undo(scenes);
+    if (!prev) return;
     set({
-      history: history.slice(0, -1),
-      future: [...future, JSON.parse(JSON.stringify(scenes))],
       scenes: prev,
       selId: prev.find((s) => s.id === selId)?.id ?? prev[0]?.id ?? null,
+      ...histCounts(),
     });
   },
 
   redo: () => {
-    const { history, scenes, future, selId } = get();
-    if (future.length === 0) return;
-    const next = future[future.length - 1];
+    const { scenes, selId } = get();
+    const next = hm.redo(scenes);
+    if (!next) return;
     set({
-      future: future.slice(0, -1),
-      history: [...history, JSON.parse(JSON.stringify(scenes))],
       scenes: next,
       selId: next.find((s) => s.id === selId)?.id ?? next[0]?.id ?? null,
+      ...histCounts(),
     });
   },
 

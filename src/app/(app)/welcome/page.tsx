@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import Link from 'next/link';
 
 /* ── SVG Icons ──────────────────────────────────── */
@@ -65,7 +66,7 @@ function WelcomeInner() {
   /* ── Shared styles ────────────────────────────── */
 
   const primaryBtn: React.CSSProperties = {
-    background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+    background: `linear-gradient(135deg, ${C.purple}, ${C.blue})`,
     color: '#fff',
     border: 'none',
     borderRadius: 50,
@@ -82,9 +83,9 @@ function WelcomeInner() {
   };
 
   const outlineBtn: React.CSSProperties = {
-    background: isDark ? 'transparent' : '#fff',
+    background: isDark ? 'transparent' : C.surface,
     color: C.text,
-    border: `1px solid ${isDark ? C.border : '#e5e7eb'}`,
+    border: `1px solid ${C.border}`,
     borderRadius: 50,
     padding: '14px 32px',
     fontSize: 15,
@@ -116,8 +117,8 @@ function WelcomeInner() {
         const isCurrent = i === currentStep;
         const isFuture = i > currentStep;
 
-        const circleColor = isCompleted ? '#16a34a' : isCurrent ? '#4f46e5' : C.dim;
-        const textColor = isCompleted ? '#16a34a' : isCurrent ? '#4f46e5' : C.dim;
+        const circleColor = isCompleted ? C.green : isCurrent ? C.purple : C.dim;
+        const textColor = isCompleted ? C.green : isCurrent ? C.purple : C.dim;
 
         return (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -127,7 +128,7 @@ function WelcomeInner() {
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  background: isCompleted ? '#16a34a' : isCurrent ? '#4f46e5' : isDark ? C.border : '#e5e7eb',
+                  background: isCompleted ? C.green : isCurrent ? C.purple : C.border,
                   color: (isCompleted || isCurrent) ? '#fff' : C.dim,
                   display: 'flex',
                   alignItems: 'center',
@@ -162,8 +163,8 @@ function WelcomeInner() {
           display: 'inline-block',
           padding: '6px 18px',
           borderRadius: 50,
-          background: 'rgba(22,163,106,.12)',
-          color: '#16a34a',
+          background: `${C.green}1f`,
+          color: C.green,
           fontSize: 12,
           fontWeight: 700,
           letterSpacing: 1,
@@ -174,7 +175,7 @@ function WelcomeInner() {
       </div>
 
       <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', color: C.text, lineHeight: 1.3 }}>
-        <span style={{ color: '#4f46e5' }}>Ура! </span>
+        <span style={{ color: C.purple }}>Ура! </span>
         <span role="img" aria-label="celebration">🎉</span>
       </h1>
       <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 16px', color: C.text }}>
@@ -184,7 +185,7 @@ function WelcomeInner() {
       <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.65, margin: '0 0 28px', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
         Ваш аккаунт успешно синхронизирован с тарифом {plan || 'PRO'}. Теперь вы можете
         генерировать видео без ограничений. Использование будет отображаться в{' '}
-        <Link href="/settings" style={{ color: '#4f46e5', textDecoration: 'underline' }}>
+        <Link href="/settings" style={{ color: C.purple, textDecoration: 'underline' }}>
           настройках
         </Link>
         .
@@ -233,7 +234,7 @@ function WelcomeInner() {
           gap: 12,
         }}
       >
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ color: '#4f46e5' }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ color: C.purple }}>
           <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
           <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor" />
         </svg>
@@ -345,7 +346,7 @@ function WelcomeInner() {
           width: '100%',
           maxWidth: 700,
           margin: '0 20px',
-          background: isDark ? C.surface : '#fff',
+          background: C.surface,
           borderRadius: 20,
           boxShadow: isDark
             ? '0 24px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05)'
@@ -366,8 +367,10 @@ function WelcomeInner() {
 
 export default function WelcomePage() {
   return (
-    <Suspense fallback={null}>
-      <WelcomeInner />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={null}>
+        <WelcomeInner />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

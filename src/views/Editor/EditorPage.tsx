@@ -4,12 +4,17 @@ import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
+import { OnlineUsers } from '@/components/ui/OnlineUsers';
+import { SceneLockIndicator } from '@/components/ui/SceneLockIndicator';
 import { MODELS } from '@/lib/constants';
 import { fmtDur, pluralRu } from '@/lib/utils';
 import { useProjectSync } from '@/hooks/useProjectSync';
 import { useVideoGeneration } from '@/hooks/useVideoGeneration';
+import { useCollaboration, useSceneEditLock } from '@/hooks/useCollaboration';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import type { Theme, Scene } from '@/lib/types';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -426,6 +431,7 @@ const SceneThumb = memo(function SceneThumb({
         >
           {sc.label}
         </span>
+        <SceneLockIndicator sceneId={sc.id} />
       </div>
     </div>
   );
@@ -660,6 +666,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const setConfirmDel = useEditorStore((s) => s.setConfirmDel);
   const saveStatus = useEditorStore((s) => s.saveStatus);
 
+  // Real-time collaboration
+  useCollaboration(projectId);
+  useSceneEditLock(selId);
+
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -734,18 +744,26 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Undo / Redo keyboard shortcuts
   const undo = useEditorStore((s) => s.undo);
   const redo = useEditorStore((s) => s.redo);
-  const historyLen = useEditorStore((s) => s.history.length);
-  const futureLen = useEditorStore((s) => s.future.length);
+  const historyLen = useEditorStore((s) => s.historyCount);
+  const futureLen = useEditorStore((s) => s.futureCount);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
-        useEditorStore.getState().undo();
+        const es = useEditorStore.getState();
+        if (es.historyCount > 0) {
+          es.undo();
+          useNotificationStore.getState().addToast('info', useLocaleStore.getState().t('editor.actionUndone'), 1500);
+        }
       }
       if ((e.ctrlKey || e.metaKey) && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
         e.preventDefault();
-        useEditorStore.getState().redo();
+        const es = useEditorStore.getState();
+        if (es.futureCount > 0) {
+          es.redo();
+          useNotificationStore.getState().addToast('info', useLocaleStore.getState().t('editor.actionRedone'), 1500);
+        }
       }
     };
     document.addEventListener('keydown', handler);
@@ -995,6 +1013,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
         <div style={{ flex: 1 }} />
 
+        {/* Online collaborators */}
+        <OnlineUsers />
+
         {/* Save status */}
         {saveStatus === 'saving' && (
           <span style={{ fontSize: 9, color: C.dim, fontWeight: 500 }}>{t('editor.saving')}</span>
@@ -1012,10 +1033,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             className={historyLen > 0 ? 'ed-action-btn' : undefined}
             onClick={undo}
             disabled={historyLen === 0}
-            title={t('editor.undo')}
-            aria-label={t('editor.undoLabel')}
+            title={`${t('editor.toolbar.undo')} (Ctrl+Z)${historyLen > 0 ? ` \u2014 ${historyLen}` : ''}`}
+            aria-label={`${t('editor.toolbar.undo')}${historyLen > 0 ? ` (${historyLen})` : ''}`}
             style={{
-              width: 28,
+              minWidth: 28,
               height: 28,
               borderRadius: 6,
               border: `1px solid ${C.border}`,
@@ -1029,18 +1050,20 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 2,
+              padding: '0 6px',
             }}
           >
-            &#8617;
+            &#8617;{historyLen > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyLen})</span>}
           </button>
           <button
             className={futureLen > 0 ? 'ed-action-btn' : undefined}
             onClick={redo}
             disabled={futureLen === 0}
-            title={t('editor.redo')}
-            aria-label={t('editor.redoLabel')}
+            title={`${t('editor.toolbar.redo')} (Ctrl+Shift+Z)${futureLen > 0 ? ` \u2014 ${futureLen}` : ''}`}
+            aria-label={`${t('editor.toolbar.redo')}${futureLen > 0 ? ` (${futureLen})` : ''}`}
             style={{
-              width: 28,
+              minWidth: 28,
               height: 28,
               borderRadius: 6,
               border: `1px solid ${C.border}`,
@@ -1054,9 +1077,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 2,
+              padding: '0 6px',
             }}
           >
-            &#8618;
+            &#8618;{futureLen > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureLen})</span>}
           </button>
         </div>
 
@@ -1122,6 +1147,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         {/* ════════════════════════════════════════════════
             LEFT PANEL — Scene thumbnails (~160px), collapsible on mobile
             ════════════════════════════════════════════════ */}
+        <ErrorBoundary>
         <div
           style={{
             width: scenePanelOpen ? 160 : 0,
@@ -1332,10 +1358,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </div>
           )}
         </div>
+        </ErrorBoundary>
 
         {/* ════════════════════════════════════════════════
             CENTER — Video Preview + Prompt Input
             ════════════════════════════════════════════════ */}
+        <ErrorBoundary>
         <div
           style={{
             flex: 1,
@@ -1685,6 +1713,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </div>
           )}
         </div>
+        </ErrorBoundary>
       </div>
 
       {/* ════════════════════════════════════════════════
@@ -1763,10 +1792,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 onChange={(e) => {
                   updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
                   autoResize(e.target);
-                  if (promptHistoryTimer.current) clearTimeout(promptHistoryTimer.current);
-                  promptHistoryTimer.current = setTimeout(() => {
-                    useEditorStore.getState().pushHistory();
-                  }, 1000);
+                  useEditorStore.getState().pushHistoryDebounced();
                 }}
                 onKeyDown={(e) => {
                   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {

@@ -1,8 +1,20 @@
 import { create } from 'zustand';
 import { uid } from '@/lib/utils';
+import { HistoryManager } from '@/lib/history';
 import { CANVAS_W, CANVAS_H, CANVAS_DEFAULT_BG, CANVAS_DEFAULT_DRAW_COLOR, CANVAS_DEFAULT_DRAW_SIZE, CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } from '@/lib/constants';
 import type { CanvasElement, AIResult } from '@/lib/types';
 
+/* ------------------------------------------------------------------ */
+/*  Snapshot type — the slice of state tracked by undo/redo            */
+/* ------------------------------------------------------------------ */
+interface CanvasSnapshot {
+  els: CanvasElement[];
+  canvasBg: string;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Store interface                                                    */
+/* ------------------------------------------------------------------ */
 interface ThumbnailState {
   step: string;
   tool: string;
@@ -21,9 +33,9 @@ interface ThumbnailState {
   aiStyle: string;
   aiCount: number;
 
-  // Undo/Redo
-  history: CanvasElement[][];
-  future: CanvasElement[][];
+  // Undo/Redo — exposed counts for UI binding
+  historyCount: number;
+  futureCount: number;
 
   // Clipboard
   clipboard: CanvasElement[] | null;
@@ -80,6 +92,8 @@ interface ThumbnailState {
 
   // History
   pushHistory: () => void;
+  /** Debounced push — collapses rapid calls (drag, resize) into one undo step */
+  pushHistoryDebounced: () => void;
   undo: () => void;
   redo: () => void;
 
@@ -123,12 +137,29 @@ interface ThumbnailState {
   // Backward-compatible selId setter
   setSelId: (id: string | null) => void;
 
+  // Backward compat: raw arrays (derived from historyManager for code that reads them)
+  history: CanvasElement[][];
+  future: CanvasElement[][];
+
   // Save/Load
   loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasW?: number; canvasH?: number } | null) => void;
   exportState: () => { els: CanvasElement[]; canvasBg: string; canvasW: number; canvasH: number };
 }
 
-const MAX_HISTORY = 50;
+/* ------------------------------------------------------------------ */
+/*  History manager instance (lives outside the store)                 */
+/* ------------------------------------------------------------------ */
+const hm = new HistoryManager<CanvasSnapshot>({ maxHistory: 50 });
+
+/** Helper to sync historyCount/futureCount after any history operation */
+function histCounts() {
+  return { historyCount: hm.undoCount, futureCount: hm.redoCount };
+}
+
+/** Build current snapshot from state */
+function snap(s: { els: CanvasElement[]; canvasBg: string }): CanvasSnapshot {
+  return { els: s.els, canvasBg: s.canvasBg };
+}
 
 export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   step: 'editor',
@@ -148,7 +179,11 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   aiStyle: 'realistic',
   aiCount: 4,
 
-  // History
+  // History counts
+  historyCount: 0,
+  futureCount: 0,
+
+  // Backward-compat empty arrays (never actually stored; UI should use historyCount/futureCount)
   history: [],
   future: [],
 
@@ -191,7 +226,10 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   })),
   setDrag: (d) => set({ drag: d }),
   setResize: (r) => set({ resize: r }),
-  setCanvasBg: (c) => set({ canvasBg: c }),
+  setCanvasBg: (c) => {
+    get().pushHistory();
+    set({ canvasBg: c, ...histCounts() });
+  },
   setDrawing: (d) => set({ drawing: d }),
   setDrawPts: (pts) =>
     set((s) => ({
@@ -215,33 +253,38 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // ===== History =====
   pushHistory: () => {
-    const { els, history } = get();
-    const next = [...history, JSON.parse(JSON.stringify(els))];
-    if (next.length > MAX_HISTORY) next.shift();
-    set({ history: next, future: [] });
+    const s = get();
+    hm.push(snap(s));
+    set(histCounts());
+  },
+
+  pushHistoryDebounced: () => {
+    const s = get();
+    hm.pushDebounced(snap(s), 300);
+    set(histCounts());
   },
 
   undo: () => {
-    const { history, els, future } = get();
-    if (history.length === 0) return;
-    const prev = history[history.length - 1];
+    const s = get();
+    const prev = hm.undo(snap(s));
+    if (!prev) return;
     set({
-      els: prev,
-      history: history.slice(0, -1),
-      future: [JSON.parse(JSON.stringify(els)), ...future],
+      els: prev.els,
+      canvasBg: prev.canvasBg,
       selIds: [],
+      ...histCounts(),
     });
   },
 
   redo: () => {
-    const { history, els, future } = get();
-    if (future.length === 0) return;
-    const next = future[0];
+    const s = get();
+    const next = hm.redo(snap(s));
+    if (!next) return;
     set({
-      els: next,
-      history: [...history, JSON.parse(JSON.stringify(els))],
-      future: future.slice(1),
+      els: next.els,
+      canvasBg: next.canvasBg,
       selIds: [],
+      ...histCounts(),
     });
   },
 
@@ -455,31 +498,35 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set((s) => ({ els: s.els.filter((e) => e.id !== id), selIds: s.selIds.filter((sid) => sid !== id) }));
   },
 
-  bringFront: (id) =>
+  bringFront: (id) => {
+    get().pushHistory();
     set((s) => {
       const el = s.els.find((e) => e.id === id);
       if (!el) return s;
       return { els: [...s.els.filter((e) => e.id !== id), el] };
-    }),
+    });
+  },
 
-  sendBack: (id) =>
+  sendBack: (id) => {
+    get().pushHistory();
     set((s) => {
       const el = s.els.find((e) => e.id === id);
       if (!el) return s;
       return { els: [el, ...s.els.filter((e) => e.id !== id)] };
-    }),
+    });
+  },
 
   // ===== Save/Load =====
   loadFromProject: (thumbnailData) => {
     if (!thumbnailData) return;
+    hm.clear();
     set({
       els: thumbnailData.els || [],
       canvasBg: thumbnailData.canvasBg || '#0c0c14',
       canvasW: thumbnailData.canvasW || CANVAS_W,
       canvasH: thumbnailData.canvasH || CANVAS_H,
-      history: [],
-      future: [],
       selIds: [],
+      ...histCounts(),
     });
   },
 

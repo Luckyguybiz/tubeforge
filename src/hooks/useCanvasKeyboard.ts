@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 export function useCanvasKeyboard() {
   useEffect(() => {
@@ -19,23 +20,24 @@ export function useCanvasKeyboard() {
       // Undo: Ctrl+Z (always, even while editing)
       if (ctrl && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
-        store.undo();
+        if (store.historyCount > 0) {
+          store.undo();
+          useNotificationStore.getState().addToast('info', useLocaleStore.getState().t('editor.actionUndone'), 1500);
+        }
         return;
       }
 
       // Redo: Ctrl+Shift+Z or Ctrl+Y
       if (ctrl && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
         e.preventDefault();
-        store.redo();
+        if (store.futureCount > 0) {
+          store.redo();
+          useNotificationStore.getState().addToast('info', useLocaleStore.getState().t('editor.actionRedone'), 1500);
+        }
         return;
       }
 
-      // `?` key toggles keyboard shortcuts modal (only when not editing text)
-      if (e.key === '?' && !isEditing) {
-        const ns = useNotificationStore.getState();
-        ns.setShowShortcuts(!ns.showShortcuts);
-        return;
-      }
+      // Note: `?` shortcut is now handled by useGlobalShortcuts
 
       // Skip rest if editing text
       if (isEditing) return;
@@ -122,10 +124,10 @@ export function useCanvasKeyboard() {
         return;
       }
 
-      // Arrow keys: nudge selected elements (with undo support)
+      // Arrow keys: nudge selected elements (with debounced undo)
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && store.selIds.length > 0) {
         e.preventDefault();
-        store.pushHistory();
+        store.pushHistoryDebounced();
         const step = e.shiftKey ? 10 : 1;
         const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
         const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;

@@ -69,8 +69,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .tf-project-row:hover{background:${C.surface}}
         @media(max-width:768px){
           .tf-sidebar{display:none!important}
-          .tf-main-content{padding:14px!important}
+          .tf-main-content{padding:10px!important}
           .tf-hamburger{display:flex!important}
+          .tf-topbar-referral{display:none!important}
+          .tf-topbar-shortcuts{display:none!important}
+          .tf-dash-heading{font-size:20px!important}
+          .tf-dash-stat-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
+          .tf-dash-project-grid{grid-template-columns:1fr!important}
+          .tf-dash-toolbar{padding:12px 12px 10px!important}
+          .tf-dash-toolbar-right{flex-direction:column!important;align-items:stretch!important}
+          .tf-dash-search-input{width:100%!important}
+          .tf-dash-content{padding:12px 12px 16px!important}
+          .tf-dash-create-btn{padding:10px 16px!important;font-size:13px!important}
+          .tf-dash-filter-pills{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important}
+          .tf-billing-inner{padding:16px 12px 32px!important}
+          .tf-billing-heading{font-size:22px!important}
+          .tf-billing-cols{flex-direction:column!important}
+          .tf-billing-right{flex:1 1 auto!important;position:static!important;width:100%!important}
+          .tf-billing-plan-grid{grid-template-columns:1fr!important}
+          .tf-tools-hero{padding:24px 0 16px!important}
+          .tf-tools-hero-title{font-size:24px!important}
+          .tf-tools-grid{grid-template-columns:1fr!important;gap:12px!important}
+          .tf-tools-cats{justify-content:flex-start!important;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important;padding-bottom:8px!important}
+          .tf-editor-scene-panel{display:none!important}
+          .tf-editor-topbar>*{flex-shrink:0}
+          .tf-shorts-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        }
+        @media(max-width:480px){
+          .tf-main-content{padding:6px!important}
+          .tf-dash-heading{font-size:18px!important}
+          .tf-dash-stat-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
+          .tf-dash-stat-card{padding:12px 14px!important}
+          .tf-dash-stat-value{font-size:18px!important}
+          .tf-billing-inner{padding:10px 8px 24px!important}
+          .tf-billing-heading{font-size:20px!important}
         }
         .tf-mobile-backdrop{
           position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;
