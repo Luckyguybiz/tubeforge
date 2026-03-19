@@ -3372,10 +3372,13 @@ export const useLocaleStore = create<LocaleState>()(
   persist(
     (set, get) => ({
       locale: 'ru',
-      setLocale: (locale) => set({ locale }),
+      setLocale: (locale) => set({
+        locale,
+        t: (key: string) => translations[locale]?.[key] ?? translations['ru'][key] ?? key,
+      }),
       t: (key: string) => {
         const { locale } = get();
-        return translations[locale][key] ?? translations['ru'][key] ?? key;
+        return translations[locale]?.[key] ?? translations['ru'][key] ?? key;
       },
     }),
     {
