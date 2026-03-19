@@ -57,11 +57,15 @@ interface YtFormat {
  * Returns video metadata fetched via YouTube's free oEmbed endpoint.
  */
 export async function GET(req: NextRequest) {
-  // Rate limit by IP (info endpoint is lightweight, no auth required)
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: 10 requests per minute per user
   const { success: rlOk, reset } = await rateLimit({
-    identifier: `yt-dl-info:${ip}`,
-    limit: 15,
+    identifier: `yt-dl-info:${session.user.id}`,
+    limit: 10,
     window: 60,
   });
   if (!rlOk) {

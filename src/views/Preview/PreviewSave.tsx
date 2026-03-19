@@ -1110,7 +1110,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 {/* Thumbnail */}
                 <div style={{ aspectRatio: '16/9', background: '#1a1a1a', position: 'relative' }}>
                   {p.thumbnailUrl ? (
-                    <img src={p.thumbnailUrl} alt="thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={p.thumbnailUrl} alt="Video thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div style={{
                       width: '100%', height: '100%',

@@ -770,7 +770,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       : saveStatus === 'saved'
         ? { text: t('metadata.save.saved'), color: C.green, icon: '\u2713' }
         : saveStatus === 'error'
-          ? { text: t('metadata.save.error'), color: C.red, icon: '\u26A0' }
+          ? { text: 'Ошибка сохранения', color: C.red, icon: '\u26A0' }
           : null;
 
   const titleWarning = title.length > 100;
@@ -943,7 +943,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           {currentProject?.thumbnailUrl ? (
             <img
               src={currentProject.thumbnailUrl}
-              alt="thumbnail"
+              alt={`Thumbnail for ${currentProject.title || 'current project'}`}
               style={{ width: 36, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
             />
           ) : (
@@ -1037,7 +1037,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 {p.thumbnailUrl ? (
                   <img
                     src={p.thumbnailUrl}
-                    alt="thumbnail"
+                    alt={`Thumbnail for ${p.title || 'project'}`}
                     style={{ width: 36, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
                   />
                 ) : (
@@ -1703,7 +1703,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     {project.data?.thumbnailUrl ? (
                       <img
                         src={project.data.thumbnailUrl}
-                        alt="thumbnail"
+                        alt="Video thumbnail preview"
                         style={{
                           width: '100%',
                           height: '100%',
