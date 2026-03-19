@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile } from '@ffmpeg/util';
+import { toBlobURL, fetchFile } from '@ffmpeg/util';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -64,10 +64,11 @@ export function Mp3Converter() {
     setError(null);
     try {
       const ffmpeg = new FFmpeg();
-      // Self-hosted files avoid COEP/CORS issues
+      // Self-hosted + toBlobURL: blob URLs bypass webpack's module resolution
+      // in the FFmpeg web worker (fixes "Cannot find module as expression is too dynamic")
       await ffmpeg.load({
-        coreURL: '/ffmpeg/ffmpeg-core.js',
-        wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+        coreURL: await toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
+        wasmURL: await toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
       });
 
       ffmpegRef.current = ffmpeg;
