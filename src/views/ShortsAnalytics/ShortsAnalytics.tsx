@@ -1362,7 +1362,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   borderBottom: `1px solid ${C.border}`,
                 }}
               >
-                {['#', 'Видео', 'Просмотры', 'Загружено', 'Канал'].map((h, i) => (
+                {['#', 'Видео', 'Просмотры', '\u2248 Заработок', 'Загружено', 'Канал'].map((h, i) => (
                   <th
                     key={h}
                     style={{
@@ -1379,6 +1379,9 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     }}
                   >
                     {h}
+                    {h.includes('Заработок') && (
+                      <span title="Приблизительная оценка на основе среднего RPM для Shorts. Реальный доход может отличаться." style={{ cursor: 'help', marginLeft: 4, opacity: 0.5 }}>ⓘ</span>
+                    )}
                   </th>
                 ))}
               </tr>
@@ -1618,6 +1621,26 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           }}
                         >
                           {formatViews(item.views)}
+                        </td>
+
+                        {/* Estimated Earnings */}
+                        <td
+                          style={{
+                            padding: '12px 14px',
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            color: C.blue,
+                            whiteSpace: 'nowrap',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {(() => {
+                            const rpm = SHORTS_RPM[filters.gameFilter] ?? 0.04;
+                            const earned = (item.views / 1000) * rpm;
+                            if (earned >= 1000) return `~$${(earned / 1000).toFixed(1)}K`;
+                            if (earned >= 1) return `~$${Math.round(earned)}`;
+                            return `~$${earned.toFixed(2)}`;
+                          })()}
                         </td>
 
                         {/* Uploaded */}
