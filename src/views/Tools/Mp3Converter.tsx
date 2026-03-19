@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL, fetchFile } from '@ffmpeg/util';
+import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -55,7 +54,7 @@ export function Mp3Converter() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // FFmpeg state
-  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegRef = useRef<FFmpegClient | null>(null);
   const [ffmpegLoading, setFfmpegLoading] = useState(false);
 
   const loadFFmpeg = useCallback(async () => {
@@ -63,14 +62,8 @@ export function Mp3Converter() {
     setFfmpegLoading(true);
     setError(null);
     try {
-      const ffmpeg = new FFmpeg();
-      // Self-hosted + toBlobURL: blob URLs bypass webpack's module resolution
-      // in the FFmpeg web worker (fixes "Cannot find module as expression is too dynamic")
-      await ffmpeg.load({
-        coreURL: await toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
-      });
-
+      const ffmpeg = new FFmpegClient();
+      await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
       return ffmpeg;
     } catch (err) {
@@ -99,7 +92,7 @@ export function Mp3Converter() {
       const inputName = `input.${inputExt}`;
       const outputName_ = `output.${outputFormat}`;
 
-      await ffmpeg.writeFile(inputName, await fetchFile(file));
+      await ffmpeg.writeFile(inputName, await readFileAsUint8Array(file));
 
       const onProgress = ({ progress: p }: { progress: number; time: number }) => {
         setProgress(Math.round(p * 100));
@@ -140,8 +133,12 @@ export function Mp3Converter() {
         throw new Error(`FFmpeg завершился с кодом ${exitCode}`);
       }
 
+<<<<<<< HEAD
       const output = await ffmpeg.readFile(outputName_);
       const rawBytes = output instanceof Uint8Array ? output : new TextEncoder().encode(output);
+=======
+      const rawBytes = await ffmpeg.readFile(outputName_);
+>>>>>>> 49d993b (fix: replace @ffmpeg/ffmpeg with custom Worker wrapper to fix WASM loading)
       const blob = new Blob([new Uint8Array(rawBytes) as BlobPart], { type: MIME_MAP[outputFormat] });
 
       setConvertedBlob(blob);
@@ -154,8 +151,12 @@ export function Mp3Converter() {
       try { await ffmpeg.deleteFile(outputName_); } catch { /* noop */ }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Conversion error:', err);
+<<<<<<< HEAD
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Ошибка конвертации: ${msg}`);
+=======
+      setError(err instanceof Error ? err.message : 'Не удалось конвертировать файл');
+>>>>>>> 49d993b (fix: replace @ffmpeg/ffmpeg with custom Worker wrapper to fix WASM loading)
     } finally {
       setLoading(false);
     }

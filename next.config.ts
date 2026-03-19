@@ -12,14 +12,8 @@ const nextConfig: NextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
-      {
-        // FFmpeg WASM requires SharedArrayBuffer, which needs these headers.
-        source: '/tools/:path*',
-        headers: [
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
-        ],
-      },
+      // Note: COEP/COOP removed — single-threaded FFmpeg WASM does not require
+      // SharedArrayBuffer, and require-corp blocks CDN fetches for the WASM core.
     ];
   },
 

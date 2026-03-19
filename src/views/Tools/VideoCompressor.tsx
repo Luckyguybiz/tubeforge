@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL, fetchFile } from '@ffmpeg/util';
+import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -44,7 +43,7 @@ export function VideoCompressor() {
   const [error, setError] = useState<string | null>(null);
 
   // FFmpeg state
-  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegRef = useRef<FFmpegClient | null>(null);
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const [ffmpegLoading, setFfmpegLoading] = useState(false);
 
@@ -65,13 +64,8 @@ export function VideoCompressor() {
     setFfmpegLoading(true);
     setError(null);
     try {
-      const ffmpeg = new FFmpeg();
-      // Self-hosted + toBlobURL: blob URLs bypass webpack's module resolution
-      await ffmpeg.load({
-        coreURL: await toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
-      });
-
+      const ffmpeg = new FFmpegClient();
+      await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
       setFfmpegLoaded(true);
       return ffmpeg;
@@ -98,7 +92,7 @@ export function VideoCompressor() {
       const ffmpeg = await loadFFmpeg();
 
       // Write input file
-      const data = await fetchFile(file);
+      const data = await readFileAsUint8Array(file);
       await ffmpeg.writeFile('input.mp4', data);
 
       // Set progress handler
@@ -147,9 +141,7 @@ export function VideoCompressor() {
       // Read output
       const output = await ffmpeg.readFile(`output.${ext}`);
       const mimeType = format === 'webm' ? 'video/webm' : 'video/mp4';
-      const blob = output instanceof Uint8Array
-        ? new Blob([new Uint8Array(output) as BlobPart], { type: mimeType })
-        : new Blob([output as string], { type: mimeType });
+      const blob = new Blob([new Uint8Array(output) as BlobPart], { type: mimeType });
 
       setCompressedBlob(blob);
       setCompressedSize(blob.size);
