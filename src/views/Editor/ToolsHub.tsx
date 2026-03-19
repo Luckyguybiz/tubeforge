@@ -903,11 +903,11 @@ export function ToolsHub() {
       padding: '0 24px',
     }}>
       {/* ── Hero Section ──────────────────────────────────── */}
-      <div style={{
+      <div className="tf-tools-hero" style={{
         textAlign: 'center',
         padding: '48px 0 32px',
       }}>
-        <h1 style={{
+        <h1 className="tf-tools-hero-title" style={{
           fontSize: 36,
           fontWeight: 800,
           color: C.text,
@@ -1038,7 +1038,7 @@ export function ToolsHub() {
       </div>
 
       {/* ── Category Tabs ──────────────────────────────────── */}
-      <div style={{
+      <div className="tf-tools-cats" style={{
         display: 'flex',
         alignItems: 'center',
         gap: 8,
@@ -1075,7 +1075,7 @@ export function ToolsHub() {
           </div>
         </div>
       ) : (
-        <div style={{
+        <div className="tf-tools-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
           gap: 16,

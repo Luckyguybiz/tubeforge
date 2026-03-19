@@ -192,6 +192,7 @@ export function AudioBalancer() {
               <input
                 type="range" min={-100} max={100} value={balance}
                 onChange={(e) => setBalance(Number(e.target.value))}
+                aria-label="Stereo balance"
                 style={{ flex: 1, accentColor: '#3b82f6' }}
               />
               <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600 }}>R</span>
@@ -210,6 +211,7 @@ export function AudioBalancer() {
               <input
                 type="range" min={0} max={100} value={leftVolume}
                 onChange={(e) => setLeftVolume(Number(e.target.value))}
+                aria-label="Left channel volume"
                 style={{ width: '100%', accentColor: '#3b82f6' }}
               />
             </div>
@@ -223,6 +225,7 @@ export function AudioBalancer() {
               <input
                 type="range" min={0} max={100} value={rightVolume}
                 onChange={(e) => setRightVolume(Number(e.target.value))}
+                aria-label="Right channel volume"
                 style={{ width: '100%', accentColor: '#6366f1' }}
               />
             </div>
@@ -230,7 +233,7 @@ export function AudioBalancer() {
 
           {/* Done status */}
           {done && (
-            <div style={{
+            <div role="status" style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12,
               border: '1px solid rgba(59,130,246,.3)', background: 'rgba(59,130,246,.06)', marginBottom: 16,
             }}>

@@ -95,6 +95,8 @@ export function TiktokDownloader() {
             onKeyDown={(e) => e.key === 'Enter' && handleDownload()}
             onBlur={() => { if (url.trim()) validateUrl(url); }}
             placeholder="Paste TikTok video URL here..."
+            aria-label="TikTok video URL"
+            aria-invalid={!!urlError || undefined}
             style={{
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
               color: C.text, fontSize: 14, padding: '14px 0', fontFamily: 'inherit',
@@ -103,6 +105,7 @@ export function TiktokDownloader() {
           {url && (
             <button
               onClick={() => { setUrl(''); setUrlError(''); setDone(false); setProgress(0); }}
+              aria-label="Clear URL"
               style={{
                 background: 'none', border: 'none', color: C.dim, cursor: 'pointer',
                 padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',

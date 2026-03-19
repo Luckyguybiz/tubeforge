@@ -116,6 +116,7 @@ export function VoiceoverGenerator() {
             <input
               type="range" min={0.5} max={2} step={0.1} value={speed}
               onChange={(e) => setSpeed(Number(e.target.value))}
+              aria-label="Voice speed"
               style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>
@@ -132,6 +133,7 @@ export function VoiceoverGenerator() {
             <input
               type="range" min={-5} max={5} step={1} value={pitch}
               onChange={(e) => setPitch(Number(e.target.value))}
+              aria-label="Voice pitch"
               style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>

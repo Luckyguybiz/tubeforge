@@ -17,6 +17,9 @@ export function usePlanLimits() {
   return {
     plan,
     isLoading: profile.isLoading,
+    isError: profile.isError,
+    error: profile.error,
+    refetch: profile.refetch,
     canCreateProject: projectCount < limits.projects,
     canUseAI: aiCount < limits.ai,
     remainingProjects: Math.max(0, limits.projects - projectCount),

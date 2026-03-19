@@ -49,6 +49,8 @@ export function CookieConsent() {
       }}
     >
       <div
+        role="dialog"
+        aria-label="Cookie consent"
         style={{
           background: C.surface,
           color: C.text,

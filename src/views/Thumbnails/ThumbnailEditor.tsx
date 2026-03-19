@@ -17,6 +17,7 @@ import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { OnlineUsers } from '@/components/ui/OnlineUsers';
 import { CollaborationCursors } from '@/components/ui/CollaborationCursors';
 import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
+import { useUndoHint } from '@/hooks/useUndoHint';
 import { useCollaboration, useCollaborationCursor } from '@/hooks/useCollaboration';
 import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } from '@/lib/constants';
 
@@ -33,6 +34,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   );
   const store = useThumbnailStore.getState;
   useCanvasKeyboard();
+  useUndoHint(historyCount);
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const sel = useMemo(() => els.find((e) => e.id === selId), [els, selId]);
   const loadedRef = useRef(false);

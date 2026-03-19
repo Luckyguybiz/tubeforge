@@ -127,7 +127,7 @@ export function YoutubeDownloader() {
         // If the abort was triggered by our timeout (not by user navigation),
         // show a user-friendly timeout message.
         if (controller.signal.aborted && abortRef.current === controller) {
-          setFetchError('Сервер не отвечает. Попробуйте ещё раз.');
+          setFetchError(t('tools.ytdl.serverTimeout'));
         }
         return;
       }
@@ -161,7 +161,7 @@ export function YoutubeDownloader() {
       return false;
     }
     if (!isValidYoutubeUrl(value)) {
-      setUrlError('Введите корректную ссылку YouTube');
+      setUrlError(t('tools.ytdl.invalidUrl'));
       return false;
     }
     setUrlError('');
@@ -200,12 +200,12 @@ export function YoutubeDownloader() {
   // ── Download handler ───────────────────────────────────────────
   const handleDownload = async () => {
     if (!url.trim() || !isValidYoutubeUrl(url)) {
-      setUrlError('Введите корректную ссылку YouTube');
+      setUrlError(t('tools.ytdl.invalidUrl'));
       return;
     }
 
     if (!videoInfo) {
-      showToast('Подождите, пока загрузится информация о видео.');
+      showToast(t('tools.ytdl.waitForInfo'));
       return;
     }
 
@@ -257,7 +257,7 @@ export function YoutubeDownloader() {
       const data = await res.json();
 
       if (!res.ok || !data.downloadUrl) {
-        setStreamError(data.error ?? 'Не удалось получить ссылку на скачивание');
+        setStreamError(data.error ?? t('tools.ytdl.downloadLinkError'));
         setDone(true);
         return;
       }
@@ -265,7 +265,7 @@ export function YoutubeDownloader() {
       // Stream the download to track real progress
       const downloadRes = await fetch(data.downloadUrl, { signal: controller.signal });
       if (!downloadRes.ok) {
-        setStreamError('Не удалось скачать файл с сервера');
+        setStreamError(t('tools.ytdl.serverDownloadError'));
         setDone(true);
         return;
       }
@@ -305,18 +305,18 @@ export function YoutubeDownloader() {
       a.click();
       URL.revokeObjectURL(blobUrl);
 
-      showToast('Скачивание завершено!');
+      showToast(t('tools.ytdl.downloadComplete'));
       setDone(true);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         // Only show timeout error if this was our timeout, not user navigation
         if (controller.signal.aborted && abortRef.current === controller) {
-          setStreamError('Сервер не отвечает. Попробуйте ещё раз.');
+          setStreamError(t('tools.ytdl.serverTimeout'));
           setDone(true);
         }
         return;
       }
-      setStreamError('Ошибка сети. Проверьте подключение к интернету.');
+      setStreamError(t('tools.ytdl.networkError'));
       setDone(true);
     } finally {
       clearTimeout(postTimeout);
@@ -333,8 +333,8 @@ export function YoutubeDownloader() {
 
   return (
     <ToolPageShell
-      title="Скачать видео с YouTube"
-      subtitle="Скачивайте видео с YouTube в любом качестве и формате"
+      title={t('tools.ytdl.title')}
+      subtitle={t('tools.ytdl.subtitle')}
       gradient={['#ef4444', '#dc2626']}
     >
       {/* Toast Notification */}
@@ -408,7 +408,9 @@ export function YoutubeDownloader() {
             onBlur={() => {
               if (url.trim()) validateUrl(url);
             }}
-            placeholder="Вставьте ссылку YouTube..."
+            placeholder={t('tools.ytdl.placeholder')}
+            aria-label="YouTube video URL"
+            aria-invalid={!!urlError || undefined}
             style={{
               flex: 1,
               background: 'transparent',
@@ -510,13 +512,14 @@ export function YoutubeDownloader() {
             <rect x="9" y="9" width="13" height="13" rx="2" />
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
           </svg>
-          Вставить
+          {t('tools.ytdl.paste')}
         </button>
       </div>
 
       {/* URL Error */}
       {urlError && (
         <div
+          role="alert"
           style={{
             fontSize: 12,
             color: '#ef4444',
@@ -778,7 +781,7 @@ export function YoutubeDownloader() {
             marginBottom: 8,
           }}
         >
-          Качество
+          {t('tools.ytdl.quality')}
         </label>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {QUALITY_VALUES.map((q) => (
@@ -822,7 +825,7 @@ export function YoutubeDownloader() {
             marginBottom: 8,
           }}
         >
-          Формат
+          {t('tools.ytdl.format')}
         </label>
         <div style={{ display: 'flex', gap: 8 }}>
           {FORMATS.map((f) => (
@@ -861,8 +864,8 @@ export function YoutubeDownloader() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
             <span style={{ fontSize: 12, color: C.sub }}>
               {downloadProgress > 0
-                ? `Скачивание... ${downloadProgress}%`
-                : 'Подготовка скачивания...'}
+                ? `${t('tools.ytdl.downloading')} ${downloadProgress}%`
+                : t('tools.ytdl.preparing')}
             </span>
             {downloadProgress > 0 && (
               <span style={{ fontSize: 12, color: C.dim }}>
@@ -906,10 +909,10 @@ export function YoutubeDownloader() {
           </svg>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              Скачивание завершено! Проверьте папку загрузок.
+              {t('tools.ytdl.downloadDone')}
             </div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-              Файл сохранён на ваш компьютер.
+              {t('tools.ytdl.fileSaved')}
             </div>
           </div>
         </div>
@@ -957,7 +960,7 @@ export function YoutubeDownloader() {
                   textDecoration: 'none',
                 }}
               >
-                Открыть на YouTube
+                {t('tools.ytdl.openOnYouTube')}
               </a>
             )}
           </div>
@@ -969,12 +972,10 @@ export function YoutubeDownloader() {
       <ActionButton
         label={
           fetchingInfo
-            ? 'Загрузка информации...'
+            ? t('tools.ytdl.loadingInfo')
             : done
-              ? 'Скачать снова'
-              : videoInfo
-                ? 'Скачать'
-                : 'Скачать'
+              ? t('tools.ytdl.downloadAgain')
+              : t('tools.download')
         }
         gradient={['#ef4444', '#dc2626']}
         onClick={handleDownload}

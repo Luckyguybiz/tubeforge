@@ -13,6 +13,7 @@ import { fmtDur, pluralRu } from '@/lib/utils';
 import { useProjectSync } from '@/hooks/useProjectSync';
 import { useVideoGeneration } from '@/hooks/useVideoGeneration';
 import { useCollaboration, useSceneEditLock } from '@/hooks/useCollaboration';
+import { useUndoHint } from '@/hooks/useUndoHint';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import type { Theme, Scene } from '@/lib/types';
@@ -681,7 +682,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const sceneListRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
-  const promptHistoryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedRef = useRef(false);
 
   // Video generation hook for selected scene
@@ -746,6 +746,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const redo = useEditorStore((s) => s.redo);
   const historyLen = useEditorStore((s) => s.historyCount);
   const futureLen = useEditorStore((s) => s.futureCount);
+  useUndoHint(historyLen);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -912,6 +913,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
       {/* ── Top bar ── */}
       <div
+        className="tf-editor-topbar"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -1008,7 +1010,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
         {/* Scene count + duration */}
         <span style={{ fontSize: 10, color: C.sub, fontWeight: 500 }}>
-          {pluralRu(scenes.length, 'сцена', 'сцены', 'сцен')} · {fmtDur(totalDur)}
+          {pluralRu(scenes.length, t('editor.scene.one'), t('editor.scene.few'), t('editor.scene.many'))} · {fmtDur(totalDur)}
         </span>
 
         <div style={{ flex: 1 }} />
@@ -1149,6 +1151,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             ════════════════════════════════════════════════ */}
         <ErrorBoundary>
         <div
+          className="tf-editor-scene-panel"
           style={{
             width: scenePanelOpen ? 160 : 0,
             maxWidth: scenePanelOpen ? 160 : 0,

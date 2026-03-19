@@ -216,6 +216,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                     }
                   }}
                   title={deletingId === p.id ? 'Нажмите ещё раз для удаления' : 'Удалить проект'}
+                  aria-label={deletingId === p.id ? `Confirm delete ${p.title || 'project'}` : `Delete ${p.title || 'project'}`}
                   style={{
                     width: 24,
                     height: 24,

@@ -206,6 +206,7 @@ export function ImageGenerator() {
             <input
               type="range" min={1} max={4} value={numImages}
               onChange={(e) => setNumImages(Number(e.target.value))}
+              aria-label="Number of images"
               style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ToolPageShell } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const GRADIENT: [string, string] = ['#3b82f6', '#06b6d4'];
 const SPEEDS = [0.5, 1, 1.5, 2];
@@ -76,6 +77,7 @@ function generateThumbnails(
 
 export function CutCrop() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const [file, setFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
@@ -225,7 +227,7 @@ export function CutCrop() {
     setIsPlaying(false);
     cancelAnimationFrame(animRef.current);
     setExporting(true);
-    setToast('Экспорт начат...');
+    setToast(t('tools.cutcrop.exportStarted'));
 
     try {
       const seg = segments.find((s) => s.id === selectedSegmentId) ?? segments[0];
@@ -300,7 +302,7 @@ export function CutCrop() {
       a.click();
       URL.revokeObjectURL(url);
 
-      setToast('Экспорт завершён!');
+      setToast(t('tools.cutcrop.exportDone'));
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Export error:', err);
       // Fallback: download the original file
@@ -310,7 +312,7 @@ export function CutCrop() {
       a.download = file.name;
       a.click();
       URL.revokeObjectURL(url);
-      setToast('Экспорт завершён (оригинал)');
+      setToast(t('tools.cutcrop.exportDoneOriginal'));
     } finally {
       setExporting(false);
     }
@@ -413,7 +415,7 @@ export function CutCrop() {
   // ---------- Upload screen ----------
   if (!file) {
     return (
-      <ToolPageShell title="Обрезка и кадрирование" subtitle="Обрезайте, кадрируйте и склеивайте видеоклипы с точностью" gradient={GRADIENT}>
+      <ToolPageShell title={t('tools.cutcrop.title')} subtitle={t('tools.cutcrop.subtitle')} gradient={GRADIENT}>
         <label
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -432,9 +434,9 @@ export function CutCrop() {
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
           </svg>
           <span style={{ fontSize: 16, fontWeight: 700, color: C.text, marginTop: 16 }}>
-            Перетащите видео сюда
+            {t('tools.cutcrop.dropLabel')}
           </span>
-          <span style={{ fontSize: 13, color: C.dim, marginTop: 6 }}>или нажмите для выбора файла</span>
+          <span style={{ fontSize: 13, color: C.dim, marginTop: 6 }}>{t('tools.cutcrop.dropHint')}</span>
           <input type="file" accept="video/*" style={{ display: 'none' }} onChange={(e) => {
             const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '';
           }} />
@@ -450,7 +452,7 @@ export function CutCrop() {
   for (let t = 0; t <= duration; t += markerStep) markers.push(t);
 
   return (
-    <ToolPageShell title="Обрезка и кадрирование" subtitle="Обрезайте, кадрируйте и склеивайте видеоклипы с точностью" gradient={GRADIENT}>
+    <ToolPageShell title={t('tools.cutcrop.title')} subtitle={t('tools.cutcrop.subtitle')} gradient={GRADIENT}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
         {/* ---- VIDEO PLAYER ---- */}
@@ -468,14 +470,14 @@ export function CutCrop() {
             onLoadedData={() => setVideoLoading(false)}
             onError={() => {
               setVideoLoading(false);
-              setError('Не удалось загрузить видео. Попробуйте другой формат (MP4, WebM, MOV).');
+              setError(t('tools.cutcrop.videoError'));
             }}
             onEnded={() => { setIsPlaying(false); cancelAnimationFrame(animRef.current); }}
             style={{ maxWidth: '100%', maxHeight: '60vh', display: videoUrl && !error ? 'block' : 'none' }}
           />
           {!videoUrl && (
             <div style={{ padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center' }}>
-              Загрузите видео для начала работы
+              {t('tools.cutcrop.loadVideo')}
             </div>
           )}
           {videoLoading && !error && (
@@ -487,7 +489,7 @@ export function CutCrop() {
                 <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,.2)" strokeWidth="2" fill="none" />
                 <path d="M8 2a6 6 0 014.47 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
               </svg>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Загрузка видео...</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>{t('tools.cutcrop.loadingVideo')}</span>
             </div>
           )}
           {error && (
@@ -517,7 +519,7 @@ export function CutCrop() {
           flexWrap: 'wrap',
         }}>
           {/* Play/Pause */}
-          <button onClick={togglePlay} style={btnBase} {...hover(C.cardHover)} title={isPlaying ? 'Пауза' : 'Воспроизвести'}>
+          <button onClick={togglePlay} style={btnBase} {...hover(C.cardHover)} title={isPlaying ? t('tools.cutcrop.pause') : t('tools.cutcrop.play')}>
             {isPlaying ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
             ) : (
@@ -526,14 +528,14 @@ export function CutCrop() {
           </button>
 
           {/* Rewind 5s */}
-          <button onClick={rewind5} style={btnBase} {...hover(C.cardHover)} title="Назад 5с">
+          <button onClick={rewind5} style={btnBase} {...hover(C.cardHover)} title={t('tools.cutcrop.rewind')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 105.64-8.36L1 10" />
             </svg>
           </button>
 
           {/* Speed */}
-          <button onClick={cycleSpeed} style={{ ...btnBase, width: 'auto', padding: '0 10px' }} {...hover(C.cardHover)} title="Скорость воспроизведения">
+          <button onClick={cycleSpeed} style={{ ...btnBase, width: 'auto', padding: '0 10px' }} {...hover(C.cardHover)} title={t('tools.cutcrop.speed')}>
             {speed}x
           </button>
 
@@ -546,28 +548,28 @@ export function CutCrop() {
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 4px', flexShrink: 0 }} />
 
           {/* Split */}
-          <button onClick={splitAtPlayhead} style={btnBase} {...hover(C.cardHover)} title="Разрезать на плейхеде">
+          <button onClick={splitAtPlayhead} style={btnBase} {...hover(C.cardHover)} title={t('tools.cutcrop.split')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" y1="4" x2="8.12" y2="15.88" /><line x1="14.47" y1="14.48" x2="20" y2="20" /><line x1="8.12" y1="8.12" x2="12" y2="12" />
             </svg>
           </button>
 
           {/* Crop toggle */}
-          <button onClick={() => setShowCrop(!showCrop)} style={{ ...btnBase, background: showCrop ? `${GRADIENT[0]}22` : C.card, borderColor: showCrop ? GRADIENT[0] : C.border, color: showCrop ? GRADIENT[0] : C.text }} {...hover(showCrop ? `${GRADIENT[0]}33` : C.cardHover)} title="Кадрирование">
+          <button onClick={() => setShowCrop(!showCrop)} style={{ ...btnBase, background: showCrop ? `${GRADIENT[0]}22` : C.card, borderColor: showCrop ? GRADIENT[0] : C.border, color: showCrop ? GRADIENT[0] : C.text }} {...hover(showCrop ? `${GRADIENT[0]}33` : C.cardHover)} title={t('tools.cutcrop.crop')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6.13 1L6 16a2 2 0 002 2h15" /><path d="M1 6.13L16 6a2 2 0 012 2v15" />
             </svg>
           </button>
 
           {/* Duplicate */}
-          <button onClick={duplicateSegment} style={btnBase} {...hover(C.cardHover)} title="Дублировать сегмент">
+          <button onClick={duplicateSegment} style={btnBase} {...hover(C.cardHover)} title={t('tools.cutcrop.duplicate')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
             </svg>
           </button>
 
           {/* Delete */}
-          <button onClick={deleteSegment} style={{ ...btnBase, color: segments.length > 1 ? C.red : C.dim }} {...hover(C.cardHover)} title="Удалить сегмент">
+          <button onClick={deleteSegment} style={{ ...btnBase, color: segments.length > 1 ? C.red : C.dim }} {...hover(C.cardHover)} title={t('tools.cutcrop.delete')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
             </svg>
@@ -577,12 +579,13 @@ export function CutCrop() {
           <div style={{ flex: 1 }} />
 
           {/* Zoom controls */}
-          <button onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title="Уменьшить">-</button>
+          <button onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title={t('tools.cutcrop.zoomOut')} aria-label="Zoom out">-</button>
           <input type="range" min={1} max={4} step={0.25} value={zoom}
             onChange={(e) => setZoom(+e.target.value)}
+            aria-label="Zoom level"
             style={{ width: 80, accentColor: GRADIENT[0] }}
           />
-          <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title="Увеличить">+</button>
+          <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title={t('tools.cutcrop.zoomIn')} aria-label="Zoom in">+</button>
 
           {/* New video */}
           <button
@@ -605,7 +608,7 @@ export function CutCrop() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
             </svg>
-            <span style={{ fontSize: 12 }}>Новое видео</span>
+            <span style={{ fontSize: 12 }}>{t('tools.cutcrop.newVideo')}</span>
           </button>
 
           {/* Add video */}
@@ -615,7 +618,7 @@ export function CutCrop() {
             {...hover(C.cardHover)}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-            <span style={{ fontSize: 12 }}>Добавить видео</span>
+            <span style={{ fontSize: 12 }}>{t('tools.cutcrop.addVideo')}</span>
           </button>
           <input ref={fileInputRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={(e) => {
             const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '';
@@ -755,7 +758,7 @@ export function CutCrop() {
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
             </svg>
           )}
-          {exporting ? 'Экспорт...' : 'Экспорт'}
+          {exporting ? t('tools.cutcrop.exporting') : t('tools.cutcrop.export')}
         </button>
       </div>
 

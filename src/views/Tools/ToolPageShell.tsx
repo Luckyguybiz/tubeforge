@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { Theme } from '@/lib/types';
 
 interface ToolPageShellProps {
@@ -16,6 +17,7 @@ interface ToolPageShellProps {
 
 export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, comingSoon, children }: ToolPageShellProps) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
 
   return (
@@ -32,6 +34,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
       }}>
         <button
           onClick={() => router.push('/tools')}
+          aria-label="Back to tools"
           style={{
             width: 36, height: 36, borderRadius: 10,
             border: `1px solid ${C.border}`, background: C.card,
@@ -45,7 +48,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
           onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${gradient[0]}44`; }}
           onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M19 12H5" /><polyline points="12 19 5 12 12 5" />
           </svg>
         </button>
@@ -99,8 +102,8 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Скоро</div>
-            <div style={{ fontSize: 12, color: C.sub }}>Этот инструмент находится в разработке и будет доступен в ближайшее время</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{t('tools.comingSoon')}</div>
+            <div style={{ fontSize: 12, color: C.sub }}>{t('tools.comingSoonDesc')}</div>
           </div>
         </div>
       )}
@@ -119,6 +122,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
 export function UploadArea({ C, accept, onFile, label }: {
   C: Theme; accept?: string; onFile: (file: File) => void; label?: string;
 }) {
+  const t = useLocaleStore((s) => s.t);
   return (
     <label
       style={{
@@ -134,10 +138,10 @@ export function UploadArea({ C, accept, onFile, label }: {
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
       </svg>
       <span style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 12 }}>
-        {label ?? 'Перетащите файл сюда или нажмите для загрузки'}
+        {label ?? t('tools.defaultDropLabel')}
       </span>
       <span style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
-        {accept ?? 'Все форматы поддерживаются'}
+        {accept ?? t('tools.allFormatsSupported')}
       </span>
       <input type="file" accept={accept} style={{ display: 'none' }} onChange={(e) => {
         const f = e.target.files?.[0];
@@ -157,6 +161,7 @@ export function ActionButton({ label, gradient, onClick, disabled, loading }: {
     <button
       onClick={onClick}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       style={{
         padding: '12px 32px', borderRadius: 12, border: 'none',
         background: (disabled || loading) ? 'rgba(128,128,128,.45)' : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,

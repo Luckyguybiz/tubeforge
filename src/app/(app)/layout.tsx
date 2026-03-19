@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { CookieConsent } from '@/components/ui/CookieConsent';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
 import { trpc } from '@/lib/trpc';
@@ -99,7 +100,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-main-content{padding:6px!important}
           .tf-dash-heading{font-size:18px!important}
           .tf-dash-stat-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
-          .tf-dash-stat-card{padding:12px 14px!important}
+          .tf-stat-card{padding:12px 14px!important}
           .tf-dash-stat-value{font-size:18px!important}
           .tf-billing-inner{padding:10px 8px 24px!important}
           .tf-billing-heading{font-size:20px!important}
@@ -144,8 +145,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       <ToastProvider />
-      <OnboardingTour />
-      <CookieConsent />
+      <ErrorBoundary>
+        <OnboardingTour />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <CookieConsent />
+      </ErrorBoundary>
     </>
   );
 }

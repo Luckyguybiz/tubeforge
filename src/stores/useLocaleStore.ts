@@ -551,18 +551,33 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.save': 'Сохранить изменения',
 
     // Onboarding
-    'onboarding.welcome': 'Добро пожаловать в TubeForge',
+    'onboarding.welcomeTitle': 'Добро пожаловать, {name}!',
     'onboarding.welcomeDesc': 'Ваша ИИ-студия для YouTube. Создавайте видео, обложки и метаданные — всё в одном месте. Давайте покажем, как всё устроено!',
-    'onboarding.dashboardTitle': 'Обзор дашборда',
-    'onboarding.dashboardDesc': 'Здесь отображается статистика канала, последние видео и быстрые действия. Всё начинается с вашего дашборда.',
-    'onboarding.projectTitle': 'Создайте первый проект',
-    'onboarding.projectDesc': 'В основной области вы работаете над видео, редактируете метаданные и управляете проектами. Начните с создания нового проекта!',
-    'onboarding.aiTitle': 'ИИ-инструменты',
-    'onboarding.aiDesc': 'Используйте боковое меню для доступа к ИИ-генерации видео, редактору обложек, оптимизатору метаданных и другим инструментам.',
+    'onboarding.sidebarTitle': 'Навигация',
+    'onboarding.sidebarDesc': 'Используйте боковое меню для переключения между разделами: дашборд, редактор, обложки, метаданные и другие.',
+    'onboarding.newProjectTitle': 'Создайте первый проект',
+    'onboarding.newProjectDesc': 'Нажмите «Новый проект» чтобы начать работу. Здесь вы будете создавать видео, редактировать метаданные и управлять контентом.',
+    'onboarding.toolsTitle': 'Бесплатные инструменты',
+    'onboarding.toolsDesc': 'Конвертируйте видео в MP3, сжимайте видеофайлы, редактируйте обложки — все инструменты доступны бесплатно.',
+    'onboarding.billingTitle': 'Расширьте возможности',
+    'onboarding.billingDesc': 'Обновите план для доступа к неограниченным ИИ-генерациям, командной работе, приоритетной поддержке и другим PRO-функциям.',
+    'onboarding.doneTitle': 'Всё готово!',
+    'onboarding.doneDesc': 'Вы готовы к работе. Создавайте контент, который привлекает аудиторию. Удачи!',
     'onboarding.next': 'Далее',
-    'onboarding.start': 'Начать',
+    'onboarding.start': 'Начать создавать',
     'onboarding.back': 'Назад',
     'onboarding.skip': 'Пропустить',
+    'onboarding.stepOf': '{current} из {total}',
+
+    // Settings — Onboarding
+    'settings.replayTour': 'Обучение',
+    'settings.replayTourDesc': 'Пройдите обучение заново, чтобы вспомнить основные функции платформы.',
+    'settings.replayTourBtn': 'Запустить обучение',
+
+    // What's New
+    'whatsNew.title': 'Что нового',
+    'whatsNew.close': 'Закрыть',
+    'whatsNew.badge': 'Новое',
 
     // Common
     'common.loading': 'Загрузка...',
@@ -727,6 +742,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.cutcrop.exportStarted': 'Экспорт начат...',
     'tools.cutcrop.exportDone': 'Экспорт завершён!',
     'tools.cutcrop.exportDoneOriginal': 'Экспорт завершён (оригинал)',
+    'tools.cutcrop.newVideo': 'Новое видео',
+    'tools.cutcrop.loadingVideo': 'Загрузка видео...',
+    'tools.cutcrop.videoError': 'Не удалось загрузить видео. Попробуйте другой формат (MP4, WebM, MOV).',
+
+    // YouTube Downloader extra
+    'tools.ytdl.serverTimeout': 'Сервер не отвечает. Попробуйте ещё раз.',
   },
   en: {
     // Navigation & Layout
@@ -1269,18 +1290,33 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.save': 'Save Changes',
 
     // Onboarding
-    'onboarding.welcome': 'Welcome to TubeForge',
+    'onboarding.welcomeTitle': 'Welcome, {name}!',
     'onboarding.welcomeDesc': 'Your AI studio for YouTube. Create videos, thumbnails and metadata — all in one place. Let us show you how it works!',
-    'onboarding.dashboardTitle': 'Dashboard Overview',
-    'onboarding.dashboardDesc': "Here you'll find channel stats, recent videos and quick actions. Everything starts from your dashboard.",
-    'onboarding.projectTitle': 'Create your first project',
-    'onboarding.projectDesc': 'In the main area you work on videos, edit metadata and manage projects. Start by creating a new project!',
-    'onboarding.aiTitle': 'AI Tools',
-    'onboarding.aiDesc': 'Use the sidebar menu to access AI video generation, thumbnail editor, metadata optimizer and other tools.',
+    'onboarding.sidebarTitle': 'Navigation',
+    'onboarding.sidebarDesc': 'Use the sidebar to switch between sections: dashboard, editor, thumbnails, metadata and more.',
+    'onboarding.newProjectTitle': 'Create your first project',
+    'onboarding.newProjectDesc': "Click \"New Project\" to get started. Here you'll create videos, edit metadata and manage your content.",
+    'onboarding.toolsTitle': 'Free Tools',
+    'onboarding.toolsDesc': 'Convert videos to MP3, compress video files, edit thumbnails — all tools are available for free.',
+    'onboarding.billingTitle': 'Unlock more features',
+    'onboarding.billingDesc': 'Upgrade your plan for unlimited AI generations, team collaboration, priority support and more PRO features.',
+    'onboarding.doneTitle': "You're all set!",
+    'onboarding.doneDesc': "You're ready to go. Start creating content that captivates your audience. Good luck!",
     'onboarding.next': 'Next',
-    'onboarding.start': 'Get Started',
+    'onboarding.start': 'Start Creating',
     'onboarding.back': 'Back',
     'onboarding.skip': 'Skip',
+    'onboarding.stepOf': '{current} of {total}',
+
+    // Settings — Onboarding
+    'settings.replayTour': 'Onboarding Tour',
+    'settings.replayTourDesc': 'Replay the onboarding tour to refresh your memory of key platform features.',
+    'settings.replayTourBtn': 'Replay Tour',
+
+    // What\'s New
+    'whatsNew.title': "What's New",
+    'whatsNew.close': 'Close',
+    'whatsNew.badge': 'New',
 
     // Common
     'common.loading': 'Loading...',
@@ -1445,6 +1481,12 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.cutcrop.exportStarted': 'Export started...',
     'tools.cutcrop.exportDone': 'Export complete!',
     'tools.cutcrop.exportDoneOriginal': 'Export complete (original)',
+    'tools.cutcrop.newVideo': 'New video',
+    'tools.cutcrop.loadingVideo': 'Loading video...',
+    'tools.cutcrop.videoError': 'Failed to load video. Try another format (MP4, WebM, MOV).',
+
+    // YouTube Downloader extra
+    'tools.ytdl.serverTimeout': 'Server not responding. Try again.',
   },
   kk: {
     // Navigation & Layout
@@ -1987,18 +2029,33 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.save': 'Өзгерістерді сақтау',
 
     // Onboarding
-    'onboarding.welcome': 'TubeForge-ке қош келдіңіз',
+    'onboarding.welcomeTitle': 'Қош келдіңіз, {name}!',
     'onboarding.welcomeDesc': 'YouTube үшін ИИ-студия. Видео, мұқабалар мен метадеректерді бір жерде жасаңыз. Қалай жұмыс істейтінін көрсетейік!',
-    'onboarding.dashboardTitle': 'Басқару тақтасына шолу',
-    'onboarding.dashboardDesc': 'Мұнда арна статистикасы, соңғы видеолар мен жылдам әрекеттер көрсетіледі. Бәрі басқару тақтасынан басталады.',
-    'onboarding.projectTitle': 'Бірінші жобаңызды жасаңыз',
-    'onboarding.projectDesc': 'Негізгі аймақта видеолармен жұмыс жасайсыз, метадеректерді өңдейсіз және жобаларды басқарасыз. Жаңа жоба жасаудан бастаңыз!',
-    'onboarding.aiTitle': 'ИИ-құралдар',
-    'onboarding.aiDesc': 'Бүйірлік мәзір арқылы ИИ-видео генерация, мұқаба редакторы, метадеректер оңтайландырғышы және басқа құралдарға қол жеткізіңіз.',
+    'onboarding.sidebarTitle': 'Навигация',
+    'onboarding.sidebarDesc': 'Бүйірлік мәзір арқылы бөлімдер арасында ауысыңыз: басқару тақтасы, редактор, мұқабалар, метадеректер және т.б.',
+    'onboarding.newProjectTitle': 'Бірінші жобаңызды жасаңыз',
+    'onboarding.newProjectDesc': '«Жаңа жоба» батырмасын басыңыз. Мұнда видеолар жасайсыз, метадеректерді өңдейсіз және контентті басқарасыз.',
+    'onboarding.toolsTitle': 'Тегін құралдар',
+    'onboarding.toolsDesc': 'Видеоны MP3-ке түрлендіріңіз, видео файлдарды сығымдаңыз, мұқабаларды өңдеңіз — барлық құралдар тегін қолжетімді.',
+    'onboarding.billingTitle': 'Мүмкіндіктерді кеңейтіңіз',
+    'onboarding.billingDesc': 'Шексіз ИИ-генерациялар, командалық жұмыс, басымды қолдау және басқа PRO-мүмкіндіктер үшін жоспарды жаңартыңыз.',
+    'onboarding.doneTitle': 'Бәрі дайын!',
+    'onboarding.doneDesc': 'Сіз жұмысқа дайынсыз. Аудиторияңызды тартатын контент жасаңыз. Сәттілік!',
     'onboarding.next': 'Келесі',
-    'onboarding.start': 'Бастау',
+    'onboarding.start': 'Жасауды бастау',
     'onboarding.back': 'Артқа',
     'onboarding.skip': 'Өткізу',
+    'onboarding.stepOf': '{total} ішінен {current}',
+
+    // Settings — Onboarding
+    'settings.replayTour': 'Оқыту',
+    'settings.replayTourDesc': 'Платформаның негізгі мүмкіндіктерін еске түсіру үшін оқытуды қайта өтіңіз.',
+    'settings.replayTourBtn': 'Оқытуды бастау',
+
+    // What's New
+    'whatsNew.title': 'Жаңалықтар',
+    'whatsNew.close': 'Жабу',
+    'whatsNew.badge': 'Жаңа',
 
     // Common
     'common.loading': 'Жүктелуде...',
@@ -2581,18 +2638,33 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.save': 'Guardar cambios',
 
     // Onboarding
-    'onboarding.welcome': 'Bienvenido a TubeForge',
+    'onboarding.welcomeTitle': '¡Bienvenido, {name}!',
     'onboarding.welcomeDesc': 'Tu estudio IA para YouTube. Crea videos, miniaturas y metadatos, todo en un solo lugar. ¡Te mostramos cómo funciona!',
-    'onboarding.dashboardTitle': 'Resumen del panel',
-    'onboarding.dashboardDesc': 'Aquí encontrarás estadísticas del canal, videos recientes y acciones rápidas. Todo empieza desde tu panel.',
-    'onboarding.projectTitle': 'Crea tu primer proyecto',
-    'onboarding.projectDesc': 'En el área principal trabajas con videos, editas metadatos y gestionas proyectos. ¡Empieza creando un nuevo proyecto!',
-    'onboarding.aiTitle': 'Herramientas IA',
-    'onboarding.aiDesc': 'Usa el menú lateral para acceder a generación de video IA, editor de miniaturas, optimizador de metadatos y más herramientas.',
+    'onboarding.sidebarTitle': 'Navegación',
+    'onboarding.sidebarDesc': 'Usa el menú lateral para cambiar entre secciones: panel, editor, miniaturas, metadatos y más.',
+    'onboarding.newProjectTitle': 'Crea tu primer proyecto',
+    'onboarding.newProjectDesc': 'Haz clic en "Nuevo proyecto" para empezar. Aquí crearás videos, editarás metadatos y gestionarás tu contenido.',
+    'onboarding.toolsTitle': 'Herramientas gratuitas',
+    'onboarding.toolsDesc': 'Convierte videos a MP3, comprime archivos de video, edita miniaturas — todas las herramientas disponibles gratis.',
+    'onboarding.billingTitle': 'Desbloquea más funciones',
+    'onboarding.billingDesc': 'Actualiza tu plan para generaciones IA ilimitadas, trabajo en equipo, soporte prioritario y más funciones PRO.',
+    'onboarding.doneTitle': '¡Todo listo!',
+    'onboarding.doneDesc': 'Estás listo para empezar. Crea contenido que cautive a tu audiencia. ¡Buena suerte!',
     'onboarding.next': 'Siguiente',
-    'onboarding.start': 'Comenzar',
+    'onboarding.start': 'Empezar a crear',
     'onboarding.back': 'Atrás',
     'onboarding.skip': 'Omitir',
+    'onboarding.stepOf': '{current} de {total}',
+
+    // Settings — Onboarding
+    'settings.replayTour': 'Tour de inicio',
+    'settings.replayTourDesc': 'Repite el tour de inicio para recordar las funciones principales de la plataforma.',
+    'settings.replayTourBtn': 'Repetir tour',
+
+    // What's New
+    'whatsNew.title': 'Novedades',
+    'whatsNew.close': 'Cerrar',
+    'whatsNew.badge': 'Nuevo',
 
     // Common
     'common.loading': 'Cargando...',

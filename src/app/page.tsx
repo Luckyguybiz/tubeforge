@@ -3,6 +3,7 @@
 import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 const CookieConsent = dynamic(
   () => import('@/components/ui/CookieConsent').then((m) => ({ default: m.CookieConsent })),
@@ -1213,7 +1214,9 @@ export default function LandingPage() {
           .tf-reveal { opacity: 1; transform: none; transition: none; }
         }
       `}</style>
-      <CookieConsent />
+      <ErrorBoundary>
+        <CookieConsent />
+      </ErrorBoundary>
     </div>
   );
 }

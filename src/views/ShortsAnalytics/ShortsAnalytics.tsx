@@ -1355,6 +1355,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
             </div>
           )}
 
+          <div className="tf-shorts-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table
             style={{
               width: '100%',
@@ -1761,6 +1762,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

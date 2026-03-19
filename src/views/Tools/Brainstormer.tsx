@@ -93,6 +93,7 @@ export function Brainstormer() {
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
               placeholder="e.g. AI productivity, fitness, personal finance..."
+              aria-label="Topic or niche"
               style={{
                 width: '100%', padding: '12px 14px', borderRadius: 10,
                 border: `1px solid ${C.border}`, background: C.surface,
