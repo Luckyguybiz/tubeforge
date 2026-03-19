@@ -189,7 +189,7 @@ export function AdminPage() {
 
   const statsCards = [
     {
-      label: 'Пользователей',
+      label: t('admin.stat.users'),
       value: stats.data?.totalUsers,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -200,10 +200,10 @@ export function AdminPage() {
         </svg>
       ),
       color: C.blue,
-      sub: stats.data ? `+${stats.data.usersThisWeek} за неделю` : null,
+      sub: stats.data ? `+${stats.data.usersThisWeek} ${t('admin.stat.thisWeek')}` : null,
     },
     {
-      label: 'Проектов',
+      label: t('admin.stat.projects'),
       value: stats.data?.totalProjects,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -211,10 +211,10 @@ export function AdminPage() {
         </svg>
       ),
       color: C.purple,
-      sub: stats.data ? `+${stats.data.projectsThisWeek} за неделю` : null,
+      sub: stats.data ? `+${stats.data.projectsThisWeek} ${t('admin.stat.thisWeek')}` : null,
     },
     {
-      label: 'Подписки',
+      label: t('admin.stat.subscriptions'),
       value: stats.data?.activeSubscriptions,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -225,7 +225,7 @@ export function AdminPage() {
       sub: stats.data ? `PRO + Studio` : null,
     },
     {
-      label: 'Видео сегодня',
+      label: t('admin.stat.videosToday'),
       value: stats.data?.videosToday,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
