@@ -196,6 +196,26 @@ function SkeletonRow({ surface, card }: { surface: string; card: string }) {
   );
 }
 
+/* ── Promo helpers ───────────────────────────────────────────────── */
+
+function formatCountdown(expiresAt: number): string {
+  const diff = expiresAt - Date.now();
+  if (diff <= 0) return 'Истёк';
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `${days}д ${hours % 24}ч`;
+  }
+  return `${hours}ч ${minutes}мин`;
+}
+
+function formatExpiry(expiresAt: number): string {
+  return new Date(expiresAt).toLocaleString('ru-RU', {
+    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+  });
+}
+
 /* ── Pro upgrade overlay (below row 10) ──────────────────────────── */
 
 function UpgradeOverlay({
@@ -206,6 +226,7 @@ function UpgradeOverlay({
   text,
   sub,
   bg,
+  onPromoClick,
 }: {
   isDark: boolean;
   accent: string;
@@ -214,6 +235,7 @@ function UpgradeOverlay({
   text: string;
   sub: string;
   bg: string;
+  onPromoClick?: () => void;
 }) {
   return (
     <tr>
@@ -322,6 +344,37 @@ function UpgradeOverlay({
             </a>{' '}
             чтобы управлять подпиской
           </p>
+
+          {onPromoClick && (
+            <p
+              style={{
+                fontSize: 12,
+                color: sub,
+                margin: '10px 0 0',
+                opacity: 0.7,
+              }}
+            >
+              или{' '}
+              <button
+                type="button"
+                onClick={onPromoClick}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: accent,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+              >
+                введите промокод
+              </button>
+            </p>
+          )}
         </div>
       </td>
     </tr>
@@ -390,7 +443,91 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   /* ── Subscription check ──────────────────────────── */
   const subscription = trpc.billing.getSubscription.useQuery();
   const plan = subscription.data?.plan ?? 'FREE';
-  const isPro = plan === 'PRO' || plan === 'STUDIO';
+
+  /* ── Promo code state ──────────────────────────── */
+  const [promoInput, setPromoInput] = useState('');
+  const [promoActive, setPromoActive] = useState(false);
+  const [promoExpires, setPromoExpires] = useState<number | null>(null);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [showPromoInput, setShowPromoInput] = useState(false);
+  const [promoSuccess, setPromoSuccess] = useState('');
+  const promoRef = useRef<HTMLDivElement>(null);
+  const [, setPromoTick] = useState(0);
+
+  // Check localStorage on mount for active promo
+  useEffect(() => {
+    const saved = localStorage.getItem('tf-promo');
+    if (saved) {
+      try {
+        const { expiresAt, code: savedCode } = JSON.parse(saved);
+        if (expiresAt > Date.now()) {
+          setPromoActive(true);
+          setPromoExpires(expiresAt);
+          setPromoCode(savedCode ?? null);
+        } else {
+          localStorage.removeItem('tf-promo');
+        }
+      } catch { localStorage.removeItem('tf-promo'); }
+    }
+  }, []);
+
+  // Update countdown every minute
+  useEffect(() => {
+    if (!promoExpires) return;
+    const timer = setInterval(() => {
+      if (Date.now() >= promoExpires) {
+        setPromoActive(false);
+        setPromoExpires(null);
+        setPromoCode(null);
+        localStorage.removeItem('tf-promo');
+        clearInterval(timer);
+      }
+      // Force re-render for countdown
+      setPromoTick((t) => t + 1);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [promoExpires]);
+
+  const isPro = plan === 'PRO' || plan === 'STUDIO' || promoActive;
+
+  const handlePromoSubmit = useCallback(async () => {
+    if (!promoInput.trim()) return;
+    setPromoLoading(true);
+    setPromoError('');
+    setPromoSuccess('');
+    try {
+      const res = await fetch('/api/tools/promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoInput.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPromoError(json.error ?? 'Промокод не найден');
+        return;
+      }
+      localStorage.setItem('tf-promo', JSON.stringify({ expiresAt: json.expiresAt, code: json.code }));
+      setPromoActive(true);
+      setPromoExpires(json.expiresAt);
+      setPromoCode(json.code);
+      setPromoSuccess(json.label);
+      setPromoInput('');
+      setShowPromoInput(false);
+    } catch {
+      setPromoError('Ошибка при проверке промокода');
+    } finally {
+      setPromoLoading(false);
+    }
+  }, [promoInput]);
+
+  const handleOpenPromoFromOverlay = useCallback(() => {
+    setShowPromoInput(true);
+    setTimeout(() => {
+      promoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  }, []);
 
   const [period, setPeriod] = useState<Period>('7d');
   const [filters, setFilters] = useState<Filters>({
@@ -921,6 +1058,129 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
             </div>
           )}
 
+          {/* ── Promo active banner ──────────────────────── */}
+          {promoActive && promoExpires && (
+            <div
+              style={{
+                margin: '12px 14px 0',
+                padding: '14px 18px',
+                borderRadius: 12,
+                background: isDark ? 'rgba(34,197,94,.08)' : 'rgba(34,197,94,.06)',
+                border: `1px solid ${isDark ? 'rgba(34,197,94,.25)' : 'rgba(34,197,94,.2)'}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 600, color: isDark ? '#4ade80' : '#16a34a' }}>
+                {'\u2728'} Промокод{promoCode ? ` ${promoCode}` : ''} активен
+              </div>
+              <div style={{ fontSize: 12.5, color: C.sub, lineHeight: 1.5 }}>
+                Полный доступ до {formatExpiry(promoExpires)}
+              </div>
+              <div style={{ fontSize: 12, color: isDark ? '#4ade80' : '#16a34a', fontWeight: 500 }}>
+                Осталось: {formatCountdown(promoExpires)}
+              </div>
+            </div>
+          )}
+
+          {/* ── Promo code input banner ──────────────────── */}
+          {!isPro && !promoActive && (
+            <div
+              ref={promoRef}
+              style={{
+                margin: '12px 14px 0',
+                padding: '12px 18px',
+                borderRadius: 12,
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+              }}
+            >
+              {!showPromoInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPromoInput(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    color: C.sub,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    width: '100%',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = C.text; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = C.sub; }}
+                >
+                  <span>{'\uD83C\uDF81'}</span>
+                  <span>Есть промокод?</span>
+                  <span style={{ fontSize: 11, opacity: 0.6, marginLeft: 'auto' }}>нажмите чтобы ввести</span>
+                </button>
+              ) : (
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>{'\uD83C\uDF81'}</span> Введите промокод
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => { setPromoInput(e.target.value); setPromoError(''); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handlePromoSubmit(); }}
+                      placeholder="Например, SHORTS2026"
+                      style={{
+                        flex: 1,
+                        padding: '9px 14px',
+                        borderRadius: 8,
+                        border: `1px solid ${promoError ? (isDark ? 'rgba(255,60,60,.4)' : 'rgba(255,60,60,.3)') : C.border}`,
+                        background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.02)',
+                        color: C.text,
+                        fontSize: 13,
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handlePromoSubmit}
+                      disabled={promoLoading || !promoInput.trim()}
+                      style={{
+                        padding: '9px 18px',
+                        borderRadius: 8,
+                        border: 'none',
+                        background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: promoLoading || !promoInput.trim() ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                        opacity: promoLoading || !promoInput.trim() ? 0.6 : 1,
+                        whiteSpace: 'nowrap',
+                        transition: 'opacity .15s ease',
+                      }}
+                    >
+                      {promoLoading ? '...' : 'Активировать'}
+                    </button>
+                  </div>
+                  {promoError && (
+                    <div style={{ fontSize: 12, color: isDark ? '#ff8080' : '#dc2626', marginTop: 8 }}>
+                      {'\u26A0\uFE0F'} {promoError}
+                    </div>
+                  )}
+                  {promoSuccess && (
+                    <div style={{ fontSize: 12, color: isDark ? '#4ade80' : '#16a34a', marginTop: 8 }}>
+                      {'\u2705'} {promoSuccess}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <table
             style={{
               width: '100%',
@@ -1282,6 +1542,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       text={C.text}
                       sub={C.sub}
                       bg={C.bg}
+                      onPromoClick={handleOpenPromoFromOverlay}
                     />
                   )}
                 </>
