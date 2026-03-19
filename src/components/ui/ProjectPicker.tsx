@@ -137,7 +137,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
             }}>
               <span>⚠</span>
               <span style={{ wordBreak: 'break-word', overflow: 'hidden' }}>{error}</span>
-              {(error.includes('лимит') || error.includes('limit')) && (
+              {(error.includes(t('picker.limitKeyword')) || error.includes('limit')) && (
                 <button
                   onClick={() => router.push('/billing')}
                   style={{
