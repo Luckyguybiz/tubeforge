@@ -38,8 +38,8 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
         const lastError = getLastAuthError();
         console.error('[auth-route] Callback failed. Location:', location, 'Last error:', lastError);
 
-        // Show real error in non-production or with ?debug param
-        if (process.env.VERCEL_ENV !== 'production' || url.searchParams.has('debug')) {
+        // Show real error in non-production only
+        if (process.env.VERCEL_ENV !== 'production') {
           return NextResponse.json({
             error: 'Auth callback failed',
             redirect: location,
@@ -60,9 +60,11 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
     return NextResponse.json({
       error: 'Auth handler threw',
       message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5) : undefined,
-      lastAuthError: lastError,
-      hasNextUrl: !!req.nextUrl,
+      ...(process.env.NODE_ENV !== 'production' && {
+        stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5) : undefined,
+        lastAuthError: lastError,
+        hasNextUrl: !!req.nextUrl,
+      }),
     }, { status: 500 });
   }
 }

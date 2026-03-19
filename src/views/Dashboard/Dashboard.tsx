@@ -963,6 +963,16 @@ export function Dashboard() {
   const renameRef = useRef<HTMLInputElement>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
+  /* ── Show toast on successful plan upgrade ───── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upgraded') === 'true') {
+      toast.success(t('billing.upgradeSuccess'));
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Debounce search ──────────────────────────── */
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -37,11 +37,27 @@ export const sceneRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await checkSceneRate(ctx.session.user.id);
-      const project = await ctx.db.project.findFirst({
-        where: { id: input.projectId, userId: ctx.session.user.id },
-        select: { id: true, _count: { select: { scenes: true } } },
-      });
+
+      const [project, user] = await Promise.all([
+        ctx.db.project.findFirst({
+          where: { id: input.projectId, userId: ctx.session.user.id },
+          select: { id: true, _count: { select: { scenes: true } } },
+        }),
+        ctx.db.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { plan: true },
+        }),
+      ]);
       if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'Проект не найден' });
+
+      const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
+      const maxScenes = SCENE_LIMITS[user?.plan ?? 'FREE'] ?? 10;
+      if (project._count.scenes >= maxScenes) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Scene limit reached (${maxScenes}). Upgrade your plan for more scenes.`,
+        });
+      }
 
       const order = input.order ?? project._count.scenes;
       return ctx.db.scene.create({

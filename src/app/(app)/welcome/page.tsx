@@ -219,30 +219,30 @@ function WelcomeInner() {
 
       <div
         style={{
-          position: 'relative',
           width: '100%',
-          paddingBottom: '56.25%',
+          paddingTop: 48,
+          paddingBottom: 48,
           borderRadius: 14,
-          overflow: 'hidden',
-          background: '#000',
+          background: isDark ? 'rgba(79,70,229,.08)' : 'rgba(79,70,229,.04)',
+          border: `1px solid ${isDark ? 'rgba(79,70,229,.2)' : 'rgba(79,70,229,.12)'}`,
           marginBottom: 28,
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
         }}
       >
-        <iframe
-          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-          title="TubeForge видео-гайд"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            borderRadius: 14,
-          }}
-        />
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ color: '#4f46e5' }}>
+          <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor" />
+        </svg>
+        <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.text }}>
+          Видео-гайд скоро появится
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: C.sub }}>
+          Мы готовим подробное обучающее видео для вас
+        </p>
       </div>
 
       <div style={{ display: 'flex', gap: 12 }}>

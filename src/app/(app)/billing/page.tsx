@@ -63,7 +63,7 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       id: 'FREE',
       name: t('billing.planFree'),
       price: 0,
-      priceLabel: '$0',
+      priceLabel: '0\u20BD',
       features: [
         t('billing.feat.projects3'),
         t('billing.feat.ai5'),
@@ -76,8 +76,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
     {
       id: 'PRO',
       name: 'Pro',
-      price: 12,
-      priceLabel: '$12',
+      price: 990,
+      priceLabel: '990\u20BD',
       badge: t('billing.popular'),
       badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
       features: [
@@ -96,8 +96,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
     {
       id: 'STUDIO',
       name: 'Studio',
-      price: 30,
-      priceLabel: '$30',
+      price: 2490,
+      priceLabel: '2490\u20BD',
       features: [
         t('billing.feat.allPro'),
         t('billing.feat.unlimitedAi'),
@@ -113,28 +113,28 @@ function getPlans(t: (key: string) => string): PlanDef[] {
   ];
 }
 
-function getDeals(t: (key: string) => string): DealDef[] {
+function getDeals(): DealDef[] {
   return [
     {
       id: 'lifetime-credits',
-      title: t('billing.deal.lifetimeTitle'),
-      description: t('billing.deal.lifetimeDesc'),
+      title: 'Lifetime Credit Pack',
+      description: 'Credits added to your subscription that never expire.',
       details: [
-        t('billing.deal.lifetimeDetail1'),
-        t('billing.deal.lifetimeDetail2'),
-        t('billing.deal.lifetimeDetail3'),
-        t('billing.deal.lifetimeDetail4'),
+        '100 workflow credits',
+        '200 AI Image credits',
+        '30 voiceovers',
+        '30 exports',
       ],
-      price: 19,
-      originalPrice: 49,
+      price: 890,
+      originalPrice: 1990,
       highlight: true,
     },
     {
       id: 'consultation',
-      title: t('billing.deal.consultTitle'),
-      description: t('billing.deal.consultDesc'),
-      price: 49,
-      originalPrice: 99,
+      title: '1:1 Expert Consultation',
+      description: 'Personal video consultation on YouTube strategy.',
+      price: 4900,
+      originalPrice: 9900,
     },
   ];
 }
@@ -161,7 +161,7 @@ export default function BillingPage() {
   });
 
   const PLANS = useMemo(() => getPlans(t), [t]);
-  const DEALS = useMemo(() => getDeals(t), [t]);
+  const DEALS = useMemo(() => getDeals(), []);
 
   const [selectedPlan, setSelectedPlan] = useState<PlanId>(userPlan);
   const [selectedDeals, setSelectedDeals] = useState<boolean[]>(() => DEALS.map(() => false));
@@ -478,9 +478,6 @@ export default function BillingPage() {
                         }}
                       >
                         {plan.priceLabel}
-                        {plan.id !== 'FREE' && (
-                          <span style={{ fontSize: 14, fontWeight: 500, color: C.sub }}>{t('billing.perMonth')}</span>
-                        )}
                       </div>
 
                       {/* Features */}
@@ -687,7 +684,7 @@ export default function BillingPage() {
                           {/* Price */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
-                              {t('billing.getFor')} ${deal.price}
+                              {t('billing.getFor')} {deal.price.toLocaleString()}{'\u20BD'}
                             </span>
                             <span
                               style={{
@@ -696,7 +693,7 @@ export default function BillingPage() {
                                 textDecoration: 'line-through',
                               }}
                             >
-                              ${deal.originalPrice}
+                              {deal.originalPrice.toLocaleString()}{'\u20BD'}
                             </span>
                             <span
                               style={{
@@ -884,7 +881,7 @@ export default function BillingPage() {
                 >
                   <span style={{ color: C.sub }}>{t('billing.plan')} {selectedPlanDef.name}</span>
                   <span style={{ fontWeight: 700, color: C.text }}>
-                    ${planPrice}
+                    {planPrice.toLocaleString()}{'\u20BD'}
                   </span>
                 </div>
 
@@ -901,7 +898,7 @@ export default function BillingPage() {
                   >
                     <span style={{ color: C.sub }}>{t('billing.deals')}</span>
                     <span style={{ fontWeight: 700, color: C.text }}>
-                      ${dealsTotal}
+                      {dealsTotal.toLocaleString()}{'\u20BD'}
                     </span>
                   </div>
                 )}
@@ -920,7 +917,7 @@ export default function BillingPage() {
                       marginBottom: 14,
                     }}
                   >
-                    {t('billing.noDealsWarningUsd')}
+                    {t('billing.noDealsWarning')}
                   </div>
                 )}
 
@@ -951,7 +948,7 @@ export default function BillingPage() {
                       letterSpacing: '-.02em',
                     }}
                   >
-                    ${totalDue}
+                    {totalDue.toLocaleString()}{'\u20BD'}
                   </span>
                 </div>
               </div>

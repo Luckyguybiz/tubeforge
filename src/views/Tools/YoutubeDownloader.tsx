@@ -4,8 +4,20 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
-const QUALITIES = ['Максимальное', '2160p', '1440p', '1080p', '720p', '480p', '360p', 'Только аудио'] as const;
+const QUALITIES = ['1080p', '720p', '480p', '360p', 'Только аудио'] as const;
 const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B/s';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB/s';
+  return (bytes / 1048576).toFixed(1) + ' MB/s';
+}
+
+function formatEta(seconds: number): string {
+  if (!isFinite(seconds) || seconds <= 0) return '';
+  if (seconds < 60) return `~${Math.ceil(seconds)}s`;
+  return `~${Math.floor(seconds / 60)}m ${Math.ceil(seconds % 60)}s`;
+}
 
 interface VideoInfo {
   videoId: string;
@@ -42,6 +54,9 @@ export function YoutubeDownloader() {
   const [thumbError, setThumbError] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [streamError, setStreamError] = useState('');
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadEta, setDownloadEta] = useState(0);
+  const [downloadSpeed, setDownloadSpeed] = useState(0);
 
   // Debounce timer ref
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -146,6 +161,9 @@ export function YoutubeDownloader() {
     setLoading(true);
     setDone(false);
     setStreamError('');
+    setDownloadProgress(0);
+    setDownloadEta(0);
+    setDownloadSpeed(0);
 
     try {
       const isAudioOnly = quality === 'Только аудио';
@@ -159,26 +177,58 @@ export function YoutubeDownloader() {
         }),
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: 'Ошибка скачивания' }));
-        setStreamError(data.error ?? 'Не удалось скачать видео');
+      const data = await res.json();
+
+      if (!res.ok || !data.downloadUrl) {
+        setStreamError(data.error ?? 'Не удалось получить ссылку на скачивание');
         setDone(true);
         return;
       }
 
-      // API now returns the file directly — save as blob
-      showToast('Загрузка файла...');
-      const blob = await res.blob();
-      const ext = isAudioOnly ? 'mp3' : 'mp4';
+      // Stream the download to track real progress
+      const downloadRes = await fetch(data.downloadUrl);
+      if (!downloadRes.ok) {
+        setStreamError('Не удалось скачать файл с сервера');
+        setDone(true);
+        return;
+      }
+
+      const contentLength = parseInt(downloadRes.headers.get('content-length') || '0', 10);
+      const reader = downloadRes.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
+      const chunks: BlobPart[] = [];
+      let received = 0;
+      const startTime = Date.now();
+
+      while (true) {
+        const { done: readerDone, value } = await reader.read();
+        if (readerDone) break;
+        chunks.push(value);
+        received += value.length;
+
+        const elapsed = (Date.now() - startTime) / 1000;
+        const speed = elapsed > 0 ? received / elapsed : 0;
+        const progress = contentLength > 0 ? received / contentLength : 0;
+        const remaining = contentLength > 0 && speed > 0 ? (contentLength - received) / speed : 0;
+
+        setDownloadProgress(Math.round(progress * 100));
+        setDownloadEta(remaining);
+        setDownloadSpeed(speed);
+      }
+
+      setDownloadProgress(100);
+
+      // Combine chunks into a blob and trigger download
+      const blob = new Blob(chunks);
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `${videoInfo.videoId}.${ext}`;
-      document.body.appendChild(a);
+      a.download = `${videoInfo.title || videoInfo.videoId || 'video'}.${isAudioOnly ? 'mp3' : 'mp4'}`;
       a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-      showToast('Файл скачан! Проверьте папку загрузок.');
+      URL.revokeObjectURL(blobUrl);
+
+      showToast('Скачивание завершено!');
       setDone(true);
     } catch {
       setStreamError('Ошибка сети. Проверьте подключение к интернету.');
@@ -720,16 +770,27 @@ export function YoutubeDownloader() {
       {loading && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: C.sub }}>Подготовка скачивания...</span>
+            <span style={{ fontSize: 12, color: C.sub }}>
+              {downloadProgress > 0
+                ? `Скачивание... ${downloadProgress}%`
+                : 'Подготовка скачивания...'}
+            </span>
+            {downloadProgress > 0 && (
+              <span style={{ fontSize: 12, color: C.dim }}>
+                {formatBytes(downloadSpeed)}
+                {downloadEta > 0 ? ` \u2022 ${formatEta(downloadEta)}` : ''}
+              </span>
+            )}
           </div>
           <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
             <div
               style={{
-                width: '60%',
+                width: downloadProgress > 0 ? `${downloadProgress}%` : '60%',
                 height: '100%',
                 borderRadius: 4,
                 background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                animation: 'pulse 1s ease-in-out infinite',
+                transition: downloadProgress > 0 ? 'width 0.3s ease' : undefined,
+                animation: downloadProgress === 0 ? 'pulse 1s ease-in-out infinite' : undefined,
               }}
             />
           </div>
@@ -756,10 +817,10 @@ export function YoutubeDownloader() {
           </svg>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              Скачивание началось! Проверьте папку загрузок.
+              Скачивание завершено! Проверьте папку загрузок.
             </div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-              Файл загружается в новой вкладке. Это может занять несколько секунд.
+              Файл сохранён на ваш компьютер.
             </div>
           </div>
         </div>

@@ -1106,8 +1106,8 @@ export default function LandingPage() {
           <div style={{ borderTop: `1px solid ${GRAY_100}`, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <span style={{ fontSize: 13, color: GRAY_400 }}>{'\u00A9'} 2026 TubeForge. Все права защищены.</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-              {['Условия использования', 'Конфиденциальность', 'Cookie'].map((text, idx) => (
-                <a key={idx} href="#" style={{ textDecoration: 'none', color: GRAY_400, fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_600; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+              {([['Условия использования', '/terms'], ['Конфиденциальность', '/privacy'], ['Cookie', '/privacy']] as const).map(([text, href], idx) => (
+                <a key={idx} href={href} style={{ textDecoration: 'none', color: GRAY_400, fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_600; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
                   {text}
                 </a>
               ))}

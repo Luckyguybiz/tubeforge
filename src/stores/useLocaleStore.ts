@@ -241,6 +241,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.noImages': 'Нет загруженных изображений',
     'thumbs.uploads.upload': 'Загрузить',
 
+    'billing.upgradeSuccess': 'Подписка успешно оформлена! Добро пожаловать в новый план.',
     'nav.referral': 'Партнёрка',
 
     // Sidebar
@@ -1080,6 +1081,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.noImages': 'No uploaded images',
     'thumbs.uploads.upload': 'Upload',
 
+    'billing.upgradeSuccess': 'Subscription upgraded successfully! Welcome to your new plan.',
     'nav.referral': 'Referrals',
 
     // Sidebar
@@ -1919,6 +1921,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.noImages': 'Жүктелген суреттер жоқ',
     'thumbs.uploads.upload': 'Жүктеу',
 
+    'billing.upgradeSuccess': 'Жазылым сәтті жаңартылды! Жаңа жоспарыңызға қош келдіңіз.',
     'nav.referral': 'Серіктестік',
 
     // Sidebar
@@ -2758,6 +2761,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.noImages': 'No hay imagenes subidas',
     'thumbs.uploads.upload': 'Subir',
 
+    'billing.upgradeSuccess': '¡Suscripción actualizada con éxito! Bienvenido a tu nuevo plan.',
     'nav.referral': 'Referidos',
 
     // Sidebar

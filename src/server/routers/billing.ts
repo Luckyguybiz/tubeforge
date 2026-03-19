@@ -30,9 +30,16 @@ export const billingRouter = router({
       status: 'active',
       limit: 1,
     });
+    const sub = subscriptions.data[0];
     return {
       plan: user.plan,
-      subscription: subscriptions.data[0] ?? null,
+      subscription: sub ? {
+        id: sub.id,
+        status: sub.status,
+        cancelAt: sub.cancel_at,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        plan: sub.items.data[0]?.price?.id ?? null,
+      } : null,
     };
   }),
 

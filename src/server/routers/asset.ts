@@ -11,6 +11,13 @@ async function checkAssetRate(userId: string) {
   if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
 }
 
+/** Plan-based asset count limits */
+const ASSET_LIMITS: Record<string, number> = {
+  FREE: 50,
+  PRO: 500,
+  // STUDIO is unlimited (no entry needed)
+};
+
 export const assetRouter = router({
   list: protectedProcedure
     .input(z.object({
@@ -54,6 +61,21 @@ export const assetRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       await checkAssetRate(ctx.session.user.id);
+
+      const plan = ctx.session.user.plan ?? 'FREE';
+      const maxAssets = ASSET_LIMITS[plan];
+      if (maxAssets !== undefined) {
+        const currentCount = await ctx.db.asset.count({
+          where: { userId: ctx.session.user.id },
+        });
+        if (currentCount >= maxAssets) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Достигнут лимит загрузок для плана ${plan} (${maxAssets}). Перейдите на более высокий тариф.`,
+          });
+        }
+      }
+
       return ctx.db.asset.create({
         data: {
           url: input.url,
