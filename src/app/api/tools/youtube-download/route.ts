@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
  * Body: { videoId: string, quality?: string, audioOnly?: boolean }
  */
 
-const YT_API_BASE = process.env.YT_DLP_API_URL;
+const YT_API_BASE = process.env.YT_DLP_API_URL ?? 'http://57.128.254.111:3333';
 
 export async function POST(req: NextRequest) {
   let body: { videoId?: string; quality?: string; audioOnly?: boolean };
