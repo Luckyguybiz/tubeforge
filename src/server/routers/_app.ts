@@ -10,6 +10,7 @@ import { videoTaskRouter } from './videoTask';
 import { teamRouter } from './team';
 import { assetRouter } from './asset';
 import { folderRouter } from './folder';
+import { referralRouter } from './referral';
 
 export const appRouter = router({
   user: userRouter,
@@ -23,6 +24,7 @@ export const appRouter = router({
   team: teamRouter,
   asset: assetRouter,
   folder: folderRouter,
+  referral: referralRouter,
 });
 
 export type AppRouter = typeof appRouter;

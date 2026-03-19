@@ -23,6 +23,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.billing': 'Оплата',
     'nav.tools': 'Все инструменты',
     'nav.shortsAnalytics': 'Shorts Аналитика',
+    'nav.referral': 'Партнёрка',
 
     // Sidebar
     'sidebar.search': 'Поиск...',
@@ -59,6 +60,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'topbar.shortcutsLabel': 'Горячие клавиши (?)',
     'topbar.close': 'Закрыть',
     'topbar.searchTrigger': 'Поиск (⌘K)',
+    'topbar.referralCta': 'Заработай $75+',
 
     // Auth - Login
     'auth.login.title': 'Войти в аккаунт',
@@ -326,6 +328,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.billing': 'Billing',
     'nav.tools': 'All Tools',
     'nav.shortsAnalytics': 'Shorts Analytics',
+    'nav.referral': 'Referrals',
 
     // Sidebar
     'sidebar.search': 'Search...',
@@ -362,6 +365,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'topbar.shortcutsLabel': 'Keyboard Shortcuts (?)',
     'topbar.close': 'Close',
     'topbar.searchTrigger': 'Search (⌘K)',
+    'topbar.referralCta': 'Earn $75+',
 
     // Auth - Login
     'auth.login.title': 'Sign in to your account',
@@ -629,6 +633,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.billing': 'Төлем',
     'nav.tools': 'Барлық құралдар',
     'nav.shortsAnalytics': 'Shorts Талдау',
+    'nav.referral': 'Серіктестік',
 
     // Sidebar
     'sidebar.search': 'Іздеу...',
@@ -665,6 +670,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'topbar.shortcutsLabel': 'Жылдам пернелер (?)',
     'topbar.close': 'Жабу',
     'topbar.searchTrigger': 'Іздеу (⌘K)',
+    'topbar.referralCta': '$75+ табыңыз',
 
     // Auth - Login
     'auth.login.title': 'Аккаунтқа кіру',
@@ -932,6 +938,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'nav.billing': 'Facturación',
     'nav.tools': 'Todas las herramientas',
     'nav.shortsAnalytics': 'Shorts Análisis',
+    'nav.referral': 'Referidos',
 
     // Sidebar
     'sidebar.search': 'Buscar...',
@@ -968,6 +975,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'topbar.shortcutsLabel': 'Atajos de teclado (?)',
     'topbar.close': 'Cerrar',
     'topbar.searchTrigger': 'Buscar (⌘K)',
+    'topbar.referralCta': 'Gana $75+',
 
     // Auth - Login
     'auth.login.title': 'Iniciar sesión',

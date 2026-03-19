@@ -12,6 +12,7 @@ const PAGE_LABEL_KEYS: Record<string, string> = {
   settings: 'nav.settings',
   admin: 'nav.admin',
   team: 'nav.team',
+  referral: 'nav.referral',
 };
 
 const NOTIF_ICONS: Record<Notification['type'], string> = {
@@ -253,6 +254,38 @@ export const TopBar = memo(function TopBar() {
           </button>
         </div>
       )}
+
+      {/* Referral CTA */}
+      <button
+        onClick={() => router.push('/referral')}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-1px)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(99,102,241,.2)';
+        }}
+        style={{
+          padding: '6px 14px',
+          borderRadius: 20,
+          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          color: '#fff',
+          fontSize: 12,
+          fontWeight: 700,
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          fontFamily: 'inherit',
+          transition: 'all .2s ease',
+          boxShadow: '0 2px 8px rgba(99,102,241,.2)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {'\uD83D\uDCB0'} {t('topbar.referralCta')}
+      </button>
 
       {/* Keyboard shortcuts hint button */}
       <button

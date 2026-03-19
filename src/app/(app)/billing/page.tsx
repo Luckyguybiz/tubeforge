@@ -63,7 +63,7 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       id: 'FREE',
       name: t('billing.planFree'),
       price: 0,
-      priceLabel: '0\u20BD',
+      priceLabel: '$0',
       features: [
         '3 projects',
         '5 AI gen/day',
@@ -76,8 +76,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
     {
       id: 'PRO',
       name: 'Pro',
-      price: 990,
-      priceLabel: '990\u20BD',
+      price: 12,
+      priceLabel: '$12',
       badge: t('billing.popular'),
       badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
       features: [
@@ -96,8 +96,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
     {
       id: 'STUDIO',
       name: 'Studio',
-      price: 2490,
-      priceLabel: '2490\u20BD',
+      price: 30,
+      priceLabel: '$30',
       features: [
         'All Pro features',
         '\u221E AI generations',
@@ -125,16 +125,16 @@ function getDeals(): DealDef[] {
         '30 voiceovers',
         '30 exports',
       ],
-      price: 890,
-      originalPrice: 1990,
+      price: 19,
+      originalPrice: 49,
       highlight: true,
     },
     {
       id: 'consultation',
       title: '1:1 Expert Consultation',
       description: 'Personal video consultation on YouTube strategy.',
-      price: 4900,
-      originalPrice: 9900,
+      price: 49,
+      originalPrice: 99,
     },
   ];
 }
@@ -478,6 +478,9 @@ export default function BillingPage() {
                         }}
                       >
                         {plan.priceLabel}
+                        {plan.id !== 'FREE' && (
+                          <span style={{ fontSize: 14, fontWeight: 500, color: C.sub }}>/mo</span>
+                        )}
                       </div>
 
                       {/* Features */}
@@ -684,7 +687,7 @@ export default function BillingPage() {
                           {/* Price */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
-                              {t('billing.getFor')} {deal.price.toLocaleString()}{'\u20BD'}
+                              {t('billing.getFor')} ${deal.price}
                             </span>
                             <span
                               style={{
@@ -693,7 +696,7 @@ export default function BillingPage() {
                                 textDecoration: 'line-through',
                               }}
                             >
-                              {deal.originalPrice.toLocaleString()}{'\u20BD'}
+                              ${deal.originalPrice}
                             </span>
                             <span
                               style={{
@@ -881,7 +884,7 @@ export default function BillingPage() {
                 >
                   <span style={{ color: C.sub }}>{t('billing.plan')} {selectedPlanDef.name}</span>
                   <span style={{ fontWeight: 700, color: C.text }}>
-                    {planPrice.toLocaleString()}{'\u20BD'}
+                    ${planPrice}
                   </span>
                 </div>
 
@@ -898,7 +901,7 @@ export default function BillingPage() {
                   >
                     <span style={{ color: C.sub }}>{t('billing.deals')}</span>
                     <span style={{ fontWeight: 700, color: C.text }}>
-                      {dealsTotal.toLocaleString()}{'\u20BD'}
+                      ${dealsTotal}
                     </span>
                   </div>
                 )}
@@ -948,7 +951,7 @@ export default function BillingPage() {
                       letterSpacing: '-.02em',
                     }}
                   >
-                    {totalDue.toLocaleString()}{'\u20BD'}
+                    ${totalDue}
                   </span>
                 </div>
               </div>

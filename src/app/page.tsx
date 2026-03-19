@@ -455,6 +455,19 @@ export default function LandingPage() {
     };
   }, []);
 
+  /* Save referral code from ?ref= URL param to localStorage for later registration */
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const refCode = params.get('ref');
+      if (refCode) {
+        localStorage.setItem('tf-ref', refCode);
+      }
+    } catch {
+      // Ignore — localStorage may be unavailable in some contexts
+    }
+  }, []);
+
   const toggleFaq = (index: number) => {
     setOpenFaq((prev) => (prev === index ? null : index));
   };

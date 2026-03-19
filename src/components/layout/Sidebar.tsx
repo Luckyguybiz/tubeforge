@@ -116,6 +116,21 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <rect x="4.5" y="11" width="5" height="2" rx="1" fill={c} opacity=".4" />
     </svg>
   ),
+  referral: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="ref-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="8" width="16" height="10" rx="2" stroke={a ? 'url(#ref-g)' : c} strokeWidth="1.5" opacity=".85" />
+      <path d="M10 8V18" stroke={c} strokeWidth="1.3" opacity=".5" />
+      <path d="M2 11H18" stroke={c} strokeWidth="1.3" opacity=".5" />
+      <path d="M10 8C10 8 10 4 7 4C5.5 4 4 5 5 6.5C6 8 10 8 10 8Z" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".85" />
+      <path d="M10 8C10 8 10 4 13 4C14.5 4 16 5 15 6.5C14 8 10 8 10 8Z" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".85" />
+    </svg>
+  ),
   'shorts-analytics': (c, a) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
@@ -182,6 +197,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
     {
       label: t('sidebar.system'),
       items: [
+        { id: 'referral', label: t('nav.referral') },
         { id: 'settings', label: t('nav.settings') },
         { id: 'billing', label: t('nav.billing') },
         { id: 'admin', label: t('nav.admin') },
@@ -202,6 +218,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   team: ['purple', 'pink'],
   settings: ['sub', 'dim'],
   billing: ['green', 'cyan'],
+  referral: ['green', 'cyan'],
   admin: ['accent', 'orange'],
   'shorts-analytics': ['green', 'cyan'],
 };
