@@ -155,14 +155,28 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Build download URL on our VPS
+    // Proxy download through our API to avoid mixed-content (HTTPS→HTTP) block
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const downloadUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
+    const vpsUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
 
-    return NextResponse.json({
-      downloadUrl,
-      filename: `${videoId}.${audioOnly ? 'mp3' : 'mp4'}`,
-      status: 'redirect',
+    const vpsRes = await fetch(vpsUrl, { signal: AbortSignal.timeout(120_000) });
+    if (!vpsRes.ok || !vpsRes.body) {
+      const errText = await vpsRes.text().catch(() => 'Unknown error');
+      return NextResponse.json({ error: 'Download failed', details: errText }, { status: 502 });
+    }
+
+    const ext = audioOnly ? 'mp3' : 'mp4';
+    const contentType = audioOnly ? 'audio/mpeg' : 'video/mp4';
+    const filename = `${videoId}.${ext}`;
+
+    return new Response(vpsRes.body as ReadableStream, {
+      headers: {
+        'Content-Type': contentType,
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        ...(vpsRes.headers.get('content-length')
+          ? { 'Content-Length': vpsRes.headers.get('content-length')! }
+          : {}),
+      },
     });
   } catch {
     return NextResponse.json({

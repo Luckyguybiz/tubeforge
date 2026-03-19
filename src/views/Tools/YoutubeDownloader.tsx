@@ -159,31 +159,25 @@ export function YoutubeDownloader() {
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.downloadUrl) {
-        setStreamError(data.error ?? 'Не удалось получить ссылку на скачивание');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Ошибка скачивания' }));
+        setStreamError(data.error ?? 'Не удалось скачать видео');
         setDone(true);
         return;
       }
 
-      // Fetch file as blob to bypass cross-origin download restriction
-      showToast('Загрузка файла с сервера...');
-      const fileRes = await fetch(data.downloadUrl);
-      if (!fileRes.ok) {
-        setStreamError('Ошибка загрузки файла с сервера');
-        setDone(true);
-        return;
-      }
-      const blob = await fileRes.blob();
+      // API now returns the file directly — save as blob
+      showToast('Загрузка файла...');
+      const blob = await res.blob();
+      const ext = isAudioOnly ? 'mp3' : 'mp4';
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = data.filename || `${videoInfo.videoId}.${isAudioOnly ? 'mp3' : 'mp4'}`;
+      a.download = `${videoInfo.videoId}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
       showToast('Файл скачан! Проверьте папку загрузок.');
       setDone(true);
     } catch {
