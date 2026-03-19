@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
 // Promo codes with duration in hours
@@ -10,9 +11,14 @@ const PROMO_CODES: Record<string, { hours: number; label: string }> = {
 };
 
 export async function POST(req: NextRequest) {
-  // Rate limit: max 3 attempts per minute per IP
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const { success, reset } = await rateLimit({ identifier: `promo:${ip}`, limit: 3, window: 60 });
+  // Auth required
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: max 3 attempts per minute per user
+  const { success, reset } = await rateLimit({ identifier: `promo:${session.user.id}`, limit: 3, window: 60 });
   if (!success) {
     return NextResponse.json(
       { error: 'Too many attempts. Please try again in a minute.' },

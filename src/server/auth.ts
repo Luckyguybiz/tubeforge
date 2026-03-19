@@ -71,10 +71,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.id as string) ?? token.sub ?? '';
+        const userId = (token.id as string) ?? token.sub;
+        if (!userId) {
+          // Invalid token — return session with no permissions
+          session.user.plan = 'FREE';
+          session.user.role = 'USER';
+          return session;
+        }
+        session.user.id = userId;
         // Fetch plan/role from database instead of hardcoding
         const dbUser = await db.user.findUnique({
-          where: { id: token.id as string },
+          where: { id: userId },
           select: { plan: true, role: true },
         });
         if (dbUser) {
@@ -92,10 +99,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user }) {
       if (user.id) {
         // Auto-generate referral code on first login if not yet set
-        await db.user.updateMany({
-          where: { id: user.id, referralCode: null },
-          data: { referralCode: user.id.slice(0, 8).toUpperCase() },
-        }).catch(() => {}); // Ignore if already set (unique constraint)
+        try {
+          await db.user.updateMany({
+            where: { id: user.id, referralCode: null },
+            data: { referralCode: user.id.slice(0, 8).toUpperCase() },
+          });
+        } catch (err: unknown) {
+          // Only ignore unique constraint violations (P2002)
+          const isPrismaConstraint = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+          if (!isPrismaConstraint) {
+            console.error('[auth] Failed to set referral code:', err);
+          }
+        }
       }
     },
   },

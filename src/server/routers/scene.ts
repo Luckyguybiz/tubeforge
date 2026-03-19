@@ -101,7 +101,7 @@ export const sceneRouter = router({
       // Sanitize text fields
       if (data.prompt) data.prompt = stripTags(data.prompt);
       if (data.label) data.label = stripTags(data.label);
-      return ctx.db.scene.update({ where: { id }, data, select: { id: true, prompt: true, label: true, model: true, duration: true, order: true, status: true, videoUrl: true } });
+      return ctx.db.scene.update({ where: { id, project: { userId: ctx.session.user.id } }, data, select: { id: true, prompt: true, label: true, model: true, duration: true, order: true, status: true, videoUrl: true } });
     }),
 
   delete: protectedProcedure
