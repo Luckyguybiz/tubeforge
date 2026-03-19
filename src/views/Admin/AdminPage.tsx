@@ -42,28 +42,33 @@ function initials(name: string | null): string {
     .toUpperCase();
 }
 
-function relativeTime(date: Date | string): string {
+function relativeTime(date: Date | string, t: (key: string) => string, locale: string): string {
   const d = new Date(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'только что';
-  if (mins < 60) return `${mins} мин. назад`;
+  if (mins < 1) return t('admin.time.justNow');
+  if (mins < 60) return `${mins} ${t('admin.time.minAgo')}`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} ч. назад`;
+  if (hours < 24) return `${hours} ${t('admin.time.hrsAgo')}`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} дн. назад`;
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  if (days < 7) return `${days} ${t('admin.time.daysAgo')}`;
+  const loc = locale === 'ru' ? 'ru-RU' : locale === 'kk' ? 'kk-KZ' : locale === 'es' ? 'es-ES' : 'en-US';
+  return d.toLocaleDateString(loc, { day: 'numeric', month: 'short' });
 }
 
 const PLAN_LABELS: Record<string, string> = { FREE: 'Free', PRO: 'Pro', STUDIO: 'Studio' };
-const ROLE_LABELS: Record<string, string> = { USER: 'Пользователь', ADMIN: 'Админ' };
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Черновик',
-  RENDERING: 'Рендер',
-  READY: 'Готово',
-  PUBLISHED: 'Опубликован',
-};
+function getRoleLabels(t: (key: string) => string): Record<string, string> {
+  return { USER: t('admin.role.user'), ADMIN: t('admin.role.admin') };
+}
+function getStatusLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    DRAFT: t('admin.status.draft'),
+    RENDERING: t('admin.status.rendering'),
+    READY: t('admin.status.ready'),
+    PUBLISHED: t('admin.status.published'),
+  };
+}
 
 /* ── Main Page ───────────────────────────────────── */
 
