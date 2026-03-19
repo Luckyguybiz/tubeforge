@@ -9,6 +9,7 @@ import { Z_INDEX } from '@/lib/constants';
 
 interface ToolBarProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isMobile?: boolean;
 }
 
 interface ToolDef {
@@ -89,7 +90,7 @@ const INSERT_OPTIONS = [
   { id: 'image', icon: SUB_ICONS.image, labelKey: 'thumbs.insert.image' },
 ];
 
-export function ToolBar({ onFileChange }: ToolBarProps) {
+export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel } = useThumbnailStore(
@@ -182,10 +183,24 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
     );
   };
 
-  const divider = <div style={{ width: 32, height: 1, background: C.border, margin: '4px auto', opacity: 0.6 }} />;
+  const divider = isMobile
+    ? <div style={{ width: 1, height: 32, background: C.border, margin: '0 4px', opacity: 0.6, flexShrink: 0 }} />
+    : <div style={{ width: 32, height: 1, background: C.border, margin: '4px auto', opacity: 0.6 }} />;
 
   // Popover style shared by all submenus
-  const popoverBase: React.CSSProperties = {
+  const popoverBase: React.CSSProperties = isMobile ? {
+    position: 'fixed',
+    bottom: 64,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: C.card,
+    border: `1px solid ${C.border}`,
+    borderRadius: 12,
+    padding: 8,
+    zIndex: Z_INDEX.TOOLBAR_POPOVER,
+    minWidth: 120,
+    boxShadow: '0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.15)',
+  } : {
     position: 'absolute',
     left: 62,
     background: C.card,
@@ -225,7 +240,14 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
   );
 
   return (
-    <div style={{ width: 56, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '8px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0, position: 'relative' }}>
+    <div style={isMobile ? {
+      width: '100%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '6px 8px',
+      display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 0, position: 'relative',
+      overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' as const,
+    } : {
+      width: 56, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '8px 6px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0, position: 'relative',
+    }}>
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileChange} />
 
       {/* Group 1: Selection */}
@@ -270,7 +292,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
       {divider}
 
       {/* Panel label */}
-      <span style={{ fontSize: 8, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2, marginBottom: 2 }}>{t('thumbs.toolbar.panels')}</span>
+      {!isMobile && <span style={{ fontSize: 8, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2, marginBottom: 2 }}>{t('thumbs.toolbar.panels')}</span>}
 
       {/* Panel toggles */}
       {PANEL_BUTTONS.map((p) => {
@@ -310,8 +332,12 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
         );
       })}
 
-      {/* Background color picker - always visible at bottom */}
-      <div style={{ marginTop: 'auto', padding: '8px 4px 4px', borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      {/* Background color picker - always visible at bottom (hidden on mobile for space) */}
+      <div style={isMobile ? {
+        marginLeft: 'auto', padding: '4px 8px', borderLeft: `1px solid ${C.border}`, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0,
+      } : {
+        marginTop: 'auto', padding: '8px 4px 4px', borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+      }}>
         <div
           role="button"
           tabIndex={0}
@@ -344,7 +370,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
 
       {/* Shapes submenu popover */}
       {showShapes && (
-        <div style={{ ...popoverBase, top: 100, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, minWidth: 160 }}>
+        <div style={{ ...popoverBase, ...(isMobile ? {} : { top: 100 }), display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, minWidth: 160 }}>
           {SHAPE_OPTIONS.map((s) => {
             const sLabel = t(s.labelKey);
             return (
@@ -363,7 +389,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
 
       {/* Lines submenu popover */}
       {showLines && (
-        <div style={{ ...popoverBase, top: 144, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ ...popoverBase, ...(isMobile ? {} : { top: 144 }), display: 'flex', flexDirection: 'column', gap: 2 }}>
           {LINE_OPTIONS.map((l) =>
             submenuItem(l.id, l.icon, t(l.labelKey), tool === l.id, () => handleLineClick(l.id))
           )}
@@ -372,7 +398,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
 
       {/* Insert submenu popover */}
       {showInsert && (
-        <div style={{ ...popoverBase, top: 188, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ ...popoverBase, ...(isMobile ? {} : { top: 188 }), display: 'flex', flexDirection: 'column', gap: 2 }}>
           {INSERT_OPTIONS.map((ins) =>
             submenuItem(ins.id, ins.icon, t(ins.labelKey), false, () => handleInsertClick(ins.id))
           )}
@@ -381,7 +407,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
 
       {/* Table size picker popover */}
       {showTablePicker && (
-        <div style={{ ...popoverBase, top: 188, padding: 14 }}>
+        <div style={{ ...popoverBase, ...(isMobile ? {} : { top: 188 }), padding: 14 }}>
           <div style={{ fontSize: 11, color: C.sub, marginBottom: 8, fontWeight: 600, textAlign: 'center' }}>
             {tableHover.r > 0 ? `${tableHover.r} x ${tableHover.c}` : t('thumbs.toolbar.selectSize')}
           </div>

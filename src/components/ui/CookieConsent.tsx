@@ -24,7 +24,7 @@ export function CookieConsent() {
   };
 
   const btnBase: React.CSSProperties = {
-    padding: '8px 20px',
+    padding: '10px 20px',
     borderRadius: 8,
     fontSize: 14,
     fontWeight: 600,
@@ -32,6 +32,7 @@ export function CookieConsent() {
     border: 'none',
     fontFamily: 'inherit',
     transition: 'opacity 0.15s',
+    minHeight: 44,
   };
 
   return (
@@ -55,19 +56,20 @@ export function CookieConsent() {
           background: C.surface,
           color: C.text,
           borderRadius: 12,
-          padding: '16px 24px',
+          padding: '16px 16px',
           display: 'flex',
           alignItems: 'center',
-          gap: 16,
+          gap: 12,
           flexWrap: 'wrap',
           maxWidth: 720,
           width: '100%',
           boxShadow: '0 -2px 24px rgba(0,0,0,0.25)',
           border: `1px solid ${C.border}`,
           pointerEvents: 'auto',
+          boxSizing: 'border-box',
         }}
       >
-        <span style={{ flex: 1, fontSize: 14, lineHeight: 1.5, minWidth: 200 }}>
+        <span style={{ flex: '1 1 200px', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word' }}>
           {t('cookie.message')}
         </span>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>

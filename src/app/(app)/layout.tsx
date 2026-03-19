@@ -97,6 +97,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-editor-scene-panel{display:none!important}
           .tf-editor-topbar>*{flex-shrink:0}
           .tf-shorts-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+          .tf-topbar-breadcrumb{font-size:12px!important}
+          .tf-topbar-breadcrumb span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
         }
         @media(max-width:480px){
           .tf-main-content{padding:6px!important}
@@ -106,6 +108,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-dash-stat-value{font-size:18px!important}
           .tf-billing-inner{padding:10px 8px 24px!important}
           .tf-billing-heading{font-size:20px!important}
+        }
+        @media(max-width:320px){
+          .tf-main-content{padding:4px!important}
+          .tf-dash-stat-grid{grid-template-columns:1fr!important}
         }
         .tf-mobile-backdrop{
           position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;

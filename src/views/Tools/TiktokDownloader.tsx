@@ -369,8 +369,10 @@ export function TiktokDownloader() {
             color: C.text,
             fontSize: 14,
             fontWeight: 600,
+            width: 'calc(100vw - 32px)',
             maxWidth: 480,
             textAlign: 'center',
+            wordBreak: 'break-word' as const,
           }}
         >
           {toastMsg}
@@ -383,6 +385,7 @@ export function TiktokDownloader() {
           display: 'flex',
           gap: 8,
           marginBottom: urlError || fetchError ? 8 : 24,
+          flexWrap: 'wrap',
         }}
       >
         <div
@@ -507,6 +510,7 @@ export function TiktokDownloader() {
           onMouseLeave={() => setPasteHover(false)}
           style={{
             padding: '0 20px',
+            minHeight: 44,
             borderRadius: 12,
             border: `1px solid ${C.border}`,
             background: pasteHover ? C.surface : C.card,
@@ -519,6 +523,7 @@ export function TiktokDownloader() {
             display: 'flex',
             alignItems: 'center',
             gap: 6,
+            flexShrink: 0,
           }}
         >
           <svg
@@ -610,12 +615,14 @@ export function TiktokDownloader() {
             border: `1px solid ${C.border}`,
             background: C.card,
             marginBottom: 24,
+            flexWrap: 'wrap',
           }}
         >
           {/* Thumbnail */}
           <div
             style={{
               width: 120,
+              maxWidth: '100%',
               height: 160,
               borderRadius: 10,
               background: C.surface,
@@ -673,6 +680,7 @@ export function TiktokDownloader() {
               justifyContent: 'center',
               gap: 6,
               minWidth: 0,
+              flexBasis: 180,
             }}
           >
             <div
@@ -685,6 +693,7 @@ export function TiktokDownloader() {
                 display: '-webkit-box',
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
+                wordBreak: 'break-word' as const,
               }}
             >
               {videoInfo.title}
@@ -738,11 +747,13 @@ export function TiktokDownloader() {
             border: `1px solid ${C.border}`,
             background: C.card,
             marginBottom: 24,
+            flexWrap: 'wrap',
           }}
         >
           <div
             style={{
               width: 120,
+              maxWidth: '100%',
               height: 160,
               borderRadius: 10,
               background: C.surface,
@@ -880,6 +891,7 @@ export function TiktokDownloader() {
               onMouseLeave={() => setHoveredQuality(null)}
               style={{
                 padding: '8px 18px',
+                minHeight: 44,
                 borderRadius: 10,
                 fontSize: 13,
                 fontWeight: 600,
@@ -918,7 +930,7 @@ export function TiktokDownloader() {
         >
           {t('tools.ttdl.format')}
         </label>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {FORMATS.map((f) => (
             <button
               key={f}
@@ -931,6 +943,7 @@ export function TiktokDownloader() {
               onMouseLeave={() => setHoveredFormat(null)}
               style={{
                 padding: '8px 18px',
+                minHeight: 44,
                 borderRadius: 10,
                 fontSize: 13,
                 fontWeight: 600,
@@ -1036,8 +1049,8 @@ export function TiktokDownloader() {
             <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, wordBreak: 'break-word' as const }}>
               {t('tools.ttdl.downloadDone')}
             </div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
@@ -1075,13 +1088,14 @@ export function TiktokDownloader() {
             <line x1="15" y1="9" x2="9" y2="15" />
             <line x1="9" y1="9" x2="15" y2="15" />
           </svg>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
                 fontSize: 14,
                 fontWeight: 600,
                 color: C.text,
                 marginBottom: 4,
+                wordBreak: 'break-word' as const,
               }}
             >
               {streamError}

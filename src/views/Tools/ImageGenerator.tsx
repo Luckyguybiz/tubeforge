@@ -52,6 +52,7 @@ export function ImageGenerator() {
 
   const pillStyle = useMemo(() => (active: boolean): React.CSSProperties => ({
     padding: '8px 16px',
+    minHeight: 44,
     borderRadius: 10,
     border: `1px solid ${active ? GRADIENT[0] : C.border}`,
     background: active ? `${GRADIENT[0]}22` : C.card,
@@ -62,6 +63,8 @@ export function ImageGenerator() {
     transition: 'all 0.2s ease',
     fontFamily: 'inherit',
     outline: 'none',
+    display: 'flex',
+    alignItems: 'center',
   }), [C.border, C.card, C.sub]);
 
   return (
@@ -70,15 +73,15 @@ export function ImageGenerator() {
       subtitle="Create stunning images from text descriptions using state-of-the-art AI models"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         {/* Left: Controls */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           {/* Prompt area */}
           <div style={{
-            padding: 20, borderRadius: 16,
+            padding: 16, borderRadius: 16,
             border: `1px solid ${C.border}`, background: C.card,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Prompt</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
@@ -146,6 +149,7 @@ export function ImageGenerator() {
                 color: C.text, fontSize: 14, fontFamily: 'inherit',
                 resize: 'vertical', outline: 'none',
                 transition: 'border-color 0.2s ease',
+                boxSizing: 'border-box',
               }}
               onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -157,7 +161,7 @@ export function ImageGenerator() {
 
           {/* Model selector */}
           <div style={{
-            padding: 20, borderRadius: 16,
+            padding: 16, borderRadius: 16,
             border: `1px solid ${C.border}`, background: C.card,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Model</span>
@@ -170,7 +174,7 @@ export function ImageGenerator() {
 
           {/* Style selector */}
           <div style={{
-            padding: 20, borderRadius: 16,
+            padding: 16, borderRadius: 16,
             border: `1px solid ${C.border}`, background: C.card,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Style</span>
@@ -183,7 +187,7 @@ export function ImageGenerator() {
 
           {/* Size selector */}
           <div style={{
-            padding: 20, borderRadius: 16,
+            padding: 16, borderRadius: 16,
             border: `1px solid ${C.border}`, background: C.card,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Size</span>
@@ -196,7 +200,7 @@ export function ImageGenerator() {
 
           {/* Number of images */}
           <div style={{
-            padding: 20, borderRadius: 16,
+            padding: 16, borderRadius: 16,
             border: `1px solid ${C.border}`, background: C.card,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
@@ -218,11 +222,12 @@ export function ImageGenerator() {
 
         {/* Right: Preview grid */}
         <div style={{
-          padding: 24, borderRadius: 16,
+          padding: 16, borderRadius: 16,
           border: `1px solid ${C.border}`, background: C.card,
+          minWidth: 0,
         }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 16 }}>Generated Images</span>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} style={{
                 aspectRatio: '1', borderRadius: 12,
@@ -278,7 +283,7 @@ export function ImageGenerator() {
               onMouseEnter={(e) => { e.currentTarget.style.background = C.surface; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = C.card; }}
               style={{
-                width: '100%', marginTop: 16, padding: '12px 20px', borderRadius: 12,
+                width: '100%', marginTop: 16, padding: '12px 20px', minHeight: 44, borderRadius: 12,
                 border: `1px solid ${C.border}`, background: C.card,
                 color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.2s ease', fontFamily: 'inherit',

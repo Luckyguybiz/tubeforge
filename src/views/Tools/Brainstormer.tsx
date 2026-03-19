@@ -599,10 +599,10 @@ export function Brainstormer() {
               placeholder="e.g. AI productivity, fitness, personal finance, cooking..."
               aria-label="Topic or niche"
               style={{
-                flex: 1, minWidth: 200, padding: '12px 16px', borderRadius: 10,
+                flex: 1, minWidth: 0, width: '100%', padding: '12px 16px', borderRadius: 10,
                 border: `1px solid ${C.border}`, background: C.surface,
                 color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none',
-                transition: 'border-color 0.2s ease',
+                transition: 'border-color 0.2s ease', boxSizing: 'border-box' as const,
               }}
               onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -641,6 +641,7 @@ export function Brainstormer() {
                   fontSize: 13, fontWeight: activeTab === tab ? 700 : 500,
                   cursor: 'pointer', transition: 'all 0.2s ease',
                   fontFamily: 'inherit', outline: 'none',
+                  minHeight: 44,
                 }}
               >
                 <TabIcon tab={tab} color={activeTab === tab ? GRADIENT[0] : C.dim} />
@@ -824,11 +825,11 @@ export function Brainstormer() {
       {/* Results */}
       {cards.length > 0 && !loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
               {cards.length} {activeTab} Generated
             </span>
-            <span style={{ fontSize: 12, color: C.dim }}>
+            <span style={{ fontSize: 12, color: C.dim, wordBreak: 'break-word' as const }}>
               For &ldquo;{topic}&rdquo; &middot; {activeTab}
             </span>
           </div>
@@ -845,7 +846,7 @@ export function Brainstormer() {
                 transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {/* Card header */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -858,7 +859,7 @@ export function Brainstormer() {
                     }}>
                       {i + 1}
                     </span>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{card.title}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: C.text, wordBreak: 'break-word' as const }}>{card.title}</span>
                   </div>
 
                   {/* Card body */}
@@ -927,7 +928,8 @@ export function Brainstormer() {
           <div style={{
             padding: 16, borderRadius: 12, textAlign: 'center',
             border: `1px dashed ${C.border}`, background: C.surface,
-            marginTop: 4,
+            marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexWrap: 'wrap', gap: 8,
           }}>
             <span style={{ fontSize: 13, color: C.dim }}>
               Not what you were looking for?
@@ -935,7 +937,7 @@ export function Brainstormer() {
             <button
               onClick={handleGenerate}
               style={{
-                marginLeft: 8, padding: '6px 14px', borderRadius: 8,
+                padding: '8px 14px', borderRadius: 8, minHeight: 44,
                 border: `1px solid ${GRADIENT[0]}`, background: `${GRADIENT[0]}11`,
                 color: GRADIENT[0], fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit', outline: 'none',

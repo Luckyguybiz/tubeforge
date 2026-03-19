@@ -730,17 +730,18 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       {/* ── Header ────────────────────────────────────────── */}
       <div
         style={{
-          padding: '24px 28px 20px',
+          padding: '24px 16px 20px',
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'space-between',
           gap: 16,
           borderBottom: `1px solid ${C.border}`,
           flexShrink: 0,
+          flexWrap: 'wrap',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
             {/* Shorts icon */}
             <div
               style={{

@@ -893,7 +893,7 @@ export function FakeTextsGenerator() {
     >
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
         gap: 24,
       }}>
         {/* ─── Left column: controls ─── */}
@@ -907,7 +907,7 @@ export function FakeTextsGenerator() {
             }}>
               Platform Style
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
               {PLATFORM_IDS.map((pid) => {
                 const ps = PLATFORM_STYLES[pid];
                 const active = platform === pid;
@@ -917,7 +917,7 @@ export function FakeTextsGenerator() {
                     key={pid}
                     onClick={() => setPlatform(pid)}
                     style={{
-                      padding: '14px 10px',
+                      padding: '14px 10px', minHeight: 44,
                       borderRadius: 12,
                       border: active ? `2px solid ${color}` : `1px solid ${C.border}`,
                       background: active ? `${color}12` : C.card,
@@ -1036,7 +1036,7 @@ export function FakeTextsGenerator() {
               )}
               {messages.map((msg, idx) => (
                 <div key={msg.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
+                  display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
                 }}>
                   {/* Index */}
                   <span style={{
@@ -1108,7 +1108,7 @@ export function FakeTextsGenerator() {
                     disabled={idx === 0}
                     title="Move up"
                     style={{
-                      width: 22, height: 22, borderRadius: 4, border: 'none',
+                      width: 28, height: 28, borderRadius: 4, border: 'none',
                       background: C.card, color: idx === 0 ? C.border : C.dim,
                       cursor: idx === 0 ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1127,7 +1127,7 @@ export function FakeTextsGenerator() {
                     disabled={idx === messages.length - 1}
                     title="Move down"
                     style={{
-                      width: 22, height: 22, borderRadius: 4, border: 'none',
+                      width: 28, height: 28, borderRadius: 4, border: 'none',
                       background: C.card,
                       color: idx === messages.length - 1 ? C.border : C.dim,
                       cursor: idx === messages.length - 1 ? 'default' : 'pointer',
@@ -1146,7 +1146,7 @@ export function FakeTextsGenerator() {
                     onClick={() => removeMessage(msg.id)}
                     title="Remove message"
                     style={{
-                      width: 22, height: 22, borderRadius: 4, border: 'none',
+                      width: 28, height: 28, borderRadius: 4, border: 'none',
                       background: C.card, color: C.dim, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 14, flexShrink: 0, transition: 'all 0.15s ease',

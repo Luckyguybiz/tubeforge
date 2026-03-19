@@ -22,13 +22,13 @@ const PRIVACY_OPTIONS: { value: PrivacyStatus; labelKey: string; descKey: string
 /* ── Skeleton loader ─────────────────────────────────── */
 function PreviewSkeleton() {
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 12px', boxSizing: 'border-box' as const }}>
       <Skeleton width={220} height={32} />
       <div style={{ marginTop: 8 }}><Skeleton width={340} height={16} /></div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24, marginTop: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth < 768 ? '1fr' : '1fr 380px', gap: 24, marginTop: 28 }}>
         <div>
           <Skeleton width="100%" height={0} style={{ paddingBottom: '56.25%' }} rounded />
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, overflowX: 'auto' }}>
             {[1, 2, 3, 4].map(i => (
               <Skeleton key={i} width={120} height={68} rounded />
             ))}
@@ -63,6 +63,14 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const [activeSceneIdx, setActiveSceneIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -298,15 +306,15 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   /* ── RENDER ───────────────────────────────────────── */
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '0 12px' : 0, boxSizing: 'border-box' as const }}>
       {/* ── Header ──────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 16 : 24, flexWrap: 'wrap', gap: isMobile ? 10 : 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => router.push('/dashboard')}
             title={t('preview.backToDashboardTitle')}
             style={{
-              width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.border}`,
+              width: 44, height: 44, borderRadius: 10, border: `1px solid ${C.border}`,
               background: C.surface, color: C.sub, fontSize: 16, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'inherit', transition: 'all .15s',
@@ -317,7 +325,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             &#8592;
           </button>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: '-0.02em' }}>
               {t('preview.title')}
             </h1>
             <p style={{ fontSize: 13, color: C.sub, margin: '2px 0 0' }}>
@@ -331,7 +339,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             disabled={!hasVideo}
             title={hasVideo ? t('preview.downloadTitle') : t('preview.downloadDisabled')}
             style={{
-              padding: '9px 18px', borderRadius: 10, border: `1px solid ${C.border}`,
+              padding: '9px 18px', minHeight: 44, borderRadius: 10, border: `1px solid ${C.border}`,
               background: 'transparent', color: hasVideo ? C.text : C.dim,
               fontSize: 13, fontWeight: 600, cursor: hasVideo ? 'pointer' : 'not-allowed',
               fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
@@ -347,7 +355,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       </div>
 
       {/* ── Main grid ───────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: isMobile ? 16 : 24, alignItems: 'start' }}>
         {/* ── LEFT COLUMN ─────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -453,9 +461,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             {/* ── Scene thumbnails timeline ──────────── */}
             {scenes.length > 0 && (
               <div style={{
-                display: 'flex', gap: 6, padding: '12px 16px',
+                display: 'flex', gap: 6, padding: isMobile ? '10px 10px' : '12px 16px',
                 overflowX: 'auto', borderTop: `1px solid ${C.border}`,
                 background: C.surface, alignItems: 'center',
+                WebkitOverflowScrolling: 'touch' as const,
               }}>
                 {/* Play All button — shown when multiple scenes have video */}
                 {scenesWithVideo.length > 1 && (
@@ -684,7 +693,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
         </div>
 
         {/* ── RIGHT COLUMN ────────────────────────────── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: isMobile ? 'static' : 'sticky', top: 20 }}>
 
           {/* ── Pre-publish checklist ──────────────── */}
           <div style={cardPadded}>
@@ -928,7 +937,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
                   {t('preview.access')}
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                   {PRIVACY_OPTIONS.map(opt => {
                     const isActive = privacy === opt.value;
                     return (
@@ -937,7 +946,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                         onClick={() => setPrivacy(opt.value)}
                         title={t(opt.descKey)}
                         style={{
-                          flex: 1, padding: '10px 4px', borderRadius: 10,
+                          flex: 1, minWidth: isMobile ? 'calc(33% - 4px)' : 'auto', padding: '10px 4px', minHeight: 44, borderRadius: 10,
                           border: `2px solid ${isActive ? C.accent : C.border}`,
                           background: isActive ? `${C.accent}08` : C.surface,
                           cursor: 'pointer', fontFamily: 'inherit',

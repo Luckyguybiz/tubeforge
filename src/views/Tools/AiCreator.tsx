@@ -6,238 +6,124 @@ import { useThemeStore } from '@/stores/useThemeStore';
 
 const GRADIENT: [string, string] = ['#f59e0b', '#f97316'];
 
-/* ------------------------------------------------------------------ */
-/*  Avatar preset definitions                                         */
-/* ------------------------------------------------------------------ */
-interface AvatarPreset {
-  id: string;
+/* ================================================================== */
+/*  TYPES & CONSTANTS                                                  */
+/* ================================================================== */
+
+type AvatarStyleId = 'photo' | 'cartoon' | 'professional' | 'robot' | 'anime';
+type BackgroundId = 'office' | 'studio' | 'nature' | 'abstract' | 'transparent';
+type ScriptCategory = 'tech-review' | 'tutorial' | 'motivational' | 'product-demo' | 'news';
+type SubtitleStyle = 'classic' | 'bold' | 'outline' | 'karaoke';
+type VideoQuality = '720p' | '1080p';
+type AspectRatio = '16:9' | '9:16' | '1:1';
+
+interface AvatarStyle {
+  id: AvatarStyleId;
   name: string;
   color: string;
-  draw: (ctx: CanvasRenderingContext2D, w: number, h: number, mouthOpen: number, blinking: boolean) => void;
+  description: string;
 }
 
-function drawProfessionalMan(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  mouthOpen: number, blinking: boolean,
-) {
-  const cx = w / 2, cy = h / 2;
-  // Head
-  ctx.fillStyle = '#e8d5b7';
-  ctx.beginPath(); ctx.arc(cx, cy - 10, 70, 0, Math.PI * 2); ctx.fill();
-  // Hair
-  ctx.fillStyle = '#3b2f2f';
-  ctx.beginPath(); ctx.ellipse(cx, cy - 55, 65, 35, 0, Math.PI, Math.PI * 2); ctx.fill();
-  ctx.fillRect(cx - 65, cy - 55, 10, 30);
-  ctx.fillRect(cx + 55, cy - 55, 10, 30);
-  // Eyes
-  if (blinking) {
-    ctx.strokeStyle = '#3b2f2f'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(cx - 30, cy - 15); ctx.lineTo(cx - 14, cy - 15); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + 14, cy - 15); ctx.lineTo(cx + 30, cy - 15); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#2d3748';
-    ctx.beginPath(); ctx.arc(cx - 22, cy - 15, 6, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 22, cy - 15, 6, 0, Math.PI * 2); ctx.fill();
-    // Eye whites
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx - 20, cy - 17, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 24, cy - 17, 2, 0, Math.PI * 2); ctx.fill();
-  }
-  // Eyebrows
-  ctx.strokeStyle = '#3b2f2f'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(cx - 32, cy - 28); ctx.lineTo(cx - 12, cy - 30); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 12, cy - 30); ctx.lineTo(cx + 32, cy - 28); ctx.stroke();
-  // Nose
-  ctx.strokeStyle = '#c4a882'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(cx, cy - 8); ctx.lineTo(cx - 5, cy + 5); ctx.lineTo(cx + 5, cy + 5); ctx.stroke();
-  // Mouth
-  if (mouthOpen > 0.05) {
-    const mh = 4 + mouthOpen * 14;
-    ctx.fillStyle = '#8B4513';
-    ctx.beginPath(); ctx.ellipse(cx, cy + 22, 12 + mouthOpen * 4, mh, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.ellipse(cx, cy + 18, 8, 2, 0, 0, Math.PI * 2); ctx.fill();
-  } else {
-    ctx.strokeStyle = '#a0522d'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cx, cy + 20, 10, 0.2, Math.PI - 0.2); ctx.stroke();
-  }
-  // Suit
-  ctx.fillStyle = '#2d3748';
-  ctx.beginPath(); ctx.moveTo(cx - 50, cy + 58); ctx.lineTo(cx - 8, cy + 60);
-  ctx.lineTo(cx, cy + 55); ctx.lineTo(cx + 8, cy + 60);
-  ctx.lineTo(cx + 50, cy + 58); ctx.lineTo(cx + 70, h);
-  ctx.lineTo(cx - 70, h); ctx.closePath(); ctx.fill();
-  // Tie
-  ctx.fillStyle = '#e74c3c';
-  ctx.beginPath(); ctx.moveTo(cx - 6, cy + 55); ctx.lineTo(cx + 6, cy + 55);
-  ctx.lineTo(cx + 4, cy + 80); ctx.lineTo(cx, cy + 85); ctx.lineTo(cx - 4, cy + 80);
-  ctx.closePath(); ctx.fill();
+interface Background {
+  id: BackgroundId;
+  name: string;
+  color: string;
+  description: string;
 }
 
-function drawProfessionalWoman(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  mouthOpen: number, blinking: boolean,
-) {
-  const cx = w / 2, cy = h / 2;
-  ctx.fillStyle = '#f0d5b8';
-  ctx.beginPath(); ctx.arc(cx, cy - 10, 68, 0, Math.PI * 2); ctx.fill();
-  // Hair
-  ctx.fillStyle = '#4a2c2a';
-  ctx.beginPath(); ctx.ellipse(cx, cy - 50, 72, 42, 0, Math.PI, Math.PI * 2); ctx.fill();
-  ctx.fillRect(cx - 72, cy - 50, 14, 55);
-  ctx.fillRect(cx + 58, cy - 50, 14, 55);
-  // Eyes
-  if (blinking) {
-    ctx.strokeStyle = '#4a2c2a'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(cx - 28, cy - 15); ctx.lineTo(cx - 12, cy - 15); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + 12, cy - 15); ctx.lineTo(cx + 28, cy - 15); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#2d3748';
-    ctx.beginPath(); ctx.arc(cx - 20, cy - 15, 5.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 20, cy - 15, 5.5, 0, Math.PI * 2); ctx.fill();
-    // Eyelashes
-    ctx.strokeStyle = '#4a2c2a'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cx - 20, cy - 15, 8, Math.PI + 0.3, Math.PI * 2 - 0.3); ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx + 20, cy - 15, 8, Math.PI + 0.3, Math.PI * 2 - 0.3); ctx.stroke();
-  }
-  // Nose
-  ctx.strokeStyle = '#d4b896'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(cx, cy - 5); ctx.lineTo(cx - 4, cy + 5); ctx.lineTo(cx + 4, cy + 5); ctx.stroke();
-  // Mouth
-  if (mouthOpen > 0.05) {
-    const mh = 3 + mouthOpen * 12;
-    ctx.fillStyle = '#e84393';
-    ctx.beginPath(); ctx.ellipse(cx, cy + 20, 10 + mouthOpen * 3, mh, 0, 0, Math.PI * 2); ctx.fill();
-  } else {
-    ctx.fillStyle = '#e84393';
-    ctx.beginPath(); ctx.arc(cx, cy + 18, 12, 0.1, Math.PI - 0.1); ctx.fill();
-  }
-  // Blouse
-  ctx.fillStyle = '#6c5ce7';
-  ctx.beginPath(); ctx.moveTo(cx - 45, cy + 58); ctx.lineTo(cx - 65, h);
-  ctx.lineTo(cx + 65, h); ctx.lineTo(cx + 45, cy + 58); ctx.closePath(); ctx.fill();
-  // Necklace
-  ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(cx, cy + 50, 18, 0.3, Math.PI - 0.3); ctx.stroke();
+interface ScriptTemplate {
+  category: ScriptCategory;
+  name: string;
+  body: string;
 }
 
-function drawCartoon(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  mouthOpen: number, blinking: boolean,
-) {
-  const cx = w / 2, cy = h / 2;
-  // Big round head
-  ctx.fillStyle = '#ffeaa7';
-  ctx.beginPath(); ctx.arc(cx, cy - 5, 75, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#fdcb6e'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(cx, cy - 5, 75, 0, Math.PI * 2); ctx.stroke();
-  // Eyes
-  if (blinking) {
-    ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(cx - 42, cy - 18); ctx.lineTo(cx - 8, cy - 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + 8, cy - 18); ctx.lineTo(cx + 42, cy - 18); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.ellipse(cx - 25, cy - 18, 20, 24, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 25, cy - 18, 20, 24, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(cx - 25, cy - 18, 20, 24, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx + 25, cy - 18, 20, 24, 0, 0, Math.PI * 2); ctx.stroke();
-    // Pupils
-    ctx.fillStyle = '#2d3436';
-    ctx.beginPath(); ctx.arc(cx - 22, cy - 15, 9, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 28, cy - 15, 9, 0, Math.PI * 2); ctx.fill();
-    // Eye shine
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx - 19, cy - 19, 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 31, cy - 19, 3.5, 0, Math.PI * 2); ctx.fill();
-  }
-  // Mouth
-  if (mouthOpen > 0.05) {
-    ctx.fillStyle = '#e17055';
-    const mh = 6 + mouthOpen * 18;
-    ctx.beginPath(); ctx.ellipse(cx, cy + 20, 18 + mouthOpen * 6, mh, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#c0392b';
-    ctx.beginPath(); ctx.ellipse(cx, cy + 24, 10, mh * 0.4, 0, 0, Math.PI * 2); ctx.fill();
-  } else {
-    ctx.strokeStyle = '#e17055'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(cx, cy + 15, 25, 0.15, Math.PI - 0.15); ctx.stroke();
-  }
-  // Cheeks
-  ctx.fillStyle = 'rgba(255,150,150,0.35)';
-  ctx.beginPath(); ctx.ellipse(cx - 50, cy + 5, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + 50, cy + 5, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
-  // Body
-  ctx.fillStyle = '#00b894';
-  ctx.beginPath(); ctx.moveTo(cx - 40, cy + 65); ctx.lineTo(cx - 55, h);
-  ctx.lineTo(cx + 55, h); ctx.lineTo(cx + 40, cy + 65); ctx.closePath(); ctx.fill();
+/* Animation state that persists across frames */
+interface AnimState {
+  blinkTimer: number;
+  nextBlinkAt: number;
+  blinkDuration: number;
+  isBlinking: boolean;
+  headOffsetX: number;
+  headOffsetY: number;
+  headTargetX: number;
+  headTargetY: number;
+  headMoveTimer: number;
+  browRaise: number;
+  browTarget: number;
+  mouthSmooth: number;
+  cloudOffsets: number[];
+  floatingShapes: FloatingShape[];
 }
 
-function drawRobot(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  mouthOpen: number, blinking: boolean,
-) {
-  const cx = w / 2, cy = h / 2;
-  // Antenna
-  ctx.strokeStyle = '#636e72'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(cx, cy - 75); ctx.lineTo(cx, cy - 90); ctx.stroke();
-  ctx.fillStyle = '#e74c3c';
-  ctx.beginPath(); ctx.arc(cx, cy - 93, 6, 0, Math.PI * 2); ctx.fill();
-  // Head
-  ctx.fillStyle = '#b2bec3';
-  ctx.beginPath();
-  drawRoundedRect(ctx, cx - 60, cy - 75, 120, 100, 16);
-  ctx.fill();
-  ctx.strokeStyle = '#636e72'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  drawRoundedRect(ctx, cx - 60, cy - 75, 120, 100, 16);
-  ctx.stroke();
-  // Eyes (screens)
-  if (blinking) {
-    ctx.fillStyle = '#636e72';
-    ctx.beginPath(); drawRoundedRect(ctx, cx - 40, cy - 42, 30, 4, 2); ctx.fill();
-    ctx.beginPath(); drawRoundedRect(ctx, cx + 10, cy - 42, 30, 4, 2); ctx.fill();
-  } else {
-    ctx.fillStyle = '#00cec9';
-    ctx.beginPath(); drawRoundedRect(ctx, cx - 40, cy - 50, 30, 22, 4); ctx.fill();
-    ctx.beginPath(); drawRoundedRect(ctx, cx + 10, cy - 50, 30, 22, 4); ctx.fill();
-    // Pupils
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx - 25, cy - 39, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 25, cy - 39, 4, 0, Math.PI * 2); ctx.fill();
-  }
-  // Mouth panel
-  if (mouthOpen > 0.05) {
-    ctx.fillStyle = '#636e72';
-    ctx.beginPath(); drawRoundedRect(ctx, cx - 30, cy - 12, 60, 14 + mouthOpen * 8, 3); ctx.fill();
-    // Animated bars
-    ctx.strokeStyle = '#00cec9'; ctx.lineWidth = 2;
-    const barCount = 6;
-    for (let i = 0; i < barCount; i++) {
-      const lx = cx - 24 + i * 10;
-      const barH = (4 + Math.sin(i * 2.1 + mouthOpen * 10) * 3) * mouthOpen;
-      ctx.beginPath(); ctx.moveTo(lx, cy - 6 + 7 - barH); ctx.lineTo(lx, cy - 6 + 7 + barH); ctx.stroke();
-    }
-  } else {
-    ctx.fillStyle = '#636e72';
-    ctx.beginPath(); drawRoundedRect(ctx, cx - 25, cy - 10, 50, 12, 3); ctx.fill();
-    ctx.strokeStyle = '#00cec9'; ctx.lineWidth = 1.5;
-    for (let i = 0; i < 5; i++) {
-      const lx = cx - 20 + i * 10;
-      ctx.beginPath(); ctx.moveTo(lx, cy - 8); ctx.lineTo(lx, cy); ctx.stroke();
-    }
-  }
-  // Body
-  ctx.fillStyle = '#74b9ff';
-  ctx.beginPath(); drawRoundedRect(ctx, cx - 50, cy + 30, 100, 70, 12); ctx.fill();
-  ctx.strokeStyle = '#0984e3'; ctx.lineWidth = 2;
-  ctx.beginPath(); drawRoundedRect(ctx, cx - 50, cy + 30, 100, 70, 12); ctx.stroke();
-  // Chest circle
-  ctx.fillStyle = '#ffeaa7';
-  ctx.beginPath(); ctx.arc(cx, cy + 60, 12, 0, Math.PI * 2); ctx.fill();
+interface FloatingShape {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rotation: number;
+  rotSpeed: number;
+  type: 'circle' | 'triangle' | 'square' | 'diamond';
+  alpha: number;
+  hue: number;
 }
 
-/** Helper for rounded rectangles */
+const MAX_SCRIPT_CHARS = 3000;
+
+const AVATAR_STYLES: AvatarStyle[] = [
+  { id: 'photo', name: 'Photo Realistic', color: '#3b82f6', description: 'Uploaded photo with animated overlays' },
+  { id: 'cartoon', name: 'Cartoon', color: '#10b981', description: 'Big eyes, round head, fun expressions' },
+  { id: 'professional', name: 'Professional', color: '#8b5cf6', description: 'Business avatar with suit and clean look' },
+  { id: 'robot', name: 'Robot', color: '#06b6d4', description: 'Futuristic robot with glowing elements' },
+  { id: 'anime', name: 'Anime', color: '#ec4899', description: 'Anime-style character with large eyes' },
+];
+
+const BACKGROUNDS: Background[] = [
+  { id: 'office', name: 'Office', color: '#64748b', description: 'Desk, monitor, plant' },
+  { id: 'studio', name: 'Studio', color: '#1e1b4b', description: 'Dark background with colored lights' },
+  { id: 'nature', name: 'Nature', color: '#22c55e', description: 'Sky gradient with animated clouds' },
+  { id: 'abstract', name: 'Abstract', color: '#a855f7', description: 'Animated gradient with shapes' },
+  { id: 'transparent', name: 'Transparent', color: '#94a3b8', description: 'Checkerboard for compositing' },
+];
+
+const SCRIPT_TEMPLATES: ScriptTemplate[] = [
+  {
+    category: 'tech-review',
+    name: 'Tech Review',
+    body: `Hey everyone, welcome back to the channel. Today we are taking a deep dive into the latest tech that is making waves in the industry. [pause:1s] First, let us talk about the design. It is sleek, modern, and feels premium in the hand. The build quality is exceptional. [pause:1s] Now for performance, this device absolutely flies. Whether you are multitasking, gaming, or editing video, it handles everything with ease. [pause:1s] Battery life is solid too, easily lasting through a full day of heavy use. [pause:1s] So, should you buy it? If you are looking for top-tier performance and do not mind the price, this is absolutely worth your money. Let me know your thoughts in the comments below.`,
+  },
+  {
+    category: 'tutorial',
+    name: 'Tutorial',
+    body: `Welcome to this step-by-step tutorial. By the end of this video, you will know exactly how to get started. [pause:1s] Step one: set up your environment. Make sure you have all the prerequisites installed and ready to go. [pause:1s] Step two: create your first project. Open your editor and follow along as I walk you through the initial configuration. [pause:1s] Step three: build the core functionality. This is where the magic happens. Pay close attention to the details here. [pause:1s] Step four: test everything thoroughly. Never skip testing, it will save you hours of debugging later. [pause:1s] And that is it! You now have a fully working project. If you found this helpful, hit that like button and subscribe for more tutorials.`,
+  },
+  {
+    category: 'motivational',
+    name: 'Motivational',
+    body: `Listen, I need you to hear this today. [pause:2s] Every single person who has ever achieved greatness started exactly where you are right now. Uncertain, maybe a little scared, but willing to try. [pause:1s] The difference between those who succeed and those who do not is simple. It is not talent. It is not luck. It is the decision to keep going when everything in you wants to quit. [pause:1s] You are stronger than you think. You are more capable than you believe. And the world needs what only you can offer. [pause:2s] So get up. Take that first step. And never, ever look back. You were built for this.`,
+  },
+  {
+    category: 'product-demo',
+    name: 'Product Demo',
+    body: `Introducing something that is going to change the way you work. [pause:1s] This product was designed with one goal in mind: to make your life easier. Let me show you exactly how it works. [pause:1s] First, notice the intuitive interface. Everything is right where you would expect it. No learning curve, no confusion. [pause:1s] Second, look at the speed. Tasks that used to take hours now take minutes. That is real productivity. [pause:1s] Third, the integration capabilities. It works seamlessly with the tools you already use. [pause:1s] And the best part? You can try it completely free for thirty days. No credit card required. Click the link below to get started today.`,
+  },
+  {
+    category: 'news',
+    name: 'News Update',
+    body: `Good evening, and welcome to your daily briefing. Here are the top stories you need to know about today. [pause:1s] In our lead story, major developments are unfolding in the technology sector. Industry leaders announced groundbreaking partnerships that could reshape the landscape. [pause:1s] In business news, markets showed strong performance driven by positive economic data. Analysts remain cautiously optimistic about the outlook for the coming quarter. [pause:1s] And in science, researchers have made a breakthrough discovery that could have far-reaching implications for healthcare. [pause:1s] That wraps up today's headlines. Stay informed, stay engaged, and we will see you next time.`,
+  },
+];
+
+const SUBTITLE_STYLES: { id: SubtitleStyle; name: string }[] = [
+  { id: 'classic', name: 'Classic' },
+  { id: 'bold', name: 'Bold' },
+  { id: 'outline', name: 'Outline' },
+  { id: 'karaoke', name: 'Karaoke' },
+];
+
+/* ================================================================== */
+/*  UTILITY: Rounded rectangle helper                                  */
+/* ================================================================== */
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number,
 ) {
@@ -261,222 +147,1272 @@ function fillRoundedRect(
   ctx.fill();
 }
 
-const AVATAR_PRESETS: AvatarPreset[] = [
-  { id: 'pro-man', name: 'Professional Man', color: '#3b82f6', draw: drawProfessionalMan },
-  { id: 'pro-woman', name: 'Professional Woman', color: '#8b5cf6', draw: drawProfessionalWoman },
-  { id: 'cartoon', name: 'Cartoon Character', color: '#10b981', draw: drawCartoon },
-  { id: 'robot', name: 'Robot', color: '#06b6d4', draw: drawRobot },
-];
-
-const MAX_SCRIPT_CHARS = 1500;
-
-/* ------------------------------------------------------------------ */
-/*  Template-based script generation                                   */
-/* ------------------------------------------------------------------ */
-interface ScriptTemplate {
-  topic: string;
-  style: string;
-  body: string;
-}
-
-const SCRIPT_TEMPLATES: ScriptTemplate[] = [
-  {
-    topic: 'technology',
-    style: 'informative',
-    body: `The future of technology is being shaped right now, and it is advancing faster than ever before. Artificial intelligence is transforming how we work, communicate, and solve problems. From self-driving cars to personalized medicine, the next decade will bring changes that seemed impossible just a few years ago. Understanding these trends is essential for anyone who wants to stay ahead in the modern world.`,
-  },
-  {
-    topic: 'technology',
-    style: 'casual',
-    body: `Alright, so let me tell you about something wild that is happening in tech right now. AI is literally everywhere. Your phone, your car, even your fridge is getting smarter. And the craziest part? We are still in the early stages. Imagine what things will look like in five years. Pretty exciting stuff if you ask me.`,
-  },
-  {
-    topic: 'motivation',
-    style: 'inspirational',
-    body: `Every great achievement starts with the decision to try. You do not need to see the whole staircase, just take the first step. Remember that failure is not the opposite of success, it is part of the journey. The people who achieve extraordinary things are the ones who refuse to give up when things get tough. Believe in yourself and keep pushing forward.`,
-  },
-  {
-    topic: 'motivation',
-    style: 'casual',
-    body: `Hey, quick reminder for you today. You are doing way better than you think. Seriously. Every small step counts, and progress is not always visible right away. So keep going, stay consistent, and do not compare your chapter one to someone elses chapter twenty. You got this.`,
-  },
-  {
-    topic: 'education',
-    style: 'informative',
-    body: `Learning is a lifelong process that extends far beyond the classroom. Studies show that the most effective learners use active recall and spaced repetition to retain information. Whether you are picking up a new language, mastering a skill, or exploring a new field, the key is consistency. Just twenty minutes of focused practice each day can lead to remarkable results over time.`,
-  },
-  {
-    topic: 'education',
-    style: 'casual',
-    body: `So here is a study tip that changed everything for me. Instead of reading your notes over and over, try to explain the concept out loud like you are teaching someone else. If you can explain it simply, you truly understand it. This technique is called the Feynman method, and trust me, it works like magic.`,
-  },
-  {
-    topic: 'health',
-    style: 'informative',
-    body: `Your daily habits have a profound impact on your long-term health. Research shows that just thirty minutes of moderate exercise, five days a week, can reduce the risk of chronic disease by up to forty percent. Combined with proper nutrition and adequate sleep, these habits form the foundation of a healthier and longer life. Small changes today lead to big results tomorrow.`,
-  },
-  {
-    topic: 'health',
-    style: 'casual',
-    body: `Okay real talk, you do not need a fancy gym membership or a complicated diet plan to be healthy. Start with the basics. Drink more water, go for a walk, and get some decent sleep. That alone will make a huge difference. And hey, the occasional pizza is totally fine. Balance is everything.`,
-  },
-  {
-    topic: 'business',
-    style: 'informative',
-    body: `Building a successful business requires more than just a great idea. It demands execution, persistence, and the ability to adapt. The most successful entrepreneurs share a common trait: they listen to their customers. By understanding what people truly need and delivering value consistently, you create a business that stands the test of time.`,
-  },
-  {
-    topic: 'business',
-    style: 'casual',
-    body: `Want to know the number one mistake people make when starting a business? They build something nobody asked for. Before you spend months on your idea, talk to real people. Find out what they actually need. The best businesses solve real problems. Start there and the rest will follow.`,
-  },
-  {
-    topic: 'storytelling',
-    style: 'dramatic',
-    body: `It was a cold winter evening when everything changed. The phone rang at exactly midnight, and on the other end was a voice I had not heard in ten years. What they told me next would alter the course of my entire life. Sometimes the biggest turning points come from the most unexpected moments. And this was one of those moments.`,
-  },
-  {
-    topic: 'science',
-    style: 'informative',
-    body: `The universe is far more mysterious than we ever imagined. Recent discoveries suggest that ordinary matter makes up only about five percent of everything that exists. The rest is dark matter and dark energy, forces we can detect but cannot yet fully explain. Every new finding opens up more questions, and that is what makes science so fascinating.`,
-  },
-];
-
-const TOPIC_OPTIONS = ['technology', 'motivation', 'education', 'health', 'business', 'storytelling', 'science'];
-const STYLE_OPTIONS = ['informative', 'casual', 'inspirational', 'dramatic'];
-
-function generateScript(topic: string, style: string): string {
-  // Find exact match first
-  const exact = SCRIPT_TEMPLATES.find((t) => t.topic === topic && t.style === style);
-  if (exact) return exact.body;
-  // Fall back to same topic
-  const topicMatch = SCRIPT_TEMPLATES.find((t) => t.topic === topic);
-  if (topicMatch) return topicMatch.body;
-  // Fall back to same style
-  const styleMatch = SCRIPT_TEMPLATES.find((t) => t.style === style);
-  if (styleMatch) return styleMatch.body;
-  // Random
-  return SCRIPT_TEMPLATES[Math.floor(Math.random() * SCRIPT_TEMPLATES.length)].body;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Blink scheduler                                                    */
-/* ------------------------------------------------------------------ */
-function shouldBlink(time: number): boolean {
-  const cycle = time % 4;
-  return cycle > 3.85;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Floating particle type                                             */
-/* ------------------------------------------------------------------ */
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  alpha: number;
-}
-
-function createParticles(count: number, width: number, height: number): Particle[] {
-  const particles: Particle[] = [];
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.6,
-      vy: (Math.random() - 0.5) * 0.4 - 0.2,
-      radius: 2 + Math.random() * 4,
+/* ================================================================== */
+/*  ANIMATION STATE                                                    */
+/* ================================================================== */
+function createAnimState(w: number, h: number): AnimState {
+  const shapes: FloatingShape[] = [];
+  for (let i = 0; i < 15; i++) {
+    shapes.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.6 - 0.15,
+      size: 8 + Math.random() * 30,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.02,
+      type: (['circle', 'triangle', 'square', 'diamond'] as const)[Math.floor(Math.random() * 4)],
       alpha: 0.04 + Math.random() * 0.08,
+      hue: Math.random() * 360,
     });
   }
-  return particles;
+  return {
+    blinkTimer: 0,
+    nextBlinkAt: 3 + Math.random() * 2,
+    blinkDuration: 0.15,
+    isBlinking: false,
+    headOffsetX: 0,
+    headOffsetY: 0,
+    headTargetX: 0,
+    headTargetY: 0,
+    headMoveTimer: 0,
+    browRaise: 0,
+    browTarget: 0,
+    mouthSmooth: 0,
+    cloudOffsets: [0, 200, 450],
+    floatingShapes: shapes,
+  };
 }
 
-function updateParticles(particles: Particle[], width: number, height: number, dt: number) {
-  for (const p of particles) {
-    p.x += p.vx * dt * 60;
-    p.y += p.vy * dt * 60;
-    if (p.x < -10) p.x = width + 10;
-    if (p.x > width + 10) p.x = -10;
-    if (p.y < -10) p.y = height + 10;
-    if (p.y > height + 10) p.y = -10;
+function updateAnimState(st: AnimState, dt: number, mouthRaw: number, isSpeaking: boolean) {
+  /* -- Blinking -- */
+  st.blinkTimer += dt;
+  if (!st.isBlinking && st.blinkTimer >= st.nextBlinkAt) {
+    st.isBlinking = true;
+    st.blinkTimer = 0;
+    st.blinkDuration = 0.1 + Math.random() * 0.08;
+  }
+  if (st.isBlinking && st.blinkTimer >= st.blinkDuration) {
+    st.isBlinking = false;
+    st.blinkTimer = 0;
+    st.nextBlinkAt = 3 + Math.random() * 2;
+  }
+
+  /* -- Head micro-movements -- */
+  st.headMoveTimer += dt;
+  if (st.headMoveTimer > 1.5 + Math.random()) {
+    st.headMoveTimer = 0;
+    st.headTargetX = (Math.random() - 0.5) * 6;
+    st.headTargetY = (Math.random() - 0.5) * 4;
+  }
+  st.headOffsetX += (st.headTargetX - st.headOffsetX) * 0.03;
+  st.headOffsetY += (st.headTargetY - st.headOffsetY) * 0.03;
+  // Add gentle sway
+  st.headOffsetX += Math.sin(performance.now() / 2000) * 0.15;
+  st.headOffsetY += Math.cos(performance.now() / 2500) * 0.1;
+
+  /* -- Brow raise on emphasis -- */
+  if (isSpeaking && mouthRaw > 0.65) {
+    st.browTarget = 1;
+  } else {
+    st.browTarget = 0;
+  }
+  st.browRaise += (st.browTarget - st.browRaise) * 0.08;
+
+  /* -- Smooth mouth -- */
+  st.mouthSmooth += (mouthRaw - st.mouthSmooth) * 0.25;
+
+  /* -- Cloud animation -- */
+  for (let i = 0; i < st.cloudOffsets.length; i++) {
+    st.cloudOffsets[i] += (0.2 + i * 0.1) * dt * 30;
+  }
+
+  /* -- Floating shapes -- */
+  for (const s of st.floatingShapes) {
+    s.x += s.vx * dt * 60;
+    s.y += s.vy * dt * 60;
+    s.rotation += s.rotSpeed;
+    if (s.x < -50) s.x += 1200;
+    if (s.x > 1200) s.x -= 1200;
+    if (s.y < -50) s.y += 800;
+    if (s.y > 800) s.y -= 800;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Word splitter for subtitles                                        */
-/* ------------------------------------------------------------------ */
-function splitIntoSubtitleChunks(text: string, wordsPerChunk: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const chunks: string[] = [];
-  for (let i = 0; i < words.length; i += wordsPerChunk) {
-    chunks.push(words.slice(i, i + wordsPerChunk).join(' '));
-  }
-  return chunks;
-}
+/* ================================================================== */
+/*  BACKGROUND RENDERERS                                               */
+/* ================================================================== */
+function drawBgOffice(ctx: CanvasRenderingContext2D, w: number, h: number, _t: number) {
+  // Wall
+  ctx.fillStyle = '#e8e0d4';
+  ctx.fillRect(0, 0, w, h);
 
-/* ------------------------------------------------------------------ */
-/*  Draw a full video frame                                            */
-/* ------------------------------------------------------------------ */
-function drawVideoFrame(
-  ctx: CanvasRenderingContext2D,
-  WIDTH: number,
-  HEIGHT: number,
-  time: number,
-  mouthOpen: number,
-  blinking: boolean,
-  avatarImg: HTMLImageElement | null,
-  preset: AvatarPreset | null,
-  particles: Particle[],
-  subtitleText: string,
-  dt: number,
-) {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  // Floor
+  ctx.fillStyle = '#8b7355';
+  ctx.fillRect(0, h * 0.7, w, h * 0.3);
+  ctx.fillStyle = '#7a6548';
+  ctx.fillRect(0, h * 0.7, w, 4);
 
-  // ── Animated gradient background ──
-  const shift = (time * 0.15) % 1;
-  const grad = ctx.createLinearGradient(
-    WIDTH * 0.5 + Math.sin(shift * Math.PI * 2) * WIDTH * 0.3,
-    0,
-    WIDTH * 0.5 - Math.sin(shift * Math.PI * 2 + 1) * WIDTH * 0.3,
-    HEIGHT,
-  );
-  grad.addColorStop(0, '#1a1a2e');
-  grad.addColorStop(0.3, '#16213e');
-  grad.addColorStop(0.6, '#0f3460');
-  grad.addColorStop(1, '#1a1a2e');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  // Window (right side)
+  ctx.fillStyle = '#87ceeb';
+  ctx.fillRect(w * 0.65, h * 0.08, w * 0.25, h * 0.35);
+  ctx.strokeStyle = '#d4c5a9';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(w * 0.65, h * 0.08, w * 0.25, h * 0.35);
+  // Window cross
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.775, h * 0.08);
+  ctx.lineTo(w * 0.775, h * 0.43);
+  ctx.moveTo(w * 0.65, h * 0.255);
+  ctx.lineTo(w * 0.9, h * 0.255);
+  ctx.stroke();
 
-  // Subtle animated accent glow
-  const glowGrad = ctx.createRadialGradient(
-    WIDTH / 2 + Math.sin(time * 0.4) * 100, HEIGHT * 0.35,
-    50,
-    WIDTH / 2, HEIGHT * 0.35,
-    400,
-  );
-  glowGrad.addColorStop(0, `${GRADIENT[0]}18`);
-  glowGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = glowGrad;
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  // Desk
+  ctx.fillStyle = '#a0845c';
+  ctx.fillRect(w * 0.05, h * 0.58, w * 0.55, h * 0.06);
+  ctx.fillStyle = '#8b7348';
+  ctx.fillRect(w * 0.1, h * 0.64, 12, h * 0.06);
+  ctx.fillRect(w * 0.5, h * 0.64, 12, h * 0.06);
 
-  // ── Floating particles ──
-  updateParticles(particles, WIDTH, HEIGHT, dt);
-  for (const p of particles) {
+  // Monitor on desk
+  ctx.fillStyle = '#2d2d2d';
+  ctx.fillRect(w * 0.2, h * 0.38, w * 0.2, h * 0.16);
+  ctx.fillStyle = '#4a90d9';
+  ctx.fillRect(w * 0.21, h * 0.39, w * 0.18, h * 0.14);
+  // Monitor stand
+  ctx.fillStyle = '#555';
+  ctx.fillRect(w * 0.28, h * 0.54, w * 0.04, h * 0.04);
+  ctx.fillRect(w * 0.25, h * 0.57, w * 0.1, h * 0.015);
+
+  // Plant (left)
+  ctx.fillStyle = '#8b4513';
+  fillRoundedRect(ctx, w * 0.06, h * 0.48, 30, 40, 4);
+  // Leaves
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = `hsl(${120 + i * 10}, 55%, ${35 + i * 4}%)`;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+    const lx = w * 0.06 + 15;
+    const ly = h * 0.48;
+    const angle = -Math.PI / 2 + (i - 2) * 0.5;
+    ctx.ellipse(lx + Math.cos(angle) * 18, ly + Math.sin(angle) * 18, 14, 7, angle, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // ── Avatar circle ──
-  const avatarCx = WIDTH / 2;
-  const avatarCy = HEIGHT * 0.35;
-  const avatarR = 130;
+  // Bookshelf (right wall)
+  ctx.fillStyle = '#a0845c';
+  ctx.fillRect(w * 0.7, h * 0.5, w * 0.2, h * 0.04);
+  ctx.fillRect(w * 0.7, h * 0.58, w * 0.2, h * 0.04);
+  // Books
+  const bookColors = ['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad', '#e74c3c', '#16a085'];
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = bookColors[i % bookColors.length];
+    ctx.fillRect(w * 0.71 + i * 18, h * 0.43, 14, h * 0.07);
+  }
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = bookColors[(i + 3) % bookColors.length];
+    ctx.fillRect(w * 0.72 + i * 20, h * 0.51, 16, h * 0.07);
+  }
+}
 
-  // Glow ring behind avatar
+function drawBgStudio(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
+  // Dark background
+  ctx.fillStyle = '#0a0a12';
+  ctx.fillRect(0, 0, w, h);
+
+  // Colored light beams
+  const lights = [
+    { x: w * 0.2, color: '#ff006630', angle: -0.3 },
+    { x: w * 0.5, color: '#0066ff20', angle: 0 },
+    { x: w * 0.8, color: '#ff660025', angle: 0.3 },
+  ];
+  for (const light of lights) {
+    const glow = ctx.createRadialGradient(
+      light.x + Math.sin(t * 0.3 + light.angle * 5) * 30,
+      -50,
+      10,
+      light.x,
+      h * 0.5,
+      h * 0.7,
+    );
+    glow.addColorStop(0, light.color);
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Subtle floor gradient
+  const floorGrad = ctx.createLinearGradient(0, h * 0.7, 0, h);
+  floorGrad.addColorStop(0, 'transparent');
+  floorGrad.addColorStop(1, '#ffffff06');
+  ctx.fillStyle = floorGrad;
+  ctx.fillRect(0, h * 0.7, w, h * 0.3);
+
+  // Floor reflection line
+  ctx.strokeStyle = '#ffffff0a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.78);
+  ctx.lineTo(w, h * 0.78);
+  ctx.stroke();
+}
+
+function drawBgNature(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, anim: AnimState) {
+  // Sky gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.65);
+  skyGrad.addColorStop(0, '#1a8fe0');
+  skyGrad.addColorStop(0.5, '#56b4f5');
+  skyGrad.addColorStop(1, '#87ceeb');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h * 0.65);
+
+  // Sun
+  const sunX = w * 0.8;
+  const sunY = h * 0.12;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, 15, sunX, sunY, 100);
+  sunGlow.addColorStop(0, '#fff9c4');
+  sunGlow.addColorStop(0.3, '#ffee5840');
+  sunGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = sunGlow;
+  ctx.fillRect(sunX - 100, sunY - 100, 200, 200);
+  ctx.fillStyle = '#fff9c4';
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Animated clouds
+  for (let i = 0; i < anim.cloudOffsets.length; i++) {
+    const cx = (anim.cloudOffsets[i] % (w + 200)) - 100;
+    const cy = h * 0.1 + i * h * 0.12;
+    const scale = 0.7 + i * 0.2;
+    ctx.fillStyle = `rgba(255,255,255,${0.7 - i * 0.15})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 25 * scale, 0, Math.PI * 2);
+    ctx.arc(cx + 25 * scale, cy - 8 * scale, 20 * scale, 0, Math.PI * 2);
+    ctx.arc(cx + 50 * scale, cy, 22 * scale, 0, Math.PI * 2);
+    ctx.arc(cx - 20 * scale, cy + 5 * scale, 18 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Hills
+  ctx.fillStyle = '#4caf50';
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.65);
+  ctx.quadraticCurveTo(w * 0.25, h * 0.52, w * 0.5, h * 0.6);
+  ctx.quadraticCurveTo(w * 0.75, h * 0.68, w, h * 0.58);
+  ctx.lineTo(w, h * 0.65);
+  ctx.fill();
+
+  // Grass field
+  const grassGrad = ctx.createLinearGradient(0, h * 0.6, 0, h);
+  grassGrad.addColorStop(0, '#4caf50');
+  grassGrad.addColorStop(0.5, '#388e3c');
+  grassGrad.addColorStop(1, '#2e7d32');
+  ctx.fillStyle = grassGrad;
+  ctx.fillRect(0, h * 0.63, w, h * 0.37);
+
+  // Grass blades
+  ctx.strokeStyle = '#66bb6a';
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 30; i++) {
+    const gx = (i / 30) * w + Math.sin(i * 7) * 20;
+    const gy = h * 0.63 + Math.abs(Math.sin(i * 3)) * h * 0.15;
+    const sway = Math.sin(t * 1.5 + i * 0.7) * 5;
+    ctx.beginPath();
+    ctx.moveTo(gx, gy);
+    ctx.quadraticCurveTo(gx + sway, gy - 15, gx + sway * 1.5, gy - 25);
+    ctx.stroke();
+  }
+
+  // Simple tree
+  ctx.fillStyle = '#5d4037';
+  ctx.fillRect(w * 0.12 - 6, h * 0.42, 12, h * 0.22);
+  ctx.fillStyle = '#2e7d32';
+  ctx.beginPath();
+  ctx.arc(w * 0.12, h * 0.38, 35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#388e3c';
+  ctx.beginPath();
+  ctx.arc(w * 0.12 - 15, h * 0.4, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(w * 0.12 + 18, h * 0.39, 24, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawBgAbstract(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, anim: AnimState) {
+  // Animated gradient
+  const shift = (t * 0.1) % 1;
+  const grad = ctx.createLinearGradient(
+    w * 0.5 + Math.sin(shift * Math.PI * 2) * w * 0.4,
+    0,
+    w * 0.5 - Math.cos(shift * Math.PI * 2 + 1) * w * 0.4,
+    h,
+  );
+  const hue1 = (t * 15) % 360;
+  const hue2 = (hue1 + 60) % 360;
+  const hue3 = (hue1 + 120) % 360;
+  grad.addColorStop(0, `hsl(${hue1}, 60%, 15%)`);
+  grad.addColorStop(0.33, `hsl(${hue2}, 50%, 12%)`);
+  grad.addColorStop(0.66, `hsl(${hue3}, 55%, 14%)`);
+  grad.addColorStop(1, `hsl(${hue1}, 45%, 10%)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Floating shapes
+  for (const s of anim.floatingShapes) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.rotation);
+    ctx.globalAlpha = s.alpha;
+    ctx.fillStyle = `hsl(${(s.hue + t * 10) % 360}, 70%, 60%)`;
+
+    switch (s.type) {
+      case 'circle':
+        ctx.beginPath();
+        ctx.arc(0, 0, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case 'triangle':
+        ctx.beginPath();
+        ctx.moveTo(0, -s.size);
+        ctx.lineTo(s.size * 0.87, s.size * 0.5);
+        ctx.lineTo(-s.size * 0.87, s.size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      case 'square':
+        ctx.fillRect(-s.size / 2, -s.size / 2, s.size, s.size);
+        break;
+      case 'diamond':
+        ctx.beginPath();
+        ctx.moveTo(0, -s.size);
+        ctx.lineTo(s.size * 0.6, 0);
+        ctx.lineTo(0, s.size);
+        ctx.lineTo(-s.size * 0.6, 0);
+        ctx.closePath();
+        ctx.fill();
+        break;
+    }
+    ctx.restore();
+  }
+
+  // Radial glow in center
+  const glow = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.5);
+  glow.addColorStop(0, `hsla(${(hue2 + 30) % 360}, 70%, 50%, 0.06)`);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawBgTransparent(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const size = 20;
+  for (let y = 0; y < h; y += size) {
+    for (let x = 0; x < w; x += size) {
+      const isLight = ((x / size) + (y / size)) % 2 === 0;
+      ctx.fillStyle = isLight ? '#cccccc' : '#999999';
+      ctx.fillRect(x, y, size, size);
+    }
+  }
+}
+
+/* ================================================================== */
+/*  AVATAR RENDERERS                                                   */
+/* ================================================================== */
+function drawAvatarPhoto(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  cx: number, cy: number, radius: number,
+  mouth: number, anim: AnimState, _t: number,
+) {
+  const imgW = img.width;
+  const imgH = img.height;
+  const scale = Math.max((radius * 2) / imgW, (radius * 2) / imgH);
+  const dw = imgW * scale;
+  const dh = imgH * scale;
+  ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+
+  /* Procedural face mesh overlay for lip sync */
+
+  // Eye blink overlay
+  if (anim.isBlinking) {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    // Left eye area
+    ctx.beginPath();
+    ctx.ellipse(-radius * 0.18, -radius * 0.12, radius * 0.12, radius * 0.04, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Right eye area
+    ctx.beginPath();
+    ctx.ellipse(radius * 0.18, -radius * 0.12, radius * 0.12, radius * 0.04, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Mouth movement overlay
+  if (mouth > 0.05) {
+    const mouthY = radius * 0.32;
+    const mouthW = 14 + mouth * 10;
+    const mouthH = 3 + mouth * 14;
+
+    // Dark shadow for open mouth
+    ctx.fillStyle = `rgba(20, 10, 10, ${0.1 + mouth * 0.3})`;
+    ctx.beginPath();
+    ctx.ellipse(0, mouthY, mouthW, mouthH, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Slight teeth hint
+    if (mouth > 0.4) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${(mouth - 0.4) * 0.25})`;
+      ctx.beginPath();
+      ctx.ellipse(0, mouthY - mouthH * 0.3, mouthW * 0.6, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Eyebrow raise indicator (subtle shadow shift)
+  if (anim.browRaise > 0.1) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${anim.browRaise * 0.06})`;
+    ctx.fillRect(-radius * 0.4, -radius * 0.35, radius * 0.8, radius * 0.1);
+  }
+}
+
+function drawAvatarCartoon(
+  ctx: CanvasRenderingContext2D,
+  _cx: number, _cy: number, radius: number,
+  mouth: number, anim: AnimState, t: number,
+) {
+  const w = radius * 2;
+  const h = radius * 2;
+  const cx = 0, cy = 0;
+
+  // Big round head
+  ctx.fillStyle = '#ffeaa7';
+  ctx.beginPath();
+  ctx.arc(cx, cy - 5, radius * 0.58, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#fdcb6e';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(cx, cy - 5, radius * 0.58, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Hair (spiky)
+  ctx.fillStyle = '#e17055';
+  for (let i = 0; i < 5; i++) {
+    const angle = -Math.PI / 2 + (i - 2) * 0.35;
+    const tipX = cx + Math.cos(angle) * radius * 0.72;
+    const tipY = cy - 5 + Math.sin(angle) * radius * 0.72;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle - 0.15) * radius * 0.5, cy - 5 + Math.sin(angle - 0.15) * radius * 0.5);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(cx + Math.cos(angle + 0.15) * radius * 0.5, cy - 5 + Math.sin(angle + 0.15) * radius * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Eyes
+  const eyeScale = 1.0;
+  if (anim.isBlinking) {
+    ctx.strokeStyle = '#2d3436';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.3, cy - radius * 0.12);
+    ctx.lineTo(cx - radius * 0.1, cy - radius * 0.12);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.1, cy - radius * 0.12);
+    ctx.lineTo(cx + radius * 0.3, cy - radius * 0.12);
+    ctx.stroke();
+  } else {
+    // Eye whites
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.2, cy - radius * 0.12, radius * 0.14 * eyeScale, radius * 0.18 * eyeScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.2, cy - radius * 0.12, radius * 0.14 * eyeScale, radius * 0.18 * eyeScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Outline
+    ctx.strokeStyle = '#2d3436';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.2, cy - radius * 0.12, radius * 0.14 * eyeScale, radius * 0.18 * eyeScale, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.2, cy - radius * 0.12, radius * 0.14 * eyeScale, radius * 0.18 * eyeScale, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Pupils (follow slight look direction)
+    const lookX = Math.sin(t * 0.5) * 2;
+    ctx.fillStyle = '#2d3436';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.17 + lookX, cy - radius * 0.1, radius * 0.065, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.23 + lookX, cy - radius * 0.1, radius * 0.065, 0, Math.PI * 2);
+    ctx.fill();
+    // Eye shine
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.15 + lookX, cy - radius * 0.14, radius * 0.025, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.25 + lookX, cy - radius * 0.14, radius * 0.025, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Eyebrows (with raise)
+  const browOff = -anim.browRaise * 6;
+  ctx.strokeStyle = '#2d3436';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(cx - radius * 0.2, cy - radius * 0.25 + browOff, radius * 0.15, Math.PI + 0.3, Math.PI * 2 - 0.3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx + radius * 0.2, cy - radius * 0.25 + browOff, radius * 0.15, Math.PI + 0.3, Math.PI * 2 - 0.3);
+  ctx.stroke();
+
+  // Mouth
+  if (mouth > 0.05) {
+    ctx.fillStyle = '#e17055';
+    const mh = radius * 0.05 + mouth * radius * 0.14;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + radius * 0.15, radius * 0.12 + mouth * radius * 0.05, mh, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Tongue
+    if (mouth > 0.3) {
+      ctx.fillStyle = '#c0392b';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + radius * 0.15 + mh * 0.3, radius * 0.06, mh * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    ctx.strokeStyle = '#e17055';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy + radius * 0.12, radius * 0.15, 0.15, Math.PI - 0.15);
+    ctx.stroke();
+  }
+
+  // Cheeks
+  ctx.fillStyle = 'rgba(255,150,150,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(cx - radius * 0.38, cy + radius * 0.03, radius * 0.09, radius * 0.06, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + radius * 0.38, cy + radius * 0.03, radius * 0.09, radius * 0.06, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  ctx.fillStyle = '#00b894';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.3, cy + radius * 0.52);
+  ctx.lineTo(cx - radius * 0.45, radius);
+  ctx.lineTo(cx + radius * 0.45, radius);
+  ctx.lineTo(cx + radius * 0.3, cy + radius * 0.52);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawAvatarProfessional(
+  ctx: CanvasRenderingContext2D,
+  _cx: number, _cy: number, radius: number,
+  mouth: number, anim: AnimState, t: number,
+) {
+  const cx = 0, cy = 0;
+
+  // Head
+  ctx.fillStyle = '#e8d5b7';
+  ctx.beginPath();
+  ctx.arc(cx, cy - radius * 0.08, radius * 0.54, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hair (clean professional)
+  ctx.fillStyle = '#2c3e50';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - radius * 0.42, radius * 0.5, radius * 0.26, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(cx - radius * 0.5, cy - radius * 0.42, radius * 0.08, radius * 0.2);
+  ctx.fillRect(cx + radius * 0.42, cy - radius * 0.42, radius * 0.08, radius * 0.2);
+
+  // Eyes
+  if (anim.isBlinking) {
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.25, cy - radius * 0.1);
+    ctx.lineTo(cx - radius * 0.1, cy - radius * 0.1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.1, cy - radius * 0.1);
+    ctx.lineTo(cx + radius * 0.25, cy - radius * 0.1);
+    ctx.stroke();
+  } else {
+    // Eye whites
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.17, cy - radius * 0.1, radius * 0.07, radius * 0.05, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.17, cy - radius * 0.1, radius * 0.07, radius * 0.05, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Iris
+    ctx.fillStyle = '#2d3748';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.17, cy - radius * 0.1, radius * 0.04, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.17, cy - radius * 0.1, radius * 0.04, 0, Math.PI * 2);
+    ctx.fill();
+    // Light dots
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.155, cy - radius * 0.115, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.185, cy - radius * 0.115, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Eyebrows
+  const browOff = -anim.browRaise * 5;
+  ctx.strokeStyle = '#2c3e50';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.26, cy - radius * 0.2 + browOff);
+  ctx.lineTo(cx - radius * 0.08, cy - radius * 0.22 + browOff);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx + radius * 0.08, cy - radius * 0.22 + browOff);
+  ctx.lineTo(cx + radius * 0.26, cy - radius * 0.2 + browOff);
+  ctx.stroke();
+
+  // Nose
+  ctx.strokeStyle = '#c4a882';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - radius * 0.04);
+  ctx.lineTo(cx - radius * 0.04, cy + radius * 0.04);
+  ctx.lineTo(cx + radius * 0.04, cy + radius * 0.04);
+  ctx.stroke();
+
+  // Mouth
+  if (mouth > 0.05) {
+    const mh = 3 + mouth * 12;
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + radius * 0.17, radius * 0.08 + mouth * radius * 0.03, mh, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Teeth
+    if (mouth > 0.3) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + radius * 0.14, radius * 0.05, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    ctx.strokeStyle = '#a0522d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy + radius * 0.15, radius * 0.07, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+  }
+
+  // Suit jacket
+  ctx.fillStyle = '#2d3748';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.38, cy + radius * 0.45);
+  ctx.lineTo(cx - radius * 0.06, cy + radius * 0.47);
+  ctx.lineTo(cx, cy + radius * 0.43);
+  ctx.lineTo(cx + radius * 0.06, cy + radius * 0.47);
+  ctx.lineTo(cx + radius * 0.38, cy + radius * 0.45);
+  ctx.lineTo(cx + radius * 0.55, radius);
+  ctx.lineTo(cx - radius * 0.55, radius);
+  ctx.closePath();
+  ctx.fill();
+
+  // White shirt collar
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.1, cy + radius * 0.42);
+  ctx.lineTo(cx - radius * 0.02, cy + radius * 0.5);
+  ctx.lineTo(cx + radius * 0.02, cy + radius * 0.5);
+  ctx.lineTo(cx + radius * 0.1, cy + radius * 0.42);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tie
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.04, cy + radius * 0.43);
+  ctx.lineTo(cx + radius * 0.04, cy + radius * 0.43);
+  ctx.lineTo(cx + radius * 0.03, cy + radius * 0.62);
+  ctx.lineTo(cx, cy + radius * 0.66);
+  ctx.lineTo(cx - radius * 0.03, cy + radius * 0.62);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawAvatarRobot(
+  ctx: CanvasRenderingContext2D,
+  _cx: number, _cy: number, radius: number,
+  mouth: number, anim: AnimState, t: number,
+) {
+  const cx = 0, cy = 0;
+
+  // Antenna
+  ctx.strokeStyle = '#636e72';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - radius * 0.56);
+  ctx.lineTo(cx, cy - radius * 0.7);
+  ctx.stroke();
+  // Antenna tip (pulsing)
+  const pulseAlpha = 0.6 + Math.sin(t * 4) * 0.4;
+  ctx.fillStyle = `rgba(231, 76, 60, ${pulseAlpha})`;
+  ctx.beginPath();
+  ctx.arc(cx, cy - radius * 0.72, 5, 0, Math.PI * 2);
+  ctx.fill();
+  // Glow
+  const glow = ctx.createRadialGradient(cx, cy - radius * 0.72, 2, cx, cy - radius * 0.72, 15);
+  glow.addColorStop(0, `rgba(231, 76, 60, ${pulseAlpha * 0.4})`);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - 15, cy - radius * 0.72 - 15, 30, 30);
+
+  // Head (metallic)
+  const headGrad = ctx.createLinearGradient(cx - radius * 0.45, cy - radius * 0.56, cx + radius * 0.45, cy + radius * 0.2);
+  headGrad.addColorStop(0, '#c0c9d0');
+  headGrad.addColorStop(0.5, '#dfe6e9');
+  headGrad.addColorStop(1, '#b2bec3');
+  ctx.fillStyle = headGrad;
+  ctx.beginPath();
+  drawRoundedRect(ctx, cx - radius * 0.45, cy - radius * 0.56, radius * 0.9, radius * 0.76, radius * 0.12);
+  ctx.fill();
+
+  // Head border
+  ctx.strokeStyle = '#636e72';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  drawRoundedRect(ctx, cx - radius * 0.45, cy - radius * 0.56, radius * 0.9, radius * 0.76, radius * 0.12);
+  ctx.stroke();
+
+  // Circuit patterns on head
+  ctx.strokeStyle = `rgba(0, 206, 201, ${0.2 + Math.sin(t * 2) * 0.1})`;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    const lx = cx - radius * 0.35 + i * radius * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(lx, cy - radius * 0.48);
+    ctx.lineTo(lx, cy - radius * 0.4);
+    ctx.lineTo(lx + radius * 0.1, cy - radius * 0.4);
+    ctx.stroke();
+  }
+
+  // Eyes (LED screens)
+  if (anim.isBlinking) {
+    ctx.fillStyle = '#636e72';
+    fillRoundedRect(ctx, cx - radius * 0.33, cy - radius * 0.32, radius * 0.24, 4, 2);
+    fillRoundedRect(ctx, cx + radius * 0.09, cy - radius * 0.32, radius * 0.24, 4, 2);
+  } else {
+    // Screen glow
+    const eyeGlow = ctx.createRadialGradient(cx - radius * 0.21, cy - radius * 0.28, 0, cx - radius * 0.21, cy - radius * 0.28, radius * 0.2);
+    eyeGlow.addColorStop(0, 'rgba(0, 206, 201, 0.3)');
+    eyeGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = eyeGlow;
+    ctx.fillRect(cx - radius * 0.4, cy - radius * 0.45, radius * 0.38, radius * 0.34);
+    const eyeGlow2 = ctx.createRadialGradient(cx + radius * 0.21, cy - radius * 0.28, 0, cx + radius * 0.21, cy - radius * 0.28, radius * 0.2);
+    eyeGlow2.addColorStop(0, 'rgba(0, 206, 201, 0.3)');
+    eyeGlow2.addColorStop(1, 'transparent');
+    ctx.fillStyle = eyeGlow2;
+    ctx.fillRect(cx + radius * 0.02, cy - radius * 0.45, radius * 0.38, radius * 0.34);
+
+    ctx.fillStyle = '#00cec9';
+    fillRoundedRect(ctx, cx - radius * 0.33, cy - radius * 0.38, radius * 0.24, radius * 0.17, 4);
+    fillRoundedRect(ctx, cx + radius * 0.09, cy - radius * 0.38, radius * 0.24, radius * 0.17, 4);
+    // Pupils (scanning animation)
+    const scanX = Math.sin(t * 2) * radius * 0.04;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.21 + scanX, cy - radius * 0.29, radius * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.21 + scanX, cy - radius * 0.29, radius * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Mouth panel
+  if (mouth > 0.05) {
+    ctx.fillStyle = '#636e72';
+    fillRoundedRect(ctx, cx - radius * 0.25, cy - radius * 0.08, radius * 0.5, radius * 0.08 + mouth * radius * 0.06, 3);
+    // Animated equalizer bars
+    ctx.strokeStyle = '#00cec9';
+    ctx.lineWidth = 2;
+    const barCount = 7;
+    for (let i = 0; i < barCount; i++) {
+      const lx = cx - radius * 0.2 + i * (radius * 0.4 / (barCount - 1));
+      const barH = (3 + Math.sin(i * 2.1 + t * 12) * 3) * mouth;
+      ctx.beginPath();
+      ctx.moveTo(lx, cy - radius * 0.04 - barH);
+      ctx.lineTo(lx, cy - radius * 0.04 + barH);
+      ctx.stroke();
+    }
+  } else {
+    ctx.fillStyle = '#636e72';
+    fillRoundedRect(ctx, cx - radius * 0.2, cy - radius * 0.06, radius * 0.4, radius * 0.08, 3);
+    ctx.strokeStyle = '#00cec9';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 5; i++) {
+      const lx = cx - radius * 0.15 + i * (radius * 0.3 / 4);
+      ctx.beginPath();
+      ctx.moveTo(lx, cy - radius * 0.04);
+      ctx.lineTo(lx, cy);
+      ctx.stroke();
+    }
+  }
+
+  // Ear bolts
+  ctx.fillStyle = '#636e72';
+  ctx.beginPath();
+  ctx.arc(cx - radius * 0.45, cy - radius * 0.2, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx + radius * 0.45, cy - radius * 0.2, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  const bodyGrad = ctx.createLinearGradient(cx - radius * 0.38, cy + radius * 0.24, cx + radius * 0.38, radius);
+  bodyGrad.addColorStop(0, '#74b9ff');
+  bodyGrad.addColorStop(1, '#0984e3');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  drawRoundedRect(ctx, cx - radius * 0.38, cy + radius * 0.24, radius * 0.76, radius * 0.55, radius * 0.08);
+  ctx.fill();
+  ctx.strokeStyle = '#0984e3';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  drawRoundedRect(ctx, cx - radius * 0.38, cy + radius * 0.24, radius * 0.76, radius * 0.55, radius * 0.08);
+  ctx.stroke();
+
+  // Chest core (glowing)
+  const coreGlow = ctx.createRadialGradient(cx, cy + radius * 0.45, 0, cx, cy + radius * 0.45, radius * 0.12);
+  coreGlow.addColorStop(0, `rgba(255, 234, 167, ${0.8 + Math.sin(t * 3) * 0.2})`);
+  coreGlow.addColorStop(0.5, `rgba(255, 234, 167, ${0.3 + Math.sin(t * 3) * 0.1})`);
+  coreGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreGlow;
+  ctx.beginPath();
+  ctx.arc(cx, cy + radius * 0.45, radius * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffeaa7';
+  ctx.beginPath();
+  ctx.arc(cx, cy + radius * 0.45, radius * 0.06, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawAvatarAnime(
+  ctx: CanvasRenderingContext2D,
+  _cx: number, _cy: number, radius: number,
+  mouth: number, anim: AnimState, t: number,
+) {
+  const cx = 0, cy = 0;
+
+  // Hair (big, colorful)
+  const hairHue = 280; // purple-pink
+  ctx.fillStyle = `hsl(${hairHue}, 70%, 55%)`;
+  // Back hair
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - radius * 0.15, radius * 0.65, radius * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hair strands hanging down sides
+  ctx.fillStyle = `hsl(${hairHue}, 65%, 50%)`;
+  ctx.beginPath();
+  ctx.ellipse(cx - radius * 0.5, cy + radius * 0.1, radius * 0.12, radius * 0.35, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + radius * 0.5, cy + radius * 0.1, radius * 0.12, radius * 0.35, 0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Face (very smooth, pointed chin)
+  ctx.fillStyle = '#fde8d0';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.38, cy - radius * 0.28);
+  ctx.quadraticCurveTo(cx - radius * 0.42, cy + radius * 0.08, cx - radius * 0.2, cy + radius * 0.3);
+  ctx.quadraticCurveTo(cx, cy + radius * 0.42, cx + radius * 0.2, cy + radius * 0.3);
+  ctx.quadraticCurveTo(cx + radius * 0.42, cy + radius * 0.08, cx + radius * 0.38, cy - radius * 0.28);
+  ctx.quadraticCurveTo(cx, cy - radius * 0.48, cx - radius * 0.38, cy - radius * 0.28);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front hair bangs
+  ctx.fillStyle = `hsl(${hairHue}, 70%, 55%)`;
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.42, cy - radius * 0.25);
+  ctx.quadraticCurveTo(cx - radius * 0.3, cy - radius * 0.52, cx, cy - radius * 0.45);
+  ctx.quadraticCurveTo(cx + radius * 0.3, cy - radius * 0.52, cx + radius * 0.42, cy - radius * 0.25);
+  ctx.quadraticCurveTo(cx + radius * 0.2, cy - radius * 0.35, cx, cy - radius * 0.28);
+  ctx.quadraticCurveTo(cx - radius * 0.2, cy - radius * 0.35, cx - radius * 0.42, cy - radius * 0.25);
+  ctx.closePath();
+  ctx.fill();
+
+  // Highlight streak
+  ctx.fillStyle = `hsl(${hairHue}, 75%, 70%)`;
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.1, cy - radius * 0.42);
+  ctx.quadraticCurveTo(cx - radius * 0.05, cy - radius * 0.3, cx + radius * 0.02, cy - radius * 0.28);
+  ctx.quadraticCurveTo(cx + radius * 0.05, cy - radius * 0.35, cx - radius * 0.1, cy - radius * 0.42);
+  ctx.closePath();
+  ctx.fill();
+
+  // Eyes (very large, anime style)
+  if (anim.isBlinking) {
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.18, cy - radius * 0.06, radius * 0.1, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.18, cy - radius * 0.06, radius * 0.1, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+  } else {
+    // Eye whites
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.18, cy - radius * 0.06, radius * 0.13, radius * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.18, cy - radius * 0.06, radius * 0.13, radius * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Iris (large, colorful)
+    const irisGrad1 = ctx.createRadialGradient(cx - radius * 0.18, cy - radius * 0.06, 0, cx - radius * 0.18, cy - radius * 0.06, radius * 0.11);
+    irisGrad1.addColorStop(0, `hsl(${hairHue + 40}, 80%, 60%)`);
+    irisGrad1.addColorStop(0.6, `hsl(${hairHue + 20}, 70%, 45%)`);
+    irisGrad1.addColorStop(1, `hsl(${hairHue}, 60%, 30%)`);
+    ctx.fillStyle = irisGrad1;
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.18, cy - radius * 0.04, radius * 0.1, radius * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const irisGrad2 = ctx.createRadialGradient(cx + radius * 0.18, cy - radius * 0.06, 0, cx + radius * 0.18, cy - radius * 0.06, radius * 0.11);
+    irisGrad2.addColorStop(0, `hsl(${hairHue + 40}, 80%, 60%)`);
+    irisGrad2.addColorStop(0.6, `hsl(${hairHue + 20}, 70%, 45%)`);
+    irisGrad2.addColorStop(1, `hsl(${hairHue}, 60%, 30%)`);
+    ctx.fillStyle = irisGrad2;
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.18, cy - radius * 0.04, radius * 0.1, radius * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupils
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.18, cy - radius * 0.04, radius * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.18, cy - radius * 0.04, radius * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Large sparkles (anime eye shine)
+    ctx.fillStyle = '#fff';
+    // Main shine
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.14, cy - radius * 0.1, radius * 0.035, radius * 0.04, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.22, cy - radius * 0.1, radius * 0.035, radius * 0.04, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Secondary shine
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.22, cy + radius * 0.0, radius * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.14, cy + radius * 0.0, radius * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyelash lines (top)
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.18, cy - radius * 0.06, radius * 0.13, radius * 0.16, 0, Math.PI + 0.2, Math.PI * 2 - 0.2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(cx + radius * 0.18, cy - radius * 0.06, radius * 0.13, radius * 0.16, 0, Math.PI + 0.2, Math.PI * 2 - 0.2);
+    ctx.stroke();
+  }
+
+  // Eyebrows (thin, expressive)
+  const browOff = -anim.browRaise * 5;
+  ctx.strokeStyle = `hsl(${hairHue}, 50%, 35%)`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.28, cy - radius * 0.22 + browOff);
+  ctx.quadraticCurveTo(cx - radius * 0.18, cy - radius * 0.27 + browOff, cx - radius * 0.08, cy - radius * 0.23 + browOff);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx + radius * 0.08, cy - radius * 0.23 + browOff);
+  ctx.quadraticCurveTo(cx + radius * 0.18, cy - radius * 0.27 + browOff, cx + radius * 0.28, cy - radius * 0.22 + browOff);
+  ctx.stroke();
+
+  // Nose (minimal)
+  ctx.fillStyle = '#f0c8a8';
+  ctx.beginPath();
+  ctx.arc(cx, cy + radius * 0.06, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mouth
+  if (mouth > 0.05) {
+    // Open mouth
+    ctx.fillStyle = '#e84393';
+    const mh = 2 + mouth * 10;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + radius * 0.18, radius * 0.06 + mouth * radius * 0.02, mh, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Fang (anime detail)
+    if (mouth > 0.35) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(cx + radius * 0.03, cy + radius * 0.15);
+      ctx.lineTo(cx + radius * 0.05, cy + radius * 0.2);
+      ctx.lineTo(cx + radius * 0.01, cy + radius * 0.15);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else {
+    // Gentle smile (cat mouth style)
+    ctx.strokeStyle = '#e84393';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.06, cy + radius * 0.16);
+    ctx.quadraticCurveTo(cx - radius * 0.02, cy + radius * 0.2, cx, cy + radius * 0.17);
+    ctx.quadraticCurveTo(cx + radius * 0.02, cy + radius * 0.2, cx + radius * 0.06, cy + radius * 0.16);
+    ctx.stroke();
+  }
+
+  // Blush
+  ctx.fillStyle = 'rgba(255, 130, 150, 0.3)';
+  ctx.beginPath();
+  ctx.ellipse(cx - radius * 0.3, cy + radius * 0.08, radius * 0.07, radius * 0.04, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + radius * 0.3, cy + radius * 0.08, radius * 0.07, radius * 0.04, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body (school uniform style)
+  ctx.fillStyle = '#2d3436';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.28, cy + radius * 0.38);
+  ctx.lineTo(cx - radius * 0.5, radius);
+  ctx.lineTo(cx + radius * 0.5, radius);
+  ctx.lineTo(cx + radius * 0.28, cy + radius * 0.38);
+  ctx.closePath();
+  ctx.fill();
+
+  // Collar
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.15, cy + radius * 0.35);
+  ctx.lineTo(cx - radius * 0.28, cy + radius * 0.5);
+  ctx.lineTo(cx, cy + radius * 0.45);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + radius * 0.15, cy + radius * 0.35);
+  ctx.lineTo(cx + radius * 0.28, cy + radius * 0.5);
+  ctx.lineTo(cx, cy + radius * 0.45);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ribbon
+  ctx.fillStyle = `hsl(${hairHue}, 70%, 55%)`;
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.05, cy + radius * 0.38);
+  ctx.lineTo(cx - radius * 0.12, cy + radius * 0.45);
+  ctx.lineTo(cx - radius * 0.02, cy + radius * 0.42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + radius * 0.05, cy + radius * 0.38);
+  ctx.lineTo(cx + radius * 0.12, cy + radius * 0.45);
+  ctx.lineTo(cx + radius * 0.02, cy + radius * 0.42);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ================================================================== */
+/*  SUBTITLE RENDERING                                                 */
+/* ================================================================== */
+function drawSubtitles(
+  ctx: CanvasRenderingContext2D,
+  w: number, h: number,
+  words: string[],
+  currentWordIdx: number,
+  style: SubtitleStyle,
+  wordsPerChunk: number,
+) {
+  if (words.length === 0 || currentWordIdx <= 0) return;
+
+  const chunkStart = Math.floor((currentWordIdx - 1) / wordsPerChunk) * wordsPerChunk;
+  const chunkEnd = Math.min(chunkStart + wordsPerChunk, words.length);
+  const chunkWords = words.slice(chunkStart, chunkEnd);
+  if (chunkWords.length === 0) return;
+
+  const subY = h * 0.85;
+  const maxWidth = w * 0.85;
+  const fontSize = Math.round(w * 0.035);
+
+  ctx.textAlign = 'center';
+
+  if (style === 'karaoke') {
+    // Karaoke: highlight the current word
+    const fullText = chunkWords.join(' ');
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+
+    // Background panel
+    const metrics = ctx.measureText(fullText);
+    const textW = Math.min(metrics.width, maxWidth);
+    const pad = 14;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    fillRoundedRect(ctx, (w - textW) / 2 - pad, subY - fontSize - 4, textW + pad * 2, fontSize + 18, 10);
+
+    // Draw word by word
+    let xOffset = (w - textW) / 2;
+    ctx.textAlign = 'left';
+    for (let i = 0; i < chunkWords.length; i++) {
+      const wordIdx = chunkStart + i;
+      const isHighlighted = wordIdx < currentWordIdx;
+      ctx.fillStyle = isHighlighted ? '#f59e0b' : 'rgba(255,255,255,0.5)';
+      ctx.fillText(chunkWords[i], xOffset, subY);
+      xOffset += ctx.measureText(chunkWords[i] + ' ').width;
+    }
+    ctx.textAlign = 'center';
+    return;
+  }
+
+  const text = chunkWords.join(' ');
+  ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+
+  // Background panel
+  const metrics = ctx.measureText(text);
+  const textW = Math.min(metrics.width, maxWidth);
+  const pad = 14;
+
+  if (style === 'classic') {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    fillRoundedRect(ctx, (w - textW) / 2 - pad, subY - fontSize - 4, textW + pad * 2, fontSize + 18, 10);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, w / 2, subY, maxWidth);
+  } else if (style === 'bold') {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    fillRoundedRect(ctx, (w - textW) / 2 - pad, subY - fontSize - 4, textW + pad * 2, fontSize + 18, 10);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(text, w / 2, subY, maxWidth);
+  } else if (style === 'outline') {
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.strokeText(text, w / 2, subY, maxWidth);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(text, w / 2, subY, maxWidth);
+  }
+
+  ctx.textAlign = 'start';
+}
+
+/* ================================================================== */
+/*  PARSE SCRIPT (strip pause markers, compute segments)               */
+/* ================================================================== */
+interface ScriptSegment {
+  type: 'text' | 'pause';
+  content: string;
+  durationMs?: number;
+}
+
+function parseScript(rawScript: string): { segments: ScriptSegment[]; plainText: string; words: string[] } {
+  const segments: ScriptSegment[] = [];
+  const parts = rawScript.split(/(\[pause:\d+(?:\.\d+)?s\])/gi);
+  let plainText = '';
+
+  for (const part of parts) {
+    const pauseMatch = part.match(/\[pause:(\d+(?:\.\d+)?)s\]/i);
+    if (pauseMatch) {
+      segments.push({ type: 'pause', content: part, durationMs: parseFloat(pauseMatch[1]) * 1000 });
+    } else if (part.trim()) {
+      segments.push({ type: 'text', content: part.trim() });
+      plainText += (plainText ? ' ' : '') + part.trim();
+    }
+  }
+
+  const words = plainText.split(/\s+/).filter(Boolean);
+  return { segments, plainText, words };
+}
+
+function getWordCount(text: string): number {
+  const cleaned = text.replace(/\[pause:\d+(?:\.\d+)?s\]/gi, '').trim();
+  if (!cleaned) return 0;
+  return cleaned.split(/\s+/).filter(Boolean).length;
+}
+
+function getEstimatedDuration(text: string): number {
+  const wc = getWordCount(text);
+  const pauseMatches = text.match(/\[pause:(\d+(?:\.\d+)?)s\]/gi) || [];
+  let pauseTotal = 0;
+  for (const m of pauseMatches) {
+    const sec = m.match(/(\d+(?:\.\d+)?)/);
+    if (sec) pauseTotal += parseFloat(sec[1]);
+  }
+  // Average speaking rate ~150 words per minute
+  return Math.ceil(wc / 2.5 + pauseTotal);
+}
+
+/* ================================================================== */
+/*  RESOLUTION CONFIGS                                                 */
+/* ================================================================== */
+function getResolution(quality: VideoQuality, aspect: AspectRatio): [number, number] {
+  const base = quality === '1080p' ? 1080 : 720;
+  switch (aspect) {
+    case '16:9': return quality === '1080p' ? [1920, 1080] : [1280, 720];
+    case '9:16': return quality === '1080p' ? [1080, 1920] : [720, 1280];
+    case '1:1': return [base, base];
+    default: return [base, base];
+  }
+}
+
+/* ================================================================== */
+/*  DRAW FULL VIDEO FRAME                                              */
+/* ================================================================== */
+function drawVideoFrame(
+  ctx: CanvasRenderingContext2D,
+  W: number, H: number,
+  t: number,
+  mouthRaw: number,
+  isSpeaking: boolean,
+  avatarImg: HTMLImageElement | null,
+  avatarStyle: AvatarStyleId,
+  bgId: BackgroundId,
+  anim: AnimState,
+  words: string[],
+  currentWordIdx: number,
+  subtitleStyle: SubtitleStyle,
+  dt: number,
+) {
+  ctx.clearRect(0, 0, W, H);
+
+  // Update animation state
+  updateAnimState(anim, dt, mouthRaw, isSpeaking);
+  const mouth = anim.mouthSmooth;
+
+  // -- Background --
+  switch (bgId) {
+    case 'office': drawBgOffice(ctx, W, H, t); break;
+    case 'studio': drawBgStudio(ctx, W, H, t); break;
+    case 'nature': drawBgNature(ctx, W, H, t, anim); break;
+    case 'abstract': drawBgAbstract(ctx, W, H, t, anim); break;
+    case 'transparent': drawBgTransparent(ctx, W, H); break;
+  }
+
+  // -- Avatar positioning --
+  const avatarCx = W / 2;
+  const avatarCy = H * 0.38;
+  const avatarR = Math.min(W, H) * 0.18;
+
+  // Glow ring
   const ringGrad = ctx.createRadialGradient(avatarCx, avatarCy, avatarR - 5, avatarCx, avatarCy, avatarR + 20);
   ringGrad.addColorStop(0, `${GRADIENT[0]}33`);
   ringGrad.addColorStop(1, 'transparent');
@@ -485,10 +1421,10 @@ function drawVideoFrame(
   ctx.arc(avatarCx, avatarCy, avatarR + 20, 0, Math.PI * 2);
   ctx.fill();
 
-  // Breathing / idle movement
-  const breathScale = 1 + Math.sin(time * 0.8) * 0.008;
-  const headX = Math.sin(time * 0.3) * 3;
-  const headY = Math.cos(time * 0.5) * 2;
+  // Breathing scale
+  const breathScale = 1 + Math.sin(t * 0.8) * 0.006;
+  const headX = anim.headOffsetX;
+  const headY = anim.headOffsetY;
 
   ctx.save();
   ctx.translate(avatarCx + headX, avatarCy + headY);
@@ -500,39 +1436,29 @@ function drawVideoFrame(
   ctx.closePath();
   ctx.clip();
 
-  // Fill circle background
+  // Fill background
   ctx.fillStyle = '#1a1a2e';
   ctx.beginPath();
   ctx.arc(0, 0, avatarR, 0, Math.PI * 2);
   ctx.fill();
 
-  if (avatarImg) {
-    // Draw user's uploaded photo
-    const imgW = avatarImg.width;
-    const imgH = avatarImg.height;
-    const scale = Math.max((avatarR * 2) / imgW, (avatarR * 2) / imgH);
-    const dw = imgW * scale;
-    const dh = imgH * scale;
-    ctx.drawImage(avatarImg, -dw / 2, -dh / 2, dw, dh);
-
-    // Blink overlay
-    if (blinking) {
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(-avatarR, -avatarR * 0.15, avatarR * 2, avatarR * 0.12);
-    }
-
-    // Mouth movement overlay for photos
-    if (mouthOpen > 0.05) {
-      const mouthY = avatarR * 0.35;
-      const mh = 4 + mouthOpen * 12;
-      ctx.fillStyle = `rgba(30, 20, 20, ${0.12 + mouthOpen * 0.25})`;
-      ctx.beginPath();
-      ctx.ellipse(0, mouthY, 16 + mouthOpen * 8, mh, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  } else if (preset) {
-    // Draw procedural face from preset
-    preset.draw(ctx, avatarR * 2, avatarR * 2, mouthOpen, blinking);
+  // Draw avatar based on style
+  if (avatarStyle === 'photo' && avatarImg) {
+    drawAvatarPhoto(ctx, avatarImg, 0, 0, avatarR, mouth, anim, t);
+  } else if (avatarStyle === 'cartoon') {
+    drawAvatarCartoon(ctx, 0, 0, avatarR, mouth, anim, t);
+  } else if (avatarStyle === 'professional') {
+    drawAvatarProfessional(ctx, 0, 0, avatarR, mouth, anim, t);
+  } else if (avatarStyle === 'robot') {
+    drawAvatarRobot(ctx, 0, 0, avatarR, mouth, anim, t);
+  } else if (avatarStyle === 'anime') {
+    drawAvatarAnime(ctx, 0, 0, avatarR, mouth, anim, t);
+  } else if (avatarImg) {
+    // Fallback: just draw uploaded image
+    drawAvatarPhoto(ctx, avatarImg, 0, 0, avatarR, mouth, anim, t);
+  } else {
+    // Fallback to professional
+    drawAvatarProfessional(ctx, 0, 0, avatarR, mouth, anim, t);
   }
 
   ctx.restore();
@@ -544,82 +1470,61 @@ function drawVideoFrame(
   ctx.arc(avatarCx + headX, avatarCy + headY, avatarR * breathScale + 2, 0, Math.PI * 2);
   ctx.stroke();
 
-  // ── Name plate ──
-  const nameText = avatarImg ? 'AI Presenter' : (preset?.name ?? 'Avatar');
-  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  // -- Name plate --
+  const styleName = AVATAR_STYLES.find((s) => s.id === avatarStyle)?.name ?? 'Avatar';
+  const nameText = (avatarStyle === 'photo' && avatarImg) ? 'AI Presenter' : styleName;
+  ctx.font = `bold ${Math.round(W * 0.028)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillText(nameText, avatarCx, avatarCy + avatarR + 40);
-  ctx.textAlign = 'start';
+  ctx.fillStyle = bgId === 'transparent' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)';
+  ctx.fillText(nameText, avatarCx, avatarCy + avatarR + W * 0.04);
 
-  // ── Audio level bars ──
-  if (mouthOpen > 0.02) {
+  // -- Audio level bars --
+  if (mouth > 0.02 && isSpeaking) {
     const barsX = avatarCx;
-    const barsY = avatarCy + avatarR + 60;
+    const barsY = avatarCy + avatarR + W * 0.06;
     const barCount = 5;
     const barSpacing = 8;
     const startX = barsX - ((barCount - 1) * barSpacing) / 2;
     for (let i = 0; i < barCount; i++) {
-      const h = 4 + Math.sin(time * 12 + i * 1.5) * mouthOpen * 12;
-      const alphaHex = Math.round(150 + mouthOpen * 100).toString(16).padStart(2, '0');
+      const bh = 4 + Math.sin(t * 12 + i * 1.5) * mouth * 12;
+      const alphaHex = Math.round(150 + mouth * 100).toString(16).padStart(2, '0');
       ctx.fillStyle = `${GRADIENT[0]}${alphaHex}`;
-      fillRoundedRect(ctx, startX + i * barSpacing - 2, barsY - h / 2, 4, Math.max(h, 2), 2);
+      fillRoundedRect(ctx, startX + i * barSpacing - 2, barsY - bh / 2, 4, Math.max(bh, 2), 2);
     }
   }
 
-  // ── Subtitle text at bottom ──
-  if (subtitleText) {
-    const subY = HEIGHT * 0.78;
-    const maxWidth = WIDTH * 0.85;
-    ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.textAlign = 'center';
+  // -- Subtitles --
+  drawSubtitles(ctx, W, H, words, currentWordIdx, subtitleStyle, 6);
 
-    // Background panel
-    const textMetrics = ctx.measureText(subtitleText);
-    const textW = Math.min(textMetrics.width, maxWidth);
-    const padding = 16;
-    const bgX = (WIDTH - textW) / 2 - padding;
-    const bgY = subY - 28;
-    const bgW = textW + padding * 2;
-    const bgH = 44;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    fillRoundedRect(ctx, bgX, bgY, bgW, bgH, 12);
-
-    // Text
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(subtitleText, WIDTH / 2, subY, maxWidth);
-    ctx.textAlign = 'start';
-  }
-
-  // ── TubeForge watermark ──
-  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  // -- Watermark --
+  ctx.font = `bold ${Math.round(W * 0.018)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(255,255,255,0.2)';
-  ctx.fillText('Made with TubeForge', WIDTH / 2, HEIGHT - 40);
+  ctx.fillStyle = bgId === 'transparent' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)';
+  ctx.fillText('Made with TubeForge', W / 2, H - W * 0.04);
   ctx.textAlign = 'start';
 }
 
 
-/* ------------------------------------------------------------------ */
-/*  Main Component                                                     */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/*  MAIN COMPONENT                                                     */
+/* ================================================================== */
 export function AiCreator() {
   const C = useThemeStore((s) => s.theme);
 
-  /* Wizard step: 1=avatar, 2=script, 3=voice, 4=generate/preview */
+  /* Wizard step: 1=avatar, 2=script, 3=voice, 4=settings, 5=generate/preview */
   const [step, setStep] = useState(1);
 
   /* Step 1 - avatar */
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<AvatarStyleId>('professional');
+  const [selectedBg, setSelectedBg] = useState<BackgroundId>('studio');
+  const [hoveredStyle, setHoveredStyle] = useState<string | null>(null);
+  const [hoveredBg, setHoveredBg] = useState<string | null>(null);
 
   /* Step 2 - script */
   const [script, setScript] = useState('');
-  const [genTopic, setGenTopic] = useState('technology');
-  const [genStyle, setGenStyle] = useState('informative');
+  const [selectedTemplate, setSelectedTemplate] = useState<ScriptCategory | null>(null);
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
 
   /* Step 3 - voice */
@@ -627,7 +1532,12 @@ export function AiCreator() {
   const [selectedVoiceUri, setSelectedVoiceUri] = useState<string>('');
   const [hoveredVoice, setHoveredVoice] = useState<string | null>(null);
 
-  /* Step 4 - generation & preview */
+  /* Step 4 - settings */
+  const [subtitleStyle, setSubtitleStyle] = useState<SubtitleStyle>('classic');
+  const [videoQuality, setVideoQuality] = useState<VideoQuality>('720p');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
+
+  /* Step 5 - generation & preview */
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animFrameRef = useRef<number>(0);
@@ -640,9 +1550,6 @@ export function AiCreator() {
 
   /* Misc UI */
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
-
-  /* Preset thumbnail canvases for selection UI */
-  const presetThumbnailRefs = useRef<Map<string, HTMLCanvasElement>>(new Map());
 
   /* ---------------------------------------------------------------- */
   /*  Load browser TTS voices                                         */
@@ -679,36 +1586,17 @@ export function AiCreator() {
   }, [photo]);
 
   /* ---------------------------------------------------------------- */
-  /*  Draw preset thumbnails                                          */
+  /*  Script template generation                                      */
   /* ---------------------------------------------------------------- */
-  const drawThumbnail = useCallback((canvas: HTMLCanvasElement | null, preset: AvatarPreset) => {
-    if (!canvas) return;
-    presetThumbnailRefs.current.set(preset.id, canvas);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    canvas.width = 100;
-    canvas.height = 100;
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, 100, 100);
-    ctx.save();
-    ctx.scale(0.5, 0.5);
-    ctx.translate(0, -10);
-    preset.draw(ctx, 200, 220, 0, false);
-    ctx.restore();
-  }, []);
-
-  /* ---------------------------------------------------------------- */
-  /*  AI Script Generation (template-based)                           */
-  /* ---------------------------------------------------------------- */
-  const handleAiScript = useCallback(() => {
+  const handleTemplateSelect = useCallback((cat: ScriptCategory) => {
+    setSelectedTemplate(cat);
     setIsGeneratingScript(true);
-    // Short delay to simulate generation
     setTimeout(() => {
-      const generated = generateScript(genTopic, genStyle);
-      setScript(generated);
+      const template = SCRIPT_TEMPLATES.find((t) => t.category === cat);
+      if (template) setScript(template.body);
       setIsGeneratingScript(false);
-    }, 600);
-  }, [genTopic, genStyle]);
+    }, 500);
+  }, []);
 
   /* ---------------------------------------------------------------- */
   /*  Load avatar image for rendering                                 */
@@ -728,7 +1616,7 @@ export function AiCreator() {
   }, [photoUrl]);
 
   /* ---------------------------------------------------------------- */
-  /*  Main generation pipeline: Canvas + SpeechSynthesis + MediaRecorder */
+  /*  Main generation pipeline                                        */
   /* ---------------------------------------------------------------- */
   const handleCreate = useCallback(async () => {
     if (generating) return;
@@ -740,86 +1628,81 @@ export function AiCreator() {
     abortRef.current = false;
 
     try {
-      /* --- Set up avatar source --- */
       setStatusText('Loading avatar...');
       setProgress(5);
 
       const avatarImg = await getAvatarImage();
-      const preset = selectedPreset
-        ? AVATAR_PRESETS.find((p) => p.id === selectedPreset) ?? null
-        : null;
 
-      if (!avatarImg && !preset) {
-        throw new Error('No avatar selected. Go back to step 1.');
+      if (selectedStyle === 'photo' && !avatarImg) {
+        throw new Error('Photo Realistic style requires an uploaded photo. Go back and upload one, or choose a different style.');
       }
 
       if (abortRef.current) return;
 
-      /* --- Prepare speech and word tracking --- */
-      setStatusText('Preparing speech...');
+      setStatusText('Parsing script...');
       setProgress(10);
 
-      const allWords = script.trim().split(/\s+/).filter(Boolean);
-      const subtitleChunks = splitIntoSubtitleChunks(script, 6);
+      const { segments, plainText, words } = parseScript(script);
+      if (words.length === 0) {
+        throw new Error('Script is empty. Go back and write a script.');
+      }
 
-      /* --- Set up canvas --- */
-      const WIDTH = 720;
-      const HEIGHT = 720;
+      const [WIDTH, HEIGHT] = getResolution(videoQuality, aspectRatio);
+
       const canvas = document.createElement('canvas');
       canvas.width = WIDTH;
       canvas.height = HEIGHT;
       const ctx = canvas.getContext('2d')!;
 
-      // Show canvas in preview area
       if (canvasRef.current) {
         canvasRef.current.width = WIDTH;
         canvasRef.current.height = HEIGHT;
       }
 
-      const particles = createParticles(20, WIDTH, HEIGHT);
+      const anim = createAnimState(WIDTH, HEIGHT);
 
-      /* --- Set up MediaRecorder --- */
       setStatusText('Starting recording...');
       setProgress(15);
 
       const stream = canvas.captureStream(30);
-
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
         : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
           ? 'video/webm;codecs=vp8'
           : 'video/webm';
 
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2_500_000 });
+      const bitrate = videoQuality === '1080p' ? 5_000_000 : 2_500_000;
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
       const chunks: Blob[] = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunks.push(e.data);
       };
-
       const recordingDone = new Promise<Blob>((resolve) => {
-        recorder.onstop = () => {
-          resolve(new Blob(chunks, { type: 'video/webm' }));
-        };
+        recorder.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
       });
-
       recorder.start(100);
 
-      /* --- Start SpeechSynthesis --- */
       setStatusText('Generating video with narration...');
       setProgress(20);
 
+      /* Process segments with pauses */
       window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(script);
-      const voice = voices.find((v) => v.voiceURI === selectedVoiceUri);
-      if (voice) utterance.voice = voice;
-      utterance.rate = 0.95;
-      utterance.pitch = 1;
 
       let currentWordIndex = 0;
       let ttsFinished = false;
       const wordTimestamps: number[] = [];
       const startTime = performance.now();
+      let lastFrameTime = performance.now();
+
+      // We need to process text segments and pause segments sequentially
+      const textSegments = segments.filter((s) => s.type === 'text');
+      const textOnly = textSegments.map((s) => s.content).join(' ');
+
+      const utterance = new SpeechSynthesisUtterance(textOnly);
+      const voice = voices.find((v) => v.voiceURI === selectedVoiceUri);
+      if (voice) utterance.voice = voice;
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
 
       utterance.onboundary = (e) => {
         if (e.name === 'word') {
@@ -835,47 +1718,36 @@ export function AiCreator() {
 
       window.speechSynthesis.speak(utterance);
 
-      /* --- Animation loop --- */
-      let lastFrameTime = performance.now();
-
+      /* Animation loop */
       const animationDone = new Promise<void>((resolve) => {
         function draw() {
           if (abortRef.current) { resolve(); return; }
 
           const now = performance.now();
-          const dt = (now - lastFrameTime) / 1000;
+          const dt = Math.min((now - lastFrameTime) / 1000, 0.05);
           lastFrameTime = now;
           const elapsed = (now - startTime) / 1000;
 
-          // If TTS boundary events do not fire, estimate word index
-          if (wordTimestamps.length === 0 && elapsed > 0.5) {
-            currentWordIndex = Math.min(Math.floor(elapsed * 3), allWords.length);
+          // Estimate word index if boundary events not firing
+          if (wordTimestamps.length === 0 && elapsed > 0.5 && !ttsFinished) {
+            currentWordIndex = Math.min(Math.floor(elapsed * 3), words.length);
           }
 
           // Compute mouth open level
-          const recentWords = wordTimestamps.filter((t) => now - t < 200).length;
+          const recentWords = wordTimestamps.filter((ts) => now - ts < 200).length;
           let mouthLevel = ttsFinished ? 0 : Math.min(recentWords * 0.35 + 0.15, 1);
           if (!ttsFinished && wordTimestamps.length === 0 && elapsed > 0.5) {
-            // Simulated mouth movement
             mouthLevel = 0.3 + Math.sin(elapsed * 8) * 0.25 + Math.sin(elapsed * 5.3) * 0.15;
             mouthLevel = Math.max(0, Math.min(1, mouthLevel));
           }
           mouthLevel *= 0.7 + Math.sin(now / 1000 * 12) * 0.3;
 
-          const blinking = shouldBlink(elapsed);
-
-          // Current subtitle chunk
-          const chunkIndex = Math.min(
-            Math.floor(currentWordIndex / 6),
-            subtitleChunks.length - 1,
-          );
-          const subtitle = subtitleChunks[Math.max(0, chunkIndex)] ?? '';
-
           drawVideoFrame(
             ctx, WIDTH, HEIGHT, elapsed,
             ttsFinished ? 0 : mouthLevel,
-            blinking,
-            avatarImg, preset, particles, subtitle, dt,
+            !ttsFinished,
+            avatarImg, selectedStyle, selectedBg, anim,
+            words, currentWordIndex, subtitleStyle, dt,
           );
 
           // Mirror to visible canvas
@@ -887,13 +1759,12 @@ export function AiCreator() {
             }
           }
 
-          // Update progress
           if (!ttsFinished) {
-            const p = 20 + (currentWordIndex / Math.max(allWords.length, 1)) * 65;
+            const p = 20 + (currentWordIndex / Math.max(words.length, 1)) * 65;
             setProgress(Math.min(p, 88));
           }
 
-          if (!ttsFinished && elapsed < 300 && !abortRef.current) {
+          if (!ttsFinished && elapsed < 600 && !abortRef.current) {
             animFrameRef.current = requestAnimationFrame(draw);
           } else {
             resolve();
@@ -906,7 +1777,48 @@ export function AiCreator() {
 
       if (abortRef.current) { recorder.stop(); return; }
 
-      // Draw a few more "ending" frames
+      // Process pause segments - just draw idle frames
+      let totalPauseMs = 0;
+      for (const seg of segments) {
+        if (seg.type === 'pause' && seg.durationMs) {
+          totalPauseMs += seg.durationMs;
+        }
+      }
+
+      if (totalPauseMs > 0) {
+        setStatusText('Processing pauses...');
+        const pauseStart = performance.now();
+        await new Promise<void>((resolve) => {
+          function pauseFrames() {
+            const now = performance.now();
+            const elapsed = (now - startTime) / 1000;
+            const pe = now - pauseStart;
+            const dt = 1 / 30;
+            drawVideoFrame(
+              ctx, WIDTH, HEIGHT, elapsed,
+              0, false, avatarImg, selectedStyle, selectedBg, anim,
+              words, words.length, subtitleStyle, dt,
+            );
+            if (canvasRef.current) {
+              const visCtx = canvasRef.current.getContext('2d');
+              if (visCtx) {
+                visCtx.clearRect(0, 0, WIDTH, HEIGHT);
+                visCtx.drawImage(canvas, 0, 0);
+              }
+            }
+            if (pe < totalPauseMs && !abortRef.current) {
+              requestAnimationFrame(pauseFrames);
+            } else {
+              resolve();
+            }
+          }
+          requestAnimationFrame(pauseFrames);
+        });
+      }
+
+      if (abortRef.current) { recorder.stop(); return; }
+
+      // Ending frames
       setStatusText('Finalizing...');
       setProgress(90);
 
@@ -915,26 +1827,28 @@ export function AiCreator() {
         function endFrames() {
           const now = performance.now();
           const elapsed = (now - startTime) / 1000;
-          const frameDt = 1 / 30;
           const fe = (now - endStart) / 1000;
+          const dt = 1 / 30;
 
           drawVideoFrame(
             ctx, WIDTH, HEIGHT, elapsed,
-            0, false, avatarImg, preset, particles, '', frameDt,
+            0, false, avatarImg, selectedStyle, selectedBg, anim,
+            words, words.length, subtitleStyle, dt,
           );
 
-          // Fade in "Thanks for watching"
+          // Fade in end text
           const alpha = Math.min(1, fe / 0.5);
-          ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+          const endFontSize = Math.round(WIDTH * 0.04);
+          ctx.font = `bold ${endFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
           ctx.textAlign = 'center';
-          ctx.fillStyle = `rgba(255,255,255,${alpha * 0.9})`;
+          const textColor = selectedBg === 'transparent' ? `rgba(0,0,0,${alpha * 0.8})` : `rgba(255,255,255,${alpha * 0.9})`;
+          ctx.fillStyle = textColor;
           ctx.fillText('Thanks for watching!', WIDTH / 2, HEIGHT * 0.78);
-          ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-          ctx.fillStyle = `rgba(255,255,255,${alpha * 0.5})`;
-          ctx.fillText('Made with TubeForge', WIDTH / 2, HEIGHT * 0.78 + 40);
+          ctx.font = `${Math.round(WIDTH * 0.022)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+          ctx.fillStyle = selectedBg === 'transparent' ? `rgba(0,0,0,${alpha * 0.4})` : `rgba(255,255,255,${alpha * 0.5})`;
+          ctx.fillText('Made with TubeForge', WIDTH / 2, HEIGHT * 0.78 + endFontSize * 1.4);
           ctx.textAlign = 'start';
 
-          // Mirror
           if (canvasRef.current) {
             const visCtx = canvasRef.current.getContext('2d');
             if (visCtx) {
@@ -943,7 +1857,7 @@ export function AiCreator() {
             }
           }
 
-          if (fe < 1.5) {
+          if (fe < 1.5 && !abortRef.current) {
             requestAnimationFrame(endFrames);
           } else {
             resolve();
@@ -952,7 +1866,6 @@ export function AiCreator() {
         requestAnimationFrame(endFrames);
       });
 
-      /* --- Stop recording and finalize --- */
       setStatusText('Encoding video...');
       setProgress(95);
       recorder.stop();
@@ -974,24 +1887,25 @@ export function AiCreator() {
     }
   }, [
     generating, script, voices, selectedVoiceUri,
-    photoUrl, selectedPreset, videoUrl, getAvatarImage,
+    photoUrl, selectedStyle, selectedBg, videoUrl,
+    getAvatarImage, videoQuality, aspectRatio, subtitleStyle,
   ]);
 
   /* ---------------------------------------------------------------- */
-  /*  Download handler                                                */
+  /*  Download                                                        */
   /* ---------------------------------------------------------------- */
   const handleDownload = useCallback(() => {
     if (!videoUrl) return;
     const a = document.createElement('a');
     a.href = videoUrl;
-    a.download = 'ai-avatar-video.webm';
+    a.download = `ai-avatar-${aspectRatio.replace(':', 'x')}-${videoQuality}.webm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }, [videoUrl]);
+  }, [videoUrl, aspectRatio, videoQuality]);
 
   /* ---------------------------------------------------------------- */
-  /*  Cancel handler                                                  */
+  /*  Cancel                                                          */
   /* ---------------------------------------------------------------- */
   const handleCancel = useCallback(() => {
     abortRef.current = true;
@@ -1002,14 +1916,15 @@ export function AiCreator() {
   }, []);
 
   /* ---------------------------------------------------------------- */
-  /*  Step navigation logic                                           */
+  /*  Navigation                                                      */
   /* ---------------------------------------------------------------- */
   const canAdvance = useMemo(() => {
-    if (step === 1) return photo !== null || selectedPreset !== null;
+    if (step === 1) return (selectedStyle === 'photo' ? photo !== null : true);
     if (step === 2) return script.trim().length > 0;
     if (step === 3) return !!selectedVoiceUri;
+    if (step === 4) return true;
     return false;
-  }, [step, photo, selectedPreset, script, selectedVoiceUri]);
+  }, [step, photo, selectedStyle, script, selectedVoiceUri]);
 
   const handleStartOver = useCallback(() => {
     window.speechSynthesis?.cancel();
@@ -1018,8 +1933,13 @@ export function AiCreator() {
     setStep(1);
     setPhoto(null);
     setPhotoUrl(null);
-    setSelectedPreset(null);
+    setSelectedStyle('professional');
+    setSelectedBg('studio');
     setScript('');
+    setSelectedTemplate(null);
+    setSubtitleStyle('classic');
+    setVideoQuality('720p');
+    setAspectRatio('1:1');
     setGenerating(false);
     setProgress(0);
     setStatusText('');
@@ -1028,7 +1948,6 @@ export function AiCreator() {
     setVideoUrl(null);
   }, [videoUrl]);
 
-  /* Clean up on unmount */
   useEffect(() => {
     return () => {
       window.speechSynthesis?.cancel();
@@ -1036,30 +1955,43 @@ export function AiCreator() {
     };
   }, []);
 
-  /* Voice display list (limit to 12 for UI) */
   const displayVoices = useMemo(() => {
     const english = voices.filter((v) => v.lang.startsWith('en'));
     const list = english.length > 0 ? english : voices;
     return list.slice(0, 12);
   }, [voices]);
 
-  const stepLabels = ['Choose Avatar', 'Write Script', 'Select Voice', 'Create Video'];
+  const wordCount = useMemo(() => getWordCount(script), [script]);
+  const estDuration = useMemo(() => getEstimatedDuration(script), [script]);
+
+  const stepLabels = ['Avatar & Scene', 'Write Script', 'Select Voice', 'Settings', 'Create Video'];
 
   /* ================================================================ */
-  /*  RENDER                                                          */
+  /*  HELPER: small reusable UI components                             */
+  /* ================================================================ */
+  const SectionCard = useCallback(({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => (
+    <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card, marginBottom: 0 }}>
+      <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: subtitle ? 4 : 14, wordBreak: 'break-word' }}>{title}</span>
+      {subtitle && <span style={{ fontSize: 12, color: C.dim, display: 'block', marginBottom: 14, wordBreak: 'break-word' }}>{subtitle}</span>}
+      {children}
+    </div>
+  ), [C]);
+
+  /* ================================================================ */
+  /*  RENDER                                                           */
   /* ================================================================ */
   return (
     <ToolPageShell
       title="AI Avatar Video Creator"
-      subtitle="Create animated avatar videos with text-to-speech -- upload a photo or choose a preset"
+      subtitle="Create professional talking-head avatar videos with text-to-speech"
       gradient={GRADIENT}
     >
       {/* ---- Progress Steps ---- */}
       <div style={{
-        padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
-        marginBottom: 24, overflowX: 'auto',
+        padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
+        marginBottom: 24, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0, minWidth: 480 }}>
           {stepLabels.map((label, i) => {
             const stepNum = i + 1;
             const isActive = step === stepNum;
@@ -1084,13 +2016,13 @@ export function AiCreator() {
                     ) : stepNum}
                   </div>
                   <span style={{
-                    fontSize: 12, fontWeight: isActive ? 700 : 500,
+                    fontSize: 11, fontWeight: isActive ? 700 : 500,
                     color: isActive ? C.text : C.dim, whiteSpace: 'nowrap',
                   }}>{label}</span>
                 </div>
                 {i < stepLabels.length - 1 && (
                   <div style={{
-                    flex: 1, height: 2, margin: '0 10px',
+                    flex: 1, height: 2, margin: '0 8px',
                     background: isComplete ? GRADIENT[0] : C.border,
                     borderRadius: 1, transition: 'background 0.3s ease',
                   }} />
@@ -1101,210 +2033,227 @@ export function AiCreator() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
         {/* ================================================================ */}
         {/*  LEFT: Step content                                              */}
         {/* ================================================================ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* ---- STEP 1: Avatar Selection ---- */}
+          {/* ---- STEP 1: Avatar & Scene ---- */}
           {step === 1 && (
             <>
-              <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 14 }}>
-                  Upload Your Photo
-                </span>
-                {!photo ? (
-                  <UploadArea C={C} accept="image/*" onFile={(f) => { setPhoto(f); setSelectedPreset(null); }} label="Drop a photo or click to upload" />
-                ) : (
-                  <div style={{
-                    padding: 14, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface,
-                    display: 'flex', alignItems: 'center', gap: 12,
-                  }}>
-                    {photoUrl && (
-                      <img src={photoUrl} alt="Avatar" style={{
-                        width: 48, height: 48, borderRadius: 12, objectFit: 'cover',
-                      }} />
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{photo.name}</div>
-                      <div style={{ fontSize: 11, color: C.dim }}>{(photo.size / 1024).toFixed(0)} KB</div>
-                    </div>
-                    <button
-                      onClick={() => setPhoto(null)}
-                      style={{
-                        padding: '5px 12px', borderRadius: 8, border: `1px solid ${C.border}`,
-                        background: C.surface, color: C.sub, fontSize: 11, fontWeight: 600,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                        outline: 'none', flexShrink: 0,
-                      }}
-                    >Remove</button>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ textAlign: 'center', color: C.dim, fontSize: 13, fontWeight: 600 }}>--- OR ---</div>
-
-              <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 14 }}>
-                  Select Avatar Preset
-                </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                  {AVATAR_PRESETS.map((preset) => {
-                    const isSelected = selectedPreset === preset.id;
-                    const isHov = hoveredPreset === preset.id;
+              {/* Avatar Style Selection */}
+              <SectionCard title="Avatar Style" subtitle="Choose how your avatar looks">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
+                  {AVATAR_STYLES.map((style) => {
+                    const isSelected = selectedStyle === style.id;
+                    const isHov = hoveredStyle === style.id;
                     return (
                       <button
-                        key={preset.id}
-                        onClick={() => { setSelectedPreset(preset.id); setPhoto(null); }}
-                        onMouseEnter={() => setHoveredPreset(preset.id)}
-                        onMouseLeave={() => setHoveredPreset(null)}
+                        key={style.id}
+                        onClick={() => {
+                          setSelectedStyle(style.id);
+                          if (style.id !== 'photo') setPhoto(null);
+                        }}
+                        onMouseEnter={() => setHoveredStyle(style.id)}
+                        onMouseLeave={() => setHoveredStyle(null)}
                         style={{
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                          padding: '14px 10px', borderRadius: 12,
-                          border: `2px solid ${isSelected ? preset.color : isHov ? `${preset.color}88` : C.border}`,
-                          background: isSelected ? `${preset.color}15` : isHov ? `${preset.color}08` : C.surface,
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          padding: '14px 8px', borderRadius: 12, minHeight: 44,
+                          border: `2px solid ${isSelected ? style.color : isHov ? `${style.color}88` : C.border}`,
+                          background: isSelected ? `${style.color}15` : isHov ? `${style.color}08` : C.surface,
                           cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                           outline: 'none',
                         }}
                       >
-                        <canvas
-                          ref={(c) => drawThumbnail(c, preset)}
-                          width={100}
-                          height={100}
-                          style={{ width: 80, height: 80, borderRadius: 10 }}
-                        />
+                        <div style={{
+                          width: 40, height: 40, borderRadius: '50%',
+                          background: `linear-gradient(135deg, ${style.color}, ${style.color}aa)`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: '#fff', fontSize: 16, fontWeight: 700,
+                        }}>
+                          {style.id === 'photo' ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                          ) : style.id === 'cartoon' ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
+                          ) : style.id === 'professional' ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                          ) : style.id === 'robot' ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" /></svg>
+                          ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg>
+                          )}
+                        </div>
                         <span style={{
-                          fontSize: 12, fontWeight: 600,
-                          color: isSelected ? preset.color : C.sub,
-                        }}>{preset.name}</span>
+                          fontSize: 11, fontWeight: 600,
+                          color: isSelected ? style.color : C.sub, textAlign: 'center',
+                        }}>{style.name}</span>
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              </SectionCard>
+
+              {/* Photo upload (only for Photo Realistic style) */}
+              {selectedStyle === 'photo' && (
+                <SectionCard title="Upload Photo" subtitle="Upload a face photo for the avatar">
+                  {!photo ? (
+                    <UploadArea C={C} accept="image/*" onFile={(f) => setPhoto(f)} label="Drop a photo or click to upload" />
+                  ) : (
+                    <div style={{
+                      padding: 14, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface,
+                      display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                    }}>
+                      {photoUrl && (
+                        <img src={photoUrl} alt="Avatar" style={{
+                          width: 56, height: 56, borderRadius: 12, objectFit: 'cover',
+                        }} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{photo.name}</div>
+                        <div style={{ fontSize: 11, color: C.dim }}>{(photo.size / 1024).toFixed(0)} KB</div>
+                      </div>
+                      <button
+                        onClick={() => setPhoto(null)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 8, border: `1px solid ${C.border}`,
+                          background: C.surface, color: C.sub, fontSize: 11, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: 'inherit', outline: 'none', flexShrink: 0,
+                          minHeight: 44,
+                        }}
+                      >Remove</button>
+                    </div>
+                  )}
+                </SectionCard>
+              )}
+
+              {/* Scene Background */}
+              <SectionCard title="Scene Background" subtitle="Choose the background for your video">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10 }}>
+                  {BACKGROUNDS.map((bg) => {
+                    const isSelected = selectedBg === bg.id;
+                    const isHov = hoveredBg === bg.id;
+                    return (
+                      <button
+                        key={bg.id}
+                        onClick={() => setSelectedBg(bg.id)}
+                        onMouseEnter={() => setHoveredBg(bg.id)}
+                        onMouseLeave={() => setHoveredBg(null)}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          padding: '12px 6px', borderRadius: 10, minHeight: 44,
+                          border: `2px solid ${isSelected ? bg.color : isHov ? `${bg.color}88` : C.border}`,
+                          background: isSelected ? `${bg.color}15` : isHov ? `${bg.color}08` : C.surface,
+                          cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                          outline: 'none',
+                        }}
+                      >
+                        <div style={{
+                          width: 36, height: 24, borderRadius: 4,
+                          background: bg.id === 'transparent'
+                            ? 'repeating-conic-gradient(#ccc 0% 25%, #999 0% 50%) 50%/10px 10px'
+                            : bg.id === 'office' ? 'linear-gradient(135deg, #e8e0d4, #8b7355)'
+                            : bg.id === 'studio' ? 'linear-gradient(135deg, #0a0a12, #1e1b4b)'
+                            : bg.id === 'nature' ? 'linear-gradient(135deg, #56b4f5, #4caf50)'
+                            : 'linear-gradient(135deg, #a855f7, #ec4899)',
+                        }} />
+                        <span style={{
+                          fontSize: 10, fontWeight: 600,
+                          color: isSelected ? bg.color : C.sub,
+                        }}>{bg.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionCard>
             </>
           )}
 
-          {/* ---- STEP 2: Script Input ---- */}
+          {/* ---- STEP 2: Script ---- */}
           {step === 2 && (
-            <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 14 }}>
-                Write Your Script
-              </span>
-              <textarea
-                value={script}
-                onChange={(e) => {
-                  if (e.target.value.length <= MAX_SCRIPT_CHARS) setScript(e.target.value);
-                }}
-                placeholder="Type what the avatar should say..."
-                style={{
-                  width: '100%', minHeight: 180, padding: 14, borderRadius: 12,
-                  border: `1px solid ${C.border}`, background: C.surface,
-                  color: C.text, fontSize: 14, fontFamily: 'inherit',
-                  resize: 'vertical', outline: 'none', lineHeight: 1.6,
-                  transition: 'border-color 0.2s ease', boxSizing: 'border-box',
-                }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                <span style={{
-                  fontSize: 12,
-                  color: script.length > MAX_SCRIPT_CHARS * 0.9 ? '#ef4444' : C.dim,
-                }}>
-                  {script.length} / {MAX_SCRIPT_CHARS}
-                </span>
-              </div>
-
-              {/* AI Script Generator */}
-              <div style={{
-                marginTop: 16, paddingTop: 16,
-                borderTop: `1px solid ${C.border}`,
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 10 }}>
-                  AI Generate Script
-                </span>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: C.dim, display: 'block', marginBottom: 4 }}>
-                      Topic
-                    </label>
-                    <select
-                      value={genTopic}
-                      onChange={(e) => setGenTopic(e.target.value)}
-                      style={{
-                        width: '100%', padding: '8px 10px', borderRadius: 8,
-                        border: `1px solid ${C.border}`, background: C.surface,
-                        color: C.text, fontSize: 13, fontFamily: 'inherit',
-                        outline: 'none', cursor: 'pointer',
-                      }}
-                    >
-                      {TOPIC_OPTIONS.map((t) => (
-                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: C.dim, display: 'block', marginBottom: 4 }}>
-                      Style
-                    </label>
-                    <select
-                      value={genStyle}
-                      onChange={(e) => setGenStyle(e.target.value)}
-                      style={{
-                        width: '100%', padding: '8px 10px', borderRadius: 8,
-                        border: `1px solid ${C.border}`, background: C.surface,
-                        color: C.text, fontSize: 13, fontFamily: 'inherit',
-                        outline: 'none', cursor: 'pointer',
-                      }}
-                    >
-                      {STYLE_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <button
-                  onClick={handleAiScript}
-                  disabled={isGeneratingScript}
-                  onMouseEnter={() => setHoveredBtn('ai-gen')}
-                  onMouseLeave={() => setHoveredBtn(null)}
-                  style={{
-                    padding: '10px 20px', borderRadius: 10, border: 'none',
-                    background: isGeneratingScript
-                      ? '#55555588'
-                      : `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
-                    color: '#fff', fontSize: 13, fontWeight: 700,
-                    cursor: isGeneratingScript ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    transition: 'all 0.2s ease', outline: 'none',
-                    boxShadow: isGeneratingScript ? 'none' : `0 4px 12px ${GRADIENT[0]}33`,
-                    transform: hoveredBtn === 'ai-gen' && !isGeneratingScript ? 'translateY(-1px)' : 'none',
+            <>
+              <SectionCard title="Write Your Script" subtitle="Type your script or use an AI template. Use [pause:2s] for pauses.">
+                <textarea
+                  value={script}
+                  onChange={(e) => {
+                    if (e.target.value.length <= MAX_SCRIPT_CHARS) setScript(e.target.value);
                   }}
-                >
-                  {isGeneratingScript && (
+                  placeholder="Type what the avatar should say... Use [pause:2s] to insert pauses."
+                  style={{
+                    width: '100%', minHeight: 200, padding: 14, borderRadius: 12,
+                    border: `1px solid ${C.border}`, background: C.surface,
+                    color: C.text, fontSize: 14, fontFamily: 'inherit',
+                    resize: 'vertical', outline: 'none', lineHeight: 1.6,
+                    transition: 'border-color 0.2s ease', boxSizing: 'border-box',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: C.dim }}>
+                      {wordCount} words
+                    </span>
+                    <span style={{ fontSize: 12, color: C.dim }}>
+                      ~{estDuration}s duration
+                    </span>
+                  </div>
+                  <span style={{
+                    fontSize: 12,
+                    color: script.length > MAX_SCRIPT_CHARS * 0.9 ? '#ef4444' : C.dim,
+                  }}>
+                    {script.length} / {MAX_SCRIPT_CHARS}
+                  </span>
+                </div>
+              </SectionCard>
+
+              {/* Script Templates */}
+              <SectionCard title="Script Templates" subtitle="Quick-start with a template by category">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
+                  {SCRIPT_TEMPLATES.map((tmpl) => {
+                    const isSelected = selectedTemplate === tmpl.category;
+                    const isHov = hoveredBtn === `tmpl-${tmpl.category}`;
+                    return (
+                      <button
+                        key={tmpl.category}
+                        onClick={() => handleTemplateSelect(tmpl.category)}
+                        onMouseEnter={() => setHoveredBtn(`tmpl-${tmpl.category}`)}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        disabled={isGeneratingScript}
+                        style={{
+                          padding: '10px 8px', borderRadius: 10, minHeight: 44,
+                          border: `1px solid ${isSelected ? GRADIENT[0] : isHov ? `${GRADIENT[0]}66` : C.border}`,
+                          background: isSelected ? `${GRADIENT[0]}15` : isHov ? `${GRADIENT[0]}08` : C.surface,
+                          cursor: isGeneratingScript ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.2s ease', fontFamily: 'inherit',
+                          outline: 'none', textAlign: 'center',
+                          opacity: isGeneratingScript ? 0.6 : 1,
+                        }}
+                      >
+                        <span style={{
+                          fontSize: 12, fontWeight: 600,
+                          color: isSelected ? GRADIENT[0] : C.sub,
+                        }}>{tmpl.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {isGeneratingScript && (
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <svg width="14" height="14" viewBox="0 0 16 16" style={{ animation: 'spin 1s linear infinite' }}>
-                      <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,.3)" strokeWidth="2" fill="none" />
-                      <path d="M8 2a6 6 0 014.47 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
+                      <circle cx="8" cy="8" r="6" stroke={GRADIENT[0]} strokeWidth="2" fill="none" opacity={0.3} />
+                      <path d="M8 2a6 6 0 014.47 2" stroke={GRADIENT[0]} strokeWidth="2" strokeLinecap="round" fill="none" />
                     </svg>
-                  )}
-                  {isGeneratingScript ? 'Generating...' : 'Generate Script'}
-                </button>
-              </div>
-            </div>
+                    <span style={{ fontSize: 12, color: GRADIENT[0], fontWeight: 600 }}>Loading template...</span>
+                  </div>
+                )}
+              </SectionCard>
+            </>
           )}
 
-          {/* ---- STEP 3: Voice Selection ---- */}
+          {/* ---- STEP 3: Voice ---- */}
           {step === 3 && (
-            <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-                Select TTS Voice
-              </span>
-              <span style={{ fontSize: 12, color: C.dim, display: 'block', marginBottom: 16 }}>
-                Choose a voice for the avatar speech (browser SpeechSynthesis)
-              </span>
+            <SectionCard title="Select TTS Voice" subtitle="Choose a voice for the avatar speech (browser SpeechSynthesis)">
               {displayVoices.length === 0 ? (
                 <div style={{
                   padding: 24, textAlign: 'center', borderRadius: 12,
@@ -1315,7 +2264,7 @@ export function AiCreator() {
                   </span>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                   {displayVoices.map((v, idx) => {
                     const isSelected = selectedVoiceUri === v.voiceURI;
                     const isHov = hoveredVoice === v.voiceURI;
@@ -1329,7 +2278,7 @@ export function AiCreator() {
                         onMouseLeave={() => setHoveredVoice(null)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                          borderRadius: 10,
+                          borderRadius: 10, minHeight: 44,
                           border: `1px solid ${isSelected ? clr : isHov ? `${clr}88` : C.border}`,
                           background: isSelected ? `${clr}15` : isHov ? `${clr}08` : C.surface,
                           cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
@@ -1356,8 +2305,7 @@ export function AiCreator() {
                   })}
                 </div>
               )}
-
-              {/* Test voice button */}
+              {/* Test voice */}
               <div style={{ marginTop: 14 }}>
                 <button
                   onClick={() => {
@@ -1370,7 +2318,7 @@ export function AiCreator() {
                   onMouseEnter={() => setHoveredBtn('test-voice')}
                   onMouseLeave={() => setHoveredBtn(null)}
                   style={{
-                    padding: '8px 18px', borderRadius: 10,
+                    padding: '8px 18px', borderRadius: 10, minHeight: 44,
                     border: `1px solid ${GRADIENT[0]}55`,
                     background: hoveredBtn === 'test-voice' ? `${GRADIENT[0]}22` : `${GRADIENT[0]}11`,
                     color: GRADIENT[0], fontSize: 12, fontWeight: 600,
@@ -1386,53 +2334,165 @@ export function AiCreator() {
                   Test Voice
                 </button>
               </div>
-            </div>
+            </SectionCard>
           )}
 
-          {/* ---- STEP 4: Generate & Preview ---- */}
+          {/* ---- STEP 4: Settings ---- */}
           {step === 4 && (
-            <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
-                Create AI Video
-              </span>
-              <span style={{ fontSize: 12, color: C.dim, display: 'block', marginBottom: 16 }}>
-                This will use SpeechSynthesis to narrate your script while recording an animated avatar video.
-                The avatar will have mouth animation synced to speech, blinking eyes, and subtle idle movements.
-              </span>
+            <>
+              {/* Subtitle Style */}
+              <SectionCard title="Subtitle Style" subtitle="Choose how subtitles appear in the video">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
+                  {SUBTITLE_STYLES.map((ss) => {
+                    const isSelected = subtitleStyle === ss.id;
+                    const isHov = hoveredBtn === `sub-${ss.id}`;
+                    return (
+                      <button
+                        key={ss.id}
+                        onClick={() => setSubtitleStyle(ss.id)}
+                        onMouseEnter={() => setHoveredBtn(`sub-${ss.id}`)}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        style={{
+                          padding: '10px 6px', borderRadius: 10, minHeight: 44,
+                          border: `2px solid ${isSelected ? GRADIENT[0] : isHov ? `${GRADIENT[0]}66` : C.border}`,
+                          background: isSelected ? `${GRADIENT[0]}15` : isHov ? `${GRADIENT[0]}08` : C.surface,
+                          cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                          outline: 'none',
+                        }}
+                      >
+                        <span style={{
+                          fontSize: 12, fontWeight: 600,
+                          color: isSelected ? GRADIENT[0] : C.sub,
+                        }}>{ss.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionCard>
 
-              {/* Summary of selections */}
+              {/* Video Quality */}
+              <SectionCard title="Video Quality">
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {(['720p', '1080p'] as VideoQuality[]).map((q) => {
+                    const isSelected = videoQuality === q;
+                    const isHov = hoveredBtn === `q-${q}`;
+                    return (
+                      <button
+                        key={q}
+                        onClick={() => setVideoQuality(q)}
+                        onMouseEnter={() => setHoveredBtn(`q-${q}`)}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        style={{
+                          flex: '1 1 120px', padding: '12px 10px', borderRadius: 10, minHeight: 44,
+                          border: `2px solid ${isSelected ? GRADIENT[0] : isHov ? `${GRADIENT[0]}66` : C.border}`,
+                          background: isSelected ? `${GRADIENT[0]}15` : isHov ? `${GRADIENT[0]}08` : C.surface,
+                          cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                          outline: 'none', textAlign: 'center',
+                        }}
+                      >
+                        <span style={{ fontSize: 14, fontWeight: 700, color: isSelected ? GRADIENT[0] : C.text, display: 'block' }}>
+                          {q}
+                        </span>
+                        <span style={{ fontSize: 10, color: C.dim, wordBreak: 'break-word' }}>
+                          {q === '720p' ? '1280x720 / Faster' : '1920x1080 / Higher Quality'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionCard>
+
+              {/* Aspect Ratio */}
+              <SectionCard title="Aspect Ratio">
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {(['16:9', '9:16', '1:1'] as AspectRatio[]).map((ar) => {
+                    const isSelected = aspectRatio === ar;
+                    const isHov = hoveredBtn === `ar-${ar}`;
+                    const dims = getResolution(videoQuality, ar);
+                    return (
+                      <button
+                        key={ar}
+                        onClick={() => setAspectRatio(ar)}
+                        onMouseEnter={() => setHoveredBtn(`ar-${ar}`)}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        style={{
+                          flex: '1 1 80px', padding: '12px 10px', borderRadius: 10, minHeight: 44,
+                          border: `2px solid ${isSelected ? GRADIENT[0] : isHov ? `${GRADIENT[0]}66` : C.border}`,
+                          background: isSelected ? `${GRADIENT[0]}15` : isHov ? `${GRADIENT[0]}08` : C.surface,
+                          cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                          outline: 'none', textAlign: 'center',
+                        }}
+                      >
+                        {/* Aspect ratio visual indicator */}
+                        <div style={{
+                          margin: '0 auto 6px',
+                          width: ar === '16:9' ? 36 : ar === '9:16' ? 20 : 28,
+                          height: ar === '16:9' ? 20 : ar === '9:16' ? 36 : 28,
+                          borderRadius: 3,
+                          border: `2px solid ${isSelected ? GRADIENT[0] : C.dim}`,
+                        }} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: isSelected ? GRADIENT[0] : C.text, display: 'block' }}>
+                          {ar}
+                        </span>
+                        <span style={{ fontSize: 10, color: C.dim }}>
+                          {dims[0]}x{dims[1]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionCard>
+            </>
+          )}
+
+          {/* ---- STEP 5: Generate & Preview ---- */}
+          {step === 5 && (
+            <SectionCard title="Create AI Video" subtitle="Review your settings and generate the video.">
+              {/* Summary */}
               <div style={{
                 padding: 14, borderRadius: 12, background: C.surface,
                 border: `1px solid ${C.border}`, marginBottom: 16,
-                display: 'flex', flexDirection: 'column', gap: 8,
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8,
               }}>
                 <div style={{ fontSize: 12, color: C.dim }}>
-                  <span style={{ fontWeight: 600, color: C.sub }}>Avatar:</span>{' '}
-                  {photo ? photo.name : selectedPreset ? AVATAR_PRESETS.find((p) => p.id === selectedPreset)?.name : 'None'}
+                  <span style={{ fontWeight: 600, color: C.sub }}>Style:</span>{' '}
+                  {AVATAR_STYLES.find((s) => s.id === selectedStyle)?.name}
+                </div>
+                <div style={{ fontSize: 12, color: C.dim }}>
+                  <span style={{ fontWeight: 600, color: C.sub }}>Background:</span>{' '}
+                  {BACKGROUNDS.find((b) => b.id === selectedBg)?.name}
                 </div>
                 <div style={{ fontSize: 12, color: C.dim }}>
                   <span style={{ fontWeight: 600, color: C.sub }}>Voice:</span>{' '}
                   {voices.find((v) => v.voiceURI === selectedVoiceUri)?.name ?? 'Default'}
                 </div>
                 <div style={{ fontSize: 12, color: C.dim }}>
+                  <span style={{ fontWeight: 600, color: C.sub }}>Quality:</span>{' '}
+                  {videoQuality} ({aspectRatio})
+                </div>
+                <div style={{ fontSize: 12, color: C.dim, gridColumn: '1 / -1', wordBreak: 'break-word' }}>
                   <span style={{ fontWeight: 600, color: C.sub }}>Script:</span>{' '}
-                  {script.trim().split(/\s+/).length} words - &quot;{script.slice(0, 80)}{script.length > 80 ? '...' : ''}&quot;
+                  {wordCount} words, ~{estDuration}s — &quot;{script.slice(0, 80)}{script.length > 80 ? '...' : ''}&quot;
+                </div>
+                <div style={{ fontSize: 12, color: C.dim }}>
+                  <span style={{ fontWeight: 600, color: C.sub }}>Subtitles:</span>{' '}
+                  {SUBTITLE_STYLES.find((s) => s.id === subtitleStyle)?.name}
                 </div>
               </div>
 
-              {/* Error display */}
+              {/* Error */}
               {error && (
                 <div style={{
                   padding: '12px 16px', borderRadius: 10, marginBottom: 14,
                   background: `${C.red}12`,
                   border: `1px solid ${C.red}30`,
-                  color: C.red, fontSize: 13, fontWeight: 500,
+                  color: C.red, fontSize: 13, fontWeight: 500, wordBreak: 'break-word',
                 }}>
                   {error}
                 </div>
               )}
 
-              {/* Generate / Cancel / Download buttons */}
+              {/* Buttons */}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {!videoUrl && (
                   <ActionButton
@@ -1447,7 +2507,7 @@ export function AiCreator() {
                   <button
                     onClick={handleCancel}
                     style={{
-                      padding: '12px 20px', borderRadius: 12,
+                      padding: '12px 20px', borderRadius: 12, minHeight: 44,
                       border: `1px solid ${C.border}`, background: C.card,
                       color: C.text, fontSize: 14, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
@@ -1466,7 +2526,7 @@ export function AiCreator() {
                       onMouseEnter={() => setHoveredBtn('dl')}
                       onMouseLeave={() => setHoveredBtn(null)}
                       style={{
-                        padding: '12px 24px', borderRadius: 12, border: 'none',
+                        padding: '12px 24px', borderRadius: 12, border: 'none', minHeight: 44,
                         background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
                         color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                         fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8,
@@ -1493,7 +2553,7 @@ export function AiCreator() {
                       onMouseEnter={() => setHoveredBtn('new-video')}
                       onMouseLeave={() => setHoveredBtn(null)}
                       style={{
-                        padding: '12px 18px', borderRadius: 12, border: `1px solid ${C.border}`,
+                        padding: '12px 18px', borderRadius: 12, border: `1px solid ${C.border}`, minHeight: 44,
                         background: hoveredBtn === 'new-video' ? C.surface : C.card,
                         color: C.sub, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                         fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
@@ -1504,11 +2564,11 @@ export function AiCreator() {
                   </>
                 )}
               </div>
-            </div>
+            </SectionCard>
           )}
 
-          {/* ---- Navigation Buttons ---- */}
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between' }}>
+          {/* ---- Navigation ---- */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }}>
             {step > 1 && (
               <button
                 onClick={() => {
@@ -1518,7 +2578,7 @@ export function AiCreator() {
                 onMouseEnter={() => setHoveredBtn('back')}
                 onMouseLeave={() => setHoveredBtn(null)}
                 style={{
-                  padding: '12px 24px', borderRadius: 12,
+                  padding: '12px 24px', borderRadius: 12, minHeight: 44,
                   border: `1px solid ${C.border}`,
                   background: hoveredBtn === 'back' ? C.surface : C.card,
                   color: C.text, fontSize: 14, fontWeight: 600,
@@ -1530,7 +2590,7 @@ export function AiCreator() {
               </button>
             )}
             <div style={{ flex: 1 }} />
-            {step < 4 && (
+            {step < 5 && (
               <button
                 onClick={() => {
                   if (canAdvance) setStep(step + 1);
@@ -1539,7 +2599,7 @@ export function AiCreator() {
                 onMouseEnter={() => setHoveredBtn('next')}
                 onMouseLeave={() => setHoveredBtn(null)}
                 style={{
-                  padding: '12px 24px', borderRadius: 12, border: 'none',
+                  padding: '12px 24px', borderRadius: 12, border: 'none', minHeight: 44,
                   background: canAdvance
                     ? `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`
                     : '#555',
@@ -1560,7 +2620,7 @@ export function AiCreator() {
                 onMouseEnter={() => setHoveredBtn('startover')}
                 onMouseLeave={() => setHoveredBtn(null)}
                 style={{
-                  padding: '12px 18px', borderRadius: 12,
+                  padding: '12px 18px', borderRadius: 12, minHeight: 44,
                   border: `1px solid ${C.border}`,
                   background: hoveredBtn === 'startover' ? C.surface : C.card,
                   color: C.dim, fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -1577,10 +2637,10 @@ export function AiCreator() {
         {/*  RIGHT: Preview area                                             */}
         {/* ================================================================ */}
         <div style={{
-          padding: 24, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
+          padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
           display: 'flex', flexDirection: 'column',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Preview</span>
             {generating && (
               <span style={{
@@ -1611,92 +2671,77 @@ export function AiCreator() {
                   transition: 'width 0.3s ease',
                 }} />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: C.sub, fontWeight: 500 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                <span style={{ fontSize: 12, color: C.sub, fontWeight: 500, wordBreak: 'break-word', minWidth: 0 }}>
                   {statusText}
                 </span>
-                <span style={{ fontSize: 12, color: C.dim, fontWeight: 600 }}>
+                <span style={{ fontSize: 12, color: C.dim, fontWeight: 600, flexShrink: 0 }}>
                   {Math.round(progress)}%
                 </span>
               </div>
             </div>
           )}
 
-          {/* Video player (shown after generation) or canvas preview or placeholder */}
+          {/* Preview area */}
           <div style={{
-            flex: 1, minHeight: 400, borderRadius: 14,
+            flex: 1, minHeight: 250, borderRadius: 14,
             border: `1px solid ${C.border}`, background: '#1a1a2e',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             position: 'relative', overflow: 'hidden',
           }}>
-            {/* Completed video playback */}
+            {/* Completed video */}
             {videoUrl && !generating && (
               <video
                 ref={videoRef}
                 src={videoUrl}
                 controls
                 playsInline
-                style={{
-                  width: '100%', height: '100%', objectFit: 'contain',
-                  display: 'block',
-                }}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
               />
             )}
 
-            {/* Canvas for live recording preview */}
+            {/* Live canvas */}
             <canvas
               ref={canvasRef}
               width={720}
               height={720}
               style={{
-                width: '100%', height: '100%', objectFit: 'contain',
+                width: '100%', maxWidth: 720, height: 'auto', objectFit: 'contain',
                 display: generating ? 'block' : 'none',
               }}
             />
 
-            {/* Placeholder when nothing is happening */}
+            {/* Placeholder */}
             {!videoUrl && !generating && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 24 }}>
-                {(photoUrl || selectedPreset) ? (
+                {(photoUrl || selectedStyle !== 'photo') ? (
                   <>
-                    {photoUrl && (
+                    {photoUrl && selectedStyle === 'photo' && (
                       <img src={photoUrl} alt="Selected avatar" style={{
                         width: 100, height: 100, borderRadius: '50%', objectFit: 'cover',
                         border: `3px solid ${GRADIENT[0]}`,
                         boxShadow: `0 4px 20px ${GRADIENT[0]}33`,
                       }} />
                     )}
-                    {selectedPreset && !photoUrl && (
+                    {selectedStyle !== 'photo' && (
                       <div style={{
-                        width: 100, height: 100, borderRadius: '50%', overflow: 'hidden',
+                        width: 80, height: 80, borderRadius: '50%',
+                        background: `linear-gradient(135deg, ${AVATAR_STYLES.find((s) => s.id === selectedStyle)?.color ?? '#888'}, ${AVATAR_STYLES.find((s) => s.id === selectedStyle)?.color ?? '#888'}aa)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                         border: `3px solid ${GRADIENT[0]}`,
                         boxShadow: `0 4px 20px ${GRADIENT[0]}33`,
+                        color: '#fff', fontSize: 28, fontWeight: 700,
                       }}>
-                        <canvas
-                          ref={(c) => {
-                            if (c) {
-                              const pr = AVATAR_PRESETS.find((p) => p.id === selectedPreset);
-                              if (pr) {
-                                c.width = 200;
-                                c.height = 200;
-                                const cx2 = c.getContext('2d');
-                                if (cx2) {
-                                  cx2.fillStyle = '#1a1a2e';
-                                  cx2.fillRect(0, 0, 200, 200);
-                                  pr.draw(cx2, 200, 200, 0, false);
-                                }
-                              }
-                            }
-                          }}
-                          style={{ width: 100, height: 100 }}
-                        />
+                        {(AVATAR_STYLES.find((s) => s.id === selectedStyle)?.name ?? 'A').charAt(0)}
                       </div>
                     )}
                     <span style={{ fontSize: 14, color: '#ffffffcc', fontWeight: 600 }}>
-                      Avatar selected
+                      {AVATAR_STYLES.find((s) => s.id === selectedStyle)?.name ?? 'Avatar'} selected
                     </span>
-                    <span style={{ fontSize: 12, color: '#ffffff88' }}>
-                      {step < 4 ? 'Complete all steps to generate video' : 'Click "Create AI Video" to begin'}
+                    <span style={{ fontSize: 12, color: '#ffffff88', textAlign: 'center', wordBreak: 'break-word', maxWidth: '100%' }}>
+                      {step < 5
+                        ? `Scene: ${BACKGROUNDS.find((b) => b.id === selectedBg)?.name ?? 'Studio'} | Complete all steps to generate`
+                        : 'Click "Create AI Video" to begin'}
                     </span>
                   </>
                 ) : (
@@ -1712,7 +2757,7 @@ export function AiCreator() {
                       </svg>
                     </div>
                     <span style={{ fontSize: 14, color: '#ffffff66' }}>
-                      Select an avatar to begin
+                      Upload a photo for Photo Realistic style
                     </span>
                   </>
                 )}
@@ -1720,17 +2765,17 @@ export function AiCreator() {
             )}
           </div>
 
-          {/* Success indicator below preview */}
+          {/* Success indicator */}
           {videoUrl && !generating && (
             <div style={{
               marginTop: 12, padding: '12px 14px', borderRadius: 10,
               background: '#10b98115', border: '1px solid #10b98133',
-              display: 'flex', alignItems: 'center', gap: 10,
+              display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#10b981', wordBreak: 'break-word', minWidth: 0 }}>
                 Video generated successfully! Use the controls above to play or download.
               </span>
             </div>
@@ -1738,7 +2783,7 @@ export function AiCreator() {
         </div>
       </div>
 
-      {/* CSS keyframes for animations */}
+      {/* CSS keyframes */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }

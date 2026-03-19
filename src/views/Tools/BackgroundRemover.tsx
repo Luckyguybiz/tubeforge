@@ -404,8 +404,8 @@ export function BackgroundRemover() {
                 <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{file.name}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
               <div style={{ fontSize: 11, color: C.dim }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
             </div>
             <button
@@ -417,6 +417,7 @@ export function BackgroundRemover() {
                 background: removeHover ? C.surface : C.card,
                 color: C.sub, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                minHeight: 44, flexShrink: 0,
               }}
             >
               Remove
@@ -428,7 +429,9 @@ export function BackgroundRemover() {
             ref={splitRef}
             style={{
               position: 'relative', borderRadius: 14, overflow: 'hidden',
-              border: `1px solid ${C.border}`, marginBottom: 24, height: 320,
+              border: `1px solid ${C.border}`, marginBottom: 24,
+              height: 'auto', minHeight: 200, maxHeight: '60vh',
+              aspectRatio: '16/10',
               cursor: isDragging ? 'col-resize' : 'default',
               userSelect: 'none',
             }}
@@ -533,6 +536,7 @@ export function BackgroundRemover() {
                     color: bgOption === opt.id ? '#8b5cf6' : C.text,
                     cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                     display: 'flex', alignItems: 'center', gap: 6,
+                    minHeight: 44,
                   }}
                 >
                   <span style={{ fontSize: 16 }}>{opt.icon}</span>
@@ -545,7 +549,7 @@ export function BackgroundRemover() {
           {/* Color Picker for Solid Color option */}
           {bgOption === 'solid' && (
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: 16,
+              display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: 16,
               borderRadius: 12, border: `1px solid ${C.border}`, background: C.card, marginBottom: 20,
             }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.sub }}>Color</label>
@@ -608,7 +612,7 @@ export function BackgroundRemover() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{error}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
             </div>
           )}
 
@@ -626,7 +630,7 @@ export function BackgroundRemover() {
           )}
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <ActionButton
               label={done ? 'Remove Again' : 'Remove Background'}
               gradient={['#8b5cf6', '#7c3aed']}
@@ -639,12 +643,13 @@ export function BackgroundRemover() {
                 onMouseEnter={() => setDownloadHover(true)}
                 onMouseLeave={() => setDownloadHover(false)}
                 style={{
-                  padding: '12px 32px', borderRadius: 12,
+                  padding: '12px 24px', borderRadius: 12,
                   border: `1px solid ${C.border}`,
                   background: downloadHover ? C.surface : C.card,
                   color: C.text, fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8,
+                  minHeight: 44,
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -627,7 +627,7 @@ export function SubtitleRemover() {
           {/* File info bar */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12,
-            border: `1px solid ${C.border}`, background: C.card,
+            border: `1px solid ${C.border}`, background: C.card, flexWrap: 'wrap',
           }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
@@ -641,7 +641,7 @@ export function SubtitleRemover() {
               </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', wordBreak: 'break-word' }}>{file.name}</p>
               <p style={{ fontSize: 11, color: C.dim, margin: '2px 0 0' }}>
                 {(file.size / (1024 * 1024)).toFixed(1)} MB
                 {videoDimensions.w > 0 && ` \u2022 ${videoDimensions.w}\u00D7${videoDimensions.h}`}
@@ -654,6 +654,7 @@ export function SubtitleRemover() {
                 padding: '6px 14px', borderRadius: 8, border: `1px solid ${C.border}`,
                 background: C.card, color: C.sub, fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                minHeight: 44, flexShrink: 0,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = C.surface; e.currentTarget.style.color = GRADIENT[0]; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = C.card; e.currentTarget.style.color = C.sub; }}
@@ -663,11 +664,11 @@ export function SubtitleRemover() {
           </div>
 
           {/* Two column layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
 
             {/* ── Left: Video preview with overlay ─────────── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>
                   Video Preview
                 </h3>
@@ -793,7 +794,7 @@ export function SubtitleRemover() {
                     aria-label={previewActive ? 'Pause preview' : 'Play preview'}
                     style={{
                       position: 'absolute', bottom: 10, left: 10,
-                      width: 34, height: 34, borderRadius: 8,
+                      width: 44, height: 44, borderRadius: 8,
                       background: 'rgba(0,0,0,0.6)', border: 'none',
                       color: '#fff', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -887,11 +888,11 @@ export function SubtitleRemover() {
                       onClick={() => setSelectedRegionId(r.id)}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '5px 10px', borderRadius: 8,
+                        padding: '8px 12px', borderRadius: 8,
                         border: `1px solid ${selectedRegionId === r.id ? GRADIENT[0] : C.border}`,
                         background: selectedRegionId === r.id ? `${GRADIENT[0]}12` : C.card,
                         cursor: 'pointer', fontSize: 11, fontWeight: 600, color: C.text,
-                        transition: 'all 0.15s ease',
+                        transition: 'all 0.15s ease', minHeight: 44,
                       }}
                     >
                       <span style={{
@@ -916,11 +917,11 @@ export function SubtitleRemover() {
                   <button
                     onClick={clearAllRegions}
                     style={{
-                      padding: '5px 10px', borderRadius: 8,
+                      padding: '8px 12px', borderRadius: 8,
                       border: `1px solid ${C.border}`, background: C.card,
                       color: C.dim, fontSize: 11, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
-                      transition: 'all 0.15s ease',
+                      transition: 'all 0.15s ease', minHeight: 44,
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = GRADIENT[0]; e.currentTarget.style.borderColor = GRADIENT[0]; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = C.dim; e.currentTarget.style.borderColor = C.border; }}
@@ -951,7 +952,8 @@ export function SubtitleRemover() {
                         color: C.text, fontSize: 13, fontWeight: 600,
                         cursor: 'pointer', transition: 'all 0.2s ease',
                         fontFamily: 'inherit', textAlign: 'left',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between',
+                        gap: 4, minHeight: 44,
                       }}
                       onMouseEnter={(e) => { if (method !== m.id) e.currentTarget.style.background = C.cardHover; }}
                       onMouseLeave={(e) => { if (method !== m.id) e.currentTarget.style.background = method === m.id ? `${GRADIENT[0]}12` : C.card; }}
@@ -1026,7 +1028,7 @@ export function SubtitleRemover() {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
                   </svg>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{error}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
                 </div>
               )}
 
@@ -1065,6 +1067,7 @@ export function SubtitleRemover() {
                       fontSize: 14, fontWeight: 600, cursor: 'pointer',
                       fontFamily: 'inherit', transition: 'all 0.2s ease',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      width: '100%', minHeight: 44, wordBreak: 'break-word',
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = C.card; }}

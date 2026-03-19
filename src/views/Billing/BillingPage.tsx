@@ -251,6 +251,7 @@ export function BillingPage() {
               alignItems: 'center',
               gap: 6,
               padding: '8px 18px',
+              minHeight: 44,
               borderRadius: 50,
               border: `1.5px solid ${cardBorder}`,
               background: hoveredBtn === 'back'
@@ -371,6 +372,7 @@ export function BillingPage() {
                   disabled={createPortal.isPending}
                   style={{
                     padding: '10px 22px',
+                    minHeight: 44,
                     borderRadius: 50,
                     border: `1.5px solid ${cardBorder}`,
                     background: hoveredBtn === 'manage'
@@ -410,7 +412,7 @@ export function BillingPage() {
                 className="tf-billing-plan-grid"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
                   gap: 16,
                 }}
               >
@@ -663,7 +665,7 @@ export function BillingPage() {
                         </div>
 
                         {/* Content */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}>
                           <div
                             style={{
                               fontSize: 15,
@@ -700,7 +702,7 @@ export function BillingPage() {
                           </p>
 
                           {/* Price */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
                               {t('billing.getFor')} {deal.price.toLocaleString()}{'\u20BD'}
                             </span>
@@ -739,10 +741,13 @@ export function BillingPage() {
           <div
             className="tf-billing-right"
             style={{
-              flex: '0 0 380px',
+              flex: '0 1 380px',
+              width: '100%',
+              maxWidth: 380,
               position: 'sticky',
               top: 32,
               alignSelf: 'flex-start',
+              minWidth: 0,
             }}
           >
             <div

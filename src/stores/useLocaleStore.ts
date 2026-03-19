@@ -907,6 +907,10 @@ const translations: Record<Locale, Record<string, string>> = {
     'toolshub.tool.translate.description': 'Автоматический перевод видео на 30+ языков. Дубляж, субтитры, локализация контента.',
     'toolshub.tool.analytics.name': 'Аналитика YouTube',
     'toolshub.tool.analytics.description': 'Детальная аналитика канала: просмотры, подписчики, CTR, удержание. Сравнение с конкурентами.',
+    'toolshub.tool.content-planner.subtitle': 'Календарь · Идеи · Шаблоны',
+    'toolshub.tool.content-planner.description': 'Планируйте, расписывайте и организуйте контент для всех платформ. Календарь, банк идей и шаблоны.',
+    'toolshub.tool.ai-video-generator.subtitle': 'Текст → Видео · Canvas',
+    'toolshub.tool.ai-video-generator.description': 'Превратите любой сценарий в полноценное видео с анимированными сценами, озвучкой и переходами.',
     'toolshub.tool.scheduler.name': 'Планировщик контента',
     'toolshub.tool.scheduler.subtitle': 'Календарь · Авто',
     'toolshub.tool.scheduler.description': 'Планируйте публикации на неделю вперёд. Оптимальное время, серии видео, контент-план.',
@@ -2666,6 +2670,10 @@ const translations: Record<Locale, Record<string, string>> = {
     'toolshub.tool.translate.description': 'Automatic video translation to 30+ languages. Dubbing, subtitles, content localization.',
     'toolshub.tool.analytics.name': 'YouTube Analytics',
     'toolshub.tool.analytics.description': 'Detailed channel analytics: views, subscribers, CTR, retention. Competitor comparison.',
+    'toolshub.tool.content-planner.subtitle': 'Calendar · Ideas · Templates',
+    'toolshub.tool.content-planner.description': 'Plan, schedule, and organize your content across all platforms with calendar, ideas bank, and templates.',
+    'toolshub.tool.ai-video-generator.subtitle': 'Text → Video · Canvas',
+    'toolshub.tool.ai-video-generator.description': 'Turn any script into a fully rendered video with animated scenes, voiceover, and transitions.',
     'toolshub.tool.scheduler.name': 'Content Scheduler',
     'toolshub.tool.scheduler.subtitle': 'Calendar · Auto',
     'toolshub.tool.scheduler.description': 'Schedule publications for the week ahead. Optimal time, video series, content plan.',
@@ -3278,6 +3286,12 @@ const translations: Record<Locale, Record<string, string>> = {
     // Thumbnail Editor — UploadsPanel
 
     // Cookie Consent
+
+    // ToolsHub — Tools
+    'toolshub.tool.content-planner.subtitle': 'Күнтізбе · Идеялар · Шаблондар',
+    'toolshub.tool.content-planner.description': 'Барлық платформалар үшін контентті жоспарлаңыз, кестелеңіз және ұйымдастырыңыз.',
+    'toolshub.tool.ai-video-generator.subtitle': 'Мәтін → Бейне · Canvas',
+    'toolshub.tool.ai-video-generator.description': 'Кез келген сценарийді анимациялы сахналар, дауыс пен ауысулармен толық бейнеге айналдырыңыз.',
   },
   es: {
     // Navigation & Layout
@@ -3887,6 +3901,12 @@ const translations: Record<Locale, Record<string, string>> = {
     // Thumbnail Editor — UploadsPanel
 
     // Cookie Consent
+
+    // ToolsHub — Tools
+    'toolshub.tool.content-planner.subtitle': 'Calendario · Ideas · Plantillas',
+    'toolshub.tool.content-planner.description': 'Planifica, programa y organiza tu contenido en todas las plataformas con calendario, banco de ideas y plantillas.',
+    'toolshub.tool.ai-video-generator.subtitle': 'Texto → Video · Canvas',
+    'toolshub.tool.ai-video-generator.description': 'Convierte cualquier guión en un video completo con escenas animadas, narración y transiciones.',
   },
 };
 

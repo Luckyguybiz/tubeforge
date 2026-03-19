@@ -866,13 +866,13 @@ export function Veo3Generator() {
   /* ── Styles ─────────────────────────────────────────── */
 
   const pillStyle = (active: boolean): React.CSSProperties => ({
-    padding: '8px 18px', borderRadius: 10,
+    padding: '10px 18px', borderRadius: 10,
     border: `1px solid ${active ? GRADIENT[0] : C.border}`,
     background: active ? `${GRADIENT[0]}22` : C.card,
     color: active ? GRADIENT[0] : C.sub,
     fontSize: 13, fontWeight: 600, cursor: 'pointer',
     transition: 'all 0.2s ease', fontFamily: 'inherit',
-    outline: 'none',
+    outline: 'none', minHeight: 44,
   });
 
   const sectionCard: React.CSSProperties = {
@@ -886,6 +886,7 @@ export function Veo3Generator() {
     color: active ? GRADIENT[0] : C.sub,
     fontSize: 14, fontWeight: 600, cursor: 'pointer',
     transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none',
+    minHeight: 44,
   });
 
   /* ── Render ─────────────────────────────────────────── */
@@ -906,7 +907,7 @@ export function Veo3Generator() {
       `}</style>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, padding: 4, borderRadius: 12, background: C.surface, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, padding: 4, borderRadius: 12, background: C.surface, width: 'fit-content', maxWidth: '100%', flexWrap: 'wrap' }}>
         <button onClick={() => setActiveTab('generate')} style={tabStyle(activeTab === 'generate')}>
           Generate
         </button>
@@ -921,7 +922,7 @@ export function Veo3Generator() {
           <p style={{ fontSize: 14, color: C.sub, marginTop: 0, marginBottom: 20 }}>
             See what the generator can create. These samples showcase the styles and quality you can expect.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
             {DEMO_GALLERY.map((item) => (
               <div key={item.title} style={{
                 borderRadius: 14, overflow: 'hidden',
@@ -962,7 +963,7 @@ export function Veo3Generator() {
         /* ── Generate Tab ────────────────────────────────── */
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))',
           gap: 24,
           animation: 'fadeIn .3s ease',
         }}>
@@ -1005,8 +1006,8 @@ export function Veo3Generator() {
                 onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                <span style={{ fontSize: 11, color: C.dim }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, flexWrap: 'wrap', gap: 4 }}>
+                <span style={{ fontSize: 11, color: C.dim, minWidth: 0, wordBreak: 'break-word' as const }}>
                   Tip: Include colors, mood, and scene details for better results
                 </span>
                 <span style={{
@@ -1021,7 +1022,7 @@ export function Veo3Generator() {
             {/* Style Presets */}
             <div style={sectionCard}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 14 }}>Style</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: 10 }}>
                 {STYLE_PRESETS.map((sp) => {
                   const isSelected = stylePreset === sp.id;
                   const isHovered = hoveredPreset === sp.id;
@@ -1059,7 +1060,7 @@ export function Veo3Generator() {
             </div>
 
             {/* Duration & Aspect */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 16 }}>
               <div style={sectionCard}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Duration</span>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1091,8 +1092,9 @@ export function Veo3Generator() {
           {/* Right: Video Preview */}
           <div style={{
             ...sectionCard,
-            padding: 24,
+            padding: 16,
             display: 'flex', flexDirection: 'column',
+            minWidth: 0,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Video Preview</span>
@@ -1151,7 +1153,7 @@ export function Veo3Generator() {
                   </div>
                   {/* Progress bar */}
                   <div style={{
-                    marginTop: 20, width: 260, height: 6, borderRadius: 3,
+                    marginTop: 20, width: '100%', maxWidth: 260, height: 6, borderRadius: 3,
                     background: C.border, overflow: 'hidden', marginLeft: 'auto', marginRight: 'auto',
                   }}>
                     <div style={{
@@ -1181,7 +1183,7 @@ export function Veo3Generator() {
                   <div style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>
                     Generation Failed
                   </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, maxWidth: 300, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, maxWidth: 300, width: '100%', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5, wordBreak: 'break-word' as const }}>
                     {errorMsg || 'Something went wrong. Please try again.'}
                   </div>
                   <button
@@ -1283,11 +1285,11 @@ export function Veo3Generator() {
                   <line x1="12" y1="16" x2="12" y2="12" />
                   <line x1="12" y1="8" x2="12.01" y2="8" />
                 </svg>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
                     Canvas Video Generator
                   </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.5, wordBreak: 'break-word' as const }}>
                     Renders animated scenes using HTML5 Canvas + MediaRecorder. Each style preset creates unique visuals: Cinematic (warm tones, lens flares), Animation (bouncing shapes), Documentary (text overlays), Music Video (neon particles, beat pulses).
                   </div>
                 </div>

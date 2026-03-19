@@ -413,7 +413,7 @@ export function AutoClip() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: 24,
         }}
       >
@@ -492,7 +492,9 @@ export function AutoClip() {
                   color: C.dim,
                   cursor: 'pointer',
                   fontSize: 18,
-                  padding: 4,
+                  padding: 8,
+                  minWidth: 44,
+                  minHeight: 44,
                   transition: 'all 0.2s ease',
                   flexShrink: 0,
                 }}
@@ -819,8 +821,10 @@ export function AutoClip() {
               <div
                 style={{
                   display: 'flex',
+                  flexWrap: 'wrap',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: 8,
                   marginBottom: 12,
                 }}
               >
@@ -830,16 +834,17 @@ export function AutoClip() {
                     fontWeight: 700,
                     color: C.text,
                     margin: 0,
+                    wordBreak: 'break-word',
                   }}
                 >
                   Detected Highlights
                 </h3>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
                   {clips.length > 0 && (
                     <button
                       onClick={handleSelectAll}
                       style={{
-                        padding: '4px 10px',
+                        padding: '6px 12px',
                         borderRadius: 6,
                         border: `1px solid ${C.border}`,
                         background: C.card,
@@ -849,6 +854,9 @@ export function AutoClip() {
                         cursor: 'pointer',
                         fontFamily: 'inherit',
                         transition: 'all 0.2s ease',
+                        minHeight: 44,
+                        display: 'flex',
+                        alignItems: 'center',
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = C.cardHover;
@@ -866,7 +874,7 @@ export function AutoClip() {
                     <button
                       onClick={handleCopyTimestamps}
                       style={{
-                        padding: '4px 12px',
+                        padding: '6px 12px',
                         borderRadius: 6,
                         border: `1px solid ${GRADIENT[0]}`,
                         background: copied ? '#22c55e' : `${GRADIENT[0]}18`,
@@ -879,6 +887,7 @@ export function AutoClip() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 4,
+                        minHeight: 44,
                       }}
                       onMouseEnter={(e) => {
                         if (!copied)
@@ -1073,7 +1082,7 @@ export function AutoClip() {
                       <button
                         onClick={() => handlePreviewClip(clip)}
                         style={{
-                          padding: '6px 12px',
+                          padding: '8px 12px',
                           borderRadius: 8,
                           border:
                             activeClipId === clip.id
@@ -1096,6 +1105,7 @@ export function AutoClip() {
                           alignItems: 'center',
                           gap: 4,
                           flexShrink: 0,
+                          minHeight: 44,
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = `${GRADIENT[0]}20`;

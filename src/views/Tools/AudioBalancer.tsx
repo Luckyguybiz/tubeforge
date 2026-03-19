@@ -385,20 +385,20 @@ export function AudioBalancer() {
           {/* File info */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12,
-            border: `1px solid ${C.border}`, background: C.card, marginBottom: 24,
+            border: `1px solid ${C.border}`, background: C.card, marginBottom: 24, flexWrap: 'wrap',
           }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
               background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
               </svg>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{file.name}</div>
-              <div style={{ fontSize: 11, color: C.dim }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
+              <div style={{ fontSize: 11, color: C.dim, wordBreak: 'break-word' }}>
                 {(file.size / 1024 / 1024).toFixed(2)} MB
                 {audioDuration != null && ` \u2022 ${formatDuration(audioDuration)}`}
                 {audioSampleRate != null && ` \u2022 ${audioSampleRate} Hz`}
@@ -414,6 +414,7 @@ export function AudioBalancer() {
                 background: removeHover ? C.surface : C.card,
                 color: C.sub, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                flexShrink: 0, minHeight: 44,
               }}
             >
               {t('tools.balancer.remove')}
@@ -463,7 +464,7 @@ export function AudioBalancer() {
           </div>
 
           {/* Channel Volume Controls */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 28 }}>
             <div style={{
               padding: 16, borderRadius: 12, border: `1px solid ${C.border}`, background: C.card,
             }}>
@@ -503,7 +504,7 @@ export function AudioBalancer() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{error}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
             </div>
           )}
 
@@ -538,12 +539,12 @@ export function AudioBalancer() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t('tools.balancer.success')}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word' }}>{t('tools.balancer.success')}</span>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <ActionButton
               label={done ? t('tools.balancer.rebalance') : t('tools.balancer.balance')}
               gradient={['#3b82f6', '#6366f1']}
@@ -563,6 +564,7 @@ export function AudioBalancer() {
                   color: C.text, fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8,
+                  minHeight: 44,
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -133,6 +133,8 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
         alignItems: 'center',
         gap: 4,
         width: 120,
+        maxWidth: '100%',
+        flexShrink: 0,
       }}
     >
       <span style={{ fontSize: 9, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '.03em' }}>
@@ -141,6 +143,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
       <div
         style={{
           width: 112,
+          maxWidth: '100%',
           height: 72,
           borderRadius: 8,
           border: value ? `1.5px solid ${accentCol}30` : `1.5px dashed ${C.border}`,
@@ -473,9 +476,9 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
       style={{
         position: 'absolute',
         top: 0,
-        left: 168,
+        left: typeof window !== 'undefined' && window.innerWidth < 768 ? 0 : 168,
         width: 280,
-        maxWidth: 'calc(100vw - 200px)',
+        maxWidth: 'calc(100vw - 32px)',
         background: C.card,
         border: `1px solid ${C.border}`,
         borderRadius: 12,
@@ -983,8 +986,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           title={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
           aria-label={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
           style={{
-            width: 28,
-            height: 28,
+            width: 44,
+            height: 44,
             borderRadius: 6,
             border: `1px solid ${C.border}`,
             background: 'transparent',
@@ -1038,8 +1041,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title={`${t('editor.toolbar.undo')} (Ctrl+Z)${historyLen > 0 ? ` \u2014 ${historyLen}` : ''}`}
             aria-label={`${t('editor.toolbar.undo')}${historyLen > 0 ? ` (${historyLen})` : ''}`}
             style={{
-              minWidth: 28,
-              height: 28,
+              minWidth: 44,
+              height: 44,
               borderRadius: 6,
               border: `1px solid ${C.border}`,
               background: 'transparent',
@@ -1065,8 +1068,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title={`${t('editor.toolbar.redo')} (Ctrl+Shift+Z)${futureLen > 0 ? ` \u2014 ${futureLen}` : ''}`}
             aria-label={`${t('editor.toolbar.redo')}${futureLen > 0 ? ` (${futureLen})` : ''}`}
             style={{
-              minWidth: 28,
-              height: 28,
+              minWidth: 44,
+              height: 44,
               borderRadius: 6,
               border: `1px solid ${C.border}`,
               background: 'transparent',
@@ -1385,7 +1388,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '20px 32px 12px',
+                  padding: scenePanelOpen && typeof window !== 'undefined' && window.innerWidth < 768 ? '12px 12px 8px' : '20px 32px 12px',
                   minHeight: 0,
                 }}
               >
@@ -1525,9 +1528,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     </div>
                   ) : (
                     /* ── Empty / editing state: show frame upload slots ── */
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '16px 24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '16px 12px', width: '100%', boxSizing: 'border-box' as const }}>
                       {/* Frame upload row */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
                         <FrameSlot
                           label={t('editor.frame.startFrame')}
                           value={sel.sf}
@@ -1617,8 +1620,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 12,
-                  padding: '0 32px 8px',
+                  padding: '0 12px 8px',
                   flexShrink: 0,
+                  flexWrap: 'wrap',
                 }}
               >
                 {sel.status === 'ready' ? (
@@ -1740,6 +1744,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               padding: '6px 12px',
               marginBottom: 0,
               borderBottom: `1px solid ${C.border}`,
+              flexWrap: 'wrap',
             }}
           >
             {/* Scene action buttons */}
@@ -1778,6 +1783,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 padding: '6px 10px',
                 transition: 'border-color .15s',
                 minWidth: 0,
+                width: '100%',
               }}
               onFocus={(e) => {
                 (e.currentTarget as HTMLElement).style.borderColor = selCol + '55';

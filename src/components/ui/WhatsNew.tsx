@@ -156,7 +156,7 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div
           style={{
-            padding: '24px 28px 16px',
+            padding: '16px 16px 12px',
             borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,.06)' : C.border}`,
             display: 'flex',
             alignItems: 'center',
@@ -196,8 +196,10 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             aria-label={t('whatsNew.close')}
             style={{
-              width: 28,
-              height: 28,
+              width: 36,
+              height: 36,
+              minWidth: 36,
+              minHeight: 36,
               borderRadius: 8,
               border: 'none',
               background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)',
@@ -208,6 +210,7 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
               justifyContent: 'center',
               fontSize: 14,
               fontFamily: 'inherit',
+              flexShrink: 0,
             }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -221,7 +224,7 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '20px 28px 28px',
+            padding: '16px 16px 20px',
           }}
         >
           {CHANGELOG.map((entry, ei) => (
@@ -301,6 +304,8 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
                           fontSize: 13,
                           color: C.sub,
                           lineHeight: 1.5,
+                          wordBreak: 'break-word',
+                          overflow: 'hidden',
                         }}
                       >
                         {item.text}
@@ -344,8 +349,10 @@ export function WhatsNewBadge({ onClick }: { onClick: () => void }) {
       aria-label={t('whatsNew.title')}
       style={{
         position: 'relative',
-        width: 28,
-        height: 28,
+        width: 36,
+        height: 36,
+        minWidth: 36,
+        minHeight: 36,
         borderRadius: 8,
         border: 'none',
         background: 'transparent',

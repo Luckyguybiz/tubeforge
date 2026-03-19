@@ -380,7 +380,7 @@ function WelcomeSection({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/autoclip'); } }}
           style={{
             flex: '1 1 260px',
-            minWidth: 220,
+            minWidth: 0,
             minHeight: 180,
             borderRadius: 16,
             padding: 2,
@@ -410,7 +410,7 @@ function WelcomeSection({
                   lineHeight: '16px',
                 }}>Pro</span>
               </div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5, maxWidth: 340 }}>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>
                 {t('dashboard.autoClipDesc')}
               </div>
             </div>
@@ -435,7 +435,7 @@ function WelcomeSection({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/cut-crop'); } }}
           style={{
             flex: '1 1 260px',
-            minWidth: 220,
+            minWidth: 0,
             minHeight: 180,
             borderRadius: 16,
             padding: 2,
@@ -465,7 +465,7 @@ function WelcomeSection({
                   lineHeight: '16px',
                 }}>{t('common.free')}</span>
               </div>
-              <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5, maxWidth: 340 }}>
+              <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
                 {t('dashboard.cutCropDesc')}
               </div>
             </div>
@@ -522,7 +522,8 @@ function WelcomeSection({
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 6,
-                width: 88,
+                width: 80,
+                minWidth: 72,
                 padding: '10px 4px',
                 borderRadius: 12,
                 cursor: 'pointer',
@@ -1176,7 +1177,7 @@ export function Dashboard() {
   const totalPages = projects.data?.pages ?? 1;
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
       {/* ── Welcome Hero Section (Crayo-style) ───────── */}
       <WelcomeSection C={C} router={router} t={t} />
 
@@ -1205,7 +1206,7 @@ export function Dashboard() {
             display: 'flex', alignItems: 'center', gap: 8,
             background: hoveredBtn === 'create-main' ? C.accent : C.accent,
             color: '#fff', border: 'none', borderRadius: 12,
-            padding: '12px 24px', fontSize: 15, fontWeight: 700,
+            padding: '12px 24px', minHeight: 44, fontSize: 15, fontWeight: 700,
             cursor: createProject.isPending ? 'wait' : 'pointer',
             fontFamily: 'inherit', opacity: createProject.isPending ? 0.6 : 1,
             boxShadow: hoveredBtn === 'create-main'
@@ -1228,7 +1229,7 @@ export function Dashboard() {
             display: 'flex', alignItems: 'center', gap: 8,
             background: 'transparent',
             color: C.text, border: `1px solid ${C.border}`, borderRadius: 12,
-            padding: '12px 20px', fontSize: 14, fontWeight: 600,
+            padding: '12px 20px', minHeight: 44, fontSize: 14, fontWeight: 600,
             cursor: 'pointer',
             fontFamily: 'inherit',
             transition: 'all .2s ease',
@@ -1245,7 +1246,7 @@ export function Dashboard() {
       {/* ── Stat cards ──────────────────────────────── */}
       <div className="tf-dash-stat-grid" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(150px, 100%), 1fr))',
         gap: 14,
         marginBottom: 28,
       }}>
@@ -1355,7 +1356,8 @@ export function Dashboard() {
                   color: C.text,
                   fontSize: 13,
                   fontFamily: 'inherit',
-                  width: 180,
+                  width: '100%',
+                  maxWidth: 180,
                   transition: 'border-color .2s, box-shadow .2s',
                 }}
               />
@@ -1420,7 +1422,7 @@ export function Dashboard() {
             /* ── Skeleton grid ─────────────── */
             <div className="tf-dash-project-grid" style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
               gap: 16,
             }}>
               {Array.from({ length: 6 }).map((_, i) => (
@@ -1517,7 +1519,7 @@ export function Dashboard() {
             <>
               <div className="tf-dash-project-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
                 gap: 16,
               }}>
                 {projects.data!.items.map((p) => (

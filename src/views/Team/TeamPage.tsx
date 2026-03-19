@@ -125,6 +125,7 @@ export function TeamPage() {
 
   const btnPrimary: React.CSSProperties = {
     padding: '10px 24px',
+    minHeight: 44,
     borderRadius: 10,
     border: 'none',
     background: C.accent,
@@ -140,6 +141,7 @@ export function TeamPage() {
 
   const btnSecondary: React.CSSProperties = {
     padding: '10px 20px',
+    minHeight: 44,
     borderRadius: 10,
     border: `1px solid ${C.border}`,
     background: C.surface,
@@ -310,8 +312,10 @@ export function TeamPage() {
         <div
           style={{
             ...cardStyle,
-            padding: 28,
+            padding: '28px 24px',
             maxWidth: 440,
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
           {/* Illustration */}
@@ -462,7 +466,7 @@ export function TeamPage() {
           padding: '18px 22px',
           marginBottom: 20,
           display: 'flex',
-          gap: 0,
+          gap: 12,
           flexWrap: 'wrap',
         }}
       >
@@ -653,6 +657,7 @@ export function TeamPage() {
           marginBottom: 24,
         }}
       >
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {/* Table header */}
         <div
           style={{
@@ -666,6 +671,7 @@ export function TeamPage() {
             color: C.dim,
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
+            minWidth: 520,
           }}
         >
           <div style={{ width: 36 }} />
@@ -713,6 +719,7 @@ export function TeamPage() {
                 padding: '12px 18px',
                 borderBottom: isLast ? 'none' : `1px solid ${C.border}`,
                 transition: 'background 0.1s',
+                minWidth: 520,
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = C.cardHover)}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -932,6 +939,7 @@ export function TeamPage() {
             {t('team.noMembers')}
           </div>
         )}
+        </div>{/* end overflowX wrapper */}
       </div>
 
       {/* ── Shared projects ────────────────────── */}
@@ -951,6 +959,7 @@ export function TeamPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
+                flexWrap: 'wrap',
               }}
             >
               <div
@@ -963,11 +972,12 @@ export function TeamPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: 22,
+                  flexShrink: 0,
                 }}
               >
                 {'\uD83C\uDFAC'}
               </div>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>
                   {pluralRu(projectCount, t('team.sharedProject.one'), t('team.sharedProject.few'), t('team.sharedProject.many'))}
                 </div>

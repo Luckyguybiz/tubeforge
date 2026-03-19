@@ -26,16 +26,18 @@ export function UpgradePrompt({ feature }: { feature: string }) {
       background: C.card,
       border: `1px solid ${C.border}`,
       borderRadius: 14,
-      padding: 24,
+      padding: '20px 16px',
       textAlign: 'center',
       maxWidth: 400,
+      width: 'calc(100% - 32px)',
       margin: '0 auto',
+      boxSizing: 'border-box',
     }}>
       <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>&#x1F512;</div>
       <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
         {t('upgrade.limitReached').replace('{feature}', feature)}
       </h3>
-      <p style={{ color: C.sub, fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
+      <p style={{ color: C.sub, fontSize: 13, marginBottom: 20, lineHeight: 1.5, wordBreak: 'break-word' }}>
         {t('upgrade.upgradeDesc')}
       </p>
       <button
@@ -52,6 +54,9 @@ export function UpgradePrompt({ feature }: { feature: string }) {
           cursor: createCheckout.isPending ? 'wait' : 'pointer',
           fontFamily: 'inherit',
           boxShadow: `0 4px 20px ${C.accent}33`,
+          minHeight: 44,
+          width: '100%',
+          maxWidth: 280,
         }}
       >
         {createCheckout.isPending ? (

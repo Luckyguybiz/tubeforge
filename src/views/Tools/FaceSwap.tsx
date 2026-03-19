@@ -819,7 +819,7 @@ export function FaceSwap() {
       {/* Two Upload Areas Side by Side */}
       <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
         {/* Source Face Upload */}
-        <div style={{ flex: 1, minWidth: 280 }}>
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
             Source Face
           </label>
@@ -900,7 +900,7 @@ export function FaceSwap() {
         {/* Arrow */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          paddingTop: 28,
+          paddingTop: 28, flexShrink: 0,
         }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -908,7 +908,7 @@ export function FaceSwap() {
         </div>
 
         {/* Target Image Upload */}
-        <div style={{ flex: 1, minWidth: 280 }}>
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
             Target Image
           </label>
@@ -1027,7 +1027,7 @@ export function FaceSwap() {
           <div
             style={{
               position: 'relative', borderRadius: 14, overflow: 'hidden',
-              border: `1px solid ${C.border}`, height: 360,
+              border: `1px solid ${C.border}`, height: 360, maxHeight: '70vh',
               cursor: isSplitDragging ? 'col-resize' : 'default',
               userSelect: 'none',
             }}
@@ -1130,7 +1130,7 @@ export function FaceSwap() {
       )}
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <ActionButton
           label={done ? 'Swap Again' : 'Swap Faces'}
           gradient={GRADIENT}
@@ -1170,9 +1170,9 @@ export function FaceSwap() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: ACCENT }}>Ethical Usage Disclaimer</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.5, wordBreak: 'break-word' as const }}>
             This tool is intended for entertainment and creative purposes only. Do not use face swap
             technology to create misleading, harmful, or non-consensual content. Misuse may violate
             laws and regulations. Always obtain consent before using someone&apos;s likeness.

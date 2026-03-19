@@ -46,8 +46,9 @@ export function Toast({
         border: `1px solid ${C.border}`,
         borderLeft: `3px solid ${color}`,
         borderRadius: 8,
-        minWidth: 280,
-        maxWidth: 400,
+        minWidth: 0,
+        maxWidth: 'calc(100vw - 32px)',
+        width: 400,
         boxShadow: '0 4px 24px rgba(0,0,0,.3)',
         animation: 'toastSlideIn .25s ease-out',
         fontFamily: 'var(--font-sans), sans-serif',
@@ -56,7 +57,7 @@ export function Toast({
       <span style={{ color, fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
         {ICONS[type]}
       </span>
-      <span style={{ color: C.text, fontSize: 13, flex: 1, lineHeight: 1.4 }}>
+      <span style={{ color: C.text, fontSize: 13, flex: 1, lineHeight: 1.4, wordBreak: 'break-word', overflow: 'hidden' }}>
         {message}
       </span>
       <button
@@ -68,8 +69,13 @@ export function Toast({
           color: C.sub,
           cursor: 'pointer',
           fontSize: 14,
-          padding: '0 2px',
+          padding: 4,
           flexShrink: 0,
+          minWidth: 32,
+          minHeight: 32,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
         {'\u2715'}

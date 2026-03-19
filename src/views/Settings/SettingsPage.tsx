@@ -104,7 +104,7 @@ export function SettingsPage() {
     background: C.card,
     border: `1px solid ${C.border}`,
     borderRadius: 16,
-    padding: 28,
+    padding: '28px 24px',
     marginBottom: 20,
   };
 
@@ -157,6 +157,7 @@ export function SettingsPage() {
 
   const btnBase: React.CSSProperties = {
     padding: '10px 24px',
+    minHeight: 44,
     borderRadius: 10,
     border: 'none',
     fontSize: 14,
@@ -181,7 +182,7 @@ export function SettingsPage() {
   const userEmail = profile.data?.email ?? session.data?.user?.email ?? '';
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto' }}>
+    <div style={{ maxWidth: 700, width: '100%', margin: '0 auto', padding: '0 16px', boxSizing: 'border-box' }}>
       {/* Page subtitle */}
       <div style={{ marginBottom: 32 }}>
         <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
@@ -203,7 +204,7 @@ export function SettingsPage() {
         ) : (
           <>
             {/* Avatar + Name + Email */}
-            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', marginBottom: 24 }}>
+            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap' }}>
               {/* Avatar */}
               <div style={{
                 width: 72,
@@ -453,7 +454,7 @@ export function SettingsPage() {
               <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 12 }}>
                 {t('settings.planFeatures')}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px 16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: '8px 16px' }}>
                 {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.FREE).map((feature, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -695,7 +696,7 @@ export function SettingsPage() {
         <h2 style={sectionHeaderStyle}>{t('settings.themeTitle')}</h2>
         <p style={sectionDescStyle}>{t('settings.themeDesc')}</p>
 
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {/* Dark theme option */}
           <button
             onClick={() => setThemeMode('dark')}

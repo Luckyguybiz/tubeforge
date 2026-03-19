@@ -243,8 +243,8 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
           borderRadius: 16,
           padding: 0,
           width: 560,
-          maxWidth: '92vw',
-          maxHeight: '80vh',
+          maxWidth: 'calc(100vw - 32px)',
+          maxHeight: '85vh',
           boxShadow: `0 24px 64px rgba(0,0,0,.3), 0 0 0 1px ${isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)'}`,
           overflow: 'hidden',
           display: 'flex',
@@ -259,7 +259,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '18px 24px',
+            padding: '14px 16px',
             borderBottom: `1px solid ${C.border}`,
             flexShrink: 0,
           }}
@@ -292,8 +292,10 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
             aria-label="Close"
             onClick={() => setShowShortcuts(false)}
             style={{
-              width: 28,
-              height: 28,
+              width: 36,
+              height: 36,
+              minWidth: 36,
+              minHeight: 36,
               borderRadius: 7,
               border: `1px solid ${C.border}`,
               background: 'transparent',
@@ -305,6 +307,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
               justifyContent: 'center',
               fontFamily: 'inherit',
               transition: 'all .15s ease',
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = C.surface;
@@ -322,7 +325,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
         {/* Content — scrollable */}
         <div
           style={{
-            padding: '16px 24px 24px',
+            padding: '12px 16px 16px',
             overflowY: 'auto',
             flex: 1,
           }}
@@ -331,7 +334,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
               gap: 20,
             }}
           >
@@ -404,7 +407,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
         {/* Footer hint */}
         <div
           style={{
-            padding: '12px 24px',
+            padding: '12px 16px',
             borderTop: `1px solid ${C.border}`,
             display: 'flex',
             alignItems: 'center',

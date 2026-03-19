@@ -379,7 +379,7 @@ export function SubtitleEditor() {
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
-          <span style={{ fontSize: 12, fontWeight: 600, color: C.text, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: C.text, maxWidth: '40vw', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
             {subtitleFile.name}
           </span>
           <span style={{ fontSize: 11, color: C.dim }}>
@@ -394,7 +394,7 @@ export function SubtitleEditor() {
             padding: '8px 14px', borderRadius: 10,
             border: `1px solid ${C.border}`, background: C.card,
             cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.sub,
-            transition: 'all 0.2s ease',
+            transition: 'all 0.2s ease', minHeight: 44,
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
@@ -427,7 +427,7 @@ export function SubtitleEditor() {
                 color: exportFormat === fmt ? '#fff' : C.sub,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 textTransform: 'uppercase', fontFamily: 'inherit',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.2s ease', minHeight: 44,
               }}
             >
               .{fmt}
@@ -447,7 +447,7 @@ export function SubtitleEditor() {
       {/* Main layout: subtitle list + optional video preview */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: videoUrl ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr',
+        gridTemplateColumns: videoUrl ? 'repeat(auto-fill, minmax(280px, 1fr))' : '1fr',
         gap: 20,
         alignItems: 'start',
       }}>
@@ -464,7 +464,7 @@ export function SubtitleEditor() {
                 background: `${GRADIENT[0]}12`,
                 color: GRADIENT[0], fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.2s ease', minHeight: 44,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = `${GRADIENT[0]}22`; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = `${GRADIENT[0]}12`; }}
@@ -625,6 +625,7 @@ export function SubtitleEditor() {
                 border: `1px solid ${C.border}`, background: C.card,
                 color: C.dim, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                minHeight: 44, width: '100%',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.color = C.text; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = C.card; e.currentTarget.style.color = C.dim; }}
@@ -640,6 +641,7 @@ export function SubtitleEditor() {
         display: 'flex', alignItems: 'center', gap: 12,
         marginTop: 20, paddingTop: 16,
         borderTop: `1px solid ${C.border}`,
+        flexWrap: 'wrap',
       }}>
         <button
           onClick={handleReset}
@@ -648,6 +650,7 @@ export function SubtitleEditor() {
             border: `1px solid ${C.border}`, background: C.card,
             color: C.dim, fontSize: 12, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+            minHeight: 44,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.color = C.text; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = C.card; e.currentTarget.style.color = C.dim; }}
@@ -661,7 +664,7 @@ export function SubtitleEditor() {
           padding: '8px 20px', borderRadius: 10,
           border: `1px solid ${C.border}`, background: C.card,
           cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.sub,
-          transition: 'all 0.2s ease',
+          transition: 'all 0.2s ease', minHeight: 44,
         }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
@@ -711,67 +714,102 @@ function SubtitleRow({
 
   return (
     <div style={{
-      display: 'flex', gap: 10, alignItems: 'flex-start',
+      display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-start',
       padding: '12px 14px', borderRadius: 10,
       background: C.card, border: `1px solid ${C.border}`,
       transition: 'all 0.15s ease',
     }}>
-      {/* Index number */}
-      <button
-        onClick={() => onSeek(entry.startTime)}
-        title="Seek to this subtitle"
-        style={{
-          width: 28, height: 28, borderRadius: 8, border: 'none',
-          background: `${gradient[0]}18`,
-          color: gradient[0], fontSize: 11, fontWeight: 700,
-          cursor: 'pointer', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', flexShrink: 0, fontFamily: 'inherit',
-          transition: 'all 0.2s ease', marginTop: 2,
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = `${gradient[0]}30`; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = `${gradient[0]}18`; }}
-      >
-        {displayIndex}
-      </button>
+      {/* Top row: index + time fields + delete */}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%' }}>
+        {/* Index number */}
+        <button
+          onClick={() => onSeek(entry.startTime)}
+          title="Seek to this subtitle"
+          style={{
+            width: 36, height: 36, borderRadius: 8, border: 'none',
+            background: `${gradient[0]}18`,
+            color: gradient[0], fontSize: 11, fontWeight: 700,
+            cursor: 'pointer', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', flexShrink: 0, fontFamily: 'inherit',
+            transition: 'all 0.2s ease', marginTop: 2,
+            minWidth: 36, minHeight: 36,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = `${gradient[0]}30`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = `${gradient[0]}18`; }}
+        >
+          {displayIndex}
+        </button>
 
-      {/* Time fields */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
-        <input
-          value={startStr}
-          onChange={(e) => setStartStr(e.target.value)}
-          onBlur={commitStart}
-          onKeyDown={(e) => { if (e.key === 'Enter') commitStart(); }}
-          placeholder="00:00:00.000"
-          aria-label={`Start time for subtitle ${displayIndex}`}
+        {/* Time fields */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 0 }}>
+          <input
+            value={startStr}
+            onChange={(e) => setStartStr(e.target.value)}
+            onBlur={commitStart}
+            onKeyDown={(e) => { if (e.key === 'Enter') commitStart(); }}
+            placeholder="00:00:00.000"
+            aria-label={`Start time for subtitle ${displayIndex}`}
+            style={{
+              width: 110, maxWidth: '100%', padding: '5px 8px', borderRadius: 6,
+              border: `1px solid ${C.border}`, background: C.surface,
+              color: C.text, fontSize: 11, fontFamily: 'monospace',
+              outline: 'none', transition: 'border-color 0.2s ease',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
+          />
+          <input
+            value={endStr}
+            onChange={(e) => setEndStr(e.target.value)}
+            onBlur={commitEnd}
+            onKeyDown={(e) => { if (e.key === 'Enter') commitEnd(); }}
+            placeholder="00:00:00.000"
+            aria-label={`End time for subtitle ${displayIndex}`}
+            style={{
+              width: 110, maxWidth: '100%', padding: '5px 8px', borderRadius: 6,
+              border: `1px solid ${C.border}`, background: C.surface,
+              color: C.text, fontSize: 11, fontFamily: 'monospace',
+              outline: 'none', transition: 'border-color 0.2s ease',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
+          />
+          <span style={{ fontSize: 9, color: C.dim, fontFamily: 'monospace', paddingLeft: 2 }}>
+            {((entry.endTime - entry.startTime)).toFixed(1)}s
+          </span>
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Delete button */}
+        <button
+          onClick={() => onDelete(entry.id)}
+          title="Delete this subtitle"
+          aria-label={`Delete subtitle ${displayIndex}`}
           style={{
-            width: 110, padding: '5px 8px', borderRadius: 6,
-            border: `1px solid ${C.border}`, background: C.surface,
-            color: C.text, fontSize: 11, fontFamily: 'monospace',
-            outline: 'none', transition: 'border-color 0.2s ease',
+            width: 36, height: 36, borderRadius: 8, border: 'none',
+            background: 'transparent', color: C.dim,
+            cursor: 'pointer', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', flexShrink: 0,
+            transition: 'all 0.2s ease', marginTop: 2,
+            minWidth: 36, minHeight: 36,
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
-        />
-        <input
-          value={endStr}
-          onChange={(e) => setEndStr(e.target.value)}
-          onBlur={commitEnd}
-          onKeyDown={(e) => { if (e.key === 'Enter') commitEnd(); }}
-          placeholder="00:00:00.000"
-          aria-label={`End time for subtitle ${displayIndex}`}
-          style={{
-            width: 110, padding: '5px 8px', borderRadius: 6,
-            border: `1px solid ${C.border}`, background: C.surface,
-            color: C.text, fontSize: 11, fontFamily: 'monospace',
-            outline: 'none', transition: 'border-color 0.2s ease',
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#ef444418';
+            e.currentTarget.style.color = '#ef4444';
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
-        />
-        <span style={{ fontSize: 9, color: C.dim, fontFamily: 'monospace', paddingLeft: 2 }}>
-          {((entry.endTime - entry.startTime)).toFixed(1)}s
-        </span>
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = C.dim;
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+          </svg>
+        </button>
       </div>
 
-      {/* Text area */}
+      {/* Text area - full width row */}
       <textarea
         value={entry.text}
         onChange={(e) => onUpdate(entry.id, { text: e.target.value })}
@@ -779,42 +817,16 @@ function SubtitleRow({
         aria-label={`Text for subtitle ${displayIndex}`}
         rows={2}
         style={{
-          flex: 1, padding: '6px 10px', borderRadius: 8,
+          width: '100%', padding: '6px 10px', borderRadius: 8,
           border: `1px solid ${C.border}`, background: C.surface,
           color: C.text, fontSize: 13, outline: 'none',
           fontFamily: 'inherit', resize: 'vertical',
           minHeight: 44, transition: 'border-color 0.2s ease',
-          lineHeight: 1.4,
+          lineHeight: 1.4, boxSizing: 'border-box',
         }}
         onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
         onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
       />
-
-      {/* Delete button */}
-      <button
-        onClick={() => onDelete(entry.id)}
-        title="Delete this subtitle"
-        aria-label={`Delete subtitle ${displayIndex}`}
-        style={{
-          width: 28, height: 28, borderRadius: 8, border: 'none',
-          background: 'transparent', color: C.dim,
-          cursor: 'pointer', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', flexShrink: 0,
-          transition: 'all 0.2s ease', marginTop: 2,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = '#ef444418';
-          e.currentTarget.style.color = '#ef4444';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = C.dim;
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-        </svg>
-      </button>
     </div>
   );
 }

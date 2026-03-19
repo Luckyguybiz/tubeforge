@@ -24,12 +24,12 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
     <div style={{ width: '100%', minHeight: '100vh', background: C.bg }}>
       {/* Header */}
       <div style={{
-        padding: '16px 16px',
+        padding: '12px 12px',
         borderBottom: `1px solid ${C.border}`,
         background: C.surface,
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 10,
         flexWrap: 'wrap',
       }}>
         <button
@@ -53,7 +53,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
           </svg>
         </button>
         <div style={{
-          width: 42, height: 42, borderRadius: 12,
+          width: 36, height: 36, borderRadius: 10,
           background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: `0 4px 12px ${gradient[0]}33`, flexShrink: 0,
@@ -64,7 +64,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0 }}>{title}</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0, wordBreak: 'break-word' }}>{title}</h1>
             {badge && (
               <span style={{
                 padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700,
@@ -75,15 +75,15 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
               </span>
             )}
           </div>
-          <p style={{ fontSize: 13, color: C.sub, margin: '4px 0 0' }}>{subtitle}</p>
+          <p style={{ fontSize: 13, color: C.sub, margin: '4px 0 0', wordBreak: 'break-word' }}>{subtitle}</p>
         </div>
       </div>
 
       {/* Coming Soon Banner */}
       {comingSoon && (
         <div style={{
-          margin: '16px 16px 0',
-          padding: '14px 20px',
+          margin: '12px 12px 0',
+          padding: '12px 14px',
           borderRadius: 12,
           background: `linear-gradient(135deg, ${gradient[0]}12, ${gradient[1]}12)`,
           border: `1px solid ${gradient[0]}30`,
@@ -110,7 +110,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
 
       {/* Content */}
       <div style={{
-        padding: '20px 16px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+        padding: '16px 12px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
       }}>
         {children}
       </div>

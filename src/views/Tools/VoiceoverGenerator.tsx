@@ -62,11 +62,11 @@ export function VoiceoverGenerator() {
       subtitle="Generate realistic AI voiceovers from your scripts with customizable voices"
       gradient={GRADIENT}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         {/* Left column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           {/* Script input */}
-          <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
+          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Script</span>
             <textarea
               value={script}
@@ -78,6 +78,7 @@ export function VoiceoverGenerator() {
                 color: C.text, fontSize: 14, fontFamily: 'inherit',
                 resize: 'vertical', outline: 'none',
                 transition: 'border-color 0.2s ease',
+                boxSizing: 'border-box',
               }}
               onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -88,7 +89,7 @@ export function VoiceoverGenerator() {
           </div>
 
           {/* Language */}
-          <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
+          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Language</span>
             <select
               value={language}
@@ -107,7 +108,7 @@ export function VoiceoverGenerator() {
           </div>
 
           {/* Speed */}
-          <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
+          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Speed</span>
               <span style={{ fontSize: 13, color: GRADIENT[0], fontWeight: 600 }}>{speed.toFixed(1)}x</span>
@@ -124,7 +125,7 @@ export function VoiceoverGenerator() {
           </div>
 
           {/* Pitch */}
-          <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
+          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Pitch</span>
               <span style={{ fontSize: 13, color: GRADIENT[0], fontWeight: 600 }}>{pitch > 0 ? '+' : ''}{pitch}</span>
@@ -144,11 +145,11 @@ export function VoiceoverGenerator() {
         </div>
 
         {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           {/* Voice selector */}
-          <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
+          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 16 }}>Select Voice</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
               {VOICES.map((v) => {
                 const isSelected = selectedVoice === v.id;
                 const isHovered = hoveredVoice === v.id;
@@ -160,11 +161,12 @@ export function VoiceoverGenerator() {
                     onMouseLeave={() => setHoveredVoice(null)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+                      minHeight: 44,
                       borderRadius: 12,
                       border: `1px solid ${isSelected ? v.color : isHovered ? `${v.color}88` : C.border}`,
                       background: isSelected ? `${v.color}11` : isHovered ? `${v.color}08` : C.surface,
                       cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit', textAlign: 'left',
-                      outline: 'none',
+                      outline: 'none', minWidth: 0,
                     }}
                     onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${v.color}44`; }}
                     onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
@@ -177,9 +179,9 @@ export function VoiceoverGenerator() {
                     }}>
                       {v.name[0]}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{v.name}</div>
-                      <div style={{ fontSize: 11, color: C.dim }}>{v.desc}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</div>
+                      <div style={{ fontSize: 11, color: C.dim, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.desc}</div>
                     </div>
                   </button>
                 );
@@ -188,12 +190,13 @@ export function VoiceoverGenerator() {
           </div>
 
           {/* Audio preview */}
-          <div style={{ padding: 20, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
+          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 16 }}>Audio Preview</span>
             <div style={{
               height: 80, borderRadius: 12, background: C.surface,
               border: `1px solid ${C.border}`, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', gap: 3, padding: '0 20px',
+              alignItems: 'center', justifyContent: 'center', gap: 3, padding: '0 12px',
+              overflow: 'hidden',
             }}>
               {generated ? (
                 waveformBars.map((h, i) => (
@@ -216,11 +219,12 @@ export function VoiceoverGenerator() {
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                   style={{
-                    width: 40, height: 40, borderRadius: '50%',
+                    width: 44, height: 44, borderRadius: '50%',
                     background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
                     border: 'none', cursor: 'pointer', display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
                     transition: 'transform 0.2s ease', outline: 'none',
+                    flexShrink: 0,
                   }}
                   onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 3px ${GRADIENT[0]}44`; }}
                   onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
@@ -250,7 +254,7 @@ export function VoiceoverGenerator() {
               onMouseEnter={() => setDownloadHover(true)}
               onMouseLeave={() => setDownloadHover(false)}
               style={{
-                padding: '14px 24px', borderRadius: 12,
+                padding: '14px 24px', minHeight: 44, borderRadius: 12,
                 border: `1px solid ${C.border}`, background: downloadHover ? C.surface : C.card,
                 color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.2s ease', fontFamily: 'inherit',

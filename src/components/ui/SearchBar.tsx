@@ -208,7 +208,7 @@ export const SearchBar = memo(function SearchBar({ expanded, onClose }: SearchBa
   let flatIndex = -1;
 
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, width: '100%', maxWidth: 400 }}>
       {/* Search icon */}
       <svg
         width={14}
@@ -241,8 +241,9 @@ export const SearchBar = memo(function SearchBar({ expanded, onClose }: SearchBa
         aria-autocomplete="list"
         role="combobox"
         style={{
-          width: 260,
-          height: 28,
+          width: '100%',
+          minWidth: 0,
+          height: 36,
           padding: '0 10px',
           borderRadius: 7,
           border: `1px solid ${C.borderActive}`,
@@ -275,8 +276,10 @@ export const SearchBar = memo(function SearchBar({ expanded, onClose }: SearchBa
         onClick={onClose}
         aria-label={t('topbar.clearSearch')}
         style={{
-          width: 22,
-          height: 22,
+          width: 32,
+          height: 32,
+          minWidth: 32,
+          minHeight: 32,
           borderRadius: 7,
           border: `1px solid ${C.border}`,
           background: 'transparent',
@@ -300,9 +303,12 @@ export const SearchBar = memo(function SearchBar({ expanded, onClose }: SearchBa
           role="listbox"
           style={{
             position: 'absolute',
-            top: 36,
+            top: 42,
             left: 0,
-            width: 380,
+            right: 0,
+            width: '100%',
+            minWidth: 280,
+            maxWidth: 'calc(100vw - 32px)',
             maxHeight: 420,
             overflowY: 'auto',
             background: C.card,

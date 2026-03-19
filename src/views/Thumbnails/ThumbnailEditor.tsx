@@ -48,6 +48,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
+
+  // Responsive check
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Real-time collaboration
   useCollaboration(projectId);
@@ -623,16 +633,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const chevronIcon = <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
 
   // Shared button styles to reduce duplication
-  const headerBtn: React.CSSProperties = { padding: '7px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' };
+  const headerBtn: React.CSSProperties = { padding: isMobile ? '10px 12px' : '7px 12px', minHeight: isMobile ? 44 : 'auto', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s', whiteSpace: 'nowrap' as const, flexShrink: 0 };
   const dropdownPanel: React.CSSProperties = { position: 'absolute', top: '100%', right: 0, marginTop: 6, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 6, zIndex: Z_INDEX.TOOLBAR_POPOVER, boxShadow: '0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.15)' };
   const menuItem: React.CSSProperties = { padding: '8px 12px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: C.text, transition: 'background .1s' };
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0' }}>{t('thumbs.editor.title')}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 10 : 16, flexWrap: 'wrap', gap: isMobile ? 8 : 0 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: '0' }}>{t('thumbs.editor.title')}</h2>
             {project.data?.title && <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>— {project.data.title}</span>}
             <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               {saveCanvas.isPending ? (
@@ -644,8 +654,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>{t('thumbs.editor.subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <OnlineUsers />
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', overflowX: isMobile ? 'auto' : 'visible', flexShrink: 0, maxWidth: '100%', WebkitOverflowScrolling: 'touch' as const }}>
+          {!isMobile && <OnlineUsers />}
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           <button onClick={() => store().undo()} disabled={historyCount === 0} title={`${t('thumbs.editor.undoTitle')}${historyCount > 0 ? ` — ${historyCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: historyCount === 0 ? C.dim : C.sub, cursor: historyCount === 0 ? 'default' : 'pointer', opacity: historyCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{undoIcon}{historyCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>}</button>
           <button onClick={() => store().redo()} disabled={futureCount === 0} title={`${t('thumbs.editor.redoTitle')}${futureCount > 0 ? ` — ${futureCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: futureCount === 0 ? C.dim : C.sub, cursor: futureCount === 0 ? 'default' : 'pointer', opacity: futureCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{redoIcon}{futureCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureCount})</span>}</button>
@@ -694,11 +704,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <button onClick={() => store().setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} {t('thumbs.editor.aiGeneration')}</button>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <ToolBar onFileChange={onFileChange} />
-        <LeftSidebar />
+      <div style={{ display: 'flex', gap: isMobile ? 8 : 12, flexDirection: isMobile ? 'column' : 'row' }}>
+        {/* On mobile: toolbar is horizontal at top */}
+        <ToolBar onFileChange={onFileChange} isMobile={isMobile} />
+        {!isMobile && <LeftSidebar />}
         <ErrorBoundary>
-        <div ref={canvasWrapperRef} style={{ flex: 1, position: 'relative', minWidth: 0, overflow: 'hidden', borderRadius: 12, border: `1px solid ${C.border}`, background: C.bg }}
+        <div ref={canvasWrapperRef} style={{ flex: 1, position: 'relative', minWidth: 0, overflow: 'hidden', borderRadius: isMobile ? 8 : 12, border: `1px solid ${C.border}`, background: C.bg, width: '100%', maxWidth: '100%' }}
           onMouseDown={onMiddleDown} onMouseMove={onMiddleMove} onMouseUp={onMiddleUp} onMouseLeave={onMiddleUp}>
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
@@ -818,7 +829,73 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             </div>
           </div>
         )}
-        <PropertiesPanel sel={sel ?? null} />
+        {/* On mobile: collapsible properties drawer */}
+        {isMobile ? (
+          <>
+            {sel && (
+              <button
+                onClick={() => setMobilePropsOpen(!mobilePropsOpen)}
+                style={{
+                  position: 'fixed',
+                  bottom: mobilePropsOpen ? 'auto' : 16,
+                  right: 16,
+                  top: mobilePropsOpen ? 'auto' : 'auto',
+                  zIndex: Z_INDEX.TOOLBAR_POPOVER,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  background: C.card,
+                  color: C.accent,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(0,0,0,.25)',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              </button>
+            )}
+            {mobilePropsOpen && (
+              <div style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: Z_INDEX.MODAL_BACKDROP,
+                background: 'rgba(0,0,0,.4)',
+              }} onClick={() => setMobilePropsOpen(false)}>
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    maxHeight: '60vh',
+                    overflowY: 'auto',
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    borderBottom: 'none',
+                    padding: 14,
+                    WebkitOverflowScrolling: 'touch' as const,
+                  }}
+                >
+                  <div style={{ width: 40, height: 4, borderRadius: 2, background: C.border, margin: '0 auto 12px' }} />
+                  <PropertiesPanel sel={sel ?? null} />
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <PropertiesPanel sel={sel ?? null} />
+        )}
+        {/* Mobile left sidebar as bottom sheet */}
+        {isMobile && <LeftSidebar isMobile={isMobile} />}
       </div>
     </div>
   );

@@ -60,23 +60,23 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 16, padding: '0 16px', boxSizing: 'border-box', width: '100%' }}>
       <div style={{ fontSize: 36, opacity: 0.2 }}>📂</div>
       <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>{title}</div>
       <div style={{ fontSize: 13, color: C.sub, marginBottom: 12 }}>{t('picker.selectProject')}</div>
       {projects.isError ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, opacity: 0.3, marginBottom: 6 }}>⚠</div>
-          <div style={{ color: C.accent, fontSize: 13, marginBottom: 12 }}>{t('picker.loadError')}</div>
+          <div style={{ color: C.accent, fontSize: 13, marginBottom: 12, wordBreak: 'break-word' }}>{t('picker.loadError')}</div>
           <button
             onClick={() => projects.refetch()}
-            style={{ padding: '10px 20px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ padding: '10px 20px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}
           >
             {t('picker.retry')}
           </button>
         </div>
       ) : projects.isLoading ? (
-        <div style={{ width: 360 }}>
+        <div style={{ width: '100%', maxWidth: 360 }}>
           {[1, 2, 3].map((i) => (
             <div key={i} style={{ marginTop: i > 1 ? 8 : 0 }}><Skeleton height={52} /></div>
           ))}
@@ -86,13 +86,13 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
           <div style={{ color: C.dim, fontSize: 13, marginBottom: 12 }}>{t('picker.noProjects')}</div>
           <button
             onClick={() => router.push('/dashboard')}
-            style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}
           >
             {t('picker.createOnDashboard')}
           </button>
         </div>
       ) : (
-        <div style={{ width: 380, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {/* New project button */}
           <button
             onClick={() => createProject.mutate({ title: t('picker.untitled') })}
@@ -136,7 +136,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
               gap: 8,
             }}>
               <span>⚠</span>
-              <span>{error}</span>
+              <span style={{ wordBreak: 'break-word', overflow: 'hidden' }}>{error}</span>
               {(error.includes('лимит') || error.includes('limit')) && (
                 <button
                   onClick={() => router.push('/billing')}
@@ -223,8 +223,10 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                   title={deletingId === p.id ? t('picker.confirmDelete') : t('picker.deleteProject')}
                   aria-label={deletingId === p.id ? `Confirm delete ${p.title || 'project'}` : `Delete ${p.title || 'project'}`}
                   style={{
-                    width: 24,
-                    height: 24,
+                    width: 32,
+                    height: 32,
+                    minWidth: 32,
+                    minHeight: 32,
                     borderRadius: 6,
                     border: 'none',
                     background: deletingId === p.id ? C.accent : 'transparent',
@@ -250,7 +252,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
             <button
               onClick={() => setDisplayCount((c) => c + 20)}
               style={{
-                padding: '8px 16px',
+                padding: '10px 16px',
                 borderRadius: 8,
                 border: `1px solid ${C.border}`,
                 background: C.surface,
@@ -260,6 +262,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 marginTop: 4,
+                minHeight: 44,
               }}
             >
               {t('picker.showMore')} ({projects.data.items.length - displayCount})

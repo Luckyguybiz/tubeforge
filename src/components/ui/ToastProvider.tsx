@@ -19,8 +19,18 @@ export function ToastProvider() {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
+        @media (max-width: 640px) {
+          .tf-toast-container {
+            top: auto !important;
+            bottom: 16px !important;
+            right: 16px !important;
+            left: 16px !important;
+            align-items: stretch !important;
+          }
+        }
       `}</style>
       <div
+        className="tf-toast-container"
         role="status"
         aria-live={toasts.some((t) => t.type === 'error') ? 'assertive' : 'polite'}
         aria-label={t('toast.notifications')}
@@ -33,6 +43,7 @@ export function ToastProvider() {
           flexDirection: 'column',
           gap: 8,
           pointerEvents: 'auto',
+          alignItems: 'flex-end',
         }}
       >
         {toasts.map((t) => (

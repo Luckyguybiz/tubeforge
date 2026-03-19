@@ -286,20 +286,20 @@ export function VideoCompressor() {
           {/* File Info */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12,
-            border: `1px solid ${C.border}`, background: C.card, marginBottom: 24,
+            border: `1px solid ${C.border}`, background: C.card, marginBottom: 24, flexWrap: 'wrap',
           }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
               background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="2" /><polygon points="10 8 16 12 10 16" />
               </svg>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{file.name}</div>
-              <div style={{ fontSize: 11, color: C.dim }}>{t('tools.compressor.originalSize')}: {formatSize(originalSize)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
+              <div style={{ fontSize: 11, color: C.dim, wordBreak: 'break-word' }}>{t('tools.compressor.originalSize')}: {formatSize(originalSize)}</div>
             </div>
             <button
               onClick={handleReset}
@@ -310,6 +310,7 @@ export function VideoCompressor() {
                 background: removeHover ? C.surface : C.card,
                 color: C.sub, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                flexShrink: 0, minHeight: 44,
               }}
             >
               {t('tools.remove')}
@@ -319,7 +320,7 @@ export function VideoCompressor() {
           {/* Compression Preset */}
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.compressor.preset')}</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
               {PRESETS.map((p) => (
                 <button
                   key={p.id}
@@ -445,22 +446,22 @@ export function VideoCompressor() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              <span style={{ fontSize: 13, color: '#ef4444' }}>{error}</span>
+              <span style={{ fontSize: 13, color: '#ef4444', wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
             </div>
           )}
 
           {/* Before/After Size Comparison */}
           {done && compressedBlob && (
             <div style={{
-              display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center',
-              padding: 20, borderRadius: 14, border: `1px solid ${C.border}`, background: C.card,
+              display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'center',
+              padding: 16, borderRadius: 14, border: `1px solid ${C.border}`, background: C.card,
               marginBottom: 24,
             }}>
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', flex: '1 1 120px', minWidth: 100 }}>
                 <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>{t('tools.compressor.before')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{formatSize(originalSize)}</div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="5 12 12 5 19 12" /><line x1="12" y1="5" x2="12" y2="19" />
                 </svg>
@@ -473,7 +474,7 @@ export function VideoCompressor() {
                   }
                 </span>
               </div>
-              <div style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center', flex: '1 1 120px', minWidth: 100 }}>
                 <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>{t('tools.compressor.after')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#06b6d4' }}>
                   {formatSize(compressedSize)}
@@ -483,7 +484,7 @@ export function VideoCompressor() {
           )}
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <ActionButton
               label={done ? t('tools.compressor.compressAgain') : t('tools.compressor.compress')}
               gradient={['#06b6d4', '#0ea5e9']}
@@ -502,6 +503,7 @@ export function VideoCompressor() {
                   color: C.text, fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8,
+                  minHeight: 44,
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

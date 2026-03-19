@@ -13,7 +13,7 @@ const PANEL_TITLE_KEYS: Record<string, string> = {
   projects: 'thumbs.panel.projects',
 };
 
-export function LeftSidebar() {
+export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const leftPanel = useThumbnailStore((s) => s.leftPanel);
@@ -27,8 +27,20 @@ export function LeftSidebar() {
     <aside
       role="region"
       aria-label={panelTitle}
-      style={{
+      style={isMobile ? {
+        width: '100%',
+        maxWidth: '100%',
+        flexShrink: 0,
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        maxHeight: 260,
+      } : {
         width: 280,
+        maxWidth: 280,
         flexShrink: 0,
         background: C.card,
         border: `1px solid ${C.border}`,
@@ -57,8 +69,8 @@ export function LeftSidebar() {
           title={t('thumbs.sidebar.close')}
           aria-label={t('thumbs.sidebar.closeLabel')}
           style={{
-            width: 24,
-            height: 24,
+            width: isMobile ? 44 : 24,
+            height: isMobile ? 44 : 24,
             borderRadius: 6,
             border: 'none',
             background: 'transparent',

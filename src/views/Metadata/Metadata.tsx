@@ -164,7 +164,9 @@ function SectionCard({
         background: C.card,
         border: `1px solid ${C.border}`,
         borderRadius: 14,
-        padding: '20px 22px',
+        padding: typeof window !== 'undefined' && window.innerWidth < 768 ? '14px 12px' : '20px 22px',
+        width: '100%',
+        boxSizing: 'border-box' as const,
         ...style,
       }}
     >
@@ -691,13 +693,13 @@ export function Metadata({ projectId }: { projectId: string | null }) {
         <div style={{ marginTop: 8 }}>
           <Skeleton width="320px" height="16px" />
         </div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 28 }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 24, marginTop: 28, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Skeleton width="100%" height="120px" />
             <Skeleton width="100%" height="220px" />
             <Skeleton width="100%" height="100px" />
           </div>
-          <div style={{ width: 340 }}>
+          <div style={{ width: '100%', maxWidth: 340 }}>
             <Skeleton width="100%" height="400px" />
           </div>
         </div>
@@ -781,7 +783,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
   const currentProject = projectsList.data?.items?.find((p) => p.id === projectId);
 
   return (
-    <div style={{ maxWidth: 1060 }}>
+    <div style={{ maxWidth: 1060, width: '100%', padding: isMobile ? '0 12px' : 0, boxSizing: 'border-box' as const }}>
       {/* ─── Breadcrumb ────────────────────────────── */}
       <div
         style={{
@@ -850,13 +852,14 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Copy all button */}
           <button
             onClick={handleCopyAll}
             title={t('metadata.copyAllTitle')}
             style={{
               padding: '8px 16px',
+              minHeight: 44,
               borderRadius: 10,
               border: `1px solid ${C.border}`,
               background: C.surface,
@@ -889,6 +892,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             disabled={manualSaving || !projectId}
             style={{
               padding: '8px 22px',
+              minHeight: 44,
               borderRadius: 10,
               border: 'none',
               background: C.accent,
@@ -935,7 +939,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             cursor: 'pointer',
             fontFamily: 'inherit',
             width: '100%',
-            maxWidth: 400,
+            maxWidth: isMobile ? '100%' : 400,
             textAlign: 'left',
             transition: 'border-color 0.2s',
           }}
@@ -1076,7 +1080,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       </div>
 
       {/* ─── Main layout: left editor + right preview ─ */}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
+      <div style={{ display: 'flex', gap: isMobile ? 16 : 24, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
         {/* ──── LEFT: Editor ──────────────────────── */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           {/* ─── TITLE SECTION ────────────────────── */}

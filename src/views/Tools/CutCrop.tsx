@@ -319,7 +319,8 @@ export function CutCrop() {
   }, [file, segments, selectedSegmentId]);
 
   /* ---- timeline helpers ---- */
-  const timelinePxPerSec = duration > 0 ? (700 * zoom) / duration : 4;
+  const timelineBaseWidth = typeof window !== 'undefined' ? Math.min(700, window.innerWidth - 32) : 700;
+  const timelinePxPerSec = duration > 0 ? (timelineBaseWidth * zoom) / duration : 4;
 
   const seekOnTimeline = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!timelineRef.current || duration <= 0) return;
@@ -361,7 +362,7 @@ export function CutCrop() {
 
   /* ---- style helpers ---- */
   const btnBase: React.CSSProperties = {
-    width: 36, height: 36, borderRadius: 8, border: `1px solid ${C.border}`,
+    width: 44, height: 44, borderRadius: 8, border: `1px solid ${C.border}`,
     background: C.card, color: C.text, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.15s ease', fontFamily: 'inherit', flexShrink: 0, fontSize: 13, fontWeight: 600,
@@ -500,7 +501,7 @@ export function CutCrop() {
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              <span style={{ color: '#ef4444', fontSize: 14, maxWidth: 320 }}>{error}</span>
+              <span style={{ color: '#ef4444', fontSize: 14, maxWidth: '100%', wordBreak: 'break-word' }}>{error}</span>
             </div>
           )}
           {showCrop && (
@@ -579,13 +580,13 @@ export function CutCrop() {
           <div style={{ flex: 1 }} />
 
           {/* Zoom controls */}
-          <button onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title={t('tools.cutcrop.zoomOut')} aria-label="Zoom out">-</button>
+          <button onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))} style={{ ...btnBase, width: 36, height: 36, fontSize: 16 }} {...hover(C.cardHover)} title={t('tools.cutcrop.zoomOut')} aria-label="Zoom out">-</button>
           <input type="range" min={1} max={4} step={0.25} value={zoom}
             onChange={(e) => setZoom(+e.target.value)}
             aria-label="Zoom level"
-            style={{ width: 80, accentColor: GRADIENT[0] }}
+            style={{ width: 60, minWidth: 40, maxWidth: 80, accentColor: GRADIENT[0] }}
           />
-          <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title={t('tools.cutcrop.zoomIn')} aria-label="Zoom in">+</button>
+          <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(1)))} style={{ ...btnBase, width: 36, height: 36, fontSize: 16 }} {...hover(C.cardHover)} title={t('tools.cutcrop.zoomIn')} aria-label="Zoom in">+</button>
 
           {/* New video */}
           <button
@@ -744,6 +745,7 @@ export function CutCrop() {
             boxShadow: exporting ? 'none' : `0 4px 16px ${GRADIENT[0]}44`,
             display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit',
             transition: 'all 0.2s ease', opacity: exporting ? 0.7 : 1,
+            minHeight: 44, width: '100%', maxWidth: 280, justifyContent: 'center',
           }}
           onMouseEnter={(e) => { if (!exporting) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 20px ${GRADIENT[0]}66`; } }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = exporting ? 'none' : `0 4px 16px ${GRADIENT[0]}44`; }}
@@ -769,7 +771,7 @@ export function CutCrop() {
           padding: '10px 24px', borderRadius: 10,
           background: C.surface, border: `1px solid ${C.border}`,
           color: C.text, fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-          zIndex: 9999,
+          zIndex: 9999, maxWidth: 'calc(100vw - 32px)', textAlign: 'center', wordBreak: 'break-word',
         }}>
           {toast}
         </div>

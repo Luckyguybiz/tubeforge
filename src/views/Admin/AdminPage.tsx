@@ -268,10 +268,10 @@ export function AdminPage() {
   /* ── Render ────────────────────────────────────── */
 
   return (
-    <div style={{ maxWidth: 1200 }}>
+    <div style={{ maxWidth: 1200, width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>{t('admin.title')}</h1>
           <span style={{
             fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
@@ -286,7 +286,7 @@ export function AdminPage() {
       </div>
 
       {/* ── Stats Cards ────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 16, marginBottom: 32 }}>
         {statsCards.map((stat) => (
           <div
             key={stat.label}
@@ -322,7 +322,7 @@ export function AdminPage() {
                 {stat.icon}
               </div>
             </div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>
               {stats.isLoading ? (
                 <Skeleton width="60px" height="32px" />
               ) : (
@@ -339,7 +339,7 @@ export function AdminPage() {
       </div>
 
       {/* ── Tab Switcher ───────────────────────────── */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20 }} role="tablist">
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }} role="tablist">
         {([['users', 'Users'], ['referrals', 'Referrals'], ['analytics', 'Analytics']] as const).map(([key, label]) => {
           const active = activeTab === key;
           return (
@@ -350,6 +350,7 @@ export function AdminPage() {
               onClick={() => setActiveTab(key)}
               style={{
                 padding: '8px 20px',
+                minHeight: 44,
                 borderRadius: 8,
                 border: `1px solid ${active ? C.accent : C.border}`,
                 fontSize: 13,
@@ -410,7 +411,8 @@ export function AdminPage() {
                 color: C.text,
                 fontSize: 13,
                 fontFamily: 'inherit',
-                width: 240,
+                width: '100%',
+                maxWidth: 240,
                 outline: 'none',
                 transition: 'border-color .15s',
               }}
@@ -420,7 +422,7 @@ export function AdminPage() {
           </div>
 
           {/* Plan Filter */}
-          <div style={{ display: 'flex', gap: 3 }} role="group" aria-label={t('admin.filterByPlan')}>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }} role="group" aria-label={t('admin.filterByPlan')}>
             {(['ALL', 'FREE', 'PRO', 'STUDIO'] as const).map((f) => {
               const active = (f === 'ALL' && !planFilter) || planFilter === f;
               return (
@@ -433,6 +435,7 @@ export function AdminPage() {
                   aria-pressed={active}
                   style={{
                     padding: '5px 12px',
+                    minHeight: 36,
                     borderRadius: 6,
                     border: `1px solid ${active ? C.accent : C.border}`,
                     fontSize: 11,
@@ -734,7 +737,7 @@ export function AdminPage() {
       )}
 
       {/* ── Recent Activity ────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: 16 }}>
         {/* Recent Registrations */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`,
@@ -1104,14 +1107,14 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
 
 function LoadingSkeleton({ C }: { C: Theme }) {
   return (
-    <div style={{ maxWidth: 1200 }}>
+    <div style={{ maxWidth: 1200, width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
       <div style={{ marginBottom: 32 }}>
         <Skeleton width="280px" height="28px" />
         <div style={{ marginTop: 8 }}><Skeleton width="360px" height="16px" /></div>
       </div>
 
       {/* Stats cards skeleton */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 16, marginBottom: 32 }}>
         {[1, 2, 3, 4].map((i) => (
           <div key={i} style={{
             background: C.card, border: `1px solid ${C.border}`,
@@ -1157,7 +1160,7 @@ function LoadingSkeleton({ C }: { C: Theme }) {
       </div>
 
       {/* Activity skeleton */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: 16 }}>
         {[1, 2].map((i) => (
           <div key={i} style={{
             background: C.card, border: `1px solid ${C.border}`,
@@ -1242,7 +1245,7 @@ function AnalyticsDashboard({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 32 }}>
       {/* ── Summary stat cards ─────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: 14 }}>
         {summaryCards.map((card) => (
           <div
             key={card.label}
@@ -1274,7 +1277,7 @@ function AnalyticsDashboard({
       </div>
 
       {/* ── Charts grid ────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 16 }}>
         {!recharts ? (
           /* Recharts still loading — show skeleton placeholders for all 3 charts */
           <>

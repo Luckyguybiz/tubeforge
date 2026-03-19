@@ -429,8 +429,8 @@ export function VocalRemover() {
 
     return (
       <div style={{
-        flex: 1, minWidth: 280, padding: 20, borderRadius: 16,
-        border: `1px solid ${C.border}`, background: C.card,
+        flex: 1, minWidth: 240, padding: 16, borderRadius: 16,
+        border: `1px solid ${C.border}`, background: C.card, width: '100%',
       }}>
         {/* Header */}
         <div style={{
@@ -461,6 +461,7 @@ export function VocalRemover() {
               color: hoveredDl === trackId ? color : C.sub,
               cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 6, outline: 'none',
+              minHeight: 44,
             }}
             onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${color}44`; }}
             onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
@@ -490,7 +491,7 @@ export function VocalRemover() {
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             aria-label={isPlaying ? `Pause ${label}` : `Play ${label}`}
             style={{
-              width: 36, height: 36, borderRadius: '50%',
+              width: 44, height: 44, borderRadius: '50%',
               background: color, border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform 0.2s ease', outline: 'none',
@@ -546,7 +547,7 @@ export function VocalRemover() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
             </svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{error}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
           </div>
         )}
 
@@ -582,7 +583,7 @@ export function VocalRemover() {
             {/* File info card */}
             <div style={{
               padding: 16, borderRadius: 14, border: `1px solid ${C.border}`, background: C.card,
-              display: 'flex', alignItems: 'center', gap: 14,
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
             }}>
               <div style={{
                 width: 44, height: 44, borderRadius: 12,
@@ -595,7 +596,7 @@ export function VocalRemover() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
-                <div style={{ fontSize: 12, color: C.dim }}>
+                <div style={{ fontSize: 12, color: C.dim, wordBreak: 'break-word' }}>
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                   {audioDuration != null && ` \u2022 ${formatDuration(audioDuration)}`}
                   {audioSampleRate != null && ` \u2022 ${audioSampleRate} Hz`}
@@ -610,7 +611,7 @@ export function VocalRemover() {
                   padding: '6px 14px', borderRadius: 8, border: `1px solid ${C.border}`,
                   background: removeHover ? C.surface : C.card, color: C.sub, fontSize: 12, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                  outline: 'none', flexShrink: 0,
+                  outline: 'none', flexShrink: 0, minHeight: 44,
                 }}
                 onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
                 onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
@@ -638,7 +639,7 @@ export function VocalRemover() {
             <div style={{
               padding: 16, borderRadius: 14, border: `1px solid ${GRADIENT[0]}30`,
               background: `linear-gradient(135deg, ${GRADIENT[0]}08, ${GRADIENT[1]}08)`,
-              display: 'flex', alignItems: 'flex-start', gap: 12,
+              display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap',
             }}>
               <div style={{
                 width: 32, height: 32, borderRadius: 8,
@@ -651,7 +652,7 @@ export function VocalRemover() {
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Mid-Side Separation</div>
-                <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: C.sub, marginTop: 2, wordBreak: 'break-word' }}>
                   Uses phase inversion to extract center-panned vocals (Mid) and side-panned instrumentals (Side) from stereo audio. Works best with professionally mixed stereo tracks.
                 </div>
               </div>
@@ -697,7 +698,7 @@ export function VocalRemover() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GRADIENT[0]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Separation complete! Listen to and download your tracks below.</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word' }}>Separation complete! Listen to and download your tracks below.</span>
               </div>
             )}
 

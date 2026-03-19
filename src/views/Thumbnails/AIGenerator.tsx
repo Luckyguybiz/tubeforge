@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
@@ -27,6 +28,14 @@ const PROMPT_EXAMPLE_KEYS = [
 export function AIGeneratorView({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const { els, canvasBg, canvasW, canvasH, aiPrompt, aiResults, aiStyle, aiCount, aiReferenceImage } = useThumbnailStore(
     useShallow((s) => ({ els: s.els, canvasBg: s.canvasBg, canvasW: s.canvasW, canvasH: s.canvasH, aiPrompt: s.aiPrompt, aiResults: s.aiResults, aiStyle: s.aiStyle, aiCount: s.aiCount, aiReferenceImage: s.aiReferenceImage }))
   );
@@ -88,8 +97,8 @@ export function AIGeneratorView({ projectId }: { projectId: string | null }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <button onClick={() => { setStep('editor'); setAiReferenceImage(null); }} aria-label={t('thumbs.ai.backLabel')} style={{ padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}>&larr; {t('thumbs.ai.backToEditor')}</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: isMobile ? 14 : 20, flexWrap: 'wrap' }}>
+        <button onClick={() => { setStep('editor'); setAiReferenceImage(null); }} aria-label={t('thumbs.ai.backLabel')} style={{ padding: isMobile ? '10px 14px' : '8px 16px', minHeight: 44, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}>&larr; {t('thumbs.ai.backToEditor')}</button>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
             {aiReferenceImage ? `\uD83D\uDCF7 ${t('thumbs.ai.titleFromPhoto')}` : `\u2728 ${t('thumbs.ai.titleGenerate')}`}
@@ -99,8 +108,8 @@ export function AIGeneratorView({ projectId }: { projectId: string | null }) {
           </p>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 20 }}>
-        <div style={{ flex: 1 }}>
+      <div style={{ display: 'flex', gap: isMobile ? 14 : 20, flexDirection: isMobile ? 'column' : 'row' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {/* Reference image or canvas preview */}
           <div style={{ fontSize: 11, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
             {aiReferenceImage ? t('thumbs.ai.canvasSnapshot') : t('thumbs.ai.editorReference')}
@@ -137,21 +146,21 @@ export function AIGeneratorView({ projectId }: { projectId: string | null }) {
               })}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
             <input
               value={aiPrompt}
               maxLength={1000}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder={aiReferenceImage ? t('thumbs.ai.placeholderRef') : t('thumbs.ai.placeholderPrompt')}
               aria-label={t('thumbs.ai.promptLabel')}
-              style={{ flex: 1, padding: '10px 14px', background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, fontFamily: 'inherit' }}
+              style={{ flex: 1, minWidth: 0, width: '100%', padding: '10px 14px', background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const }}
               onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
             />
             <button
               onClick={handleGenerate}
               disabled={isLoading || (!aiReferenceImage && !aiPrompt.trim())}
               style={{
-                padding: '10px 24px', borderRadius: 8,
+                padding: isMobile ? '10px 16px' : '10px 24px', borderRadius: 8, minHeight: 44, flexShrink: 0, width: isMobile ? '100%' : 'auto',
                 border: isLoading ? `1px solid ${C.border}` : 'none',
                 background: isLoading ? 'transparent' : `linear-gradient(135deg,${C.accent},${C.pink})`,
                 color: isLoading ? C.sub : '#fff',
@@ -180,7 +189,7 @@ export function AIGeneratorView({ projectId }: { projectId: string | null }) {
               <div style={{ fontSize: 11, fontWeight: 600, color: C.sub, marginBottom: 8 }}>{t('thumbs.ai.results')}</div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {aiResults.map((r) => (
-                  <div key={r.id} style={{ width: 'calc(50% - 5px)', aspectRatio: '16/9', background: C.card, borderRadius: 10, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+                  <div key={r.id} style={{ width: isMobile ? '100%' : 'calc(50% - 5px)', aspectRatio: '16/9', background: C.card, borderRadius: 10, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
                     {r.url ? (
                       <img src={r.url} alt={r.label} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -196,7 +205,7 @@ export function AIGeneratorView({ projectId }: { projectId: string | null }) {
             </div>
           )}
         </div>
-        <div style={{ width: 240 }}>
+        <div style={{ width: isMobile ? '100%' : 240, maxWidth: isMobile ? '100%' : 240, flexShrink: 0 }}>
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{t('thumbs.ai.settings')}</div>
             <div style={{ marginBottom: 10 }}><div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>{t('thumbs.ai.styleLabel')}</div>

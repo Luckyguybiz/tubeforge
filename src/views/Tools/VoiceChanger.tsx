@@ -572,7 +572,7 @@ export function VoiceChanger() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
           </svg>
-          <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{error}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
         </div>
       )}
 
@@ -627,7 +627,7 @@ export function VoiceChanger() {
               background: recordHover ? C.surface : C.card,
               color: C.text, cursor: 'pointer', transition: 'all 0.2s ease',
               fontFamily: 'inherit', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: 10,
+              justifyContent: 'center', gap: 10, minHeight: 44,
             }}
           >
             <div style={{
@@ -640,7 +640,7 @@ export function VoiceChanger() {
       ) : isRecording && !file ? (
         /* ── Recording UI ── */
         <div style={{
-          padding: 32, borderRadius: 14, border: `1px solid ${C.border}`,
+          padding: 16, borderRadius: 14, border: `1px solid ${C.border}`,
           background: C.card, textAlign: 'center', marginBottom: 24,
         }}>
           <div style={{
@@ -656,7 +656,7 @@ export function VoiceChanger() {
           </div>
           <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 4 }}>Recording...</div>
           <div style={{ fontSize: 12, color: C.dim, marginBottom: 16 }}>Speak into your microphone</div>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={stopRecording}
               style={{
@@ -664,6 +664,7 @@ export function VoiceChanger() {
                 border: 'none', background: '#ef4444', color: '#fff',
                 fontSize: 13, fontWeight: 700, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                minHeight: 44,
               }}
             >
               Stop Recording
@@ -681,6 +682,7 @@ export function VoiceChanger() {
                 border: `1px solid ${C.border}`, background: C.card, color: C.sub,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                minHeight: 44,
               }}
             >
               Cancel
@@ -692,20 +694,20 @@ export function VoiceChanger() {
           {/* ── File Info ── */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12,
-            border: `1px solid ${C.border}`, background: C.card, marginBottom: 16,
+            border: `1px solid ${C.border}`, background: C.card, marginBottom: 16, flexWrap: 'wrap',
           }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
               background: 'linear-gradient(135deg, #d946ef, #a855f7)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" />
               </svg>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{file!.name}</div>
-              <div style={{ fontSize: 11, color: C.dim }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file!.name}</div>
+              <div style={{ fontSize: 11, color: C.dim, wordBreak: 'break-word' }}>
                 {file!.size > 0 ? `${(file!.size / 1024 / 1024).toFixed(2)} MB` : 'Recorded audio'}
                 {sourceDuration > 0 && ` \u2022 ${formatTime(sourceDuration)}`}
               </div>
@@ -719,6 +721,7 @@ export function VoiceChanger() {
                 background: removeHover ? C.surface : C.card,
                 color: C.sub, fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
+                flexShrink: 0, minHeight: 44,
               }}
             >
               Remove
@@ -841,11 +844,11 @@ export function VoiceChanger() {
                 <button
                   onClick={togglePlay}
                   style={{
-                    width: 40, height: 40, borderRadius: 20, border: 'none',
+                    width: 44, height: 44, borderRadius: 22, border: 'none',
                     background: 'linear-gradient(135deg, #d946ef, #a855f7)',
                     color: '#fff', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.2s ease', flexShrink: 0,
                     transform: isPlaying ? 'scale(0.95)' : 'scale(1)',
                   }}
                 >
@@ -859,7 +862,7 @@ export function VoiceChanger() {
                     </svg>
                   )}
                 </button>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     width: '100%', height: 4, borderRadius: 2, background: C.surface,
                     overflow: 'hidden',
@@ -888,11 +891,11 @@ export function VoiceChanger() {
                 <button
                   onClick={togglePlay}
                   style={{
-                    width: 40, height: 40, borderRadius: 20, border: 'none',
+                    width: 44, height: 44, borderRadius: 22, border: 'none',
                     background: 'linear-gradient(135deg, #d946ef, #a855f7)',
                     color: '#fff', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.2s ease', flexShrink: 0,
                     transform: isPlaying ? 'scale(0.95)' : 'scale(1)',
                   }}
                 >
@@ -906,11 +909,11 @@ export function VoiceChanger() {
                     </svg>
                   )}
                 </button>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
                     Live Preview
                   </div>
-                  <div style={{ fontSize: 11, color: C.dim }}>
+                  <div style={{ fontSize: 11, color: C.dim, wordBreak: 'break-word' }}>
                     Listen with current effect before applying
                   </div>
                 </div>
@@ -927,7 +930,7 @@ export function VoiceChanger() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d946ef" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Effect applied successfully</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text, wordBreak: 'break-word' }}>Effect applied successfully</span>
             </div>
           )}
 
@@ -952,6 +955,7 @@ export function VoiceChanger() {
                   color: C.text, fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8,
+                  minHeight: 44,
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

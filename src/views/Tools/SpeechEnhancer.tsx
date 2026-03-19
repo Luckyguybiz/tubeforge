@@ -475,7 +475,7 @@ export function SpeechEnhancer() {
     border: 'none', cursor: 'pointer', transition: 'all 0.2s ease',
     display: 'flex', alignItems: 'center',
     justifyContent: active ? 'flex-end' : 'flex-start',
-    outline: 'none',
+    outline: 'none', flexShrink: 0,
   });
 
   const sourceDuration = sourceBufferRef.current?.duration ?? 0;
@@ -494,7 +494,7 @@ export function SpeechEnhancer() {
     duration: number;
   }) => (
     <div style={{
-      flex: 1, minWidth: 0, padding: 20, borderRadius: 14,
+      flex: 1, minWidth: 0, flexBasis: 280, padding: 16, borderRadius: 14,
       border: `1px solid ${C.border}`, background: C.card,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -527,11 +527,12 @@ export function SpeechEnhancer() {
             onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             style={{
-              width: 32, height: 32, borderRadius: '50%',
+              width: 44, height: 44, borderRadius: '50%',
               background: color, border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform 0.2s ease', outline: 'none',
               transform: playing ? 'scale(0.95)' : 'scale(1)',
+              flexShrink: 0,
             }}
             onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 3px ${color}44`; }}
             onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
@@ -556,7 +557,7 @@ export function SpeechEnhancer() {
               }} />
             </div>
           </div>
-          <span style={{ fontSize: 11, color: C.dim, minWidth: 70, textAlign: 'right' }}>
+          <span style={{ fontSize: 11, color: C.dim, minWidth: 70, textAlign: 'right', flexShrink: 0, whiteSpace: 'nowrap' }}>
             {formatTime(progress * dur)} / {formatTime(dur)}
           </span>
         </div>
@@ -574,7 +575,7 @@ export function SpeechEnhancer() {
       badge="New"
       badgeColor={GRADIENT[0]}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Error banner */}
         {error && (
           <div style={{
@@ -618,7 +619,7 @@ export function SpeechEnhancer() {
         ) : (
           <div style={{
             padding: 16, borderRadius: 14, border: `1px solid ${C.border}`, background: C.card,
-            display: 'flex', alignItems: 'center', gap: 14,
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
@@ -629,8 +630,8 @@ export function SpeechEnhancer() {
                 <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
               </svg>
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
+            <div style={{ flex: 1, minWidth: 0, flexBasis: 150 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', wordBreak: 'break-word' as const }}>{file.name}</div>
               <div style={{ fontSize: 12, color: C.dim }}>
                 {(file.size / 1024 / 1024).toFixed(2)} MB
                 {sourceDuration > 0 && ` \u2022 ${formatTime(sourceDuration)}`}
@@ -656,10 +657,10 @@ export function SpeechEnhancer() {
 
         {/* Enhancement Options */}
         <div style={{
-          padding: 24, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
+          padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
         }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.text, display: 'block', marginBottom: 20 }}>Enhancement Options</span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.text, display: 'block', marginBottom: 16 }}>Enhancement Options</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
             {/* Noise Reduction */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -736,7 +737,7 @@ export function SpeechEnhancer() {
         </div>
 
         {/* Before / After Comparison */}
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <WaveformPanel
             label="Before (Original)"
             color="#ef4444"
@@ -787,7 +788,7 @@ export function SpeechEnhancer() {
               onMouseEnter={() => setDownloadHover(true)}
               onMouseLeave={() => setDownloadHover(false)}
               style={{
-                padding: '12px 24px', borderRadius: 12,
+                padding: '12px 24px', minHeight: 44, borderRadius: 12,
                 border: `1px solid ${C.border}`, background: downloadHover ? C.surface : C.card,
                 color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.2s ease', fontFamily: 'inherit',

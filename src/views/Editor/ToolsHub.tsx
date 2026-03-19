@@ -290,6 +290,30 @@ function getTools(t: (key: string) => string): ToolDef[] {
     gradient: ['#f97316', '#ef4444'],
   },
 
+  /* ── New Tools ────────────────────────────────────── */
+  {
+    id: 'content-planner',
+    name: 'Content Planner',
+    subtitle: 'Calendar · Ideas · Templates',
+    description: 'Plan, schedule, and organize your content across all platforms with calendar, ideas bank, and templates.',
+    category: 'publishing',
+    route: '/tools/content-planner',
+    available: true,
+    badge: 'NEW',
+    gradient: ['#06b6d4', '#8b5cf6'],
+  },
+  {
+    id: 'ai-video-generator',
+    name: 'AI Video Generator',
+    subtitle: 'Text → Video · Canvas',
+    description: 'Turn any script into a fully rendered video with animated scenes, voiceover, and transitions.',
+    category: 'ai',
+    route: '/tools/ai-video-generator',
+    available: true,
+    badge: 'NEW',
+    gradient: ['#8b5cf6', '#ec4899'],
+  },
+
   /* ── Coming Soon ───────────────────────────────────── */
   {
     id: 'scenario',
@@ -672,10 +696,10 @@ const ToolCard = memo(function ToolCard({
 
       {/* Icon + gradient background area */}
       <div style={{
-        padding: '24px 20px 16px',
+        padding: '20px 16px 14px',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 14,
+        gap: 12,
       }}>
         {/* Icon container */}
         <div style={{
@@ -706,6 +730,7 @@ const ToolCard = memo(function ToolCard({
             display: 'flex',
             alignItems: 'center',
             gap: 6,
+            wordBreak: 'break-word',
           }}>
             {tool.name}
           </div>
@@ -739,10 +764,11 @@ const ToolCard = memo(function ToolCard({
 
       {/* Description */}
       <div style={{
-        padding: '0 20px 20px',
+        padding: '0 16px 16px',
         fontSize: 12.5,
         lineHeight: 1.5,
         color: C.sub,
+        wordBreak: 'break-word',
       }}>
         {tool.description}
       </div>
@@ -750,7 +776,7 @@ const ToolCard = memo(function ToolCard({
       {/* Bottom action bar — only for available tools */}
       {tool.available && (
         <div style={{
-          padding: '10px 20px',
+          padding: '10px 16px',
           borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
@@ -797,7 +823,7 @@ const ToolCard = memo(function ToolCard({
       {/* Bottom bar — coming soon tools */}
       {!tool.available && (
         <div style={{
-          padding: '10px 20px',
+          padding: '10px 16px',
           borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
@@ -840,6 +866,7 @@ const CategoryTab = memo(function CategoryTab({
       onMouseLeave={() => setHovered(false)}
       style={{
         padding: '8px 18px',
+        minHeight: 44,
         borderRadius: 50,
         border: active ? 'none' : `1px solid ${hovered ? C.accent + '44' : C.border}`,
         background: active
@@ -910,15 +937,16 @@ export function ToolsHub() {
       width: '100%',
       maxWidth: 1200,
       margin: '0 auto',
-      padding: '0 24px',
+      padding: '0 16px',
+      boxSizing: 'border-box',
     }}>
       {/* ── Hero Section ──────────────────────────────────── */}
       <div className="tf-tools-hero" style={{
         textAlign: 'center',
-        padding: '48px 0 32px',
+        padding: '32px 0 24px',
       }}>
         <h1 className="tf-tools-hero-title" style={{
-          fontSize: 36,
+          fontSize: 28,
           fontWeight: 800,
           color: C.text,
           margin: 0,
@@ -943,6 +971,7 @@ export function ToolsHub() {
           justifyContent: 'center',
           gap: 24,
           margin: '20px 0 0',
+          flexWrap: 'wrap',
         }}>
           <div style={{
             display: 'flex',
@@ -980,6 +1009,7 @@ export function ToolsHub() {
       {/* ── Search Bar ──────────────────────────────────── */}
       <div style={{
         maxWidth: 560,
+        width: '100%',
         margin: '0 auto 24px',
         position: 'relative',
       }}>
@@ -1087,7 +1117,7 @@ export function ToolsHub() {
       ) : (
         <div className="tf-tools-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))',
           gap: 16,
           paddingBottom: 60,
         }}>
