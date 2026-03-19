@@ -1658,24 +1658,39 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                         {/* Channel */}
                         <td style={{ padding: '12px 14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {/* Avatar placeholder */}
-                            <div
-                              style={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: '50%',
-                                background: `linear-gradient(135deg, ${C.purple}, ${C.blue})`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: '#fff',
-                                flexShrink: 0,
-                              }}
-                            >
-                              {item.channel[0]}
-                            </div>
+                            {/* Channel avatar */}
+                            {item.channelAvatar ? (
+                              <img
+                                src={item.channelAvatar}
+                                alt={item.channel}
+                                loading="lazy"
+                                style={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: '50%',
+                                  background: `linear-gradient(135deg, ${C.purple}, ${C.blue})`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: '#fff',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {item.channel[0]}
+                              </div>
+                            )}
                             {/* Channel name - clickable only for Pro */}
                             {isPro && item.channelId ? (
                               <a

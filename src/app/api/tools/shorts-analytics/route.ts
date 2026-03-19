@@ -154,8 +154,37 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.views - a.views)
       .map((item, i) => ({ ...item, rank: i + 1 }));
 
+    // Fetch channel avatars (1 API unit per 50 channels)
+    const channelIds = [...new Set(shorts.map(s => s.channelId).filter(Boolean))];
+    const avatarMap = new Map<string, string>();
+    if (channelIds.length > 0) {
+      try {
+        const chBatches: string[][] = [];
+        for (let i = 0; i < channelIds.length; i += 50) chBatches.push(channelIds.slice(i, i + 50));
+        const chResults = await Promise.all(
+          chBatches.map(batch =>
+            fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${batch.join(',')}&key=${apiKey}`)
+              .then(r => r.ok ? r.json() : null)
+          )
+        );
+        for (const r of chResults) {
+          if (!r?.items) continue;
+          for (const ch of r.items) {
+            const url = ch.snippet?.thumbnails?.default?.url ?? ch.snippet?.thumbnails?.medium?.url;
+            if (url) avatarMap.set(ch.id, url);
+          }
+        }
+      } catch { /* non-critical, skip avatars */ }
+    }
+
+    // Attach avatars to shorts
+    const shortsWithAvatars = shorts.map(s => ({
+      ...s,
+      channelAvatar: avatarMap.get(s.channelId) ?? null,
+    }));
+
     // Cache the results
-    cache.set(cacheKey, { data: shorts, ts: Date.now() });
+    cache.set(cacheKey, { data: shortsWithAvatars, ts: Date.now() });
 
     // Cleanup old cache entries
     if (cache.size > 100) {
@@ -163,7 +192,7 @@ export async function GET(req: NextRequest) {
       for (let i = 0; i < 50; i++) cache.delete(oldest[i][0]);
     }
 
-    return NextResponse.json({ mock: false, shorts: shorts.slice(0, limit), cached: false });
+    return NextResponse.json({ mock: false, shorts: shortsWithAvatars.slice(0, limit), cached: false });
   } catch (err) {
     console.error('[shorts-analytics] Error:', err);
     return NextResponse.json({
