@@ -234,6 +234,7 @@ export function YoutubeDownloader() {
         body: JSON.stringify({
           videoId: videoInfo.videoId,
           quality,
+          format: format.toLowerCase(),
           audioOnly: isAudioOnly,
         }),
         signal: controller.signal,
@@ -262,10 +263,24 @@ export function YoutubeDownloader() {
         return;
       }
 
-      // Stream the download to track real progress
-      const downloadRes = await fetch(data.downloadUrl, { signal: controller.signal });
+      // Stream download through our server-side proxy to avoid Mixed Content / CORS issues
+      // The proxy route fetches the HTTP download URL on the server and streams it over HTTPS
+      const ext = isAudioOnly ? 'mp3' : (format?.toLowerCase() ?? 'mp4');
+      const fname = `${videoInfo.title || videoInfo.videoId || 'video'}.${ext}`;
+      const proxyUrl = `/api/tools/youtube-download/stream?url=${encodeURIComponent(data.downloadUrl)}&filename=${encodeURIComponent(fname)}`;
+
+      const downloadRes = await fetch(proxyUrl, { signal: controller.signal });
       if (!downloadRes.ok) {
-        setStreamError(t('tools.ytdl.serverDownloadError'));
+        // Try fallback: open download URL directly via anchor tag (bypasses Mixed Content for navigation)
+        const a = document.createElement('a');
+        a.href = data.downloadUrl;
+        a.download = fname;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(t('tools.ytdl.downloadComplete'));
         setDone(true);
         return;
       }
@@ -301,7 +316,7 @@ export function YoutubeDownloader() {
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `${videoInfo.title || videoInfo.videoId || 'video'}.${isAudioOnly ? 'mp3' : 'mp4'}`;
+      a.download = fname;
       a.click();
       URL.revokeObjectURL(blobUrl);
 

@@ -59,20 +59,25 @@ export async function GET(req: NextRequest) {
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';
   const game = sp.get('game') ?? '';
+  const platformParam = sp.get('platform') ?? 'youtube';
   const limitParam = sp.get('limit');
   const limit = limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50;
 
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     // Return mock data if no API key configured
+    const mockData = platformParam === 'tiktok' ? getTiktokMockData() : getMockData();
     return NextResponse.json({
       mock: true,
-      shorts: getMockData().slice(0, limit),
+      shorts: mockData.slice(0, limit),
       message: 'YOUTUBE_API_KEY not configured — showing mock data',
     });
   }
 
-  const cacheKey = `${period}:${country}:${category}:${game}`;
+  // TikTok analytics: use YouTube search for TikTok content (re-uploaded/viral TikToks)
+  const isTiktok = platformParam === 'tiktok';
+
+  const cacheKey = `${platformParam}:${period}:${country}:${category}:${game}`;
   cleanupCache();
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
@@ -92,10 +97,15 @@ export async function GET(req: NextRequest) {
 
     // Strategy: run 2 parallel searches for better coverage, then merge & dedupe
     const searchTerm = gameKeyword || catKeyword;
-    const queries = [
-      `shorts viral ${searchTerm}`.trim(),
-      `#shorts ${searchTerm}`.trim(),
-    ];
+    const queries = isTiktok
+      ? [
+          `tiktok viral ${searchTerm}`.trim(),
+          `#tiktok trending ${searchTerm}`.trim(),
+        ]
+      : [
+          `shorts viral ${searchTerm}`.trim(),
+          `#shorts ${searchTerm}`.trim(),
+        ];
 
     const searchPromises = queries.map((q) => {
       const sp = new URLSearchParams({
@@ -427,5 +437,20 @@ function getMockData() {
       thumbnail: '',
       duration: 55,
     },
+  ];
+}
+
+function getTiktokMockData() {
+  return [
+    { rank: 1, videoId: 'tkmock1', title: 'Этот тренд взорвал TikTok за 1 день', views: 89234567, viewsFormatted: '89 234 567', uploaded: '1 день назад', channel: 'TikTokViral', channelId: '', thumbnail: '', duration: 15 },
+    { rank: 2, videoId: 'tkmock2', title: 'POV: когда мама нашла твои оценки', views: 67890123, viewsFormatted: '67 890 123', uploaded: '2 дня назад', channel: 'MemeMaster', channelId: '', thumbnail: '', duration: 12 },
+    { rank: 3, videoId: 'tkmock3', title: 'Самый быстрый рецепт пасты #foodtok', views: 45678901, viewsFormatted: '45 678 901', uploaded: '3 дня назад', channel: 'FoodTok', channelId: '', thumbnail: '', duration: 30 },
+    { rank: 4, videoId: 'tkmock4', title: 'Minecraft но каждый блок = $1', views: 34567890, viewsFormatted: '34 567 890', uploaded: '2 дня назад', channel: 'GameClips', channelId: '', thumbnail: '', duration: 25 },
+    { rank: 5, videoId: 'tkmock5', title: 'Ranking все виды мороженого от худшего к лучшему', views: 28901234, viewsFormatted: '28 901 234', uploaded: '4 дня назад', channel: 'RankingKing', channelId: '', thumbnail: '', duration: 45 },
+    { rank: 6, videoId: 'tkmock6', title: 'Танец который может повторить каждый', views: 23456789, viewsFormatted: '23 456 789', uploaded: '1 день назад', channel: 'DanceTok', channelId: '', thumbnail: '', duration: 15 },
+    { rank: 7, videoId: 'tkmock7', title: 'Лайфхак с телефоном который ты не знал', views: 19876543, viewsFormatted: '19 876 543', uploaded: '5 дней назад', channel: 'TechTips', channelId: '', thumbnail: '', duration: 20 },
+    { rank: 8, videoId: 'tkmock8', title: 'Ranking лучших серверов Minecraft', views: 17654321, viewsFormatted: '17 654 321', uploaded: '3 дня назад', channel: 'MCRanking', channelId: '', thumbnail: '', duration: 35 },
+    { rank: 9, videoId: 'tkmock9', title: 'Этот голос поразил всех на улице', views: 15432100, viewsFormatted: '15 432 100', uploaded: '6 дней назад', channel: 'StreetVibes', channelId: '', thumbnail: '', duration: 18 },
+    { rank: 10, videoId: 'tkmock10', title: 'Как стать вирусным на TikTok в 2026', views: 12345678, viewsFormatted: '12 345 678', uploaded: '7 дней назад', channel: 'CreatorSchool', channelId: '', thumbnail: '', duration: 40 },
   ];
 }

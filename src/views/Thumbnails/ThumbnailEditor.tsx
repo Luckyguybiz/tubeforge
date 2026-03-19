@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import type { CanvasElement } from '@/lib/types';
 import { Z_INDEX } from '@/lib/constants';
@@ -23,6 +24,7 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
@@ -33,6 +35,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }))
   );
   const store = useThumbnailStore.getState;
+  const SIZE_PRESETS = useMemo(() => getSizePresets(t), [t]);
   useCanvasKeyboard();
   useUndoHint(historyCount);
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
@@ -115,7 +118,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const onMiddleUp = useCallback(() => { isPanning.current = false; }, []);
 
   if (step === 'ai') return <AIGeneratorView projectId={projectId} />;
-  if (!projectId) return <ProjectPicker target="/thumbnails" title="Редактор обложек" />;
+  if (!projectId) return <ProjectPicker target="/thumbnails" title={t('thumbs.editor.title')} />;
   if (project.isLoading) return (
     <div>
       <Skeleton width="220px" height="28px" />
@@ -125,9 +128,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   );
   if (project.error) return (
     <div style={{ padding: 24, textAlign: 'center' }}>
-      <p style={{ color: C.accent, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Не удалось загрузить проект</p>
+      <p style={{ color: C.accent, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{t('thumbs.editor.loadError')}</p>
       <p style={{ color: C.sub, fontSize: 12, marginBottom: 16 }}>{project.error.message}</p>
-      <button onClick={() => project.refetch()} style={{ padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Повторить</button>
+      <button onClick={() => project.refetch()} style={{ padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{t('thumbs.editor.retry')}</button>
     </div>
   );
 
@@ -343,7 +346,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.fillStyle = el.noteColor ?? STICKY_NOTE_COLOR; ctx.shadowColor = 'rgba(0,0,0,.15)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
           ctx.fillRect(el.x, el.y, el.w, el.h); ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
           ctx.fillStyle = STICKY_NOTE_TEXT_COLOR; ctx.font = `${el.size ?? 14}px sans-serif`;
-          (el.noteText ?? 'Заметка').split('\n').forEach((line, i) => ctx.fillText(line, el.x + 10, el.y + 20 + i * ((el.size ?? 14) + 4)));
+          (el.noteText ?? t('thumbs.editor.noteDefault')).split('\n').forEach((line, i) => ctx.fillText(line, el.x + 10, el.y + 20 + i * ((el.size ?? 14) + 4)));
         } else if (el.type === 'table') {
           const rows = el.rows ?? 3, cols = el.cols ?? 3, cw = el.w / cols, ch = el.h / rows;
           ctx.strokeStyle = el.strokeColor ?? 'rgba(255,255,255,.2)'; ctx.lineWidth = 1;
@@ -396,7 +399,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     );
     const deleteHandle = isSel && (
       <div
-        title="Удалить"
+        title={t('thumbs.editor.deleteTitle')}
         onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().delEl(el.id); }}
         style={{ position: 'absolute', top: -10, right: -10, width: 20, height: 20, background: '#e53935', borderRadius: '50%', cursor: 'pointer', zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,.3)' }}
       >&times;</div>
@@ -441,7 +444,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'image') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         onMouseDown={elDrag}>
-        <img src={el.src} alt="Изображение" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
+        <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
         {resizeHandle}{deleteHandle}
       </div>
     );
@@ -487,7 +490,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
         onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
-        {el.noteText ?? 'Заметка'}{resizeHandle}{deleteHandle}
+        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandle}{deleteHandle}
       </div>
     );
 
@@ -629,27 +632,27 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0' }}>Редактор обложек</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0' }}>{t('thumbs.editor.title')}</h2>
             {project.data?.title && <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>— {project.data.title}</span>}
             <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               {saveCanvas.isPending ? (
-                <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Сохраняется...</>
+                <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> {t('thumbs.editor.saving')}</>
               ) : (
-                <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 3 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Сохранено</span>
+                <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 3 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> {t('thumbs.editor.saved')}</span>
               )}
             </span>
           </div>
-          <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>Создайте обложку как в Canva или перейдите к ИИ-генерации</p>
+          <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>{t('thumbs.editor.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <OnlineUsers />
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
-          <button onClick={() => store().undo()} disabled={historyCount === 0} title={`Отменить (Ctrl+Z)${historyCount > 0 ? ` — ${historyCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: historyCount === 0 ? C.dim : C.sub, cursor: historyCount === 0 ? 'default' : 'pointer', opacity: historyCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{undoIcon}{historyCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>}</button>
-          <button onClick={() => store().redo()} disabled={futureCount === 0} title={`Повторить (Ctrl+Y)${futureCount > 0 ? ` — ${futureCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: futureCount === 0 ? C.dim : C.sub, cursor: futureCount === 0 ? 'default' : 'pointer', opacity: futureCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{redoIcon}{futureCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureCount})</span>}</button>
+          <button onClick={() => store().undo()} disabled={historyCount === 0} title={`${t('thumbs.editor.undoTitle')}${historyCount > 0 ? ` — ${historyCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: historyCount === 0 ? C.dim : C.sub, cursor: historyCount === 0 ? 'default' : 'pointer', opacity: historyCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{undoIcon}{historyCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>}</button>
+          <button onClick={() => store().redo()} disabled={futureCount === 0} title={`${t('thumbs.editor.redoTitle')}${futureCount > 0 ? ` — ${futureCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: futureCount === 0 ? C.dim : C.sub, cursor: futureCount === 0 ? 'default' : 'pointer', opacity: futureCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{redoIcon}{futureCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureCount})</span>}</button>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* Size presets */}
           <div style={{ position: 'relative' }}>
-            <button onClick={() => { setShowSizeMenu(!showSizeMenu); setShowDownloadMenu(false); }} title="Размер холста" style={{ ...headerBtn, padding: '7px 12px', fontSize: 11 }}>
+            <button onClick={() => { setShowSizeMenu(!showSizeMenu); setShowDownloadMenu(false); }} title={t('thumbs.editor.canvasSizeTitle')} style={{ ...headerBtn, padding: '7px 12px', fontSize: 11 }}>
               {canvasW}x{canvasH} {chevronIcon}
             </button>
             {showSizeMenu && (
@@ -669,11 +672,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Download dropdown */}
           <div style={{ position: 'relative' }}>
-            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} disabled={isDownloading} title="Скачать обложку" style={{ ...headerBtn, padding: '7px 14px', opacity: isDownloading ? 0.5 : 1, cursor: isDownloading ? 'wait' : 'pointer' }}>{downloadIcon} {isDownloading ? 'Скачивание...' : 'Скачать'} {chevronIcon}</button>
+            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} disabled={isDownloading} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px', opacity: isDownloading ? 0.5 : 1, cursor: isDownloading ? 'wait' : 'pointer' }}>{downloadIcon} {isDownloading ? t('thumbs.editor.downloading') : t('thumbs.editor.download')} {chevronIcon}</button>
             {showDownloadMenu && (
               <div style={{ ...dropdownPanel, minWidth: 140 }}>
-                {[{ label: 'PNG', format: 'png' as const, desc: 'Без потерь' }, { label: 'JPG', format: 'jpg' as const, desc: 'Сжатый' }, { label: 'PDF', format: 'pdf' as const, desc: 'Документ' }].map((opt) => (
-                  <div key={opt.format} role="menuitem" tabIndex={0} aria-label={`Скачать ${opt.label}`} onClick={() => { downloadCanvas(opt.format); setShowDownloadMenu(false); }}
+                {[{ label: 'PNG', format: 'png' as const, desc: t('thumbs.editor.lossless') }, { label: 'JPG', format: 'jpg' as const, desc: t('thumbs.editor.compressed') }, { label: 'PDF', format: 'pdf' as const, desc: t('thumbs.editor.documentFormat') }].map((opt) => (
+                  <div key={opt.format} role="menuitem" tabIndex={0} aria-label={`${t('thumbs.editor.downloadFormat')} ${opt.label}`} onClick={() => { downloadCanvas(opt.format); setShowDownloadMenu(false); }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); downloadCanvas(opt.format); setShowDownloadMenu(false); } }}
                     style={menuItem}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
@@ -687,8 +690,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* AI reference + AI generate */}
-          <button onClick={() => { const img = captureCanvas(); if (img) { store().setAiReferenceImage(img); store().setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} По фото</button>
-          <button onClick={() => store().setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} ИИ-генерация</button>
+          <button onClick={() => { const img = captureCanvas(); if (img) { store().setAiReferenceImage(img); store().setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} {t('thumbs.editor.byPhoto')}</button>
+          <button onClick={() => store().setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} {t('thumbs.editor.aiGeneration')}</button>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 12 }}>
@@ -723,21 +726,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           </div>
           {/* Floating zoom controls */}
-          <div title="Ctrl+Scroll для зума" style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
-            <button onClick={() => store().zoomOut()} title="Уменьшить (Ctrl+-)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+          <div title={t('thumbs.editor.zoomHint')} style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
+            <button onClick={() => store().zoomOut()} title={t('thumbs.editor.zoomOut')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => store().zoomIn()} title="Увеличить (Ctrl++)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => store().zoomIn()} title={t('thumbs.editor.zoomIn')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomInIcon}</button>
             <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-            <button onClick={() => store().fitToScreen()} title="Вместить (Ctrl+0)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+            <button onClick={() => store().fitToScreen()} title={t('thumbs.editor.fitToScreen')} style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
-            >{fitIcon} По размеру</button>
+            >{fitIcon} {t('thumbs.editor.fitLabel')}</button>
           </div>
         </div>
         </ErrorBoundary>
@@ -775,10 +778,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   }
                 }}>
                   {[
-                    { label: 'Дублировать', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
-                    { label: 'На передний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => { const id = store().contextMenu?.elId; if (id) store().bringFront(id); } },
-                    { label: 'На задний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => { const id = store().contextMenu?.elId; if (id) store().sendBack(id); } },
-                    { label: 'Удалить', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { const id = store().contextMenu?.elId; if (id) store().delEl(id); }, danger: true },
+                    { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
+                    { label: t('thumbs.editor.bringForward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => { const id = store().contextMenu?.elId; if (id) store().bringFront(id); } },
+                    { label: t('thumbs.editor.sendBackward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => { const id = store().contextMenu?.elId; if (id) store().sendBack(id); } },
+                    { label: t('thumbs.editor.delete'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { const id = store().contextMenu?.elId; if (id) store().delEl(id); }, danger: true },
                   ].map((item, i) => (
                     <div
                       key={item.label}
@@ -810,7 +813,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   ))}
                 </div>
               ) : (
-                <div style={{ padding: '8px 12px', fontSize: 11, color: C.dim }}>Нет элемента</div>
+                <div style={{ padding: '8px 12px', fontSize: 11, color: C.dim }}>{t('thumbs.editor.noElement')}</div>
               )}
             </div>
           </div>
@@ -821,14 +824,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   );
 }
 
-const SIZE_PRESETS = [
-  { label: 'YouTube Обложка', w: 1280, h: 720 },
-  { label: 'Instagram Пост', w: 1080, h: 1080 },
-  { label: 'Instagram Сторис', w: 1080, h: 1920 },
-  { label: 'Facebook Обложка', w: 820, h: 312 },
-  { label: 'Twitter Баннер', w: 1500, h: 500 },
-  { label: 'HD 1920×1080', w: 1920, h: 1080 },
-];
+function getSizePresets(t: (key: string) => string) {
+  return [
+    { label: t('thumbs.editor.sizeYoutube'), w: 1280, h: 720 },
+    { label: t('thumbs.editor.sizeInstagramPost'), w: 1080, h: 1080 },
+    { label: t('thumbs.editor.sizeInstagramStory'), w: 1080, h: 1920 },
+    { label: t('thumbs.editor.sizeFacebookCover'), w: 820, h: 312 },
+    { label: t('thumbs.editor.sizeTwitterBanner'), w: 1500, h: 500 },
+    { label: 'HD 1920×1080', w: 1920, h: 1080 },
+  ];
+}
 
 function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
   const dx = x2 - x1, dy = y2 - y1;

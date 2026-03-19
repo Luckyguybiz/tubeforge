@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 
 /* ── Types ───────────────────────────────────────────────────────── */
@@ -33,63 +34,83 @@ interface Filters {
 
 /* ── Period config ───────────────────────────────────────────────── */
 
-const PERIODS: { key: Period; label: string }[] = [
-  { key: 'today', label: 'За сегодня' },
-  { key: 'yesterday', label: 'За вчера' },
-  { key: '7d', label: 'За 7 дней' },
-  { key: '28d', label: 'За 28 дней' },
-  { key: '3m', label: 'За 3 месяца' },
-  { key: '6m', label: 'За 6 месяцев' },
-  { key: '1y', label: 'За год' },
-  { key: 'all', label: 'За всё время' },
-];
+function getPeriods(t: (key: string) => string): { key: Period; label: string }[] {
+  return [
+    { key: 'today', label: t('shorts.period.today') },
+    { key: 'yesterday', label: t('shorts.period.yesterday') },
+    { key: '7d', label: t('shorts.period.7d') },
+    { key: '28d', label: t('shorts.period.28d') },
+    { key: '3m', label: t('shorts.period.3m') },
+    { key: '6m', label: t('shorts.period.6m') },
+    { key: '1y', label: t('shorts.period.1y') },
+    { key: 'all', label: t('shorts.period.all') },
+  ];
+}
 
 const FREE_PERIOD: Period = '7d';
 
-const COUNTRIES: { key: string; label: string }[] = [
-  { key: '', label: 'Все' },
-  { key: 'RU', label: 'Россия' },
-  { key: 'US', label: 'США' },
-  { key: 'KZ', label: 'Казахстан' },
-  { key: 'IN', label: 'Индия' },
-  { key: 'BR', label: 'Бразилия' },
-  { key: 'DE', label: 'Германия' },
-  { key: 'GB', label: 'Великобритания' },
-  { key: 'FR', label: 'Франция' },
-  { key: 'JP', label: 'Япония' },
-  { key: 'KR', label: 'Корея' },
-];
+function getCountries(t: (key: string) => string): { key: string; label: string }[] {
+  return [
+    { key: '', label: t('shorts.country.all') },
+    { key: 'RU', label: t('shorts.country.RU') },
+    { key: 'US', label: t('shorts.country.US') },
+    { key: 'KZ', label: t('shorts.country.KZ') },
+    { key: 'IN', label: t('shorts.country.IN') },
+    { key: 'BR', label: t('shorts.country.BR') },
+    { key: 'DE', label: t('shorts.country.DE') },
+    { key: 'GB', label: t('shorts.country.GB') },
+    { key: 'FR', label: t('shorts.country.FR') },
+    { key: 'JP', label: t('shorts.country.JP') },
+    { key: 'KR', label: t('shorts.country.KR') },
+  ];
+}
 
-const CATEGORIES: { key: string; label: string }[] = [
-  { key: '', label: 'Все' },
-  { key: '1', label: 'Кино' },
-  { key: '2', label: 'Авто' },
-  { key: '10', label: 'Музыка' },
-  { key: '15', label: 'Животные' },
-  { key: '17', label: 'Спорт' },
-  { key: '20', label: 'Игры' },
-  { key: '22', label: 'Люди и блоги' },
-  { key: '23', label: 'Юмор' },
-  { key: '24', label: 'Развлечения' },
-  { key: '25', label: 'Новости' },
-  { key: '26', label: 'Хау-ту и стиль' },
-  { key: '27', label: 'Образование' },
-  { key: '28', label: 'Наука и технологии' },
-];
+function getCategories(t: (key: string) => string): { key: string; label: string }[] {
+  return [
+    { key: '', label: t('shorts.cat.all') },
+    { key: '1', label: t('shorts.cat.1') },
+    { key: '2', label: t('shorts.cat.2') },
+    { key: '10', label: t('shorts.cat.10') },
+    { key: '15', label: t('shorts.cat.15') },
+    { key: '17', label: t('shorts.cat.17') },
+    { key: '20', label: t('shorts.cat.20') },
+    { key: '22', label: t('shorts.cat.22') },
+    { key: '23', label: t('shorts.cat.23') },
+    { key: '24', label: t('shorts.cat.24') },
+    { key: '25', label: t('shorts.cat.25') },
+    { key: '26', label: t('shorts.cat.26') },
+    { key: '27', label: t('shorts.cat.27') },
+    { key: '28', label: t('shorts.cat.28') },
+  ];
+}
+
+type Platform = 'youtube' | 'tiktok';
 
 const SHORTS_RPM: Record<string, number> = {
   'minecraft': 0.07,
+  'minecraft ranking': 0.08,
   'fortnite': 0.06,
   'roblox': 0.05,
+  'ranking': 0.05,
+  'gta': 0.06,
+  'valorant': 0.06,
+  'brawl stars': 0.05,
   '': 0.04,
 };
 
-const GAME_FILTERS: { key: string; label: string }[] = [
-  { key: '', label: 'Все игры' },
-  { key: 'minecraft', label: 'Minecraft' },
-  { key: 'fortnite', label: 'Fortnite' },
-  { key: 'roblox', label: 'Roblox' },
-];
+function getGameFilters(_t: (key: string) => string): { key: string; label: string }[] {
+  return [
+    { key: '', label: _t('shorts.game.all') },
+    { key: 'ranking', label: 'Ranking Videos' },
+    { key: 'minecraft', label: 'Minecraft' },
+    { key: 'minecraft ranking', label: 'Minecraft Ranking' },
+    { key: 'fortnite', label: 'Fortnite' },
+    { key: 'roblox', label: 'Roblox' },
+    { key: 'gta', label: 'GTA' },
+    { key: 'valorant', label: 'Valorant' },
+    { key: 'brawl stars', label: 'Brawl Stars' },
+  ];
+}
 
 // Hindi/Devanagari script detection for "Hide Indian" filter
 const INDIAN_PATTERN = /[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]/;
@@ -100,9 +121,10 @@ function formatViews(n: number): string {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
-function getPeriodRange(period: Period): string {
+function getPeriodRange(period: Period, locale: string, t: (key: string) => string): string {
   const now = new Date();
-  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+  const loc = locale === 'ru' ? 'ru-RU' : locale === 'kk' ? 'kk-KZ' : locale === 'es' ? 'es-ES' : 'en-US';
+  const fmt = (d: Date) => d.toLocaleDateString(loc, { month: 'short', day: 'numeric' });
   switch (period) {
     case 'today': return fmt(now);
     case 'yesterday': { const y = new Date(now); y.setDate(y.getDate() - 1); return fmt(y); }
@@ -111,7 +133,7 @@ function getPeriodRange(period: Period): string {
     case '3m': { const d = new Date(now); d.setMonth(d.getMonth() - 3); return `${fmt(d)} - ${fmt(now)}`; }
     case '6m': { const d = new Date(now); d.setMonth(d.getMonth() - 6); return `${fmt(d)} - ${fmt(now)}`; }
     case '1y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return `${fmt(d)} - ${fmt(now)}`; }
-    case 'all': return 'Всё время';
+    case 'all': return t('shorts.periodAll');
   }
 }
 
@@ -218,20 +240,21 @@ function SkeletonRow({ surface, card }: { surface: string; card: string }) {
 
 /* ── Promo helpers ───────────────────────────────────────────────── */
 
-function formatCountdown(expiresAt: number): string {
+function formatCountdown(expiresAt: number, t: (key: string) => string): string {
   const diff = expiresAt - Date.now();
-  if (diff <= 0) return 'Истёк';
+  if (diff <= 0) return t('shorts.expired');
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   if (hours > 24) {
     const days = Math.floor(hours / 24);
-    return `${days}д ${hours % 24}ч`;
+    return `${days}${t('shorts.daysSuffix')} ${hours % 24}${t('shorts.hoursSuffix')}`;
   }
-  return `${hours}ч ${minutes}мин`;
+  return `${hours}${t('shorts.hoursSuffix')} ${minutes}${t('shorts.minutesSuffix')}`;
 }
 
-function formatExpiry(expiresAt: number): string {
-  return new Date(expiresAt).toLocaleString('ru-RU', {
+function formatExpiry(expiresAt: number, locale: string): string {
+  const loc = locale === 'ru' ? 'ru-RU' : locale === 'kk' ? 'kk-KZ' : locale === 'es' ? 'es-ES' : 'en-US';
+  return new Date(expiresAt).toLocaleString(loc, {
     day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
   });
 }
@@ -247,6 +270,7 @@ function UpgradeOverlay({
   sub,
   bg,
   onPromoClick,
+  t,
 }: {
   isDark: boolean;
   accent: string;
@@ -256,6 +280,7 @@ function UpgradeOverlay({
   sub: string;
   bg: string;
   onPromoClick?: () => void;
+  t: (key: string) => string;
 }) {
   return (
     <tr>
@@ -300,7 +325,7 @@ function UpgradeOverlay({
               letterSpacing: '-.02em',
             }}
           >
-            Разблокируйте полный доступ
+            {t('shorts.upgrade.title')}
           </h3>
 
           <p
@@ -314,7 +339,7 @@ function UpgradeOverlay({
               marginRight: 'auto',
             }}
           >
-            Смотрите Топ-50 Shorts, все периоды и фильтры
+            {t('shorts.upgrade.desc')}
           </p>
 
           {/* Upgrade button */}
@@ -342,7 +367,7 @@ function UpgradeOverlay({
               (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 24px ${accent}40`;
             }}
           >
-            Перейти на Pro — $9.99/мес
+            {t('shorts.upgrade.cta')}
           </a>
 
           <p
@@ -353,16 +378,16 @@ function UpgradeOverlay({
               opacity: 0.7,
             }}
           >
-            или{' '}
+            {t('shorts.upgrade.or')}{' '}
             <a
               href="/settings"
               style={{ color: accent, textDecoration: 'none' }}
               onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
               onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
             >
-              настройки
+              {t('shorts.upgrade.settings')}
             </a>{' '}
-            чтобы управлять подпиской
+            {t('shorts.upgrade.manageSubscription')}
           </p>
 
           {onPromoClick && (
@@ -374,7 +399,7 @@ function UpgradeOverlay({
                 opacity: 0.7,
               }}
             >
-              или{' '}
+              {t('shorts.upgrade.or')}{' '}
               <button
                 type="button"
                 onClick={onPromoClick}
@@ -391,7 +416,7 @@ function UpgradeOverlay({
                 onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
                 onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
               >
-                введите промокод
+                {t('shorts.upgrade.enterPromo')}
               </button>
             </p>
           )}
@@ -407,10 +432,12 @@ function PeriodUpgradeTooltip({
   accent,
   pink,
   isDark,
+  t,
 }: {
   accent: string;
   pink: string;
   isDark: boolean;
+  t: (key: string) => string;
 }) {
   return (
     <div
@@ -433,7 +460,7 @@ function PeriodUpgradeTooltip({
       }}
     >
       <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: isDark ? '#e8e8f0' : '#111' }}>
-        Доступно в Pro
+        {t('shorts.upgrade.availablePro')}
       </div>
       <a
         href="/billing"
@@ -448,7 +475,7 @@ function PeriodUpgradeTooltip({
           textDecoration: 'none',
         }}
       >
-        Обновить
+        {t('shorts.upgrade.upgradeBtn')}
       </a>
     </div>
   );
@@ -459,6 +486,15 @@ function PeriodUpgradeTooltip({
 export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
+  const locale = useLocaleStore((s) => s.locale);
+  const PERIODS = useMemo(() => getPeriods(t), [t]);
+  const COUNTRIES = useMemo(() => getCountries(t), [t]);
+  const CATEGORIES = useMemo(() => getCategories(t), [t]);
+  const GAME_FILTERS = useMemo(() => getGameFilters(t), [t]);
+
+  /* ── Platform tab (YouTube Shorts / TikTok) ───────── */
+  const [platform, setPlatform] = useState<Platform>('youtube');
 
   /* ── Subscription check ──────────────────────────── */
   const subscription = trpc.billing.getSubscription.useQuery();
@@ -525,7 +561,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setPromoError(json.error ?? 'Промокод не найден');
+        setPromoError(json.error ?? t('shorts.promo.notFound'));
         return;
       }
       localStorage.setItem('tf-promo', JSON.stringify({ expiresAt: json.expiresAt, code: json.code }));
@@ -536,7 +572,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       setPromoInput('');
       setShowPromoInput(false);
     } catch {
-      setPromoError('Ошибка при проверке промокода');
+      setPromoError(t('shorts.promo.checkError'));
     } finally {
       setPromoLoading(false);
     }
@@ -586,6 +622,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       if (category) params.set('category', category);
       if (game) params.set('game', game);
       if (!pro) params.set('limit', '10');
+      params.set('platform', platform === 'tiktok' ? 'tiktok' : 'youtube');
 
       const res = await fetch(`/api/tools/shorts-analytics?${params}`);
       if (!res.ok) {
@@ -606,7 +643,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('[ShortsAnalytics] fetch error:', err);
-      setError('Не удалось загрузить данные');
+      setError(t('shorts.promo.loadError'));
     } finally {
       setLoading(false);
     }
@@ -615,7 +652,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   // Fetch on mount and when period changes
   useEffect(() => {
     fetchData(period, filters.country, filters.category, isPro, filters.gameFilter);
-  }, [period, isPro, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [period, isPro, platform, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced fetch when country/category/game changes
   useEffect(() => {
@@ -644,7 +681,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
     setFilters({ country: '', category: '', showMusic: true, showKids: true, hideIndian: false, gameFilter: '' });
   }, []);
 
-  const dateRange = useMemo(() => getPeriodRange(period), [period]);
+  const dateRange = useMemo(() => getPeriodRange(period, locale, t), [period, locale, t]);
 
   /* ── Styles ──────────────────────────────────────────── */
 
@@ -730,7 +767,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 lineHeight: 1.2,
               }}
             >
-              Shorts Аналитика
+              {t('shorts.title')}
             </h1>
 
             {/* Mock data badge */}
@@ -748,7 +785,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   flexShrink: 0,
                 }}
               >
-                Тестовые данные
+                {t('shorts.testData')}
               </div>
             )}
 
@@ -767,13 +804,38 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   flexShrink: 0,
                 }}
               >
-                Бесплатный
+                {t('shorts.freePlan')}
               </div>
             )}
           </div>
           <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.5 }}>
-            Топ YouTube Shorts по просмотрам — находите тренды и вдохновение
+            {platform === 'youtube' ? t('shorts.subtitle') : t('shorts.subtitleTiktok')}
           </p>
+          {/* Platform tabs */}
+          <div style={{ display: 'flex', gap: 4, marginTop: 12, background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)', borderRadius: 10, padding: 3 }}>
+            {([
+              { key: 'youtube' as Platform, label: 'YouTube Shorts', color: '#ff0000' },
+              { key: 'tiktok' as Platform, label: 'TikTok', color: '#00f2ea' },
+            ]).map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPlatform(p.key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 16px', borderRadius: 8, border: 'none',
+                  background: platform === p.key ? (isDark ? 'rgba(255,255,255,.1)' : '#fff') : 'transparent',
+                  color: platform === p.key ? C.text : C.dim,
+                  fontSize: 12.5, fontWeight: platform === p.key ? 700 : 500,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: platform === p.key ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
+                  transition: 'all .2s ease',
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: platform === p.key ? p.color : C.dim, flexShrink: 0 }} />
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Period badge */}
@@ -823,7 +885,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     padding: '0 4px',
                   }}
                 >
-                  Период
+                  {t('shorts.periodLabel')}
                 </div>
                 {PERIODS.map((p) => {
                   const isActive = period === p.key;
@@ -866,7 +928,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                         )}
                       </button>
                       {periodTooltip === p.key && (
-                        <PeriodUpgradeTooltip accent={C.accent} pink={C.pink} isDark={isDark} />
+                        <PeriodUpgradeTooltip accent={C.accent} pink={C.pink} isDark={isDark} t={t} />
                       )}
                     </div>
                   );
@@ -895,7 +957,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    Фильтры
+                    {t('shorts.filtersLabel')}
                     {!isPro && (
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.6 }}>
                         <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
@@ -937,7 +999,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           lineHeight: 1.4,
                         }}
                       >
-                        Фильтры доступны в{' '}
+                        {t('shorts.filtersAvailableIn')}{' '}
                         <a
                           href="/billing"
                           style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}
@@ -950,7 +1012,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     {/* Country */}
                     <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
-                        Страна
+                        {t('shorts.countryLabel')}
                       </label>
                       <select
                         value={filters.country}
@@ -979,7 +1041,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     {/* Category */}
                     <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
-                        Категория
+                        {t('shorts.categoryLabel')}
                       </label>
                       <select
                         value={filters.category}
@@ -1016,7 +1078,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     <ToggleSwitch
                       checked={filters.showMusic}
                       onChange={(v) => setFilters((f) => ({ ...f, showMusic: v }))}
-                      label="Показать музыкальные каналы"
+                      label={t('shorts.showMusic')}
                       isDark={isDark}
                       accent={C.accent}
                       dim={C.dim}
@@ -1026,7 +1088,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     <ToggleSwitch
                       checked={filters.showKids}
                       onChange={(v) => setFilters((f) => ({ ...f, showKids: v }))}
-                      label="Показать детский контент"
+                      label={t('shorts.showKids')}
                       isDark={isDark}
                       accent={C.accent}
                       dim={C.dim}
@@ -1036,7 +1098,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     <ToggleSwitch
                       checked={filters.hideIndian}
                       onChange={(v) => setFilters((f) => ({ ...f, hideIndian: v }))}
-                      label="Скрыть индийский контент"
+                      label={t('shorts.hideIndian')}
                       isDark={isDark}
                       accent={C.accent}
                       dim={C.dim}
@@ -1048,7 +1110,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     {(filters.category === '' || filters.category === '20') && (
                     <div style={{ marginTop: 8 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
-                        Игры
+                        {t('shorts.gamesLabel')}
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {GAME_FILTERS.map((g) => (
@@ -1072,7 +1134,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           </button>
                         ))}
                         <span style={{ fontSize: 10, color: C.dim, alignSelf: 'center', fontStyle: 'italic' }}>
-                          скоро больше
+                          {t('shorts.moreSoon')}
                         </span>
                       </div>
                     </div>
@@ -1093,7 +1155,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                         textAlign: 'left',
                       }}
                     >
-                      Очистить
+                      {t('shorts.clearFilters')}
                     </button>
                   </div>
                 </div>
@@ -1105,7 +1167,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
         {/* Sidebar toggle button */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? 'Показать фильтры' : 'Скрыть фильтры'}
+          title={sidebarCollapsed ? t('shorts.showFilters') : t('shorts.hideFilters')}
           style={{
             position: 'absolute',
             left: sidebarW - 1,
@@ -1172,13 +1234,13 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
               }}
             >
               <div style={{ fontSize: 14, fontWeight: 600, color: isDark ? '#4ade80' : '#16a34a' }}>
-                {'\u2728'} Промокод{promoCode ? ` ${promoCode}` : ''} активен
+                {'\u2728'} {t('shorts.promoActive')}{promoCode ? ` ${promoCode}` : ''} {t('shorts.promoActiveLabel')}
               </div>
               <div style={{ fontSize: 12.5, color: C.sub, lineHeight: 1.5 }}>
-                Полный доступ до {formatExpiry(promoExpires)}
+                {t('shorts.promoAccessUntil')} {formatExpiry(promoExpires, locale)}
               </div>
               <div style={{ fontSize: 12, color: isDark ? '#4ade80' : '#16a34a', fontWeight: 500 }}>
-                Осталось: {formatCountdown(promoExpires)}
+                {t('shorts.promoRemaining')} {formatCountdown(promoExpires, t)}
               </div>
             </div>
           )}
@@ -1216,13 +1278,13 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = C.sub; }}
                 >
                   <span>{'\uD83C\uDF81'}</span>
-                  <span>Есть промокод?</span>
-                  <span style={{ fontSize: 11, opacity: 0.6, marginLeft: 'auto' }}>нажмите чтобы ввести</span>
+                  <span>{t('shorts.hasPromo')}</span>
+                  <span style={{ fontSize: 11, opacity: 0.6, marginLeft: 'auto' }}>{t('shorts.clickToEnter')}</span>
                 </button>
               ) : (
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span>{'\uD83C\uDF81'}</span> Введите промокод
+                    <span>{'\uD83C\uDF81'}</span> {t('shorts.enterPromoCode')}
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input
@@ -1230,7 +1292,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       value={promoInput}
                       onChange={(e) => { setPromoInput(e.target.value); setPromoError(''); }}
                       onKeyDown={(e) => { if (e.key === 'Enter') handlePromoSubmit(); }}
-                      placeholder="Например, SHORTS2026"
+                      placeholder={t('shorts.promoPlaceholder')}
                       style={{
                         flex: 1,
                         padding: '9px 14px',
@@ -1262,7 +1324,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                         transition: 'opacity .15s ease',
                       }}
                     >
-                      {promoLoading ? '...' : 'Активировать'}
+                      {promoLoading ? '...' : t('shorts.promoActivate')}
                     </button>
                   </div>
                   {promoError && (
@@ -1298,7 +1360,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 border: `1px solid ${C.border}`,
               }}>
                 <div style={{ fontSize: 11, color: C.dim, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Просмотров в топе
+                  {t('shorts.topViews')}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#22c55e' }}>
                   {nicheStats.totalViews >= 1_000_000_000
@@ -1308,7 +1370,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       : nicheStats.totalViews.toLocaleString('ru-RU')}
                 </div>
                 <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
-                  {nicheStats.count} видео в выборке
+                  {nicheStats.count} {t('shorts.videosInSample')}
                 </div>
               </div>
 
@@ -1322,7 +1384,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 border: `1px solid ${C.border}`,
               }}>
                 <div style={{ fontSize: 11, color: C.dim, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Примерный заработок
+                  {t('shorts.estEarnings')}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.blue }}>
                   ${nicheStats.estimatedEarnings >= 1000
@@ -1350,7 +1412,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   ${nicheStats.rpm.toFixed(2)}
                 </div>
                 <div style={{ fontSize: 11, color: C.dim, marginTop: 2, lineHeight: 1.4 }}>
-                  Shorts платят в 10-20x меньше чем горизонталка
+                  {t('shorts.rpmNote')}
                 </div>
               </div>
             </div>
@@ -1375,7 +1437,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   borderBottom: `1px solid ${C.border}`,
                 }}
               >
-                {['#', 'Видео', 'Просмотры', '\u2248 Заработок', 'Загружено', 'Канал'].map((h, i) => (
+                {[t('shorts.colRank'), t('shorts.colVideo'), t('shorts.colViews'), t('shorts.colEarnings'), t('shorts.colUploaded'), t('shorts.colChannel')].map((h, i) => (
                   <th
                     key={h}
                     style={{
@@ -1392,8 +1454,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     }}
                   >
                     {h}
-                    {h.includes('Заработок') && (
-                      <span title="Приблизительная оценка на основе среднего RPM для Shorts. Реальный доход может отличаться." style={{ cursor: 'help', marginLeft: 4, opacity: 0.5 }}>ⓘ</span>
+                    {i === 3 && (
+                      <span title={t('shorts.earningsTooltip')} style={{ cursor: 'help', marginLeft: 4, opacity: 0.5 }}>ⓘ</span>
                     )}
                   </th>
                 ))}
@@ -1407,7 +1469,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
               ) : data.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ padding: '48px 14px', textAlign: 'center', color: C.sub, fontSize: 14 }}>
-                    Нет данных для отображения
+                    {t('shorts.noData')}
                   </td>
                 </tr>
               ) : (
@@ -1757,6 +1819,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       sub={C.sub}
                       bg={C.bg}
                       onPromoClick={handleOpenPromoFromOverlay}
+                      t={t}
                     />
                   )}
                 </>

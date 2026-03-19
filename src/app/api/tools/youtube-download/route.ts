@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
  */
 
 const YT_API_BASE = process.env.YT_DLP_API_URL;
+const COBALT_API_URL = process.env.COBALT_API_URL || 'https://api.cobalt.tools';
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -172,39 +173,84 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { videoId?: string; quality?: string; audioOnly?: boolean };
+  let body: { videoId?: string; quality?: string; format?: string; audioOnly?: boolean };
   try {
-    body = (await req.json()) as { videoId?: string; quality?: string; audioOnly?: boolean };
+    body = (await req.json()) as { videoId?: string; quality?: string; format?: string; audioOnly?: boolean };
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { videoId, quality, audioOnly } = body;
+  const { videoId, quality, format, audioOnly } = body;
 
   if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
     return NextResponse.json({ error: 'Missing or invalid videoId' }, { status: 400 });
   }
 
-  if (!YT_API_BASE) {
-    return NextResponse.json(
-      { error: 'Download service is not configured. Please set YT_DLP_API_URL.' },
-      { status: 503 },
-    );
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  // Strategy 1: Use our own yt-dlp VPS if configured
+  if (YT_API_BASE) {
+    try {
+      const downloadUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&format=${encodeURIComponent(format ?? 'mp4')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
+
+      return NextResponse.json({
+        downloadUrl,
+        filename: `${videoId}.${audioOnly ? 'mp3' : format ?? 'mp4'}`,
+        status: 'redirect',
+      });
+    } catch {
+      // Fall through to cobalt API
+    }
   }
 
+  // Strategy 2: Use Cobalt API as fallback
   try {
-    // Build download URL on our VPS
-    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const downloadUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
+    const qualityMap: Record<string, string> = {
+      '1080p': '1080',
+      '720p': '720',
+      '480p': '480',
+      '360p': '360',
+      'audio': '128',
+    };
 
-    return NextResponse.json({
-      downloadUrl,
-      filename: `${videoId}.${audioOnly ? 'mp3' : 'mp4'}`,
-      status: 'redirect',
+    const cobaltBody: Record<string, unknown> = {
+      url: youtubeUrl,
+      videoQuality: qualityMap[quality ?? '720p'] ?? '720',
+      filenameStyle: 'pretty',
+    };
+
+    if (audioOnly) {
+      cobaltBody.isAudioOnly = true;
+      cobaltBody.audioFormat = 'mp3';
+    }
+
+    const cobaltRes = await fetch(COBALT_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(cobaltBody),
+      signal: AbortSignal.timeout(15_000),
     });
+
+    if (cobaltRes.ok) {
+      const cobaltData = await cobaltRes.json() as { status?: string; url?: string };
+      if (cobaltData.url) {
+        return NextResponse.json({
+          downloadUrl: cobaltData.url,
+          filename: `${videoId}.${audioOnly ? 'mp3' : format ?? 'mp4'}`,
+          status: cobaltData.status ?? 'redirect',
+        });
+      }
+    }
   } catch {
-    return NextResponse.json({
-      error: 'Download service is temporarily unavailable. Please try again later.',
-    }, { status: 502 });
+    // Fall through to final error
   }
+
+  // Strategy 3: Provide a direct YouTube link as last resort
+  return NextResponse.json({
+    error: 'Сервис скачивания временно недоступен. Попробуйте позже или используйте расширение для браузера.',
+    watchUrl: youtubeUrl,
+  }, { status: 503 });
 }

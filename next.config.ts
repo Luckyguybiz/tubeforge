@@ -4,6 +4,10 @@ import { securityHeaders } from './src/lib/security-headers';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Capacitor iOS builds: uncomment the line below to produce a static export
+  // in the `out/` directory. Do NOT enable this for Vercel deployments.
+  // output: 'export',
+
   /* ── Security headers ─────────────────────────────────────────── */
   async headers() {
     return [
