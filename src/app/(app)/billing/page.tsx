@@ -65,11 +65,11 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       price: 0,
       priceLabel: '$0',
       features: [
-        '3 projects',
-        '5 AI gen/day',
-        '720p export',
-        'Basic thumbnails',
-        'Watermark',
+        t('billing.feat.projects3'),
+        t('billing.feat.ai5'),
+        t('billing.feat.export720'),
+        t('billing.feat.basicThumbs'),
+        t('billing.feat.watermark'),
       ],
       buttonLabel: t('billing.currentPlanBtn'),
     },
@@ -81,13 +81,13 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       badge: t('billing.popular'),
       badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
       features: [
-        '\u221E projects',
-        '50 AI gen/day',
-        '1080p export',
-        'Advanced thumbnails',
-        'SEO optimizer',
-        'No watermark',
-        'Priority support',
+        t('billing.feat.unlimitedProjects'),
+        t('billing.feat.ai50'),
+        t('billing.feat.export1080'),
+        t('billing.feat.advancedThumbs'),
+        t('billing.feat.seo'),
+        t('billing.feat.noWatermark'),
+        t('billing.feat.prioritySupport'),
       ],
       buttonLabel: t('billing.planPro'),
       buttonGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
@@ -99,13 +99,13 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       price: 30,
       priceLabel: '$30',
       features: [
-        'All Pro features',
-        '\u221E AI generations',
-        '4K export',
-        'Team access (5)',
-        'API access',
-        'White label',
-        'Personal manager',
+        t('billing.feat.allPro'),
+        t('billing.feat.unlimitedAi'),
+        t('billing.feat.export4k'),
+        t('billing.feat.team5'),
+        t('billing.feat.api'),
+        t('billing.feat.whiteLabel'),
+        t('billing.feat.personalManager'),
       ],
       buttonLabel: t('billing.planStudio'),
       buttonGradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
@@ -113,17 +113,17 @@ function getPlans(t: (key: string) => string): PlanDef[] {
   ];
 }
 
-function getDeals(): DealDef[] {
+function getDeals(t: (key: string) => string): DealDef[] {
   return [
     {
       id: 'lifetime-credits',
-      title: 'Lifetime Credit Pack',
-      description: 'Credits added to your subscription that never expire.',
+      title: t('billing.deal.lifetimeTitle'),
+      description: t('billing.deal.lifetimeDesc'),
       details: [
-        '100 workflow credits',
-        '200 AI Image credits',
-        '30 voiceovers',
-        '30 exports',
+        t('billing.deal.lifetimeDetail1'),
+        t('billing.deal.lifetimeDetail2'),
+        t('billing.deal.lifetimeDetail3'),
+        t('billing.deal.lifetimeDetail4'),
       ],
       price: 19,
       originalPrice: 49,
@@ -131,8 +131,8 @@ function getDeals(): DealDef[] {
     },
     {
       id: 'consultation',
-      title: '1:1 Expert Consultation',
-      description: 'Personal video consultation on YouTube strategy.',
+      title: t('billing.deal.consultTitle'),
+      description: t('billing.deal.consultDesc'),
       price: 49,
       originalPrice: 99,
     },
@@ -161,7 +161,7 @@ export default function BillingPage() {
   });
 
   const PLANS = useMemo(() => getPlans(t), [t]);
-  const DEALS = useMemo(() => getDeals(), []);
+  const DEALS = useMemo(() => getDeals(t), [t]);
 
   const [selectedPlan, setSelectedPlan] = useState<PlanId>(userPlan);
   const [selectedDeals, setSelectedDeals] = useState<boolean[]>(() => DEALS.map(() => false));
@@ -479,7 +479,7 @@ export default function BillingPage() {
                       >
                         {plan.priceLabel}
                         {plan.id !== 'FREE' && (
-                          <span style={{ fontSize: 14, fontWeight: 500, color: C.sub }}>/mo</span>
+                          <span style={{ fontSize: 14, fontWeight: 500, color: C.sub }}>{t('billing.perMonth')}</span>
                         )}
                       </div>
 
@@ -920,7 +920,7 @@ export default function BillingPage() {
                       marginBottom: 14,
                     }}
                   >
-                    {t('billing.noDealsWarning')}
+                    {t('billing.noDealsWarningUsd')}
                   </div>
                 )}
 
