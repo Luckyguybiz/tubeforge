@@ -1,13 +1,19 @@
 /**
  * Tests for OnboardingTour component
+ *
+ * The enhanced OnboardingTour now uses tRPC (user.getProfile, user.completeOnboarding)
+ * and next-auth for session data. We mock all external dependencies.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+/* ── Mocks ─────────────────────────────────────────────────────────── */
 
 vi.mock('@/stores/useThemeStore', () => ({
   useThemeStore: (selector: (s: unknown) => unknown) =>
     selector({
       theme: {
         accent: '#7c5cfc',
+        pink: '#ec4899',
         surface: '#16162a',
         border: '#23233a',
         text: '#e4e4ed',
@@ -15,6 +21,7 @@ vi.mock('@/stores/useThemeStore', () => ({
         dim: '#4a4a64',
         accentDim: 'rgba(124,92,252,.08)',
       },
+      isDark: true,
     }),
 }));
 
@@ -25,20 +32,24 @@ vi.mock('@/lib/constants', () => ({
   },
 }));
 
-// Mock the locale store — return Russian translations (the default locale)
 const ruTranslations: Record<string, string> = {
-  'onboarding.welcome': 'Добро пожаловать в TubeForge',
-  'onboarding.welcomeDesc': 'Ваша ИИ-студия для YouTube. Создавайте видео, обложки и метаданные — всё в одном месте. Давайте покажем, как всё устроено!',
-  'onboarding.dashboardTitle': 'Обзор дашборда',
-  'onboarding.dashboardDesc': 'Здесь отображается статистика канала, последние видео и быстрые действия. Всё начинается с вашего дашборда.',
-  'onboarding.projectTitle': 'Создайте первый проект',
-  'onboarding.projectDesc': 'В основной области вы работаете над видео, редактируете метаданные и управляете проектами. Начните с создания нового проекта!',
-  'onboarding.aiTitle': 'ИИ-инструменты',
-  'onboarding.aiDesc': 'Используйте боковое меню для доступа к ИИ-генерации видео, редактору обложек, оптимизатору метаданных и другим инструментам.',
+  'onboarding.welcomeTitle': 'Добро пожаловать, {name}!',
+  'onboarding.welcomeDesc': 'Ваша ИИ-студия для YouTube.',
+  'onboarding.sidebarTitle': 'Навигация',
+  'onboarding.sidebarDesc': 'Используйте боковое меню.',
+  'onboarding.newProjectTitle': 'Создайте первый проект',
+  'onboarding.newProjectDesc': 'Нажмите «Новый проект».',
+  'onboarding.toolsTitle': 'Бесплатные инструменты',
+  'onboarding.toolsDesc': 'Конвертируйте видео в MP3.',
+  'onboarding.billingTitle': 'Расширьте возможности',
+  'onboarding.billingDesc': 'Обновите план.',
+  'onboarding.doneTitle': 'Всё готово!',
+  'onboarding.doneDesc': 'Вы готовы к работе.',
   'onboarding.next': 'Далее',
-  'onboarding.start': 'Начать',
+  'onboarding.start': 'Начать создавать',
   'onboarding.back': 'Назад',
   'onboarding.skip': 'Пропустить',
+  'onboarding.stepOf': '{current} из {total}',
 };
 
 vi.mock('@/stores/useLocaleStore', () => ({
@@ -49,38 +60,70 @@ vi.mock('@/stores/useLocaleStore', () => ({
     }),
 }));
 
+// Mock next-auth session
+const mockSession = {
+  data: { user: { id: 'user1', name: 'Test User', plan: 'FREE', role: 'USER' } },
+  status: 'authenticated',
+};
+vi.mock('next-auth/react', () => ({
+  useSession: () => mockSession,
+}));
+
+// Mock tRPC hooks
+const mockMutate = vi.fn();
+let mockProfileData: { onboardingDone: boolean } | undefined = { onboardingDone: false };
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    user: {
+      getProfile: {
+        useQuery: () => ({
+          data: mockProfileData,
+          isLoading: false,
+        }),
+      },
+      completeOnboarding: {
+        useMutation: () => ({
+          mutate: mockMutate,
+          isPending: false,
+        }),
+      },
+    },
+  },
+}));
+
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
 describe('OnboardingTour', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
+    vi.clearAllMocks();
+    mockProfileData = { onboardingDone: false };
   });
 
-  it('should show the tour when onboarding is not done', () => {
+  it('should show the tour when onboardingDone is false', () => {
     render(<OnboardingTour />);
-    expect(screen.getByText('Добро пожаловать в TubeForge')).toBeDefined();
+    expect(screen.getByText('Добро пожаловать, Test User!')).toBeDefined();
   });
 
-  it('should not show the tour when onboarding is already done', () => {
-    localStorage.setItem('tubeforge_onboarding_done', 'true');
+  it('should not show the tour when onboardingDone is true', () => {
+    mockProfileData = { onboardingDone: true };
     const { container } = render(<OnboardingTour />);
     expect(container.innerHTML).toBe('');
   });
 
-  it('should show first step initially', () => {
+  it('should show first step initially with step indicator', () => {
     render(<OnboardingTour />);
-    expect(screen.getByText('Добро пожаловать в TubeForge')).toBeDefined();
-    expect(screen.getByText('1/4')).toBeDefined();
+    expect(screen.getByText('Добро пожаловать, Test User!')).toBeDefined();
+    expect(screen.getByText('1 из 6')).toBeDefined();
   });
 
   it('should advance to next step when Далее is clicked', () => {
     render(<OnboardingTour />);
     fireEvent.click(screen.getByText('Далее'));
-    expect(screen.getByText('Обзор дашборда')).toBeDefined();
-    expect(screen.getByText('2/4')).toBeDefined();
+    expect(screen.getByText('Навигация')).toBeDefined();
+    expect(screen.getByText('2 из 6')).toBeDefined();
   });
 
   it('should show Назад button on second step', () => {
@@ -91,60 +134,61 @@ describe('OnboardingTour', () => {
 
   it('should go back when Назад is clicked', () => {
     render(<OnboardingTour />);
-    fireEvent.click(screen.getByText('Далее')); // go to step 2
-    fireEvent.click(screen.getByText('Назад')); // back to step 1
-    expect(screen.getByText('Добро пожаловать в TubeForge')).toBeDefined();
+    fireEvent.click(screen.getByText('Далее'));
+    fireEvent.click(screen.getByText('Назад'));
+    expect(screen.getByText('Добро пожаловать, Test User!')).toBeDefined();
   });
 
-  it('should show Начать on last step', () => {
+  it('should show Начать создавать on last step', () => {
     render(<OnboardingTour />);
-    fireEvent.click(screen.getByText('Далее')); // step 2
-    fireEvent.click(screen.getByText('Далее')); // step 3
-    fireEvent.click(screen.getByText('Далее')); // step 4
-    expect(screen.getByText('Начать')).toBeDefined();
+    for (let i = 0; i < 5; i++) {
+      fireEvent.click(screen.getByText('Далее'));
+    }
+    expect(screen.getByText('Начать создавать')).toBeDefined();
+    expect(screen.getByText('Всё готово!')).toBeDefined();
   });
 
-  it('should close and save to localStorage when Начать is clicked', () => {
+  it('should call completeOnboarding mutation when finishing', () => {
     const { container } = render(<OnboardingTour />);
-    fireEvent.click(screen.getByText('Далее')); // step 2
-    fireEvent.click(screen.getByText('Далее')); // step 3
-    fireEvent.click(screen.getByText('Далее')); // step 4
-    fireEvent.click(screen.getByText('Начать'));
-    expect(localStorage.getItem('tubeforge_onboarding_done')).toBe('true');
+    for (let i = 0; i < 5; i++) {
+      fireEvent.click(screen.getByText('Далее'));
+    }
+    fireEvent.click(screen.getByText('Начать создавать'));
+    expect(mockMutate).toHaveBeenCalled();
     expect(container.innerHTML).toBe('');
   });
 
-  it('should close when Пропустить is clicked', () => {
+  it('should close and call mutation when Пропустить is clicked', () => {
     const { container } = render(<OnboardingTour />);
     fireEvent.click(screen.getByText('Пропустить'));
-    expect(localStorage.getItem('tubeforge_onboarding_done')).toBe('true');
+    expect(mockMutate).toHaveBeenCalled();
     expect(container.innerHTML).toBe('');
   });
 
   it('should close on Escape key', () => {
     const { container } = render(<OnboardingTour />);
     fireEvent.keyDown(window, { key: 'Escape' });
-    expect(localStorage.getItem('tubeforge_onboarding_done')).toBe('true');
+    expect(mockMutate).toHaveBeenCalled();
     expect(container.innerHTML).toBe('');
   });
 
   it('should advance on ArrowRight key', () => {
     render(<OnboardingTour />);
     fireEvent.keyDown(window, { key: 'ArrowRight' });
-    expect(screen.getByText('Обзор дашборда')).toBeDefined();
+    expect(screen.getByText('Навигация')).toBeDefined();
   });
 
   it('should go back on ArrowLeft key', () => {
     render(<OnboardingTour />);
-    fireEvent.keyDown(window, { key: 'ArrowRight' }); // step 2
-    fireEvent.keyDown(window, { key: 'ArrowLeft' }); // back to step 1
-    expect(screen.getByText('Добро пожаловать в TubeForge')).toBeDefined();
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText('Добро пожаловать, Test User!')).toBeDefined();
   });
 
   it('should advance on Enter key', () => {
     render(<OnboardingTour />);
     fireEvent.keyDown(window, { key: 'Enter' });
-    expect(screen.getByText('Обзор дашборда')).toBeDefined();
+    expect(screen.getByText('Навигация')).toBeDefined();
   });
 
   it('should have accessible dialog role', () => {
@@ -152,5 +196,18 @@ describe('OnboardingTour', () => {
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeDefined();
     expect(dialog.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('should respond to replay event', () => {
+    mockProfileData = { onboardingDone: true };
+    const { container } = render(<OnboardingTour />);
+    expect(container.innerHTML).toBe('');
+
+    // Dispatch replay event
+    act(() => {
+      window.dispatchEvent(new Event('tubeforge:replay-onboarding'));
+    });
+
+    expect(screen.getByText('Добро пожаловать, Test User!')).toBeDefined();
   });
 });

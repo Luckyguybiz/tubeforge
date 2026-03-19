@@ -137,7 +137,7 @@ describe('useThumbnailStore', () => {
         s.pushHistory();
         useThumbnailStore.setState({ els: [{ id: `el-${i}`, type: 'rect', x: 0, y: 0, w: 10, h: 10, rot: 0 }] as any });
       }
-      expect(useThumbnailStore.getState().history.length).toBeLessThanOrEqual(50);
+      expect(useThumbnailStore.getState().historyCount).toBeLessThanOrEqual(50);
     });
   });
 
@@ -320,7 +320,7 @@ describe('useThumbnailStore', () => {
       expect(s.canvasBg).toBe('#123456');
       expect(s.canvasW).toBe(1080);
       expect(s.canvasH).toBe(1080);
-      expect(s.history.length).toBe(0);
+      expect(s.historyCount).toBe(0);
       expect(s.selIds).toEqual([]);
     });
 
