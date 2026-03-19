@@ -115,7 +115,7 @@ export function AdminPage() {
 
   const updateUser = trpc.admin.updateUser.useMutation({
     onSuccess: () => {
-      toast.success('Пользователь обновлён');
+      toast.success(useLocaleStore.getState().t('admin.userUpdated'));
       users.refetch();
       stats.refetch();
     },
