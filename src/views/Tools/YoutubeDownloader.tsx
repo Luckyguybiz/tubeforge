@@ -95,6 +95,19 @@ export function YoutubeDownloader() {
         `/api/tools/youtube-download?url=${encodeURIComponent(videoUrl)}`,
         { signal: controller.signal },
       );
+
+      // Check content-type BEFORE trying to parse JSON — API may return
+      // HTML (e.g. redirect to login) which would crash res.json()
+      const ct = res.headers.get('content-type') ?? '';
+      if (!ct.includes('application/json')) {
+        if (res.status === 401 || res.redirected) {
+          setFetchError('Сессия истекла. Пожалуйста, обновите страницу.');
+        } else {
+          setFetchError(`Сервер вернул некорректный ответ (${res.status}). Попробуйте позже.`);
+        }
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -105,6 +118,7 @@ export function YoutubeDownloader() {
       setVideoInfo(data as VideoInfo);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
+      console.error('[YoutubeDownloader] fetchVideoInfo error:', err);
       setFetchError('Ошибка сети. Проверьте подключение к интернету.');
     } finally {
       setFetchingInfo(false);
@@ -206,6 +220,18 @@ export function YoutubeDownloader() {
         signal: controller.signal,
       });
 
+      // Validate JSON response before parsing
+      const ct = res.headers.get('content-type') ?? '';
+      if (!ct.includes('application/json')) {
+        if (res.status === 401 || res.redirected) {
+          setStreamError('Сессия истекла. Пожалуйста, обновите страницу.');
+        } else {
+          setStreamError(`Сервер вернул некорректный ответ (${res.status}).`);
+        }
+        setDone(true);
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok || !data.downloadUrl) {
@@ -284,6 +310,8 @@ export function YoutubeDownloader() {
       {/* Toast Notification */}
       {toastMsg && (
         <div
+          role="status"
+          aria-live="polite"
           style={{
             position: 'fixed',
             top: 24,
@@ -391,6 +419,7 @@ export function YoutubeDownloader() {
           {url && !fetchingInfo && (
             <button
               onClick={clearUrl}
+              aria-label="Clear URL"
               style={{
                 background: 'none',
                 border: 'none',

@@ -131,6 +131,14 @@ export default function middleware(req: NextRequest) {
     req.cookies.has('__Secure-next-auth.session-token');
 
   if (!hasSession) {
+    // API routes: return JSON 401 instead of redirect (fetch can't follow redirects to HTML)
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    // Page routes: redirect to login
     const loginUrl = new URL('/login', req.url);
     // Prevent open redirect: only allow internal paths (starting with / but not //)
     const safeCallback = pathname.startsWith('/') && !pathname.startsWith('//') ? pathname : '/dashboard';
