@@ -8,6 +8,11 @@ function getStripe() {
 }
 
 export async function POST(req: NextRequest) {
+  const contentLength = parseInt(req.headers.get('content-length') || '0', 10);
+  if (contentLength > 1_000_000) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+  }
+
   let body: string;
   try {
     body = await req.text();

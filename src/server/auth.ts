@@ -102,7 +102,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           await db.user.updateMany({
             where: { id: user.id, referralCode: null },
-            data: { referralCode: user.id.slice(0, 8).toUpperCase() },
+            data: {
+              referralCode: Array.from(crypto.getRandomValues(new Uint8Array(4)))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('')
+                .toUpperCase(),
+            },
           });
         } catch (err: unknown) {
           // Only ignore unique constraint violations (P2002)

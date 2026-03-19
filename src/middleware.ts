@@ -9,11 +9,15 @@ import type { NextRequest } from 'next/server';
  * This file is kept as reference; the root copy is the active one.
  */
 export default function middleware(req: NextRequest) {
-  const hasSession =
-    req.cookies.has('authjs.session-token') ||
-    req.cookies.has('__Secure-authjs.session-token') ||
-    req.cookies.has('next-auth.session-token') ||
-    req.cookies.has('__Secure-next-auth.session-token');
+  const hasSession = [
+    'authjs.session-token',
+    '__Secure-authjs.session-token',
+    'next-auth.session-token',
+    '__Secure-next-auth.session-token',
+  ].some(name => {
+    const cookie = req.cookies.get(name);
+    return cookie && cookie.value.length > 0;
+  });
 
   if (!hasSession) {
     const loginUrl = new URL('/login', req.url);

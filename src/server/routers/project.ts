@@ -52,7 +52,7 @@ const importPayloadSchema = z.object({
 export const projectRouter = router({
   list: protectedProcedure
     .input(z.object({
-      search: z.string().optional(),
+      search: z.string().max(100).optional(),
       status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).optional(),
       sortBy: z.enum(['updatedAt', 'createdAt', 'title']).default('updatedAt'),
       sortOrder: z.enum(['asc', 'desc']).default('desc'),

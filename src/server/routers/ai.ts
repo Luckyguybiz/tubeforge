@@ -105,7 +105,7 @@ export const aiRouter = router({
 
   generateFromImage: protectedProcedure
     .input(z.object({
-      imageBase64: z.string().min(1).max(10_000_000),
+      imageBase64: z.string().min(1).max(2_000_000),
       prompt: z.string().max(1000).default(''),
       style: z.enum(['realistic', 'anime', 'cinematic', 'minimalist', '3d', 'popart']).default('realistic'),
     }))
