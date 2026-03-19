@@ -167,15 +167,24 @@ export function YoutubeDownloader() {
         return;
       }
 
-      // Trigger real file download via hidden anchor
+      // Fetch file as blob to bypass cross-origin download restriction
+      showToast('Загрузка файла с сервера...');
+      const fileRes = await fetch(data.downloadUrl);
+      if (!fileRes.ok) {
+        setStreamError('Ошибка загрузки файла с сервера');
+        setDone(true);
+        return;
+      }
+      const blob = await fileRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = data.downloadUrl;
+      a.href = blobUrl;
       a.download = data.filename || `${videoInfo.videoId}.${isAudioOnly ? 'mp3' : 'mp4'}`;
-      a.rel = 'noopener';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast('Скачивание началось! Проверьте папку загрузок.');
+      URL.revokeObjectURL(blobUrl);
+      showToast('Файл скачан! Проверьте папку загрузок.');
       setDone(true);
     } catch {
       setStreamError('Ошибка сети. Проверьте подключение к интернету.');
