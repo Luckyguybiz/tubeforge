@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -56,6 +56,16 @@ export function Mp3Converter() {
   // FFmpeg state
   const ffmpegRef = useRef<FFmpegClient | null>(null);
   const [ffmpegLoading, setFfmpegLoading] = useState(false);
+
+  // Cleanup FFmpeg worker on unmount
+  useEffect(() => {
+    return () => {
+      if (ffmpegRef.current) {
+        ffmpegRef.current.terminate();
+        ffmpegRef.current = null;
+      }
+    };
+  }, []);
 
   const loadFFmpeg = useCallback(async () => {
     if (ffmpegRef.current) return ffmpegRef.current;
@@ -157,7 +167,7 @@ export function Mp3Converter() {
     if (!convertedBlob || !file) return;
     const url = URL.createObjectURL(convertedBlob);
     const link = document.createElement('a');
-    const baseName = outputName || file.name.replace(/\.[^/.]+$/, '');
+    const baseName = (outputName || file.name.replace(/\.[^/.]+$/, '')).replace(/[/\\:*?"<>|]/g, '_');
     link.href = url;
     link.download = `${baseName}.${outputFormat}`;
     link.click();

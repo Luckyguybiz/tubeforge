@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -46,6 +46,16 @@ export function VideoCompressor() {
   const ffmpegRef = useRef<FFmpegClient | null>(null);
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const [ffmpegLoading, setFfmpegLoading] = useState(false);
+
+  // Cleanup FFmpeg worker on unmount
+  useEffect(() => {
+    return () => {
+      if (ffmpegRef.current) {
+        ffmpegRef.current.terminate();
+        ffmpegRef.current = null;
+      }
+    };
+  }, []);
 
   // Hover states
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
@@ -96,9 +106,11 @@ export function VideoCompressor() {
 
       const ffmpeg = await loadFFmpeg();
 
-      // Write input file (use actual extension for format detection)
+      // Write input file with actual extension for correct format detection
+      const inputExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+      const inputName = `input.${inputExt}`;
       const data = await readFileAsUint8Array(file);
-      await ffmpeg.writeFile('input.mp4', data);
+      await ffmpeg.writeFile(inputName, data);
 
       // Set progress handler
       const onProgress = ({ progress: p }: { progress: number; time: number }) => {
@@ -107,7 +119,7 @@ export function VideoCompressor() {
       ffmpeg.on('progress', onProgress);
 
       // Build FFmpeg command based on preset + resolution + format
-      const args = ['-i', 'input.mp4'];
+      const args = ['-i', inputName];
 
       // Resolution
       if (resolution === '1080p') args.push('-vf', 'scale=-2:1080');
@@ -156,7 +168,7 @@ export function VideoCompressor() {
       setDone(true);
 
       // Clean up virtual filesystem
-      try { await ffmpeg.deleteFile('input.mp4'); } catch { /* noop */ }
+      try { await ffmpeg.deleteFile(inputName); } catch { /* noop */ }
       try { await ffmpeg.deleteFile(`output.${ext}`); } catch { /* noop */ }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Compression error:', err);

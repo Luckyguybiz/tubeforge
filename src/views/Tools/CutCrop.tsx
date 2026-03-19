@@ -263,10 +263,16 @@ export function CutCrop() {
 
       // Seek to segment start, then play and draw frames
       v.currentTime = seg.startTime;
-      await new Promise<void>((r) => { v.onseeked = () => r(); });
+      await new Promise<void>((resolve, reject) => {
+        const onSeeked = () => { v.removeEventListener('seeked', onSeeked); resolve(); };
+        const onError = () => { v.removeEventListener('seeked', onSeeked); v.removeEventListener('error', onError); reject(new Error('Seek failed')); };
+        v.addEventListener('seeked', onSeeked);
+        v.addEventListener('error', onError);
+      });
       recorder.start();
       v.play();
 
+      let rafId = 0;
       const drawFrame = () => {
         if (v.currentTime >= seg.endTime || v.paused) {
           v.pause();
@@ -274,13 +280,14 @@ export function CutCrop() {
           return;
         }
         ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-        requestAnimationFrame(drawFrame);
+        rafId = requestAnimationFrame(drawFrame);
       };
-      requestAnimationFrame(drawFrame);
+      rafId = requestAnimationFrame(drawFrame);
 
       // Safety timeout: stop after expected duration + 2 seconds
       const safetyTimeout = setTimeout(() => {
         if (recorder.state === 'recording') {
+          cancelAnimationFrame(rafId);
           v.pause();
           recorder.stop();
         }
