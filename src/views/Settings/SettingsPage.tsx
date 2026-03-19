@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
@@ -61,6 +61,7 @@ export function SettingsPage() {
   const language = useLocaleStore((s) => s.locale);
   const setLanguage = useLocaleStore((s) => s.setLocale);
   const t = useLocaleStore((s) => s.t);
+  const PLAN_FEATURES = useMemo(() => getPlanFeatures(t), [t]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
 

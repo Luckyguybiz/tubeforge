@@ -997,6 +997,23 @@ const translations: Record<Locale, Record<string, string>> = {
     'shorts.colChannel': 'Канал',
     'shorts.earningsTooltip': 'Приблизительная оценка на основе среднего RPM для Shorts. Реальный доход может отличаться.',
     'shorts.noData': 'Нет данных для отображения',
+
+    // Settings plan features
+    'settings.plan.free.projects': '3 проекта',
+    'settings.plan.free.aiGen': '5 ИИ-генераций в месяц',
+    'settings.plan.free.templates': 'Базовые шаблоны',
+    'settings.plan.free.watermark': 'Водяной знак на экспорте',
+    'settings.plan.pro.projects': '25 проектов',
+    'settings.plan.pro.aiGen': '100 ИИ-генераций в месяц',
+    'settings.plan.pro.priority': 'Приоритетная генерация',
+    'settings.plan.pro.noWatermark': 'Экспорт без водяного знака',
+    'settings.plan.pro.templates': 'Расширенные шаблоны',
+    'settings.plan.studio.projects': 'Безлимитные проекты',
+    'settings.plan.studio.aiGen': 'Безлимитные ИИ-генерации',
+    'settings.plan.studio.team': 'Командная работа',
+    'settings.plan.studio.api': 'API-доступ',
+    'settings.plan.studio.support': 'Приоритетная поддержка',
+    'settings.plan.studio.allFeatures': 'Все шаблоны и функции',
   },
   en: {
     // Navigation & Layout
@@ -1887,6 +1904,23 @@ const translations: Record<Locale, Record<string, string>> = {
     'shorts.colChannel': 'Channel',
     'shorts.earningsTooltip': 'Approximate estimate based on average RPM for Shorts. Actual income may vary.',
     'shorts.noData': 'No data to display',
+
+    // Settings plan features
+    'settings.plan.free.projects': '3 projects',
+    'settings.plan.free.aiGen': '5 AI generations per month',
+    'settings.plan.free.templates': 'Basic templates',
+    'settings.plan.free.watermark': 'Watermark on export',
+    'settings.plan.pro.projects': '25 projects',
+    'settings.plan.pro.aiGen': '100 AI generations per month',
+    'settings.plan.pro.priority': 'Priority generation',
+    'settings.plan.pro.noWatermark': 'Export without watermark',
+    'settings.plan.pro.templates': 'Advanced templates',
+    'settings.plan.studio.projects': 'Unlimited projects',
+    'settings.plan.studio.aiGen': 'Unlimited AI generations',
+    'settings.plan.studio.team': 'Team collaboration',
+    'settings.plan.studio.api': 'API access',
+    'settings.plan.studio.support': 'Priority support',
+    'settings.plan.studio.allFeatures': 'All templates and features',
 
     // YouTube Downloader extra
     'tools.ytdl.serverTimeout': 'Server not responding. Try again.',
