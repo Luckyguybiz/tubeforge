@@ -657,13 +657,15 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
     if (filters.hideIndian) {
       result = result.filter((item) => !INDIAN_PATTERN.test(item.title) && !INDIAN_PATTERN.test(item.channel));
     }
-    if (filters.gameFilter) {
+    // Game filter is applied server-side via API 'game' param
+    // Only apply client-side if data came from mock (no server filtering)
+    if (filters.gameFilter && isMock) {
       const q = filters.gameFilter.toLowerCase();
       result = result.filter((item) => item.title.toLowerCase().includes(q) || item.channel.toLowerCase().includes(q));
     }
     // Re-rank after filtering
     return result.map((item, i) => ({ ...item, rank: i + 1 }));
-  }, [data, filters.hideIndian, filters.gameFilter]);
+  }, [data, filters.hideIndian, filters.gameFilter, isMock]);
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
   const showUpgradeOverlay = !isPro && data.length > 0;
