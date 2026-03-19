@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, type ComponentType } from 'react';
+import { useState, useEffect, useMemo, type ComponentType } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 interface AnalyticsChartProps {
@@ -9,11 +10,13 @@ interface AnalyticsChartProps {
   metric: 'views' | 'subscribers' | 'watchTime';
 }
 
-const METRIC_LABELS: Record<string, string> = {
-  views: 'Просмотры',
-  subscribers: 'Подписчики',
-  watchTime: 'Время просмотра (мин)',
-};
+function getMetricLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    views: t('chart.views'),
+    subscribers: t('chart.subscribers'),
+    watchTime: t('chart.watchTime'),
+  };
+}
 
 /**
  * Recharts is ~200KB — lazy-load it only when this component actually renders.
@@ -22,6 +25,8 @@ let rechartsCache: typeof import('recharts') | null = null;
 
 export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+  const METRIC_LABELS = useMemo(() => getMetricLabels(t), [t]);
   const [recharts, setRecharts] = useState(rechartsCache);
 
   useEffect(() => {
@@ -37,7 +42,7 @@ export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
   if (!data || data.length === 0) {
     return (
       <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.dim, fontSize: 13 }}>
-        Нет данных аналитики
+        {t('chart.noData')}
       </div>
     );
   }
@@ -45,7 +50,7 @@ export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
   if (!recharts) {
     return (
       <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.dim, fontSize: 13 }}>
-        Загрузка графика...
+        {t('chart.loading')}
       </div>
     );
   }
@@ -53,14 +58,14 @@ export function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
   const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = recharts;
 
   return (
-    <div aria-label={`Аналитика: ${METRIC_LABELS[metric]}`}>
+    <div aria-label={`${t('chart.ariaLabel')}: ${METRIC_LABELS[metric]}`}>
       <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 12 }}>
         {METRIC_LABELS[metric]}
       </div>
       <ErrorBoundary
         fallback={
           <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.dim, fontSize: 13 }}>
-            Ошибка отображения графика
+            {t('chart.error')}
           </div>
         }
       >

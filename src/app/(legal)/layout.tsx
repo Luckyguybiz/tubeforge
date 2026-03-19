@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   return (
     <main
@@ -37,7 +39,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           }}
         >
           <span style={{ fontSize: 18 }}>{'\u2190'}</span>
-          Назад на главную
+          {t('legal.backToHome')}
         </Link>
         <article
           style={{
@@ -57,7 +59,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             color: C.dim,
           }}
         >
-          {'\u00A9'} {new Date().getFullYear()} TubeForge. Все права защищены.
+          {'\u00A9'} {new Date().getFullYear()} TubeForge. {t('legal.copyright')}
         </div>
       </div>
     </main>

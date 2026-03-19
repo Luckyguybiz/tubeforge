@@ -1,12 +1,14 @@
 'use client';
 
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { Z_INDEX } from '@/lib/constants';
 import { Toast } from './Toast';
 
 export function ToastProvider() {
   const toasts = useNotificationStore((s) => s.toasts);
   const removeToast = useNotificationStore((s) => s.removeToast);
+  const t = useLocaleStore((s) => s.t);
 
   if (toasts.length === 0) return null;
 
@@ -21,7 +23,7 @@ export function ToastProvider() {
       <div
         role="status"
         aria-live={toasts.some((t) => t.type === 'error') ? 'assertive' : 'polite'}
-        aria-label="Уведомления"
+        aria-label={t('toast.notifications')}
         style={{
           position: 'fixed',
           top: 20,

@@ -67,16 +67,16 @@ function MonitorIcon({ size = 14, color = 'currentColor' }: { size?: number; col
 
 const THEME_MODE_LABELS: Record<ThemeMode, string> = { dark: 'settings.dark', light: 'settings.light', system: 'settings.system' };
 
-function timeAgo(ts: number): string {
+function timeAgo(ts: number, t: (key: string) => string): string {
   const diff = Math.max(0, Date.now() - ts);
   const s = Math.floor(diff / 1000);
-  if (s < 60) return 'только что';
+  if (s < 60) return t('topbar.timeJustNow');
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m} мин. назад`;
+  if (m < 60) return `${m} ${t('topbar.timeMinAgo')}`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} ч. назад`;
+  if (h < 24) return `${h} ${t('topbar.timeHourAgo')}`;
   const d = Math.floor(h / 24);
-  return `${d} дн. назад`;
+  return `${d} ${t('topbar.timeDayAgo')}`;
 }
 
 export const TopBar = memo(function TopBar() {
@@ -219,7 +219,7 @@ export const TopBar = memo(function TopBar() {
       {isEditor && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 20, height: 20, borderRadius: 5, background: `linear-gradient(135deg,${C.accent},${C.pink})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff' }}>Y</div>
-          <span style={{ fontWeight: 700, fontSize: 12 }}>Студия</span>
+          <span style={{ fontWeight: 700, fontSize: 12 }}>{t('topbar.studio')}</span>
         </div>
       )}
       {/* Breadcrumbs */}
@@ -432,7 +432,7 @@ export const TopBar = memo(function TopBar() {
                       )}
                     </div>
                     <div title={n.message} style={{ fontSize: 11, color: C.sub, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</div>
-                    <div style={{ fontSize: 10, color: C.dim, marginTop: 3 }}>{timeAgo(n.createdAt)}</div>
+                    <div style={{ fontSize: 10, color: C.dim, marginTop: 3 }}>{timeAgo(n.createdAt, t)}</div>
                   </div>
                 </div>
               ))}

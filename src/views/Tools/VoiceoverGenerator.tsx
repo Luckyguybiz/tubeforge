@@ -58,7 +58,6 @@ export function VoiceoverGenerator() {
 
   return (
     <ToolPageShell
-      comingSoon
       title="AI Voiceover Generator"
       subtitle="Generate realistic AI voiceovers from your scripts with customizable voices"
       gradient={GRADIENT}

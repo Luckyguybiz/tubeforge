@@ -3,20 +3,21 @@ import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { CANVAS_DEFAULT_BG, CANVAS_DEFAULT_DRAW_COLOR, CANVAS_DEFAULT_DRAW_SIZE, CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX, STICKY_NOTE_COLOR, CANVAS_W, CANVAS_H } from '@/lib/constants';
 
 function resetStore() {
-  const store = useThumbnailStore.getState();
-  // Reset to defaults
-  useThumbnailStore.setState({
+  // Use loadFromProject to clear the external HistoryManager as well as store state
+  useThumbnailStore.getState().loadFromProject({
     els: [],
-    selIds: [],
+    canvasBg: CANVAS_DEFAULT_BG,
+    canvasW: CANVAS_W,
+    canvasH: CANVAS_H,
+  });
+  // Reset remaining fields that loadFromProject doesn't touch
+  useThumbnailStore.setState({
     history: [],
     future: [],
     clipboard: null,
     zoom: 1,
     panX: 0,
     panY: 0,
-    canvasBg: CANVAS_DEFAULT_BG,
-    canvasW: CANVAS_W,
-    canvasH: CANVAS_H,
     leftPanel: 'none',
     tool: 'select',
     step: 'editor',

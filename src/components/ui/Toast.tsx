@@ -1,6 +1,7 @@
 'use client';
 
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { ToastType } from '@/stores/useNotificationStore';
 
 const ICONS: Record<ToastType, string> = {
@@ -22,6 +23,7 @@ export function Toast({
   onClose: (id: string) => void;
 }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const colorMap: Record<ToastType, string> = {
     success: C.green,
@@ -59,7 +61,7 @@ export function Toast({
       </span>
       <button
         onClick={() => onClose(id)}
-        aria-label="Закрыть уведомление"
+        aria-label={t('toast.close')}
         style={{
           background: 'none',
           border: 'none',

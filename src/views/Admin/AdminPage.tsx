@@ -400,8 +400,8 @@ export function AdminPage() {
               type="search"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Поиск по имени или email..."
-              aria-label="Поиск пользователей"
+              placeholder={t('admin.searchPlaceholder')}
+              aria-label={t('admin.searchLabel')}
               style={{
                 padding: '7px 12px 7px 30px',
                 background: C.surface,
@@ -420,7 +420,7 @@ export function AdminPage() {
           </div>
 
           {/* Plan Filter */}
-          <div style={{ display: 'flex', gap: 3 }} role="group" aria-label="Фильтр по плану">
+          <div style={{ display: 'flex', gap: 3 }} role="group" aria-label={t('admin.filterByPlan')}>
             {(['ALL', 'FREE', 'PRO', 'STUDIO'] as const).map((f) => {
               const active = (f === 'ALL' && !planFilter) || planFilter === f;
               return (
@@ -444,7 +444,7 @@ export function AdminPage() {
                     transition: 'all .15s',
                   }}
                 >
-                  {f === 'ALL' ? 'Все' : f}
+                  {f === 'ALL' ? t('admin.filterAll') : f}
                 </button>
               );
             })}
@@ -458,20 +458,20 @@ export function AdminPage() {
               <tr>
                 <th style={{ ...thBase, width: 44, padding: '12px 0 12px 16px' }}></th>
                 <th style={thSortable} onClick={() => handleSort('name')}>
-                  Имя{sortArrow('name')}
+                  {t('admin.colName')}{sortArrow('name')}
                 </th>
                 <th style={thBase}>Email</th>
                 <th style={thSortable} onClick={() => handleSort('plan')}>
-                  План{sortArrow('plan')}
+                  {t('admin.colPlan')}{sortArrow('plan')}
                 </th>
                 <th style={thSortable} onClick={() => handleSort('role')}>
-                  Роль{sortArrow('role')}
+                  {t('admin.colRole')}{sortArrow('role')}
                 </th>
-                <th style={thBase}>Проекты</th>
+                <th style={thBase}>{t('admin.colProjects')}</th>
                 <th style={thSortable} onClick={() => handleSort('createdAt')}>
-                  Регистрация{sortArrow('createdAt')}
+                  {t('admin.colRegistration')}{sortArrow('createdAt')}
                 </th>
-                <th style={{ ...thBase, textAlign: 'center' }}>Действия</th>
+                <th style={{ ...thBase, textAlign: 'center' }}>{t('admin.colActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -502,8 +502,8 @@ export function AdminPage() {
                     </div>
                     <div style={{ color: C.sub, fontSize: 14, fontWeight: 500 }}>
                       {search || planFilter
-                        ? 'Пользователи не найдены. Попробуйте изменить фильтры.'
-                        : 'Нет пользователей'}
+                        ? t('admin.noUsersFound')
+                        : t('admin.noUsers')}
                     </div>
                   </td>
                 </tr>
@@ -535,13 +535,13 @@ export function AdminPage() {
             justifyContent: 'space-between',
           }}>
             <span style={{ fontSize: 12, color: C.dim }}>
-              Стр. {users.data.page} из {users.data.pages} ({users.data.total} всего)
+              {t('admin.page')} {users.data.page} {t('admin.of')} {users.data.pages} ({users.data.total} {t('admin.total')})
             </span>
             <div style={{ display: 'flex', gap: 6 }}>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                aria-label="Предыдущая страница"
+                aria-label={t('admin.prevPage')}
                 style={{
                   padding: '6px 14px',
                   borderRadius: 8,
@@ -556,7 +556,7 @@ export function AdminPage() {
                   transition: 'opacity .15s',
                 }}
               >
-                Назад
+                {t('admin.prev')}
               </button>
 
               {/* Page numbers */}
@@ -569,7 +569,7 @@ export function AdminPage() {
                   <button
                     key={p}
                     onClick={() => setPage(p as number)}
-                    aria-label={`Страница ${p}`}
+                    aria-label={`${t('admin.pageNum')} ${p}`}
                     aria-current={page === p ? 'page' : undefined}
                     style={{
                       width: 32,
@@ -593,7 +593,7 @@ export function AdminPage() {
               <button
                 onClick={() => setPage((p) => Math.min(users.data!.pages, p + 1))}
                 disabled={page >= users.data.pages}
-                aria-label="Следующая страница"
+                aria-label={t('admin.nextPage')}
                 style={{
                   padding: '6px 14px',
                   borderRadius: 8,
@@ -608,7 +608,7 @@ export function AdminPage() {
                   transition: 'opacity .15s',
                 }}
               >
-                Далее
+                {t('admin.next')}
               </button>
             </div>
           </div>
@@ -750,7 +750,7 @@ export function AdminPage() {
               <line x1="20" y1="8" x2="20" y2="14" />
               <line x1="23" y1="11" x2="17" y2="11" />
             </svg>
-            <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Новые пользователи</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{t('admin.newUsers')}</h3>
           </div>
           <div style={{ padding: '4px 0' }}>
             {activity.isLoading ? (
@@ -765,7 +765,7 @@ export function AdminPage() {
               ))
             ) : !activity.data?.recentUsers.length ? (
               <div style={{ padding: '32px 20px', textAlign: 'center', color: C.dim, fontSize: 13 }}>
-                Нет данных
+                {t('admin.noData')}
               </div>
             ) : (
               activity.data.recentUsers.map((u) => (
@@ -780,9 +780,9 @@ export function AdminPage() {
                   <UserAvatar image={u.image} name={u.name} size={28} C={C} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {u.name || u.email || 'Без имени'}
+                      {u.name || u.email || t('admin.noName')}
                     </div>
-                    <div style={{ fontSize: 11, color: C.dim }}>{relativeTime(u.createdAt)}</div>
+                    <div style={{ fontSize: 11, color: C.dim }}>{relativeTime(u.createdAt, t, locale)}</div>
                   </div>
                   <PlanBadge plan={u.plan} C={C} />
                 </div>
@@ -803,7 +803,7 @@ export function AdminPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
-            <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Последние проекты</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{t('admin.recentProjects')}</h3>
           </div>
           <div style={{ padding: '4px 0' }}>
             {activity.isLoading ? (
@@ -818,7 +818,7 @@ export function AdminPage() {
               ))
             ) : !activity.data?.recentProjects.length ? (
               <div style={{ padding: '32px 20px', textAlign: 'center', color: C.dim, fontSize: 13 }}>
-                Нет проектов
+                {t('admin.noProjects')}
               </div>
             ) : (
               activity.data.recentProjects.map((p) => (
@@ -839,7 +839,7 @@ export function AdminPage() {
                       {p.title}
                     </div>
                     <div style={{ fontSize: 11, color: C.dim }}>
-                      {p.user.name || 'Без имени'} &middot; {relativeTime(p.createdAt)}
+                      {p.user.name || t('admin.noName')} &middot; {relativeTime(p.createdAt, t, locale)}
                     </div>
                   </div>
                   <StatusBadge status={p.status} C={C} />
@@ -906,6 +906,7 @@ function PlanBadge({ plan, C }: { plan: string; C: Theme }) {
 }
 
 function RoleBadge({ role, C }: { role: string; C: Theme }) {
+  const t = useLocaleStore((s) => s.t);
   const isAdmin = role === 'ADMIN';
   return (
     <span style={{
@@ -918,12 +919,13 @@ function RoleBadge({ role, C }: { role: string; C: Theme }) {
       color: isAdmin ? C.orange : C.sub,
       letterSpacing: '.01em',
     }}>
-      {ROLE_LABELS[role] ?? role}
+      {getRoleLabels(t)[role] ?? role}
     </span>
   );
 }
 
 function StatusBadge({ status, C }: { status: string; C: Theme }) {
+  const t = useLocaleStore((s) => s.t);
   const colors: Record<string, string> = {
     DRAFT: C.dim,
     RENDERING: C.orange,
@@ -942,7 +944,7 @@ function StatusBadge({ status, C }: { status: string; C: Theme }) {
         width: 6, height: 6, borderRadius: '50%',
         background: color, flexShrink: 0,
       }} />
-      {STATUS_LABELS[status] ?? status}
+      {getStatusLabels(t)[status] ?? status}
     </span>
   );
 }
@@ -970,6 +972,7 @@ interface UserRowProps {
 }
 
 function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending }: UserRowProps) {
+  const t = useLocaleStore((s) => s.t);
   return (
     <>
       <tr
@@ -1048,7 +1051,7 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
             }}>
               {/* Plan change */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub }}>План:</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub }}>{t('admin.planLabel')}</label>
                 <select
                   value={user.plan}
                   onChange={(e) => {
@@ -1057,7 +1060,7 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
                   }}
                   onClick={(e) => e.stopPropagation()}
                   disabled={isPending}
-                  aria-label={`Изменить план для ${user.name || user.email}`}
+                  aria-label={`${t('admin.changePlanFor')} ${user.name || user.email}`}
                   style={{
                     padding: '6px 12px',
                     borderRadius: 8,
@@ -1081,7 +1084,7 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
               {/* Meta info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 'auto' }}>
                 <span style={{ fontSize: 11, color: C.dim }}>
-                  ИИ-генерации: <strong style={{ color: C.sub }}>{user.aiUsage}</strong>
+                  {t('admin.aiGenLabel')} <strong style={{ color: C.sub }}>{user.aiUsage}</strong>
                 </span>
                 <span style={{ fontSize: 11, color: C.dim }}>
                   ID: <code style={{ fontSize: 10, color: C.dim, background: C.card, padding: '1px 6px', borderRadius: 4 }}>
@@ -1190,10 +1193,14 @@ const PLAN_COLORS: Record<string, string> = {
 interface AnalyticsDashboardProps {
   C: Theme;
   recharts: typeof import('recharts') | null;
-  growthStats: { data?: { day: string; count: number }[]; isLoading: boolean };
-  revenueStats: { data?: { month: string; total: number }[]; isLoading: boolean };
-  planDistribution: { data?: { plan: string; count: number }[]; isLoading: boolean };
-  activeUsers: { data?: { count: number }; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  growthStats: { data?: any[]; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  revenueStats: { data?: any[]; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  planDistribution: { data?: any[]; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  activeUsers: { data?: any; isLoading: boolean };
   totalUsers: number;
   paidUsers: number;
 }
@@ -1314,9 +1321,12 @@ interface AdminChartsProps {
   C: Theme;
   chartCardStyle: React.CSSProperties;
   chartTitleStyle: React.CSSProperties;
-  growthStats: { data?: { day: string; count: number }[]; isLoading: boolean };
-  planDistribution: { data?: { plan: string; count: number }[]; isLoading: boolean };
-  revenueStats: { data?: { month: string; total: number }[]; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  growthStats: { data?: any[]; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  planDistribution: { data?: any[]; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  revenueStats: { data?: any[]; isLoading: boolean };
 }
 
 function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthStats, planDistribution, revenueStats }: AdminChartsProps) {
@@ -1400,7 +1410,7 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
                 outerRadius={100}
                 innerRadius={50}
                 paddingAngle={3}
-                label={(props: Record<string, unknown>) => `${props.plan}: ${props.count}`}
+                label={(props: { name?: string; value?: number }) => `${props.name ?? ''}: ${props.value ?? ''}`}
                 labelLine={{ stroke: C.dim, strokeWidth: 1 }}
               >
                 {planDistribution.data.map((entry) => (

@@ -1,18 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { pluralRu } from '@/lib/utils';
 
-const STATUS_LABEL: Record<string, { l: string; c: string }> = {
-  DRAFT: { l: 'Черновик', c: 'blue' },
-  RENDERING: { l: 'Генерация', c: 'orange' },
-  READY: { l: 'Готово', c: 'green' },
-  PUBLISHED: { l: 'Опубликовано', c: 'green' },
-};
+function getStatusLabels(t: (key: string) => string): Record<string, { l: string; c: string }> {
+  return {
+    DRAFT: { l: t('picker.status.draft'), c: 'blue' },
+    RENDERING: { l: t('picker.status.rendering'), c: 'orange' },
+    READY: { l: t('picker.status.ready'), c: 'green' },
+    PUBLISHED: { l: t('picker.status.published'), c: 'green' },
+  };
+}
 
 interface ProjectPickerProps {
   /** Target page path, e.g. '/editor', '/metadata', '/preview' */
@@ -22,6 +25,8 @@ interface ProjectPickerProps {
 
 export function ProjectPicker({ target, title }: ProjectPickerProps) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+  const STATUS_LABEL = useMemo(() => getStatusLabels(t), [t]);
   const router = useRouter();
   const [displayCount, setDisplayCount] = useState(10);
   const projects = trpc.project.list.useQuery({ page: 1, limit: 50 });
@@ -33,7 +38,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
       router.push(`${target}?projectId=${data.id}`);
     },
     onError: (err) => {
-      setError(err.message || 'Не удалось создать проект');
+      setError(err.message || t('picker.createError'));
     },
   });
   const deleteProject = trpc.project.delete.useMutation({
@@ -43,7 +48,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
     },
     onError: (err) => {
       setDeletingId(null);
-      setError(err.message || 'Не удалось удалить проект');
+      setError(err.message || t('picker.deleteError'));
     },
   });
 
@@ -58,16 +63,16 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 16 }}>
       <div style={{ fontSize: 36, opacity: 0.2 }}>📂</div>
       <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>{title}</div>
-      <div style={{ fontSize: 13, color: C.sub, marginBottom: 12 }}>Выберите проект для работы</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 12 }}>{t('picker.selectProject')}</div>
       {projects.isError ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, opacity: 0.3, marginBottom: 6 }}>⚠</div>
-          <div style={{ color: C.accent, fontSize: 13, marginBottom: 12 }}>Ошибка загрузки проектов</div>
+          <div style={{ color: C.accent, fontSize: 13, marginBottom: 12 }}>{t('picker.loadError')}</div>
           <button
             onClick={() => projects.refetch()}
             style={{ padding: '10px 20px', borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Повторить
+            {t('picker.retry')}
           </button>
         </div>
       ) : projects.isLoading ? (
@@ -78,19 +83,19 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
         </div>
       ) : !projects.data?.items?.length ? (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ color: C.dim, fontSize: 13, marginBottom: 12 }}>У вас пока нет проектов</div>
+          <div style={{ color: C.dim, fontSize: 13, marginBottom: 12 }}>{t('picker.noProjects')}</div>
           <button
             onClick={() => router.push('/dashboard')}
             style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Создать проект на Дашборде
+            {t('picker.createOnDashboard')}
           </button>
         </div>
       ) : (
         <div style={{ width: 380, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {/* New project button */}
           <button
-            onClick={() => createProject.mutate({ title: 'Без названия' })}
+            onClick={() => createProject.mutate({ title: t('picker.untitled') })}
             disabled={createProject.isPending}
             style={{
               display: 'flex',
@@ -114,7 +119,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
             onMouseLeave={(e) => { e.currentTarget.style.background = `${C.accent}06`; e.currentTarget.style.borderColor = `${C.accent}50`; }}
           >
             <span style={{ width: 28, height: 28, borderRadius: 8, background: `${C.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16 }}>+</span>
-            {createProject.isPending ? 'Создаём...' : 'Новый проект'}
+            {createProject.isPending ? t('picker.creating') : t('picker.newProject')}
           </button>
 
           {error && (
@@ -132,7 +137,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
             }}>
               <span>⚠</span>
               <span>{error}</span>
-              {error.includes('лимит') && (
+              {(error.includes('лимит') || error.includes('limit')) && (
                 <button
                   onClick={() => router.push('/billing')}
                   style={{
@@ -149,7 +154,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Улучшить план
+                  {t('picker.upgradePlan')}
                 </button>
               )}
             </div>
@@ -197,10 +202,10 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                 )}
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>
-                    {p.title || 'Без названия'}
+                    {p.title || t('picker.untitled')}
                   </div>
                   <div style={{ fontSize: 10, color: C.sub, display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
-                    <span>{pluralRu(p._count.scenes, 'сцена', 'сцены', 'сцен')}</span>
+                    <span>{pluralRu(p._count.scenes, t('picker.scene.one'), t('picker.scene.few'), t('picker.scene.many'))}</span>
                     <span style={{ color: statusColor(p.status), fontWeight: 600 }}>{st.l}</span>
                   </div>
                 </div>
@@ -215,7 +220,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                       setTimeout(() => setDeletingId((curr) => curr === p.id ? null : curr), 3000);
                     }
                   }}
-                  title={deletingId === p.id ? 'Нажмите ещё раз для удаления' : 'Удалить проект'}
+                  title={deletingId === p.id ? t('picker.confirmDelete') : t('picker.deleteProject')}
                   aria-label={deletingId === p.id ? `Confirm delete ${p.title || 'project'}` : `Delete ${p.title || 'project'}`}
                   style={{
                     width: 24,
@@ -257,12 +262,12 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                 marginTop: 4,
               }}
             >
-              Показать ещё ({projects.data.items.length - displayCount})
+              {t('picker.showMore')} ({projects.data.items.length - displayCount})
             </button>
           )}
-          {projects.data.total > projects.data.items.length && displayCount >= projects.data.items.length && (
+          {(projects.data.total ?? 0) > projects.data.items.length && displayCount >= projects.data.items.length && (
             <div style={{ fontSize: 11, color: C.dim, textAlign: 'center', marginTop: 4 }}>
-              Показано {projects.data.items.length} из {projects.data.total} проектов
+              {t('picker.showing')} {projects.data.items.length} {t('picker.of')} {projects.data.total} {t('picker.projectsCount')}
             </div>
           )}
         </div>

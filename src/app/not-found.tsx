@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const fallbackTheme = {
   bg: '#06060b',
@@ -25,6 +26,7 @@ export default function NotFound() {
     C = fallbackTheme;
   }
 
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
 
   return (
@@ -146,7 +148,7 @@ export default function NotFound() {
           letterSpacing: '-0.02em',
         }}
       >
-        Страница не найдена
+        {t('notFound.title')}
       </h2>
 
       <p
@@ -159,7 +161,7 @@ export default function NotFound() {
           margin: '0 0 32px',
         }}
       >
-        Такой страницы не существует или она была удалена. Возможно, вы перешли по устаревшей ссылке.
+        {t('notFound.description')}
       </p>
 
       {/* Buttons */}
@@ -188,7 +190,7 @@ export default function NotFound() {
             e.currentTarget.style.boxShadow = `0 2px 16px ${C.accent}33`;
           }}
         >
-          Вернуться на главную
+          {t('notFound.goHome')}
         </button>
         <button
           onClick={() => router.back()}
@@ -213,7 +215,7 @@ export default function NotFound() {
             e.currentTarget.style.background = C.surface;
           }}
         >
-          Назад
+          {t('notFound.back')}
         </button>
       </div>
 

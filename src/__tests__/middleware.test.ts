@@ -59,8 +59,8 @@ describe('src/middleware — matcher-based auth', () => {
     }
   });
 
-  it('matcher should have exactly 8 protected route patterns', () => {
-    expect(config.matcher).toHaveLength(8);
+  it('matcher should have exactly 11 protected route patterns', () => {
+    expect(config.matcher).toHaveLength(11);
   });
 
   it('matcher should NOT include public routes', () => {

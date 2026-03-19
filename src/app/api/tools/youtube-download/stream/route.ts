@@ -55,6 +55,10 @@ export async function GET(req: NextRequest) {
     if (parsedUrl.hostname.includes('googlevideo.com') || parsedUrl.hostname.includes('youtube.com')) {
       allowed = true;
     }
+    // Allow TikTok CDN domains
+    if (parsedUrl.hostname.includes('tiktok.com') || parsedUrl.hostname.includes('tiktokcdn.com') || parsedUrl.hostname.includes('musical.ly')) {
+      allowed = true;
+    }
   } catch {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
@@ -64,10 +68,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // For googlevideo.com URLs (YouTube CDN), mimic the VR client user-agent
+    // to match the session that generated the URL
+    const isGoogleVideo = downloadUrl.includes('googlevideo.com');
     const upstream = await fetch(downloadUrl, {
       signal: AbortSignal.timeout(300_000), // 5 minute timeout for large files
       headers: {
-        'User-Agent': 'TubeForge/1.0',
+        'User-Agent': isGoogleVideo
+          ? 'com.google.android.apps.youtube.vr.oculus/1.56.21 (Linux; U; Android 12; eureka-user Build/SQ3A.220605.009.A1; Cronet/132.0.6834.14)'
+          : 'TubeForge/1.0',
       },
     });
 

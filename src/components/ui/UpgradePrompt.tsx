@@ -1,17 +1,19 @@
 'use client';
 
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 
 export function UpgradePrompt({ feature }: { feature: string }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const createCheckout = trpc.billing.createCheckout.useMutation({
     onSuccess: (data) => {
       if (data.url && data.url.startsWith('https://')) {
         window.location.href = data.url;
       } else {
-        toast.error('Не удалось создать сессию оплаты');
+        toast.error(t('upgrade.checkoutError'));
       }
     },
     onError: (err) => toast.error(err.message),
@@ -31,10 +33,10 @@ export function UpgradePrompt({ feature }: { feature: string }) {
     }}>
       <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.6 }}>&#x1F512;</div>
       <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-        Лимит {feature} исчерпан
+        {t('upgrade.limitReached').replace('{feature}', feature)}
       </h3>
       <p style={{ color: C.sub, fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
-        Обновите план для продолжения работы
+        {t('upgrade.upgradeDesc')}
       </p>
       <button
         onClick={() => createCheckout.mutate({ plan: 'PRO' })}
@@ -65,9 +67,9 @@ export function UpgradePrompt({ feature }: { feature: string }) {
                 animation: 'spin 0.8s linear infinite',
               }}
             />
-            Загрузка...
+            {t('upgrade.loading')}
           </span>
-        ) : 'Обновить до Pro'}
+        ) : t('upgrade.upgradeToPro')}
       </button>
     </div>
     </>

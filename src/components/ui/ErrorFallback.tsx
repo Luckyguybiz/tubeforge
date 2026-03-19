@@ -3,45 +3,46 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
-function getSuggestions(error: Error): string[] {
+function getSuggestions(error: Error, t: (key: string) => string): string[] {
   const msg = error.message?.toLowerCase() ?? '';
   const name = error.name?.toLowerCase() ?? '';
 
   // Auth / session errors
   if (msg.includes('unauthorized') || msg.includes('unauthenticated') || msg.includes('401') || msg.includes('403') || msg.includes('forbidden'))
-    return ['Попробуйте войти заново', 'Возможно, сессия истекла', 'Проверьте, что у вас есть доступ к этому ресурсу'];
+    return [t('error.auth.relogin'), t('error.auth.sessionExpired'), t('error.auth.checkAccess')];
 
   // Rate limiting
   if (msg.includes('too_many_requests') || msg.includes('rate') || msg.includes('429'))
-    return ['Подождите минуту и попробуйте снова', 'Вы отправили слишком много запросов'];
+    return [t('error.rate.wait'), t('error.rate.tooMany')];
 
   // Not found
   if (msg.includes('not_found') || msg.includes('404'))
-    return ['Проверьте URL', 'Возможно, ресурс был удалён'];
+    return [t('error.notFound.checkUrl'), t('error.notFound.deleted')];
 
   // Server errors (5xx)
   if (msg.includes('500') || msg.includes('502') || msg.includes('503') || msg.includes('504') || msg.includes('internal server') || msg.includes('bad gateway') || msg.includes('service unavailable'))
-    return ['Ошибка на сервере — попробуйте обновить страницу через несколько секунд', 'Если ошибка повторяется, сервис может быть временно недоступен'];
+    return [t('error.server.retry'), t('error.server.unavailable')];
 
   // Timeout errors
   if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('aborted') || name.includes('abort'))
-    return ['Запрос занял слишком много времени', 'Проверьте подключение к интернету и попробуйте снова'];
+    return [t('error.timeout.tooLong'), t('error.timeout.checkConnection')];
 
   // Network / fetch errors
   if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch') || msg.includes('err_connection') || msg.includes('offline'))
-    return ['Проверьте подключение к интернету', 'Попробуйте обновить страницу', 'Убедитесь, что VPN или прокси не блокирует соединение'];
+    return [t('error.network.checkInternet'), t('error.network.refresh'), t('error.network.vpn')];
 
   // Chunk / lazy-load errors (common in Next.js)
   if (msg.includes('chunk') || msg.includes('loading chunk') || msg.includes('dynamically imported module'))
-    return ['Приложение было обновлено — обновите страницу', 'Очистите кэш браузера, если ошибка повторяется'];
+    return [t('error.chunk.updated'), t('error.chunk.clearCache')];
 
   // Storage errors
   if (msg.includes('quota') || msg.includes('storage') || msg.includes('localstorage'))
-    return ['Хранилище браузера переполнено', 'Очистите данные сайта в настройках браузера'];
+    return [t('error.storage.full'), t('error.storage.clear')];
 
   // Generic fallback
-  return ['Обновите страницу', 'Если проблема повторяется, напишите в поддержку'];
+  return [t('error.generic.refresh'), t('error.generic.contact')];
 }
 
 export function ErrorFallback({
@@ -52,6 +53,7 @@ export function ErrorFallback({
   reset?: () => void;
 }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const [showDetails, setShowDetails] = useState(false);
 
@@ -107,7 +109,7 @@ export function ErrorFallback({
           letterSpacing: '-0.02em',
         }}
       >
-        Что-то пошло не так
+        {t('error.title')}
       </h2>
 
       <p
@@ -119,7 +121,7 @@ export function ErrorFallback({
           maxWidth: 400,
         }}
       >
-        Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться на главную.
+        {t('error.description')}
       </p>
 
       {/* Error details - collapsible */}
@@ -157,7 +159,7 @@ export function ErrorFallback({
             >
               {'\u25B6'}
             </span>
-            Подробности ошибки
+            {t('error.details')}
           </button>
           {showDetails && (
             <div
@@ -204,7 +206,7 @@ export function ErrorFallback({
             marginBottom: 8,
           }}
         >
-          Рекомендации:
+          {t('error.suggestions')}
         </p>
         <ul
           style={{
@@ -213,7 +215,7 @@ export function ErrorFallback({
             listStyleType: 'disc',
           }}
         >
-          {getSuggestions(error).map((s, i) => (
+          {getSuggestions(error, t).map((s, i) => (
             <li
               key={i}
               style={{
@@ -255,7 +257,7 @@ export function ErrorFallback({
               e.currentTarget.style.boxShadow = `0 2px 12px ${C.accent}33`;
             }}
           >
-            Попробовать снова
+            {t('error.tryAgain')}
           </button>
         )}
         <button
@@ -281,7 +283,7 @@ export function ErrorFallback({
             e.currentTarget.style.background = C.surface;
           }}
         >
-          На главную
+          {t('error.goHome')}
         </button>
       </div>
     </div>

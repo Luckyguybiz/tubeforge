@@ -447,7 +447,7 @@ export function SubtitleEditor() {
       {/* Main layout: subtitle list + optional video preview */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: videoUrl ? '1fr 360px' : '1fr',
+        gridTemplateColumns: videoUrl ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr',
         gap: 20,
         alignItems: 'start',
       }}>

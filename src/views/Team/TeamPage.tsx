@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useMemo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -9,12 +11,14 @@ import { pluralRu } from '@/lib/utils';
 
 /* ─── Role helpers ──────────────────────────────── */
 
-const ROLE_LABELS: Record<string, string> = {
-  OWNER: 'Владелец',
-  ADMIN: 'Админ',
-  EDITOR: 'Редактор',
-  VIEWER: 'Зритель',
-};
+function getTeamRoleLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    OWNER: t('team.role.owner'),
+    ADMIN: t('team.role.admin'),
+    EDITOR: t('team.role.editor'),
+    VIEWER: t('team.role.viewer'),
+  };
+}
 
 const PLAN_LABELS: Record<string, string> = {
   FREE: 'Free',
@@ -26,6 +30,9 @@ const PLAN_LABELS: Record<string, string> = {
 
 export function TeamPage() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+  const locale = useLocaleStore((s) => s.locale);
+  const ROLE_LABELS = useMemo(() => getTeamRoleLabels(t), [t]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'ADMIN' | 'EDITOR' | 'VIEWER'>('EDITOR');
   const [teamName, setTeamName] = useState('');
@@ -39,7 +46,7 @@ export function TeamPage() {
 
   const createTeam = trpc.team.create.useMutation({
     onSuccess: () => {
-      toast.success('Команда создана');
+      toast.success(t('team.teamCreated'));
       setTeamName('');
       team.refetch();
     },
@@ -48,7 +55,7 @@ export function TeamPage() {
 
   const invite = trpc.team.invite.useMutation({
     onSuccess: () => {
-      toast.success('Участник добавлен');
+      toast.success(t('team.memberAdded'));
       setInviteEmail('');
       setShowInviteForm(false);
       team.refetch();
@@ -58,7 +65,7 @@ export function TeamPage() {
 
   const removeMember = trpc.team.removeMember.useMutation({
     onSuccess: () => {
-      toast.success('Участник удалён');
+      toast.success(t('team.memberRemoved'));
       setConfirmRemoveId(null);
       team.refetch();
     },
@@ -67,7 +74,7 @@ export function TeamPage() {
 
   const updateRole = trpc.team.updateRole.useMutation({
     onSuccess: () => {
-      toast.success('Роль обновлена');
+      toast.success(t('team.roleUpdated'));
       team.refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -227,7 +234,7 @@ export function TeamPage() {
             letterSpacing: '-0.02em',
           }}
         >
-          Команды
+          {t('team.title')}
         </h2>
         <p
           style={{
@@ -239,7 +246,7 @@ export function TeamPage() {
             marginBottom: 8,
           }}
         >
-          Совместная работа над проектами доступна на плане Studio.
+          {t('team.studioRequired')}
         </p>
         <p
           style={{
@@ -251,7 +258,7 @@ export function TeamPage() {
             lineHeight: 1.5,
           }}
         >
-          Приглашайте до 10 участников, назначайте роли и делитесь проектами.
+          {t('team.studioDesc')}
         </p>
 
         <a
@@ -268,7 +275,7 @@ export function TeamPage() {
             transition: 'transform 0.1s, box-shadow 0.15s',
           }}
         >
-          Обновить до Studio
+          {t('team.upgradeToStudio')}
         </a>
       </div>
     );
@@ -287,7 +294,7 @@ export function TeamPage() {
             letterSpacing: '-0.02em',
           }}
         >
-          Команда
+          {t('team.teamLabel')}
         </h1>
         <p
           style={{
@@ -297,7 +304,7 @@ export function TeamPage() {
             lineHeight: 1.5,
           }}
         >
-          Создайте команду для совместной работы над проектами
+          {t('team.createTeamDesc')}
         </p>
 
         <div
@@ -337,7 +344,7 @@ export function TeamPage() {
                 margin: 0,
               }}
             >
-              Создайте команду, чтобы приглашать участников и совместно работать над видео.
+              {t('team.createTeamLong')}
             </p>
           </div>
 
@@ -351,15 +358,15 @@ export function TeamPage() {
               marginBottom: 6,
             }}
           >
-            Название команды
+            {t('team.teamNameLabel')}
           </label>
           <input
             id="team-name"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            placeholder="Моя студия"
+            placeholder={t('team.teamNamePlaceholder')}
             maxLength={100}
-            aria-label="Название команды"
+            aria-label={t('team.teamNameLabel')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && teamName.trim()) {
                 createTeam.mutate({ name: teamName.trim() });
@@ -383,7 +390,7 @@ export function TeamPage() {
               opacity: !teamName.trim() ? 0.5 : 1,
             }}
           >
-            {createTeam.isPending ? 'Создание...' : 'Создать команду'}
+            {createTeam.isPending ? t('team.creating') : t('team.createTeam')}
           </button>
         </div>
       </div>
@@ -427,9 +434,9 @@ export function TeamPage() {
               lineHeight: 1.5,
             }}
           >
-            {pluralRu(memberCount, 'участник', 'участника', 'участников')}
+            {pluralRu(memberCount, t('team.member.one'), t('team.member.few'), t('team.member.many'))}
             {' \u00B7 '}
-            {pluralRu(projectCount, 'проект', 'проекта', 'проектов')}
+            {pluralRu(projectCount, t('team.project.one'), t('team.project.few'), t('team.project.many'))}
           </p>
         </div>
         {isAdmin && (
@@ -443,7 +450,7 @@ export function TeamPage() {
             }}
           >
             <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-            Пригласить в команду
+            {t('team.inviteToTeam')}
           </button>
         )}
       </div>
@@ -468,7 +475,7 @@ export function TeamPage() {
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Команда
+            {t('team.tabTeam')}
           </div>
           <div style={{ fontSize: 15, fontWeight: 600 }}>{team.data.name}</div>
         </div>
@@ -481,7 +488,7 @@ export function TeamPage() {
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Участники
+            {t('team.tabMembers')}
           </div>
           <div style={{ fontSize: 15, fontWeight: 600 }}>{memberCount}</div>
         </div>
@@ -494,7 +501,7 @@ export function TeamPage() {
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Проекты
+            {t('team.tabProjects')}
           </div>
           <div style={{ fontSize: 15, fontWeight: 600 }}>{projectCount}</div>
         </div>
@@ -506,7 +513,7 @@ export function TeamPage() {
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            План
+            {t('team.tabPlan')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span
@@ -534,7 +541,7 @@ export function TeamPage() {
           }}
         >
           <div style={sectionTitle}>
-            Пригласить участника
+            {t('team.inviteMember')}
           </div>
           <div
             style={{
@@ -563,7 +570,7 @@ export function TeamPage() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="user@example.com"
-                aria-label="Email для приглашения"
+                aria-label={t('team.inviteEmailLabel')}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && inviteEmail.trim()) {
                     invite.mutate({ email: inviteEmail.trim(), role: inviteRole });
@@ -585,13 +592,13 @@ export function TeamPage() {
                   marginBottom: 5,
                 }}
               >
-                Роль
+                {t('team.roleLabel')}
               </label>
               <select
                 id="invite-role"
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as 'ADMIN' | 'EDITOR' | 'VIEWER')}
-                aria-label="Роль участника"
+                aria-label={t('team.memberRole')}
                 style={{
                   ...inputStyle,
                   cursor: 'pointer',
@@ -602,9 +609,9 @@ export function TeamPage() {
                   paddingRight: 32,
                 }}
               >
-                <option value="EDITOR">Редактор</option>
-                <option value="ADMIN">Админ</option>
-                <option value="VIEWER">Зритель</option>
+                <option value="EDITOR">{t('team.role.editor')}</option>
+                <option value="ADMIN">{t('team.role.admin')}</option>
+                <option value="VIEWER">{t('team.role.viewer')}</option>
               </select>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -619,7 +626,7 @@ export function TeamPage() {
                   opacity: !inviteEmail.trim() ? 0.5 : 1,
                 }}
               >
-                {invite.isPending ? 'Отправка...' : 'Пригласить'}
+                {invite.isPending ? t('team.sending') : t('team.invite')}
               </button>
               <button
                 onClick={() => {
@@ -628,7 +635,7 @@ export function TeamPage() {
                 }}
                 style={btnSecondary}
               >
-                Отмена
+                {t('team.cancel')}
               </button>
             </div>
           </div>
@@ -637,7 +644,7 @@ export function TeamPage() {
 
       {/* ── Members list ───────────────────────── */}
       <div style={sectionTitle}>
-        Участники
+        {t('team.membersLabel')}
       </div>
       <div
         style={{
@@ -662,10 +669,10 @@ export function TeamPage() {
           }}
         >
           <div style={{ width: 36 }} />
-          <div style={{ flex: 1 }}>Участник</div>
-          <div style={{ width: 100, textAlign: 'center' }}>Роль</div>
-          <div style={{ width: 100, textAlign: 'center' }}>Дата входа</div>
-          {isOwner && <div style={{ width: 120, textAlign: 'right' }}>Действия</div>}
+          <div style={{ flex: 1 }}>{t('team.memberCol')}</div>
+          <div style={{ width: 100, textAlign: 'center' }}>{t('team.roleCol')}</div>
+          <div style={{ width: 100, textAlign: 'center' }}>{t('team.joinDateCol')}</div>
+          {isOwner && <div style={{ width: 120, textAlign: 'right' }}>{t('team.actionsCol')}</div>}
         </div>
 
         {/* Member rows */}
@@ -687,8 +694,9 @@ export function TeamPage() {
             `linear-gradient(135deg, ${C.purple}, ${C.pink})`,
           ];
 
+          const loc = locale === 'ru' ? 'ru-RU' : locale === 'kk' ? 'kk-KZ' : locale === 'es' ? 'es-ES' : 'en-US';
           const joinedDate = m.joinedAt
-            ? new Date(m.joinedAt).toLocaleDateString('ru-RU', {
+            ? new Date(m.joinedAt).toLocaleDateString(loc, {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
@@ -811,7 +819,7 @@ export function TeamPage() {
                             role: e.target.value as 'ADMIN' | 'EDITOR' | 'VIEWER',
                           })
                         }
-                        aria-label={`Изменить роль ${m.user.name || m.user.email}`}
+                        aria-label={`${t('team.changeRoleFor')} ${m.user.name || m.user.email}`}
                         style={{
                           padding: '5px 8px',
                           borderRadius: 8,
@@ -827,9 +835,9 @@ export function TeamPage() {
                         onFocus={(e) => (e.currentTarget.style.borderColor = C.borderActive)}
                         onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
                       >
-                        <option value="EDITOR">Редактор</option>
-                        <option value="ADMIN">Админ</option>
-                        <option value="VIEWER">Зритель</option>
+                        <option value="EDITOR">{t('team.role.editor')}</option>
+                        <option value="ADMIN">{t('team.role.admin')}</option>
+                        <option value="VIEWER">{t('team.role.viewer')}</option>
                       </select>
 
                       {/* Remove button / confirmation */}
@@ -837,8 +845,8 @@ export function TeamPage() {
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button
                             onClick={() => removeMember.mutate({ memberId: m.id })}
-                            title="Подтвердить удаление"
-                            aria-label="Подтвердить удаление"
+                            title={t('team.confirmRemove')}
+                            aria-label={t('team.confirmRemove')}
                             style={{
                               padding: '5px 10px',
                               borderRadius: 8,
@@ -851,12 +859,12 @@ export function TeamPage() {
                               fontFamily: 'inherit',
                             }}
                           >
-                            {removeMember.isPending ? '...' : 'Да'}
+                            {removeMember.isPending ? '...' : t('team.yes')}
                           </button>
                           <button
                             onClick={() => setConfirmRemoveId(null)}
-                            title="Отменить"
-                            aria-label="Отменить удаление"
+                            title={t('team.cancelBtn')}
+                            aria-label={t('team.cancelRemove')}
                             style={{
                               padding: '5px 8px',
                               borderRadius: 8,
@@ -868,14 +876,14 @@ export function TeamPage() {
                               fontFamily: 'inherit',
                             }}
                           >
-                            Нет
+                            {t('team.no')}
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setConfirmRemoveId(m.id)}
-                          title={`Удалить ${m.user.name || m.user.email}`}
-                          aria-label={`Удалить ${m.user.name || m.user.email}`}
+                          title={`${t('team.remove')} ${m.user.name || m.user.email}`}
+                          aria-label={`${t('team.remove')} ${m.user.name || m.user.email}`}
                           style={{
                             padding: '5px 10px',
                             borderRadius: 8,
@@ -921,7 +929,7 @@ export function TeamPage() {
               fontSize: 13,
             }}
           >
-            Нет участников
+            {t('team.noMembers')}
           </div>
         )}
       </div>
@@ -930,7 +938,7 @@ export function TeamPage() {
       {projectCount > 0 && (
         <>
           <div style={sectionTitle}>
-            Общие проекты
+            {t('team.sharedProjects')}
           </div>
           <div
             style={{
@@ -961,10 +969,10 @@ export function TeamPage() {
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>
-                  {pluralRu(projectCount, 'общий проект', 'общих проекта', 'общих проектов')}
+                  {pluralRu(projectCount, t('team.sharedProject.one'), t('team.sharedProject.few'), t('team.sharedProject.many'))}
                 </div>
                 <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-                  Проекты, доступные всей команде
+                  {t('team.sharedProjectsDesc')}
                 </div>
               </div>
               <a
@@ -977,7 +985,7 @@ export function TeamPage() {
                   padding: '8px 16px',
                 }}
               >
-                Открыть дашборд
+                {t('team.openDashboard')}
               </a>
             </div>
           </div>
@@ -987,7 +995,7 @@ export function TeamPage() {
       {projectCount === 0 && (
         <>
           <div style={sectionTitle}>
-            Общие проекты
+            {t('team.sharedProjects')}
           </div>
           <div
             style={{
@@ -998,7 +1006,7 @@ export function TeamPage() {
           >
             <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.4 }}>{'\uD83D\uDCC1'}</div>
             <div style={{ color: C.sub, fontSize: 13, lineHeight: 1.5 }}>
-              Пока нет общих проектов. Поделитесь проектом из дашборда, чтобы ваша команда могла с ним работать.
+              {t('team.noSharedProjects')}
             </div>
           </div>
         </>

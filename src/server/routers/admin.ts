@@ -145,6 +145,79 @@ export const adminRouter = router({
       return { success: true };
     }),
 
+  /* ── Analytics chart endpoints ──────────────────────────────────── */
+
+  getGrowthStats: adminProcedure.query(async ({ ctx }) => {
+    // Return user growth by month for the last 6 months
+    const months: { month: string; users: number; projects: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      const [users, projects] = await Promise.all([
+        ctx.db.user.count({ where: { createdAt: { gte: start, lte: end } } }),
+        ctx.db.project.count({ where: { createdAt: { gte: start, lte: end } } }),
+      ]);
+      months.push({
+        month: start.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        users,
+        projects,
+      });
+    }
+    return months;
+  }),
+
+  getRevenueStats: adminProcedure.query(async ({ ctx }) => {
+    const months: { month: string; revenue: number; payouts: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      const [proUsers, studioUsers, payoutSum] = await Promise.all([
+        ctx.db.user.count({ where: { plan: 'PRO', createdAt: { lte: end } } }),
+        ctx.db.user.count({ where: { plan: 'STUDIO', createdAt: { lte: end } } }),
+        ctx.db.payout.aggregate({ _sum: { amount: true }, where: { createdAt: { gte: start, lte: end } } }),
+      ]);
+      months.push({
+        month: start.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        revenue: proUsers * 9 + studioUsers * 29, // estimated MRR
+        payouts: payoutSum._sum.amount ?? 0,
+      });
+    }
+    return months;
+  }),
+
+  getPlanDistribution: adminProcedure.query(async ({ ctx }) => {
+    const [free, pro, studio] = await Promise.all([
+      ctx.db.user.count({ where: { plan: 'FREE' } }),
+      ctx.db.user.count({ where: { plan: 'PRO' } }),
+      ctx.db.user.count({ where: { plan: 'STUDIO' } }),
+    ]);
+    return [
+      { name: 'Free', value: free, color: '#6b7280' },
+      { name: 'Pro', value: pro, color: '#3b82f6' },
+      { name: 'Studio', value: studio, color: '#8b5cf6' },
+    ];
+  }),
+
+  getActiveUsers: adminProcedure.query(async ({ ctx }) => {
+    const days: { day: string; active: number }[] = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i, 23, 59, 59);
+      const active = await ctx.db.project.groupBy({
+        by: ['userId'],
+        where: { updatedAt: { gte: start, lte: end } },
+      });
+      days.push({
+        day: start.toLocaleString('default', { weekday: 'short' }),
+        active: active.length,
+      });
+    }
+    return days;
+  }),
+
   referralStats: adminProcedure.query(async ({ ctx }) => {
     const referrers = await ctx.db.user.findMany({
       where: { referralEarnings: { gt: 0 } },

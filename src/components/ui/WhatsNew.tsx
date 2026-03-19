@@ -50,7 +50,8 @@ const STORAGE_KEY = 'tubeforge_last_seen_version';
 
 /* ── Badge type colors ─────────────────────────────────────────────── */
 
-function typeBadge(type: string, C: Record<string, string>): { bg: string; color: string; label: string } {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function typeBadge(type: string, C: Record<string, any>): { bg: string; color: string; label: string } {
   switch (type) {
     case 'feature':
       return { bg: `${C.green}18`, color: C.green, label: 'NEW' };

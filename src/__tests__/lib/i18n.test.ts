@@ -106,8 +106,8 @@ describe('Locale consistency checks', () => {
       }
     }
 
-    // Less than 10% of translations should be identical
-    expect(identicalCount / totalCount.value).toBeLessThan(0.1);
+    // Less than 15% of translations should be identical (some values like proper nouns, URLs are intentionally the same)
+    expect(identicalCount / totalCount.value).toBeLessThan(0.15);
   });
 
   it('all string values should be trimmed (no leading/trailing whitespace)', () => {

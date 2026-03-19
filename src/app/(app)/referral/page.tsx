@@ -74,10 +74,10 @@ function ReferralContent() {
     onSuccess: () => {
       myReferral.refetch();
       stats.refetch();
-      toast.success('Партнёрская программа активирована!');
+      toast.success(t('referral.activated'));
     },
     onError: () => {
-      toast.error('Не удалось активировать. Попробуйте снова.');
+      toast.error(t('referral.activateError'));
     },
   });
 
@@ -116,7 +116,7 @@ function ReferralContent() {
 
   const handleShareTelegram = useCallback(() => {
     const text = encodeURIComponent(
-      `Присоединяйся к TubeForge — лучшей платформе для создания видео с ИИ! Регистрируйся по моей ссылке: ${referralLink}`
+      `${t('referral.shareText')} ${referralLink}`
     );
     window.open(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${text}`, '_blank');
   }, [referralLink]);
@@ -247,10 +247,10 @@ function ReferralContent() {
 
   /* ── Benefits list ──────────────────────────────────────────── */
   const benefits = [
-    'Получайте 20% с каждого оплаченного реферала',
-    'Бессрочная привязка — реферал остаётся вашим навсегда',
-    'Мгновенные выплаты при достижении $50',
-    'Доступ к маркетинговым материалам',
+    t('referral.benefit1'),
+    t('referral.benefit2'),
+    t('referral.benefit3'),
+    t('referral.benefit4'),
   ];
 
   /* ── Render ─────────────────────────────────────────────────── */
@@ -295,7 +295,7 @@ function ReferralContent() {
           position: 'relative',
           zIndex: 1,
         }}>
-          Добро пожаловать в{'\u00A0'}партнёрскую программу TubeForge
+          {t('referral.heading')}
         </h1>
 
         {/* Subheading */}
@@ -307,7 +307,7 @@ function ReferralContent() {
           position: 'relative',
           zIndex: 1,
         }}>
-          Зарабатывайте <span style={{ fontWeight: 700, color: '#fff' }}>20%</span> с каждого оплаченного реферала. Без ограничений по сумме.
+          {t('referral.subheading')} <span style={{ fontWeight: 700, color: '#fff' }}>20%</span> {t('referral.subheadingEnd')}
         </p>
 
         {/* Benefits */}
@@ -343,13 +343,13 @@ function ReferralContent() {
           zIndex: 1,
         }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.7)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-            Потенциальный доход
+            {t('referral.potentialEarnings')}
           </div>
           <div style={{ fontSize: 36, fontWeight: 800, color: '#fff', letterSpacing: '-.03em' }}>
             $75 — $500+
           </div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.65)', marginTop: 4 }}>
-            в месяц при 10–50 рефералах
+            {t('referral.perMonth')}
           </div>
         </div>
       </div>
@@ -370,7 +370,7 @@ function ReferralContent() {
                 margin: '0 auto 16px',
               }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-              <div style={{ color: C.sub, fontSize: 13 }}>Загрузка...</div>
+              <div style={{ color: C.sub, fontSize: 13 }}>{t('referral.loading')}</div>
             </div>
           )}
 
@@ -378,7 +378,7 @@ function ReferralContent() {
           {!isLoading && myReferral.isError && (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
               <div style={{ fontSize: 14, color: C.sub, marginBottom: 16 }}>
-                {'\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435'}
+                {t('referral.loadError')}
               </div>
               <button
                 onClick={() => myReferral.refetch()}
@@ -394,7 +394,7 @@ function ReferralContent() {
                   fontFamily: 'inherit',
                 }}
               >
-                {'\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C'}
+                {t('referral.retry')}
               </button>
             </div>
           )}
@@ -405,22 +405,22 @@ function ReferralContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <GiftIcon color="#6366f1" />
                 <h2 style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: '-.02em' }}>
-                  Присоединитесь к программе
+                  {t('referral.joinProgram')}
                 </h2>
               </div>
               <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.5, marginBottom: 32 }}>
-                Активируйте партнёрскую программу чтобы получить уникальный реферальный код и начать зарабатывать.
+                {t('referral.joinDesc')}
               </p>
 
               {/* How it works */}
               <div style={{ marginBottom: 32 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16 }}>
-                  Как это работает
+                  {t('referral.howItWorks')}
                 </div>
                 {[
-                  { step: '1', title: 'Получите ссылку', desc: 'Активируйте программу и получите уникальную реферальную ссылку' },
-                  { step: '2', title: 'Поделитесь', desc: 'Отправьте ссылку друзьям, подписчикам или коллегам' },
-                  { step: '3', title: 'Зарабатывайте', desc: '20% с каждой оплаты ваших рефералов — навсегда' },
+                  { step: '1', title: t('referral.step1Title'), desc: t('referral.step1Desc') },
+                  { step: '2', title: t('referral.step2Title'), desc: t('referral.step2Desc') },
+                  { step: '3', title: t('referral.step3Title'), desc: t('referral.step3Desc') },
                 ].map((item) => (
                   <div key={item.step} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
                     <div style={{
@@ -465,7 +465,7 @@ function ReferralContent() {
                   e.currentTarget.style.boxShadow = '0 4px 14px rgba(99,102,241,.3)';
                 }}
               >
-                {activating ? 'Активация...' : 'Активировать программу'}
+                {activating ? t('referral.activating') : t('referral.activateProgram')}
               </button>
             </>
           )}
@@ -476,17 +476,17 @@ function ReferralContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <GiftIcon color="#6366f1" />
                 <h2 style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: '-.02em' }}>
-                  Партнёрская панель
+                  {t('referral.dashboard')}
                 </h2>
               </div>
               <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.5, marginBottom: 28 }}>
-                Делитесь ссылкой и зарабатывайте 20% с каждого оплаченного реферала.
+                {t('referral.dashboardDesc')}
               </p>
 
               {/* Referral link */}
               <div style={{ marginBottom: 24 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
-                  Ваша реферальная ссылка
+                  {t('referral.yourLink')}
                 </label>
                 <div style={inputRowStyle}>
                   <input
@@ -513,12 +513,12 @@ function ReferralContent() {
                     {copied ? (
                       <>
                         <CheckCircleIcon color="#fff" />
-                        Скопировано!
+                        {t('referral.copied')}
                       </>
                     ) : (
                       <>
                         <CopyIcon color="#fff" />
-                        Копировать
+                        {t('referral.copy')}
                       </>
                     )}
                   </button>
@@ -536,7 +536,7 @@ function ReferralContent() {
                 border: `1px solid ${isDark ? 'rgba(99,102,241,.2)' : 'rgba(99,102,241,.12)'}`,
                 marginBottom: 28,
               }}>
-                <span style={{ fontSize: 11, color: C.sub, fontWeight: 500 }}>Ваш код:</span>
+                <span style={{ fontSize: 11, color: C.sub, fontWeight: 500 }}>{t('referral.yourCode')}</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#6366f1', letterSpacing: '.05em', fontFamily: 'monospace' }}>
                   {referralCode}
                 </span>
@@ -548,13 +548,13 @@ function ReferralContent() {
                   <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
                     {invited}
                   </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>Приглашено</div>
+                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.invited')}</div>
                 </div>
                 <div style={statCardStyle}>
                   <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
                     {paid}
                   </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>Оплатили</div>
+                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.paid')}</div>
                 </div>
                 <div style={{
                   ...statCardStyle,
@@ -566,14 +566,14 @@ function ReferralContent() {
                   <div style={{ fontSize: 28, fontWeight: 800, color: '#6366f1', letterSpacing: '-.03em', lineHeight: 1 }}>
                     ${earnings.toFixed(0)}
                   </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>Заработано</div>
+                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.earned')}</div>
                 </div>
               </div>
 
               {/* Share buttons */}
               <div style={{ marginBottom: 28 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 10 }}>
-                  Поделиться
+                  {t('referral.share')}
                 </label>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button
@@ -589,7 +589,7 @@ function ReferralContent() {
                     }}
                   >
                     <CopyIcon color={C.sub} />
-                    {copied ? 'Скопировано!' : 'Копировать ссылку'}
+                    {copied ? t('referral.copied') : t('referral.copyLink')}
                   </button>
                   <button
                     onClick={handleShareTelegram}
@@ -637,11 +637,9 @@ function ReferralContent() {
                 background: isDark ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.02)',
                 border: `1px solid ${C.border}`,
               }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 8 }}>Условия программы</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 8 }}>{t('referral.termsTitle')}</div>
                 <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.7 }}>
-                  Вы получаете 20% от каждого платежа привлечённого пользователя.
-                  Привязка реферала бессрочная. Выплаты при достижении $50 на баланс.
-                  Подробности в разделе помощи.
+                  {t('referral.termsDesc')}
                 </div>
               </div>
             </>

@@ -10,6 +10,7 @@ import { CookieConsent } from '@/components/ui/CookieConsent';
 import { ShortcutsModal } from '@/components/ui/ShortcutsModal';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
 import { useGlobalShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { trpc } from '@/lib/trpc';
@@ -23,6 +24,7 @@ const OnboardingTour = dynamic(
 export function AppShell({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
   const isEditor = pathname === '/editor';
 
@@ -110,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }
         .tf-mobile-drawer.open{transform:translateX(0)}
       `}</style>
-      <a href="#main-content" className="skip-to-content">Перейти к содержимому</a>
+      <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
       <div style={{ width: '100%', height: '100vh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
         {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

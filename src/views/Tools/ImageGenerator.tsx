@@ -66,7 +66,6 @@ export function ImageGenerator() {
 
   return (
     <ToolPageShell
-      comingSoon
       title="AI Image Generator"
       subtitle="Create stunning images from text descriptions using state-of-the-art AI models"
       gradient={GRADIENT}

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import Link from 'next/link';
 
@@ -36,22 +37,29 @@ const MailIcon = () => (
 
 /* ── Step definitions ───────────────────────────── */
 
-const STEPS = [
-  { label: 'Приветствие' },
-  { label: 'Обучение' },
-  { label: 'Поддержка' },
-] as const;
+function getSteps(t: (key: string) => string) {
+  return [
+    { label: t('welcome.step.greeting') },
+    { label: t('welcome.step.tutorial') },
+    { label: t('welcome.step.support') },
+  ];
+}
 
-const PLAN_LABELS: Record<string, string> = {
-  PRO: 'PRO ПОДПИСКА',
-  STUDIO: 'STUDIO ПОДПИСКА',
-};
+function getPlanLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    PRO: t('welcome.planPro'),
+    STUDIO: t('welcome.planStudio'),
+  };
+}
 
 /* ── Inner component (uses useSearchParams) ─────── */
 
 function WelcomeInner() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
+  const STEPS = useMemo(() => getSteps(t), [t]);
+  const PLAN_LABELS = useMemo(() => getPlanLabels(t), [t]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const session = useSession();
@@ -175,18 +183,17 @@ function WelcomeInner() {
       </div>
 
       <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', color: C.text, lineHeight: 1.3 }}>
-        <span style={{ color: C.purple }}>Ура! </span>
+        <span style={{ color: C.purple }}>{t('welcome.hooray')}</span>
         <span role="img" aria-label="celebration">🎉</span>
       </h1>
       <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 16px', color: C.text }}>
-        Поздравляем с подпиской {plan || 'PRO'}!
+        {t('welcome.congrats')} {plan || 'PRO'}!
       </h2>
 
       <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.65, margin: '0 0 28px', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
-        Ваш аккаунт успешно синхронизирован с тарифом {plan || 'PRO'}. Теперь вы можете
-        генерировать видео без ограничений. Использование будет отображаться в{' '}
+        {t('welcome.syncedDesc1')} {plan || 'PRO'}{t('welcome.syncedDesc2')}{' '}
         <Link href="/settings" style={{ color: C.purple, textDecoration: 'underline' }}>
-          настройках
+          {t('welcome.settingsLink')}
         </Link>
         .
       </p>
@@ -196,12 +203,12 @@ function WelcomeInner() {
         style={primaryBtn}
         onClick={() => setCurrentStep(1)}
       >
-        Начать работу
+        {t('welcome.startWorking')}
       </button>
 
       <div style={{ marginTop: 16 }}>
         <button type="button" style={linkStyle}>
-          Посмотреть чек
+          {t('welcome.viewReceipt')}
         </button>
       </div>
     </div>
@@ -212,10 +219,10 @@ function WelcomeInner() {
   const renderStep2 = () => (
     <div>
       <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px', color: C.text, textAlign: 'center' }}>
-        Знакомство с TubeForge
+        {t('welcome.tutorialTitle')}
       </h2>
       <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.65, margin: '0 0 24px', textAlign: 'center' }}>
-        Узнайте, как максимально использовать вашу подписку с помощью этого короткого видео-гайда.
+        {t('welcome.tutorialDesc')}
       </p>
 
       <div
@@ -239,10 +246,10 @@ function WelcomeInner() {
           <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor" />
         </svg>
         <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.text }}>
-          Видео-гайд скоро появится
+          {t('welcome.videoGuideComingSoon')}
         </p>
         <p style={{ margin: 0, fontSize: 13, color: C.sub }}>
-          Мы готовим подробное обучающее видео для вас
+          {t('welcome.videoGuidePrep')}
         </p>
       </div>
 
@@ -252,14 +259,14 @@ function WelcomeInner() {
           style={outlineBtn}
           onClick={() => setCurrentStep(0)}
         >
-          Назад
+          {t('welcome.back')}
         </button>
         <button
           type="button"
           style={{ ...primaryBtn, flex: 1 }}
           onClick={() => setCurrentStep(2)}
         >
-          Продолжить
+          {t('welcome.continue')}
         </button>
       </div>
     </div>
@@ -270,10 +277,10 @@ function WelcomeInner() {
   const renderStep3 = () => (
     <div style={{ textAlign: 'center' }}>
       <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px', color: C.text }}>
-        Нужна помощь?
+        {t('welcome.needHelp')}
       </h2>
       <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.65, margin: '0 0 28px' }}>
-        У нас есть команда поддержки в Telegram, а также вы можете написать нам на email.
+        {t('welcome.supportDesc')}
       </p>
 
       <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
@@ -310,14 +317,14 @@ function WelcomeInner() {
           style={outlineBtn}
           onClick={() => setCurrentStep(1)}
         >
-          Назад
+          {t('welcome.back')}
         </button>
         <button
           type="button"
           style={{ ...primaryBtn, flex: 1 }}
           onClick={() => router.push('/dashboard')}
         >
-          Перейти в дашборд
+          {t('welcome.goToDashboard')}
         </button>
       </div>
     </div>

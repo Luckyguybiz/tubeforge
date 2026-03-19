@@ -30,7 +30,8 @@ const config: CapacitorConfig = {
       backgroundColor: '#0a0a0a',
     },
     Keyboard: {
-      resize: 'body',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resize: 'body' as any,
       resizeOnFullScreen: true,
     },
   },

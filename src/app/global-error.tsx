@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /**
  * Next.js global error boundary -- catches errors in the root layout itself.
  * Must include <html> and <body> tags since the root layout is broken.
  * Uses inline styles only (no theme store, which may itself be broken).
+ * Locale store is used with a safe fallback for translations.
  */
 export default function GlobalError({
   error,
@@ -15,6 +17,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   const [showDetails, setShowDetails] = useState(false);
+  const t = useLocaleStore((s) => s.t);
 
   /* Hardcoded dark colors since theme store may be broken */
   const bg = '#06060b';
@@ -32,7 +35,7 @@ export default function GlobalError({
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Ошибка | TubeForge</title>
+        <title>{t('globalError.pageTitle')}</title>
       </head>
       <body
         style={{
@@ -91,7 +94,7 @@ export default function GlobalError({
               letterSpacing: '-0.02em',
             }}
           >
-            Критическая ошибка
+            {t('globalError.title')}
           </h1>
 
           <p
@@ -102,7 +105,7 @@ export default function GlobalError({
               margin: '0 0 28px',
             }}
           >
-            Произошла серьёзная ошибка приложения. Попробуйте обновить страницу.
+            {t('globalError.description')}
           </p>
 
           {/* Collapsible error details */}
@@ -134,7 +137,7 @@ export default function GlobalError({
                 >
                   {'\u25B6'}
                 </span>
-                Подробности ошибки
+                {t('globalError.details')}
               </button>
               {showDetails && (
                 <div
@@ -185,7 +188,7 @@ export default function GlobalError({
                 boxShadow: `0 2px 16px ${accent}33`,
               }}
             >
-              Попробовать снова
+              {t('globalError.tryAgain')}
             </button>
             <button
               onClick={() => (window.location.href = '/dashboard')}
@@ -201,7 +204,7 @@ export default function GlobalError({
                 fontFamily: 'inherit',
               }}
             >
-              На главную
+              {t('globalError.goHome')}
             </button>
           </div>
         </div>
