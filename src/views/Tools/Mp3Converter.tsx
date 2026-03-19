@@ -153,7 +153,8 @@ export function Mp3Converter() {
       try { await ffmpeg.deleteFile(outputName_); } catch { /* noop */ }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Conversion error:', err);
-      setError(err instanceof Error ? err.message : 'Не удалось конвертировать файл');
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Ошибка конвертации: ${msg}`);
     } finally {
       setLoading(false);
     }
