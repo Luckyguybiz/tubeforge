@@ -661,6 +661,22 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
   const showUpgradeOverlay = !isPro && data.length > 0;
 
+  // Niche stats: total views + estimated earnings
+  const SHORTS_RPM: Record<string, number> = {
+    'minecraft': 0.07,
+    'fortnite': 0.06,
+    'roblox': 0.05,
+    '': 0.04, // general Shorts RPM
+  };
+
+  const nicheStats = useMemo(() => {
+    if (filteredData.length === 0) return null;
+    const totalViews = filteredData.reduce((sum, item) => sum + (item.views || 0), 0);
+    const rpm = SHORTS_RPM[filters.gameFilter] ?? 0.04;
+    const estimatedEarnings = (totalViews / 1000) * rpm;
+    return { totalViews, estimatedEarnings, rpm, count: filteredData.length };
+  }, [filteredData, filters.gameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       {/* Shimmer animation keyframes */}
@@ -1249,6 +1265,82 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Niche Stats Banner ─────────────────────── */}
+          {nicheStats && !loading && (
+            <div style={{
+              display: 'flex',
+              gap: 12,
+              marginBottom: 16,
+              flexWrap: 'wrap',
+            }}>
+              {/* Total Views */}
+              <div style={{
+                flex: 1,
+                minWidth: 160,
+                padding: '14px 18px',
+                background: C.surface,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+              }}>
+                <div style={{ fontSize: 11, color: C.dim, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Просмотров в топе
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#22c55e' }}>
+                  {nicheStats.totalViews >= 1_000_000_000
+                    ? `${(nicheStats.totalViews / 1_000_000_000).toFixed(1)}B`
+                    : nicheStats.totalViews >= 1_000_000
+                      ? `${(nicheStats.totalViews / 1_000_000).toFixed(1)}M`
+                      : nicheStats.totalViews.toLocaleString('ru-RU')}
+                </div>
+                <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
+                  {nicheStats.count} видео в выборке
+                </div>
+              </div>
+
+              {/* Estimated Earnings */}
+              <div style={{
+                flex: 1,
+                minWidth: 160,
+                padding: '14px 18px',
+                background: C.surface,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+              }}>
+                <div style={{ fontSize: 11, color: C.dim, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Примерный заработок
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: C.blue }}>
+                  ${nicheStats.estimatedEarnings >= 1000
+                    ? `${(nicheStats.estimatedEarnings / 1000).toFixed(1)}K`
+                    : Math.round(nicheStats.estimatedEarnings).toLocaleString('ru-RU')}
+                </div>
+                <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
+                  RPM: ${nicheStats.rpm.toFixed(2)} (Shorts)
+                </div>
+              </div>
+
+              {/* RPM Info */}
+              <div style={{
+                flex: 1,
+                minWidth: 160,
+                padding: '14px 18px',
+                background: C.surface,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+              }}>
+                <div style={{ fontSize: 11, color: C.dim, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {filters.gameFilter ? filters.gameFilter.charAt(0).toUpperCase() + filters.gameFilter.slice(1) : 'Shorts'} RPM
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>
+                  ${nicheStats.rpm.toFixed(2)}
+                </div>
+                <div style={{ fontSize: 11, color: C.dim, marginTop: 2, lineHeight: 1.4 }}>
+                  Shorts платят в 10-20x меньше чем горизонталка
+                </div>
+              </div>
             </div>
           )}
 
