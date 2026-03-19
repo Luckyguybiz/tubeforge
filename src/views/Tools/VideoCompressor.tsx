@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL, fetchFile } from '@ffmpeg/util';
+import { fetchFile } from '@ffmpeg/util';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -66,15 +66,17 @@ export function VideoCompressor() {
     setError(null);
     try {
       const ffmpeg = new FFmpeg();
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm';
-      const fallbackURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+      const cdns = [
+        'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd',
+        'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd',
+      ];
 
       let loaded = false;
-      for (const url of [baseURL, fallbackURL]) {
+      for (const base of cdns) {
         try {
           await ffmpeg.load({
-            coreURL: await toBlobURL(`${url}/ffmpeg-core.js`, 'text/javascript'),
-            wasmURL: await toBlobURL(`${url}/ffmpeg-core.wasm`, 'application/wasm'),
+            coreURL: `${base}/ffmpeg-core.js`,
+            wasmURL: `${base}/ffmpeg-core.wasm`,
           });
           loaded = true;
           break;
@@ -84,16 +86,16 @@ export function VideoCompressor() {
       }
 
       if (!loaded) {
-        throw new Error('Не удалось загрузить модуль FFmpeg');
+        throw new Error('FFmpeg load failed');
       }
 
       ffmpegRef.current = ffmpeg;
       setFfmpegLoaded(true);
       return ffmpeg;
-    } catch (err) {
+    } catch {
       setError('Не удалось загрузить модуль обработки. Попробуйте обновить страницу.');
       ffmpegRef.current = null;
-      throw err;
+      throw new Error('FFmpeg load failed');
     } finally {
       setFfmpegLoading(false);
     }
