@@ -27,6 +27,8 @@ interface Filters {
   category: string;
   showMusic: boolean;
   showKids: boolean;
+  hideIndian: boolean;
+  gameFilter: string;
 }
 
 /* ── Period config ───────────────────────────────────────────────── */
@@ -74,6 +76,16 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: '27', label: 'Образование' },
   { key: '28', label: 'Наука и технологии' },
 ];
+
+const GAME_FILTERS: { key: string; label: string }[] = [
+  { key: '', label: 'Все игры' },
+  { key: 'minecraft', label: 'Minecraft' },
+  { key: 'fortnite', label: 'Fortnite' },
+  { key: 'roblox', label: 'Roblox' },
+];
+
+// Hindi/Devanagari script detection for "Hide Indian" filter
+const INDIAN_PATTERN = /[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]/;
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 
@@ -535,6 +547,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
     category: '',
     showMusic: true,
     showKids: true,
+    hideIndian: false,
+    gameFilter: '',
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -618,7 +632,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   }, [isPro]);
 
   const handleClearFilters = useCallback(() => {
-    setFilters({ country: '', category: '', showMusic: true, showKids: true });
+    setFilters({ country: '', category: '', showMusic: true, showKids: true, hideIndian: false, gameFilter: '' });
   }, []);
 
   const dateRange = useMemo(() => getPeriodRange(period), [period]);
@@ -629,7 +643,21 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   // Free users: show max 10 rows
   const FREE_ROW_LIMIT = 10;
-  const visibleData = isPro ? data : data.slice(0, FREE_ROW_LIMIT);
+  // Client-side filters: hide Indian content, game sub-filter
+  const filteredData = useMemo(() => {
+    let result = data;
+    if (filters.hideIndian) {
+      result = result.filter((item) => !INDIAN_PATTERN.test(item.title) && !INDIAN_PATTERN.test(item.channel));
+    }
+    if (filters.gameFilter) {
+      const q = filters.gameFilter.toLowerCase();
+      result = result.filter((item) => item.title.toLowerCase().includes(q) || item.channel.toLowerCase().includes(q));
+    }
+    // Re-rank after filtering
+    return result.map((item, i) => ({ ...item, rank: i + 1 }));
+  }, [data, filters.hideIndian, filters.gameFilter]);
+
+  const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
   const showUpgradeOverlay = !isPro && data.length > 0;
 
   return (
@@ -978,6 +1006,48 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       sub={C.sub}
                       text={C.text}
                     />
+                    <ToggleSwitch
+                      checked={filters.hideIndian}
+                      onChange={(v) => setFilters((f) => ({ ...f, hideIndian: v }))}
+                      label="Скрыть индийский контент"
+                      isDark={isDark}
+                      accent={C.accent}
+                      dim={C.dim}
+                      sub={C.sub}
+                      text={C.text}
+                    />
+
+                    {/* Game sub-filter (shown when category = Gaming) */}
+                    <div style={{ marginTop: 8 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
+                        Игры
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {GAME_FILTERS.map((g) => (
+                          <button
+                            key={g.key}
+                            onClick={() => setFilters((f) => ({ ...f, gameFilter: f.gameFilter === g.key ? '' : g.key }))}
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: 8,
+                              border: `1px solid ${filters.gameFilter === g.key ? C.accent : C.border}`,
+                              background: filters.gameFilter === g.key ? `${C.accent}15` : 'transparent',
+                              color: filters.gameFilter === g.key ? C.accent : C.sub,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                              transition: 'all .15s',
+                            }}
+                          >
+                            {g.label}
+                          </button>
+                        ))}
+                        <span style={{ fontSize: 10, color: C.dim, alignSelf: 'center', fontStyle: 'italic' }}>
+                          скоро больше
+                        </span>
+                      </div>
+                    </div>
 
                     {/* Clear */}
                     <button
