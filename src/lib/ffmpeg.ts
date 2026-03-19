@@ -37,9 +37,11 @@ async function loadCore(baseURL) {
   // 3. Init Emscripten with wasmBinary — NO additional fetch needed
   ff = await self.createFFmpegCore({
     wasmBinary: wasmBinary,
-    locateFile: function(path) {
-      // Prevent Emscripten from trying to fetch any other files
-      return path;
+    locateFile: function(path, scriptDir) {
+      // Return proper CDN URL so Emscripten doesn't try to atob() the path.
+      // wasmBinary is already provided so .wasm won't be re-fetched.
+      if (path.endsWith('.wasm')) return baseURL + '/' + path;
+      return (scriptDir || baseURL + '/') + path;
     }
   });
 
