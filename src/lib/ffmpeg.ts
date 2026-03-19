@@ -1,12 +1,13 @@
 /**
- * Custom FFmpeg WASM wrapper that bypasses @ffmpeg/ffmpeg's Worker creation.
+ * Custom FFmpeg WASM wrapper — all CDN loading happens INSIDE a Web Worker.
  *
- * Why: The @ffmpeg/ffmpeg package uses `new Worker(new URL('./worker.js', import.meta.url))`
- * which conflicts with Next.js webpack bundling — either the worker chunk isn't emitted
- * correctly or dynamic imports inside the worker fail with "Cannot find module".
- *
- * This wrapper creates a classic Worker from inline blob code and loads the
- * @ffmpeg/core UMD build via `importScripts`, which is universally reliable.
+ * Architecture:
+ * 1. Main thread creates a classic Worker from inline blob code
+ * 2. Worker receives CDN base URL via postMessage
+ * 3. Worker fetches ffmpeg-core.js and ffmpeg-core.wasm
+ * 4. Worker loads JS via importScripts(blobURL) — CSP allows blob:
+ * 5. Worker passes wasmBinary (ArrayBuffer) directly to createFFmpegCore
+ *    so Emscripten never does its own fetch() (which fails under CSP)
  */
 
 const CORE_CDNS = [
@@ -14,18 +15,36 @@ const CORE_CDNS = [
   'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd',
 ];
 
-/* ── Worker inline code (classic worker, uses importScripts) ── */
+/* ── Worker inline code ── */
 const WORKER_JS = /* js */ `
 let ff = null;
 
-async function loadCore(coreURL, wasmURL) {
-  importScripts(coreURL);
-  if (!self.createFFmpegCore) throw new Error("createFFmpegCore not defined");
+async function loadCore(baseURL) {
+  // 1. Fetch JS, load via blob importScripts (bypasses CSP script-src for CDN)
+  var jsResp = await fetch(baseURL + '/ffmpeg-core.js');
+  if (!jsResp.ok) throw new Error('JS fetch ' + jsResp.status);
+  var jsBlob = new Blob([await jsResp.arrayBuffer()], { type: 'text/javascript' });
+  var jsBlobURL = URL.createObjectURL(jsBlob);
+  importScripts(jsBlobURL);
+  URL.revokeObjectURL(jsBlobURL);
+  if (!self.createFFmpegCore) throw new Error('createFFmpegCore not found');
+
+  // 2. Fetch WASM as ArrayBuffer
+  var wasmResp = await fetch(baseURL + '/ffmpeg-core.wasm');
+  if (!wasmResp.ok) throw new Error('WASM fetch ' + wasmResp.status);
+  var wasmBinary = await wasmResp.arrayBuffer();
+
+  // 3. Init Emscripten with wasmBinary — NO additional fetch needed
   ff = await self.createFFmpegCore({
-    mainScriptUrlOrBlob: coreURL + "#" + btoa(JSON.stringify({ wasmURL, workerURL: "" })),
+    wasmBinary: wasmBinary,
+    locateFile: function(path) {
+      // Prevent Emscripten from trying to fetch any other files
+      return path;
+    }
   });
-  ff.setLogger(function (d) { self.postMessage({ t: "log", d: d }); });
-  ff.setProgress(function (d) { self.postMessage({ t: "progress", d: d }); });
+
+  ff.setLogger(function (d) { self.postMessage({ t: 'log', d: d }); });
+  ff.setProgress(function (d) { self.postMessage({ t: 'progress', d: d }); });
 }
 
 self.onmessage = async function (e) {
@@ -33,24 +52,24 @@ self.onmessage = async function (e) {
   try {
     var r, tr = [];
     switch (t) {
-      case "load":
-        await loadCore(p.coreURL, p.wasmURL);
+      case 'load':
+        await loadCore(p.baseURL);
         r = true;
         break;
-      case "exec":
+      case 'exec':
         ff.setTimeout(p.timeout || -1);
         ff.exec.apply(ff, p.args);
         r = ff.ret;
         ff.reset();
         break;
-      case "write":
+      case 'write':
         ff.FS.writeFile(p.path, p.data);
         r = true;
         break;
-      case "read":
-        r = ff.FS.readFile(p.path, { encoding: p.enc || "binary" });
+      case 'read':
+        r = ff.FS.readFile(p.path, { encoding: p.enc || 'binary' });
         break;
-      case "del":
+      case 'del':
         ff.FS.unlink(p.path);
         r = true;
         break;
@@ -58,18 +77,10 @@ self.onmessage = async function (e) {
     if (r instanceof Uint8Array) tr.push(r.buffer);
     self.postMessage({ id: id, t: t, d: r }, tr);
   } catch (err) {
-    self.postMessage({ id: id, t: "error", d: err.toString() });
+    self.postMessage({ id: id, t: 'error', d: err.toString() });
   }
 };
 `;
-
-/* ── Blob URL helper ── */
-async function toBlobURL(url: string, mimeType: string): Promise<string> {
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Fetch ${url}: ${resp.status}`);
-  const buf = await resp.arrayBuffer();
-  return URL.createObjectURL(new Blob([buf], { type: mimeType }));
-}
 
 /* ── Public API ── */
 export type ProgressCb = (p: { progress: number; time: number }) => void;
@@ -84,7 +95,6 @@ export class FFmpegClient {
 
   /** Load the FFmpeg WASM core. Tries multiple CDNs. */
   async load(): Promise<void> {
-    // Create worker from blob
     const blob = new Blob([WORKER_JS], { type: 'text/javascript' });
     this.worker = new Worker(URL.createObjectURL(blob));
     this.worker.onmessage = ({ data }) => {
@@ -92,7 +102,7 @@ export class FFmpegClient {
         this.progressCbs.forEach((cb) => cb(data.d));
         return;
       }
-      if (data.t === 'log') return; // ignore logs
+      if (data.t === 'log') return;
       const { id } = data;
       if (data.t === 'error') {
         this.rejects[id]?.(new Error(data.d));
@@ -103,25 +113,23 @@ export class FFmpegClient {
       delete this.rejects[id];
     };
 
-    // Try CDNs in order
     let lastErr: unknown;
-    for (const base of CORE_CDNS) {
+    for (const baseURL of CORE_CDNS) {
       try {
-        const coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript');
-        const wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm');
-        await this.send('load', { coreURL, wasmURL });
+        await this.send('load', { baseURL });
         return;
       } catch (e) {
         lastErr = e;
+        console.warn(`FFmpeg CDN failed (${baseURL}):`, e);
       }
     }
     this.terminate();
-    throw lastErr ?? new Error('All CDNs failed');
+    throw lastErr ?? new Error('All FFmpeg CDNs failed');
   }
 
   private send(t: string, p: Record<string, unknown>): Promise<unknown> {
     return new Promise((resolve, reject) => {
-      if (!this.worker) return reject(new Error('Worker not ready'));
+      if (!this.worker) return reject(new Error('Worker not initialised'));
       const id = ++msgId;
       this.resolves[id] = resolve;
       this.rejects[id] = reject;
@@ -168,7 +176,7 @@ export class FFmpegClient {
   }
 }
 
-/** Read a File into a Uint8Array (replaces @ffmpeg/util's fetchFile). */
+/** Read a File into a Uint8Array. */
 export async function readFileAsUint8Array(file: File): Promise<Uint8Array> {
   return new Uint8Array(await file.arrayBuffer());
 }
