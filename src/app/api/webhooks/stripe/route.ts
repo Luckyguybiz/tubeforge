@@ -100,16 +100,6 @@ export async function POST(req: NextRequest) {
         });
         if (!payingUser?.referredBy) break;
 
-        // Idempotency: use Stripe event ID to prevent duplicate referral credits
-        // on webhook retries. The stripeEventId field must be unique in the Payout model.
-        const alreadyProcessed = await db.payout.findFirst({
-          where: { stripeEventId: event.id },
-        });
-        if (alreadyProcessed) {
-          console.warn('[Stripe] Duplicate invoice.paid event, skipping:', event.id);
-          break;
-        }
-
         // Credit 20% commission to the referrer
         const commission = (invoice.amount_paid / 100) * 0.2;
 
@@ -120,20 +110,32 @@ export async function POST(req: NextRequest) {
         });
         if (!referrer) break;
 
-        // Atomically credit the referrer and record the payout for dedup
-        await db.$transaction([
-          db.user.update({
-            where: { id: referrer.id },
-            data: { referralEarnings: { increment: commission } },
-          }),
-          db.payout.create({
-            data: {
-              userId: referrer.id,
-              amount: commission,
-              stripeEventId: event.id,
-            },
-          }),
-        ]);
+        // Idempotency: rely on the UNIQUE constraint on stripeEventId.
+        // If two webhooks race, the second insert will fail with P2002.
+        // This is safer than check-then-insert which has a TOCTOU window.
+        try {
+          await db.$transaction([
+            db.user.update({
+              where: { id: referrer.id },
+              data: { referralEarnings: { increment: commission } },
+            }),
+            db.payout.create({
+              data: {
+                userId: referrer.id,
+                amount: commission,
+                stripeEventId: event.id,
+              },
+            }),
+          ]);
+        } catch (err) {
+          // P2002 = unique constraint violation → duplicate webhook, safe to ignore
+          const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+          if (isPrismaUnique) {
+            console.warn('[Stripe] Duplicate invoice.paid event (unique constraint), skipping:', event.id);
+          } else {
+            throw err; // Re-throw real errors
+          }
+        }
         break;
       }
       case 'invoice.payment_failed': {
@@ -147,7 +149,7 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (err) {
-    console.error(`[Stripe webhook] Error processing ${event.type}:`, err instanceof Error ? err.message : err);
+    console.error(`[Stripe webhook] Error processing ${event.type} (event: ${event.id}):`, err instanceof Error ? err.message : err);
     // Return 200 to prevent Stripe from retrying indefinitely; error is logged for monitoring
     return NextResponse.json({ received: true, error: true, type: event.type });
   }

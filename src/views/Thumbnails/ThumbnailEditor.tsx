@@ -457,7 +457,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => store().addImage(ev.target!.result as string);
+    reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') store().addImage(result); };
     reader.readAsDataURL(file); e.target.value = '';
   };
 
@@ -503,7 +503,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       Array.from(files).forEach((file) => {
         if (!file.type.startsWith('image/')) return;
         const reader = new FileReader();
-        reader.onload = (ev) => store().addImage(ev.target!.result as string);
+        reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') store().addImage(result); };
         reader.readAsDataURL(file);
       });
     }
@@ -671,9 +671,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                 }}>
                   {[
                     { label: 'Дублировать', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
-                    { label: 'На передний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => store().bringFront(store().contextMenu!.elId!) },
-                    { label: 'На задний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => store().sendBack(store().contextMenu!.elId!) },
-                    { label: 'Удалить', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => store().delEl(store().contextMenu!.elId!), danger: true },
+                    { label: 'На передний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => { const id = store().contextMenu?.elId; if (id) store().bringFront(id); } },
+                    { label: 'На задний план', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => { const id = store().contextMenu?.elId; if (id) store().sendBack(id); } },
+                    { label: 'Удалить', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { const id = store().contextMenu?.elId; if (id) store().delEl(id); }, danger: true },
                   ].map((item, i) => (
                     <div
                       key={item.label}

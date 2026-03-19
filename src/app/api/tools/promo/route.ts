@@ -35,7 +35,12 @@ export async function POST(req: NextRequest) {
   }
   const normalized = (code ?? '').toString().trim().toUpperCase();
 
-  const promo = PROMO_CODES[normalized];
+  // Validate format before lookup to prevent prototype pollution / abuse
+  if (!normalized || normalized.length > 30 || !/^[\p{L}\p{N}]+$/u.test(normalized)) {
+    return NextResponse.json({ error: 'Invalid promo code format' }, { status: 400 });
+  }
+
+  const promo = Object.prototype.hasOwnProperty.call(PROMO_CODES, normalized) ? PROMO_CODES[normalized] : undefined;
   if (!promo) {
     return NextResponse.json({ error: 'Promo code not found' }, { status: 400 });
   }

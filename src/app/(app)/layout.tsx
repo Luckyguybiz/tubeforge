@@ -52,6 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (refCode) {
         claimReferral.mutate({ code: refCode }, {
           onSettled: () => localStorage.removeItem('tf-ref'),
+          onError: (err) => console.error('[referral] claim failed:', err.message),
         });
       }
     } catch { /* localStorage unavailable */ }

@@ -99,6 +99,10 @@ export function CutCrop() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoUrlRef = useRef(videoUrl);
   videoUrlRef.current = videoUrl;
+  // Persist AudioContext and MediaElementSource across exports to avoid
+  // "already connected" errors from calling createMediaElementSource twice.
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
   /* ---- file handling ---- */
   const loadFile = useCallback((f: File) => {
@@ -117,7 +121,13 @@ export function CutCrop() {
   }, [videoUrl]);
 
   useEffect(() => {
-    return () => { if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current); };
+    return () => {
+      if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current);
+      // Close persisted AudioContext on unmount
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -233,18 +243,27 @@ export function CutCrop() {
 
       const stream = canvas.captureStream(30);
 
-      // Try to capture audio by playing through a media element source
-      let audioCtx: AudioContext | null = null;
-      let audioSource: MediaElementAudioSourceNode | null = null;
+      // Try to capture audio by playing through a media element source.
+      // Reuse existing AudioContext/source across exports because
+      // createMediaElementSource can only be called once per element.
       try {
-        audioCtx = new AudioContext();
-        audioSource = audioCtx.createMediaElementSource(v);
-        const dest = audioCtx.createMediaStreamDestination();
-        audioSource.connect(dest);
-        audioSource.connect(audioCtx.destination);
+        // Create or resume the AudioContext (it may have been suspended/closed)
+        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+          audioCtxRef.current = new AudioContext();
+          audioSourceRef.current = null; // source tied to old context is invalid
+        }
+        if (audioCtxRef.current.state === 'suspended') {
+          await audioCtxRef.current.resume();
+        }
+        if (!audioSourceRef.current) {
+          audioSourceRef.current = audioCtxRef.current.createMediaElementSource(v);
+          audioSourceRef.current.connect(audioCtxRef.current.destination);
+        }
+        const dest = audioCtxRef.current.createMediaStreamDestination();
+        audioSourceRef.current.connect(dest);
         dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
       } catch {
-        // Audio capture may fail if already connected – that is fine, export video only
+        // Audio capture may fail – that is fine, export video only
       }
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
@@ -295,14 +314,6 @@ export function CutCrop() {
 
       const blob = await done;
       clearTimeout(safetyTimeout);
-
-      // Clean up audio context
-      if (audioSource) {
-        try { audioSource.disconnect(); } catch { /* noop */ }
-      }
-      if (audioCtx) {
-        try { audioCtx.close(); } catch { /* noop */ }
-      }
 
       // Download
       const url = URL.createObjectURL(blob);

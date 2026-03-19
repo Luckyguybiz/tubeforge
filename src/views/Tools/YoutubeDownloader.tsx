@@ -67,9 +67,23 @@ export function YoutubeDownloader() {
 
   // Debounce timer ref
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // AbortController ref for cancelling in-flight fetch requests on unmount
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Cancel any in-flight requests on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   // ── Fetch video info from our API ──────────────────────────────
   const fetchVideoInfo = useCallback(async (videoUrl: string) => {
+    // Abort any previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setFetchingInfo(true);
     setFetchError('');
     setVideoInfo(null);
@@ -79,6 +93,7 @@ export function YoutubeDownloader() {
     try {
       const res = await fetch(
         `/api/tools/youtube-download?url=${encodeURIComponent(videoUrl)}`,
+        { signal: controller.signal },
       );
       const data = await res.json();
 
@@ -88,7 +103,8 @@ export function YoutubeDownloader() {
       }
 
       setVideoInfo(data as VideoInfo);
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setFetchError('Ошибка сети. Проверьте подключение к интернету.');
     } finally {
       setFetchingInfo(false);
@@ -165,6 +181,11 @@ export function YoutubeDownloader() {
       return;
     }
 
+    // Abort any previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setDone(false);
     setStreamError('');
@@ -182,6 +203,7 @@ export function YoutubeDownloader() {
           quality,
           audioOnly: isAudioOnly,
         }),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -193,7 +215,7 @@ export function YoutubeDownloader() {
       }
 
       // Stream the download to track real progress
-      const downloadRes = await fetch(data.downloadUrl);
+      const downloadRes = await fetch(data.downloadUrl, { signal: controller.signal });
       if (!downloadRes.ok) {
         setStreamError('Не удалось скачать файл с сервера');
         setDone(true);
@@ -237,7 +259,8 @@ export function YoutubeDownloader() {
 
       showToast('Скачивание завершено!');
       setDone(true);
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setStreamError('Ошибка сети. Проверьте подключение к интернету.');
       setDone(true);
     } finally {

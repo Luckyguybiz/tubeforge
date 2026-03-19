@@ -1,63 +1,42 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/server/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  // In production, return minimal response to avoid leaking internal details
+  // Always require admin auth — never expose debug info publicly
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // Only admins can access debug info
+  if (session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  // In production, return minimal response even for admins
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ status: 'ok' }, { status: 200 });
+    return NextResponse.json({ status: 'ok', user: session.user.email }, { status: 200 });
   }
 
   const checks: Record<string, unknown> = {};
 
-  // 1. Test NextAuth import
-  try {
-    const authModule = await import('@/server/auth');
-    checks['auth_import'] = 'OK';
-    checks['auth_exports'] = Object.keys(authModule);
-  } catch (e) {
-    checks['auth_import'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-    checks['auth_stack'] = e instanceof Error ? e.stack?.split('\n').slice(0, 8) : undefined;
-  }
+  // 1. Test auth module loads
+  checks['auth_module'] = 'OK (already loaded)';
 
-  // 2. Test auth() function (session check)
-  try {
-    const { auth } = await import('@/server/auth');
-    const session = await auth();
-    checks['auth_session'] = session ? { user: session.user?.email } : 'no session (expected if not logged in)';
-  } catch (e) {
-    checks['auth_session'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-    checks['auth_session_stack'] = e instanceof Error ? e.stack?.split('\n').slice(0, 5) : undefined;
-  }
-
-  // 3. Test PrismaAdapter
+  // 2. Test PrismaAdapter
   try {
     const { PrismaAdapter } = await import('@auth/prisma-adapter');
     const { db } = await import('@/server/db');
-    const adapter = PrismaAdapter(db);
+    PrismaAdapter(db);
     checks['prisma_adapter'] = 'OK';
-    checks['adapter_methods'] = Object.keys(adapter).slice(0, 10);
   } catch (e) {
     checks['prisma_adapter'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  // 4. Test env module
-  try {
-    const { env } = await import('@/lib/env');
-    checks['env_module'] = {
-      AUTH_GOOGLE_ID: env.AUTH_GOOGLE_ID ? `SET (${env.AUTH_GOOGLE_ID.length} chars)` : 'MISSING',
-      AUTH_GOOGLE_SECRET: env.AUTH_GOOGLE_SECRET ? `SET (${env.AUTH_GOOGLE_SECRET.length} chars)` : 'MISSING',
-    };
-  } catch (e) {
-    checks['env_module'] = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-  }
-
-  // 5. Check NextAuth version
-  try {
-    const pkg = await import('next-auth/package.json');
-    checks['nextauth_version'] = pkg.version;
-  } catch {
-    checks['nextauth_version'] = 'unknown';
+  // 3. Env presence only (no lengths — prevent brute-force info leakage)
+  const envVars = ['AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET', 'DATABASE_URL', 'STRIPE_SECRET_KEY'];
+  for (const name of envVars) {
+    checks[`env_${name}`] = process.env[name] ? 'SET' : 'MISSING';
   }
 
   return NextResponse.json(checks, { status: 200 });

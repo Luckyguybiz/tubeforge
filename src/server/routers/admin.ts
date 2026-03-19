@@ -126,6 +126,8 @@ export const adminRouter = router({
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
       const { userId, ...data } = input;
+      const user = await ctx.db.user.findUnique({ where: { id: userId }, select: { id: true } });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
       return ctx.db.user.update({ where: { id: userId }, data, select: { id: true, plan: true, role: true } });
     }),
 

@@ -86,9 +86,11 @@ export default function middleware(req: NextRequest) {
   }
 
   // --- IP rate limiting (applies to all non-static requests) ---
+  // Prefer Vercel's x-real-ip (set by Vercel Edge from the actual client IP,
+  // more trustworthy than x-forwarded-for which can be appended to).
   const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     'unknown';
 
   if (!checkRateLimit(ip)) {
@@ -110,7 +112,6 @@ export default function middleware(req: NextRequest) {
     '/api/stripe/webhook',
     '/api/webhooks',
     '/api/health',
-    '/api/auth-debug',
     '/privacy',
     '/terms',
   ];
@@ -131,7 +132,9 @@ export default function middleware(req: NextRequest) {
 
   if (!hasSession) {
     const loginUrl = new URL('/login', req.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    // Prevent open redirect: only allow internal paths (starting with / but not //)
+    const safeCallback = pathname.startsWith('/') && !pathname.startsWith('//') ? pathname : '/dashboard';
+    loginUrl.searchParams.set('callbackUrl', safeCallback);
     return NextResponse.redirect(loginUrl);
   }
 

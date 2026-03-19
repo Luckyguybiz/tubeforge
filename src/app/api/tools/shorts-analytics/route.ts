@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 // In-memory cache: key = period+country+category, value = { data, timestamp }
 const cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
@@ -79,7 +81,7 @@ export async function GET(req: NextRequest) {
       });
       if (publishedAfter) sp.set('publishedAfter', publishedAfter);
       if (country) sp.set('regionCode', country);
-      return fetch(`https://www.googleapis.com/youtube/v3/search?${sp}`).then(r => r.ok ? r.json() : null);
+      return fetch(`https://www.googleapis.com/youtube/v3/search?${sp}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }).then(r => r.ok ? r.json() : null).catch(() => null);
     });
 
     const searchResults = await Promise.all(searchPromises);
@@ -106,8 +108,9 @@ export async function GET(req: NextRequest) {
     }
 
     const statsPromises = batches.map((batch) =>
-      fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,contentDetails&id=${batch.join(',')}&key=${apiKey}`)
+      fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,contentDetails&id=${batch.join(',')}&key=${apiKey}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
         .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
     );
     const statsResults = await Promise.all(statsPromises);
 
@@ -183,8 +186,9 @@ export async function GET(req: NextRequest) {
         for (let i = 0; i < channelIds.length; i += 50) chBatches.push(channelIds.slice(i, i + 50));
         const chResults = await Promise.all(
           chBatches.map(batch =>
-            fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${batch.join(',')}&key=${apiKey}`)
+            fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${batch.join(',')}&key=${apiKey}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
               .then(r => r.ok ? r.json() : null)
+              .catch(() => null)
           )
         );
         for (const r of chResults) {

@@ -61,9 +61,25 @@ export const billingRouter = router({
         try {
           const customer = await stripe.customers.create({ email: user.email ?? undefined });
           newCustomerId = customer.id;
-          await ctx.db.user.update({ where: { id: ctx.session.user.id }, data: { stripeId: newCustomerId } });
-          customerId = newCustomerId;
+          // Atomic: only set stripeId if still null (prevents race with concurrent requests)
+          const updated = await ctx.db.user.updateMany({
+            where: { id: ctx.session.user.id, stripeId: null },
+            data: { stripeId: newCustomerId },
+          });
+          if (updated.count === 0) {
+            // Another request already set stripeId — use the existing one, clean up ours
+            try { await stripe.customers.del(newCustomerId); } catch { /* best effort */ }
+            const fresh = await ctx.db.user.findUnique({
+              where: { id: ctx.session.user.id },
+              select: { stripeId: true },
+            });
+            customerId = fresh?.stripeId ?? null;
+            if (!customerId) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create Stripe customer' });
+          } else {
+            customerId = newCustomerId;
+          }
         } catch (err) {
+          if (err instanceof TRPCError) throw err;
           if (newCustomerId) {
             try { await stripe.customers.del(newCustomerId); } catch { /* best effort */ }
           }
