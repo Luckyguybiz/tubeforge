@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Promo codes with duration in hours
 const PROMO_CODES: Record<string, { hours: number; label: string }> = {
@@ -9,6 +10,16 @@ const PROMO_CODES: Record<string, { hours: number; label: string }> = {
 };
 
 export async function POST(req: NextRequest) {
+  // Rate limit: max 3 attempts per minute per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const { success, reset } = await rateLimit({ identifier: `promo:${ip}`, limit: 3, window: 60 });
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Слишком много попыток. Попробуйте через минуту.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
+  }
+
   const { code } = await req.json();
   const normalized = (code ?? '').toString().trim().toUpperCase();
 

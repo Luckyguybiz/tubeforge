@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { Z_INDEX } from '@/lib/constants';
 
 interface ToolBarProps {
@@ -13,7 +14,7 @@ interface ToolBarProps {
 interface ToolDef {
   id: string;
   icon: React.ReactElement;
-  label: string;
+  labelKey: string;
 }
 
 // ===== Clean SVG Icons =====
@@ -46,50 +47,51 @@ const SUB_ICONS: Record<string, React.ReactElement> = {
 
 // Group 1: Selection
 const SELECTION_TOOLS: ToolDef[] = [
-  { id: 'select', icon: TOOL_ICONS.select, label: 'Выбрать' },
+  { id: 'select', icon: TOOL_ICONS.select, labelKey: 'thumbs.tool.select' },
 ];
 
 // Group 2: Creation (grouped Canva-style)
 const CREATION_TOOLS: ToolDef[] = [
-  { id: 'text', icon: TOOL_ICONS.text, label: 'Текст' },
-  { id: 'shapes', icon: TOOL_ICONS.shapes, label: 'Фигуры' },
-  { id: 'lines', icon: TOOL_ICONS.lines, label: 'Линии' },
-  { id: 'insert', icon: TOOL_ICONS.insert, label: 'Вставить' },
+  { id: 'text', icon: TOOL_ICONS.text, labelKey: 'thumbs.tool.text' },
+  { id: 'shapes', icon: TOOL_ICONS.shapes, labelKey: 'thumbs.tool.shapes' },
+  { id: 'lines', icon: TOOL_ICONS.lines, labelKey: 'thumbs.tool.lines' },
+  { id: 'insert', icon: TOOL_ICONS.insert, labelKey: 'thumbs.tool.insert' },
 ];
 
 // Group 3: Drawing
 const DRAWING_TOOLS: ToolDef[] = [
-  { id: 'draw', icon: TOOL_ICONS.draw, label: 'Рисовать' },
+  { id: 'draw', icon: TOOL_ICONS.draw, labelKey: 'thumbs.tool.draw' },
 ];
 
 // Panel buttons (visually distinct from tools)
 const PANEL_BUTTONS: ToolDef[] = [
-  { id: 'uploads', icon: TOOL_ICONS.uploads, label: 'Загрузки' },
-  { id: 'elements', icon: TOOL_ICONS.elements, label: 'Элементы' },
-  { id: 'projects', icon: TOOL_ICONS.projects, label: 'Проекты' },
+  { id: 'uploads', icon: TOOL_ICONS.uploads, labelKey: 'thumbs.panel.uploads' },
+  { id: 'elements', icon: TOOL_ICONS.elements, labelKey: 'thumbs.panel.elements' },
+  { id: 'projects', icon: TOOL_ICONS.projects, labelKey: 'thumbs.panel.projects' },
 ];
 
 // Submenus
 const SHAPE_OPTIONS = [
-  { id: 'rect', icon: SUB_ICONS.rect, label: 'Прямоуг.' },
-  { id: 'circle', icon: SUB_ICONS.circle, label: 'Круг' },
-  { id: 'triangle', icon: SUB_ICONS.triangle, label: 'Треуголь.' },
-  { id: 'star', icon: SUB_ICONS.star, label: 'Звезда' },
+  { id: 'rect', icon: SUB_ICONS.rect, labelKey: 'thumbs.shape.rect' },
+  { id: 'circle', icon: SUB_ICONS.circle, labelKey: 'thumbs.shape.circle' },
+  { id: 'triangle', icon: SUB_ICONS.triangle, labelKey: 'thumbs.shape.triangle' },
+  { id: 'star', icon: SUB_ICONS.star, labelKey: 'thumbs.shape.star' },
 ];
 
 const LINE_OPTIONS = [
-  { id: 'line', icon: SUB_ICONS.line, label: 'Линия' },
-  { id: 'arrow', icon: SUB_ICONS.arrow, label: 'Стрелка' },
+  { id: 'line', icon: SUB_ICONS.line, labelKey: 'thumbs.line.line' },
+  { id: 'arrow', icon: SUB_ICONS.arrow, labelKey: 'thumbs.line.arrow' },
 ];
 
 const INSERT_OPTIONS = [
-  { id: 'stickyNote', icon: SUB_ICONS.stickyNote, label: 'Заметка' },
-  { id: 'table', icon: SUB_ICONS.table, label: 'Таблица' },
-  { id: 'image', icon: SUB_ICONS.image, label: 'Картинка' },
+  { id: 'stickyNote', icon: SUB_ICONS.stickyNote, labelKey: 'thumbs.insert.stickyNote' },
+  { id: 'table', icon: SUB_ICONS.table, labelKey: 'thumbs.insert.table' },
+  { id: 'image', icon: SUB_ICONS.image, labelKey: 'thumbs.insert.image' },
 ];
 
 export function ToolBar({ onFileChange }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel } = useThumbnailStore(
     useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel }))
   );
@@ -140,22 +142,23 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
     closeAllSubmenus();
   }, [closeAllSubmenus, addTable]);
 
-  const renderToolButton = (t: ToolDef) => {
+  const renderToolButton = (td: ToolDef) => {
+    const label = t(td.labelKey);
     const active =
-      tool === t.id ||
-      (t.id === 'shapes' && showShapes) ||
-      (t.id === 'lines' && (showLines || tool === 'line' || tool === 'arrow')) ||
-      (t.id === 'insert' && (showInsert || showTablePicker));
+      tool === td.id ||
+      (td.id === 'shapes' && showShapes) ||
+      (td.id === 'lines' && (showLines || tool === 'line' || tool === 'arrow')) ||
+      (td.id === 'insert' && (showInsert || showTablePicker));
     return (
       <div
-        key={t.id}
+        key={td.id}
         role="button"
         tabIndex={0}
-        aria-label={t.label}
-        aria-pressed={tool === t.id}
-        onClick={() => handleToolClick(t.id)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToolClick(t.id); } }}
-        title={t.label}
+        aria-label={label}
+        aria-pressed={tool === td.id}
+        onClick={() => handleToolClick(td.id)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToolClick(td.id); } }}
+        title={label}
         style={{
           width: 44,
           height: 44,
@@ -173,8 +176,8 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
         onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = C.surface; }}
         onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>{t.icon}</span>
-        <span style={{ fontSize: 9, fontWeight: 600, lineHeight: 1, color: active ? C.accent : C.dim }}>{t.label}</span>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>{td.icon}</span>
+        <span style={{ fontSize: 9, fontWeight: 600, lineHeight: 1, color: active ? C.accent : C.dim }}>{label}</span>
       </div>
     );
   };
@@ -243,7 +246,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
         <div style={{ padding: '6px 4px 2px', borderTop: `1px solid ${C.border}`, marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
           <button
             onClick={() => setTool(tool === 'eraser' ? 'draw' : 'eraser')}
-            title={tool === 'eraser' ? 'Кисть' : 'Ластик'}
+            title={tool === 'eraser' ? t('thumbs.toolbar.brush') : t('thumbs.toolbar.eraser')}
             style={{
               width: 34,
               height: 30,
@@ -259,29 +262,30 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
           >
             {tool === 'eraser' ? TOOL_ICONS.eraser : TOOL_ICONS.brush}
           </button>
-          <input type="color" value={drawColor} aria-label="Цвет кисти" onChange={(e) => setDrawColor(e.target.value)} style={{ width: 30, height: 30, border: `2px solid ${C.border}`, borderRadius: 7, background: 'none', cursor: 'pointer', padding: 0 }} />
-          <input type="range" min={1} max={12} value={drawSize} aria-label="Толщина кисти" onChange={(e) => setDrawSize(+e.target.value)} style={{ width: 40, accentColor: C.accent }} title={'Толщина: ' + drawSize} />
+          <input type="color" value={drawColor} aria-label={t('thumbs.toolbar.brushColor')} onChange={(e) => setDrawColor(e.target.value)} style={{ width: 30, height: 30, border: `2px solid ${C.border}`, borderRadius: 7, background: 'none', cursor: 'pointer', padding: 0 }} />
+          <input type="range" min={1} max={12} value={drawSize} aria-label={t('thumbs.toolbar.brushSize')} onChange={(e) => setDrawSize(+e.target.value)} style={{ width: 40, accentColor: C.accent }} title={t('thumbs.toolbar.sizeValue') + drawSize} />
         </div>
       )}
 
       {divider}
 
       {/* Panel label */}
-      <span style={{ fontSize: 8, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2, marginBottom: 2 }}>Панели</span>
+      <span style={{ fontSize: 8, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2, marginBottom: 2 }}>{t('thumbs.toolbar.panels')}</span>
 
       {/* Panel toggles */}
       {PANEL_BUTTONS.map((p) => {
         const active = leftPanel === p.id;
+        const pLabel = t(p.labelKey);
         return (
           <div
             key={p.id}
             role="button"
             tabIndex={0}
-            aria-label={`Панель: ${p.label}`}
+            aria-label={t('thumbs.toolbar.panelLabel') + pLabel}
             aria-pressed={active}
             onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects'); } }}
-            title={p.label}
+            title={pLabel}
             style={{
               width: 44,
               height: 44,
@@ -301,7 +305,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
             onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>{p.icon}</span>
-            <span style={{ fontSize: 9, fontWeight: 600, lineHeight: 1, color: active ? C.accent : C.dim }}>{p.label}</span>
+            <span style={{ fontSize: 9, fontWeight: 600, lineHeight: 1, color: active ? C.accent : C.dim }}>{pLabel}</span>
           </div>
         );
       })}
@@ -311,10 +315,10 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
         <div
           role="button"
           tabIndex={0}
-          aria-label="Цвет фона"
+          aria-label={t('thumbs.toolbar.bgColor')}
           onClick={() => bgColorRef.current?.click()}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bgColorRef.current?.click(); } }}
-          title="Цвет фона"
+          title={t('thumbs.toolbar.bgColor')}
           style={{
             width: 28,
             height: 28,
@@ -335,22 +339,25 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
           onChange={(e) => setCanvasBg(e.target.value)}
           style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
         />
-        <span style={{ fontSize: 8, color: C.dim, fontWeight: 600 }}>Фон</span>
+        <span style={{ fontSize: 8, color: C.dim, fontWeight: 600 }}>{t('thumbs.toolbar.bg')}</span>
       </div>
 
       {/* Shapes submenu popover */}
       {showShapes && (
         <div style={{ ...popoverBase, top: 100, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, minWidth: 160 }}>
-          {SHAPE_OPTIONS.map((s) => (
-            <div key={s.id} role="button" tabIndex={0} aria-label={s.label} onClick={() => handleShapeClick(s.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleShapeClick(s.id); } }}
+          {SHAPE_OPTIONS.map((s) => {
+            const sLabel = t(s.labelKey);
+            return (
+            <div key={s.id} role="button" tabIndex={0} aria-label={sLabel} onClick={() => handleShapeClick(s.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleShapeClick(s.id); } }}
               style={{ padding: '10px 6px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, cursor: 'pointer', background: shapeSub === s.id ? C.accentDim : 'transparent', color: shapeSub === s.id ? C.accent : C.sub, transition: 'all .12s' }}
               onMouseEnter={(e) => { if (shapeSub !== s.id) (e.currentTarget as HTMLElement).style.background = C.surface; }}
               onMouseLeave={(e) => { if (shapeSub !== s.id) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }}>{s.icon}</span>
-              <span style={{ fontSize: 10, fontWeight: 600 }}>{s.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 600 }}>{sLabel}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -358,7 +365,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
       {showLines && (
         <div style={{ ...popoverBase, top: 144, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {LINE_OPTIONS.map((l) =>
-            submenuItem(l.id, l.icon, l.label, tool === l.id, () => handleLineClick(l.id))
+            submenuItem(l.id, l.icon, t(l.labelKey), tool === l.id, () => handleLineClick(l.id))
           )}
         </div>
       )}
@@ -367,7 +374,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
       {showInsert && (
         <div style={{ ...popoverBase, top: 188, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {INSERT_OPTIONS.map((ins) =>
-            submenuItem(ins.id, ins.icon, ins.label, false, () => handleInsertClick(ins.id))
+            submenuItem(ins.id, ins.icon, t(ins.labelKey), false, () => handleInsertClick(ins.id))
           )}
         </div>
       )}
@@ -376,7 +383,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
       {showTablePicker && (
         <div style={{ ...popoverBase, top: 188, padding: 14 }}>
           <div style={{ fontSize: 11, color: C.sub, marginBottom: 8, fontWeight: 600, textAlign: 'center' }}>
-            {tableHover.r > 0 ? `${tableHover.r} x ${tableHover.c}` : 'Выберите размер'}
+            {tableHover.r > 0 ? `${tableHover.r} x ${tableHover.c}` : t('thumbs.toolbar.selectSize')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 22px)', gap: 3, justifyContent: 'center' }}>
             {Array.from({ length: 25 }, (_, i) => {
@@ -386,7 +393,7 @@ export function ToolBar({ onFileChange }: ToolBarProps) {
                 <div key={i}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${r}x${c} таблица`}
+                  aria-label={`${r}x${c} ${t('thumbs.toolbar.table')}`}
                   onMouseEnter={() => setTableHover({ r, c })}
                   onClick={() => handleTableSelect(r, c)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTableSelect(r, c); } }}

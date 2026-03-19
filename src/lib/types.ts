@@ -13,6 +13,7 @@ export interface Theme {
   orange: string;
   cyan: string;
   pink: string;
+  red: string;
   text: string;
   sub: string;
   dim: string;

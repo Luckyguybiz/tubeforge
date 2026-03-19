@@ -10,51 +10,56 @@ import { toast } from '@/stores/useNotificationStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { Theme } from '@/lib/types';
 
 /* ─── YouTube categories ─────────────────────────────── */
-const YOUTUBE_CATEGORIES: { value: YouTubeCategory; label: string }[] = [
-  { value: '', label: 'Не выбрана' },
-  { value: 'Entertainment', label: 'Развлечения' },
-  { value: 'Education', label: 'Образование' },
-  { value: 'Science & Technology', label: 'Наука и технологии' },
-  { value: 'Gaming', label: 'Видеоигры' },
-  { value: 'Music', label: 'Музыка' },
-  { value: 'Sports', label: 'Спорт' },
-  { value: 'News & Politics', label: 'Новости и политика' },
-  { value: 'Howto & Style', label: 'Хобби и стиль' },
-  { value: 'People & Blogs', label: 'Люди и блоги' },
-  { value: 'Comedy', label: 'Юмор' },
-  { value: 'Film & Animation', label: 'Фильмы и анимация' },
-  { value: 'Autos & Vehicles', label: 'Авто и транспорт' },
-  { value: 'Travel & Events', label: 'Путешествия' },
-  { value: 'Pets & Animals', label: 'Животные' },
-  { value: 'Nonprofits & Activism', label: 'НКО и активизм' },
-];
+function getYouTubeCategories(t: (key: string) => string): { value: YouTubeCategory; label: string }[] {
+  return [
+    { value: '', label: t('metadata.cat.none') },
+    { value: 'Entertainment', label: t('metadata.cat.entertainment') },
+    { value: 'Education', label: t('metadata.cat.education') },
+    { value: 'Science & Technology', label: t('metadata.cat.science') },
+    { value: 'Gaming', label: t('metadata.cat.gaming') },
+    { value: 'Music', label: t('metadata.cat.music') },
+    { value: 'Sports', label: t('metadata.cat.sports') },
+    { value: 'News & Politics', label: t('metadata.cat.news') },
+    { value: 'Howto & Style', label: t('metadata.cat.howto') },
+    { value: 'People & Blogs', label: t('metadata.cat.people') },
+    { value: 'Comedy', label: t('metadata.cat.comedy') },
+    { value: 'Film & Animation', label: t('metadata.cat.film') },
+    { value: 'Autos & Vehicles', label: t('metadata.cat.autos') },
+    { value: 'Travel & Events', label: t('metadata.cat.travel') },
+    { value: 'Pets & Animals', label: t('metadata.cat.pets') },
+    { value: 'Nonprofits & Activism', label: t('metadata.cat.nonprofits') },
+  ];
+}
 
 /* ─── Description templates ──────────────────────────── */
-const DESC_TEMPLATES = [
-  {
-    label: 'Таймкоды',
-    icon: '\u23F1',
-    text: '\n\n\u23F1 Таймкоды:\n00:00 — Введение\n01:00 — Основная часть\n05:00 — Выводы',
-  },
-  {
-    label: 'Ссылки',
-    icon: '\uD83D\uDD17',
-    text: '\n\n\uD83D\uDD17 Полезные ссылки:\n\u2022 Сайт: https://\n\u2022 Ресурсы: https://',
-  },
-  {
-    label: 'Соцсети',
-    icon: '\uD83D\uDCF1',
-    text: '\n\n\uD83D\uDCF1 Мои соцсети:\n\u2022 Telegram: @\n\u2022 VK: vk.com/\n\u2022 Instagram: @',
-  },
-  {
-    label: 'CTA',
-    icon: '\uD83D\uDD14',
-    text: '\n\n\uD83D\uDD14 Подпишись на канал и нажми колокольчик, чтобы не пропустить новые видео!\n\uD83D\uDC4D Поставь лайк, если видео было полезным!',
-  },
-];
+function getDescTemplates(t: (key: string) => string) {
+  return [
+    {
+      label: t('metadata.tpl.timecodes'),
+      icon: '\u23F1',
+      text: t('metadata.tpl.timecodes.text'),
+    },
+    {
+      label: t('metadata.tpl.links'),
+      icon: '\uD83D\uDD17',
+      text: t('metadata.tpl.links.text'),
+    },
+    {
+      label: t('metadata.tpl.social'),
+      icon: '\uD83D\uDCF1',
+      text: t('metadata.tpl.social.text'),
+    },
+    {
+      label: t('metadata.tpl.cta'),
+      icon: '\uD83D\uDD14',
+      text: t('metadata.tpl.cta.text'),
+    },
+  ];
+}
 
 /* ─── Robust timestamp validation ────────────────────── */
 function isValidTimestamp(match: string): boolean {
@@ -75,16 +80,16 @@ function extractValidTimestamps(text: string): string[] {
 }
 
 /* ─── Friendly AI error mapping ──────────────────────── */
-function friendlyAIError(err: { message: string; data?: { code?: string } }): string {
+function friendlyAIError(err: { message: string; data?: { code?: string } }, t: (key: string) => string): string {
   const code = err.data?.code || '';
   const msg = err.message.toLowerCase();
   if (code === 'TOO_MANY_REQUESTS' || msg.includes('too many'))
-    return 'Слишком много запросов. Подождите минуту.';
+    return t('ai.error.rateLimit');
   if (code === 'FORBIDDEN' || msg.includes('limit') || msg.includes('upgrade'))
-    return 'Лимит ИИ исчерпан. Обновите план.';
+    return t('ai.error.quota');
   if (code === 'INTERNAL_SERVER_ERROR' || msg.includes('api error'))
-    return 'Ошибка генерации. Попробуйте снова.';
-  return 'Ошибка ИИ. Попробуйте позже.';
+    return t('ai.error.generation');
+  return t('ai.error.generic');
 }
 
 /* ─── Reusable AI button ─────────────────────────────── */
@@ -181,7 +186,7 @@ function CharCounter({
   C: Theme;
 }) {
   const pct = current / max;
-  const color = current > max ? '#ef4444' : current >= warn ? C.accent : C.dim;
+  const color = current > max ? C.red : current >= warn ? C.accent : C.dim;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
       <div
@@ -199,7 +204,7 @@ function CharCounter({
             height: '100%',
             borderRadius: 2,
             background: current > max
-              ? '#ef4444'
+              ? C.red
               : current >= warn
                 ? `linear-gradient(90deg, ${C.accent}, ${C.accent})`
                 : `linear-gradient(90deg, ${C.green}, ${C.green})`,
@@ -233,6 +238,7 @@ const TagChip = memo(function TagChip({
   C: Theme;
   onRemove: (tag: string) => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [hovered, setHovered] = useState(false);
   const handleRemove = useCallback(() => onRemove(tag), [onRemove, tag]);
   return (
@@ -258,7 +264,7 @@ const TagChip = memo(function TagChip({
         onClick={handleRemove}
         role="button"
         tabIndex={0}
-        aria-label={`Удалить тег ${tag}`}
+        aria-label={`${t('metadata.tags.removeAria')} ${tag}`}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Backspace') handleRemove(); }}
         style={{
           width: 18,
@@ -358,6 +364,7 @@ function PulsingLoader({ C, text }: { C: Theme; text: string }) {
 
 export function Metadata({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const {
     title,
@@ -397,6 +404,9 @@ export function Metadata({ projectId }: { projectId: string | null }) {
   const [aiTagsLoading, setAiTagsLoading] = useState(false);
   const [manualSaving, setManualSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const YOUTUBE_CATEGORIES = useMemo(() => getYouTubeCategories(t), [t]);
+  const DESC_TEMPLATES = useMemo(() => getDescTemplates(t), [t]);
 
   // Responsive check for sidebar layout
   useEffect(() => {
@@ -494,9 +504,9 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           setAISuggestions({ titles: deduped });
         }
       }
-      toast.success('Варианты названий готовы');
+      toast.success(t('metadata.toast.titlesReady'));
     },
-    onError: (err) => toast.error(friendlyAIError(err as { message: string; data?: { code?: string } })),
+    onError: (err) => toast.error(friendlyAIError(err as { message: string; data?: { code?: string } }, t)),
     onSettled: () => setAiTitleLoading(false),
   });
 
@@ -505,9 +515,9 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       if (data.description) {
         setAISuggestions({ descriptions: [data.description, ...(aiSuggestions.descriptions || [])].slice(0, 3) });
       }
-      toast.success('Описание сгенерировано');
+      toast.success(t('metadata.toast.descGenerated'));
     },
-    onError: (err) => toast.error(friendlyAIError(err as { message: string; data?: { code?: string } })),
+    onError: (err) => toast.error(friendlyAIError(err as { message: string; data?: { code?: string } }, t)),
     onSettled: () => setAiDescLoading(false),
   });
 
@@ -525,15 +535,15 @@ export function Metadata({ projectId }: { projectId: string | null }) {
         const merged = [...new Set([...newTags, ...oldFiltered])].slice(0, 20);
         setAISuggestions({ tags: merged });
       }
-      toast.success('Теги подобраны');
+      toast.success(t('metadata.toast.tagsReady'));
     },
-    onError: (err) => toast.error(friendlyAIError(err as { message: string; data?: { code?: string } })),
+    onError: (err) => toast.error(friendlyAIError(err as { message: string; data?: { code?: string } }, t)),
     onSettled: () => setAiTagsLoading(false),
   });
 
   const handleAITitle = useCallback(() => {
     if (!title && !desc) {
-      toast.warning('Введите заголовок или описание для лучших результатов ИИ');
+      toast.warning(t('metadata.toast.aiHint'));
     }
     setAiTitleLoading(true);
     generateTitle.mutate({ topic: title || desc || 'YouTube video', language: 'ru' });
@@ -541,7 +551,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
 
   const handleAIDesc = useCallback(() => {
     if (!title && !desc) {
-      toast.warning('Введите заголовок или описание для лучших результатов ИИ');
+      toast.warning(t('metadata.toast.aiHint'));
     }
     setAiDescLoading(true);
     generateDesc.mutate({ topic: title || desc || 'YouTube video', language: 'ru' });
@@ -549,7 +559,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
 
   const handleAITags = useCallback(() => {
     if (!title && !desc) {
-      toast.warning('Введите заголовок или описание для лучших результатов ИИ');
+      toast.warning(t('metadata.toast.aiHint'));
     }
     setAiTagsLoading(true);
     generateTags.mutate({ topic: title || desc || 'YouTube video', language: 'ru' });
@@ -563,16 +573,16 @@ export function Metadata({ projectId }: { projectId: string | null }) {
     if (!tag) return;
     if (tag.length > 50) tag = tag.slice(0, 50);
     if (tags.length >= 30) {
-      toast.warning('Максимум 30 тегов');
+      toast.warning(t('metadata.toast.maxTags'));
       return;
     }
     const newCharCount = tagsCharCount + (tagsCharCount > 0 ? 2 : 0) + tag.length;
     if (newCharCount > 500) {
-      toast.warning('Превышен лимит 500 символов для тегов');
+      toast.warning(t('metadata.toast.tagsCharLimit'));
       return;
     }
     if (tags.some((t) => t.toLowerCase() === tag.toLowerCase())) {
-      toast.warning('Тег уже добавлен');
+      toast.warning(t('metadata.toast.tagDuplicate'));
       return;
     }
     addTag(tag);
@@ -603,18 +613,18 @@ export function Metadata({ projectId }: { projectId: string | null }) {
   // Copy all metadata
   const handleCopyAll = useCallback(() => {
     const parts = [];
-    if (title) parts.push(`Название: ${title}`);
-    if (desc) parts.push(`\nОписание:\n${desc}`);
-    if (tags.length) parts.push(`\nТеги: ${tags.join(', ')}`);
+    if (title) parts.push(`${t('metadata.copy.title')}: ${title}`);
+    if (desc) parts.push(`\n${t('metadata.copy.desc')}:\n${desc}`);
+    if (tags.length) parts.push(`\n${t('metadata.copy.tags')}: ${tags.join(', ')}`);
     if (category) {
       const cat = YOUTUBE_CATEGORIES.find((c) => c.value === category);
-      if (cat) parts.push(`\nКатегория: ${cat.label}`);
+      if (cat) parts.push(`\n${t('metadata.copy.category')}: ${cat.label}`);
     }
     navigator.clipboard.writeText(parts.join('\n')).then(
-      () => toast.success('Метаданные скопированы'),
-      () => toast.error('Не удалось скопировать')
+      () => toast.success(t('metadata.toast.metadataCopied')),
+      () => toast.error(t('metadata.toast.copyFailed'))
     );
-  }, [title, desc, tags, category]);
+  }, [title, desc, tags, category, t, YOUTUBE_CATEGORIES]);
 
   // Manual save
   const handleManualSave = useCallback(() => {
@@ -625,7 +635,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       {
         onSuccess: () => {
           setSaveStatus('saved');
-          toast.success('Метаданные сохранены');
+          toast.success(t('metadata.toast.metadataSaved'));
           if (savedTimer.current) clearTimeout(savedTimer.current);
           savedTimer.current = setTimeout(() => setSaveStatus('idle'), 2000);
         },
@@ -670,7 +680,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
 
   /* ─── Project picker ─────────────────────────────── */
   if (!projectId) {
-    return <ProjectPicker target="/metadata" title="Метаданные" />;
+    return <ProjectPicker target="/metadata" title={t('metadata.pageTitle')} />;
   }
 
   /* ─── Loading state ──────────────────────────────── */
@@ -710,10 +720,10 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       >
         <div style={{ fontSize: 32, opacity: 0.3 }}>&#9888;</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-          Не удалось загрузить проект
+          {t('metadata.error.loadProject')}
         </div>
         <div style={{ fontSize: 12, color: C.sub }}>
-          {project.error?.message || 'Попробуйте ещё раз'}
+          {project.error?.message || t('metadata.error.tryAgain')}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
           <button
@@ -730,7 +740,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               fontFamily: 'inherit',
             }}
           >
-            Повторить
+            {t('metadata.error.retry')}
           </button>
           <button
             onClick={() => router.push('/dashboard')}
@@ -746,7 +756,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               fontFamily: 'inherit',
             }}
           >
-            На дашборд
+            {t('metadata.error.toDashboard')}
           </button>
         </div>
       </div>
@@ -756,11 +766,11 @@ export function Metadata({ projectId }: { projectId: string | null }) {
   /* ─── Derived state ──────────────────────────────── */
   const saveLabel =
     saveStatus === 'saving'
-      ? { text: 'Сохраняется...', color: C.dim, icon: '\u25CB' }
+      ? { text: t('metadata.save.saving'), color: C.dim, icon: '\u25CB' }
       : saveStatus === 'saved'
-        ? { text: 'Сохранено', color: C.green, icon: '\u2713' }
+        ? { text: t('metadata.save.saved'), color: C.green, icon: '\u2713' }
         : saveStatus === 'error'
-          ? { text: 'Ошибка сохранения', color: '#ef4444', icon: '\u26A0' }
+          ? { text: t('metadata.save.error'), color: C.red, icon: '\u26A0' }
           : null;
 
   const titleWarning = title.length > 100;
@@ -794,9 +804,9 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           style={{ cursor: 'pointer', color: C.sub }}
           role="link"
           tabIndex={0}
-          aria-label="Вернуться на главную"
+          aria-label={t('metadata.breadcrumb.ariaLabel')}
         >
-          Проекты
+          {t('metadata.breadcrumb.projects')}
         </span>
         <span style={{ color: C.dim }}>/</span>
         {project.data?.title && (
@@ -805,7 +815,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             <span style={{ color: C.dim }}>/</span>
           </>
         )}
-        <span style={{ color: C.text, fontWeight: 500 }}>Метаданные</span>
+        <span style={{ color: C.text, fontWeight: 500 }}>{t('metadata.pageTitle')}</span>
       </div>
 
       {/* ─── Header row ────────────────────────────── */}
@@ -821,7 +831,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
           <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-.02em' }}>
-            Метаданные видео
+            {t('metadata.heading')}
           </h2>
           {saveLabel && (
             <span
@@ -844,7 +854,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           {/* Copy all button */}
           <button
             onClick={handleCopyAll}
-            title="Скопировать все метаданные"
+            title={t('metadata.copyAllTitle')}
             style={{
               padding: '8px 16px',
               borderRadius: 10,
@@ -870,7 +880,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             }}
           >
             <span style={{ fontSize: 14 }}>{'\uD83D\uDCCB'}</span>
-            Копировать всё
+            {t('metadata.copyAll')}
           </button>
 
           {/* Save button */}
@@ -895,19 +905,19 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               gap: 6,
             }}
           >
-            {manualSaving ? 'Сохраняю...' : 'Сохранить метаданные'}
+            {manualSaving ? t('metadata.save.btnSaving') : t('metadata.save.btn')}
           </button>
         </div>
       </div>
 
       <p style={{ color: C.sub, fontSize: 13, marginBottom: 24 }}>
-        Заголовок, описание, теги — оптимизировано для YouTube SEO
+        {t('metadata.subtitle')}
       </p>
 
       {/* ─── Project selector ──────────────────────── */}
       <div ref={dropdownRef} style={{ position: 'relative', marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: C.sub, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Проект
+          {t('metadata.projectLabel')}
         </div>
         <button
           onClick={() => setShowProjectDropdown(!showProjectDropdown)}
@@ -933,7 +943,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           {currentProject?.thumbnailUrl ? (
             <img
               src={currentProject.thumbnailUrl}
-              alt=""
+              alt="thumbnail"
               style={{ width: 36, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
             />
           ) : (
@@ -960,7 +970,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               whiteSpace: 'nowrap',
             }}
           >
-            {currentProject?.title || project.data?.title || 'Без названия'}
+            {currentProject?.title || project.data?.title || t('metadata.untitled')}
           </span>
           <span
             style={{
@@ -1027,7 +1037,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 {p.thumbnailUrl ? (
                   <img
                     src={p.thumbnailUrl}
-                    alt=""
+                    alt="thumbnail"
                     style={{ width: 36, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
                   />
                 ) : (
@@ -1054,7 +1064,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {p.title || 'Без названия'}
+                  {p.title || t('metadata.untitled')}
                 </span>
                 {p.id === projectId && (
                   <span style={{ fontSize: 11, color: C.accent }}>{'\u2713'}</span>
@@ -1091,35 +1101,35 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 }}
               >
                 <span style={{ fontSize: 15 }}>{'\u270E'}</span>
-                Название видео
+                {t('metadata.title.label')}
               </label>
               <AIButton
                 C={C}
                 isLoading={aiTitleLoading}
                 onClick={handleAITitle}
-                label="Сгенерировать с ИИ"
-                ariaLabel="Сгенерировать название с помощью ИИ"
+                label={t('metadata.title.aiBtn')}
+                ariaLabel={t('metadata.title.aiBtnAria')}
               />
             </div>
             <input
               id="meta-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Введите привлекательное название..."
+              placeholder={t('metadata.title.placeholder')}
               maxLength={100}
               style={{
                 ...inputBase,
                 fontSize: 18,
                 fontWeight: 600,
                 padding: '14px 16px',
-                borderColor: titleWarning ? '#ef4444' : titleCaution ? C.accent + '66' : C.border,
+                borderColor: titleWarning ? C.red : titleCaution ? C.accent + '66' : C.border,
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = C.accent;
                 e.currentTarget.style.boxShadow = `0 0 0 3px ${C.accent}15`;
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = titleWarning ? '#ef4444' : titleCaution ? C.accent + '66' : C.border;
+                e.currentTarget.style.borderColor = titleWarning ? C.red : titleCaution ? C.accent + '66' : C.border;
                 e.currentTarget.style.boxShadow = 'none';
               }}
               aria-describedby="meta-title-counter"
@@ -1129,13 +1139,13 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             {/* AI Title Suggestions */}
             {aiTitleLoading && (
               <div style={{ marginTop: 12 }}>
-                <PulsingLoader C={C} text="Генерация вариантов названий..." />
+                <PulsingLoader C={C} text={t('metadata.title.aiLoading')} />
               </div>
             )}
             {!aiTitleLoading && aiSuggestions.titles.length > 0 && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ fontSize: 11, color: C.dim, marginBottom: 6, fontWeight: 500 }}>
-                  Варианты от ИИ (нажмите, чтобы применить):
+                  {t('metadata.title.aiSuggestions')}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {aiSuggestions.titles.map((t, i) => (
@@ -1178,14 +1188,14 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 }}
               >
                 <span style={{ fontSize: 15 }}>{'\uD83D\uDCDD'}</span>
-                Описание видео
+                {t('metadata.desc.label')}
               </label>
               <AIButton
                 C={C}
                 isLoading={aiDescLoading}
                 onClick={handleAIDesc}
-                label="Сгенерировать с ИИ"
-                ariaLabel="Сгенерировать описание с помощью ИИ"
+                label={t('metadata.desc.aiBtn')}
+                ariaLabel={t('metadata.desc.aiBtnAria')}
               />
             </div>
             <textarea
@@ -1193,7 +1203,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               rows={8}
-              placeholder="Опишите содержание видео. Первые 2-3 строки особенно важны — они видны в поиске..."
+              placeholder={t('metadata.desc.placeholder')}
               maxLength={5000}
               style={{
                 ...inputBase,
@@ -1201,14 +1211,14 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 lineHeight: 1.65,
                 resize: 'vertical',
                 minHeight: 180,
-                borderColor: descWarning ? '#ef4444' : descCaution ? C.accent + '66' : C.border,
+                borderColor: descWarning ? C.red : descCaution ? C.accent + '66' : C.border,
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = C.accent;
                 e.currentTarget.style.boxShadow = `0 0 0 3px ${C.accent}15`;
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = descWarning ? '#ef4444' : descCaution ? C.accent + '66' : C.border;
+                e.currentTarget.style.borderColor = descWarning ? C.red : descCaution ? C.accent + '66' : C.border;
                 e.currentTarget.style.boxShadow = 'none';
               }}
               aria-describedby="meta-desc-counter"
@@ -1218,7 +1228,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             {/* Template insert buttons */}
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 11, color: C.dim, marginBottom: 8, fontWeight: 500 }}>
-                Вставить шаблон:
+                {t('metadata.desc.insertTemplate')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {DESC_TEMPLATES.map((tmpl) => (
@@ -1236,13 +1246,13 @@ export function Metadata({ projectId }: { projectId: string | null }) {
             {/* AI Description Suggestions */}
             {aiDescLoading && (
               <div style={{ marginTop: 12 }}>
-                <PulsingLoader C={C} text="ИИ пишет описание..." />
+                <PulsingLoader C={C} text={t('metadata.desc.aiLoading')} />
               </div>
             )}
             {!aiDescLoading && aiSuggestions.descriptions.length > 0 && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ fontSize: 11, color: C.dim, marginBottom: 6, fontWeight: 500 }}>
-                  Варианты от ИИ (нажмите, чтобы вставить):
+                  {t('metadata.desc.aiSuggestions')}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {aiSuggestions.descriptions.map((d, i) => (
@@ -1308,7 +1318,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 }}
               >
                 <span style={{ fontSize: 15 }}>{'\uD83C\uDFF7'}</span>
-                Теги
+                {t('metadata.tags.label')}
                 {tags.length > 0 && (
                   <span
                     style={{
@@ -1326,8 +1336,8 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 C={C}
                 isLoading={aiTagsLoading}
                 onClick={handleAITags}
-                label="Подобрать теги с ИИ"
-                ariaLabel="Подобрать теги с помощью ИИ"
+                label={t('metadata.tags.aiBtn')}
+                ariaLabel={t('metadata.tags.aiBtnAria')}
               />
             </div>
 
@@ -1370,8 +1380,8 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                       setTagInput('');
                     }
                   }}
-                  placeholder={tags.length === 0 ? 'Введите тег и нажмите Enter...' : 'Ещё тег...'}
-                  aria-label="Ввод нового тега"
+                  placeholder={tags.length === 0 ? t('metadata.tags.placeholder') : t('metadata.tags.placeholderMore')}
+                  aria-label={t('metadata.tags.addAria')}
                   style={{
                     padding: '4px 2px',
                     background: 'transparent',
@@ -1389,7 +1399,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                   style={{ fontSize: 13, color: C.dim, cursor: 'text' }}
                   onClick={() => setShowTagInput(true)}
                 >
-                  Введите тег и нажмите Enter...
+                  {t('metadata.tags.placeholder')}
                 </span>
               ) : (
                 <span
@@ -1405,7 +1415,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-label="Добавить новый тег"
+                  aria-label={t('metadata.tags.addBtnAria')}
                   style={{
                     padding: '4px 10px',
                     border: `1px dashed ${C.border}`,
@@ -1417,7 +1427,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     transition: 'all 0.15s',
                   }}
                 >
-                  + добавить
+                  {t('metadata.tags.addBtn')}
                 </span>
               )}
             </div>
@@ -1432,24 +1442,24 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               }}
             >
               <span style={{ fontSize: 11, color: C.dim }}>
-                Enter или запятая для добавления, Backspace для удаления
+                {t('metadata.tags.hint')}
               </span>
               <span
                 style={{
                   fontSize: 11,
-                  color: tagsCharCount > 500 ? '#ef4444' : tagsCharCount > 400 ? C.accent : C.dim,
+                  color: tagsCharCount > 500 ? C.red : tagsCharCount > 400 ? C.accent : C.dim,
                   fontWeight: tagsCharCount > 400 ? 600 : 400,
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                {tagsCharCount}/500 символов
+                {tagsCharCount}/500 {t('metadata.tags.charCount')}
               </span>
             </div>
 
             {/* AI Tags Loading */}
             {aiTagsLoading && (
               <div style={{ marginTop: 12 }}>
-                <PulsingLoader C={C} text="ИИ подбирает теги..." />
+                <PulsingLoader C={C} text={t('metadata.tags.aiLoading')} />
               </div>
             )}
 
@@ -1465,7 +1475,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                   }}
                 >
                   <span style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>
-                    Рекомендации ИИ (нажмите, чтобы добавить):
+                    {t('metadata.tags.aiSuggestions')}
                   </span>
                   <button
                     onClick={() => clearAISuggestions()}
@@ -1479,7 +1489,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                       textDecoration: 'underline',
                     }}
                   >
-                    Очистить
+                    {t('metadata.tags.clear')}
                   </button>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -1515,7 +1525,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                   }}
                 >
                   <span style={{ fontSize: 15 }}>{'\uD83D\uDCC1'}</span>
-                  Категория YouTube
+                  {t('metadata.category.label')}
                 </label>
                 <select
                   id="meta-category"
@@ -1566,7 +1576,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 }}
               >
                 <span style={{ fontSize: 14 }}>{'\uD83D\uDDBC'}</span>
-                Обложка
+                {t('metadata.preview.thumbnail')}
               </span>
               {project.data?.thumbnailUrl && (
                 <button
@@ -1591,14 +1601,14 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     e.currentTarget.style.color = C.sub;
                   }}
                 >
-                  Редактировать
+                  {t('metadata.preview.editThumbnail')}
                 </button>
               )}
             </div>
             {project.data?.thumbnailUrl ? (
               <img
                 src={project.data.thumbnailUrl}
-                alt="Обложка видео"
+                alt={t('metadata.preview.thumbnailAlt')}
                 style={{
                   width: '100%',
                   aspectRatio: '16/9',
@@ -1641,7 +1651,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     e.currentTarget.style.color = C.sub;
                   }}
                 >
-                  Создать обложку
+                  {t('metadata.preview.createThumbnail')}
                 </button>
               </div>
             )}
@@ -1661,7 +1671,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 }}
               >
                 <span style={{ fontSize: 14 }}>{'\uD83D\uDD0D'}</span>
-                Превью в поиске YouTube
+                {t('metadata.preview.searchTitle')}
               </span>
             </div>
 
@@ -1693,7 +1703,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     {project.data?.thumbnailUrl ? (
                       <img
                         src={project.data.thumbnailUrl}
-                        alt=""
+                        alt="thumbnail"
                         style={{
                           width: '100%',
                           height: '100%',
@@ -1736,7 +1746,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                         marginBottom: 4,
                       }}
                     >
-                      {title || 'Название видео'}
+                      {title || t('metadata.preview.videoTitle')}
                     </div>
                     {/* Channel + views */}
                     <div
@@ -1746,7 +1756,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                         lineHeight: 1.4,
                       }}
                     >
-                      Мой канал
+                      {t('metadata.preview.channel')}
                     </div>
                     <div
                       style={{
@@ -1755,7 +1765,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                         lineHeight: 1.4,
                       }}
                     >
-                      0 просмотров {'\u00B7'} только что
+                      {t('metadata.preview.views')} {'\u00B7'} {t('metadata.preview.justNow')}
                     </div>
                   </div>
                 </div>
@@ -1764,7 +1774,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               {/* Mock YouTube video page preview */}
               <div style={{ marginTop: 14 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: C.dim, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Превью страницы видео
+                  {t('metadata.preview.pageTitle')}
                 </div>
                 <div
                   style={{
@@ -1783,7 +1793,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                       marginBottom: 6,
                     }}
                   >
-                    {title || 'Название видео'}
+                    {title || t('metadata.preview.videoTitle')}
                   </div>
                   <div
                     style={{
@@ -1792,7 +1802,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                       marginBottom: 8,
                     }}
                   >
-                    0 просмотров {'\u00B7'} только что
+                    {t('metadata.preview.views')} {'\u00B7'} {t('metadata.preview.justNow')}
                   </div>
                   <div
                     style={{
@@ -1806,7 +1816,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                       whiteSpace: 'pre-line',
                     }}
                   >
-                    {desc || 'Описание видео...'}
+                    {desc || t('metadata.preview.descPlaceholder')}
                   </div>
 
                   {/* Tags preview */}
@@ -1886,7 +1896,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               }}
             >
               <span style={{ fontSize: 14 }}>{'\uD83D\uDCCA'}</span>
-              SEO проверка
+              {t('metadata.seo.title')}
             </div>
             <SEOChecklist
               C={C}
@@ -1959,58 +1969,59 @@ function SEOChecklist({
   category: YouTubeCategory;
   thumbnailUrl: string | null;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const checks = useMemo(() => {
     const items: { label: string; ok: boolean; tip: string }[] = [
       {
-        label: 'Название заполнено',
+        label: t('metadata.seo.titleFilled'),
         ok: title.length >= 10,
-        tip: title.length < 10 ? 'Минимум 10 символов' : 'Отлично!',
+        tip: title.length < 10 ? t('metadata.seo.titleMin') : t('metadata.seo.titleOk'),
       },
       {
-        label: 'Название до 70 символов',
+        label: t('metadata.seo.titleLength'),
         ok: title.length > 0 && title.length <= 70,
-        tip: title.length > 70 ? 'YouTube обрезает длинные названия' : 'Оптимальная длина',
+        tip: title.length > 70 ? t('metadata.seo.titleTruncated') : t('metadata.seo.titleOptimal'),
       },
       {
-        label: 'Описание заполнено',
+        label: t('metadata.seo.descFilled'),
         ok: desc.length >= 50,
-        tip: desc.length < 50 ? 'Минимум 50 символов для SEO' : 'Отлично!',
+        tip: desc.length < 50 ? t('metadata.seo.descMin') : t('metadata.seo.descOk'),
       },
       {
-        label: 'Описание > 200 символов',
+        label: t('metadata.seo.descLength'),
         ok: desc.length >= 200,
-        tip: desc.length < 200 ? 'Рекомендуется > 200 символов' : 'Хорошее описание',
+        tip: desc.length < 200 ? t('metadata.seo.descRecommended') : t('metadata.seo.descGood'),
       },
       {
-        label: 'Добавлены теги',
+        label: t('metadata.seo.tagsAdded'),
         ok: tags.length >= 3,
-        tip: tags.length < 3 ? 'Добавьте минимум 3 тега' : `${tags.length} тегов`,
+        tip: tags.length < 3 ? t('metadata.seo.tagsMin') : `${tags.length} ${t('metadata.seo.tagsCount')}`,
       },
       {
-        label: 'Выбрана категория',
+        label: t('metadata.seo.categorySet'),
         ok: !!category,
-        tip: !category ? 'Укажите категорию видео' : 'Категория задана',
+        tip: !category ? t('metadata.seo.categoryMissing') : t('metadata.seo.categoryOk'),
       },
       {
-        label: 'Обложка загружена',
+        label: t('metadata.seo.thumbnailUploaded'),
         ok: !!thumbnailUrl,
-        tip: !thumbnailUrl ? 'Создайте обложку в редакторе' : 'Обложка есть',
+        tip: !thumbnailUrl ? t('metadata.seo.thumbnailMissing') : t('metadata.seo.thumbnailOk'),
       },
       {
-        label: 'Таймкоды в описании',
+        label: t('metadata.seo.timestamps'),
         ok: extractValidTimestamps(desc).length >= 2,
         tip: extractValidTimestamps(desc).length >= 2
-          ? `${extractValidTimestamps(desc).length} таймкодов`
-          : 'Добавьте таймкоды для навигации',
+          ? `${extractValidTimestamps(desc).length} ${t('metadata.seo.timestampsCount')}`
+          : t('metadata.seo.timestampsMissing'),
       },
     ];
     return items;
-  }, [title, desc, tags, category, thumbnailUrl]);
+  }, [title, desc, tags, category, thumbnailUrl, t]);
 
   const score = checks.filter((c) => c.ok).length;
   const total = checks.length;
   const pct = Math.round((score / total) * 100);
-  const color = pct >= 80 ? C.green : pct >= 50 ? C.accent : '#ef4444';
+  const color = pct >= 80 ? C.green : pct >= 50 ? C.accent : C.red;
 
   return (
     <div>
@@ -2041,10 +2052,10 @@ function SEOChecklist({
         </div>
         <div>
           <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-            {pct >= 80 ? 'Отлично!' : pct >= 50 ? 'Хорошо, но можно лучше' : 'Нужна доработка'}
+            {pct >= 80 ? t('metadata.seo.excellent') : pct >= 50 ? t('metadata.seo.good') : t('metadata.seo.needsWork')}
           </div>
           <div style={{ fontSize: 11, color: C.dim }}>
-            {score}/{total} рекомендаций выполнено
+            {score}/{total} {t('metadata.seo.score')}
           </div>
         </div>
       </div>

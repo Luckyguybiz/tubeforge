@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // In production, return minimal response to avoid leaking internal details
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ status: 'ok' }, { status: 200 });
+  }
+
   const checks: Record<string, unknown> = {};
 
   // 1. Test NextAuth import

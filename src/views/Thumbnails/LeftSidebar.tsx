@@ -1,28 +1,32 @@
 'use client';
 
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { UploadsPanel } from './panels/UploadsPanel';
 import { ElementsPanel } from './panels/ElementsPanel';
 import { ProjectsPanel } from './panels/ProjectsPanel';
 
-const PANEL_TITLES: Record<string, string> = {
-  uploads: 'Загрузки',
-  elements: 'Элементы',
-  projects: 'Проекты',
+const PANEL_TITLE_KEYS: Record<string, string> = {
+  uploads: 'thumbs.panel.uploads',
+  elements: 'thumbs.panel.elements',
+  projects: 'thumbs.panel.projects',
 };
 
 export function LeftSidebar() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const leftPanel = useThumbnailStore((s) => s.leftPanel);
   const setLeftPanel = useThumbnailStore((s) => s.setLeftPanel);
 
   if (leftPanel === 'none') return null;
 
+  const panelTitle = PANEL_TITLE_KEYS[leftPanel] ? t(PANEL_TITLE_KEYS[leftPanel]) : t('thumbs.sidebar.panel');
+
   return (
     <aside
       role="region"
-      aria-label={PANEL_TITLES[leftPanel] ?? 'Панель'}
+      aria-label={panelTitle}
       style={{
         width: 280,
         flexShrink: 0,
@@ -46,12 +50,12 @@ export function LeftSidebar() {
           {leftPanel === 'uploads' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
           {leftPanel === 'elements' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
           {leftPanel === 'projects' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>}
-          {PANEL_TITLES[leftPanel] ?? ''}
+          {panelTitle}
         </h3>
         <button
           onClick={() => setLeftPanel('none')}
-          title="Закрыть"
-          aria-label="Закрыть боковую панель"
+          title={t('thumbs.sidebar.close')}
+          aria-label={t('thumbs.sidebar.closeLabel')}
           style={{
             width: 24,
             height: 24,

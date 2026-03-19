@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
@@ -10,6 +11,7 @@ import { MAX_UPLOAD_SIZE } from '@/lib/constants';
 
 export function UploadsPanel() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const addImage = useThumbnailStore((s) => s.addImage);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -36,11 +38,11 @@ export function UploadsPanel() {
 
   const uploadFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast.error('Поддерживаются только изображения (PNG, JPG, WebP)');
+      toast.error(t('thumbs.uploads.onlyImages'));
       return;
     }
     if (file.size > MAX_UPLOAD_SIZE) {
-      toast.error('Файл слишком большой. Максимум 10 МБ.');
+      toast.error(t('thumbs.uploads.tooBig'));
       return;
     }
     setUploading(true);
@@ -76,7 +78,7 @@ export function UploadsPanel() {
         const dataUrl = await readAsDataUrl(file);
         addImage(dataUrl);
       } catch {
-        toast.error('Не удалось загрузить файл');
+        toast.error(t('thumbs.uploads.uploadFailed'));
       }
     } finally {
       setUploading(false);
@@ -121,7 +123,7 @@ export function UploadsPanel() {
       <div
         role="button"
         tabIndex={0}
-        aria-label="Загрузить изображение. Перетащите файл или нажмите"
+        aria-label={t('thumbs.uploads.dropLabel')}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
@@ -142,10 +144,10 @@ export function UploadsPanel() {
           {uploading ? <span style={{ fontSize: 24 }}>...</span> : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
         </div>
         <div style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>
-          {uploading ? 'Загрузка...' : 'Перетащите или нажмите'}
+          {uploading ? t('thumbs.uploads.uploading') : t('thumbs.uploads.dropHint')}
         </div>
         <div style={{ fontSize: 10, color: C.dim, marginTop: 4 }}>
-          PNG, JPG, WebP до 10 МБ
+          {t('thumbs.uploads.sizeHint')}
         </div>
       </div>
 
@@ -153,7 +155,7 @@ export function UploadsPanel() {
       {assets.isError ? (
         <div style={{ textAlign: 'center', padding: '20px 0', color: C.dim, fontSize: 12 }}>
           <div style={{ marginBottom: 8, opacity: 0.3, display: 'flex', justifyContent: 'center' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-          <div style={{ marginBottom: 10, color: C.accent }}>Не удалось загрузить ассеты</div>
+          <div style={{ marginBottom: 10, color: C.accent }}>{t('thumbs.uploads.loadError')}</div>
           <button
             onClick={() => assets.refetch()}
             style={{
@@ -168,7 +170,7 @@ export function UploadsPanel() {
               fontFamily: 'inherit',
             }}
           >
-            Повторить
+            {t('thumbs.uploads.retry')}
           </button>
         </div>
       ) : assets.isLoading ? (
@@ -207,8 +209,8 @@ export function UploadsPanel() {
                   e.stopPropagation();
                   deleteAsset.mutate({ id: asset.id });
                 }}
-                title="Удалить"
-                aria-label={`Удалить ${asset.filename}`}
+                title={t('thumbs.uploads.deleteLabel')}
+                aria-label={`${t('thumbs.uploads.deleteAsset')} ${asset.filename}`}
                 style={{
                   position: 'absolute',
                   top: 4,
@@ -253,7 +255,7 @@ export function UploadsPanel() {
       ) : (
         <div style={{ textAlign: 'center', padding: '20px 0', color: C.dim, fontSize: 12 }}>
           <div style={{ marginBottom: 8, opacity: 0.3, display: 'flex', justifyContent: 'center' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-          <div style={{ marginBottom: 10 }}>Нет загруженных изображений</div>
+          <div style={{ marginBottom: 10 }}>{t('thumbs.uploads.noImages')}</div>
           <button
             onClick={() => fileRef.current?.click()}
             style={{
@@ -268,7 +270,7 @@ export function UploadsPanel() {
               fontFamily: 'inherit',
             }}
           >
-            Загрузить
+            {t('thumbs.uploads.upload')}
           </button>
         </div>
       )}

@@ -174,7 +174,7 @@ export function VideoCompressor() {
       try { await ffmpeg.deleteFile('input.mp4'); } catch { /* noop */ }
       try { await ffmpeg.deleteFile(`output.${ext}`); } catch { /* noop */ }
     } catch (err) {
-      console.error('Compression error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Compression error:', err);
       setError(err instanceof Error ? err.message : 'Не удалось сжать видео');
     } finally {
       setCompressing(false);

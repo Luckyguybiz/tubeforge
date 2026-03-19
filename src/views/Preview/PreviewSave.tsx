@@ -8,14 +8,15 @@ import { fmtTime, fmtDur, pluralRu } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 type PrivacyStatus = 'public' | 'unlisted' | 'private';
 type PublishState = 'idle' | 'publishing' | 'published' | 'error';
 
-const PRIVACY_OPTIONS: { value: PrivacyStatus; label: string; desc: string; icon: string }[] = [
-  { value: 'public', label: 'Открытое', desc: 'Видно всем', icon: '🌍' },
-  { value: 'unlisted', label: 'По ссылке', desc: 'Только по прямой ссылке', icon: '🔗' },
-  { value: 'private', label: 'Личное', desc: 'Только вам', icon: '🔒' },
+const PRIVACY_OPTIONS: { value: PrivacyStatus; labelKey: string; descKey: string; icon: string }[] = [
+  { value: 'public', labelKey: 'preview.privacy.public', descKey: 'preview.privacy.publicDesc', icon: '🌍' },
+  { value: 'unlisted', labelKey: 'preview.privacy.unlisted', descKey: 'preview.privacy.unlistedDesc', icon: '🔗' },
+  { value: 'private', labelKey: 'preview.privacy.private', descKey: 'preview.privacy.privateDesc', icon: '🔒' },
 ];
 
 /* ── Skeleton loader ─────────────────────────────────── */
@@ -47,6 +48,7 @@ function PreviewSkeleton() {
 /* ── Main component ──────────────────────────────────── */
 export function PreviewSave({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
 
   /* ── State ────────────────────────────────────────── */
@@ -77,7 +79,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   const saveProject = trpc.project.update.useMutation({
     onSuccess: () => {
-      toast.success('Проект сохранён');
+      toast.success(useLocaleStore.getState().t('preview.projectSaved'));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -87,7 +89,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       setPublishState('published');
       setPublishProgress(100);
       if (data.uploadUrl) setYoutubeUrl(data.uploadUrl);
-      toast.success('Видео отправлено на YouTube!');
+      toast.success(useLocaleStore.getState().t('preview.videoUploaded'));
       if (projectId) saveProject.mutate({ id: projectId, status: 'PUBLISHED' });
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     },
@@ -115,7 +117,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   /* ── Project picker ───────────────────────────────── */
   if (!projectId) {
-    return <ProjectPicker target="/preview" title="Превью и публикация" />;
+    return <ProjectPicker target="/preview" title={t('preview.title')} />;
   }
 
   /* ── Loading state ────────────────────────────────── */
@@ -126,20 +128,20 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', background: `${C.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>!</div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginTop: 4 }}>Не удалось загрузить проект</div>
-        <div style={{ fontSize: 13, color: C.sub, maxWidth: 400, textAlign: 'center' }}>{project.error?.message || 'Произошла ошибка при загрузке данных. Попробуйте ещё раз.'}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginTop: 4 }}>{t('preview.loadError')}</div>
+        <div style={{ fontSize: 13, color: C.sub, maxWidth: 400, textAlign: 'center' }}>{project.error?.message || t('preview.loadErrorDefault')}</div>
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
           <button
             onClick={() => project.refetch()}
             style={{ padding: '10px 24px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
           >
-            Повторить
+            {t('preview.retry')}
           </button>
           <button
             onClick={() => router.push('/dashboard')}
             style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
           >
-            На дашборд
+            {t('preview.toDashboard')}
           </button>
         </div>
       </div>
@@ -166,11 +168,11 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   /* ── Checklist (memoized) ──────────────────────────── */
   const checklist = useMemo(() => [
-    { label: 'Видео готово', done: scenes.length > 0 && scenes.every(s => s.status === 'READY'), href: `/editor?projectId=${projectId}`, hint: 'Перейти в редактор' },
-    { label: 'Метаданные заполнены', done: (p.title?.length ?? 0) > 0 && (p.description?.length ?? 0) > 0, href: `/metadata?projectId=${projectId}`, hint: 'Перейти к метаданным' },
-    { label: 'Обложка создана', done: !!(p.thumbnailUrl || p.thumbnailData), href: `/thumbnails?projectId=${projectId}`, hint: 'Перейти к обложкам' },
-    { label: 'Канал подключён', done: (channels.data?.length ?? 0) > 0, href: '/dashboard', hint: 'Подключить YouTube' },
-  ], [scenes, p.title, p.description, p.thumbnailUrl, p.thumbnailData, projectId, channels.data?.length]);
+    { label: t('preview.checklist.videoReady'), done: scenes.length > 0 && scenes.every(s => s.status === 'READY'), href: `/editor?projectId=${projectId}`, hint: t('preview.checklist.goEditor') },
+    { label: t('preview.checklist.metadataFilled'), done: (p.title?.length ?? 0) > 0 && (p.description?.length ?? 0) > 0, href: `/metadata?projectId=${projectId}`, hint: t('preview.checklist.goMetadata') },
+    { label: t('preview.checklist.thumbnailCreated'), done: !!(p.thumbnailUrl || p.thumbnailData), href: `/thumbnails?projectId=${projectId}`, hint: t('preview.checklist.goThumbnails') },
+    { label: t('preview.checklist.channelConnected'), done: (channels.data?.length ?? 0) > 0, href: '/dashboard', hint: t('preview.checklist.connectYoutube') },
+  ], [scenes, p.title, p.description, p.thumbnailUrl, p.thumbnailData, projectId, channels.data?.length, t]);
   const checklistDone = useMemo(() => checklist.filter(c => c.done).length, [checklist]);
   const allReady = useMemo(() => checklist.every(c => c.done), [checklist]);
 
@@ -223,15 +225,15 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   const handlePublish = () => {
     if (!allReady) {
-      toast.warning('Заполните все пункты чеклиста перед публикацией');
+      toast.warning(t('preview.checklistWarning'));
       return;
     }
     if (!videoUrl) {
-      toast.error('Нет готового видео для публикации');
+      toast.error(t('preview.noVideoError'));
       return;
     }
     if (!selectedChannel) {
-      toast.error('Выберите канал для публикации');
+      toast.error(t('preview.noChannelError'));
       return;
     }
 
@@ -261,7 +263,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   const handleDownload = () => {
     if (!videoUrl) {
-      toast.error('Нет готового видео для скачивания');
+      toast.error(t('preview.noVideoDownload'));
       return;
     }
     const a = document.createElement('a');
@@ -302,7 +304,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => router.push('/dashboard')}
-            title="Вернуться на дашборд"
+            title={t('preview.backToDashboardTitle')}
             style={{
               width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.border}`,
               background: C.surface, color: C.sub, fontSize: 16, cursor: 'pointer',
@@ -316,10 +318,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           </button>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: '-0.02em' }}>
-              Превью и публикация
+              {t('preview.title')}
             </h1>
             <p style={{ fontSize: 13, color: C.sub, margin: '2px 0 0' }}>
-              {p.title || 'Без названия'} &middot; {pluralRu(scenes.length, 'сцена', 'сцены', 'сцен')} &middot; {fmtTime(totalDuration)}
+              {p.title || t('preview.untitled')} &middot; {pluralRu(scenes.length, 'сцена', 'сцены', 'сцен')} &middot; {fmtTime(totalDuration)}
             </p>
           </div>
         </div>
@@ -327,7 +329,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           <button
             onClick={handleDownload}
             disabled={!hasVideo}
-            title={hasVideo ? 'Скачать видео на устройство' : 'Сначала сгенерируйте видео'}
+            title={hasVideo ? t('preview.downloadTitle') : t('preview.downloadDisabled')}
             style={{
               padding: '9px 18px', borderRadius: 10, border: `1px solid ${C.border}`,
               background: 'transparent', color: hasVideo ? C.text : C.dim,
@@ -339,7 +341,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}
           >
             <span style={{ fontSize: 15 }}>&#8681;</span>
-            Скачать видео
+            {t('preview.downloadVideo')}
           </button>
         </div>
       </div>
@@ -374,7 +376,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       border: 'none', cursor: 'pointer', display: 'flex',
                       alignItems: 'center', justifyContent: 'center', transition: 'background .2s',
                     }}
-                    aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
+                    aria-label={isPlaying ? t('preview.pauseLabel') : t('preview.playLabel')}
                   >
                     {!isPlaying && (
                       <div style={{
@@ -403,7 +405,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   {p.thumbnailUrl ? (
                     <img
                       src={p.thumbnailUrl}
-                      alt="Обложка"
+                      alt={t('preview.thumbnailAlt')}
                       style={{
                         position: 'absolute', inset: 0, width: '100%', height: '100%',
                         objectFit: 'cover', opacity: 0.3, filter: 'blur(4px)',
@@ -419,7 +421,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     &#9654;
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', zIndex: 1, textAlign: 'center' }}>
-                    {scenes.length > 0 ? 'Нет готовых видео' : 'Сначала сгенерируйте видео в Редакторе'}
+                    {scenes.length > 0 ? t('preview.noReadyVideos') : t('preview.generateFirst')}
                   </div>
                   <button
                     onClick={() => router.push(`/editor?projectId=${projectId}`)}
@@ -430,7 +432,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       zIndex: 1, transition: 'opacity .15s',
                     }}
                   >
-                    Открыть редактор
+                    {t('preview.openEditor')}
                   </button>
                 </div>
               )}
@@ -459,7 +461,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 {scenesWithVideo.length > 1 && (
                   <button
                     onClick={isPlayingAll ? () => { videoRef.current?.pause(); setIsPlaying(false); setIsPlayingAll(false); } : handlePlayAll}
-                    title={isPlayingAll ? 'Остановить воспроизведение всех сцен' : 'Воспроизвести все сцены последовательно'}
+                    title={isPlayingAll ? t('preview.stopAllScenes') : t('preview.playAllScenes')}
                     style={{
                       flexShrink: 0, height: 68, padding: '0 14px', borderRadius: 8,
                       border: `2px solid ${isPlayingAll ? C.accent : C.border}`,
@@ -475,7 +477,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       {isPlayingAll ? '\u23F9' : '\u23EF'}
                     </span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: isPlayingAll ? C.accent : C.sub, whiteSpace: 'nowrap' }}>
-                      {isPlayingAll ? 'Стоп' : 'Все сцены'}
+                      {isPlayingAll ? t('preview.stop') : t('preview.allScenes')}
                     </span>
                   </button>
                 )}
@@ -496,7 +498,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                           setIsPlaying(false);
                         }
                       }}
-                      title={`Сцена ${idx + 1}: ${scene.label || 'Без названия'} (${fmtDur(scene.duration)})${isCurrentlyPlaying ? ' — воспроизводится' : ''}`}
+                      title={`${t('preview.sceneTitle')} ${idx + 1}: ${scene.label || t('preview.untitled')} (${fmtDur(scene.duration)})${isCurrentlyPlaying ? ` — ${t('preview.nowPlaying')}` : ''}`}
                       style={{
                         flexShrink: 0, width: 120, height: 68, borderRadius: 8,
                         border: `2px solid ${isActive ? C.accent : 'transparent'}`,
@@ -561,7 +563,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           {/* ── Metadata summary ────────────────────── */}
           <div style={cardPadded}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={sectionTitle}>Метаданные</div>
+              <div style={sectionTitle}>{t('preview.metadata')}</div>
               <button
                 onClick={() => router.push(`/metadata?projectId=${projectId}`)}
                 style={{
@@ -572,7 +574,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 onMouseEnter={e => { e.currentTarget.style.color = C.accent; e.currentTarget.style.borderColor = C.accent; }}
                 onMouseLeave={e => { e.currentTarget.style.color = C.sub; e.currentTarget.style.borderColor = C.border; }}
               >
-                Редактировать
+                {t('preview.edit')}
               </button>
             </div>
 
@@ -582,10 +584,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               border: `1px solid ${C.border}`,
             }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-                Название
+                {t('preview.metaTitle')}
               </div>
               <div style={{ fontSize: 15, fontWeight: 700, color: p.title ? C.text : C.dim }}>
-                {p.title || 'Не указано'}
+                {p.title || t('preview.notSpecified')}
               </div>
             </div>
 
@@ -595,14 +597,14 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               border: `1px solid ${C.border}`,
             }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-                Описание
+                {t('preview.metaDescription')}
               </div>
               <div style={{
                 fontSize: 13, color: p.description ? C.sub : C.dim, lineHeight: 1.6,
                 maxHeight: 80, overflow: 'hidden',
                 WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', display: '-webkit-box',
               }}>
-                {p.description || 'Не указано'}
+                {p.description || t('preview.notSpecified')}
               </div>
             </div>
 
@@ -612,7 +614,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               border: `1px solid ${C.border}`,
             }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                Теги
+                {t('preview.metaTags')}
               </div>
               {tags.length > 0 ? (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -627,7 +629,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize: 13, color: C.dim }}>Не указаны</div>
+                <div style={{ fontSize: 13, color: C.dim }}>{t('preview.tagsNotSpecified')}</div>
               )}
             </div>
           </div>
@@ -635,7 +637,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           {/* ── Thumbnail preview ──────────────────── */}
           <div style={cardPadded}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={sectionTitle}>Обложка</div>
+              <div style={sectionTitle}>{t('preview.thumbnail')}</div>
               <button
                 onClick={() => router.push(`/thumbnails?projectId=${projectId}`)}
                 style={{
@@ -646,14 +648,14 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 onMouseEnter={e => { e.currentTarget.style.color = C.accent; e.currentTarget.style.borderColor = C.accent; }}
                 onMouseLeave={e => { e.currentTarget.style.color = C.sub; e.currentTarget.style.borderColor = C.border; }}
               >
-                Редактировать
+                {t('preview.edit')}
               </button>
             </div>
             {p.thumbnailUrl ? (
               <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}` }}>
                 <img
                   src={p.thumbnailUrl}
-                  alt="Обложка видео"
+                  alt={t('preview.thumbnailAltFull')}
                   loading="lazy"
                   style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
                 />
@@ -665,7 +667,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 justifyContent: 'center', gap: 8, background: C.surface,
               }}>
                 <div style={{ fontSize: 28, opacity: 0.2 }}>&#128444;</div>
-                <div style={{ fontSize: 12, color: C.dim }}>Обложка не создана</div>
+                <div style={{ fontSize: 12, color: C.dim }}>{t('preview.thumbnailNotCreated')}</div>
                 <button
                   onClick={() => router.push(`/thumbnails?projectId=${projectId}`)}
                   style={{
@@ -674,7 +676,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  Создать обложку
+                  {t('preview.createThumbnail')}
                 </button>
               </div>
             )}
@@ -687,7 +689,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           {/* ── Pre-publish checklist ──────────────── */}
           <div style={cardPadded}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={sectionTitle}>Чеклист</div>
+              <div style={sectionTitle}>{t('preview.checklist')}</div>
               <div style={{
                 padding: '3px 10px', borderRadius: 20,
                 background: allReady ? `${C.green}15` : `${C.orange}15`,
@@ -720,7 +722,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 onClick={() => !item.done && router.push(item.href)}
                 onKeyDown={(e) => { if (!item.done && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); router.push(item.href); } }}
                 title={item.done ? undefined : item.hint}
-                aria-label={item.done ? `${item.label} -- выполнено` : `${item.label} -- ${item.hint}`}
+                aria-label={item.done ? `${item.label} -- ${t('preview.checklistDone')}` : `${item.label} -- ${item.hint}`}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 10px', marginLeft: -10, marginRight: -10,
@@ -775,10 +777,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   &#10003;
                 </div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                  Опубликовано!
+                  {t('preview.published')}
                 </div>
                 <div style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>
-                  Видео отправлено на YouTube
+                  {t('preview.videoSentToYoutube')}
                 </div>
                 {youtubeUrl && (
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -795,12 +797,12 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       }}
                     >
                       <span style={{ fontSize: 16 }}>&#9654;</span>
-                      Открыть на YouTube
+                      {t('preview.openOnYoutube')}
                     </a>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(youtubeUrl);
-                        toast.success('Ссылка скопирована');
+                        toast.success(t('preview.linkCopied'));
                       }}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -812,7 +814,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       }}
                     >
                       <span style={{ fontSize: 14 }}>&#128203;</span>
-                      Копировать ссылку
+                      {t('preview.copyLink')}
                     </button>
                   </div>
                 )}
@@ -825,19 +827,19 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  Вернуться на дашборд
+                  {t('preview.backToDashboard')}
                 </button>
               </div>
             </div>
           ) : (
             /* ── Publish form ───────────────────────── */
             <div style={cardPadded}>
-              <div style={sectionTitle}>Публикация на YouTube</div>
+              <div style={sectionTitle}>{t('preview.publishToYoutube')}</div>
 
               {/* Channel selector */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                  Канал
+                  {t('preview.channel')}
                 </div>
                 {channels.isLoading ? (
                   <Skeleton height={44} rounded />
@@ -846,12 +848,12 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     padding: '10px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
                     background: C.surface, fontSize: 12, color: C.dim,
                   }}>
-                    YouTube не подключён.{' '}
+                    {t('preview.youtubeNotConnected')}{' '}
                     <button
                       onClick={() => channels.refetch()}
                       style={{ background: 'none', border: 'none', color: C.accent, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, padding: 0 }}
                     >
-                      Повторить
+                      {t('preview.retry')}
                     </button>
                   </div>
                 ) : !channels.data?.length ? (
@@ -859,8 +861,8 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     padding: '12px 14px', borderRadius: 10, border: `2px dashed ${C.border}`,
                     background: C.surface, textAlign: 'center',
                   }}>
-                    <div style={{ fontSize: 12, color: C.dim, marginBottom: 6 }}>Нет подключённых каналов</div>
-                    <div style={{ fontSize: 11, color: C.dim }}>Авторизуйтесь через Google с доступом к YouTube</div>
+                    <div style={{ fontSize: 12, color: C.dim, marginBottom: 6 }}>{t('preview.noChannels')}</div>
+                    <div style={{ fontSize: 11, color: C.dim }}>{t('preview.noChannelsHint')}</div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -900,7 +902,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                             </div>
                             {ch.statistics?.subscriberCount && (
                               <div style={{ fontSize: 10, color: C.dim, marginTop: 1 }}>
-                                {Number(ch.statistics.subscriberCount).toLocaleString('ru-RU')} подписчиков
+                                {Number(ch.statistics.subscriberCount).toLocaleString()} {t('preview.subscribers')}
                               </div>
                             )}
                           </div>
@@ -924,7 +926,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               {/* Visibility selector */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                  Доступ
+                  {t('preview.access')}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {PRIVACY_OPTIONS.map(opt => {
@@ -933,7 +935,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       <button
                         key={opt.value}
                         onClick={() => setPrivacy(opt.value)}
-                        title={opt.desc}
+                        title={t(opt.descKey)}
                         style={{
                           flex: 1, padding: '10px 4px', borderRadius: 10,
                           border: `2px solid ${isActive ? C.accent : C.border}`,
@@ -945,7 +947,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       >
                         <span style={{ fontSize: 16 }}>{opt.icon}</span>
                         <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? C.accent : C.sub }}>
-                          {opt.label}
+                          {t(opt.labelKey)}
                         </span>
                       </button>
                     );
@@ -970,17 +972,17 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s', flexShrink: 0,
                   }} />
-                  <span style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>Запланировать публикацию</span>
+                  <span style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{t('preview.schedulePublish')}</span>
                   <span style={{
                     fontSize: 10, fontWeight: 700, color: C.orange,
                     background: `${C.orange}15`, padding: '2px 8px',
                     borderRadius: 4, letterSpacing: 0.3, marginLeft: 4,
                   }}>
-                    Скоро
+                    {t('preview.soon')}
                   </span>
                 </button>
                 <div style={{ fontSize: 11, color: C.dim, paddingLeft: 26, marginTop: 4 }}>
-                  Планирование публикации будет доступно в ближайшем обновлении
+                  {t('preview.scheduleHint')}
                 </div>
               </div>
 
@@ -988,7 +990,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               {publishState === 'publishing' && (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: C.sub, fontWeight: 500 }}>Загрузка на YouTube...</span>
+                    <span style={{ fontSize: 12, color: C.sub, fontWeight: 500 }}>{t('preview.uploadingToYoutube')}</span>
                     <span style={{ fontSize: 12, color: C.accent, fontWeight: 700 }}>{Math.round(publishProgress)}%</span>
                   </div>
                   <div style={{
@@ -1012,8 +1014,8 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 }}>
                   <span style={{ fontSize: 14 }}>&#9888;</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>Ошибка публикации</div>
-                    <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Проверьте подключение и попробуйте ещё раз</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>{t('preview.publishError')}</div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>{t('preview.publishErrorHint')}</div>
                   </div>
                   <button
                     onClick={() => { setPublishState('idle'); setPublishProgress(0); }}
@@ -1024,7 +1026,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       flexShrink: 0, transition: 'all .15s',
                     }}
                   >
-                    Повторить
+                    {t('preview.retry')}
                   </button>
                 </div>
               )}
@@ -1033,7 +1035,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               <button
                 onClick={handlePublish}
                 disabled={!allReady || publishState === 'publishing'}
-                title={!allReady ? 'Завершите все пункты чеклиста' : undefined}
+                title={!allReady ? t('preview.completeChecklist') : undefined}
                 style={{
                   width: '100%', padding: '14px 0', borderRadius: 12, border: 'none',
                   background: allReady
@@ -1056,18 +1058,18 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                       borderTopColor: '#fff', borderRadius: '50%',
                       animation: 'spin .8s linear infinite',
                     }} />
-                    Публикация...
+                    {t('preview.publishing')}
                   </span>
                 ) : publishState === 'error' ? (
-                  'Повторить публикацию'
+                  t('preview.retryPublish')
                 ) : (
-                  'Опубликовать на YouTube'
+                  t('preview.publishBtn')
                 )}
               </button>
 
               {!allReady && (
                 <div style={{ fontSize: 11, color: C.dim, textAlign: 'center', marginTop: 6 }}>
-                  Завершите все пункты чеклиста для публикации
+                  {t('preview.completeChecklistHint')}
                 </div>
               )}
 
@@ -1086,7 +1088,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 onMouseEnter={e => { if (!saveProject.isPending) e.currentTarget.style.borderColor = C.accent; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}
               >
-                {saveProject.isPending ? 'Сохранение...' : 'Сохранить проект'}
+                {saveProject.isPending ? t('preview.savingProject') : t('preview.saveProject')}
               </button>
             </div>
           )}
@@ -1097,7 +1099,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             background: `linear-gradient(135deg, ${C.card}, ${C.surface})`,
           }}>
             <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ ...sectionTitle, marginBottom: 0 }}>Как будет выглядеть</div>
+              <div style={{ ...sectionTitle, marginBottom: 0 }}>{t('preview.youtubePreview')}</div>
             </div>
             <div style={{ padding: 16 }}>
               {/* Mini YouTube preview */}
@@ -1108,7 +1110,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 {/* Thumbnail */}
                 <div style={{ aspectRatio: '16/9', background: '#1a1a1a', position: 'relative' }}>
                   {p.thumbnailUrl ? (
-                    <img src={p.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={p.thumbnailUrl} alt="thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div style={{
                       width: '100%', height: '100%',
@@ -1135,10 +1137,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                     overflow: 'hidden', marginBottom: 6,
                   }}>
-                    {p.title || 'Без названия'}
+                    {p.title || t('preview.untitled')}
                   </div>
                   <div style={{ fontSize: 11, color: '#aaa' }}>
-                    0 просмотров &middot; только что
+                    {t('preview.views')}
                   </div>
                 </div>
               </div>

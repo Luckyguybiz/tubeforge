@@ -9,17 +9,18 @@ import { MODELS } from '@/lib/constants';
 import { fmtDur, pluralRu } from '@/lib/utils';
 import { useProjectSync } from '@/hooks/useProjectSync';
 import { useVideoGeneration } from '@/hooks/useVideoGeneration';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { Theme, Scene } from '@/lib/types';
 
 /* ═══════════════════════════════════════════════════════════════════
    STATUS BADGE CONFIG
    ═══════════════════════════════════════════════════════════════════ */
-const STATUS_CFG: Record<string, { label: string; colorKey: string }> = {
-  empty:      { label: 'Пусто',      colorKey: 'dim' },
-  editing:    { label: 'Черновик',    colorKey: 'blue' },
-  generating: { label: 'Генерация',  colorKey: 'orange' },
-  ready:      { label: 'Готово',     colorKey: 'green' },
-  error:      { label: 'Ошибка',    colorKey: 'accent' },
+const STATUS_CFG: Record<string, { labelKey: string; colorKey: string }> = {
+  empty:      { labelKey: 'editor.status.empty',      colorKey: 'dim' },
+  editing:    { labelKey: 'editor.status.editing',    colorKey: 'blue' },
+  generating: { labelKey: 'editor.status.generating', colorKey: 'orange' },
+  ready:      { labelKey: 'editor.status.ready',      colorKey: 'green' },
+  error:      { labelKey: 'editor.status.error',      colorKey: 'accent' },
 };
 
 function getStatusColor(status: string, C: Theme): string {
@@ -89,14 +90,14 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
 
       // Validate file type
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        setError('Неверный формат');
+        setError(useLocaleStore.getState().t('editor.frame.invalidFormat'));
         e.target.value = '';
         return;
       }
 
       // Validate file size
       if (file.size > MAX_IMAGE_SIZE) {
-        setError('Макс. 10 МБ');
+        setError(useLocaleStore.getState().t('editor.frame.maxSize'));
         e.target.value = '';
         return;
       }
@@ -108,7 +109,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
         setIsLoading(false);
       };
       reader.onerror = () => {
-        setError('Ошибка чтения');
+        setError(useLocaleStore.getState().t('editor.frame.readError'));
         setIsLoading(false);
       };
       reader.readAsDataURL(file);
@@ -175,7 +176,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
                 display: 'inline-block',
               }}
             />
-            <span style={{ fontSize: 8, color: C.dim, fontWeight: 500 }}>Загрузка...</span>
+            <span style={{ fontSize: 8, color: C.dim, fontWeight: 500 }}>{useLocaleStore.getState().t('editor.frame.loading')}</span>
           </div>
         ) : value ? (
           <>
@@ -216,7 +217,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
                 backdropFilter: 'blur(4px)',
                 transition: 'background .15s',
               }}
-              title="Удалить"
+              title={useLocaleStore.getState().t('editor.frame.remove')}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(220,50,50,.75)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.55)'; }}
             >
@@ -248,7 +249,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
                 backdropFilter: 'blur(4px)',
                 transition: 'background .15s',
               }}
-              title="Заменить"
+              title={useLocaleStore.getState().t('editor.frame.replace')}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.7)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.45)'; }}
             >
@@ -258,7 +259,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
             <span style={{ fontSize: 22, color: error ? C.accent : C.dim, lineHeight: 1 }}>{error ? '!' : '+'}</span>
-            <span style={{ fontSize: 8, color: error ? C.accent : C.dim, fontWeight: 500 }}>{error || 'Загрузить'}</span>
+            <span style={{ fontSize: 8, color: error ? C.accent : C.dim, fontWeight: 500 }}>{error || useLocaleStore.getState().t('editor.frame.upload')}</span>
           </div>
         )}
         <input
@@ -487,7 +488,7 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
         }}
       >
         <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>
-          Настройки сцены
+          {useLocaleStore.getState().t('editor.settingsTitle')}
         </span>
         <button
           onClick={onClose}
@@ -516,7 +517,7 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
       <div style={{ padding: '10px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Scene name */}
         <div>
-          <label style={compactLabelStyle(C)}>Название</label>
+          <label style={compactLabelStyle(C)}>{useLocaleStore.getState().t('editor.settingsName')}</label>
           <input
             value={sc.label}
             maxLength={100}
@@ -527,7 +528,7 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
 
         {/* Model selector */}
         <div>
-          <label style={compactLabelStyle(C)}>Модель</label>
+          <label style={compactLabelStyle(C)}>{useLocaleStore.getState().t('editor.settingsModel')}</label>
           <div style={{ position: 'relative' }} ref={modDropRef}>
             <button
               onClick={() => setModelsOpen(!modelsOpen)}
@@ -617,9 +618,9 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
         {/* Duration slider */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <label style={{ ...compactLabelStyle(C), marginBottom: 0 }}>Длительность</label>
+            <label style={{ ...compactLabelStyle(C), marginBottom: 0 }}>{useLocaleStore.getState().t('editor.settingsDuration')}</label>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: col }}>
-              {sc.duration}с
+              {sc.duration}{useLocaleStore.getState().t('editor.sec')}
             </span>
           </div>
           <input
@@ -631,8 +632,8 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
             style={{ width: '100%', accentColor: col, cursor: 'pointer', height: 4 }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, color: C.dim, marginTop: 1 }}>
-            <span>1с</span>
-            <span>30с</span>
+            <span>1{useLocaleStore.getState().t('editor.sec')}</span>
+            <span>30{useLocaleStore.getState().t('editor.sec')}</span>
           </div>
         </div>
       </div>
@@ -646,6 +647,7 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
 export function EditorPage({ projectId = null }: { projectId?: string | null }) {
   const sync = useProjectSync(projectId);
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const scenes = useEditorStore((s) => s.scenes);
   const selId = useEditorStore((s) => s.selId);
@@ -838,7 +840,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   if (!projectId) {
     return (
       <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-        <ProjectPicker target="/editor" title="Редактор" />
+        <ProjectPicker target="/editor" title={t('editor.title')} />
       </div>
     );
   }
@@ -858,8 +860,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: C.accent }}>!</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Не удалось загрузить проект</div>
-          <div style={{ fontSize: 12, color: C.sub, textAlign: 'center', maxWidth: 280 }}>Проверьте подключение и попробуйте ещё раз</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('editor.loadError')}</div>
+          <div style={{ fontSize: 12, color: C.sub, textAlign: 'center', maxWidth: 280 }}>{t('editor.loadErrorHint')}</div>
           <button
             onClick={() => sync.refetch()}
             style={{
@@ -875,7 +877,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               fontFamily: 'inherit',
             }}
           >
-            Повторить
+            {t('editor.retry')}
           </button>
         </div>
       </div>
@@ -934,7 +936,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         ) : (
           <div
             onClick={startEditTitle}
-            title="Нажмите для редактирования"
+            title={t('editor.clickToEdit')}
             style={{
               fontSize: 13,
               fontWeight: 700,
@@ -951,15 +953,15 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
-            {sync.project?.title || 'Без названия'}
+            {sync.project?.title || t('editor.untitled')}
           </div>
         )}
 
         {/* Scene panel toggle (useful on mobile) */}
         <button
           onClick={() => setScenePanelOpen((v) => !v)}
-          title={scenePanelOpen ? 'Скрыть сцены' : 'Показать сцены'}
-          aria-label={scenePanelOpen ? 'Скрыть сцены' : 'Показать сцены'}
+          title={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
+          aria-label={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
           style={{
             width: 28,
             height: 28,
@@ -995,13 +997,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
         {/* Save status */}
         {saveStatus === 'saving' && (
-          <span style={{ fontSize: 9, color: C.dim, fontWeight: 500 }}>Сохранение...</span>
+          <span style={{ fontSize: 9, color: C.dim, fontWeight: 500 }}>{t('editor.saving')}</span>
         )}
         {saveStatus === 'saved' && (
-          <span style={{ fontSize: 9, color: C.green, fontWeight: 500 }}>Сохранено &#10003;</span>
+          <span style={{ fontSize: 9, color: C.green, fontWeight: 500 }}>{t('editor.saved')} &#10003;</span>
         )}
         {saveStatus === 'error' && (
-          <span style={{ fontSize: 9, color: C.accent, fontWeight: 500 }}>Ошибка сохранения</span>
+          <span style={{ fontSize: 9, color: C.accent, fontWeight: 500 }}>{t('editor.saveError')}</span>
         )}
 
         {/* Undo / Redo */}
@@ -1010,8 +1012,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             className={historyLen > 0 ? 'ed-action-btn' : undefined}
             onClick={undo}
             disabled={historyLen === 0}
-            title="Отменить (Ctrl+Z)"
-            aria-label="Отменить"
+            title={t('editor.undo')}
+            aria-label={t('editor.undoLabel')}
             style={{
               width: 28,
               height: 28,
@@ -1035,8 +1037,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             className={futureLen > 0 ? 'ed-action-btn' : undefined}
             onClick={redo}
             disabled={futureLen === 0}
-            title="Повторить (Ctrl+Shift+Z)"
-            aria-label="Повторить"
+            title={t('editor.redo')}
+            aria-label={t('editor.redoLabel')}
             style={{
               width: 28,
               height: 28,
@@ -1101,14 +1103,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   flexShrink: 0,
                 }}
               />
-              Генерация...
+              {t('editor.generating')}
             </>
           ) : (
             <>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
                 <path d="M8 5v14l11-7z" />
               </svg>
-              Генерировать видео
+              {t('editor.generateVideo')}
             </>
           )}
         </button>
@@ -1137,11 +1139,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           {/* Scene list header */}
           <div style={{ padding: '10px 10px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: C.sub, textTransform: 'uppercase', letterSpacing: '.04em' }}>
-              Сцены
+              {t('editor.scenes')}
             </span>
             <button
               onClick={() => addScene()}
-              title="Добавить сцену"
+              title={t('editor.addScene')}
               style={{
                 width: 22,
                 height: 22,
@@ -1221,7 +1223,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   +
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, textAlign: 'center' }}>
-                  Нажмите, чтобы добавить сцену
+                  {t('editor.clickToAddScene')}
                 </span>
               </div>
             ) : (
@@ -1284,8 +1286,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   boxShadow: '0 8px 32px rgba(0,0,0,.3)',
                 }}
               >
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>Удалить сцену?</span>
-                <span style={{ fontSize: 10, color: C.sub }}>Это действие нельзя отменить</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.deleteSceneConfirm')}</span>
+                <span style={{ fontSize: 10, color: C.sub }}>{t('editor.deleteIrreversible')}</span>
                 <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                   <button
                     onClick={() => handleSceneConfirmDelete(confirmDel)}
@@ -1304,7 +1306,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                   >
-                    Удалить
+                    {t('editor.delete')}
                   </button>
                   <button
                     onClick={handleSceneCancelDelete}
@@ -1323,7 +1325,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; (e.currentTarget as HTMLElement).style.color = C.text; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; (e.currentTarget as HTMLElement).style.color = C.sub; }}
                   >
-                    Отмена
+                    {t('editor.cancel')}
                   </button>
                 </div>
               </div>
@@ -1416,7 +1418,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       )}
                       {!isPlaying && (
                         <span style={{ fontSize: 11, fontWeight: 600, color: C.green, zIndex: 2 }}>
-                          Видео готово
+                          {t('editor.videoReady')}
                         </span>
                       )}
                     </div>
@@ -1434,7 +1436,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         }}
                       />
                       <span style={{ fontSize: 12, fontWeight: 600, color: selCol }}>
-                        Генерация видео...
+                        {t('editor.generatingVideo')}
                       </span>
                       {/* Progress bar */}
                       <div style={{ width: 180 }}>
@@ -1462,7 +1464,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                           />
                         </div>
                         <div style={{ textAlign: 'center', fontSize: 9, color: C.dim, marginTop: 5, fontFamily: "'JetBrains Mono', monospace" }}>
-                          {progress != null ? `${Math.round(progress)}%` : 'Подождите...'}
+                          {progress != null ? `${Math.round(progress)}%` : t('editor.pleaseWait')}
                         </div>
                       </div>
                     </div>
@@ -1484,10 +1486,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         !
                       </div>
                       <span style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>
-                        Ошибка генерации
+                        {t('editor.generationError')}
                       </span>
                       <span style={{ fontSize: 10, color: C.sub }}>
-                        Измените промпт и попробуйте снова
+                        {t('editor.changePromptRetry')}
                       </span>
                     </div>
                   ) : (
@@ -1496,7 +1498,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       {/* Frame upload row */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <FrameSlot
-                          label="Начальный кадр"
+                          label={t('editor.frame.startFrame')}
                           value={sel.sf}
                           C={C}
                           accentCol={selCol}
@@ -1515,11 +1517,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                               fontFamily: "'JetBrains Mono', monospace",
                             }}
                           >
-                            {sel.duration} сек
+                            {sel.duration} {t('editor.sec')}
                           </span>
                         </div>
                         <FrameSlot
-                          label="Конечный кадр"
+                          label={t('editor.frame.endFrame')}
                           value={sel.ef}
                           C={C}
                           accentCol={selCol}
@@ -1530,8 +1532,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       {/* Hint text */}
                       <span style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>
                         {!sel.prompt.trim()
-                          ? 'Введите промпт ниже'
-                          : <>Нажмите &laquo;Генерировать видео&raquo;</>}
+                          ? t('editor.enterPromptBelow')
+                          : t('editor.clickGenerate')}
                       </span>
                     </div>
                   )}
@@ -1607,7 +1609,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       fontFamily: 'inherit',
                       transition: 'all .15s',
                     }}
-                    title={isPlaying ? 'Пауза' : 'Воспроизвести'}
+                    title={isPlaying ? t('editor.pause') : t('editor.play')}
                   >
                     {isPlaying ? '\u23F8' : '\u25B6'}
                   </button>
@@ -1615,7 +1617,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   <StatusDot status={sel.status} C={C} size={7} />
                 )}
                 <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.sub, fontWeight: 500 }}>
-                  {sel.status === 'ready' ? `00:00 / ${fmtDur(sel.duration)}` : (STATUS_CFG[sel.status]?.label || 'Пусто')}
+                  {sel.status === 'ready' ? `00:00 / ${fmtDur(sel.duration)}` : t(STATUS_CFG[sel.status]?.labelKey || 'editor.status.empty')}
                 </span>
                 <div style={{ flex: 1 }} />
                 {/* Model badge */}
@@ -1656,7 +1658,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 &#9671;
               </div>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.sub }}>
-                {scenes.length === 0 ? 'Добавьте первую сцену' : 'Выберите сцену слева'}
+                {scenes.length === 0 ? t('editor.addFirstScene') : t('editor.selectSceneLeft')}
               </span>
               {scenes.length === 0 && (
                 <button
@@ -1677,7 +1679,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     boxShadow: `0 4px 16px ${C.accent}40`,
                   }}
                 >
-                  + Добавить сцену
+                  {t('editor.addSceneBtn')}
                 </button>
               )}
             </div>
@@ -1710,13 +1712,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           >
             {/* Scene action buttons */}
             <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-              <button className="ed-action-btn" onClick={() => dupScene(sel.id)} title="Дублировать сцену" style={tinyBtnStyle(C, false)}>
+              <button className="ed-action-btn" onClick={() => dupScene(sel.id)} title={t('editor.duplicateScene')} style={tinyBtnStyle(C, false)}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
-              <button className="ed-action-btn" onClick={() => addScene(sel.id)} title="Добавить сцену после" style={tinyBtnStyle(C, false)}>
+              <button className="ed-action-btn" onClick={() => addScene(sel.id)} title={t('editor.addSceneAfter')} style={tinyBtnStyle(C, false)}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
-              <button className="ed-action-btn" onClick={() => setShowSettings(!showSettings)} title="Настройки сцены" style={tinyBtnStyle(C, showSettings)}>
+              <button className="ed-action-btn" onClick={() => setShowSettings(!showSettings)} title={t('editor.sceneSettings')} style={tinyBtnStyle(C, showSettings)}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
               </button>
               <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
@@ -1724,7 +1726,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 className={scenes.length > 1 && !isGenerating ? 'ed-action-btn' : undefined}
                 onClick={() => { if (scenes.length > 1 && !isGenerating) handleSceneRequestDelete(sel.id); }}
                 disabled={scenes.length <= 1 || isGenerating}
-                title={scenes.length <= 1 ? 'Нельзя удалить единственную сцену' : isGenerating ? 'Нельзя удалить во время генерации' : 'Удалить сцену'}
+                title={scenes.length <= 1 ? t('editor.cannotDeleteOnly') : isGenerating ? t('editor.cannotDeleteGenerating') : t('editor.deleteScene')}
                 style={{ ...tinyBtnStyle(C, false), color: (scenes.length <= 1 || isGenerating) ? C.dim : C.accent, opacity: (scenes.length <= 1 || isGenerating) ? 0.3 : 1, cursor: (scenes.length <= 1 || isGenerating) ? 'not-allowed' : 'pointer' }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -1772,7 +1774,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     handleGenerate();
                   }
                 }}
-                placeholder="Опишите, что должно происходить в сцене: действие, персонажи, атмосфера, стиль..."
+                placeholder={t('editor.promptPlaceholder')}
                 maxLength={2000}
                 style={{
                   flex: 1,
@@ -1900,7 +1902,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               color: C.dim,
               fontSize: 16,
             }}
-            title="Добавить сцену"
+            title={t('editor.addScene')}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55';
               (e.currentTarget as HTMLElement).style.color = C.accent;

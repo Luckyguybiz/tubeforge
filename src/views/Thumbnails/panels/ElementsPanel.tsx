@@ -1,6 +1,7 @@
 'use client';
 
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { STICKY_NOTE_COLOR } from '@/lib/constants';
 import {
@@ -21,6 +22,7 @@ interface SectionProps {
 
 function PresetSection({ title, presets, onAdd, cols = 3 }: SectionProps) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const handleDragStart = (e: React.DragEvent, preset: ElementPreset) => {
     e.dataTransfer.setData('application/x-tubeforge-preset', JSON.stringify(preset));
@@ -37,7 +39,7 @@ function PresetSection({ title, presets, onAdd, cols = 3 }: SectionProps) {
             key={`${preset.type}-${i}`}
             role="button"
             tabIndex={0}
-            aria-label={`Добавить: ${preset.label}`}
+            aria-label={t('thumbs.elements.addLabel') + preset.label}
             draggable
             onDragStart={(e) => handleDragStart(e, preset)}
             onClick={() => onAdd(preset)}
@@ -75,6 +77,7 @@ function PresetSection({ title, presets, onAdd, cols = 3 }: SectionProps) {
 }
 
 export function ElementsPanel() {
+  const t = useLocaleStore((s) => s.t);
   // Only actions needed — use getState() to avoid subscribing to store changes
   const getStore = () => useThumbnailStore.getState();
 
@@ -162,7 +165,7 @@ export function ElementsPanel() {
       if (last) {
         store.updEl(last.id, {
           noteColor: (props.noteColor as string) ?? STICKY_NOTE_COLOR,
-          noteText: (props.noteText as string) ?? 'Заметка',
+          noteText: (props.noteText as string) ?? t('thumbs.insert.stickyNote'),
           w: (props.w as number) ?? 200,
           h: (props.h as number) ?? 150,
         });
@@ -181,11 +184,11 @@ export function ElementsPanel() {
 
   return (
     <div>
-      <PresetSection title="Фигуры" presets={SHAPE_PRESETS} onAdd={addPreset} />
-      <PresetSection title="Линии и стрелки" presets={LINE_PRESETS} onAdd={addPreset} />
-      <PresetSection title="Иконки / Эмодзи" presets={ICON_PRESETS} onAdd={addPreset} cols={4} />
-      <PresetSection title="Стикеры" presets={STICKER_PRESETS} onAdd={addPreset} cols={2} />
-      <PresetSection title="Таблицы" presets={TABLE_PRESETS} onAdd={addPreset} cols={2} />
+      <PresetSection title={t('thumbs.elements.shapes')} presets={SHAPE_PRESETS} onAdd={addPreset} />
+      <PresetSection title={t('thumbs.elements.linesArrows')} presets={LINE_PRESETS} onAdd={addPreset} />
+      <PresetSection title={t('thumbs.elements.iconsEmoji')} presets={ICON_PRESETS} onAdd={addPreset} cols={4} />
+      <PresetSection title={t('thumbs.elements.stickers')} presets={STICKER_PRESETS} onAdd={addPreset} cols={2} />
+      <PresetSection title={t('thumbs.elements.tables')} presets={TABLE_PRESETS} onAdd={addPreset} cols={2} />
     </div>
   );
 }

@@ -54,7 +54,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const saveCanvas = trpc.project.update.useMutation({
-    onError: (err) => { console.error('[ThumbnailEditor] Auto-save failed:', err.message); },
+    onError: (err) => { if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Auto-save failed:', err.message); },
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
@@ -294,7 +294,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       link.href = format === 'jpg' ? canvas.toDataURL('image/jpeg', 0.92) : canvas.toDataURL('image/png');
       link.click();
     }).catch((err) => {
-      console.error('[ThumbnailEditor] Download failed:', err);
+      if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Download failed:', err);
     });
   };
 

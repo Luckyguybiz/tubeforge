@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
  * Body: { videoId: string, quality?: string, audioOnly?: boolean }
  */
 
-const YT_API_BASE = process.env.YT_DLP_API_URL ?? 'http://57.128.254.111:3333';
+const YT_API_BASE = process.env.YT_DLP_API_URL;
 
 export async function POST(req: NextRequest) {
   let body: { videoId?: string; quality?: string; audioOnly?: boolean };
@@ -145,6 +145,13 @@ export async function POST(req: NextRequest) {
 
   if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
     return NextResponse.json({ error: 'Missing or invalid videoId' }, { status: 400 });
+  }
+
+  if (!YT_API_BASE) {
+    return NextResponse.json(
+      { error: 'Download service is not configured. Please set YT_DLP_API_URL.' },
+      { status: 503 },
+    );
   }
 
   try {

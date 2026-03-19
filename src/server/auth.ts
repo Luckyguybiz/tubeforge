@@ -72,8 +72,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.id as string) ?? token.sub ?? '';
-        session.user.plan = 'FREE';
-        session.user.role = 'USER';
+        // Fetch plan/role from database instead of hardcoding
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { plan: true, role: true },
+        });
+        if (dbUser) {
+          session.user.plan = dbUser.plan;
+          session.user.role = dbUser.role;
+        } else {
+          session.user.plan = 'FREE';
+          session.user.role = 'USER';
+        }
       }
       return session;
     },

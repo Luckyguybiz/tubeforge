@@ -604,7 +604,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
         setError(json.error);
       }
     } catch (err) {
-      console.error('[ShortsAnalytics] fetch error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('[ShortsAnalytics] fetch error:', err);
       setError('Не удалось загрузить данные');
     } finally {
       setLoading(false);

@@ -306,7 +306,7 @@ export function CutCrop() {
 
       setToast('Экспорт завершён!');
     } catch (err) {
-      console.error('Export error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Export error:', err);
       // Fallback: download the original file
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
@@ -395,7 +395,7 @@ export function CutCrop() {
           <img
             key={i}
             src={th.url}
-            alt=""
+            alt="Video timeline thumbnail"
             style={{
               position: 'absolute',
               left: th.offsetPx,
@@ -543,7 +543,7 @@ export function CutCrop() {
           </button>
 
           {/* Delete */}
-          <button onClick={deleteSegment} style={{ ...btnBase, color: segments.length > 1 ? '#ef4444' : C.dim }} {...hover(C.cardHover)} title="Удалить сегмент">
+          <button onClick={deleteSegment} style={{ ...btnBase, color: segments.length > 1 ? C.red : C.dim }} {...hover(C.cardHover)} title="Удалить сегмент">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
             </svg>
