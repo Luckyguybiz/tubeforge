@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const period = sp.get('period') ?? '7d';
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';
+  const game = sp.get('game') ?? '';
   const limitParam = sp.get('limit');
   const limit = limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50;
 
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const cacheKey = `${period}:${country}:${category}`;
+  const cacheKey = `${period}:${country}:${category}:${game}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     const cachedShorts = Array.isArray(cached.data) ? cached.data.slice(0, limit) : cached.data;
@@ -37,11 +38,13 @@ export async function GET(req: NextRequest) {
       '24': 'entertainment', '25': 'news', '26': 'howto tutorial', '27': 'education', '28': 'science',
     };
     const catKeyword = category ? (catMap[category] ?? '') : '';
+    const gameKeyword = game ? game : '';
 
     // Strategy: run 2 parallel searches for better coverage, then merge & dedupe
+    const searchTerm = gameKeyword || catKeyword;
     const queries = [
-      `shorts viral ${catKeyword}`.trim(),
-      `#shorts ${catKeyword}`.trim(),
+      `shorts viral ${searchTerm}`.trim(),
+      `#shorts ${searchTerm}`.trim(),
     ];
 
     const searchPromises = queries.map((q) => {

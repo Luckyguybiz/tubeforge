@@ -569,13 +569,14 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch data from API
-  const fetchData = useCallback(async (p: Period, country: string, category: string, pro: boolean) => {
+  const fetchData = useCallback(async (p: Period, country: string, category: string, pro: boolean, game?: string) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({ period: p });
       if (country) params.set('country', country);
       if (category) params.set('category', category);
+      if (game) params.set('game', game);
       if (!pro) params.set('limit', '10');
 
       const res = await fetch(`/api/tools/shorts-analytics?${params}`);
@@ -605,19 +606,19 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   // Fetch on mount and when period changes
   useEffect(() => {
-    fetchData(period, filters.country, filters.category, isPro);
+    fetchData(period, filters.country, filters.category, isPro, filters.gameFilter);
   }, [period, isPro, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Debounced fetch when country/category changes
+  // Debounced fetch when country/category/game changes
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(period, filters.country, filters.category, isPro);
+      fetchData(period, filters.country, filters.category, isPro, filters.gameFilter);
     }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [filters.country, filters.category]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters.country, filters.category, filters.gameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePeriodChange = useCallback((p: Period) => {
     if (!isPro && p !== FREE_PERIOD) {
