@@ -93,18 +93,8 @@ export const teamRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       await checkTeamRate(ctx.session.user.id);
-      const team = await ctx.db.team.findFirst({
-        where: { ownerId: ctx.session.user.id },
-        select: { id: true, _count: { select: { members: true } } },
-      });
-      if (!team) throw new TRPCError({ code: 'NOT_FOUND', message: 'Команда не найдена' });
 
-      // Check member limit
-      if (team._count.members >= 10) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Максимум 10 участников в команде' });
-      }
-
-      // Find user by email
+      // Find user by email outside transaction (read-only, no race condition)
       const invitee = await ctx.db.user.findUnique({
         where: { email: input.email },
         select: { id: true },
@@ -113,27 +103,41 @@ export const teamRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Пользователь не найден' });
       }
 
-      // Check if already a member
-      const existing = await ctx.db.teamMember.findUnique({
-        where: { teamId_userId: { teamId: team.id, userId: invitee.id } },
-        select: { id: true },
-      });
-      if (existing) {
-        throw new TRPCError({ code: 'CONFLICT', message: 'Пользователь уже в команде' });
-      }
+      // Use interactive transaction to atomically check limit and create member
+      return ctx.db.$transaction(async (tx) => {
+        const team = await tx.team.findFirst({
+          where: { ownerId: ctx.session.user.id },
+          select: { id: true, _count: { select: { members: true } } },
+        });
+        if (!team) throw new TRPCError({ code: 'NOT_FOUND', message: 'Команда не найдена' });
 
-      return ctx.db.teamMember.create({
-        data: {
-          teamId: team.id,
-          userId: invitee.id,
-          role: input.role,
-        },
-        select: {
-          id: true,
-          role: true,
-          joinedAt: true,
-          user: { select: { id: true, name: true, email: true, image: true } },
-        },
+        // Check member limit
+        if (team._count.members >= 10) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Максимум 10 участников в команде' });
+        }
+
+        // Check if already a member
+        const existing = await tx.teamMember.findUnique({
+          where: { teamId_userId: { teamId: team.id, userId: invitee.id } },
+          select: { id: true },
+        });
+        if (existing) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'Пользователь уже в команде' });
+        }
+
+        return tx.teamMember.create({
+          data: {
+            teamId: team.id,
+            userId: invitee.id,
+            role: input.role,
+          },
+          select: {
+            id: true,
+            role: true,
+            joinedAt: true,
+            user: { select: { id: true, name: true, email: true, image: true } },
+          },
+        });
       });
     }),
 

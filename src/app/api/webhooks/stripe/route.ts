@@ -33,11 +33,11 @@ export async function POST(req: NextRequest) {
    * Determine plan from subscription.
    * Supports both price IDs (price_...) and product IDs (prod_...) in env config.
    */
-  function getPlanFromSub(sub: Stripe.Subscription): 'FREE' | 'PRO' | 'STUDIO' {
+  function getPlanFromSub(sub: Stripe.Subscription): 'PRO' | 'STUDIO' | null {
     const item = sub.items?.data?.[0];
     if (!item) {
-      console.warn('[Stripe] getPlanFromSub: subscription has no items');
-      return 'FREE';
+      console.error('[Stripe] getPlanFromSub: subscription has no items, sub:', sub.id);
+      return null;
     }
 
     const priceId = item.price?.id ?? '';
@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
     const proRef = env.STRIPE_PRICE_PRO;
     if (priceId === proRef || productId === proRef) return 'PRO';
 
-    // Unknown subscription — don't grant any paid plan
-    console.warn('[Stripe] Unknown price/product:', priceId, productId);
-    return 'FREE';
+    // Unknown subscription — refuse to map to any plan
+    console.error('[Stripe] Unknown price/product, cannot determine plan. priceId:', priceId, 'productId:', productId, 'sub:', sub.id);
+    return null;
   }
 
   /** Update user plan by stripeId — uses updateMany to avoid throwing if user not found */
@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         if (!session.subscription || !session.customer) break;
         const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-        await updatePlan(session.customer as string, getPlanFromSub(sub));
+        const plan = getPlanFromSub(sub);
+        if (plan) {
+          await updatePlan(session.customer as string, plan);
+        }
         break;
       }
       case 'customer.subscription.deleted': {
@@ -86,7 +89,10 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;
         if (!sub.customer) break;
-        await updatePlan(sub.customer as string, getPlanFromSub(sub));
+        const updatedPlan = getPlanFromSub(sub);
+        if (updatedPlan) {
+          await updatePlan(sub.customer as string, updatedPlan);
+        }
         break;
       }
       case 'invoice.paid': {
@@ -101,7 +107,7 @@ export async function POST(req: NextRequest) {
         if (!payingUser?.referredBy) break;
 
         // Credit 20% commission to the referrer
-        const commission = (invoice.amount_paid / 100) * 0.2;
+        const commission = Math.round((invoice.amount_paid * 20) / 10000);
 
         // Find the referrer so we can link the payout record
         const referrer = await db.user.findFirst({
@@ -149,9 +155,11 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (err) {
-    console.error(`[Stripe webhook] Error processing ${event.type} (event: ${event.id}):`, err instanceof Error ? err.message : err);
-    // Return 200 to prevent Stripe from retrying indefinitely; error is logged for monitoring
-    return NextResponse.json({ received: true, error: true, type: event.type });
+    console.error('[Stripe Webhook] Unhandled error:', err);
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ received: true });

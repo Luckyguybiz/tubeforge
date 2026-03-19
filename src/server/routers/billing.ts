@@ -57,6 +57,9 @@ export const billingRouter = router({
       const stripe = getStripe();
       let customerId = user.stripeId;
       if (!customerId) {
+        if (!user.email) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email required for billing' });
+        }
         let newCustomerId: string | undefined;
         try {
           const customer = await stripe.customers.create({ email: user.email ?? undefined });
@@ -101,7 +104,10 @@ export const billingRouter = router({
         }
         resolvedPriceId = prices.data[0].id;
       } else {
-        resolvedPriceId = envRef;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Invalid Stripe price/product config: expected price_ or prod_ prefix, got: ${envRef.slice(0, 8)}...`,
+        });
       }
 
       const appUrl = env.NEXT_PUBLIC_APP_URL.startsWith('http')

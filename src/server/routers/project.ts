@@ -342,17 +342,21 @@ export const projectRouter = router({
     .input(z.object({ title: z.string().max(100).optional() }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: { plan: true, _count: { select: { projects: true } } },
-      });
-      const planLimit = PLAN_LIMITS[user?.plan ?? 'FREE'];
-      if ((user?._count.projects ?? 0) >= planLimit) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Достигнут лимит проектов. Обновите тарифный план.' });
-      }
-      return ctx.db.project.create({
-        data: { title: stripTags(input.title ?? 'Без названия'), userId: ctx.session.user.id },
-        select: { id: true, title: true, status: true, createdAt: true },
+
+      // Use interactive transaction to atomically check limit and create
+      return ctx.db.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { plan: true, _count: { select: { projects: true } } },
+        });
+        const planLimit = PLAN_LIMITS[user?.plan ?? 'FREE'];
+        if ((user?._count.projects ?? 0) >= planLimit) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Достигнут лимит проектов. Обновите тарифный план.' });
+        }
+        return tx.project.create({
+          data: { title: stripTags(input.title ?? 'Без названия'), userId: ctx.session.user.id },
+          select: { id: true, title: true, status: true, createdAt: true },
+        });
       });
     }),
 
@@ -465,35 +469,34 @@ export const projectRouter = router({
 
       const userId = ctx.session.user.id;
 
-      // Check plan limits
-      const user = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: { plan: true, _count: { select: { projects: true } } },
-      });
-
-      const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
-      if ((user?._count.projects ?? 0) >= projectLimit) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Project limit reached. Upgrade your plan.',
-        });
-      }
-
-      const sceneLimit = SCENE_LIMITS[user?.plan ?? 'FREE'] ?? 10;
-      if (input.scenes.length > sceneLimit) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: `Scene limit is ${sceneLimit}. The imported project has ${input.scenes.length} scenes.`,
-        });
-      }
-
       // Sanitize text fields
       const title = stripTags(input.project.title);
       const description = input.project.description ? stripTags(input.project.description) : null;
       const tags = input.project.tags.map((tag) => stripTags(tag));
 
-      // Create project + scenes in a transaction
+      // Check plan limits and create project + scenes atomically in a transaction
       const result = await ctx.db.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { plan: true, _count: { select: { projects: true } } },
+        });
+
+        const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
+        if ((user?._count.projects ?? 0) >= projectLimit) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Project limit reached. Upgrade your plan.',
+          });
+        }
+
+        const sceneLimit = SCENE_LIMITS[user?.plan ?? 'FREE'] ?? 10;
+        if (input.scenes.length > sceneLimit) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Scene limit is ${sceneLimit}. The imported project has ${input.scenes.length} scenes.`,
+          });
+        }
+
         const projectData: Prisma.ProjectCreateInput = {
           title,
           description,
@@ -541,47 +544,45 @@ export const projectRouter = router({
 
       const userId = ctx.session.user.id;
 
-      // Check plan limits
-      const user = await ctx.db.user.findUnique({
-        where: { id: userId },
-        select: { plan: true, _count: { select: { projects: true } } },
-      });
-      const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
-      if ((user?._count.projects ?? 0) >= projectLimit) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Project limit reached. Upgrade your plan.',
-        });
-      }
-
-      // Fetch the source project
-      const source = await ctx.db.project.findFirst({
-        where: { id: input.id, userId },
-        select: {
-          title: true,
-          description: true,
-          tags: true,
-          status: true,
-          thumbnailData: true,
-          thumbnailUrl: true,
-          characters: true,
-          scenes: {
-            select: {
-              prompt: true,
-              label: true,
-              duration: true,
-              order: true,
-              model: true,
-              metadata: true,
-            },
-            orderBy: { order: 'asc' },
-          },
-        },
-      });
-      if (!source) throw new TRPCError({ code: 'NOT_FOUND' });
-
-      // Create duplicate in a transaction
+      // Check plan limits, fetch source, and create duplicate atomically in a transaction
       const result = await ctx.db.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { plan: true, _count: { select: { projects: true } } },
+        });
+        const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
+        if ((user?._count.projects ?? 0) >= projectLimit) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Project limit reached. Upgrade your plan.',
+          });
+        }
+
+        // Fetch the source project
+        const source = await tx.project.findFirst({
+          where: { id: input.id, userId },
+          select: {
+            title: true,
+            description: true,
+            tags: true,
+            status: true,
+            thumbnailData: true,
+            thumbnailUrl: true,
+            characters: true,
+            scenes: {
+              select: {
+                prompt: true,
+                label: true,
+                duration: true,
+                order: true,
+                model: true,
+                metadata: true,
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+        });
+        if (!source) throw new TRPCError({ code: 'NOT_FOUND' });
         const projectData: Prisma.ProjectCreateInput = {
           title: `${source.title} (Copy)`,
           description: source.description,

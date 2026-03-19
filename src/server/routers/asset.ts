@@ -64,28 +64,32 @@ export const assetRouter = router({
 
       const plan = ctx.session.user.plan ?? 'FREE';
       const maxAssets = ASSET_LIMITS[plan];
-      if (maxAssets !== undefined) {
-        const currentCount = await ctx.db.asset.count({
-          where: { userId: ctx.session.user.id },
-        });
-        if (currentCount >= maxAssets) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: `Достигнут лимит загрузок для плана ${plan} (${maxAssets}). Перейдите на более высокий тариф.`,
-          });
-        }
-      }
 
-      return ctx.db.asset.create({
-        data: {
-          url: input.url,
-          filename: stripTags(input.filename),
-          type: input.type,
-          size: input.size,
-          folderId: input.folderId ?? null,
-          userId: ctx.session.user.id,
-        },
-        select: { id: true, url: true, filename: true, type: true, folderId: true },
+      // Use interactive transaction to atomically check limit and create
+      return ctx.db.$transaction(async (tx) => {
+        if (maxAssets !== undefined) {
+          const currentCount = await tx.asset.count({
+            where: { userId: ctx.session.user.id },
+          });
+          if (currentCount >= maxAssets) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: `Достигнут лимит загрузок для плана ${plan} (${maxAssets}). Перейдите на более высокий тариф.`,
+            });
+          }
+        }
+
+        return tx.asset.create({
+          data: {
+            url: input.url,
+            filename: stripTags(input.filename),
+            type: input.type,
+            size: input.size,
+            folderId: input.folderId ?? null,
+            userId: ctx.session.user.id,
+          },
+          select: { id: true, url: true, filename: true, type: true, folderId: true },
+        });
       });
     }),
 
