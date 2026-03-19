@@ -77,6 +77,13 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: '28', label: 'Наука и технологии' },
 ];
 
+const SHORTS_RPM: Record<string, number> = {
+  'minecraft': 0.07,
+  'fortnite': 0.06,
+  'roblox': 0.05,
+  '': 0.04,
+};
+
 const GAME_FILTERS: { key: string; label: string }[] = [
   { key: '', label: 'Все игры' },
   { key: 'minecraft', label: 'Minecraft' },
@@ -662,13 +669,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const showUpgradeOverlay = !isPro && data.length > 0;
 
   // Niche stats: total views + estimated earnings
-  const SHORTS_RPM: Record<string, number> = {
-    'minecraft': 0.07,
-    'fortnite': 0.06,
-    'roblox': 0.05,
-    '': 0.04, // general Shorts RPM
-  };
-
   const nicheStats = useMemo(() => {
     if (filteredData.length === 0) return null;
     const totalViews = filteredData.reduce((sum, item) => sum + (item.views || 0), 0);
