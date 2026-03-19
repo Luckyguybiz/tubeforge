@@ -115,7 +115,7 @@ export function AdminPage() {
 
   const updateUser = trpc.admin.updateUser.useMutation({
     onSuccess: () => {
-      toast.success(useLocaleStore.getState().t('admin.userUpdated'));
+      toast.success(t('admin.userUpdated'));
       users.refetch();
       stats.refetch();
     },
@@ -125,7 +125,7 @@ export function AdminPage() {
   const referralStats = trpc.admin.referralStats.useQuery(undefined, { enabled: isAdmin && activeTab === 'referrals' });
   const createPayout = trpc.admin.createPayout.useMutation({
     onSuccess: () => {
-      toast.success('Выплата записана');
+      toast.success(t('admin.payoutRecorded'));
       referralStats.refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -160,9 +160,9 @@ export function AdminPage() {
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Доступ запрещён</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{t('admin.accessDenied')}</h2>
         <p style={{ color: C.sub, fontSize: 14, maxWidth: 300, textAlign: 'center', lineHeight: 1.5 }}>
-          У вас нет прав администратора для просмотра этой страницы
+          {t('admin.noPermission')}
         </p>
       </div>
     );
