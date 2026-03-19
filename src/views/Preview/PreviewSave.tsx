@@ -104,7 +104,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   /* Auto-select first channel */
   useEffect(() => {
     if (channels.data?.length && !selectedChannel) {
-      setSelectedChannel(channels.data[0].id);
+      setSelectedChannel(channels.data[0]?.id ?? '');
     }
   }, [channels.data, selectedChannel]);
 
