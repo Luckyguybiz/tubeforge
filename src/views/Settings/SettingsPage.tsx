@@ -10,29 +10,31 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import type { Theme } from '@/lib/types';
 
 /* ── Plan feature lists ──────────────────────────── */
-const PLAN_FEATURES: Record<string, string[]> = {
-  FREE: [
-    '3 проекта',
-    '5 ИИ-генераций в месяц',
-    'Базовые шаблоны',
-    'Водяной знак на экспорте',
-  ],
-  PRO: [
-    '25 проектов',
-    '100 ИИ-генераций в месяц',
-    'Приоритетная генерация',
-    'Экспорт без водяного знака',
-    'Расширенные шаблоны',
-  ],
-  STUDIO: [
-    'Безлимитные проекты',
-    'Безлимитные ИИ-генерации',
-    'Командная работа',
-    'API-доступ',
-    'Приоритетная поддержка',
-    'Все шаблоны и функции',
-  ],
-};
+function getPlanFeatures(t: (key: string) => string): Record<string, string[]> {
+  return {
+    FREE: [
+      t('settings.plan.free.projects'),
+      t('settings.plan.free.aiGen'),
+      t('settings.plan.free.templates'),
+      t('settings.plan.free.watermark'),
+    ],
+    PRO: [
+      t('settings.plan.pro.projects'),
+      t('settings.plan.pro.aiGen'),
+      t('settings.plan.pro.priority'),
+      t('settings.plan.pro.noWatermark'),
+      t('settings.plan.pro.templates'),
+    ],
+    STUDIO: [
+      t('settings.plan.studio.projects'),
+      t('settings.plan.studio.aiGen'),
+      t('settings.plan.studio.team'),
+      t('settings.plan.studio.api'),
+      t('settings.plan.studio.support'),
+      t('settings.plan.studio.allFeatures'),
+    ],
+  };
+}
 
 function getPlanLabel(plan: string, t: (key: string) => string): string {
   const map: Record<string, string> = {
