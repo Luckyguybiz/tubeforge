@@ -89,9 +89,14 @@ export function VideoCompressor() {
     setError(null);
 
     try {
+      // WASM has limited memory — reject files > 200 MB
+      if (file.size > 200 * 1024 * 1024) {
+        throw new Error('Файл слишком большой для браузерного сжатия (макс. 200 МБ). Используйте десктопный FFmpeg.');
+      }
+
       const ffmpeg = await loadFFmpeg();
 
-      // Write input file
+      // Write input file (use actual extension for format detection)
       const data = await readFileAsUint8Array(file);
       await ffmpeg.writeFile('input.mp4', data);
 
@@ -118,16 +123,18 @@ export function VideoCompressor() {
         args.push('-b:v', '3000k', '-b:a', '192k');
       }
 
-      // Format
+      // Format & codecs
       const ext = format === 'webm' ? 'webm' : 'mp4';
       if (format === 'webm') {
-        args.push('-c:v', 'libvpx-vp9', '-c:a', 'libopus');
+        // VP8 + Vorbis — VP9 crashes WASM with memory overflow
+        args.push('-c:v', 'libvpx', '-deadline', 'realtime', '-cpu-used', '8', '-c:a', 'libvorbis');
       } else {
-        // mp4 with h264
-        args.push('-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac');
+        // H.264 + AAC — ultrafast uses less WASM memory
+        args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac');
       }
 
-      args.push(`output.${ext}`);
+      // Prevent "already exists. Overwrite?" prompt
+      args.push('-y', `output.${ext}`);
 
       const exitCode = await ffmpeg.exec(args);
 
