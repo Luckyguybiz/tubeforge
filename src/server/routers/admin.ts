@@ -142,4 +142,35 @@ export const adminRouter = router({
       await ctx.db.user.delete({ where: { id: input.userId } });
       return { success: true };
     }),
+
+  referralStats: adminProcedure.query(async ({ ctx }) => {
+    const referrers = await ctx.db.user.findMany({
+      where: { referralEarnings: { gt: 0 } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        referralCode: true,
+        referralEarnings: true,
+        payouts: { select: { amount: true } },
+      },
+      orderBy: { referralEarnings: 'desc' },
+      take: 50,
+    });
+
+    return referrers.map(r => ({
+      ...r,
+      totalPaid: r.payouts.reduce((s, p) => s + p.amount, 0),
+      pending: r.referralEarnings - r.payouts.reduce((s, p) => s + p.amount, 0),
+    }));
+  }),
+
+  createPayout: adminProcedure
+    .input(z.object({ userId: z.string(), amount: z.number().positive(), note: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      await checkAdminRate(ctx.session.user.id);
+      return ctx.db.payout.create({
+        data: { userId: input.userId, amount: input.amount, note: input.note },
+      });
+    }),
 });

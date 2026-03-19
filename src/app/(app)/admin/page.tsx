@@ -57,6 +57,7 @@ export default function AdminPage() {
   const [sortBy, setSortBy] = useState<SortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'users' | 'referrals'>('users');
 
   // Debounced search
   const searchTimer = useMemo(() => ({ id: null as ReturnType<typeof setTimeout> | null }), []);
@@ -87,6 +88,15 @@ export default function AdminPage() {
       toast.success('Пользователь обновлён');
       users.refetch();
       stats.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const referralStats = trpc.admin.referralStats.useQuery(undefined, { enabled: isAdmin && activeTab === 'referrals' });
+  const createPayout = trpc.admin.createPayout.useMutation({
+    onSuccess: () => {
+      toast.success('Выплата записана');
+      referralStats.refetch();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -292,8 +302,37 @@ export default function AdminPage() {
         ))}
       </div>
 
+      {/* ── Tab Switcher ───────────────────────────── */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20 }} role="tablist">
+        {([['users', 'Users'], ['referrals', 'Referrals']] as const).map(([key, label]) => {
+          const active = activeTab === key;
+          return (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveTab(key)}
+              style={{
+                padding: '8px 20px',
+                borderRadius: 8,
+                border: `1px solid ${active ? C.accent : C.border}`,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                background: active ? C.accentDim : 'transparent',
+                color: active ? C.accent : C.sub,
+                transition: 'all .15s',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Users Table Section ────────────────────── */}
-      <div style={{
+      {activeTab === 'users' && <div style={{
         background: C.card, border: `1px solid ${C.border}`,
         borderRadius: 16, overflow: 'hidden', marginBottom: 32,
       }}>
@@ -538,7 +577,111 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-      </div>
+      </div>}
+
+      {/* ── Referrals Section ──────────────────────── */}
+      {activeTab === 'referrals' && (
+        <div style={{
+          background: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 16, overflow: 'hidden', marginBottom: 32,
+        }}>
+          <div style={{
+            padding: '16px 20px', borderBottom: `1px solid ${C.border}`,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1v22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Referral Payouts</h2>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+              <thead>
+                <tr>
+                  <th style={thBase}>Name</th>
+                  <th style={thBase}>Email</th>
+                  <th style={thBase}>Code</th>
+                  <th style={{ ...thBase, textAlign: 'right' }}>Total Earned</th>
+                  <th style={{ ...thBase, textAlign: 'right' }}>Already Paid</th>
+                  <th style={{ ...thBase, textAlign: 'right' }}>Pending</th>
+                  <th style={{ ...thBase, textAlign: 'center' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {referralStats.isLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>
+                      <td style={tdBase}><Skeleton width="100px" height="16px" /></td>
+                      <td style={tdBase}><Skeleton width="140px" height="16px" /></td>
+                      <td style={tdBase}><Skeleton width="80px" height="16px" /></td>
+                      <td style={tdBase}><Skeleton width="60px" height="16px" /></td>
+                      <td style={tdBase}><Skeleton width="60px" height="16px" /></td>
+                      <td style={tdBase}><Skeleton width="60px" height="16px" /></td>
+                      <td style={{ ...tdBase, textAlign: 'center' }}><Skeleton width="80px" height="28px" /></td>
+                    </tr>
+                  ))
+                ) : !referralStats.data?.length ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '48px 20px', textAlign: 'center', color: C.dim, fontSize: 14 }}>
+                      No referrers with earnings yet
+                    </td>
+                  </tr>
+                ) : (
+                  referralStats.data.map((r) => (
+                    <tr key={r.id}>
+                      <td style={{ ...tdBase, fontWeight: 600 }}>{r.name || '---'}</td>
+                      <td style={{ ...tdBase, color: C.sub, fontSize: 12 }}>{r.email || '---'}</td>
+                      <td style={tdBase}>
+                        <code style={{
+                          fontSize: 11, background: `${C.accent}12`, color: C.accent,
+                          padding: '2px 8px', borderRadius: 4, fontWeight: 600,
+                        }}>
+                          {r.referralCode || '---'}
+                        </code>
+                      </td>
+                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600 }}>
+                        ${r.referralEarnings.toFixed(2)}
+                      </td>
+                      <td style={{ ...tdBase, textAlign: 'right', color: C.green, fontWeight: 600 }}>
+                        ${r.totalPaid.toFixed(2)}
+                      </td>
+                      <td style={{ ...tdBase, textAlign: 'right', fontWeight: 700, color: r.pending > 0 ? C.orange : C.dim }}>
+                        ${r.pending.toFixed(2)}
+                      </td>
+                      <td style={{ ...tdBase, textAlign: 'center' }}>
+                        {r.pending > 0 ? (
+                          <button
+                            disabled={createPayout.isPending}
+                            onClick={() => createPayout.mutate({ userId: r.id, amount: r.pending, note: `Payout $${r.pending.toFixed(2)}` })}
+                            style={{
+                              padding: '5px 14px',
+                              borderRadius: 6,
+                              border: `1px solid ${C.green}`,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: createPayout.isPending ? 'not-allowed' : 'pointer',
+                              fontFamily: 'inherit',
+                              background: `${C.green}18`,
+                              color: C.green,
+                              opacity: createPayout.isPending ? 0.5 : 1,
+                              transition: 'opacity .15s',
+                            }}
+                          >
+                            Mark Paid
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 11, color: C.dim }}>Paid</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── Recent Activity ────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>

@@ -67,6 +67,7 @@ model User {
   referralCode     String?      @unique
   referredBy       String?
   referralEarnings Float        @default(0)
+  payouts          Payout[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 }
@@ -215,4 +216,14 @@ model DesignFolder {
   @@index([userId])
   @@index([userId, parentId])
   @@index([parentId])
+}
+
+model Payout {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float
+  method    String   @default("manual") // "manual", "stripe_connect", "paypal"
+  note      String?
+  createdAt DateTime @default(now())
 }

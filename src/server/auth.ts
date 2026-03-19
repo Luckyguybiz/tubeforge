@@ -88,6 +88,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
+  events: {
+    async signIn({ user }) {
+      if (user.id) {
+        // Auto-generate referral code on first login if not yet set
+        await db.user.updateMany({
+          where: { id: user.id, referralCode: null },
+          data: { referralCode: user.id.slice(0, 8).toUpperCase() },
+        }).catch(() => {}); // Ignore if already set (unique constraint)
+      }
+    },
+  },
   pages: {
     signIn: '/login',
   },
