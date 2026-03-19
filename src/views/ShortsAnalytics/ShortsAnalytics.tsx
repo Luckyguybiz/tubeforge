@@ -600,7 +600,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
           thumbnail: s.thumbnail ?? null,
         })),
       );
-      if (json.error) {
+      if (json.error && (!json.shorts || json.shorts.length === 0)) {
         setError(json.error);
       }
     } catch (err) {
@@ -980,7 +980,14 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       </label>
                       <select
                         value={filters.category}
-                        onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFilters((f) => ({
+                            ...f,
+                            category: val,
+                            gameFilter: val === '' || val === '20' ? f.gameFilter : '',
+                          }));
+                        }}
                         style={{
                           width: '100%',
                           padding: '7px 10px',
@@ -1034,7 +1041,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       text={C.text}
                     />
 
-                    {/* Game sub-filter (shown when category = Gaming) */}
+                    {/* Game sub-filter (shown only when category = Gaming or All) */}
+                    {(filters.category === '' || filters.category === '20') && (
                     <div style={{ marginTop: 8 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
                         Игры
@@ -1065,6 +1073,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                         </span>
                       </div>
                     </div>
+                    )}
 
                     {/* Clear */}
                     <button
