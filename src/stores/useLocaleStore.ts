@@ -242,6 +242,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.upload': 'Загрузить',
 
     'billing.upgradeSuccess': 'Подписка успешно оформлена! Добро пожаловать в новый план.',
+    'cookie.message': 'Мы используем cookies для улучшения работы сервиса.',
+    'cookie.accept': 'Принять',
+    'cookie.decline': 'Отклонить',
     'nav.referral': 'Партнёрка',
 
     // Sidebar
@@ -1082,6 +1085,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.upload': 'Upload',
 
     'billing.upgradeSuccess': 'Subscription upgraded successfully! Welcome to your new plan.',
+    'cookie.message': 'We use cookies to improve your experience.',
+    'cookie.accept': 'Accept',
+    'cookie.decline': 'Decline',
     'nav.referral': 'Referrals',
 
     // Sidebar
@@ -1922,6 +1928,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.upload': 'Жүктеу',
 
     'billing.upgradeSuccess': 'Жазылым сәтті жаңартылды! Жаңа жоспарыңызға қош келдіңіз.',
+    'cookie.message': 'Біз cookies файлдарын қызметті жақсарту үшін пайдаланамыз.',
+    'cookie.accept': 'Қабылдау',
+    'cookie.decline': 'Бас тарту',
     'nav.referral': 'Серіктестік',
 
     // Sidebar
@@ -2762,6 +2771,9 @@ const translations: Record<Locale, Record<string, string>> = {
     'thumbs.uploads.upload': 'Subir',
 
     'billing.upgradeSuccess': '¡Suscripción actualizada con éxito! Bienvenido a tu nuevo plan.',
+    'cookie.message': 'Usamos cookies para mejorar tu experiencia.',
+    'cookie.accept': 'Aceptar',
+    'cookie.decline': 'Rechazar',
     'nav.referral': 'Referidos',
 
     // Sidebar
