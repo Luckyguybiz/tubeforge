@@ -133,12 +133,7 @@ export function Mp3Converter() {
         throw new Error(`FFmpeg завершился с кодом ${exitCode}`);
       }
 
-<<<<<<< HEAD
-      const output = await ffmpeg.readFile(outputName_);
-      const rawBytes = output instanceof Uint8Array ? output : new TextEncoder().encode(output);
-=======
       const rawBytes = await ffmpeg.readFile(outputName_);
->>>>>>> 49d993b (fix: replace @ffmpeg/ffmpeg with custom Worker wrapper to fix WASM loading)
       const blob = new Blob([new Uint8Array(rawBytes) as BlobPart], { type: MIME_MAP[outputFormat] });
 
       setConvertedBlob(blob);
@@ -151,12 +146,8 @@ export function Mp3Converter() {
       try { await ffmpeg.deleteFile(outputName_); } catch { /* noop */ }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Conversion error:', err);
-<<<<<<< HEAD
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Ошибка конвертации: ${msg}`);
-=======
-      setError(err instanceof Error ? err.message : 'Не удалось конвертировать файл');
->>>>>>> 49d993b (fix: replace @ffmpeg/ffmpeg with custom Worker wrapper to fix WASM loading)
     } finally {
       setLoading(false);
     }
