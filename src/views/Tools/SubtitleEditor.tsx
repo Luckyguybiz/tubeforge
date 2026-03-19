@@ -130,6 +130,7 @@ export function SubtitleEditor() {
           value={videoTitle}
           onChange={(e) => setVideoTitle(e.target.value)}
           placeholder="Video title..."
+          aria-label="Video title"
           style={{
             flex: 1, minWidth: 120, padding: '8px 14px', borderRadius: 10,
             border: `1px solid ${C.border}`, background: C.card,
@@ -166,7 +167,7 @@ export function SubtitleEditor() {
 
       {/* Export success feedback */}
       {exported && (
-        <div style={{
+        <div role="status" style={{
           padding: 14, borderRadius: 10, marginBottom: 16,
           background: '#22c55e12', border: '1px solid #22c55e33',
           display: 'flex', alignItems: 'center', gap: 10,
@@ -226,6 +227,9 @@ export function SubtitleEditor() {
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>One Word</span>
                   <button
                     onClick={() => setOneWord(!oneWord)}
+                    role="switch"
+                    aria-checked={oneWord}
+                    aria-label="One word display mode"
                     style={{
                       width: 40, height: 22, borderRadius: 11, border: 'none',
                       background: oneWord
@@ -249,6 +253,9 @@ export function SubtitleEditor() {
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Lines</span>
                   <button
                     onClick={() => setShowLines(!showLines)}
+                    role="switch"
+                    aria-checked={showLines}
+                    aria-label="Show subtitle lines"
                     style={{
                       width: 40, height: 22, borderRadius: 11, border: 'none',
                       background: showLines
@@ -510,6 +517,7 @@ export function SubtitleEditor() {
             {/* Rewind */}
             <button
               onClick={() => setIsPlaying(false)}
+              aria-label="Rewind"
               style={{
                 width: 30, height: 30, borderRadius: 8, border: 'none',
                 background: C.card, color: C.text, cursor: 'pointer',
@@ -527,6 +535,7 @@ export function SubtitleEditor() {
             {/* Play/Pause */}
             <button
               onClick={() => setIsPlaying(!isPlaying)}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
               style={{
                 width: 36, height: 36, borderRadius: 10, border: 'none',
                 background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
@@ -551,6 +560,7 @@ export function SubtitleEditor() {
             {/* Speed */}
             <button
               onClick={cycleSpeed}
+              aria-label={`Playback speed ${speed}`}
               style={{
                 padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}`,
                 background: C.card, color: C.text, fontSize: 11, fontWeight: 600,
@@ -570,6 +580,7 @@ export function SubtitleEditor() {
             {/* Volume */}
             <button
               onClick={() => {/* Volume toggle placeholder */}}
+              aria-label="Toggle volume"
               style={{
                 width: 30, height: 30, borderRadius: 8, border: 'none',
                 background: C.card, color: C.text, cursor: 'pointer',

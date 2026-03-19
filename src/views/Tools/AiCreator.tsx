@@ -430,6 +430,7 @@ export function AiCreator() {
                   onClick={handlePlay}
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
                   style={{
                     width: 48, height: 48, borderRadius: '50%', marginTop: 20,
                     background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,

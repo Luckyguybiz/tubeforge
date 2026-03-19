@@ -1,6 +1,8 @@
 /* Tool registry — maps tool IDs to their lazy-loaded components */
+import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 const loader = () => <Skeleton width="100%" height="60vh" />;
 
@@ -55,13 +57,32 @@ const COMPONENT_NAMES: Record<string, string> = {
   'face-swap': 'FaceSwap',
 };
 
-/* Create dynamic components for each tool */
+/**
+ * Wraps a lazy-loaded tool component in ErrorBoundary + Suspense so one
+ * broken tool doesn't crash the whole page.
+ */
+function createToolWrapper(LazyComponent: React.ComponentType, displayName: string) {
+  function ToolWithBoundary() {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<Skeleton width="100%" height="60vh" />}>
+          <LazyComponent />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+  ToolWithBoundary.displayName = `ErrorBoundary(${displayName})`;
+  return ToolWithBoundary;
+}
+
+/* Create dynamic components for each tool, each wrapped in ErrorBoundary + Suspense */
 for (const [id, importFn] of Object.entries(tools)) {
   const name = COMPONENT_NAMES[id]!;
-  TOOL_COMPONENTS[id] = dynamic(
+  const LazyComponent = dynamic(
     () => importFn().then((m) => ({ default: (m as Record<string, React.ComponentType>)[name] })),
     { loading: loader, ssr: false },
   );
+  TOOL_COMPONENTS[id] = createToolWrapper(LazyComponent, name);
 }
 
 export const TOOL_IDS = Object.keys(tools);

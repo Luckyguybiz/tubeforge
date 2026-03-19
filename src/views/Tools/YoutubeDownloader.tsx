@@ -3,15 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const QUALITY_VALUES = ['1080p', '720p', '480p', '360p', 'audio'] as const;
-const QUALITY_LABELS: Record<(typeof QUALITY_VALUES)[number], string> = {
-  '1080p': '1080p',
-  '720p': '720p',
-  '480p': '480p',
-  '360p': '360p',
-  audio: 'Только аудио',
-};
 const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
 
 function formatBytes(bytes: number): string {
@@ -45,6 +39,15 @@ function isValidYoutubeUrl(url: string): boolean {
 
 export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+
+  const QUALITY_LABELS: Record<(typeof QUALITY_VALUES)[number], string> = {
+    '1080p': '1080p',
+    '720p': '720p',
+    '480p': '480p',
+    '360p': '360p',
+    audio: t('tools.ytdl.audioOnly'),
+  };
 
   const [url, setUrl] = useState('');
   const [quality, setQuality] = useState<(typeof QUALITY_VALUES)[number]>('1080p');
@@ -90,6 +93,9 @@ export function YoutubeDownloader() {
     setThumbError(false);
     setDone(false);
 
+    // Auto-abort after 15 seconds to prevent hanging spinner
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+
     try {
       const res = await fetch(
         `/api/tools/youtube-download?url=${encodeURIComponent(videoUrl)}`,
@@ -101,9 +107,9 @@ export function YoutubeDownloader() {
       const ct = res.headers.get('content-type') ?? '';
       if (!ct.includes('application/json')) {
         if (res.status === 401 || res.redirected) {
-          setFetchError('Сессия истекла. Пожалуйста, обновите страницу.');
+          setFetchError(t('tools.ytdl.sessionExpired'));
         } else {
-          setFetchError(`Сервер вернул некорректный ответ (${res.status}). Попробуйте позже.`);
+          setFetchError(`${t('tools.ytdl.serverError')} (${res.status})`);
         }
         return;
       }
@@ -111,16 +117,24 @@ export function YoutubeDownloader() {
       const data = await res.json();
 
       if (!res.ok) {
-        setFetchError(data.error ?? 'Не удалось загрузить информацию о видео');
+        setFetchError(data.error ?? t('tools.ytdl.fetchError'));
         return;
       }
 
       setVideoInfo(data as VideoInfo);
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        // If the abort was triggered by our timeout (not by user navigation),
+        // show a user-friendly timeout message.
+        if (controller.signal.aborted && abortRef.current === controller) {
+          setFetchError('Сервер не отвечает. Попробуйте ещё раз.');
+        }
+        return;
+      }
       console.error('[YoutubeDownloader] fetchVideoInfo error:', err);
-      setFetchError('Ошибка сети. Проверьте подключение к интернету.');
+      setFetchError(t('tools.ytdl.networkError'));
     } finally {
+      clearTimeout(timeout);
       setFetchingInfo(false);
     }
   }, []);
@@ -207,6 +221,11 @@ export function YoutubeDownloader() {
     setDownloadEta(0);
     setDownloadSpeed(0);
 
+    // Timeout for the initial API call (not the download stream)
+    const postTimeout = setTimeout(() => {
+      if (!controller.signal.aborted) controller.abort();
+    }, 20_000);
+
     try {
       const isAudioOnly = quality === 'audio';
       const res = await fetch('/api/tools/youtube-download', {
@@ -220,13 +239,16 @@ export function YoutubeDownloader() {
         signal: controller.signal,
       });
 
+      // POST succeeded — clear the timeout before starting the long download
+      clearTimeout(postTimeout);
+
       // Validate JSON response before parsing
       const ct = res.headers.get('content-type') ?? '';
       if (!ct.includes('application/json')) {
         if (res.status === 401 || res.redirected) {
-          setStreamError('Сессия истекла. Пожалуйста, обновите страницу.');
+          setStreamError(t('tools.ytdl.sessionExpired'));
         } else {
-          setStreamError(`Сервер вернул некорректный ответ (${res.status}).`);
+          setStreamError(`${t('tools.ytdl.serverError')} (${res.status})`);
         }
         setDone(true);
         return;
@@ -286,10 +308,18 @@ export function YoutubeDownloader() {
       showToast('Скачивание завершено!');
       setDone(true);
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        // Only show timeout error if this was our timeout, not user navigation
+        if (controller.signal.aborted && abortRef.current === controller) {
+          setStreamError('Сервер не отвечает. Попробуйте ещё раз.');
+          setDone(true);
+        }
+        return;
+      }
       setStreamError('Ошибка сети. Проверьте подключение к интернету.');
       setDone(true);
     } finally {
+      clearTimeout(postTimeout);
       setLoading(false);
     }
   };

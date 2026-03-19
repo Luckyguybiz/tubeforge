@@ -77,6 +77,7 @@ export function SubtitleRemover() {
               </div>
               <button
                 onClick={() => { setFile(null); setProcessed(false); }}
+                aria-label="Remove video file"
                 style={{
                   background: 'none', border: 'none', color: C.dim,
                   cursor: 'pointer', fontSize: 18, padding: 4,
@@ -360,7 +361,7 @@ export function SubtitleRemover() {
 
           {/* Status info */}
           {processed && (
-            <div style={{
+            <div role="status" style={{
               padding: 14, borderRadius: 10,
               background: '#22c55e12', border: '1px solid #22c55e33',
               display: 'flex', alignItems: 'center', gap: 10,

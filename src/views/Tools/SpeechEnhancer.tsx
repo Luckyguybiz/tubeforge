@@ -32,8 +32,14 @@ export function SpeechEnhancer() {
   }, [file, loading]);
 
   const handleDownload = useCallback(() => {
-    /* Simulate download */
-  }, []);
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `enhanced_${file.name}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [file]);
 
   const handleFileSet = useCallback((f: File) => {
     setFile(f);
@@ -209,6 +215,7 @@ export function SpeechEnhancer() {
               <input
                 type="range" min={0} max={100} value={noiseReduction}
                 onChange={(e) => setNoiseReduction(Number(e.target.value))}
+                aria-label="Noise reduction"
                 style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
               />
             </div>
@@ -222,6 +229,7 @@ export function SpeechEnhancer() {
               <input
                 type="range" min={0} max={100} value={clarityBoost}
                 onChange={(e) => setClarityBoost(Number(e.target.value))}
+                aria-label="Clarity boost"
                 style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
               />
             </div>

@@ -203,6 +203,7 @@ export function Veo3Generator() {
                 }} />
                 <button
                   onClick={handlePlay}
+                  aria-label={isPlaying ? 'Pause video' : 'Play video'}
                   style={{
                     width: 64, height: 64, borderRadius: '50%',
                     background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,

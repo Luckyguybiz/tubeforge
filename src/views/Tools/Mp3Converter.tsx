@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const BITRATES = ['128', '192', '256', '320'] as const;
 const SAMPLE_RATES = ['44.1kHz', '48kHz'] as const;
@@ -25,12 +26,13 @@ const MIME_MAP: Record<OutputFormat, string> = {
 };
 
 function formatSize(bytes: number) {
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} МБ`;
-  return `${(bytes / 1024).toFixed(1)} КБ`;
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} ${useLocaleStore.getState().t('tools.sizeMB')}`;
+  return `${(bytes / 1024).toFixed(1)} ${useLocaleStore.getState().t('tools.sizeKB')}`;
 }
 
 export function Mp3Converter() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const [file, setFile] = useState<File | null>(null);
   const [bitrate, setBitrate] = useState<(typeof BITRATES)[number]>('256');
@@ -78,7 +80,7 @@ export function Mp3Converter() {
       return ffmpeg;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(`Не удалось загрузить модуль обработки: ${msg}`);
+      setError(`${t('tools.mp3.loadModuleError')}: ${msg}`);
       ffmpegRef.current = null;
       throw err;
     } finally {
@@ -140,7 +142,7 @@ export function Mp3Converter() {
       ffmpeg.off('progress', onProgress);
 
       if (exitCode !== 0) {
-        throw new Error(`FFmpeg завершился с кодом ${exitCode}`);
+        throw new Error(`${t('tools.mp3.ffmpegExitCode')} ${exitCode}`);
       }
 
       const rawBytes = await ffmpeg.readFile(outputName_);
@@ -157,7 +159,7 @@ export function Mp3Converter() {
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Conversion error:', err);
       const msg = err instanceof Error ? err.message : String(err);
-      setError(`Ошибка конвертации: ${msg}`);
+      setError(`${t('tools.mp3.conversionError')}: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -205,8 +207,8 @@ export function Mp3Converter() {
 
   return (
     <ToolPageShell
-      title="Конвертер аудио"
-      subtitle="Конвертируйте любой аудио или видеофайл в аудиоформат"
+      title={t('tools.mp3.title')}
+      subtitle={t('tools.mp3.subtitle')}
       gradient={['#10b981', '#059669']}
     >
       {!file ? (
@@ -229,7 +231,7 @@ export function Mp3Converter() {
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             <span style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 12 }}>
-              Перетащите аудио или видеофайл сюда или нажмите для загрузки
+              {t('tools.mp3.dropLabel')}
             </span>
             <span style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
               MP4, WAV, FLAC, OGG, AAC, WebM, MKV
@@ -277,13 +279,13 @@ export function Mp3Converter() {
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
               }}
             >
-              Убрать
+              {t('tools.remove')}
             </button>
           </div>
 
           {/* Output Format Selector */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Формат</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.mp3.format')}</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {OUTPUT_FORMATS.map((fmt) => (
                 <button
@@ -308,7 +310,7 @@ export function Mp3Converter() {
           {/* Bitrate Selector */}
           {bitrateRelevant && (
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Битрейт (кбит/с)</label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.mp3.bitrate')}</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {BITRATES.map((b) => (
                   <button
@@ -333,7 +335,7 @@ export function Mp3Converter() {
 
           {/* Sample Rate */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Частота дискретизации</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.mp3.sampleRate')}</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {SAMPLE_RATES.map((s) => (
                 <button
@@ -357,14 +359,14 @@ export function Mp3Converter() {
 
           {/* Trim Option */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Обрезка (необязательно)</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.mp3.trim')}</label>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 background: C.surface, border: `1px solid ${C.border}`,
                 borderRadius: 10, padding: '0 12px', flex: 1,
               }}>
-                <span style={{ fontSize: 12, color: C.dim }}>Начало</span>
+                <span style={{ fontSize: 12, color: C.dim }}>{t('tools.mp3.start')}</span>
                 <input
                   value={trimStart}
                   onChange={(e) => setTrimStart(e.target.value)}
@@ -383,7 +385,7 @@ export function Mp3Converter() {
                 background: C.surface, border: `1px solid ${C.border}`,
                 borderRadius: 10, padding: '0 12px', flex: 1,
               }}>
-                <span style={{ fontSize: 12, color: C.dim }}>Конец</span>
+                <span style={{ fontSize: 12, color: C.dim }}>{t('tools.mp3.end')}</span>
                 <input
                   value={trimEnd}
                   onChange={(e) => setTrimEnd(e.target.value)}
@@ -399,7 +401,7 @@ export function Mp3Converter() {
 
           {/* Output File Name */}
           <div style={{ marginBottom: 28 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Имя выходного файла</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.mp3.outputName')}</label>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: C.surface, border: `1px solid ${C.border}`,
@@ -428,7 +430,7 @@ export function Mp3Converter() {
                 <path d="M21 12a9 9 0 11-6.219-8.56" />
               </svg>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.sub }}>
-                Загрузка модуля конвертации...
+                {t('tools.mp3.loadingModule')}
               </span>
               <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -438,7 +440,7 @@ export function Mp3Converter() {
           {loading && !ffmpegLoading && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: C.sub }}>Конвертация...</span>
+                <span style={{ fontSize: 12, color: C.sub }}>{t('tools.mp3.converting')}</span>
                 <span style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>{Math.min(100, Math.round(progress))}%</span>
               </div>
               <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
@@ -475,7 +477,7 @@ export function Mp3Converter() {
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
               </svg>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                Конвертация завершена — {formatSize(convertedSize)}
+                {t('tools.mp3.conversionDone')} — {formatSize(convertedSize)}
               </span>
             </div>
           )}
@@ -483,7 +485,7 @@ export function Mp3Converter() {
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: 12 }}>
             <ActionButton
-              label={done ? 'Конвертировать снова' : 'Конвертировать'}
+              label={done ? t('tools.mp3.convertAgain') : t('tools.mp3.convert')}
               gradient={['#10b981', '#059669']}
               onClick={handleConvert}
               loading={loading}
@@ -505,7 +507,7 @@ export function Mp3Converter() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Скачать аудио
+                {t('tools.mp3.downloadAudio')}
               </button>
             )}
           </div>

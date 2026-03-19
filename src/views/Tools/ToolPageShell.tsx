@@ -108,7 +108,6 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
       {/* Content */}
       <div style={{
         padding: '20px 16px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
-        ...(comingSoon ? { opacity: 0.5, pointerEvents: 'none' as const, filter: 'grayscale(0.3)' } : {}),
       }}>
         {children}
       </div>

@@ -91,6 +91,8 @@ export function CutCrop() {
   const [dragOver, setDragOver] = useState(false);
   const [thumbnails, setThumbnails] = useState<{ time: number; url: string }[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState('');
+  const [videoLoading, setVideoLoading] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const animRef = useRef(0);
@@ -99,10 +101,6 @@ export function CutCrop() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoUrlRef = useRef(videoUrl);
   videoUrlRef.current = videoUrl;
-  // Persist AudioContext and MediaElementSource across exports to avoid
-  // "already connected" errors from calling createMediaElementSource twice.
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
   /* ---- file handling ---- */
   const loadFile = useCallback((f: File) => {
@@ -110,6 +108,8 @@ export function CutCrop() {
     const url = URL.createObjectURL(f);
     setFile(f);
     setVideoUrl(url);
+    setVideoLoading(true);
+    setError('');
     setIsPlaying(false);
     setCurrentTime(0);
     setSpeed(1);
@@ -123,10 +123,6 @@ export function CutCrop() {
   useEffect(() => {
     return () => {
       if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current);
-      // Close persisted AudioContext on unmount
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(() => {});
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -243,28 +239,8 @@ export function CutCrop() {
 
       const stream = canvas.captureStream(30);
 
-      // Try to capture audio by playing through a media element source.
-      // Reuse existing AudioContext/source across exports because
-      // createMediaElementSource can only be called once per element.
-      try {
-        // Create or resume the AudioContext (it may have been suspended/closed)
-        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-          audioCtxRef.current = new AudioContext();
-          audioSourceRef.current = null; // source tied to old context is invalid
-        }
-        if (audioCtxRef.current.state === 'suspended') {
-          await audioCtxRef.current.resume();
-        }
-        if (!audioSourceRef.current) {
-          audioSourceRef.current = audioCtxRef.current.createMediaElementSource(v);
-          audioSourceRef.current.connect(audioCtxRef.current.destination);
-        }
-        const dest = audioCtxRef.current.createMediaStreamDestination();
-        audioSourceRef.current.connect(dest);
-        dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
-      } catch {
-        // Audio capture may fail – that is fine, export video only
-      }
+      // Note: Audio is not captured in browser exports — canvas captureStream only records video.
+      // For audio export, FFmpeg WASM would be needed.
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
         ? 'video/webm;codecs=vp9,opus'
@@ -489,12 +465,40 @@ export function CutCrop() {
             preload="auto"
             playsInline
             onLoadedMetadata={onMetadata}
+            onLoadedData={() => setVideoLoading(false)}
+            onError={() => {
+              setVideoLoading(false);
+              setError('Не удалось загрузить видео. Попробуйте другой формат (MP4, WebM, MOV).');
+            }}
             onEnded={() => { setIsPlaying(false); cancelAnimationFrame(animRef.current); }}
-            style={{ maxWidth: '100%', maxHeight: '60vh', display: videoUrl ? 'block' : 'none' }}
+            style={{ maxWidth: '100%', maxHeight: '60vh', display: videoUrl && !error ? 'block' : 'none' }}
           />
           {!videoUrl && (
             <div style={{ padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center' }}>
               Загрузите видео для начала работы
+            </div>
+          )}
+          {videoLoading && !error && (
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 12,
+            }}>
+              <svg width="32" height="32" viewBox="0 0 16 16" style={{ animation: 'spin 1s linear infinite' }}>
+                <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,.2)" strokeWidth="2" fill="none" />
+                <path d="M8 2a6 6 0 014.47 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
+              </svg>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Загрузка видео...</span>
+            </div>
+          )}
+          {error && (
+            <div style={{
+              padding: 40, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center',
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              <span style={{ color: '#ef4444', fontSize: 14, maxWidth: 320 }}>{error}</span>
             </div>
           )}
           {showCrop && (
@@ -579,6 +583,30 @@ export function CutCrop() {
             style={{ width: 80, accentColor: GRADIENT[0] }}
           />
           <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(1)))} style={{ ...btnBase, width: 28, height: 28, fontSize: 16 }} {...hover(C.cardHover)} title="Увеличить">+</button>
+
+          {/* New video */}
+          <button
+            onClick={() => {
+              if (videoUrl) URL.revokeObjectURL(videoUrl);
+              setFile(null);
+              setVideoUrl('');
+              setError('');
+              setVideoLoading(false);
+              setDuration(0);
+              setSegments([]);
+              setThumbnails([]);
+              setIsPlaying(false);
+              setCurrentTime(0);
+              setExporting(false);
+            }}
+            style={{ ...btnBase, width: 'auto', padding: '0 12px', gap: 6 }}
+            {...hover(C.cardHover)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span style={{ fontSize: 12 }}>Новое видео</span>
+          </button>
 
           {/* Add video */}
           <button

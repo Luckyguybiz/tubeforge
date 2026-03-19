@@ -127,6 +127,7 @@ export function FaceSwap() {
                 onClick={() => { setSourceFile(null); setDone(false); }}
                 onMouseEnter={() => setSourceRemoveHover(true)}
                 onMouseLeave={() => setSourceRemoveHover(false)}
+                aria-label="Remove source face image"
                 style={{
                   position: 'absolute', top: 8, right: 8,
                   width: 24, height: 24, borderRadius: 12,
@@ -217,6 +218,7 @@ export function FaceSwap() {
                 onClick={() => { setTargetFile(null); setDone(false); }}
                 onMouseEnter={() => setTargetRemoveHover(true)}
                 onMouseLeave={() => setTargetRemoveHover(false)}
+                aria-label="Remove target image"
                 style={{
                   position: 'absolute', top: 8, right: 8,
                   width: 24, height: 24, borderRadius: 12,
@@ -249,6 +251,9 @@ export function FaceSwap() {
         </div>
         <button
           onClick={() => setEnhance(!enhance)}
+          role="switch"
+          aria-checked={enhance}
+          aria-label="Enhance result quality"
           style={{
             width: 44, height: 24, borderRadius: 12, border: 'none',
             background: enhance ? '#f97316' : C.surface,

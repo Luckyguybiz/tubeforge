@@ -287,6 +287,7 @@ export function BackgroundRemover() {
             <input
               type="range" min={0} max={100} value={edgeSmoothing}
               onChange={(e) => setEdgeSmoothing(Number(e.target.value))}
+              aria-label="Edge smoothing"
               style={{ width: '100%', accentColor: '#8b5cf6' }}
             />
           </div>

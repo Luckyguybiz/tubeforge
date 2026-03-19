@@ -4,19 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
-
-const PRESETS = [
-  { id: 'low', label: 'Низкое', desc: 'Маленький файл' },
-  { id: 'medium', label: 'Среднее', desc: 'Баланс' },
-  { id: 'high', label: 'Высокое', desc: 'Лучшее качество' },
-] as const;
-
-const RESOLUTIONS = [
-  { label: 'Оригинал', value: 'original' },
-  { label: '1080p', value: '1080p' },
-  { label: '720p', value: '720p' },
-  { label: '480p', value: '480p' },
-] as const;
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const FORMATS = [
   { label: 'MP4', value: 'mp4' },
@@ -24,12 +12,26 @@ const FORMATS = [
 ] as const;
 
 function formatSize(bytes: number) {
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} МБ`;
-  return `${(bytes / 1024).toFixed(1)} КБ`;
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} ${useLocaleStore.getState().t('tools.sizeMB')}`;
+  return `${(bytes / 1024).toFixed(1)} ${useLocaleStore.getState().t('tools.sizeKB')}`;
 }
 
 export function VideoCompressor() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+
+  const PRESETS = [
+    { id: 'low', label: t('tools.compressor.presetLow'), desc: t('tools.compressor.presetLowDesc') },
+    { id: 'medium', label: t('tools.compressor.presetMedium'), desc: t('tools.compressor.presetMediumDesc') },
+    { id: 'high', label: t('tools.compressor.presetHigh'), desc: t('tools.compressor.presetHighDesc') },
+  ] as const;
+
+  const RESOLUTIONS = [
+    { label: t('tools.compressor.resOriginal'), value: 'original' },
+    { label: '1080p', value: '1080p' },
+    { label: '720p', value: '720p' },
+    { label: '480p', value: '480p' },
+  ] as const;
 
   const [file, setFile] = useState<File | null>(null);
   const [preset, setPreset] = useState<string>('medium');
@@ -81,7 +83,7 @@ export function VideoCompressor() {
       return ffmpeg;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(`Не удалось загрузить модуль обработки: ${msg}`);
+      setError(`${t('tools.compressor.loadModuleError')}: ${msg}`);
       ffmpegRef.current = null;
       throw err;
     } finally {
@@ -101,7 +103,7 @@ export function VideoCompressor() {
     try {
       // WASM has limited memory — reject files > 200 MB
       if (file.size > 200 * 1024 * 1024) {
-        throw new Error('Файл слишком большой для браузерного сжатия (макс. 200 МБ). Используйте десктопный FFmpeg.');
+        throw new Error(t('tools.compressor.fileTooBig'));
       }
 
       const ffmpeg = await loadFFmpeg();
@@ -154,7 +156,7 @@ export function VideoCompressor() {
       ffmpeg.off('progress', onProgress);
 
       if (exitCode !== 0) {
-        throw new Error(`FFmpeg завершился с кодом ${exitCode}`);
+        throw new Error(`${t('tools.compressor.ffmpegExitCode')} ${exitCode}`);
       }
 
       // Read output
@@ -172,7 +174,7 @@ export function VideoCompressor() {
       try { await ffmpeg.deleteFile(`output.${ext}`); } catch { /* noop */ }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Compression error:', err);
-      setError(err instanceof Error ? err.message : 'Не удалось сжать видео');
+      setError(err instanceof Error ? err.message : t('tools.compressor.compressError'));
     } finally {
       setCompressing(false);
     }
@@ -224,8 +226,8 @@ export function VideoCompressor() {
 
   return (
     <ToolPageShell
-      title="Сжатие видео"
-      subtitle="Уменьшите размер видеофайла с сохранением качества — сжатие через FFmpeg прямо в браузере"
+      title={t('tools.compressor.title')}
+      subtitle={t('tools.compressor.subtitle')}
       gradient={['#06b6d4', '#0ea5e9']}
     >
       {!file ? (
@@ -248,7 +250,7 @@ export function VideoCompressor() {
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             <span style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 12 }}>
-              Перетащите видеофайл сюда или нажмите для загрузки
+              {t('tools.compressor.dropLabel')}
             </span>
             <span style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
               MP4, WebM, MOV, AVI, MKV
@@ -290,7 +292,7 @@ export function VideoCompressor() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{file.name}</div>
-              <div style={{ fontSize: 11, color: C.dim }}>Размер оригинала: {formatSize(originalSize)}</div>
+              <div style={{ fontSize: 11, color: C.dim }}>{t('tools.compressor.originalSize')}: {formatSize(originalSize)}</div>
             </div>
             <button
               onClick={handleReset}
@@ -303,13 +305,13 @@ export function VideoCompressor() {
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
               }}
             >
-              Убрать
+              {t('tools.remove')}
             </button>
           </div>
 
           {/* Compression Preset */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Пресет сжатия</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.compressor.preset')}</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               {PRESETS.map((p) => (
                 <button
@@ -333,7 +335,7 @@ export function VideoCompressor() {
 
           {/* Resolution Selector */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Разрешение</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.compressor.resolution')}</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {RESOLUTIONS.map((r) => (
                 <button
@@ -357,7 +359,7 @@ export function VideoCompressor() {
 
           {/* Format Selector */}
           <div style={{ marginBottom: 24 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>Формат</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>{t('tools.compressor.format')}</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {FORMATS.map((f) => (
                 <button
@@ -390,8 +392,8 @@ export function VideoCompressor() {
                 <path d="M10 2a8 8 0 015.66 2.34" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" fill="none" />
               </svg>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Загрузка модуля сжатия...</div>
-                <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>Первая загрузка может занять 5-10 секунд</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t('tools.compressor.loadingModule')}</div>
+                <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>{t('tools.compressor.firstLoadHint')}</div>
               </div>
             </div>
           )}
@@ -405,7 +407,7 @@ export function VideoCompressor() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              <span style={{ fontSize: 12, color: '#06b6d4', fontWeight: 600 }}>Модуль FFmpeg загружен и готов к работе</span>
+              <span style={{ fontSize: 12, color: '#06b6d4', fontWeight: 600 }}>{t('tools.compressor.ffmpegReady')}</span>
             </div>
           )}
 
@@ -414,11 +416,11 @@ export function VideoCompressor() {
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.sub }}>
-                  {ffmpegLoading ? 'Загрузка FFmpeg...' : 'Сжатие видео...'}
+                  {ffmpegLoading ? t('tools.compressor.loadingFFmpeg') : t('tools.compressor.compressing')}
                 </span>
                 <span style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>{Math.min(100, progress)}%</span>
               </div>
-              <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
+              <div role="progressbar" aria-valuenow={Math.min(100, progress)} aria-valuemin={0} aria-valuemax={100} aria-label="Compression progress" style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
                 <div style={{
                   width: `${Math.min(100, progress)}%`, height: '100%', borderRadius: 4,
                   background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', transition: 'width 0.3s ease',
@@ -429,7 +431,7 @@ export function VideoCompressor() {
 
           {/* Error Message */}
           {error && (
-            <div style={{
+            <div role="alert" style={{
               padding: 16, borderRadius: 12, border: '1px solid rgba(239,68,68,.3)', background: 'rgba(239,68,68,.06)',
               marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10,
             }}>
@@ -448,7 +450,7 @@ export function VideoCompressor() {
               marginBottom: 24,
             }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>До</div>
+                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>{t('tools.compressor.before')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{formatSize(originalSize)}</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -457,15 +459,15 @@ export function VideoCompressor() {
                 </svg>
                 <span style={{ fontSize: 13, fontWeight: 700, color: reductionPercent > 0 ? '#06b6d4' : '#ef4444' }}>
                   {reductionPercent > 0
-                    ? `${reductionPercent}% меньше`
+                    ? `${reductionPercent}% ${t('tools.compressor.smaller')}`
                     : reductionPercent === 0
-                      ? 'Без изменений'
-                      : `${Math.abs(reductionPercent)}% больше`
+                      ? t('tools.compressor.noChange')
+                      : `${Math.abs(reductionPercent)}% ${t('tools.compressor.larger')}`
                   }
                 </span>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>После</div>
+                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>{t('tools.compressor.after')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#06b6d4' }}>
                   {formatSize(compressedSize)}
                 </div>
@@ -476,7 +478,7 @@ export function VideoCompressor() {
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: 12 }}>
             <ActionButton
-              label={done ? 'Сжать снова' : 'Сжать'}
+              label={done ? t('tools.compressor.compressAgain') : t('tools.compressor.compress')}
               gradient={['#06b6d4', '#0ea5e9']}
               onClick={handleCompress}
               loading={compressing}
@@ -498,7 +500,7 @@ export function VideoCompressor() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Скачать
+                {t('tools.download')}
               </button>
             )}
           </div>

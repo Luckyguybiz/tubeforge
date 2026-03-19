@@ -42,8 +42,14 @@ export function VocalRemover() {
   }, []);
 
   const handleDownload = useCallback((_label: string) => {
-    /* Simulate download */
-  }, []);
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${_label.toLowerCase()}_${file.name}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [file]);
 
   const pillStyle = (active: boolean): React.CSSProperties => ({
     padding: '8px 18px', borderRadius: 10,
@@ -129,6 +135,7 @@ export function VocalRemover() {
               onClick={() => setPlayingTrack(isPlaying ? null : label)}
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+              aria-label={isPlaying ? `Pause ${label}` : `Play ${label}`}
               style={{
                 width: 32, height: 32, borderRadius: '50%',
                 background: color, border: 'none', cursor: 'pointer',

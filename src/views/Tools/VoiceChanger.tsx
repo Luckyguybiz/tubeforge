@@ -304,6 +304,7 @@ export function VoiceChanger() {
               <input
                 type="range" min={0} max={100} value={pitch}
                 onChange={(e) => setPitch(Number(e.target.value))}
+                aria-label="Voice pitch"
                 style={{ width: '100%', accentColor: '#d946ef' }}
               />
             </div>
@@ -317,6 +318,7 @@ export function VoiceChanger() {
               <input
                 type="range" min={0} max={100} value={speed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
+                aria-label="Voice speed"
                 style={{ width: '100%', accentColor: '#a855f7' }}
               />
             </div>

@@ -192,6 +192,7 @@ export function FakeTextsGenerator() {
                   {/* Sender toggle */}
                   <button
                     onClick={() => toggleSender(msg.id)}
+                    aria-label={`Switch sender for message ${idx + 1}, currently Person ${msg.sender}`}
                     style={{
                       padding: '6px 10px', borderRadius: 8, border: 'none',
                       background: msg.sender === 1 ? activePlatform.bubbleColor : C.card,
@@ -223,6 +224,7 @@ export function FakeTextsGenerator() {
                   {/* Remove */}
                   <button
                     onClick={() => removeMessage(msg.id)}
+                    aria-label={`Remove message ${idx + 1}`}
                     style={{
                       width: 26, height: 26, borderRadius: 6, border: 'none',
                       background: C.card, color: C.dim, cursor: 'pointer',
@@ -271,6 +273,9 @@ export function FakeTextsGenerator() {
             </div>
             <button
               onClick={() => setTypingAnimation(!typingAnimation)}
+              role="switch"
+              aria-checked={typingAnimation}
+              aria-label="Typing animation"
               style={{
                 width: 44, height: 24, borderRadius: 12, border: 'none',
                 background: typingAnimation

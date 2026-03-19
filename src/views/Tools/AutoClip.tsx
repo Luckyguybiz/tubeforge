@@ -100,6 +100,7 @@ export function AutoClip() {
               </div>
               <button
                 onClick={() => { setFile(null); setResults([]); setPreviewingId(null); }}
+                aria-label="Remove video file"
                 style={{
                   background: 'none', border: 'none', color: C.dim,
                   cursor: 'pointer', fontSize: 18, padding: 4,

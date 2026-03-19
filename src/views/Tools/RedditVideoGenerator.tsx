@@ -254,6 +254,9 @@ export function RedditVideoGenerator() {
               <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Background Music</span>
               <button
                 onClick={() => setMusicEnabled(!musicEnabled)}
+                role="switch"
+                aria-checked={musicEnabled}
+                aria-label="Background music"
                 style={{
                   width: 44, height: 24, borderRadius: 12, border: 'none',
                   background: musicEnabled
