@@ -167,9 +167,15 @@ export function YoutubeDownloader() {
         return;
       }
 
-      // Open direct download from VPS
-      window.open(data.downloadUrl, '_blank', 'noopener');
-      showToast('Скачивание началось! Файл загружается с сервера.');
+      // Trigger real file download via hidden anchor
+      const a = document.createElement('a');
+      a.href = data.downloadUrl;
+      a.download = data.filename || `${videoInfo.videoId}.${isAudioOnly ? 'mp3' : 'mp4'}`;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Скачивание началось! Проверьте папку загрузок.');
       setDone(true);
     } catch {
       setStreamError('Ошибка сети. Проверьте подключение к интернету.');
