@@ -234,7 +234,7 @@ export function AdminPage() {
         </svg>
       ),
       color: C.orange,
-      sub: `ИИ-генераций: ${stats.data?.totalAIUsage ?? '..'}`,
+      sub: `${t('admin.stat.aiGen')} ${stats.data?.totalAIUsage ?? '..'}`,
     },
   ];
 
@@ -272,7 +272,7 @@ export function AdminPage() {
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Панель администратора</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>{t('admin.title')}</h1>
           <span style={{
             fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
             background: `${C.accent}15`, color: C.accent, letterSpacing: '.03em',
@@ -281,7 +281,7 @@ export function AdminPage() {
           </span>
         </div>
         <p style={{ color: C.sub, fontSize: 14, margin: 0 }}>
-          Обзор платформы, управление пользователями и активность
+          {t('admin.subtitle')}
         </p>
       </div>
 
@@ -378,7 +378,7 @@ export function AdminPage() {
           display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, marginRight: 'auto' }}>
-            Пользователи
+            {t('admin.usersTitle')}
             {users.data && (
               <span style={{ fontWeight: 400, fontSize: 13, color: C.dim, marginLeft: 8 }}>
                 {users.data.total}
