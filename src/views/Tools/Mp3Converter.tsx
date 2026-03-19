@@ -57,11 +57,16 @@ export function Mp3Converter() {
 
   // FFmpeg state
   const ffmpegRef = useRef<FFmpegClient | null>(null);
+  const activeProgressCbRef = useRef<((p: { progress: number; time: number }) => void) | null>(null);
   const [ffmpegLoading, setFfmpegLoading] = useState(false);
 
   // Cleanup FFmpeg worker on unmount
   useEffect(() => {
     return () => {
+      if (ffmpegRef.current && activeProgressCbRef.current) {
+        ffmpegRef.current.off('progress', activeProgressCbRef.current);
+        activeProgressCbRef.current = null;
+      }
       if (ffmpegRef.current) {
         ffmpegRef.current.terminate();
         ffmpegRef.current = null;
@@ -109,6 +114,7 @@ export function Mp3Converter() {
       const onProgress = ({ progress: p }: { progress: number; time: number }) => {
         setProgress(Math.round(p * 100));
       };
+      activeProgressCbRef.current = onProgress;
       ffmpeg.on('progress', onProgress);
 
       const sr = sampleRate === '48kHz' ? '48000' : '44100';
@@ -140,6 +146,7 @@ export function Mp3Converter() {
 
       const exitCode = await ffmpeg.exec(args);
       ffmpeg.off('progress', onProgress);
+      activeProgressCbRef.current = null;
 
       if (exitCode !== 0) {
         throw new Error(`${t('tools.mp3.ffmpegExitCode')} ${exitCode}`);
@@ -371,6 +378,7 @@ export function Mp3Converter() {
                   value={trimStart}
                   onChange={(e) => setTrimStart(e.target.value)}
                   placeholder="00:00"
+                  aria-label="Trim start time"
                   style={{
                     flex: 1, background: 'transparent', border: 'none', outline: 'none',
                     color: C.text, fontSize: 13, padding: '10px 0', fontFamily: 'inherit',
@@ -390,6 +398,7 @@ export function Mp3Converter() {
                   value={trimEnd}
                   onChange={(e) => setTrimEnd(e.target.value)}
                   placeholder="00:00"
+                  aria-label="Trim end time"
                   style={{
                     flex: 1, background: 'transparent', border: 'none', outline: 'none',
                     color: C.text, fontSize: 13, padding: '10px 0', fontFamily: 'inherit',
@@ -411,6 +420,7 @@ export function Mp3Converter() {
                 value={outputName}
                 onChange={(e) => setOutputName(e.target.value)}
                 placeholder={file.name.replace(/\.[^/.]+$/, '')}
+                aria-label="Output file name"
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
                   color: C.text, fontSize: 14, padding: '12px 0', fontFamily: 'inherit',
@@ -443,7 +453,7 @@ export function Mp3Converter() {
                 <span style={{ fontSize: 12, color: C.sub }}>{t('tools.mp3.converting')}</span>
                 <span style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>{Math.min(100, Math.round(progress))}%</span>
               </div>
-              <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
+              <div role="progressbar" aria-valuenow={Math.min(100, Math.round(progress))} aria-valuemin={0} aria-valuemax={100} aria-label="Conversion progress" style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
                 <div style={{
                   width: `${Math.min(100, progress)}%`, height: '100%', borderRadius: 4,
                   background: 'linear-gradient(135deg, #10b981, #059669)', transition: 'width 0.3s ease',
@@ -454,7 +464,7 @@ export function Mp3Converter() {
 
           {/* Error state */}
           {error && (
-            <div style={{
+            <div role="alert" style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12,
               border: '1px solid rgba(239,68,68,.3)', background: 'rgba(239,68,68,.06)', marginBottom: 16,
             }}>
@@ -469,7 +479,7 @@ export function Mp3Converter() {
 
           {/* Done status */}
           {done && convertedBlob && (
-            <div style={{
+            <div role="status" style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12,
               border: '1px solid rgba(16,185,129,.3)', background: 'rgba(16,185,129,.06)', marginBottom: 16,
             }}>

@@ -46,12 +46,17 @@ export function VideoCompressor() {
 
   // FFmpeg state
   const ffmpegRef = useRef<FFmpegClient | null>(null);
+  const activeProgressCbRef = useRef<((p: { progress: number; time: number }) => void) | null>(null);
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const [ffmpegLoading, setFfmpegLoading] = useState(false);
 
   // Cleanup FFmpeg worker on unmount
   useEffect(() => {
     return () => {
+      if (ffmpegRef.current && activeProgressCbRef.current) {
+        ffmpegRef.current.off('progress', activeProgressCbRef.current);
+        activeProgressCbRef.current = null;
+      }
       if (ffmpegRef.current) {
         ffmpegRef.current.terminate();
         ffmpegRef.current = null;
@@ -118,6 +123,7 @@ export function VideoCompressor() {
       const onProgress = ({ progress: p }: { progress: number; time: number }) => {
         setProgress(Math.round(p * 100));
       };
+      activeProgressCbRef.current = onProgress;
       ffmpeg.on('progress', onProgress);
 
       // Build FFmpeg command based on preset + resolution + format
@@ -154,6 +160,7 @@ export function VideoCompressor() {
 
       // Clean up listener
       ffmpeg.off('progress', onProgress);
+      activeProgressCbRef.current = null;
 
       if (exitCode !== 0) {
         throw new Error(`${t('tools.compressor.ffmpegExitCode')} ${exitCode}`);
