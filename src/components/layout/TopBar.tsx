@@ -5,6 +5,7 @@ import { NAV, KEYBOARD_SHORTCUTS, SHORTCUT_CATEGORIES, Z_INDEX } from '@/lib/con
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
 import type { Notification } from '@/stores/useNotificationStore';
 
 /** Translation keys for extra page labels not in NAV */
@@ -163,8 +164,36 @@ export const TopBar = memo(function TopBar() {
     }
   }, [markRead]);
 
+  const mobileMenuToggle = useMobileMenuStore((s) => s.toggle);
+
   return (
     <div style={{ height: 44, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, background: C.surface, flexShrink: 0 }}>
+      {/* Hamburger – visible only below 768px */}
+      <button
+        className="tf-hamburger"
+        aria-label="Menu"
+        onClick={mobileMenuToggle}
+        style={{
+          display: 'none', /* shown via @media in layout.tsx */
+          width: 32,
+          height: 32,
+          borderRadius: 7,
+          border: `1px solid ${C.border}`,
+          background: 'transparent',
+          color: C.text,
+          cursor: 'pointer',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          padding: 0,
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <line x1="3" y1="4.5" x2="15" y2="4.5" />
+          <line x1="3" y1="9" x2="15" y2="9" />
+          <line x1="3" y1="13.5" x2="15" y2="13.5" />
+        </svg>
+      </button>
       {isEditor && (
         <button title={t('nav.dashboard')} onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           {'\u2190'} {t('common.back')}

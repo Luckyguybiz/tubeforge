@@ -1,10 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/server/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 // In-memory cache: key = period+country+category, value = { data, timestamp }
 const cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: 5 requests per minute per user
+  const { success: rlOk, reset } = await rateLimit({
+    identifier: `shorts-analytics:${session.user.id}`,
+    limit: 5,
+    window: 60,
+  });
+  if (!rlOk) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
+  }
+
   const sp = req.nextUrl.searchParams;
   const period = sp.get('period') ?? '7d';
   const country = sp.get('country') ?? '';

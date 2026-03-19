@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { ToastProvider } from '@/components/ui/ToastProvider';
+import { CookieConsent } from '@/components/ui/CookieConsent';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
 import { trpc } from '@/lib/trpc';
 
 // Lazy-load onboarding tour — only shown once per new user, no SSR needed
@@ -19,6 +21,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
   const pathname = usePathname();
   const isEditor = pathname === '/editor';
+
+  const mobileMenuOpen = useMobileMenuStore((s) => s.open);
+  const closeMobileMenu = useMobileMenuStore((s) => s.close);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    closeMobileMenu();
+  }, [pathname, closeMobileMenu]);
+
+  // Close mobile menu on Escape
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMobileMenu();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [mobileMenuOpen, closeMobileMenu]);
+
+  const handleBackdropClick = useCallback(() => {
+    closeMobileMenu();
+  }, [closeMobileMenu]);
 
   // Claim referral code from localStorage after login (runs once)
   const claimReferral = trpc.referral.claimReferral.useMutation();
@@ -45,7 +69,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         @media(max-width:768px){
           .tf-sidebar{display:none!important}
           .tf-main-content{padding:14px!important}
+          .tf-hamburger{display:flex!important}
         }
+        .tf-mobile-backdrop{
+          position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;
+          opacity:0;transition:opacity .25s ease;pointer-events:none;
+        }
+        .tf-mobile-backdrop.open{opacity:1;pointer-events:auto}
+        .tf-mobile-drawer{
+          position:fixed;top:0;left:0;bottom:0;width:260px;z-index:9999;
+          transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+          overflow-y:auto;
+        }
+        .tf-mobile-drawer.open{transform:translateX(0)}
       `}</style>
       <a href="#main-content" className="skip-to-content">Перейти к содержимому</a>
       <div style={{ width: '100%', height: '100vh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
@@ -59,8 +95,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
         </div>
       </div>
+
+      {/* Mobile sidebar drawer */}
+      {!isEditor && (
+        <>
+          <div
+            className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
+            onClick={handleBackdropClick}
+            aria-hidden="true"
+          />
+          <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+            <Sidebar />
+          </div>
+        </>
+      )}
+
       <ToastProvider />
       <OnboardingTour />
+      <CookieConsent />
     </>
   );
 }

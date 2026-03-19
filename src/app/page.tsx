@@ -2,6 +2,12 @@
 
 import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const CookieConsent = dynamic(
+  () => import('@/components/ui/CookieConsent').then((m) => ({ default: m.CookieConsent })),
+  { ssr: false },
+);
 
 /* ── Color constants ──────────────────────────────────────── */
 
@@ -453,19 +459,6 @@ export default function LandingPage() {
     return () => {
       document.documentElement.style.scrollBehavior = '';
     };
-  }, []);
-
-  /* Save referral code from ?ref= URL param to localStorage for later registration */
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const refCode = params.get('ref');
-      if (refCode) {
-        localStorage.setItem('tf-ref', refCode);
-      }
-    } catch {
-      // Ignore — localStorage may be unavailable in some contexts
-    }
   }, []);
 
   const toggleFaq = (index: number) => {
@@ -1220,6 +1213,7 @@ export default function LandingPage() {
           .tf-reveal { opacity: 1; transform: none; transition: none; }
         }
       `}</style>
+      <CookieConsent />
     </div>
   );
 }

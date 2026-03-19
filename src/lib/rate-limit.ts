@@ -1,8 +1,18 @@
 /**
- * Rate limiting utility.
+ * Rate limiting utility — per-function-instance, best-effort.
  *
- * Uses an in-memory Map for development / testing.
- * In production swap this out for @upstash/ratelimit + Redis:
+ * IMPORTANT — SERVERLESS LIMITATION:
+ * This module uses an in-memory Map. On Vercel (serverless / edge), each
+ * function instance gets its own Map that is discarded on cold start. This
+ * means the limiter is **best-effort only** within a single warm instance and
+ * is NOT shared across concurrent serverless invocations.
+ *
+ * The primary line of defence for global IP-based rate limiting lives in the
+ * root middleware.ts (edge runtime), which has longer-lived instances than
+ * individual serverless functions and therefore provides better coverage.
+ *
+ * For cross-instance, production-grade rate limiting you need a shared store
+ * such as @upstash/ratelimit + @upstash/redis:
  *
  *   import { Ratelimit } from '@upstash/ratelimit';
  *   import { Redis }     from '@upstash/redis';
@@ -38,16 +48,16 @@ interface RateLimitOptions {
 
 const store = new Map<string, RateLimitEntry>();
 
-/** Максимальное количество записей в хранилище rate-limit */
+/** Maximum number of entries in the rate-limit store */
 const MAX_ENTRIES = 10_000;
-/** Порог для логирования предупреждения */
+/** Threshold for logging a warning */
 const WARN_THRESHOLD = 5_000;
-/** Флаг, указывающий что аварийная очистка уже выполняется */
+/** Flag indicating an emergency cleanup is already running */
 let cleanupInProgress = false;
 
 /**
- * Аварийная очистка хранилища при превышении MAX_ENTRIES.
- * Сначала удаляет просроченные записи, затем — старейшие 20%.
+ * Emergency cleanup when the store exceeds MAX_ENTRIES.
+ * First removes expired entries, then the oldest 50 %.
  */
 function emergencyCleanup(): void {
   if (cleanupInProgress) return;
@@ -55,14 +65,14 @@ function emergencyCleanup(): void {
   try {
     const now = Date.now();
 
-    // Шаг 1: удалить просроченные записи
+    // Step 1: remove expired entries
     for (const [key, entry] of store) {
       if (now >= entry.resetTime) {
         store.delete(key);
       }
     }
 
-    // Шаг 2: если размер всё ещё >= MAX_ENTRIES, удалить старейшую половину
+    // Step 2: if still >= MAX_ENTRIES, drop the oldest half
     if (store.size >= MAX_ENTRIES) {
       const entries = [...store.entries()].sort((a, b) => a[1].resetTime - b[1].resetTime);
       const toDelete = Math.ceil(entries.length * 0.5);
@@ -77,6 +87,8 @@ function emergencyCleanup(): void {
 
 /**
  * Check (and consume) a rate-limit token for the given identifier.
+ *
+ * NOTE: Best-effort in serverless environments — see module-level comment.
  *
  * @example
  * ```ts
@@ -103,12 +115,12 @@ export async function rateLimit({
 
   // No previous record or the window has expired — start fresh.
   if (!entry || now >= entry.resetTime) {
-    // Проверка лимита записей перед добавлением новой
+    // Check store size before adding a new entry
     if (store.size >= MAX_ENTRIES) {
       emergencyCleanup();
     }
     if (store.size >= WARN_THRESHOLD) {
-      console.warn(`[rate-limit] Размер хранилища: ${store.size} записей (порог предупреждения: ${WARN_THRESHOLD})`);
+      console.warn(`[rate-limit] Store size: ${store.size} entries (warning threshold: ${WARN_THRESHOLD})`);
     }
     const resetTime = now + windowMs;
     store.set(identifier, { count: 1, resetTime });

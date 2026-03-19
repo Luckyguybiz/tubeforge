@@ -219,11 +219,14 @@ model DesignFolder {
 }
 
 model Payout {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount    Float
-  method    String   @default("manual") // "manual", "stripe_connect", "paypal"
-  note      String?
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float
+  method        String   @default("manual") // "manual", "stripe_connect", "paypal"
+  note          String?
+  stripeEventId String?  @unique // Dedup key for Stripe webhook retries
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }

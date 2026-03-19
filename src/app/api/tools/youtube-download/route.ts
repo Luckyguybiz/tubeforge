@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/server/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +57,24 @@ interface YtFormat {
  * Returns video metadata fetched via YouTube's free oEmbed endpoint.
  */
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: 10 requests per minute per user
+  const { success: rlOk, reset } = await rateLimit({
+    identifier: `yt-dl-info:${session.user.id}`,
+    limit: 10,
+    window: 60,
+  });
+  if (!rlOk) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
+  }
+
   const url = req.nextUrl.searchParams.get('url');
 
   if (!url) {
@@ -131,9 +151,27 @@ export async function GET(req: NextRequest) {
  * Body: { videoId: string, quality?: string, audioOnly?: boolean }
  */
 
-const YT_API_BASE = process.env.YT_DLP_API_URL ?? 'http://57.128.254.111:3333';
+const YT_API_BASE = process.env.YT_DLP_API_URL;
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: 5 requests per minute per user
+  const { success: rlOk, reset } = await rateLimit({
+    identifier: `yt-dl-download:${session.user.id}`,
+    limit: 5,
+    window: 60,
+  });
+  if (!rlOk) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
+  }
+
   let body: { videoId?: string; quality?: string; audioOnly?: boolean };
   try {
     body = (await req.json()) as { videoId?: string; quality?: string; audioOnly?: boolean };
@@ -155,28 +193,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Proxy download through our API to avoid mixed-content (HTTPS→HTTP) block
+    // Build download URL on our VPS
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const vpsUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
+    const downloadUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
 
-    const vpsRes = await fetch(vpsUrl, { signal: AbortSignal.timeout(120_000) });
-    if (!vpsRes.ok || !vpsRes.body) {
-      const errText = await vpsRes.text().catch(() => 'Unknown error');
-      return NextResponse.json({ error: 'Download failed', details: errText }, { status: 502 });
-    }
-
-    const ext = audioOnly ? 'mp3' : 'mp4';
-    const contentType = audioOnly ? 'audio/mpeg' : 'video/mp4';
-    const filename = `${videoId}.${ext}`;
-
-    return new Response(vpsRes.body as ReadableStream, {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        ...(vpsRes.headers.get('content-length')
-          ? { 'Content-Length': vpsRes.headers.get('content-length')! }
-          : {}),
-      },
+    return NextResponse.json({
+      downloadUrl,
+      filename: `${videoId}.${audioOnly ? 'mp3' : 'mp4'}`,
+      status: 'redirect',
     });
   } catch {
     return NextResponse.json({
