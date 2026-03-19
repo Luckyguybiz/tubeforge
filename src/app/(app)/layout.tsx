@@ -1,11 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { trpc } from '@/lib/trpc';
 
 // Lazy-load onboarding tour — only shown once per new user, no SSR needed
 const OnboardingTour = dynamic(
@@ -17,6 +19,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
   const pathname = usePathname();
   const isEditor = pathname === '/editor';
+
+  // Claim referral code from localStorage after login (runs once)
+  const claimReferral = trpc.referral.claimReferral.useMutation();
+  useEffect(() => {
+    try {
+      const refCode = localStorage.getItem('tf-ref');
+      if (refCode) {
+        claimReferral.mutate({ code: refCode }, {
+          onSettled: () => localStorage.removeItem('tf-ref'),
+        });
+      }
+    } catch { /* localStorage unavailable */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

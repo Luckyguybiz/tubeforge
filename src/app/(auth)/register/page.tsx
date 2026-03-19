@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -16,6 +16,14 @@ function RegisterContent() {
   const validPlans = ['PRO', 'STUDIO'] as const;
   const safePlan = planParam && validPlans.includes(planParam as typeof validPlans[number]) ? planParam : null;
   const callbackUrl = safePlan ? `/dashboard?initCheckout=${safePlan}` : '/dashboard';
+
+  // Capture referral code from URL to localStorage
+  useEffect(() => {
+    try {
+      const refCode = searchParams.get('ref');
+      if (refCode) localStorage.setItem('tf-ref', refCode);
+    } catch { /* localStorage unavailable */ }
+  }, [searchParams]);
 
   return (
     <main

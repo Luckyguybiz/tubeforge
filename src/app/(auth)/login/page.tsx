@@ -20,6 +20,14 @@ function LoginContent() {
     if (status === 'authenticated') window.location.href = '/dashboard';
   }, [status]);
 
+  // Capture referral code from URL to localStorage
+  useEffect(() => {
+    try {
+      const refCode = searchParams.get('ref');
+      if (refCode) localStorage.setItem('tf-ref', refCode);
+    } catch { /* localStorage unavailable */ }
+  }, [searchParams]);
+
   if (status === 'loading' || status === 'authenticated') {
     return (
       <div style={{ width: '100%', height: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.sub }}>

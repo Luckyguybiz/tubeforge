@@ -81,7 +81,22 @@ export async function POST(req: NextRequest) {
         break;
       }
       case 'invoice.paid': {
-        // Subscription renewed successfully
+        const invoice = event.data.object as Stripe.Invoice;
+        if (!invoice.customer || !invoice.amount_paid) break;
+
+        // Find the paying user and check if they were referred
+        const payingUser = await db.user.findFirst({
+          where: { stripeId: invoice.customer as string },
+          select: { referredBy: true },
+        });
+        if (!payingUser?.referredBy) break;
+
+        // Credit 20% commission to the referrer
+        const commission = (invoice.amount_paid / 100) * 0.2;
+        await db.user.updateMany({
+          where: { referralCode: payingUser.referredBy },
+          data: { referralEarnings: { increment: commission } },
+        });
         break;
       }
       case 'invoice.payment_failed': {
