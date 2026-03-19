@@ -10,7 +10,7 @@ export const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net",  // Next.js requires unsafe-inline; blob:/unpkg/jsdelivr for FFmpeg WASM core
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:",  // unsafe-inline: Next.js; wasm-unsafe-eval: FFmpeg WASM; blob: workers
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' blob: data: https://lh3.googleusercontent.com https://i.ytimg.com https://yt3.ggpht.com https://oaidalleapiprodscus.blob.core.windows.net",
       "font-src 'self' data:",
