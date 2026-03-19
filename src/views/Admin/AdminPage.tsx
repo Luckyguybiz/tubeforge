@@ -74,6 +74,10 @@ function getStatusLabels(t: (key: string) => string): Record<string, string> {
 
 export function AdminPage() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+  const locale = useLocaleStore((s) => s.locale);
+  const ROLE_LABELS = useMemo(() => getRoleLabels(t), [t]);
+  const STATUS_LABELS = useMemo(() => getStatusLabels(t), [t]);
   const recharts = useRecharts();
 
   const [page, setPage] = useState(1);
