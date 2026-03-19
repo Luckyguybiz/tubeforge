@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
-const QUALITIES = ['1080p', '720p', '480p', '360p', 'Только аудио'] as const;
+const QUALITIES = ['Максимальное', '2160p', '1440p', '1080p', '720p', '480p', '360p', 'Только аудио'] as const;
 const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
 
 interface VideoInfo {
