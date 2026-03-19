@@ -64,28 +64,11 @@ export function Mp3Converter() {
     setError(null);
     try {
       const ffmpeg = new FFmpeg();
-      const cdns = [
-        'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd',
-        'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd',
-      ];
-
-      let loaded = false;
-      for (const base of cdns) {
-        try {
-          await ffmpeg.load({
-            coreURL: `${base}/ffmpeg-core.js`,
-            wasmURL: `${base}/ffmpeg-core.wasm`,
-          });
-          loaded = true;
-          break;
-        } catch {
-          continue;
-        }
-      }
-
-      if (!loaded) {
-        throw new Error('FFmpeg load failed');
-      }
+      // Self-hosted files avoid COEP/CORS issues
+      await ffmpeg.load({
+        coreURL: '/ffmpeg/ffmpeg-core.js',
+        wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+      });
 
       ffmpegRef.current = ffmpeg;
       return ffmpeg;
