@@ -460,7 +460,7 @@ export function CutCrop() {
         <div style={{
           width: '100%', background: '#000', borderRadius: '14px 14px 0 0', position: 'relative',
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-          maxHeight: '60vh',
+          maxHeight: '60vh', minHeight: 200,
         }}>
           <video
             ref={videoRef}
@@ -474,7 +474,10 @@ export function CutCrop() {
               setError(t('tools.cutcrop.videoError'));
             }}
             onEnded={() => { setIsPlaying(false); cancelAnimationFrame(animRef.current); }}
-            style={{ maxWidth: '100%', maxHeight: '60vh', display: videoUrl && !error ? 'block' : 'none' }}
+            style={{
+              width: '100%', maxHeight: '60vh', objectFit: 'contain',
+              display: videoUrl && !error ? 'block' : 'none',
+            }}
           />
           {!videoUrl && (
             <div style={{ padding: 40, color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center' }}>

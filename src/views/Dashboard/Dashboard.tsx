@@ -627,7 +627,7 @@ interface ProjectCardItem {
   status: string;
   thumbnailUrl: string | null;
   updatedAt: string | Date;
-  _count: { scenes: number };
+  _count?: { scenes: number };
 }
 
 interface ProjectCardProps {
@@ -765,7 +765,7 @@ const ProjectCard = memo(function ProjectCard({
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
         }}>
-          {pluralRu(p._count.scenes, t('dashboard.scene.one'), t('dashboard.scene.few'), t('dashboard.scene.many'))}
+          {pluralRu(p._count?.scenes ?? 0, t('dashboard.scene.one'), t('dashboard.scene.few'), t('dashboard.scene.many'))}
         </div>
 
         {/* Hover overlay with play icon */}
@@ -957,15 +957,15 @@ export function Dashboard() {
   const utils = trpc.useUtils();
 
   /* ── Local state (initialized from URL params) ── */
-  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '');
-  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get('q') ?? '');
+  const [searchInput, setSearchInput] = useState(() => searchParams?.get('q') ?? '');
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams?.get('q') ?? '');
   const [statusFilter, setStatusFilter] = useState<'DRAFT' | 'RENDERING' | 'READY' | 'PUBLISHED' | undefined>(() => {
-    const sp = searchParams.get('status');
+    const sp = searchParams?.get('status');
     if (sp === 'DRAFT' || sp === 'RENDERING' || sp === 'READY' || sp === 'PUBLISHED') return sp;
     return undefined;
   });
   const [sortBy, setSortBy] = useState<'updatedAt' | 'createdAt' | 'title'>(() => {
-    const sp = searchParams.get('sort');
+    const sp = searchParams?.get('sort');
     if (sp === 'updatedAt' || sp === 'createdAt' || sp === 'title') return sp;
     return 'updatedAt';
   });
@@ -1076,7 +1076,7 @@ export function Dashboard() {
       if (!val) toast.warning(t('dashboard.emptyName'));
       setRenameId(null);
     }
-  }, [renameValue, renameProject]);
+  }, [renameValue, renameProject, t]);
 
   /* ── Card callbacks (stable refs for memo) ──── */
   const handleNavigate = useCallback((id: string) => {
@@ -1156,17 +1156,19 @@ export function Dashboard() {
 
   /* ── Error states ─────────────────────────────── */
   if (profile.isError) {
+    const err = profile.error;
     return (
       <ErrorFallback
-        error={profile.error instanceof Error ? profile.error : new Error(String(profile.error))}
+        error={err instanceof Error ? err : new Error((err as { message?: string })?.message ?? String(err))}
         reset={() => profile.refetch()}
       />
     );
   }
   if (projects.isError) {
+    const err = projects.error;
     return (
       <ErrorFallback
-        error={projects.error instanceof Error ? projects.error : new Error(String(projects.error))}
+        error={err instanceof Error ? err : new Error((err as { message?: string })?.message ?? String(err))}
         reset={() => projects.refetch()}
       />
     );
@@ -1327,7 +1329,7 @@ export function Dashboard() {
                 fontSize: 12, color: C.sub, fontWeight: 500,
                 background: C.surface, padding: '2px 8px', borderRadius: 6,
               }}>
-                {projects.data.total}
+                {'total' in projects.data ? projects.data.total : ''}
               </span>
             )}
           </div>
@@ -1522,7 +1524,7 @@ export function Dashboard() {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
                 gap: 16,
               }}>
-                {projects.data!.items.map((p) => (
+                {(projects.data?.items ?? []).map((p) => (
                   <ProjectCard
                     key={p.id}
                     project={p}
