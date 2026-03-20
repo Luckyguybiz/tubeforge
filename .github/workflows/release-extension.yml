@@ -3,6 +3,9 @@ name: Build Chrome Extension ZIP
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,6 +19,12 @@ jobs:
           cd ..
           echo "ZIP contents:"
           unzip -l tubeforge-chrome-extension.zip
+
+      - name: Upload to release v1.0.0
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          files: tubeforge-chrome-extension.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
