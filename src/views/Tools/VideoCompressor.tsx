@@ -96,6 +96,57 @@ export function VideoCompressor() {
     }
   }, []);
 
+  /**
+   * Build FFmpeg args for the chosen preset, resolution, format.
+   * @param inputName  virtual FS input file name
+   * @param outputName virtual FS output file name
+   * @param includeAudio  when false, skip audio codec/bitrate flags (for
+   *                      inputs without an audio stream)
+   */
+  const buildArgs = useCallback(
+    (inputName: string, outputName: string, includeAudio: boolean) => {
+      const ext = format === 'webm' ? 'webm' : 'mp4';
+      const args: string[] = ['-i', inputName];
+
+      // Resolution scaling (use -2 so width stays divisible by 2)
+      if (resolution === '1080p') args.push('-vf', 'scale=-2:1080');
+      else if (resolution === '720p') args.push('-vf', 'scale=-2:720');
+      else if (resolution === '480p') args.push('-vf', 'scale=-2:480');
+
+      // Video bitrate
+      const vBitrate =
+        preset === 'low' ? '500k' : preset === 'medium' ? '1500k' : '3000k';
+      args.push('-b:v', vBitrate);
+
+      // Audio: only when the input actually has an audio stream
+      if (includeAudio) {
+        const aBitrate =
+          preset === 'low' ? '64k' : preset === 'medium' ? '128k' : '192k';
+        args.push('-b:a', aBitrate);
+      } else {
+        // Explicitly drop audio so FFmpeg doesn't fail on missing stream
+        args.push('-an');
+      }
+
+      // Codec selection
+      if (ext === 'webm') {
+        args.push(
+          '-c:v', 'libvpx', '-deadline', 'realtime', '-cpu-used', '8',
+        );
+        if (includeAudio) args.push('-c:a', 'libvorbis');
+      } else {
+        args.push('-c:v', 'libx264', '-preset', 'ultrafast');
+        if (includeAudio) args.push('-c:a', 'aac');
+      }
+
+      // NOTE: @ffmpeg/core DEFAULT_ARGS already includes -y, so we only
+      //       need the output file name here.
+      args.push(outputName);
+      return args;
+    },
+    [format, resolution, preset],
+  );
+
   const handleCompress = useCallback(async () => {
     if (!file) return;
     setCompressing(true);
@@ -116,6 +167,9 @@ export function VideoCompressor() {
       // Write input file with actual extension for correct format detection
       const inputExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
       const inputName = `input.${inputExt}`;
+      const ext = format === 'webm' ? 'webm' : 'mp4';
+      const outputName = `output.${ext}`;
+
       const data = await readFileAsUint8Array(file);
       await ffmpeg.writeFile(inputName, data);
 
@@ -126,48 +180,43 @@ export function VideoCompressor() {
       activeProgressCbRef.current = onProgress;
       ffmpeg.on('progress', onProgress);
 
-      // Build FFmpeg command based on preset + resolution + format
-      const args = ['-i', inputName];
+      // --- Attempt 1: with audio ---
+      const argsWithAudio = buildArgs(inputName, outputName, true);
+      const result1 = await ffmpeg.exec(argsWithAudio);
 
-      // Resolution
-      if (resolution === '1080p') args.push('-vf', 'scale=-2:1080');
-      else if (resolution === '720p') args.push('-vf', 'scale=-2:720');
-      else if (resolution === '480p') args.push('-vf', 'scale=-2:480');
+      let exitCode = result1.ret;
+      let logs = result1.logs;
 
-      // Bitrate based on preset
-      if (preset === 'low') {
-        args.push('-b:v', '500k', '-b:a', '64k');
-      } else if (preset === 'medium') {
-        args.push('-b:v', '1500k', '-b:a', '128k');
-      } else {
-        args.push('-b:v', '3000k', '-b:a', '192k');
+      // --- Attempt 2: if first failed, retry without audio ---
+      // FFmpeg returns 1 when an audio stream specifier doesn't match
+      // (e.g. video-only files, screen recordings without mic).
+      if (exitCode !== 0) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('FFmpeg attempt 1 failed (exit', exitCode, '), retrying without audio. Logs:', logs);
+        }
+
+        // Re-write the input file (previous exec may have consumed it)
+        const data2 = await readFileAsUint8Array(file);
+        await ffmpeg.writeFile(inputName, data2);
+
+        setProgress(0);
+        const argsNoAudio = buildArgs(inputName, outputName, false);
+        const result2 = await ffmpeg.exec(argsNoAudio);
+        exitCode = result2.ret;
+        logs = result2.logs;
       }
-
-      // Format & codecs
-      const ext = format === 'webm' ? 'webm' : 'mp4';
-      if (format === 'webm') {
-        // VP8 + Vorbis — VP9 crashes WASM with memory overflow
-        args.push('-c:v', 'libvpx', '-deadline', 'realtime', '-cpu-used', '8', '-c:a', 'libvorbis');
-      } else {
-        // H.264 + AAC — ultrafast uses less WASM memory
-        args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac');
-      }
-
-      // Prevent "already exists. Overwrite?" prompt
-      args.push('-y', `output.${ext}`);
-
-      const exitCode = await ffmpeg.exec(args);
 
       // Clean up listener
       ffmpeg.off('progress', onProgress);
       activeProgressCbRef.current = null;
 
       if (exitCode !== 0) {
+        if (process.env.NODE_ENV === 'development') console.error('FFmpeg logs:', logs);
         throw new Error(`${t('tools.compressor.ffmpegExitCode')} ${exitCode}`);
       }
 
       // Read output
-      const output = await ffmpeg.readFile(`output.${ext}`);
+      const output = await ffmpeg.readFile(outputName);
       const mimeType = format === 'webm' ? 'video/webm' : 'video/mp4';
       const blob = new Blob([new Uint8Array(output) as BlobPart], { type: mimeType });
 
@@ -178,14 +227,14 @@ export function VideoCompressor() {
 
       // Clean up virtual filesystem
       try { await ffmpeg.deleteFile(inputName); } catch { /* noop */ }
-      try { await ffmpeg.deleteFile(`output.${ext}`); } catch { /* noop */ }
+      try { await ffmpeg.deleteFile(outputName); } catch { /* noop */ }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Compression error:', err);
       setError(err instanceof Error ? err.message : t('tools.compressor.compressError'));
     } finally {
       setCompressing(false);
     }
-  }, [file, preset, resolution, format, loadFFmpeg]);
+  }, [file, preset, resolution, format, loadFFmpeg, buildArgs]);
 
   const handleDownload = useCallback(() => {
     const blob = compressedBlob;

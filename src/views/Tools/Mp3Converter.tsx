@@ -144,11 +144,12 @@ export function Mp3Converter() {
           break;
       }
 
-      const exitCode = await ffmpeg.exec(args);
+      const { ret: exitCode, logs } = await ffmpeg.exec(args);
       ffmpeg.off('progress', onProgress);
       activeProgressCbRef.current = null;
 
       if (exitCode !== 0) {
+        if (process.env.NODE_ENV === 'development') console.error('FFmpeg logs:', logs);
         throw new Error(`${t('tools.mp3.ffmpegExitCode')} ${exitCode}`);
       }
 

@@ -18,6 +18,8 @@ const CORE_CDNS = [
 /* ── Worker inline code ── */
 const WORKER_JS = /* js */ `
 let ff = null;
+var logLines = [];
+var MAX_LOG_LINES = 200;
 
 async function loadCore(baseURL) {
   // 1. Fetch JS, load via blob importScripts (bypasses CSP script-src for CDN)
@@ -45,7 +47,13 @@ async function loadCore(baseURL) {
     }
   });
 
-  ff.setLogger(function (d) { self.postMessage({ t: 'log', d: d }); });
+  ff.setLogger(function (d) {
+    // Keep recent log lines for diagnostics on failure
+    var msg = (d && d.message) ? d.message : String(d);
+    logLines.push(msg);
+    if (logLines.length > MAX_LOG_LINES) logLines.shift();
+    self.postMessage({ t: 'log', d: d });
+  });
   ff.setProgress(function (d) { self.postMessage({ t: 'progress', d: d }); });
 }
 
@@ -59,10 +67,13 @@ self.onmessage = async function (e) {
         r = true;
         break;
       case 'exec':
+        logLines = [];
         ff.setTimeout(p.timeout || -1);
         ff.exec.apply(ff, p.args);
-        r = ff.ret;
+        var ret = ff.ret;
         ff.reset();
+        // Return both exit code and recent logs for diagnostics
+        r = { ret: ret, logs: logLines.slice(-50) };
         break;
       case 'write':
         ff.FS.writeFile(p.path, p.data);
@@ -141,8 +152,10 @@ export class FFmpegClient {
     });
   }
 
-  async exec(args: string[]): Promise<number> {
-    return (await this.send('exec', { args })) as number;
+  /** Run FFmpeg with the given args. Returns { ret, logs }. */
+  async exec(args: string[]): Promise<{ ret: number; logs: string[] }> {
+    const result = (await this.send('exec', { args })) as { ret: number; logs: string[] };
+    return result;
   }
 
   async writeFile(path: string, data: Uint8Array): Promise<void> {

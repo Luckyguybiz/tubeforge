@@ -18,7 +18,7 @@ function defaultPostMessageHandler(
     if (!onmessage) return;
     const { id, t } = msg;
     if (t === 'load') onmessage({ data: { id, t, d: true } });
-    else if (t === 'exec') onmessage({ data: { id, t, d: 0 } });
+    else if (t === 'exec') onmessage({ data: { id, t, d: { ret: 0, logs: [] } } });
     else if (t === 'write') onmessage({ data: { id, t, d: true } });
     else if (t === 'read') onmessage({ data: { id, t, d: new Uint8Array([1, 2, 3]) } });
     else if (t === 'del') onmessage({ data: { id, t, d: true } });
@@ -128,7 +128,7 @@ describe('FFmpegClient', () => {
       await client.load();
       const result = await client.exec(['-i', 'input.mp4', 'output.mp3']);
       expect(receivedArgs).toEqual(['-i', 'input.mp4', 'output.mp3']);
-      expect(result).toBe(0);
+      expect(result).toEqual({ ret: 0, logs: [] });
     });
   });
 

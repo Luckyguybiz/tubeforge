@@ -53,9 +53,6 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   /* ── State ────────────────────────────────────────── */
   const [privacy, setPrivacy] = useState<PrivacyStatus>('private');
-  const [scheduled, setScheduled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleTime, setScheduleTime] = useState('');
   const [publishState, setPublishState] = useState<PublishState>('idle');
   const [publishProgress, setPublishProgress] = useState(0);
   const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null);
@@ -123,45 +120,11 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     };
   }, []);
 
-  /* ── Project picker ───────────────────────────────── */
-  if (!projectId) {
-    return <ProjectPicker target="/preview" title={t('preview.title')} />;
-  }
-
-  /* ── Loading state ────────────────────────────────── */
-  if (project.isLoading) return <PreviewSkeleton />;
-
-  /* ── Error state ──────────────────────────────────── */
-  if (project.isError) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: `${C.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>!</div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginTop: 4 }}>{t('preview.loadError')}</div>
-        <div style={{ fontSize: 13, color: C.sub, maxWidth: 400, textAlign: 'center' }}>{project.error?.message || t('preview.loadErrorDefault')}</div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <button
-            onClick={() => project.refetch()}
-            style={{ padding: '10px 24px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
-          >
-            {t('preview.retry')}
-          </button>
-          <button
-            onClick={() => router.push('/dashboard')}
-            style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
-          >
-            {t('preview.toDashboard')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const p = project.data;
-  if (!p) return null;
-
   /* ── Derived data (memoized) ─────────────────────── */
-  const scenes = useMemo(() => p.scenes ?? [], [p.scenes]);
-  const readyScenes = useMemo(() => scenes.filter(s => s.status === 'READY'), [scenes]);
+  /* All hooks must be called unconditionally (React Rules of Hooks).
+     When project data is not yet available we use safe empty defaults. */
+  const p = project.data ?? null;
+  const scenes = useMemo(() => p?.scenes ?? [], [p?.scenes]);
   const scenesWithVideo = useMemo(() => scenes.filter(s => s.videoUrl), [scenes]);
   const totalDuration = useMemo(() => scenes.reduce((sum, sc) => sum + sc.duration, 0), [scenes]);
   const hasVideo = scenesWithVideo.length > 0;
@@ -172,15 +135,15 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     return found?.videoUrl ?? scenesWithVideo[0]?.videoUrl ?? null;
   }, [scenesWithVideo, scenes, activeSceneIdx]);
   const videoUrl = scenesWithVideo[0]?.videoUrl ?? null;
-  const tags = useMemo(() => (p.tags as string[]) ?? [], [p.tags]);
+  const tags = useMemo(() => (p?.tags as string[]) ?? [], [p?.tags]);
 
   /* ── Checklist (memoized) ──────────────────────────── */
   const checklist = useMemo(() => [
     { label: t('preview.checklist.videoReady'), done: scenes.length > 0 && scenes.every(s => s.status === 'READY'), href: `/editor?projectId=${projectId}`, hint: t('preview.checklist.goEditor') },
-    { label: t('preview.checklist.metadataFilled'), done: (p.title?.length ?? 0) > 0 && (p.description?.length ?? 0) > 0, href: `/metadata?projectId=${projectId}`, hint: t('preview.checklist.goMetadata') },
-    { label: t('preview.checklist.thumbnailCreated'), done: !!(p.thumbnailUrl || p.thumbnailData), href: `/thumbnails?projectId=${projectId}`, hint: t('preview.checklist.goThumbnails') },
+    { label: t('preview.checklist.metadataFilled'), done: (p?.title?.length ?? 0) > 0 && (p?.description?.length ?? 0) > 0, href: `/metadata?projectId=${projectId}`, hint: t('preview.checklist.goMetadata') },
+    { label: t('preview.checklist.thumbnailCreated'), done: !!(p?.thumbnailUrl || p?.thumbnailData), href: `/thumbnails?projectId=${projectId}`, hint: t('preview.checklist.goThumbnails') },
     { label: t('preview.checklist.channelConnected'), done: (channels.data?.length ?? 0) > 0, href: '/dashboard', hint: t('preview.checklist.connectYoutube') },
-  ], [scenes, p.title, p.description, p.thumbnailUrl, p.thumbnailData, projectId, channels.data?.length, t]);
+  ], [scenes, p?.title, p?.description, p?.thumbnailUrl, p?.thumbnailData, projectId, channels.data?.length, t]);
   const checklistDone = useMemo(() => checklist.filter(c => c.done).length, [checklist]);
   const allReady = useMemo(() => checklist.every(c => c.done), [checklist]);
 
@@ -219,7 +182,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     }, 50);
   }, [scenes, scenesWithVideo.length]);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (!hasVideo) return;
     if (videoRef.current) {
       if (isPlaying) {
@@ -229,9 +192,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       }
       setIsPlaying(!isPlaying);
     }
-  };
+  }, [hasVideo, isPlaying]);
 
-  const handlePublish = () => {
+  const handlePublish = useCallback(() => {
+    if (!p) return;
     if (!allReady) {
       toast.warning(t('preview.checklistWarning'));
       return;
@@ -267,10 +231,10 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       thumbnailUrl: p.thumbnailUrl ?? undefined,
       privacyStatus: privacy,
     });
-  };
+  }, [p, allReady, videoUrl, selectedChannel, tags, privacy, t, uploadVideo]);
 
-  const handleDownload = () => {
-    if (!videoUrl) {
+  const handleDownload = useCallback(() => {
+    if (!videoUrl || !p) {
       toast.error(t('preview.noVideoDownload'));
       return;
     }
@@ -280,7 +244,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
+  }, [videoUrl, p, t]);
 
   /* ── Card style helper ────────────────────────────── */
   const cardStyle = useMemo<React.CSSProperties>(() => ({
@@ -303,6 +267,39 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     textTransform: 'uppercase' as const,
     marginBottom: 14,
   }), [C.text]);
+
+  /* ── Early returns (after all hooks) ─────────────── */
+  if (!projectId) {
+    return <ProjectPicker target="/preview" title={t('preview.title')} />;
+  }
+
+  if (project.isLoading) return <PreviewSkeleton />;
+
+  if (project.isError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: `${C.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>!</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginTop: 4 }}>{t('preview.loadError')}</div>
+        <div style={{ fontSize: 13, color: C.sub, maxWidth: 400, textAlign: 'center' }}>{project.error?.message || t('preview.loadErrorDefault')}</div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <button
+            onClick={() => project.refetch()}
+            style={{ padding: '10px 24px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
+          >
+            {t('preview.retry')}
+          </button>
+          <button
+            onClick={() => router.push('/dashboard')}
+            style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
+          >
+            {t('preview.toDashboard')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!p) return null;
 
   /* ── RENDER ───────────────────────────────────────── */
   return (
