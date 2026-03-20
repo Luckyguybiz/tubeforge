@@ -145,6 +145,21 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M12 11L15 7L18 9" stroke={c} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".45" />
     </svg>
   ),
+  'tiktok-analytics': (_c, _a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="tiktok-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#00f2ea" />
+          <stop offset="1" stopColor="#ff0050" />
+        </linearGradient>
+      </defs>
+      <path d="M10 3V13" stroke="url(#tiktok-g)" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="7.5" cy="13.5" r="3" stroke="url(#tiktok-g)" strokeWidth="1.5" fill="none" />
+      <path d="M10 5C10 5 12 5 14 7C16 9 17 9 17 9" stroke="url(#tiktok-g)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M2 16L5 12L8 14" stroke="#00f2ea" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity=".5" />
+      <path d="M12 14L15 10L18 12" stroke="#ff0050" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity=".5" />
+    </svg>
+  ),
   analytics: (c, a) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
@@ -200,6 +215,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'preview', label: t('nav.preview') },
         { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
+        { id: 'tiktok-analytics', label: t('nav.tiktokAnalytics') },
         { id: 'analytics', label: t('nav.analytics') },
       ],
     },
@@ -237,6 +253,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   referral: ['green', 'cyan'],
   admin: ['accent', 'orange'],
   'shorts-analytics': ['green', 'cyan'],
+  'tiktok-analytics': ['cyan', 'pink'],
   analytics: ['cyan', 'purple'],
 };
 
