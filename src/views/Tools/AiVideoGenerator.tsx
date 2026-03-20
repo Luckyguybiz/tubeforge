@@ -405,6 +405,25 @@ function uid(): string {
   return `scene-${++idCounter}-${Date.now()}`;
 }
 
+function splitIntoSentences(text: string): string[] {
+  // Split on sentence-ending punctuation followed by a space or end-of-string
+  const raw = text.match(/[^.!?]*[.!?]+[\s]?|[^.!?]+$/g);
+  if (!raw) return [text];
+  return raw.map((s) => s.trim()).filter(Boolean);
+}
+
+function groupSentencesIntoScenes(sentences: string[], targetScenes: number): string[] {
+  if (sentences.length <= targetScenes) {
+    return sentences;
+  }
+  const perScene = Math.ceil(sentences.length / targetScenes);
+  const groups: string[] = [];
+  for (let i = 0; i < sentences.length; i += perScene) {
+    groups.push(sentences.slice(i, i + perScene).join(' '));
+  }
+  return groups;
+}
+
 function parseScenes(raw: string): Scene[] {
   const blocks = raw
     .split(/(?:\n\s*\n|\n---\n)/)
@@ -413,11 +432,32 @@ function parseScenes(raw: string): Scene[] {
 
   if (blocks.length === 0) return [];
 
-  return blocks.map((text, i) => ({
-    id: uid(),
-    text,
-    style: VISUAL_STYLES[i % VISUAL_STYLES.length].id,
-  }));
+  // If there are already multiple blocks the user separated manually, use them
+  if (blocks.length > 1) {
+    return blocks.map((text, i) => ({
+      id: uid(),
+      text,
+      style: VISUAL_STYLES[i % VISUAL_STYLES.length].id,
+    }));
+  }
+
+  // Single block — try to auto-split into 4-6 scenes by sentences
+  const singleText = blocks[0];
+  const sentences = splitIntoSentences(singleText);
+
+  if (sentences.length >= 2) {
+    // Group sentences into ~5 scenes (clamp between 4-6)
+    const target = Math.max(4, Math.min(6, sentences.length));
+    const groups = groupSentencesIntoScenes(sentences, target);
+    return groups.map((text, i) => ({
+      id: uid(),
+      text,
+      style: VISUAL_STYLES[i % VISUAL_STYLES.length].id,
+    }));
+  }
+
+  // Very short text (single sentence or fragment) — wrap into 1 scene
+  return [{ id: uid(), text: singleText, style: VISUAL_STYLES[0].id }];
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
