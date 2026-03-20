@@ -132,16 +132,60 @@ export const adminRouter = router({
       return ctx.db.user.update({ where: { id: userId }, data, select: { id: true, plan: true, role: true } });
     }),
 
+  updateUserRole: adminProcedure
+    .input(z.object({
+      userId: z.string(),
+      role: z.enum(['USER', 'ADMIN']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkAdminRate(ctx.session.user.id);
+      // Prevent admin from changing their own role
+      if (input.userId === ctx.session.user.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot change your own role' });
+      }
+      const user = await ctx.db.user.findUnique({ where: { id: input.userId }, select: { id: true, role: true } });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      return ctx.db.user.update({
+        where: { id: input.userId },
+        data: { role: input.role },
+        select: { id: true, plan: true, role: true },
+      });
+    }),
+
+  /**
+   * DESTRUCTIVE OPERATION: Permanently deletes a user and all associated data.
+   * This action is irreversible — cascading deletes will remove projects, scenes, assets, etc.
+   * Safety checks:
+   *   1. Admin cannot delete themselves
+   *   2. Admin cannot delete another ADMIN (prevents privilege escalation / sabotage)
+   */
   deleteUser: adminProcedure
     .input(z.object({
       userId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
-      // Prevent admin from deleting themselves
+
+      // Safety check 1: Prevent admin from deleting themselves
       if (input.userId === ctx.session.user.id) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Нельзя удалить собственный аккаунт' });
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete your own account' });
       }
+
+      // Safety check 2: Prevent deleting another ADMIN user
+      const targetUser = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, role: true },
+      });
+      if (!targetUser) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+      if (targetUser.role === 'ADMIN') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot delete an admin user. Demote them first.',
+        });
+      }
+
       await ctx.db.user.delete({ where: { id: input.userId } });
       return { success: true };
     }),
@@ -554,6 +598,52 @@ export const adminRouter = router({
         recipientCount,
         message: `Email queued for ${recipientCount} recipients (delivery pending integration)`,
       };
+    }),
+
+  /* ── CSV Export: Users ────────────────────────────────────── */
+
+  exportUsers: adminProcedure
+    .input(z.object({
+      planFilter: z.enum(['FREE', 'PRO', 'STUDIO']).optional(),
+      search: z.string().optional(),
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      await checkAdminRate(ctx.session.user.id);
+
+      const where: Record<string, unknown> = {};
+      if (input?.planFilter) {
+        where.plan = input.planFilter;
+      }
+      if (input?.search) {
+        where.OR = [
+          { name: { contains: input.search, mode: 'insensitive' } },
+          { email: { contains: input.search, mode: 'insensitive' } },
+        ];
+      }
+
+      const users = await ctx.db.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          plan: true,
+          role: true,
+          createdAt: true,
+          _count: { select: { projects: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return users.map(u => ({
+        id: u.id,
+        email: u.email ?? '',
+        name: u.name ?? '',
+        plan: u.plan,
+        role: u.role,
+        createdAt: u.createdAt.toISOString(),
+        projectCount: u._count.projects,
+      }));
     }),
 
   referralStats: adminProcedure.query(async ({ ctx }) => {

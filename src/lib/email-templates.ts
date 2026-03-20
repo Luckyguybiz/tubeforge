@@ -467,6 +467,140 @@ function daySevenTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Team & notification templates
+// ---------------------------------------------------------------------------
+
+function teamInviteTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const inviterName = String(data.inviterName || '');
+  const teamName = String(data.teamName || '');
+  const acceptUrl = String(data.acceptUrl || `${APP_URL}/teams`);
+
+  if (locale === 'en') {
+    return {
+      subject: `${inviterName} invited you to team "${teamName}"`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Team Invitation</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          <strong>${inviterName}</strong> has invited you to join the team <strong>${teamName}</strong> on TubeForge.
+        </p>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Accept the invitation to start collaborating on projects together.
+        </p>
+        ${ctaButton('Accept Invitation', acceptUrl)}
+        <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">If you did not expect this invitation, you can safely ignore this email.</p>
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `${inviterName} пригласил вас в команду "${teamName}"`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Приглашение в команду</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        <strong>${inviterName}</strong> приглашает вас присоединиться к команде <strong>${teamName}</strong> на TubeForge.
+      </p>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Примите приглашение, чтобы начать совместную работу над проектами.
+      </p>
+      ${ctaButton('Принять приглашение', acceptUrl)}
+      <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">Если вы не ожидали это приглашение, просто проигнорируйте это письмо.</p>
+    `, locale),
+  };
+}
+
+function planChangeConfirmationTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const userName = String(data.userName || '');
+  const oldPlan = String(data.oldPlan || 'FREE');
+  const newPlan = String(data.newPlan || 'PRO');
+
+  if (locale === 'en') {
+    const greeting = userName ? `Hi ${userName}!` : 'Hi there!';
+    return {
+      subject: `Your plan was changed from ${oldPlan} to ${newPlan}`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Your TubeForge plan has been updated.
+        </p>
+        <p style="text-align:center;margin:20px 0;">
+          <span style="display:inline-block;padding:8px 16px;background:#eee;border-radius:6px;color:#888;font-weight:600;">${oldPlan}</span>
+          <span style="display:inline-block;padding:0 12px;color:#6c5ce7;font-size:20px;font-weight:700;">&rarr;</span>
+          <span style="display:inline-block;padding:8px 16px;background:#6c5ce7;border-radius:6px;color:#fff;font-weight:600;">${newPlan}</span>
+        </p>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          If you did not make this change, please contact support immediately.
+        </p>
+        ${ctaButton('View Account Settings', `${APP_URL}/settings/billing`)}
+      `, locale),
+    };
+  }
+
+  const greeting = userName ? `Привет, ${userName}!` : 'Привет!';
+  return {
+    subject: `Ваш план изменён с ${oldPlan} на ${newPlan}`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Ваш план TubeForge был обновлён.
+      </p>
+      <p style="text-align:center;margin:20px 0;">
+        <span style="display:inline-block;padding:8px 16px;background:#eee;border-radius:6px;color:#888;font-weight:600;">${oldPlan}</span>
+        <span style="display:inline-block;padding:0 12px;color:#6c5ce7;font-size:20px;font-weight:700;">&rarr;</span>
+        <span style="display:inline-block;padding:8px 16px;background:#6c5ce7;border-radius:6px;color:#fff;font-weight:600;">${newPlan}</span>
+      </p>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Если вы не вносили это изменение, пожалуйста, свяжитесь с поддержкой.
+      </p>
+      ${ctaButton('Настройки аккаунта', `${APP_URL}/settings/billing`)}
+    `, locale),
+  };
+}
+
+function commentMentionTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const authorName = String(data.authorName || '');
+  const projectName = String(data.projectName || '');
+  const commentText = String(data.commentText || '');
+
+  // Truncate comment text to 200 chars for the email preview
+  const truncatedComment = commentText.length > 200
+    ? commentText.slice(0, 200) + '...'
+    : commentText;
+
+  if (locale === 'en') {
+    return {
+      subject: `${authorName} mentioned you in "${projectName}"`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">You were mentioned in a comment</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          <strong>${authorName}</strong> mentioned you in a comment on the project <strong>${projectName}</strong>.
+        </p>
+        <div style="margin:20px 0;padding:16px 20px;background:#f8f8fc;border-left:4px solid #6c5ce7;border-radius:0 8px 8px 0;">
+          <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0;font-style:italic;">&ldquo;${truncatedComment}&rdquo;</p>
+        </div>
+        ${ctaButton('View Comment', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `${authorName} упомянул вас в "${projectName}"`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Вас упомянули в комментарии</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        <strong>${authorName}</strong> упомянул вас в комментарии к проекту <strong>${projectName}</strong>.
+      </p>
+      <div style="margin:20px 0;padding:16px 20px;background:#f8f8fc;border-left:4px solid #6c5ce7;border-radius:0 8px 8px 0;">
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0;font-style:italic;">&laquo;${truncatedComment}&raquo;</p>
+      </div>
+      ${ctaButton('Посмотреть комментарий', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Re-engagement templates
 // ---------------------------------------------------------------------------
 
@@ -617,7 +751,7 @@ function reengagementDay14Template(data: TemplateData): TemplateResult {
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -629,6 +763,9 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'reengagement-day3': reengagementDay3Template,
   'reengagement-day7': reengagementDay7Template,
   'reengagement-day14': reengagementDay14Template,
+  'team-invite': teamInviteTemplate,
+  'plan-change-confirmation': planChangeConfirmationTemplate,
+  'comment-mention': commentMentionTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {
@@ -672,4 +809,25 @@ export function getReengagementDay7(userName: string, locale = 'ru'): TemplateRe
  */
 export function getReengagementDay14(userName: string, locale = 'ru'): TemplateResult {
   return getTemplate('reengagement-day14', { name: userName, locale });
+}
+
+/**
+ * Team invite email — "{inviterName} invited you to team {teamName}"
+ */
+export function getTeamInviteEmail(inviterName: string, teamName: string, acceptUrl: string, locale = 'ru'): TemplateResult {
+  return getTemplate('team-invite', { inviterName, teamName, acceptUrl, locale });
+}
+
+/**
+ * Plan change confirmation — "Your plan was changed from {oldPlan} to {newPlan}"
+ */
+export function getPlanChangeEmail(userName: string, oldPlan: string, newPlan: string, locale = 'ru'): TemplateResult {
+  return getTemplate('plan-change-confirmation', { userName, oldPlan, newPlan, locale });
+}
+
+/**
+ * Comment mention email — "You were mentioned in a comment on {projectName}"
+ */
+export function getCommentMentionEmail(authorName: string, projectName: string, commentText: string, locale = 'ru'): TemplateResult {
+  return getTemplate('comment-mention', { authorName, projectName, commentText, locale });
 }

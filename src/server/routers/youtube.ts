@@ -56,8 +56,18 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
         });
         return data.access_token as string;
       }
+
+      // FIX: Google returned HTTP 200 but the response body is missing access_token.
+      // This can happen if the refresh_token was revoked or the response was malformed.
+      // We must NOT silently fall through and use the old expired token — that would
+      // cause confusing 401s from YouTube API. Instead, throw immediately so the user
+      // knows to re-authenticate.
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Токен обновлён, но access_token отсутствует в ответе. Переподключите аккаунт Google.',
+      });
     }
-    // Token was expired and refresh failed — do not fall back to the old expired token
+    // Token was expired and refresh HTTP request failed — do not fall back to the old expired token
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не удалось обновить токен YouTube. Переподключите аккаунт Google.' });
   }
 

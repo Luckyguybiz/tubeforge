@@ -6,6 +6,26 @@ import { useEditorStore } from '@/stores/useEditorStore';
 import { toast } from '@/stores/useNotificationStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
+/**
+ * Retry predicate for transient failures during video generation polling.
+ * Retries on network errors (no status) and 5xx server errors.
+ * Does NOT retry on 4xx client errors (bad request, unauthorized, etc.).
+ */
+function shouldRetryStatusCheck(failureCount: number, error: unknown): boolean {
+  const MAX_RETRIES = 3;
+  if (failureCount >= MAX_RETRIES) return false;
+
+  // TRPCClientError exposes the HTTP status via data.httpStatus or shape
+  const err = error as { data?: { httpStatus?: number }; message?: string };
+  const httpStatus = err?.data?.httpStatus;
+
+  // If we have an HTTP status and it's a client error (4xx), don't retry
+  if (httpStatus && httpStatus >= 400 && httpStatus < 500) return false;
+
+  // Retry on 5xx, network errors (no httpStatus), or anything else transient
+  return true;
+}
+
 export function useVideoGeneration(sceneId: string | null) {
   const sceneStatus = useEditorStore((s) => {
     const sc = s.scenes.find((sc) => sc.id === sceneId);
@@ -46,12 +66,16 @@ export function useVideoGeneration(sceneId: string | null) {
     },
   });
 
-  // Poll task status every 3 seconds while generating
+  // Poll task status every 3 seconds while generating.
+  // Retry up to 3 times with exponential backoff (1s, 2s, 4s) on transient
+  // failures (5xx / network errors). 4xx errors are not retried.
   const taskStatus = trpc.videoTask.checkStatus.useQuery(
     { taskId: activeTaskId! },
     {
       enabled: !!activeTaskId && sceneStatus === 'generating',
       refetchInterval: 3000,
+      retry: shouldRetryStatusCheck,
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 4000),
     },
   );
 

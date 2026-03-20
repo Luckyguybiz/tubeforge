@@ -109,13 +109,30 @@ export function AdminPage() {
   const stats = trpc.admin.getStats.useQuery(undefined, { enabled: isAdmin });
   const activity = trpc.admin.recentActivity.useQuery(undefined, { enabled: isAdmin });
   const users = trpc.admin.listUsers.useQuery(
-    { page, limit: 15, search: searchDebounced || undefined, planFilter, sortBy, sortDir },
+    { page, limit: 20, search: searchDebounced || undefined, planFilter, sortBy, sortDir },
     { enabled: isAdmin, placeholderData: (prev) => prev },
   );
 
   const updateUser = trpc.admin.updateUser.useMutation({
     onSuccess: () => {
       toast.success(t('admin.userUpdated'));
+      users.refetch();
+      stats.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateUserRole = trpc.admin.updateUserRole.useMutation({
+    onSuccess: () => {
+      toast.success('Role updated');
+      users.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteUser = trpc.admin.deleteUser.useMutation({
+    onSuccess: () => {
+      toast.success('User deleted');
       users.refetch();
       stats.refetch();
     },
@@ -553,6 +570,7 @@ export function AdminPage() {
                     user={user}
                     C={C}
                     tdBase={tdBase}
+                    currentUserId={profile.data?.id ?? ''}
                     expanded={expandedUserId === user.id}
                     onToggle={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
                     onUpdatePlan={(plan) => updateUser.mutate({ userId: user.id, plan })}
@@ -561,6 +579,14 @@ export function AdminPage() {
                     onGrantTrial={(plan) => grantTrial.mutate({ userId: user.id, plan })}
                     isSuspending={suspendUser.isPending}
                     isGranting={grantTrial.isPending}
+                    onUpdateRole={(role) => updateUserRole.mutate({ userId: user.id, role })}
+                    isUpdatingRole={updateUserRole.isPending}
+                    onDelete={() => {
+                      if (window.confirm(`Are you sure you want to delete user ${user.email || user.name || user.id}?`)) {
+                        deleteUser.mutate({ userId: user.id });
+                      }
+                    }}
+                    isDeleting={deleteUser.isPending}
                   />
                 ))
               )}
@@ -1030,6 +1056,7 @@ interface UserRowProps {
   };
   C: Theme;
   tdBase: React.CSSProperties;
+  currentUserId: string;
   expanded: boolean;
   onToggle: () => void;
   onUpdatePlan: (plan: 'FREE' | 'PRO' | 'STUDIO') => void;
@@ -1038,10 +1065,15 @@ interface UserRowProps {
   onGrantTrial: (plan: 'PRO' | 'STUDIO') => void;
   isSuspending: boolean;
   isGranting: boolean;
+  onUpdateRole: (role: 'USER' | 'ADMIN') => void;
+  isUpdatingRole: boolean;
+  onDelete: () => void;
+  isDeleting: boolean;
 }
 
-function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending, onSuspend, onGrantTrial, isSuspending, isGranting }: UserRowProps) {
+function UserRow({ user, C, tdBase, currentUserId, expanded, onToggle, onUpdatePlan, isPending, onSuspend, onGrantTrial, isSuspending, isGranting, onUpdateRole, isUpdatingRole, onDelete, isDeleting }: UserRowProps) {
   const t = useLocaleStore((s) => s.t);
+  const isSelf = user.id === currentUserId;
   return (
     <>
       <tr
@@ -1072,9 +1104,38 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending,
           <PlanBadge plan={user.plan} C={C} />
         </td>
 
-        {/* Role Badge */}
+        {/* Role */}
         <td style={tdBase}>
-          <RoleBadge role={user.role} C={C} />
+          {isSelf ? (
+            <RoleBadge role={user.role} C={C} />
+          ) : (
+            <select
+              value={user.role}
+              onChange={(e) => {
+                e.stopPropagation();
+                onUpdateRole(e.target.value as 'USER' | 'ADMIN');
+              }}
+              onClick={(e) => e.stopPropagation()}
+              disabled={isUpdatingRole}
+              aria-label={`Change role for ${user.name || user.email}`}
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                background: user.role === 'ADMIN' ? `${C.orange}18` : `${C.dim}18`,
+                color: user.role === 'ADMIN' ? C.orange : C.sub,
+                border: `1px solid ${user.role === 'ADMIN' ? C.orange + '40' : C.border}`,
+                cursor: isUpdatingRole ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                outline: 'none',
+                opacity: isUpdatingRole ? 0.6 : 1,
+              }}
+            >
+              <option value="USER">User</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          )}
         </td>
 
         {/* Projects Count */}
@@ -1091,19 +1152,49 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending,
           })}
         </td>
 
-        {/* Expand */}
+        {/* Actions */}
         <td style={{ ...tdBase, textAlign: 'center' }}>
-          <span style={{
-            display: 'inline-block',
-            color: C.dim,
-            fontSize: 16,
-            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform .2s ease',
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {/* Delete button — hidden for self */}
+            {!isSelf && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                disabled={isDeleting}
+                aria-label={`Delete user ${user.name || user.email}`}
+                title="Delete user"
+                style={{
+                  width: 26, height: 26,
+                  borderRadius: 6,
+                  border: `1px solid ${C.red}40`,
+                  background: `${C.red}10`,
+                  color: C.red,
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: isDeleting ? 0.5 : 1,
+                  transition: 'opacity .15s, background .15s',
+                  fontFamily: 'inherit',
+                  padding: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+            {/* Expand chevron */}
+            <span style={{
+              display: 'inline-block',
+              color: C.dim,
+              fontSize: 16,
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform .2s ease',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </div>
         </td>
       </tr>
 
@@ -1178,6 +1269,20 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending,
                     }}
                   >
                     Grant PRO Trial
+                  </button>
+                )}
+                {!isSelf && (
+                  <button
+                    disabled={isDeleting}
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                    style={{
+                      padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.red}`,
+                      fontSize: 11, fontWeight: 700, cursor: isDeleting ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit', background: `${C.red}14`, color: C.red,
+                      opacity: isDeleting ? 0.5 : 1, transition: 'opacity .15s',
+                    }}
+                  >
+                    Delete User
                   </button>
                 )}
               </div>
