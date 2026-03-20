@@ -547,6 +547,65 @@ ${sceneSummary}
     }),
 
   /* ═══════════════════════════════════════════════════════════════
+     Z5: AI Image Generator — general-purpose DALL-E 3 image gen
+     ═══════════════════════════════════════════════════════════════ */
+  generateImage: protectedProcedure
+    .input(z.object({
+      prompt: z.string().min(1).max(1000),
+      style: z.enum(['realistic', 'anime', '3d', 'watercolor', 'oil', 'pixel', 'minimalist', 'cinematic']).default('realistic'),
+      size: z.enum(['1024x1024', '1792x1024', '1024x1792']).default('1024x1024'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRateLimit(ctx.session.user.id, 'ai-image', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const styleMap: Record<string, string> = {
+        realistic: 'photorealistic, professional photography, detailed',
+        anime: 'anime/manga art style, vibrant Japanese animation, detailed illustration',
+        '3d': '3D rendered, CGI quality, volumetric lighting',
+        watercolor: 'watercolor painting, soft strokes, artistic, hand-painted feel',
+        oil: 'oil painting on canvas, rich textures, classical art style',
+        pixel: 'pixel art, 16-bit retro game style, crisp pixels',
+        minimalist: 'clean minimalist design, simple shapes, modern, geometric',
+        cinematic: 'cinematic movie poster style, dramatic lighting, epic composition',
+      };
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_IMAGES, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'dall-e-3',
+            prompt: `${input.prompt}. Style: ${styleMap[input.style] ?? input.style}. High quality, detailed.`,
+            n: 1,
+            size: input.size,
+            quality: 'hd',
+          }),
+        });
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'DALL-E API error' });
+      }
+
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
+      const img = data.data?.[0] as { url?: string; revised_prompt?: string } | undefined;
+      return {
+        url: img?.url ?? '',
+        revisedPrompt: img?.revised_prompt ?? '',
+      };
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
      Z4: AI Background Removal — placeholder
      ═══════════════════════════════════════════════════════════════ */
   removeBackground: protectedProcedure

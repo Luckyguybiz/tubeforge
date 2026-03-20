@@ -77,7 +77,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.image-generator.description'),
     category: 'ai',
     route: '/tools/image-generator',
-    available: false,
+    available: true,
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -87,7 +87,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.voiceover-generator.description'),
     category: 'ai',
     route: '/tools/voiceover-generator',
-    available: false,
+    available: true,
     gradient: ['#3b82f6', '#6366f1'],
   },
   {
@@ -170,7 +170,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.subtitle-editor.description'),
     category: 'video',
     route: '/tools/subtitle-editor',
-    available: false,
+    available: true,
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -266,7 +266,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.background-remover.description'),
     category: 'ai',
     route: '/tools/background-remover',
-    available: false,
+    available: true,
     gradient: ['#8b5cf6', '#7c3aed'],
   },
   {
