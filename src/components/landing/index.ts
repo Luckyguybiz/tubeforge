@@ -5,3 +5,4 @@ export { FaqAccordion } from './FaqAccordion';
 export { HoverCard } from './HoverCard';
 export { HoverLink } from './HoverLink';
 export { HoverButton } from './HoverButton';
+export { ClientCookieConsent } from './ClientCookieConsent';
