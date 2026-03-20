@@ -69,11 +69,11 @@ export default function TermsPage() {
             функционалом
           </li>
           <li>
-            <strong style={{ color: C.text }}>Pro ($19/мес):</strong> расширенный функционал для
+            <strong style={{ color: C.text }}>Pro (990₽/мес):</strong> расширенный функционал для
             индивидуальных авторов
           </li>
           <li>
-            <strong style={{ color: C.text }}>Studio ($49/мес):</strong> командный тариф с полным
+            <strong style={{ color: C.text }}>Studio (2490₽/мес):</strong> командный тариф с полным
             доступом
           </li>
         </ul>

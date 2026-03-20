@@ -24,6 +24,7 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+  @@index([userId, provider])
 }
 
 model Session {
@@ -241,4 +242,5 @@ model Payout {
   createdAt     DateTime @default(now())
 
   @@index([userId])
+  @@index([userId, createdAt])
 }

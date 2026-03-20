@@ -374,7 +374,7 @@ export async function GET(req: NextRequest) {
     if (!downloadUrl) {
       return NextResponse.json(
         {
-          error: 'Не удалось найти источник для скачивания. YouTube блокирует этот контент с серверов.',
+          error: 'Could not find a download source. YouTube blocks this content from servers.',
           watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
         },
         { status: 503 },
@@ -494,6 +494,6 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[yt-download] Stream error:', message);
-    return NextResponse.json({ error: 'Ошибка при загрузке файла' }, { status: 502 });
+    return NextResponse.json({ error: 'File download failed' }, { status: 502 });
   }
 }

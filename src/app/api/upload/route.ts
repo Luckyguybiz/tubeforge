@@ -16,36 +16,36 @@ const ALLOWED_TYPES = new Set([
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ error: 'Необходима авторизация' }, { status: 401 });
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
   const { success } = await rateLimit({ identifier: `upload:${session.user.id}`, limit: 20, window: 60 });
   if (!success) {
-    return NextResponse.json({ error: 'Слишком много загрузок. Попробуйте позже.' }, { status: 429 });
+    return NextResponse.json({ error: 'Too many uploads. Please try again later.' }, { status: 429 });
   }
 
   let formData: FormData;
   try {
     formData = await req.formData();
   } catch {
-    return NextResponse.json({ error: 'Некорректные данные формы' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
   }
   const file = formData.get('file') as File | null;
 
   if (!file) {
-    return NextResponse.json({ error: 'Файл не предоставлен' }, { status: 400 });
+    return NextResponse.json({ error: 'No file provided' }, { status: 400 });
   }
 
   if (file.size === 0) {
-    return NextResponse.json({ error: 'Файл пустой' }, { status: 400 });
+    return NextResponse.json({ error: 'File is empty' }, { status: 400 });
   }
 
   if (file.size > MAX_UPLOAD_SIZE) {
-    return NextResponse.json({ error: 'Файл слишком большой (максимум 10 МБ)' }, { status: 400 });
+    return NextResponse.json({ error: 'File too large (max 10 MB)' }, { status: 400 });
   }
 
   if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: 'Разрешены только изображения (JPEG, PNG, WebP, GIF, AVIF)' }, { status: 400 });
+    return NextResponse.json({ error: 'Only images allowed (JPEG, PNG, WebP, GIF, AVIF)' }, { status: 400 });
   }
 
   try {
@@ -61,12 +61,12 @@ export async function POST(req: NextRequest) {
     const isAvif = header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70;
 
     if (!isJpeg && !isPng && !isGif && !isWebp && !isAvif) {
-      return NextResponse.json({ error: 'Файл не является допустимым изображением' }, { status: 400 });
+      return NextResponse.json({ error: 'File is not a valid image' }, { status: 400 });
     }
 
     const url = await uploadFile(buffer, file.name, file.type);
     if (!url) {
-      return NextResponse.json({ error: 'Не удалось загрузить файл' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
     }
     return NextResponse.json({ url }, {
       headers: {
@@ -75,6 +75,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('Upload failed:', err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: 'Ошибка загрузки файла. Попробуйте снова.' }, { status: 500 });
+    return NextResponse.json({ error: 'Upload failed. Please try again.' }, { status: 500 });
   }
 }

@@ -364,12 +364,12 @@ function getRelativeTime(dateStr: string | undefined): string {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return 'сегодня';
-  if (days === 1) return '1 день назад';
-  if (days < 7) return `${days} дней назад`;
-  if (days < 30) return `${Math.floor(days / 7)} нед. назад`;
-  if (days < 365) return `${Math.floor(days / 30)} мес. назад`;
-  return `${Math.floor(days / 365)} г. назад`;
+  if (days === 0) return 'today';
+  if (days === 1) return '1 day ago';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 function getMockData() {
@@ -377,10 +377,10 @@ function getMockData() {
     {
       rank: 1,
       videoId: 'mock1',
-      title: 'Невероятный трюк на скейтборде',
+      title: 'Incredible skateboard trick',
       views: 45234567,
-      viewsFormatted: '45 234 567',
-      uploaded: '2 дня назад',
+      viewsFormatted: '45,234,567',
+      uploaded: '2 days ago',
       channel: 'SkateVibes',
       channelId: '',
       thumbnail: '',
@@ -389,10 +389,10 @@ function getMockData() {
     {
       rank: 2,
       videoId: 'mock2',
-      title: 'Котик просто захотел поспать, но...',
+      title: 'Cat just wanted to sleep, but...',
       views: 38901234,
-      viewsFormatted: '38 901 234',
-      uploaded: '1 день назад',
+      viewsFormatted: '38,901,234',
+      uploaded: '1 day ago',
       channel: 'PetFun',
       channelId: '',
       thumbnail: '',
@@ -401,10 +401,10 @@ function getMockData() {
     {
       rank: 3,
       videoId: 'mock3',
-      title: 'Рецепт за 30 секунд: паста карбонара',
+      title: '30-second recipe: pasta carbonara',
       views: 32456789,
-      viewsFormatted: '32 456 789',
-      uploaded: '3 дня назад',
+      viewsFormatted: '32,456,789',
+      uploaded: '3 days ago',
       channel: 'QuickChef',
       channelId: '',
       thumbnail: '',
@@ -413,10 +413,10 @@ function getMockData() {
     {
       rank: 4,
       videoId: 'mock4',
-      title: 'Этот голос поразил всех зрителей',
+      title: 'This voice stunned the entire audience',
       views: 28765432,
-      viewsFormatted: '28 765 432',
-      uploaded: '5 дней назад',
+      viewsFormatted: '28,765,432',
+      uploaded: '5 days ago',
       channel: 'VoiceTalent',
       channelId: '',
       thumbnail: '',
@@ -425,10 +425,10 @@ function getMockData() {
     {
       rank: 5,
       videoId: 'mock5',
-      title: 'Лайфхак с телефоном, который ты не знал',
+      title: 'Phone hack you never knew about',
       views: 25123456,
-      viewsFormatted: '25 123 456',
-      uploaded: '4 дня назад',
+      viewsFormatted: '25,123,456',
+      uploaded: '4 days ago',
       channel: 'TechTips',
       channelId: '',
       thumbnail: '',
@@ -437,10 +437,10 @@ function getMockData() {
     {
       rank: 6,
       videoId: 'mock6',
-      title: 'Танец, который взорвал TikTok и YouTube',
+      title: 'The dance that blew up TikTok and YouTube',
       views: 22987654,
-      viewsFormatted: '22 987 654',
-      uploaded: '6 дней назад',
+      viewsFormatted: '22,987,654',
+      uploaded: '6 days ago',
       channel: 'DanceWave',
       channelId: '',
       thumbnail: '',
@@ -449,10 +449,10 @@ function getMockData() {
     {
       rank: 7,
       videoId: 'mock7',
-      title: 'Сделал невозможный бросок в баскетбол',
+      title: 'Made an impossible basketball shot',
       views: 19876543,
-      viewsFormatted: '19 876 543',
-      uploaded: '2 дня назад',
+      viewsFormatted: '19,876,543',
+      uploaded: '2 days ago',
       channel: 'SportsKing',
       channelId: '',
       thumbnail: '',
@@ -461,10 +461,10 @@ function getMockData() {
     {
       rank: 8,
       videoId: 'mock8',
-      title: 'Разоблачение популярного лайфхака',
+      title: 'Debunking a popular life hack',
       views: 17654321,
-      viewsFormatted: '17 654 321',
-      uploaded: '1 день назад',
+      viewsFormatted: '17,654,321',
+      uploaded: '1 day ago',
       channel: 'TruthCheck',
       channelId: '',
       thumbnail: '',
@@ -473,10 +473,10 @@ function getMockData() {
     {
       rank: 9,
       videoId: 'mock9',
-      title: 'Попробовал самую острую еду в мире',
+      title: 'Tried the spiciest food in the world',
       views: 15432100,
-      viewsFormatted: '15 432 100',
-      uploaded: '3 дня назад',
+      viewsFormatted: '15,432,100',
+      uploaded: '3 days ago',
       channel: 'FoodChallenge',
       channelId: '',
       thumbnail: '',
@@ -485,10 +485,10 @@ function getMockData() {
     {
       rank: 10,
       videoId: 'mock10',
-      title: 'Как заработать на YouTube Shorts',
+      title: 'How to earn money on YouTube Shorts',
       views: 14321000,
-      viewsFormatted: '14 321 000',
-      uploaded: '7 дней назад',
+      viewsFormatted: '14,321,000',
+      uploaded: '7 days ago',
       channel: 'CreatorHub',
       channelId: '',
       thumbnail: '',
@@ -499,15 +499,15 @@ function getMockData() {
 
 function getTiktokMockData() {
   return [
-    { rank: 1, videoId: 'tkmock1', title: 'Этот тренд взорвал TikTok за 1 день', views: 89234567, viewsFormatted: '89 234 567', uploaded: '1 день назад', channel: 'TikTokViral', channelId: '', thumbnail: '', duration: 15 },
-    { rank: 2, videoId: 'tkmock2', title: 'POV: когда мама нашла твои оценки', views: 67890123, viewsFormatted: '67 890 123', uploaded: '2 дня назад', channel: 'MemeMaster', channelId: '', thumbnail: '', duration: 12 },
-    { rank: 3, videoId: 'tkmock3', title: 'Самый быстрый рецепт пасты #foodtok', views: 45678901, viewsFormatted: '45 678 901', uploaded: '3 дня назад', channel: 'FoodTok', channelId: '', thumbnail: '', duration: 30 },
-    { rank: 4, videoId: 'tkmock4', title: 'Minecraft но каждый блок = $1', views: 34567890, viewsFormatted: '34 567 890', uploaded: '2 дня назад', channel: 'GameClips', channelId: '', thumbnail: '', duration: 25 },
-    { rank: 5, videoId: 'tkmock5', title: 'Ranking все виды мороженого от худшего к лучшему', views: 28901234, viewsFormatted: '28 901 234', uploaded: '4 дня назад', channel: 'RankingKing', channelId: '', thumbnail: '', duration: 45 },
-    { rank: 6, videoId: 'tkmock6', title: 'Танец который может повторить каждый', views: 23456789, viewsFormatted: '23 456 789', uploaded: '1 день назад', channel: 'DanceTok', channelId: '', thumbnail: '', duration: 15 },
-    { rank: 7, videoId: 'tkmock7', title: 'Лайфхак с телефоном который ты не знал', views: 19876543, viewsFormatted: '19 876 543', uploaded: '5 дней назад', channel: 'TechTips', channelId: '', thumbnail: '', duration: 20 },
-    { rank: 8, videoId: 'tkmock8', title: 'Ranking лучших серверов Minecraft', views: 17654321, viewsFormatted: '17 654 321', uploaded: '3 дня назад', channel: 'MCRanking', channelId: '', thumbnail: '', duration: 35 },
-    { rank: 9, videoId: 'tkmock9', title: 'Этот голос поразил всех на улице', views: 15432100, viewsFormatted: '15 432 100', uploaded: '6 дней назад', channel: 'StreetVibes', channelId: '', thumbnail: '', duration: 18 },
-    { rank: 10, videoId: 'tkmock10', title: 'Как стать вирусным на TikTok в 2026', views: 12345678, viewsFormatted: '12 345 678', uploaded: '7 дней назад', channel: 'CreatorSchool', channelId: '', thumbnail: '', duration: 40 },
+    { rank: 1, videoId: 'tkmock1', title: 'This trend blew up TikTok in 1 day', views: 89234567, viewsFormatted: '89,234,567', uploaded: '1 day ago', channel: 'TikTokViral', channelId: '', thumbnail: '', duration: 15 },
+    { rank: 2, videoId: 'tkmock2', title: 'POV: when mom found your grades', views: 67890123, viewsFormatted: '67,890,123', uploaded: '2 days ago', channel: 'MemeMaster', channelId: '', thumbnail: '', duration: 12 },
+    { rank: 3, videoId: 'tkmock3', title: 'Fastest pasta recipe ever #foodtok', views: 45678901, viewsFormatted: '45,678,901', uploaded: '3 days ago', channel: 'FoodTok', channelId: '', thumbnail: '', duration: 30 },
+    { rank: 4, videoId: 'tkmock4', title: 'Minecraft but every block = $1', views: 34567890, viewsFormatted: '34,567,890', uploaded: '2 days ago', channel: 'GameClips', channelId: '', thumbnail: '', duration: 25 },
+    { rank: 5, videoId: 'tkmock5', title: 'Ranking all ice cream flavors worst to best', views: 28901234, viewsFormatted: '28,901,234', uploaded: '4 days ago', channel: 'RankingKing', channelId: '', thumbnail: '', duration: 45 },
+    { rank: 6, videoId: 'tkmock6', title: 'Dance that anyone can repeat', views: 23456789, viewsFormatted: '23,456,789', uploaded: '1 day ago', channel: 'DanceTok', channelId: '', thumbnail: '', duration: 15 },
+    { rank: 7, videoId: 'tkmock7', title: 'Phone hack you never knew about', views: 19876543, viewsFormatted: '19,876,543', uploaded: '5 days ago', channel: 'TechTips', channelId: '', thumbnail: '', duration: 20 },
+    { rank: 8, videoId: 'tkmock8', title: 'Ranking best Minecraft servers', views: 17654321, viewsFormatted: '17,654,321', uploaded: '3 days ago', channel: 'MCRanking', channelId: '', thumbnail: '', duration: 35 },
+    { rank: 9, videoId: 'tkmock9', title: 'This voice stunned everyone on the street', views: 15432100, viewsFormatted: '15,432,100', uploaded: '6 days ago', channel: 'StreetVibes', channelId: '', thumbnail: '', duration: 18 },
+    { rank: 10, videoId: 'tkmock10', title: 'How to go viral on TikTok in 2026', views: 12345678, viewsFormatted: '12,345,678', uploaded: '7 days ago', channel: 'CreatorSchool', channelId: '', thumbnail: '', duration: 40 },
   ];
 }

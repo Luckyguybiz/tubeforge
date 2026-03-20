@@ -268,8 +268,8 @@ export function OnboardingTour() {
       border: `1px solid ${isDark ? 'rgba(255,255,255,.08)' : C.border}`,
       borderRadius: 20,
       padding: 28,
-      width: 400,
-      maxWidth: 'calc(100vw - 32px)',
+      width: 'calc(100vw - 32px)',
+      maxWidth: 400,
       boxShadow: isDark
         ? '0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset'
         : '0 24px 80px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.04)',

@@ -13,10 +13,10 @@ import { rateLimit } from '@/lib/rate-limit';
  * TODO: migrate promo codes to a database table for runtime management.
  */
 const DEFAULT_PROMO_CODES: Record<string, { hours: number; label: string }> = {
-  'SHORTS2026': { hours: 24, label: '24 часа полного доступа' },
-  'TUBEFORGE': { hours: 24, label: '24 часа полного доступа' },
-  'CREATOR': { hours: 168, label: '7 дней полного доступа' },
-  '\u041F\u0415\u0420\u0412\u042B\u0419': { hours: 72, label: '3 дня полного доступа' },
+  'SHORTS2026': { hours: 24, label: '24 hours full access' },
+  'TUBEFORGE': { hours: 24, label: '24 hours full access' },
+  'CREATOR': { hours: 168, label: '7 days full access' },
+  '\u041F\u0415\u0420\u0412\u042B\u0419': { hours: 72, label: '3 days full access' },
 };
 
 const PROMO_CODES: Record<string, { hours: number; label: string }> = (() => {

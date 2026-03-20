@@ -137,8 +137,8 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 480,
-          maxWidth: 'calc(100vw - 32px)',
+          width: 'calc(100vw - 32px)',
+          maxWidth: 480,
           maxHeight: 'calc(100vh - 80px)',
           background: isDark
             ? 'linear-gradient(135deg, rgba(16,16,28,.99), rgba(12,12,20,.99))'

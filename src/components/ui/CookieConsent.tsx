@@ -20,6 +20,7 @@ export function CookieConsent() {
 
   const respond = (value: 'accepted' | 'declined') => {
     localStorage.setItem(STORAGE_KEY, value);
+    window.dispatchEvent(new Event('tf-consent-changed'));
     setVisible(false);
   };
 

@@ -62,11 +62,15 @@ export const assetRouter = router({
     .mutation(async ({ ctx, input }) => {
       await checkAssetRate(ctx.session.user.id);
 
-      const plan = ctx.session.user.plan ?? 'FREE';
-      const maxAssets = ASSET_LIMITS[plan];
-
       // Use interactive transaction to atomically check limit and create
       return ctx.db.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { plan: true },
+        });
+        const plan = user?.plan ?? 'FREE';
+        const maxAssets = ASSET_LIMITS[plan];
+
         if (maxAssets !== undefined) {
           const currentCount = await tx.asset.count({
             where: { userId: ctx.session.user.id },

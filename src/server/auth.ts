@@ -19,6 +19,7 @@ if (_hadAuthUrl || _hadNextAuthUrl) {
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import type { Plan, Role } from '@prisma/client';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 
@@ -27,7 +28,7 @@ let _lastAuthError: unknown = null;
 export function getLastAuthError() { return _lastAuthError; }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  debug: process.env.NODE_ENV !== 'production',
+  debug: false,
   trustHost: true,
   secret: env.AUTH_SECRET,
   adapter: PrismaAdapter(db),
@@ -65,33 +66,54 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
+      const PLAN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
       if (user) {
+        // Initial sign-in: populate plan/role from DB into the JWT token
         token.id = user.id;
+        const dbUser = user.id
+          ? await db.user.findUnique({
+              where: { id: user.id },
+              select: { plan: true, role: true },
+            })
+          : null;
+        token.plan = dbUser?.plan ?? 'FREE';
+        token.role = dbUser?.role ?? 'USER';
+        token.planUpdatedAt = Date.now();
+      } else {
+        // Subsequent requests: refresh plan/role from DB if cache is stale
+        const lastUpdated = (token.planUpdatedAt as number) ?? 0;
+        if (Date.now() - lastUpdated > PLAN_CACHE_TTL_MS) {
+          const userId = (token.id as string) ?? token.sub;
+          if (userId) {
+            const dbUser = await db.user.findUnique({
+              where: { id: userId },
+              select: { plan: true, role: true },
+            });
+            token.plan = dbUser?.plan ?? 'FREE';
+            token.role = dbUser?.role ?? 'USER';
+          } else {
+            token.plan = 'FREE';
+            token.role = 'USER';
+          }
+          token.planUpdatedAt = Date.now();
+        }
       }
+
       return token;
     },
     async session({ session, token }) {
+      // Read plan/role directly from the cached JWT — no DB query needed
       if (session.user) {
         const userId = (token.id as string) ?? token.sub;
         if (!userId) {
-          // Invalid token — return session with no permissions
           session.user.plan = 'FREE';
           session.user.role = 'USER';
           return session;
         }
         session.user.id = userId;
-        // Fetch plan/role from database instead of hardcoding
-        const dbUser = await db.user.findUnique({
-          where: { id: userId },
-          select: { plan: true, role: true },
-        });
-        if (dbUser) {
-          session.user.plan = dbUser.plan;
-          session.user.role = dbUser.role;
-        } else {
-          session.user.plan = 'FREE';
-          session.user.role = 'USER';
-        }
+        session.user.plan = (token.plan as Plan) ?? 'FREE';
+        session.user.role = (token.role as Role) ?? 'USER';
       }
       return session;
     },

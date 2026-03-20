@@ -18,6 +18,12 @@ const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
 /** Current export format version */
 const EXPORT_FORMAT_VERSION = 1;
 
+/** Bounded schema for thumbnailData / metadata JSON fields */
+const thumbnailDataSchema = z.record(
+  z.string().max(100),
+  z.union([z.string().max(10000), z.number(), z.boolean(), z.null()])
+).optional();
+
 /** Zod schema for validating imported scene data */
 const importedSceneSchema = z.object({
   prompt: z.string().max(2000).nullish(),
@@ -25,7 +31,7 @@ const importedSceneSchema = z.object({
   duration: z.number().min(1).max(60).default(5),
   order: z.number().min(0),
   model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).default('standard'),
-  metadata: z.record(z.string(), z.unknown()).nullish(),
+  metadata: thumbnailDataSchema.nullish(),
 });
 
 /** Zod schema for validating the full import payload */
@@ -36,7 +42,7 @@ const importPayloadSchema = z.object({
     description: z.string().max(5000).nullish(),
     tags: z.array(z.string().max(100)).max(30).default([]),
     status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).default('DRAFT'),
-    thumbnailData: z.record(z.string(), z.unknown()).nullish(),
+    thumbnailData: thumbnailDataSchema.nullish(),
     characters: z.array(z.object({
       id: z.string(),
       name: z.string().max(100),
@@ -386,7 +392,7 @@ export const projectRouter = router({
         ck: z.string().max(20),
         desc: z.string().max(500),
       })).max(50).optional(),
-      thumbnailData: z.record(z.string(), z.unknown()).optional(),
+      thumbnailData: thumbnailDataSchema,
       thumbnailUrl: z.string().nullish(),
     }))
     .mutation(async ({ ctx, input }) => {

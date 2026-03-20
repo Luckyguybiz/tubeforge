@@ -34,9 +34,11 @@ export async function GET() {
   }
 
   // 3. Env presence only (no lengths — prevent brute-force info leakage)
-  const envVars = ['AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET', 'DATABASE_URL', 'STRIPE_SECRET_KEY'];
-  for (const name of envVars) {
-    checks[`env_${name}`] = process.env[name] ? 'SET' : 'MISSING';
+  if (process.env.NODE_ENV === 'development') {
+    const envVars = ['AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET', 'DATABASE_URL', 'STRIPE_SECRET_KEY'];
+    for (const name of envVars) {
+      checks[`env_${name}`] = process.env[name] ? 'SET' : 'MISSING';
+    }
   }
 
   return NextResponse.json(checks, { status: 200 });

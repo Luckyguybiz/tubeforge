@@ -116,7 +116,10 @@ export const aiRouter = router({
 
   generateFromImage: protectedProcedure
     .input(z.object({
-      imageBase64: z.string().min(1).max(2_000_000),
+      imageBase64: z.string().min(1).max(2_000_000).refine(
+        (v) => /^data:image\/(jpeg|png|webp|gif|avif);base64,[A-Za-z0-9+/=]/.test(v),
+        { message: 'Must be a valid base64-encoded image (JPEG, PNG, WebP, GIF, or AVIF)' }
+      ),
       prompt: z.string().max(1000).default(''),
       style: z.enum(['realistic', 'anime', 'cinematic', 'minimalist', '3d', 'popart']).default('realistic'),
     }))

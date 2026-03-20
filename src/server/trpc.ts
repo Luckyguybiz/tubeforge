@@ -10,13 +10,12 @@ export const createTRPCContext = async () => {
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter({ shape, error }) {
+  errorFormatter({ shape }) {
     return {
       ...shape,
       data: {
         ...shape.data,
-        // Не раскрывать стек вызовов в production — предотвращает утечку внутренних деталей
-        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+        // Never expose stack traces to client in any environment
       },
     };
   },

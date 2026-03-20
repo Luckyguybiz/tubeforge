@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
@@ -408,13 +409,14 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   justifyContent: 'center', gap: 12, padding: 40,
                 }}>
                   {p.thumbnailUrl ? (
-                    <img
+                    <Image
                       src={p.thumbnailUrl}
                       alt={t('preview.thumbnailAlt')}
+                      fill
                       style={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%',
                         objectFit: 'cover', opacity: 0.3, filter: 'blur(4px)',
                       }}
+                      unoptimized
                     />
                   ) : null}
                   <div style={{
@@ -659,11 +661,14 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             </div>
             {p.thumbnailUrl ? (
               <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}` }}>
-                <img
+                <Image
                   src={p.thumbnailUrl}
                   alt={t('preview.thumbnailAltFull')}
+                  width={640}
+                  height={360}
                   loading="lazy"
-                  style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
+                  style={{ width: '100%', height: 'auto', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
+                  unoptimized
                 />
               </div>
             ) : (
@@ -888,9 +893,11 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                           }}
                         >
                           {ch.snippet?.thumbnails?.default?.url ? (
-                            <img
+                            <Image
                               src={ch.snippet.thumbnails.default.url}
                               alt={ch.snippet.title}
+                              width={32}
+                              height={32}
                               style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                             />
                           ) : (
@@ -1116,7 +1123,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 {/* Thumbnail */}
                 <div style={{ aspectRatio: '16/9', background: '#1a1a1a', position: 'relative' }}>
                   {p.thumbnailUrl ? (
-                    <img src={p.thumbnailUrl} alt="Video thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <Image src={p.thumbnailUrl} alt="Video thumbnail" fill style={{ objectFit: 'cover' }} unoptimized />
                   ) : (
                     <div style={{
                       width: '100%', height: '100%',

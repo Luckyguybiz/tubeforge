@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -285,10 +286,19 @@ export function TiktokDownloader() {
         return;
       }
 
+      const MAX_DOWNLOAD_SIZE = 500 * 1024 * 1024; // 500 MB safety limit
       const contentLength = parseInt(
         downloadRes.headers.get('content-length') || '0',
         10,
       );
+
+      // Reject early if Content-Length already exceeds the limit
+      if (contentLength > MAX_DOWNLOAD_SIZE) {
+        setStreamError(t('tools.ttdl.fileTooLarge'));
+        setDone(true);
+        return;
+      }
+
       const reader = downloadRes.body?.getReader();
       if (!reader) throw new Error('No reader');
 
@@ -299,8 +309,17 @@ export function TiktokDownloader() {
       while (true) {
         const { done: readerDone, value } = await reader.read();
         if (readerDone) break;
-        chunks.push(value);
         received += value.length;
+
+        // Abort if accumulated size exceeds the safety limit
+        if (received > MAX_DOWNLOAD_SIZE) {
+          reader.cancel();
+          setStreamError(t('tools.ttdl.fileTooLarge'));
+          setDone(true);
+          return;
+        }
+
+        chunks.push(value);
 
         const elapsed = (Date.now() - startTime) / 1000;
         const speed = elapsed > 0 ? received / elapsed : 0;
@@ -632,9 +651,11 @@ export function TiktokDownloader() {
             }}
           >
             {videoInfo.thumbnail && !thumbError ? (
-              <img
+              <Image
                 src={videoInfo.thumbnail}
                 alt={videoInfo.title}
+                width={120}
+                height={160}
                 onError={() => setThumbError(true)}
                 style={{
                   width: '100%',
@@ -642,6 +663,7 @@ export function TiktokDownloader() {
                   objectFit: 'cover',
                   display: 'block',
                 }}
+                unoptimized
               />
             ) : (
               <div

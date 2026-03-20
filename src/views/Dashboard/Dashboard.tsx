@@ -712,7 +712,6 @@ const ProjectCard = memo(function ProjectCard({
             src={p.thumbnailUrl}
             alt={p.title}
             fill
-            unoptimized
             onError={() => setImgError(true)}
             style={{
               objectFit: 'cover',

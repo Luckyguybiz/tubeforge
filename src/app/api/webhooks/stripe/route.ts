@@ -206,23 +206,162 @@ export async function POST(req: NextRequest) {
         }
         break;
       }
+      case 'customer.subscription.created': {
+        const sub = event.data.object as Stripe.Subscription;
+        if (!sub.customer) break;
+
+        // Only activate if the subscription is active or trialing
+        if (sub.status !== 'active' && sub.status !== 'trialing') {
+          console.warn('[Stripe] subscription.created but status is', sub.status, '— skipping plan update, sub:', sub.id);
+          break;
+        }
+
+        // Idempotency: skip if this event was already processed
+        const existingCreated = await db.processedEvent.findUnique({
+          where: { stripeEventId: event.id },
+        });
+        if (existingCreated) {
+          console.warn('[Stripe] Duplicate customer.subscription.created event, skipping:', event.id);
+          break;
+        }
+
+        const createdPlan = getPlanFromSub(sub);
+        if (createdPlan) {
+          try {
+            await db.$transaction([
+              db.processedEvent.create({ data: { stripeEventId: event.id } }),
+              db.user.updateMany({
+                where: { stripeId: sub.customer as string },
+                data: { plan: createdPlan },
+              }),
+            ]);
+            console.log('[Stripe] subscription.created — set plan to', createdPlan, 'for customer:', sub.customer);
+          } catch (err) {
+            const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+            if (isPrismaUnique) {
+              console.warn('[Stripe] Duplicate customer.subscription.created event (unique constraint), skipping:', event.id);
+            } else {
+              throw err;
+            }
+          }
+        }
+        break;
+      }
+      case 'customer.subscription.paused': {
+        const sub = event.data.object as Stripe.Subscription;
+        if (!sub.customer) break;
+
+        // Idempotency: skip if this event was already processed
+        const existingPaused = await db.processedEvent.findUnique({
+          where: { stripeEventId: event.id },
+        });
+        if (existingPaused) {
+          console.warn('[Stripe] Duplicate customer.subscription.paused event, skipping:', event.id);
+          break;
+        }
+
+        try {
+          await db.$transaction([
+            db.processedEvent.create({ data: { stripeEventId: event.id } }),
+            db.user.updateMany({
+              where: { stripeId: sub.customer as string },
+              data: { plan: 'FREE' },
+            }),
+          ]);
+          console.log('[Stripe] subscription.paused — downgraded to FREE for customer:', sub.customer);
+        } catch (err) {
+          const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+          if (isPrismaUnique) {
+            console.warn('[Stripe] Duplicate customer.subscription.paused event (unique constraint), skipping:', event.id);
+          } else {
+            throw err;
+          }
+        }
+        break;
+      }
+      case 'customer.subscription.resumed': {
+        const sub = event.data.object as Stripe.Subscription;
+        if (!sub.customer) break;
+
+        // Idempotency: skip if this event was already processed
+        const existingResumed = await db.processedEvent.findUnique({
+          where: { stripeEventId: event.id },
+        });
+        if (existingResumed) {
+          console.warn('[Stripe] Duplicate customer.subscription.resumed event, skipping:', event.id);
+          break;
+        }
+
+        const resumedPlan = getPlanFromSub(sub);
+        if (resumedPlan) {
+          try {
+            await db.$transaction([
+              db.processedEvent.create({ data: { stripeEventId: event.id } }),
+              db.user.updateMany({
+                where: { stripeId: sub.customer as string },
+                data: { plan: resumedPlan },
+              }),
+            ]);
+            console.log('[Stripe] subscription.resumed — restored plan to', resumedPlan, 'for customer:', sub.customer);
+          } catch (err) {
+            const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+            if (isPrismaUnique) {
+              console.warn('[Stripe] Duplicate customer.subscription.resumed event (unique constraint), skipping:', event.id);
+            } else {
+              throw err;
+            }
+          }
+        }
+        break;
+      }
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
         if (!invoice.customer || !invoice.amount_paid) break;
 
-        // Find the paying user and check if they were referred
-        const payingUser = await db.user.findFirst({
-          where: { stripeId: invoice.customer as string },
-          select: { referredBy: true },
+        const invoiceCustomerId = typeof invoice.customer === 'string'
+          ? invoice.customer
+          : invoice.customer?.id;
+
+        if (!invoiceCustomerId) break;
+
+        // --- Payment recovery: restore plan if user was downgraded to FREE ---
+        // When a previously-failed payment succeeds, the user may be on FREE
+        // despite having an active subscription. Detect and restore.
+        const paidUser = await db.user.findFirst({
+          where: { stripeId: invoiceCustomerId },
+          select: { id: true, plan: true, referredBy: true },
         });
-        if (!payingUser?.referredBy) break;
+
+        // In Stripe v20+, subscription lives under parent.subscription_details
+        const invoiceSubRef = invoice.parent?.subscription_details?.subscription;
+        if (paidUser?.plan === 'FREE' && invoiceSubRef) {
+          const paidSub = await stripe.subscriptions.retrieve(
+            typeof invoiceSubRef === 'string'
+              ? invoiceSubRef
+              : invoiceSubRef.id,
+          );
+          if (paidSub.status === 'active' || paidSub.status === 'trialing') {
+            const restoredPlan = getPlanFromSub(paidSub);
+            if (restoredPlan) {
+              await updatePlan(invoiceCustomerId, restoredPlan);
+              console.log(
+                '[Stripe] invoice.paid — restored plan to', restoredPlan,
+                'for customer:', invoiceCustomerId,
+                '(was FREE due to prior payment failure)',
+              );
+            }
+          }
+        }
+
+        // --- Referral commission ---
+        if (!paidUser?.referredBy) break;
 
         // Credit 20% commission to the referrer
         const commission = Math.round((invoice.amount_paid * 20) / 100);
 
         // Find the referrer so we can link the payout record
         const referrer = await db.user.findFirst({
-          where: { referralCode: payingUser.referredBy },
+          where: { referralCode: paidUser.referredBy },
           select: { id: true },
         });
         if (!referrer) break;

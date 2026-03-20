@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 /** Mutation rate limit: 30 scene actions per minute per user */
 async function checkSceneRate(userId: string) {
@@ -38,39 +38,42 @@ export const sceneRouter = router({
     .mutation(async ({ ctx, input }) => {
       await checkSceneRate(ctx.session.user.id);
 
-      const [project, user] = await Promise.all([
-        ctx.db.project.findFirst({
-          where: { id: input.projectId, userId: ctx.session.user.id },
-          select: { id: true, _count: { select: { scenes: true } } },
-        }),
-        ctx.db.user.findUnique({
-          where: { id: ctx.session.user.id },
-          select: { plan: true },
-        }),
-      ]);
-      if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'Проект не найден' });
+      // Use interactive transaction to atomically check limit and create
+      return ctx.db.$transaction(async (tx) => {
+        const [project, user] = await Promise.all([
+          tx.project.findFirst({
+            where: { id: input.projectId, userId: ctx.session.user.id },
+            select: { id: true, _count: { select: { scenes: true } } },
+          }),
+          tx.user.findUnique({
+            where: { id: ctx.session.user.id },
+            select: { plan: true },
+          }),
+        ]);
+        if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'Проект не найден' });
 
-      const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
-      const maxScenes = SCENE_LIMITS[user?.plan ?? 'FREE'] ?? 10;
-      if (project._count.scenes >= maxScenes) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: `Scene limit reached (${maxScenes}). Upgrade your plan for more scenes.`,
+        const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
+        const maxScenes = SCENE_LIMITS[user?.plan ?? 'FREE'] ?? 10;
+        if (project._count.scenes >= maxScenes) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Scene limit reached (${maxScenes}). Upgrade your plan for more scenes.`,
+          });
+        }
+
+        const order = input.order ?? project._count.scenes;
+        return tx.scene.create({
+          data: {
+            projectId: input.projectId,
+            prompt: stripTags(input.prompt),
+            label: stripTags(input.label),
+            model: input.model,
+            duration: input.duration,
+            order,
+            metadata: input.metadata ?? undefined,
+          },
+          select: { id: true, projectId: true, prompt: true, label: true, model: true, duration: true, order: true, status: true },
         });
-      }
-
-      const order = input.order ?? project._count.scenes;
-      return ctx.db.scene.create({
-        data: {
-          projectId: input.projectId,
-          prompt: stripTags(input.prompt),
-          label: stripTags(input.label),
-          model: input.model,
-          duration: input.duration,
-          order,
-          metadata: input.metadata ?? undefined,
-        },
-        select: { id: true, projectId: true, prompt: true, label: true, model: true, duration: true, order: true, status: true },
       });
     }),
 
@@ -150,11 +153,16 @@ export const sceneRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Необходимо указать все сцены проекта' });
       }
 
-      await ctx.db.$transaction(
-        input.sceneIds.map((id, index) =>
-          ctx.db.scene.update({ where: { id }, data: { order: index }, select: { id: true } }),
-        ),
-      );
+      // Single raw SQL batch update using CASE statement instead of N individual updates
+      const cases = input.sceneIds.map((id, idx) =>
+        Prisma.sql`WHEN id = ${id} THEN ${idx}`
+      ).reduce((a, b) => Prisma.sql`${a} ${b}`);
+
+      await ctx.db.$executeRaw`
+        UPDATE "Scene" SET "order" = CASE ${cases} END
+        WHERE id IN (${Prisma.join(input.sceneIds)})
+        AND "projectId" = ${project.id}
+      `;
       return { success: true };
     }),
 });

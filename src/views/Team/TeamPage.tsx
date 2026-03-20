@@ -671,7 +671,7 @@ export function TeamPage() {
             color: C.dim,
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
-            minWidth: 520,
+            minWidth: 320,
           }}
         >
           <div style={{ width: 36 }} />
@@ -719,7 +719,7 @@ export function TeamPage() {
                 padding: '12px 18px',
                 borderBottom: isLast ? 'none' : `1px solid ${C.border}`,
                 transition: 'background 0.1s',
-                minWidth: 520,
+                minWidth: 320,
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = C.cardHover)}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}

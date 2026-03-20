@@ -15,6 +15,7 @@ export const folderRouter = router({
   list: protectedProcedure
     .input(z.object({
       parentId: z.string().nullish(),
+      limit: z.number().min(1).max(200).default(100),
     }))
     .query(async ({ ctx, input }) => {
       return ctx.db.designFolder.findMany({
@@ -30,6 +31,7 @@ export const folderRouter = router({
           _count: { select: { assets: true, children: true } },
         },
         orderBy: { name: 'asc' },
+        take: input.limit,
       });
     }),
 

@@ -243,7 +243,7 @@ export function BillingPage() {
     <div
       style={{
         flex: 1,
-        minHeight: '100vh',
+        minHeight: '100dvh', /* dvh accounts for mobile address bar */
         background: C.bg,
         color: C.text,
         fontFamily: 'inherit',

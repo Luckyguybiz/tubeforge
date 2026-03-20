@@ -29,18 +29,20 @@ function RegisterContent() {
     <main
       style={{
         width: '100%',
-        height: '100vh',
+        minHeight: '100dvh', /* dvh accounts for mobile address bar */
         background: C.bg,
         fontFamily: "'Instrument Sans',sans-serif",
         color: C.text,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 16,
       }}
     >
       <div
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           background: C.surface,
           border: `1px solid ${C.border}`,
           borderRadius: 20,
@@ -155,7 +157,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />}>
+    <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh' /* dvh accounts for mobile address bar */, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />}>
       <RegisterContent />
     </Suspense>
   );

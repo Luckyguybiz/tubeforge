@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
+import Image from 'next/image';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useMetadataStore } from '@/stores/useMetadataStore';
 import type { YouTubeCategory } from '@/stores/useMetadataStore';
@@ -945,10 +946,13 @@ export function Metadata({ projectId }: { projectId: string | null }) {
           }}
         >
           {currentProject?.thumbnailUrl ? (
-            <img
+            <Image
               src={currentProject.thumbnailUrl}
               alt={`Thumbnail for ${currentProject.title || 'current project'}`}
+              width={36}
+              height={22}
               style={{ width: 36, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+              unoptimized
             />
           ) : (
             <div
@@ -1039,10 +1043,13 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                 }}
               >
                 {p.thumbnailUrl ? (
-                  <img
+                  <Image
                     src={p.thumbnailUrl}
                     alt={`Thumbnail for ${p.title || 'project'}`}
+                    width={36}
+                    height={22}
                     style={{ width: 36, height: 22, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+                    unoptimized
                   />
                 ) : (
                   <div
@@ -1610,15 +1617,19 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               )}
             </div>
             {project.data?.thumbnailUrl ? (
-              <img
+              <Image
                 src={project.data.thumbnailUrl}
                 alt={t('metadata.preview.thumbnailAlt')}
+                width={640}
+                height={360}
                 style={{
                   width: '100%',
+                  height: 'auto',
                   aspectRatio: '16/9',
                   objectFit: 'cover',
                   display: 'block',
                 }}
+                unoptimized
               />
             ) : (
               <div
@@ -1705,14 +1716,14 @@ export function Metadata({ projectId }: { projectId: string | null }) {
                     }}
                   >
                     {project.data?.thumbnailUrl ? (
-                      <img
+                      <Image
                         src={project.data.thumbnailUrl}
                         alt="Video thumbnail preview"
+                        fill
                         style={{
-                          width: '100%',
-                          height: '100%',
                           objectFit: 'cover',
                         }}
+                        unoptimized
                       />
                     ) : (
                       <span style={{ fontSize: 20, opacity: 0.15 }}>{'\u25B6'}</span>

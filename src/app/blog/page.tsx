@@ -10,7 +10,7 @@ export default function BlogPage() {
   return (
     <main
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh', /* dvh accounts for mobile address bar; fallback: 100vh */
         background: '#fff',
         color: '#18181b',
         fontFamily: "'Instrument Sans', sans-serif",

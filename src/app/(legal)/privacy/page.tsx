@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         Политика конфиденциальности
       </h1>
       <p style={{ fontSize: 13, color: C.dim, marginBottom: 40 }}>
-        Последнее обновление: 1 марта 2026
+        Последнее обновление: 20 марта 2026
       </p>
 
       <div style={sectionStyle}>
@@ -63,11 +63,86 @@ export default function PrivacyPage() {
         <ul style={listStyle}>
           <li>Необходимые cookie: для аутентификации и поддержания сессии (NextAuth.js)</li>
           <li>Функциональные cookie: для сохранения пользовательских настроек (тема, язык)</li>
-          <li>Аналитические cookie: для понимания использования платформы и улучшения UX</li>
+          <li>Аналитические cookie: для понимания использования платформы и улучшения UX (PostHog, Google Analytics)</li>
         </ul>
+
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>
+          Перечень используемых cookie:
+        </p>
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: 13,
+            lineHeight: 1.7,
+            color: C.sub,
+            marginBottom: 16,
+          }}
+        >
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${C.border}`, textAlign: 'left' }}>
+              <th style={{ padding: '6px 8px', color: C.text }}>Cookie</th>
+              <th style={{ padding: '6px 8px', color: C.text }}>Тип</th>
+              <th style={{ padding: '6px 8px', color: C.text }}>Срок</th>
+              <th style={{ padding: '6px 8px', color: C.text }}>Назначение</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>next-auth.session-token</td>
+              <td style={{ padding: '6px 8px' }}>Необходимый</td>
+              <td style={{ padding: '6px 8px' }}>Сессия (до 30 дней)</td>
+              <td style={{ padding: '6px 8px' }}>Аутентификация пользователя (NextAuth.js)</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>next-auth.csrf-token</td>
+              <td style={{ padding: '6px 8px' }}>Необходимый</td>
+              <td style={{ padding: '6px 8px' }}>Сессия</td>
+              <td style={{ padding: '6px 8px' }}>Защита от CSRF-атак</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>next-auth.callback-url</td>
+              <td style={{ padding: '6px 8px' }}>Необходимый</td>
+              <td style={{ padding: '6px 8px' }}>Сессия</td>
+              <td style={{ padding: '6px 8px' }}>URL перенаправления после входа</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>tf-locale</td>
+              <td style={{ padding: '6px 8px' }}>Функциональный</td>
+              <td style={{ padding: '6px 8px' }}>Бессрочный (localStorage)</td>
+              <td style={{ padding: '6px 8px' }}>Сохранение выбранного языка интерфейса</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>tf-theme</td>
+              <td style={{ padding: '6px 8px' }}>Функциональный</td>
+              <td style={{ padding: '6px 8px' }}>Бессрочный (localStorage)</td>
+              <td style={{ padding: '6px 8px' }}>Сохранение выбранной темы оформления</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>tf-cookie-consent</td>
+              <td style={{ padding: '6px 8px' }}>Необходимый</td>
+              <td style={{ padding: '6px 8px' }}>Бессрочный (localStorage)</td>
+              <td style={{ padding: '6px 8px' }}>Хранение вашего выбора о согласии на cookie</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>ph_*</td>
+              <td style={{ padding: '6px 8px' }}>Аналитический</td>
+              <td style={{ padding: '6px 8px' }}>1 год</td>
+              <td style={{ padding: '6px 8px' }}>PostHog: идентификатор сессии и устройства</td>
+            </tr>
+            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+              <td style={{ padding: '6px 8px' }}>_ga, _ga_*</td>
+              <td style={{ padding: '6px 8px' }}>Аналитический</td>
+              <td style={{ padding: '6px 8px' }}>2 года</td>
+              <td style={{ padding: '6px 8px' }}>Google Analytics: идентификатор пользователя</td>
+            </tr>
+          </tbody>
+        </table>
+
         <p style={paraStyle}>
-          Вы можете отключить cookie в настройках браузера, однако это может ограничить
-          функциональность платформы.
+          Аналитические cookie (PostHog, Google Analytics) устанавливаются <strong style={{ color: C.text }}>только после вашего
+          явного согласия</strong> через баннер cookie-consent. Вы можете отключить cookie в настройках
+          браузера, однако это может ограничить функциональность платформы.
         </p>
       </div>
 
@@ -110,6 +185,22 @@ export default function PrivacyPage() {
             тексты, рекомендации). Ваш контент может обрабатываться через API OpenAI. Мы не
             передаём персональные данные в OpenAI.
           </li>
+          <li>
+            <strong style={{ color: C.text }}>PostHog:</strong> для продуктовой аналитики. PostHog
+            собирает данные о просмотрах страниц, кликах, продолжительности сессий и взаимодействии
+            с интерфейсом. Данные обрабатываются на серверах PostHog (US). PostHog получает доступ
+            к данным <strong style={{ color: C.text }}>только после вашего явного согласия</strong>{' '}
+            через баннер cookie-consent. См.{' '}
+            <a
+              href="https://posthog.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: C.accent }}
+            >
+              Политику конфиденциальности PostHog
+            </a>
+            .
+          </li>
         </ul>
       </div>
 
@@ -130,7 +221,41 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 id="udalenie-dannyh" style={headingStyle}>6. Удаление данных</h2>
+        <h2 id="otziv-soglasiya" style={headingStyle}>6. Отзыв согласия и управление cookie</h2>
+        <p style={paraStyle}>
+          Вы можете отозвать согласие на использование аналитических cookie в любое время
+          следующими способами:
+        </p>
+        <ul style={listStyle}>
+          <li>
+            <strong style={{ color: C.text }}>Баннер cookie-consent:</strong> удалите значение{' '}
+            <code style={{ fontSize: 13, background: C.surface, padding: '2px 6px', borderRadius: 4 }}>
+              tf-cookie-consent
+            </code>{' '}
+            из localStorage вашего браузера (Инструменты разработчика &rarr; Application &rarr;
+            Local Storage) — при следующем визите баннер появится снова, и вы сможете нажать
+            &laquo;Отклонить&raquo;.
+          </li>
+          <li>
+            <strong style={{ color: C.text }}>Настройки браузера:</strong> очистите cookie сайта
+            tubeforge.co в настройках вашего браузера. Это удалит все аналитические cookie
+            (PostHog, Google Analytics).
+          </li>
+          <li>
+            <strong style={{ color: C.text }}>Opt-out PostHog:</strong> PostHog поддерживает
+            функцию opt-out. После отзыва согласия PostHog прекращает сбор данных и удаляет
+            cookie-файлы <code style={{ fontSize: 13, background: C.surface, padding: '2px 6px', borderRadius: 4 }}>ph_*</code>.
+          </li>
+        </ul>
+        <p style={paraStyle}>
+          После отзыва согласия аналитические скрипты (PostHog, Google Analytics) не загружаются
+          и не собирают данные. Необходимые и функциональные cookie продолжают работать для
+          обеспечения базовой функциональности сервиса.
+        </p>
+      </div>
+
+      <div style={sectionStyle}>
+        <h2 id="udalenie-dannyh" style={headingStyle}>7. Удаление данных</h2>
         <p style={paraStyle}>
           Вы можете запросить полное удаление ваших данных, связавшись с нами по электронной почте
           или через настройки аккаунта. При удалении аккаунта мы:
@@ -148,7 +273,7 @@ export default function PrivacyPage() {
       </div>
 
       <div style={sectionStyle}>
-        <h2 id="kontaktnaya-informatsiya" style={headingStyle}>7. Контактная информация</h2>
+        <h2 id="kontaktnaya-informatsiya" style={headingStyle}>8. Контактная информация</h2>
         <p style={paraStyle}>
           По всем вопросам, связанным с конфиденциальностью и обработкой персональных данных,
           обращайтесь:

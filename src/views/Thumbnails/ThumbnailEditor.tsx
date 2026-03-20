@@ -90,7 +90,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (!loadedRef.current || !projectId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveCanvas.mutate({ id: projectId, thumbnailData: store().exportState() });
+      saveCanvas.mutate({ id: projectId, thumbnailData: store().exportState() as unknown as Record<string, string | number | boolean | null> });
     }, CANVAS_SAVE_DEBOUNCE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [elsFingerprint, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps

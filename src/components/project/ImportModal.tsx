@@ -45,7 +45,7 @@ interface ImportData {
     description?: string | null;
     tags?: string[];
     status?: string;
-    thumbnailData?: Record<string, unknown> | null;
+    thumbnailData?: Record<string, string | number | boolean | null> | null;
     characters?: Array<{
       id: string;
       name: string;
@@ -61,7 +61,7 @@ interface ImportData {
     duration: number;
     order: number;
     model: string;
-    metadata?: Record<string, unknown> | null;
+    metadata?: Record<string, string | number | boolean | null> | null;
   }>;
 }
 

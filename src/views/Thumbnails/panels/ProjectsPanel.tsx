@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
@@ -92,7 +93,7 @@ export function ProjectsPanel() {
                 }}
               >
                 {proj.thumbnailUrl ? (
-                  <img src={proj.thumbnailUrl} alt={proj.title} loading="lazy" style={{ width: 36, height: 24, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />
+                  <Image src={proj.thumbnailUrl} alt={proj.title} width={36} height={24} loading="lazy" style={{ width: 36, height: 24, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} unoptimized />
                 ) : (
                   <div style={{ width: 36, height: 24, borderRadius: 4, background: C.border, flexShrink: 0 }} />
                 )}
@@ -277,8 +278,8 @@ export function ProjectsPanel() {
           ) : assets.data && assets.data.items.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
               {assets.data.items.map((asset) => (
-                <div key={asset.id} style={{ borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}`, aspectRatio: '1', cursor: 'pointer' }}>
-                  <img src={asset.url} alt={asset.filename} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                <div key={asset.id} style={{ borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}`, aspectRatio: '1', cursor: 'pointer', position: 'relative' }}>
+                  <Image src={asset.url} alt={asset.filename} fill style={{ objectFit: 'cover' }} loading="lazy" unoptimized />
                 </div>
               ))}
             </div>

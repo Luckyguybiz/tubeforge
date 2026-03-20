@@ -149,40 +149,81 @@ export const adminRouter = router({
   /* ── Analytics chart endpoints ──────────────────────────────────── */
 
   getGrowthStats: adminProcedure.query(async ({ ctx }) => {
-    // Return user growth by month for the last 6 months
-    const months: { month: string; users: number; projects: number }[] = [];
+    // Single GROUP BY query instead of 12 individual queries (6 months x 2 tables)
     const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const [userCounts, projectCounts] = await Promise.all([
+      ctx.db.$queryRaw<{ month: Date; count: bigint }[]>`
+        SELECT DATE_TRUNC('month', "createdAt") as month, COUNT(*)::bigint as count
+        FROM "User" WHERE "createdAt" >= ${sixMonthsAgo} GROUP BY 1 ORDER BY 1
+      `,
+      ctx.db.$queryRaw<{ month: Date; count: bigint }[]>`
+        SELECT DATE_TRUNC('month', "createdAt") as month, COUNT(*)::bigint as count
+        FROM "Project" WHERE "createdAt" >= ${sixMonthsAgo} GROUP BY 1 ORDER BY 1
+      `,
+    ]);
+
+    // Build a map keyed by YYYY-MM for quick lookup
+    const userMap = new Map(userCounts.map(r => [
+      new Date(r.month).toISOString().slice(0, 7), Number(r.count),
+    ]));
+    const projectMap = new Map(projectCounts.map(r => [
+      new Date(r.month).toISOString().slice(0, 7), Number(r.count),
+    ]));
+
+    const months: { month: string; users: number; projects: number }[] = [];
     for (let i = 5; i >= 0; i--) {
-      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-      const [users, projects] = await Promise.all([
-        ctx.db.user.count({ where: { createdAt: { gte: start, lte: end } } }),
-        ctx.db.project.count({ where: { createdAt: { gte: start, lte: end } } }),
-      ]);
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toISOString().slice(0, 7);
       months.push({
-        month: start.toLocaleString('default', { month: 'short', year: '2-digit' }),
-        users,
-        projects,
+        month: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        users: userMap.get(key) ?? 0,
+        projects: projectMap.get(key) ?? 0,
       });
     }
     return months;
   }),
 
   getRevenueStats: adminProcedure.query(async ({ ctx }) => {
-    const months: { month: string; revenue: number; payouts: number }[] = [];
+    // Single aggregate queries instead of 18 individual queries (6 months x 3)
     const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const [planSnapshots, payoutsByMonth] = await Promise.all([
+      // For each month-end, count PRO and STUDIO users created up to that point
+      ctx.db.$queryRaw<{ month: Date; pro: bigint; studio: bigint }[]>`
+        SELECT m.month,
+          COUNT(*) FILTER (WHERE u.plan = 'PRO' AND u."createdAt" <= (m.month + INTERVAL '1 month' - INTERVAL '1 second')) as pro,
+          COUNT(*) FILTER (WHERE u.plan = 'STUDIO' AND u."createdAt" <= (m.month + INTERVAL '1 month' - INTERVAL '1 second')) as studio
+        FROM generate_series(${sixMonthsAgo}::timestamp, ${now}::timestamp, '1 month') AS m(month)
+        LEFT JOIN "User" u ON u."createdAt" <= (m.month + INTERVAL '1 month' - INTERVAL '1 second')
+          AND u.plan IN ('PRO', 'STUDIO')
+        GROUP BY 1 ORDER BY 1
+      `,
+      ctx.db.$queryRaw<{ month: Date; total: number }[]>`
+        SELECT DATE_TRUNC('month', "createdAt") as month, COALESCE(SUM(amount), 0)::float as total
+        FROM "Payout" WHERE "createdAt" >= ${sixMonthsAgo} GROUP BY 1 ORDER BY 1
+      `,
+    ]);
+
+    const planMap = new Map(planSnapshots.map(r => [
+      new Date(r.month).toISOString().slice(0, 7),
+      { pro: Number(r.pro), studio: Number(r.studio) },
+    ]));
+    const payoutMap = new Map(payoutsByMonth.map(r => [
+      new Date(r.month).toISOString().slice(0, 7), r.total,
+    ]));
+
+    const months: { month: string; revenue: number; payouts: number }[] = [];
     for (let i = 5; i >= 0; i--) {
-      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-      const [proUsers, studioUsers, payoutSum] = await Promise.all([
-        ctx.db.user.count({ where: { plan: 'PRO', createdAt: { lte: end } } }),
-        ctx.db.user.count({ where: { plan: 'STUDIO', createdAt: { lte: end } } }),
-        ctx.db.payout.aggregate({ _sum: { amount: true }, where: { createdAt: { gte: start, lte: end } } }),
-      ]);
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toISOString().slice(0, 7);
+      const snap = planMap.get(key) ?? { pro: 0, studio: 0 };
       months.push({
-        month: start.toLocaleString('default', { month: 'short', year: '2-digit' }),
-        revenue: proUsers * 9 + studioUsers * 29, // estimated MRR
-        payouts: payoutSum._sum.amount ?? 0,
+        month: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        revenue: snap.pro * 9 + snap.studio * 29, // estimated MRR
+        payouts: payoutMap.get(key) ?? 0,
       });
     }
     return months;
@@ -202,18 +243,28 @@ export const adminRouter = router({
   }),
 
   getActiveUsers: adminProcedure.query(async ({ ctx }) => {
-    const days: { day: string; active: number }[] = [];
+    // Single query instead of 7 individual groupBy queries (one per day)
     const now = new Date();
+    const sevenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+
+    const activeCounts = await ctx.db.$queryRaw<{ day: Date; active: bigint }[]>`
+      SELECT DATE_TRUNC('day', "updatedAt") as day, COUNT(DISTINCT "userId")::bigint as active
+      FROM "Project"
+      WHERE "updatedAt" >= ${sevenDaysAgo}
+      GROUP BY 1 ORDER BY 1
+    `;
+
+    const activeMap = new Map(activeCounts.map(r => [
+      new Date(r.day).toISOString().slice(0, 10), Number(r.active),
+    ]));
+
+    const days: { day: string; active: number }[] = [];
     for (let i = 6; i >= 0; i--) {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i, 23, 59, 59);
-      const active = await ctx.db.project.groupBy({
-        by: ['userId'],
-        where: { updatedAt: { gte: start, lte: end } },
-      });
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
       days.push({
-        day: start.toLocaleString('default', { weekday: 'short' }),
-        active: active.length,
+        day: d.toLocaleString('default', { weekday: 'short' }),
+        active: activeMap.get(key) ?? 0,
       });
     }
     return days;

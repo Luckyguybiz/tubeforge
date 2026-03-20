@@ -35,6 +35,9 @@ export const billingRouter = router({
     );
     const sub = relevantSub ?? null;
     if (!sub) return { plan: user.plan, subscription: null };
+    if (!sub.items.data[0]) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Subscription has no items' });
+    }
     return {
       plan: user.plan,
       subscription: {
@@ -42,7 +45,6 @@ export const billingRouter = router({
         status: sub.status,
         cancelAt: sub.cancel_at,
         cancelAtPeriodEnd: sub.cancel_at_period_end,
-        plan: sub.items.data[0]?.price?.id ?? null,
       },
     };
   }),
@@ -154,6 +156,8 @@ export const billingRouter = router({
 
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
+        client_reference_id: ctx.session.user.id,
+        metadata: { userId: ctx.session.user.id, plan: input.plan },
         mode: 'subscription',
         line_items: [{ price: resolvedPriceId, quantity: 1 }],
         success_url: `${appUrl}/dashboard?upgraded=true`,

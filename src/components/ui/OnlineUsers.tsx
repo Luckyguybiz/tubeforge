@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { usePresenceStore, type PresenceUser } from '@/stores/usePresenceStore';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -60,9 +61,11 @@ function UserAvatar({
         }}
       >
         {user.image ? (
-          <img
+          <Image
             src={user.image}
             alt={user.name}
+            width={size}
+            height={size}
             style={{
               width: '100%',
               height: '100%',

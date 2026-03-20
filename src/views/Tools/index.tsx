@@ -90,3 +90,16 @@ for (const [id, importFn] of Object.entries(tools)) {
 }
 
 export const TOOL_IDS = Object.keys(tools);
+
+/**
+ * Tool IDs that are currently available (not "coming soon").
+ * Must match the `available: true` flags in ToolsHub.tsx.
+ */
+export const AVAILABLE_TOOL_IDS = new Set([
+  'cut-crop',
+  'youtube-downloader',
+  'video-compressor',
+  'mp3-converter',
+  'content-planner',
+  'ai-video-generator',
+]);

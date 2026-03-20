@@ -126,7 +126,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .tf-mobile-drawer.open{transform:translateX(0)}
       `}</style>
       <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
-      <div style={{ width: '100%', height: '100vh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: '100dvh' /* dvh accounts for mobile address bar; fallback: 100vh */, background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
         {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <TopBar />
