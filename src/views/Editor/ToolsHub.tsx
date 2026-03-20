@@ -305,8 +305,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
   {
     id: 'ai-video-generator',
     name: 'AI Video Generator',
-    subtitle: 'Text → Video · Canvas',
-    description: 'Turn any script into a fully rendered video with animated scenes, voiceover, and transitions.',
+    subtitle: 'Runway · Kling · Pika · Veo',
+    description: 'Choose from top AI video providers — Runway ML, Kling AI, Pika, Luma, Google Veo 2 and more.',
     category: 'ai',
     route: '/tools/ai-video-generator',
     available: true,
