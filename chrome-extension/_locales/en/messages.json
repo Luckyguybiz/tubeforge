@@ -100,5 +100,29 @@
   "liveStream": {
     "message": "Live",
     "description": "Label for live streams with no duration"
+  },
+  "downloadBtn": {
+    "message": "Download",
+    "description": "Label on the download button injected into YouTube page"
+  },
+  "downloadingBtn": {
+    "message": "Downloading…",
+    "description": "Label shown while a download is in progress or data is loading"
+  },
+  "errorBtn": {
+    "message": "Error",
+    "description": "Label shown on the button when an error occurs"
+  },
+  "formatVideoAudio": {
+    "message": "\ud83c\udfac Video + Audio",
+    "description": "Section header for combined video+audio formats in the quick menu"
+  },
+  "formatVideoOnly": {
+    "message": "\ud83c\udfa5 Video (no audio)",
+    "description": "Section header for video-only formats in the quick menu"
+  },
+  "cobaltDownload": {
+    "message": "\u26a1 Quick download (Cobalt)",
+    "description": "Section header for Cobalt-based download options"
   }
 }

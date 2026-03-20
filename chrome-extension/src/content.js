@@ -273,14 +273,14 @@
       const btn = document.createElement('button');
       btn.id = TUBEFORGE_BTN_ID;
       btn.className = 'tubeforge-dl-btn';
-      btn.title = 'TubeForge — Скачать видео';
+      btn.title = chrome.i18n.getMessage('extTitle');
       btn.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        ${isShorts ? '' : '<span>Скачать</span>'}
+        ${isShorts ? '' : `<span>${chrome.i18n.getMessage('downloadBtn')}</span>`}
       `;
 
       btn.addEventListener('click', (e) => {
@@ -295,7 +295,7 @@
             <svg class="tubeforge-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
             </svg>
-            <span>Загрузка...</span>
+            <span>${chrome.i18n.getMessage('downloadingBtn')}</span>
           `;
           setTimeout(() => {
             if (extractedData) {
@@ -307,7 +307,7 @@
                   <line x1="15" y1="9" x2="9" y2="15"/>
                   <line x1="9" y1="9" x2="15" y2="15"/>
                 </svg>
-                <span>Ошибка</span>
+                <span>${chrome.i18n.getMessage('errorBtn')}</span>
               `;
             }
             updateDownloadButton();
@@ -345,7 +345,7 @@
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      ${isShorts ? '' : '<span>Скачать</span>'}
+      ${isShorts ? '' : `<span>${chrome.i18n.getMessage('downloadBtn')}</span>`}
     `;
   }
 
@@ -389,7 +389,7 @@
     if (combined.length > 0) {
       const label = document.createElement('div');
       label.className = 'tubeforge-menu-label';
-      label.textContent = '🎬 Видео + Аудио';
+      label.textContent = chrome.i18n.getMessage('formatVideoAudio');
       menu.appendChild(label);
 
       for (const f of combined) {
@@ -407,7 +407,7 @@
     if (videoOnly.length > 0) {
       const label = document.createElement('div');
       label.className = 'tubeforge-menu-label';
-      label.textContent = '🎥 Видео (без звука)';
+      label.textContent = chrome.i18n.getMessage('formatVideoOnly');
       menu.appendChild(label);
 
       for (const f of videoOnly) {
@@ -436,7 +436,7 @@
     if (bestAudio.length > 0) {
       const label = document.createElement('div');
       label.className = 'tubeforge-menu-label';
-      label.textContent = '🎵 Аудио';
+      label.textContent = chrome.i18n.getMessage('audioLabel');
       menu.appendChild(label);
 
       for (const f of bestAudio) {
@@ -449,13 +449,13 @@
     menu.appendChild(createSep());
     const cobaltLabel = document.createElement('div');
     cobaltLabel.className = 'tubeforge-menu-label';
-    cobaltLabel.textContent = '⚡ Быстрое скачивание (Cobalt)';
+    cobaltLabel.textContent = chrome.i18n.getMessage('cobaltDownload');
     menu.appendChild(cobaltLabel);
 
     const cobaltOptions = [
       { quality: '1080', label: '1080p MP4' },
       { quality: '720', label: '720p MP4' },
-      { quality: 'audio', label: 'MP3 Аудио' },
+      { quality: 'audio', label: chrome.i18n.getMessage('audioMp3') },
     ];
     for (const opt of cobaltOptions) {
       const item = document.createElement('div');
@@ -558,7 +558,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
-        <span>Скачивание...</span>
+        <span>${chrome.i18n.getMessage('downloadingBtn')}</span>
       `;
       setTimeout(() => { btn.innerHTML = origHTML; }, 3000);
     }
@@ -575,7 +575,7 @@
         <svg class="tubeforge-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
         </svg>
-        <span>Загрузка...</span>
+        <span>${chrome.i18n.getMessage('downloadingBtn')}</span>
       `;
     }
 
@@ -622,7 +622,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span>Скачивание...</span>
+          <span>${chrome.i18n.getMessage('downloadingBtn')}</span>
         `;
         setTimeout(() => { if (origHTML) btn.innerHTML = origHTML; }, 3000);
       }
@@ -635,7 +635,7 @@
             <line x1="15" y1="9" x2="9" y2="15"/>
             <line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
-          <span>Ошибка</span>
+          <span>${chrome.i18n.getMessage('errorBtn')}</span>
         `;
         setTimeout(() => { if (origHTML) btn.innerHTML = origHTML; }, 3000);
       }
