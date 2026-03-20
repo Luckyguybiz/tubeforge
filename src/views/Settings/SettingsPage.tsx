@@ -67,9 +67,22 @@ export function SettingsPage() {
   const [deleteInput, setDeleteInput] = useState('');
   const [cookieConsent, setCookieConsent] = useState<string | null>(null);
 
+  /** Derive a simple 'accepted'/'declined' status from the new JSON-based consent */
+  const deriveCookieStatus = (): string | null => {
+    const raw = localStorage.getItem('tf-cookie-consent');
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed === 'object' && parsed !== null && 'analytics' in parsed) {
+        return parsed.analytics ? 'accepted' : 'declined';
+      }
+    } catch { /* legacy string format */ }
+    return raw; // 'accepted' or 'declined' (legacy)
+  };
+
   useEffect(() => {
-    setCookieConsent(localStorage.getItem('tf-cookie-consent'));
-    const handler = () => setCookieConsent(localStorage.getItem('tf-cookie-consent'));
+    setCookieConsent(deriveCookieStatus());
+    const handler = () => setCookieConsent(deriveCookieStatus());
     window.addEventListener('tf-consent-changed', handler);
     return () => window.removeEventListener('tf-consent-changed', handler);
   }, []);
@@ -1502,8 +1515,9 @@ export function SettingsPage() {
           </div>
           <button
             onClick={() => {
-              const next = cookieConsent === 'accepted' ? 'declined' : 'accepted';
-              localStorage.setItem('tf-cookie-consent', next);
+              const isAccepted = cookieConsent === 'accepted';
+              const prefs = { necessary: true, analytics: !isAccepted, marketing: !isAccepted };
+              localStorage.setItem('tf-cookie-consent', JSON.stringify(prefs));
               window.dispatchEvent(new Event('tf-consent-changed'));
             }}
             style={{

@@ -10,12 +10,18 @@ export const createTRPCContext = async () => {
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter({ shape }) {
+  errorFormatter({ shape, error }) {
     return {
       ...shape,
+      message:
+        process.env.NODE_ENV === 'production' &&
+        shape.data.code === 'INTERNAL_SERVER_ERROR'
+          ? 'An internal error occurred'
+          : shape.message,
       data: {
         ...shape.data,
-        // Never expose stack traces to client in any environment
+        stack:
+          process.env.NODE_ENV === 'production' ? undefined : error.stack,
       },
     };
   },

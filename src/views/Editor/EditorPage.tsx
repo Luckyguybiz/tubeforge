@@ -361,7 +361,7 @@ const SceneThumb = memo(function SceneThumb({
       style={{
         borderRadius: 10,
         background: isSel ? col + '14' : C.card,
-        border: `1.5px solid ${isDragOver ? col + '66' : isSel ? col + '40' : 'transparent'}`,
+        border: `1.5px solid ${isDragOver ? col + '66' : isSel ? col + '40' : sc.status === 'error' ? col + '50' : 'transparent'}`,
         cursor: 'pointer',
         transition: 'all .15s',
         opacity: isDragging ? 0.4 : 1,
@@ -395,6 +395,8 @@ const SceneThumb = memo(function SceneThumb({
               animation: 'spin .8s linear infinite',
             }}
           />
+        ) : sc.status === 'error' ? (
+          <span style={{ fontSize: 14, color: col, fontWeight: 700 }}>!</span>
         ) : (
           <span style={{ fontSize: 12, color: C.dim, opacity: 0.5 }}>
             {String(idx + 1).padStart(2, '0')}
@@ -855,6 +857,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   const isGenerating = videoGen.isGenerating;
   const progress = videoGen.progress;
+  const lastError = videoGen.lastError;
 
   /* ═══════════════════════════════════════════════════════════════
      NO PROJECT — Project picker
@@ -1522,7 +1525,32 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       <span style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>
                         {t('editor.generationError')}
                       </span>
-                      <span style={{ fontSize: 10, color: C.sub }}>
+                      {lastError && (
+                        <span style={{ fontSize: 10, color: C.sub, textAlign: 'center', maxWidth: 260, lineHeight: 1.4 }}>
+                          {lastError}
+                        </span>
+                      )}
+                      <button
+                        onClick={handleGenerate}
+                        disabled={!sel.prompt.trim()}
+                        style={{
+                          marginTop: 4,
+                          padding: '7px 18px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: sel.prompt.trim() ? C.accent : C.dim,
+                          color: '#fff',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: sel.prompt.trim() ? 'pointer' : 'not-allowed',
+                          fontFamily: 'inherit',
+                          transition: 'all .15s',
+                          opacity: sel.prompt.trim() ? 1 : 0.5,
+                        }}
+                      >
+                        {t('editor.retryGeneration')}
+                      </button>
+                      <span style={{ fontSize: 10, color: C.dim }}>
                         {t('editor.changePromptRetry')}
                       </span>
                     </div>
@@ -1828,7 +1856,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, paddingBottom: 1 }}>
-                <span style={{ fontSize: 9, color: sel.prompt.length > 1800 ? C.accent : sel.prompt.length > 0 ? C.sub : C.dim, fontFamily: "'JetBrains Mono', monospace", fontWeight: sel.prompt.length > 1800 ? 600 : 400 }}>
+                <span style={{ fontSize: 9, color: sel.prompt.length > 1800 ? '#ef4444' : sel.prompt.length > 1500 ? '#eab308' : sel.prompt.length > 0 ? C.sub : C.dim, fontFamily: "'JetBrains Mono', monospace", fontWeight: sel.prompt.length > 1500 ? 600 : 400 }}>
                   {sel.prompt.length}/2000
                 </span>
                 <span
@@ -1882,7 +1910,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   height: 36,
                   background: isSelScene ? col + '18' : C.card,
                   borderRadius: 6,
-                  border: `1.5px solid ${sc.id === dragOv ? col + '66' : isSelScene ? col + '40' : C.border}`,
+                  border: `1.5px solid ${sc.id === dragOv ? col + '66' : isSelScene ? col + '40' : sc.status === 'error' ? C.accent + '50' : C.border}`,
                   cursor: 'pointer',
                   position: 'relative',
                   display: 'flex',

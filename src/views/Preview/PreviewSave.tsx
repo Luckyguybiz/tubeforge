@@ -444,6 +444,18 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 </div>
               )}
 
+              {/* Scene indicator badge */}
+              {scenes.length > 1 && hasVideo && (
+                <div style={{
+                  position: 'absolute', bottom: 10, left: 10,
+                  background: 'rgba(0,0,0,.85)', borderRadius: 6,
+                  padding: '3px 8px', fontSize: 12, fontWeight: 700,
+                  color: '#fff', zIndex: 3, letterSpacing: '0.03em',
+                }}>
+                  {t('preview.sceneTitle')} {activeSceneIdx + 1} / {scenes.length}
+                </div>
+              )}
+
               {/* Duration badge */}
               {totalDuration > 0 && (
                 <div style={{

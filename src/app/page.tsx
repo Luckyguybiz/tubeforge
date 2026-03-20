@@ -112,10 +112,10 @@ const TOOLS = [
 ];
 
 const STATS = [
-  { value: "1000+", label: "инструментов" },
-  { value: "10+", label: "ИИ-провайдеров" },
-  { value: "4K", label: "максимальное качество" },
-  { value: "0 ₽", label: "бесплатный старт" },
+  { value: "2026", label: "запущено" },
+  { value: "Next-Gen", label: "ИИ-технологии" },
+  { value: "99.9%", label: "uptime" },
+  { value: "EU", label: "защита данных" },
 ];
 
 const PLANS = [
@@ -173,35 +173,79 @@ const PLANS = [
 const FAQ_ITEMS = [
   {
     q: "Что такое TubeForge?",
-    a: "TubeForge — это платформа для YouTube-блогеров, объединяющая скачивание видео, ИИ-инструменты, VPN, редактор обложек, SEO-оптимизацию и реферальную программу в одном месте.",
+    a: "TubeForge — это ИИ-платформа для YouTube-креаторов, объединяющая скачивание видео, ИИ-инструменты, VPN, редактор обложек, SEO-оптимизацию и реферальную программу в одном месте.",
   },
   {
-    q: "Действительно ли есть бесплатный тариф?",
-    a: "Да, бесплатный тариф включает 3 скачивания в день, базовый ИИ-редактор, генерацию обложек и SEO-оптимизацию. Кредитная карта не требуется.",
+    q: "Нужно ли платить?",
+    a: "Нет, есть бесплатный тариф: 3 скачивания в день, базовый ИИ-редактор, генерация обложек и SEO-оптимизация. Кредитная карта не требуется. Тариф Pro открывает безлимит и расширенные функции.",
   },
   {
-    q: "Как работает VPN для YouTube?",
-    a: "Мы используем протокол WireGuard — самый быстрый и безопасный VPN-протокол. После подключения вы получаете стабильный доступ к YouTube из России без ограничений скорости.",
+    q: "Какие форматы видео поддерживаются?",
+    a: "Скачивание и экспорт в формате MP4 с поддержкой нескольких разрешений — от 360p до 4K. Также доступна конвертация в MP3 для извлечения аудио.",
   },
   {
-    q: "Какие ИИ-провайдеры поддерживаются?",
-    a: "TubeForge интегрирован с 10+ ИИ-провайдерами, включая OpenAI, Anthropic, Google и другие. Генерируйте тексты, идеи, аналитику и визуальный контент.",
-  },
-  {
-    q: "Как работает реферальная программа?",
-    a: "Поделитесь уникальной ссылкой с друзьями. Вы получите 20% от каждого платежа приглашённого пользователя. Выплаты — ежемесячно.",
+    q: "Как работает ИИ-генерация?",
+    a: "TubeForge интегрирован с 10+ ИИ-провайдерами (OpenAI, Anthropic, Google и др.). ИИ анализирует ваш контент и генерирует оптимизированные заголовки, описания, скрипты и визуальный контент.",
   },
   {
     q: "Могу ли я отменить подписку?",
-    a: "Да, отмена в любое время из настроек аккаунта. Доступ к оплаченным функциям сохраняется до конца оплаченного периода.",
+    a: "Да, отмена в любое время из настроек аккаунта — без вопросов и скрытых условий. Доступ к оплаченным функциям сохраняется до конца оплаченного периода.",
+  },
+  {
+    q: "Безопасны ли мои данные?",
+    a: "Да. Серверы расположены в ЕС, все данные шифруются при передаче и хранении. Мы соблюдаем требования GDPR и не передаём персональные данные третьим лицам.",
+  },
+  {
+    q: "Есть ли API?",
+    a: "Да, API-доступ доступен на тарифе Studio. Вы можете интегрировать инструменты TubeForge в свои приложения и автоматизировать рабочие процессы.",
   },
 ];
+
+/* ── JSON-LD Structured Data ──────────────────────────────── */
+
+const PAGE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "TubeForge",
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Web",
+  url: "https://tubeforge.co",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "RUB",
+  },
+  description:
+    "AI-powered video creation platform for YouTube creators",
+};
+
+const FAQ_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+};
 
 /* ── Page (React Server Component) ────────────────────────── */
 
 export default function LandingPage() {
   return (
     <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh", fontFamily: "var(--font-sans), system-ui, -apple-system, sans-serif" }}>
+      {/* JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
+      />
       <ScrollRevealProvider />
       <LandingNav />
       <LandingHero />

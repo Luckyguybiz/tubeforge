@@ -16,6 +16,7 @@ export function useVideoGeneration(sceneId: string | null) {
   });
   const updScene = useEditorStore((s) => s.updScene);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const updateScene = trpc.scene.update.useMutation();
   const updateSceneRef = useRef(updateScene);
@@ -39,6 +40,7 @@ export function useVideoGeneration(sceneId: string | null) {
     },
     onError: (err) => {
       if (sceneId) updScene(sceneId, { status: 'error' });
+      setLastError(err.message);
       toast.error(err.message);
     },
   });
@@ -65,15 +67,18 @@ export function useVideoGeneration(sceneId: string | null) {
     }
 
     if (taskStatus.data.status === 'FAILED') {
+      const errMsg = taskStatus.data.error || 'Ошибка генерации видео';
       updScene(sceneId, { status: 'error', taskId: null });
       setActiveTaskId(null);
+      setLastError(errMsg);
       updateSceneRef.current.mutate({ id: sceneId, status: 'ERROR', taskId: null });
-      toast.error(taskStatus.data.error || 'Ошибка генерации видео');
+      toast.error(errMsg);
     }
   }, [taskStatus.data, sceneId, updScene]);
 
   const start = (prompt: string, model: string, duration: number) => {
     if (!sceneId) return;
+    setLastError(null);
     updScene(sceneId, { status: 'generating' });
     generateVideo.mutate({
       prompt,
@@ -87,5 +92,6 @@ export function useVideoGeneration(sceneId: string | null) {
     isGenerating: generateVideo.isPending || sceneStatus === 'generating',
     progress: taskStatus.data?.progress,
     taskStatus: taskStatus.data?.status,
+    lastError,
   };
 }

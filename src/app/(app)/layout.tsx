@@ -8,6 +8,7 @@ import { TopBar } from '@/components/layout/TopBar';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { CookieConsent } from '@/components/ui/CookieConsent';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { FeedbackWidget } from '@/components/ui/FeedbackWidget';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
@@ -152,6 +153,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </>
       )}
 
+      <FeedbackWidget />
       <ToastProvider />
       <ErrorBoundary>
         <OnboardingTour />

@@ -55,8 +55,12 @@ function LoginContent() {
         {error && (
           <div style={{ background: '#ef444414', border: '1px solid #ef444433', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#ef4444', fontSize: 13, textAlign: 'left' }}>
             {error === 'OAuthAccountNotLinked'
-              ? t('auth.login.errorLinked')
-              : t('auth.login.errorGeneric')}
+              ? 'Этот email уже используется с другим способом входа.'
+              : error === 'OAuthSignin'
+                ? 'Ошибка авторизации. Попробуйте снова.'
+                : error === 'OAuthCallback'
+                  ? 'Ошибка callback. Попробуйте снова.'
+                  : 'Произошла ошибка при входе.'}
           </div>
         )}
         <button

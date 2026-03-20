@@ -167,6 +167,10 @@ export function BillingPage() {
     onError: (err) => toast.error(err.message),
   });
 
+  const invoicesQuery = trpc.billing.getInvoices.useQuery(undefined, {
+    enabled: userPlan !== 'FREE',
+  });
+
   const PLANS = useMemo(() => getPlans(t), [t]);
   const DEALS = useMemo(() => getDeals(), []);
 
@@ -768,6 +772,95 @@ export function BillingPage() {
                 })}
               </div>
             </div>
+
+            {/* ── Section 4: Billing History ──────── */}
+            {userPlan !== 'FREE' && (
+              <div style={{ marginTop: 40 }}>
+                <h2
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.dim,
+                    textTransform: 'uppercase',
+                    letterSpacing: '.12em',
+                    margin: '0 0 20px',
+                  }}
+                >
+                  {t('billing.history') || 'Billing History'}
+                </h2>
+
+                {invoicesQuery.isLoading ? (
+                  <p style={{ fontSize: 13, color: C.sub }}>{t('common.loading')}</p>
+                ) : !invoicesQuery.data || invoicesQuery.data.length === 0 ? (
+                  <p style={{ fontSize: 13, color: C.sub }}>{t('billing.noInvoices') || 'No invoices yet.'}</p>
+                ) : (
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      border: `1px solid ${cardBorder}`,
+                      background: cardBg,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {invoicesQuery.data.map((inv, idx) => (
+                      <div
+                        key={inv.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          padding: '14px 20px',
+                          borderBottom: idx < invoicesQuery.data.length - 1 ? `1px solid ${cardBorder}` : 'none',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          <span style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap' }}>
+                            {new Date(inv.date * 1000).toLocaleDateString('ru-RU')}
+                          </span>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 50,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              background: inv.status === 'paid'
+                                ? isDark ? 'rgba(34,197,94,.12)' : 'rgba(34,197,94,.1)'
+                                : isDark ? 'rgba(234,179,8,.12)' : 'rgba(234,179,8,.1)',
+                              color: inv.status === 'paid' ? C.green : C.orange,
+                            }}
+                          >
+                            {inv.status === 'paid' ? (t('billing.paid') || 'Paid') : inv.status}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                            {((inv.amount ?? 0) / 100).toFixed(2)} {inv.currency?.toUpperCase()}
+                          </span>
+                          {inv.pdf && (
+                            <a
+                              href={inv.pdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: 12,
+                                color: C.accent,
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              PDF
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── RIGHT COLUMN — Order Summary ────── */}

@@ -2,32 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
+import { getCookiePreferences } from '@/components/ui/CookieConsent';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 
-const CONSENT_KEY = 'tf-cookie-consent';
-
 /**
  * Analytics — conditionally loads GA4 and/or PostHog based on env vars
  * AND user cookie consent. Renders nothing until the user has accepted
- * cookies via the CookieConsent banner (GDPR compliance).
+ * analytics cookies via the CookieConsent banner (GDPR compliance).
  */
 export function Analytics() {
   const [consented, setConsented] = useState(false);
 
   useEffect(() => {
-    // Check current consent status on mount
-    setConsented(localStorage.getItem(CONSENT_KEY) === 'accepted');
-
-    // Re-check whenever consent changes (fired by CookieConsent component)
-    const onConsentChanged = () => {
-      setConsented(localStorage.getItem(CONSENT_KEY) === 'accepted');
+    const check = () => {
+      const prefs = getCookiePreferences();
+      setConsented(prefs?.analytics ?? false);
     };
+    check();
 
-    window.addEventListener('tf-consent-changed', onConsentChanged);
-    return () => window.removeEventListener('tf-consent-changed', onConsentChanged);
+    window.addEventListener('tf-consent-changed', check);
+    return () => window.removeEventListener('tf-consent-changed', check);
   }, []);
 
   if (!consented) return null;
