@@ -242,6 +242,29 @@ export const adminRouter = router({
     ];
   }),
 
+  getFunnel: adminProcedure.query(async ({ ctx }) => {
+    const [
+      registered,
+      withProject,
+      withVideo,
+      upgraded,
+    ] = await Promise.all([
+      ctx.db.user.count(),
+      ctx.db.user.count({ where: { projects: { some: {} } } }),
+      ctx.db.user.count({
+        where: { projects: { some: { scenes: { some: { status: 'READY' } } } } },
+      }),
+      ctx.db.user.count({ where: { plan: { not: 'FREE' } } }),
+    ]);
+
+    return [
+      { step: 'Registered', count: registered },
+      { step: 'First Project', count: withProject },
+      { step: 'First Video', count: withVideo },
+      { step: 'Upgraded', count: upgraded },
+    ];
+  }),
+
   getActiveUsers: adminProcedure.query(async ({ ctx }) => {
     // Single query instead of 7 individual groupBy queries (one per day)
     const now = new Date();
@@ -269,6 +292,269 @@ export const adminRouter = router({
     }
     return days;
   }),
+
+  /* ── O1: Revenue Overview ──────────────────────────────────── */
+
+  getRevenueOverview: adminProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [proCurrent, studioCurrent, proPrev, studioPrev, totalUsers] = await Promise.all([
+      ctx.db.user.count({ where: { plan: 'PRO' } }),
+      ctx.db.user.count({ where: { plan: 'STUDIO' } }),
+      // Approximate previous month paid users: users with plan != FREE created before this month
+      // (simplified — in production you'd track plan changes over time)
+      ctx.db.user.count({ where: { plan: 'PRO', createdAt: { lt: monthStart } } }),
+      ctx.db.user.count({ where: { plan: 'STUDIO', createdAt: { lt: monthStart } } }),
+      ctx.db.user.count(),
+    ]);
+
+    const activeSubscriptions = proCurrent + studioCurrent;
+    const mrr = proCurrent * 9.90 + studioCurrent * 24.90;
+    const prevMrr = proPrev * 9.90 + studioPrev * 24.90;
+    const mrrChange = prevMrr > 0 ? ((mrr - prevMrr) / prevMrr) * 100 : 0;
+
+    // Churn: users who were paid last month but are now FREE (simplified)
+    const churnedThisMonth = await ctx.db.user.count({
+      where: {
+        plan: 'FREE',
+        createdAt: { lt: monthStart },
+        updatedAt: { gte: prevMonthStart },
+      },
+    });
+    const prevPaid = proPrev + studioPrev;
+    const churnRate = prevPaid > 0 ? (churnedThisMonth / prevPaid) * 100 : null;
+
+    return {
+      mrr: Math.round(mrr * 100) / 100,
+      mrrChange: Math.round(mrrChange * 10) / 10,
+      activeSubscriptions,
+      totalUsers,
+      churnRate: churnRate !== null ? Math.round(churnRate * 10) / 10 : null,
+      proCount: proCurrent,
+      studioCount: studioCurrent,
+    };
+  }),
+
+  /* ── O2: User Analytics ────────────────────────────────────── */
+
+  getUserAnalytics: adminProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      newToday,
+      newThisWeek,
+      newThisMonth,
+      freeCount,
+      proCount,
+      studioCount,
+      topByAI,
+    ] = await Promise.all([
+      ctx.db.user.count({ where: { createdAt: { gte: todayStart } } }),
+      ctx.db.user.count({ where: { createdAt: { gte: weekAgo } } }),
+      ctx.db.user.count({ where: { createdAt: { gte: monthAgo } } }),
+      ctx.db.user.count({ where: { plan: 'FREE' } }),
+      ctx.db.user.count({ where: { plan: 'PRO' } }),
+      ctx.db.user.count({ where: { plan: 'STUDIO' } }),
+      ctx.db.user.findMany({
+        where: { aiUsage: { gt: 0 } },
+        select: { id: true, name: true, email: true, plan: true, aiUsage: true },
+        orderBy: { aiUsage: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    return {
+      newToday,
+      newThisWeek,
+      newThisMonth,
+      planDistribution: { free: freeCount, pro: proCount, studio: studioCount },
+      topByAI,
+    };
+  }),
+
+  /* ── O3: Suspend User ──────────────────────────────────────── */
+
+  suspendUser: adminProcedure
+    .input(z.object({ userId: z.string(), reason: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      await checkAdminRate(ctx.session.user.id);
+      if (input.userId === ctx.session.user.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot suspend yourself' });
+      }
+      const user = await ctx.db.user.findUnique({ where: { id: input.userId }, select: { id: true, plan: true } });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+
+      // "Suspend" by downgrading to FREE
+      const updated = await ctx.db.user.update({
+        where: { id: input.userId },
+        data: { plan: 'FREE' },
+        select: { id: true, plan: true },
+      });
+
+      // Log the suspension in audit log (best-effort, don't break if table doesn't exist yet)
+      try {
+        await (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.create?.({
+          data: {
+            userId: ctx.session.user.id,
+            action: 'SUSPEND_USER',
+            target: input.userId,
+            metadata: { previousPlan: user.plan, reason: input.reason ?? null },
+          },
+        });
+      } catch {
+        // AuditLog table may not exist yet (migration not run)
+      }
+
+      return updated;
+    }),
+
+  /* ── O3: Grant Trial ───────────────────────────────────────── */
+
+  grantTrial: adminProcedure
+    .input(z.object({ userId: z.string(), plan: z.enum(['PRO', 'STUDIO']).default('PRO') }))
+    .mutation(async ({ ctx, input }) => {
+      await checkAdminRate(ctx.session.user.id);
+      const user = await ctx.db.user.findUnique({ where: { id: input.userId }, select: { id: true, plan: true } });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+
+      const updated = await ctx.db.user.update({
+        where: { id: input.userId },
+        data: { plan: input.plan },
+        select: { id: true, plan: true },
+      });
+
+      try {
+        await (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.create?.({
+          data: {
+            userId: ctx.session.user.id,
+            action: 'GRANT_TRIAL',
+            target: input.userId,
+            metadata: { previousPlan: user.plan, newPlan: input.plan },
+          },
+        });
+      } catch {
+        // AuditLog table may not exist yet
+      }
+
+      return updated;
+    }),
+
+  /* ── O4: System Health ─────────────────────────────────────── */
+
+  getSystemHealth: adminProcedure.query(async ({ ctx }) => {
+    const memUsage = process.memoryUsage();
+    const heapMB = Math.round(memUsage.heapUsed / 1024 / 1024 * 10) / 10;
+    const rssMB = Math.round(memUsage.rss / 1024 / 1024 * 10) / 10;
+    const uptimeSec = process.uptime();
+
+    let dbOk = false;
+    let dbLatencyMs = 0;
+    try {
+      const start = Date.now();
+      await ctx.db.$queryRaw`SELECT 1 as ok`;
+      dbLatencyMs = Date.now() - start;
+      dbOk = true;
+    } catch {
+      // DB connection failed
+    }
+
+    let userCount = 0;
+    let projectCount = 0;
+    try {
+      [userCount, projectCount] = await Promise.all([
+        ctx.db.user.count(),
+        ctx.db.project.count(),
+      ]);
+    } catch {
+      // ignore
+    }
+
+    return {
+      status: dbOk ? 'ok' as const : 'degraded' as const,
+      db: { ok: dbOk, latencyMs: dbLatencyMs },
+      memory: { heapMB, rssMB },
+      uptime: uptimeSec,
+      nodeVersion: process.version,
+      counts: { users: userCount, projects: projectCount },
+    };
+  }),
+
+  /* ── O5: Audit Log ─────────────────────────────────────────── */
+
+  getAuditLog: adminProcedure
+    .input(z.object({
+      page: z.number().min(1).default(1),
+      limit: z.number().min(1).max(50).default(20),
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      const { page = 1, limit = 20 } = input ?? {};
+      try {
+        const [logs, total] = await Promise.all([
+          (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.findMany?.({
+            orderBy: { createdAt: 'desc' },
+            skip: (page - 1) * limit,
+            take: limit,
+          }) ?? [],
+          (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.count?.() ?? 0,
+        ]);
+        return {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          logs: (logs as any[]) ?? [],
+          total: (total as number) ?? 0,
+          page,
+          pages: Math.ceil(((total as number) ?? 0) / limit),
+        };
+      } catch {
+        // AuditLog table may not exist yet — degrade gracefully
+        return { logs: [], total: 0, page: 1, pages: 0 };
+      }
+    }),
+
+  /* ── O6: Bulk Email (stub) ─────────────────────────────────── */
+
+  sendBulkEmail: adminProcedure
+    .input(z.object({
+      planFilter: z.enum(['ALL', 'FREE', 'PRO', 'STUDIO']),
+      template: z.enum(['welcome', 'feature_update', 'promo', 'maintenance']),
+      subject: z.string().min(1).max(200),
+      previewText: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkAdminRate(ctx.session.user.id);
+
+      // Count affected users
+      const where = input.planFilter === 'ALL' ? {} : { plan: input.planFilter as 'FREE' | 'PRO' | 'STUDIO' };
+      const recipientCount = await ctx.db.user.count({ where: { ...where, email: { not: null } } });
+
+      if (recipientCount === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'No users match the selected plan filter' });
+      }
+
+      // Log the intent (actual sending to be wired later)
+      try {
+        await (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.create?.({
+          data: {
+            userId: ctx.session.user.id,
+            action: 'BULK_EMAIL',
+            target: input.planFilter,
+            metadata: { template: input.template, subject: input.subject, recipientCount },
+          },
+        });
+      } catch {
+        // AuditLog table may not exist yet
+      }
+
+      return {
+        success: true,
+        recipientCount,
+        message: `Email queued for ${recipientCount} recipients (delivery pending integration)`,
+      };
+    }),
 
   referralStats: adminProcedure.query(async ({ ctx }) => {
     const referrers = await ctx.db.user.findMany({

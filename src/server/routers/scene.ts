@@ -20,6 +20,9 @@ const sceneMetadataSchema = z.object({
   enh: z.boolean().optional(),
   snd: z.boolean().optional(),
   chars: z.array(z.string()).optional(),
+  transition: z.enum(['none', 'fade', 'slide', 'zoom']).optional(),
+  voiceoverUrl: z.string().nullish(),
+  voiceoverStatus: z.enum(['idle', 'generating', 'done', 'error']).optional(),
 }).transform((v) => v as unknown as Prisma.InputJsonValue);
 
 export const sceneRouter = router({

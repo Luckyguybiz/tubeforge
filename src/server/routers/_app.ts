@@ -13,6 +13,8 @@ import { folderRouter } from './folder';
 import { referralRouter } from './referral';
 import { analyticsRouter } from './analytics';
 import { vpnRouter } from './vpn';
+import { apikeyRouter } from './apikey';
+import { webhookRouter } from './webhook';
 
 export const appRouter = router({
   user: userRouter,
@@ -29,6 +31,8 @@ export const appRouter = router({
   referral: referralRouter,
   analytics: analyticsRouter,
   vpn: vpnRouter,
+  apikey: apikeyRouter,
+  webhook: webhookRouter,
 });
 
 export type AppRouter = typeof appRouter;

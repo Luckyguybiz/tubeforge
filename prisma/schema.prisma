@@ -99,6 +99,8 @@ model Project {
   thumbnailData Json?
   characters    Json?
   status        ProjectStatus @default(DRAFT)
+  isPublic      Boolean       @default(false)
+  likesCount    Int           @default(0)
   scenes        Scene[]
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -112,6 +114,8 @@ model Project {
   @@index([userId, updatedAt])
   @@index([teamId])
   @@index([createdAt])
+  @@index([isPublic, createdAt])
+  @@index([isPublic, likesCount])
 }
 
 model Scene {
@@ -259,4 +263,17 @@ model VpnPeer {
 
   @@index([userId])
   @@index([active])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  target    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
 }

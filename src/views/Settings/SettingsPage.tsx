@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { signOut, useSession } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { usePushNotifications } from '@/components/PushNotificationManager';
 import QRCode from 'qrcode';
 import type { Theme } from '@/lib/types';
 
@@ -1476,6 +1477,11 @@ export function SettingsPage() {
       </div>
 
       {/* ====================================================== */}
+      {/* SECTION 6b: Push Notifications                         */}
+      {/* ====================================================== */}
+      <PushNotificationSection C={C} sectionStyle={sectionStyle} sectionHeaderStyle={sectionHeaderStyle} sectionDescStyle={sectionDescStyle} t={t} />
+
+      {/* ====================================================== */}
       {/* SECTION 7: Privacy & Cookies                           */}
       {/* ====================================================== */}
       <div style={sectionStyle}>
@@ -1646,6 +1652,13 @@ export function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* ====================================================== */}
+      {/* SECTION: API Keys (Studio only)                        */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <ApiKeysSection C={C} sectionStyle={sectionStyle} sectionHeaderStyle={sectionHeaderStyle} sectionDescStyle={sectionDescStyle} btnBase={btnBase} inputStyle={inputStyle} />
+      )}
 
       {/* ====================================================== */}
       {/* SECTION 9: Account (Danger Zone)                       */}
@@ -1948,6 +1961,88 @@ function SubscriptionSkeleton() {
   );
 }
 
+/** Push notification settings section */
+function PushNotificationSection({
+  C,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+  t,
+}: {
+  C: Theme;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+  t: (key: string) => string;
+}) {
+  const { isSupported, isEnabled, isDenied, enable, disable } = usePushNotifications();
+
+  if (!isSupported) return null;
+
+  return (
+    <div style={sectionStyle}>
+      <h2 style={sectionHeaderStyle}>{t('settings.pushNotifications')}</h2>
+      <p style={sectionDescStyle}>{t('settings.pushNotificationsDesc')}</p>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+            {t('settings.pushLabel')}
+          </span>
+        </div>
+
+        {isDenied ? (
+          <span style={{ fontSize: 12, color: C.dim, fontStyle: 'italic' }}>
+            {t('settings.pushDenied')}
+          </span>
+        ) : (
+          <button
+            onClick={() => (isEnabled ? disable() : enable())}
+            style={{
+              position: 'relative',
+              width: 44,
+              height: 24,
+              borderRadius: 12,
+              border: 'none',
+              cursor: 'pointer',
+              background: isEnabled ? '#6366f1' : C.border,
+              transition: 'background .2s',
+              padding: 0,
+              flexShrink: 0,
+            }}
+            aria-label={isEnabled ? t('settings.pushDisable') : t('settings.pushEnable')}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                top: 2,
+                left: isEnabled ? 22 : 2,
+                width: 20,
+                height: 20,
+                borderRadius: '50%',
+                background: '#fff',
+                transition: 'left .2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+              }}
+            />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Channels section skeleton */
 function ChannelsSkeleton() {
   return (
@@ -1962,5 +2057,309 @@ function ChannelsSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+/** API Keys management section — only rendered for STUDIO plan users */
+function ApiKeysSection({
+  C,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+  btnBase,
+  inputStyle,
+}: {
+  C: Theme;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+  btnBase: React.CSSProperties;
+  inputStyle: React.CSSProperties;
+}) {
+  const t = useLocaleStore((s) => s.t);
+  const [newKeyLabel, setNewKeyLabel] = useState('');
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const apiKeys = trpc.apikey.list.useQuery();
+  const apiUsage = trpc.apikey.usage.useQuery();
+
+  const generateKey = trpc.apikey.generate.useMutation({
+    onSuccess: (data) => {
+      setGeneratedKey(data.key);
+      setNewKeyLabel('');
+      apiKeys.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const revokeKey = trpc.apikey.revoke.useMutation({
+    onSuccess: () => {
+      toast.success('API key revoked');
+      apiKeys.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, []);
+
+  return (
+    <div style={sectionStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>API Keys</h2>
+        <a
+          href="/api-docs"
+          style={{
+            fontSize: 12,
+            color: C.blue,
+            textDecoration: 'none',
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: `${C.blue}10`,
+          }}
+        >
+          Docs
+        </a>
+      </div>
+      <p style={sectionDescStyle}>
+        Manage API keys for programmatic access. Keys are shown only once after generation.
+      </p>
+
+      {/* API Usage */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 16px',
+        background: C.surface,
+        borderRadius: 10,
+        border: `1px solid ${C.border}`,
+        marginBottom: 16,
+        fontSize: 13,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20V10" />
+          <path d="M18 20V4" />
+          <path d="M6 20v-4" />
+        </svg>
+        <span style={{ color: C.sub }}>API calls this month:</span>
+        <strong style={{ color: C.text }}>{apiUsage.data?.count ?? 0}</strong>
+      </div>
+
+      {/* Generated key alert */}
+      {generatedKey && (
+        <div style={{
+          padding: '16px 20px',
+          background: `${C.green}0a`,
+          border: `1px solid ${C.green}30`,
+          borderRadius: 12,
+          marginBottom: 16,
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.green, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Key generated! Copy it now — it will not be shown again.
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <code style={{
+              flex: 1,
+              padding: '10px 14px',
+              background: C.bg,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace",
+              color: C.text,
+              wordBreak: 'break-all',
+              lineHeight: 1.5,
+            }}>
+              {generatedKey}
+            </code>
+            <button
+              onClick={() => handleCopy(generatedKey)}
+              style={{
+                ...btnBase,
+                padding: '10px 16px',
+                background: copied ? C.green : C.surface,
+                color: copied ? '#fff' : C.text,
+                border: `1px solid ${copied ? C.green : C.border}`,
+                fontSize: 12,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+          <button
+            onClick={() => setGeneratedKey(null)}
+            style={{
+              marginTop: 10,
+              background: 'none',
+              border: 'none',
+              color: C.sub,
+              fontSize: 12,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              padding: 0,
+              textDecoration: 'underline',
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Generate new key */}
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 20,
+        flexWrap: 'wrap',
+      }}>
+        <input
+          type="text"
+          value={newKeyLabel}
+          onChange={(e) => setNewKeyLabel(e.target.value)}
+          placeholder="Key label (e.g. 'Production')"
+          maxLength={50}
+          style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+        />
+        <button
+          onClick={() => generateKey.mutate({ label: newKeyLabel || undefined })}
+          disabled={generateKey.isPending}
+          style={{
+            ...btnBase,
+            background: C.blue,
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            whiteSpace: 'nowrap',
+            opacity: generateKey.isPending ? 0.7 : 1,
+          }}
+        >
+          {generateKey.isPending ? (
+            <ApiKeySpinner size={14} color="#fff" />
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          )}
+          Generate Key
+        </button>
+      </div>
+
+      {/* Key list */}
+      {apiKeys.isLoading ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 16 }}>
+          <ApiKeySpinner size={16} color={C.sub} />
+          <span style={{ fontSize: 13, color: C.sub }}>{t('settings.loading')}</span>
+        </div>
+      ) : apiKeys.data && apiKeys.data.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {apiKeys.data.map((k) => (
+            <div
+              key={k.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                background: C.surface,
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: C.bg,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{k.label}</div>
+                <div style={{ fontSize: 12, color: C.dim, fontFamily: 'monospace' }}>
+                  tf_{'*'.repeat(8)}{k.last4}
+                  <span style={{ marginLeft: 10, fontFamily: 'inherit', color: C.sub }}>
+                    Created {new Date(k.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (window.confirm('Revoke this API key? This cannot be undone.')) {
+                    revokeKey.mutate({ id: k.id });
+                  }
+                }}
+                disabled={revokeKey.isPending}
+                style={{
+                  ...btnBase,
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  background: 'transparent',
+                  color: C.accent,
+                  border: `1px solid ${C.accent}40`,
+                }}
+              >
+                Revoke
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{
+          padding: '24px',
+          border: `1px dashed ${C.border}`,
+          borderRadius: 12,
+          textAlign: 'center',
+        }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: C.bg,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 12,
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+            </svg>
+          </div>
+          <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>
+            No API keys yet. Generate one to get started.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Small spinner for API keys section */
+function ApiKeySpinner({ size = 16, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="3" opacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke={color} strokeWidth="3" strokeLinecap="round" />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </svg>
   );
 }

@@ -14,6 +14,7 @@ import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { trackEvent } from '@/lib/analytics-events';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -127,6 +128,15 @@ function IconEdit({ size = 14, color = 'currentColor' }: { size?: number; color?
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function IconShareLink({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
     </svg>
   );
 }
@@ -657,6 +667,7 @@ interface ProjectCardProps {
   onRenameChange: (val: string) => void;
   onDuplicate: (id: string) => void;
   onToggleSelect: (id: string) => void;
+  onShare: (id: string) => void;
 }
 
 const ProjectCard = memo(function ProjectCard({
@@ -680,6 +691,7 @@ const ProjectCard = memo(function ProjectCard({
   onRenameChange,
   onDuplicate,
   onToggleSelect,
+  onShare,
 }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hovBtn, setHovBtn] = useState<string | null>(null);
@@ -955,6 +967,26 @@ const ProjectCard = memo(function ProjectCard({
                   }}
                 >
                   <IconPlus size={14} color={C.sub} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare(p.id);
+                  }}
+                  title={t('dashboard.share')}
+                  aria-label={`${t('dashboard.share')} ${p.title}`}
+                  onMouseEnter={() => setHovBtn(`share-${p.id}`)}
+                  onMouseLeave={() => setHovBtn(null)}
+                  style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    border: `1px solid ${hovBtn === `share-${p.id}` ? C.borderActive : C.border}`,
+                    background: hovBtn === `share-${p.id}` ? C.card : 'transparent',
+                    color: C.sub, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all .15s ease',
+                  }}
+                >
+                  <IconShareLink size={14} color={C.sub} />
                 </button>
                 <ExportButton projectId={p.id} projectTitle={p.title} />
                 <button
@@ -1342,6 +1374,7 @@ function TemplatePickerModal({
 
   const createProject = trpc.project.create.useMutation({
     onSuccess: (project) => {
+      trackEvent('project_create', { source: 'template_modal' });
       toast.success(t('dashboard.projectCreated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -1353,6 +1386,7 @@ function TemplatePickerModal({
 
   const importProject = trpc.project.import.useMutation({
     onSuccess: (result) => {
+      trackEvent('project_create', { source: 'import' });
       toast.success(t('dashboard.projectCreated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -1650,6 +1684,7 @@ export function Dashboard() {
   /* ── tRPC mutations ───────────────────────────── */
   const createProject = trpc.project.create.useMutation({
     onSuccess: (project) => {
+      trackEvent('project_create', { source: 'dashboard' });
       toast.success(t('dashboard.projectCreated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -1741,6 +1776,24 @@ export function Dashboard() {
   const handleDuplicate = useCallback((id: string) => {
     duplicateProject.mutate({ id });
   }, [duplicateProject]);
+
+  const togglePublic = trpc.project.togglePublic.useMutation({
+    onSuccess: (data) => {
+      if (data.isPublic) {
+        const url = `${window.location.origin}/share/${data.id}`;
+        navigator.clipboard.writeText(url).catch(() => {});
+        toast.success(t('dashboard.shareEnabled'));
+      } else {
+        toast.success(t('dashboard.shareDisabled'));
+      }
+      utils.project.list.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleShare = useCallback((id: string) => {
+    togglePublic.mutate({ id });
+  }, [togglePublic]);
 
   /* ── Bulk selection handlers ─────────────────── */
   const selectMode = selectedIds.size > 0;
@@ -2246,6 +2299,7 @@ export function Dashboard() {
                     onRenameChange={handleRenameChange}
                     onDuplicate={handleDuplicate}
                     onToggleSelect={handleToggleSelect}
+                    onShare={handleShare}
                   />
                 ))}
               </div>

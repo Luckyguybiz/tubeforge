@@ -56,6 +56,8 @@ export interface VideoItem {
   st: string;
 }
 
+export type TransitionType = 'none' | 'fade' | 'slide' | 'zoom';
+
 export interface Scene {
   id: string;
   label: string;
@@ -71,6 +73,9 @@ export interface Scene {
   snd: boolean;
   taskId?: string | null;
   videoUrl?: string | null;
+  transition?: TransitionType;
+  voiceoverUrl?: string | null;
+  voiceoverStatus?: 'idle' | 'generating' | 'done' | 'error';
 }
 
 export interface Character {

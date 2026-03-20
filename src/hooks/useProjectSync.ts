@@ -27,7 +27,7 @@ function useDebouncedCallback<T extends (...args: never[]) => void>(fn: T, delay
 
 /** Map client scene UI fields to server metadata JSON */
 function toServerPatch(patch: Partial<Scene>) {
-  const { ck, sf, ef, enh, snd, chars, ...rest } = patch;
+  const { ck, sf, ef, enh, snd, chars, transition, voiceoverUrl, voiceoverStatus, ...rest } = patch;
   const metadata: Record<string, unknown> = {};
   if (ck !== undefined) metadata.ck = ck;
   if (sf !== undefined) metadata.sf = sf;
@@ -35,6 +35,9 @@ function toServerPatch(patch: Partial<Scene>) {
   if (enh !== undefined) metadata.enh = enh;
   if (snd !== undefined) metadata.snd = snd;
   if (chars !== undefined) metadata.chars = chars;
+  if (transition !== undefined) metadata.transition = transition;
+  if (voiceoverUrl !== undefined) metadata.voiceoverUrl = voiceoverUrl;
+  if (voiceoverStatus !== undefined) metadata.voiceoverStatus = voiceoverStatus;
 
   const serverData: Record<string, unknown> = { ...rest };
   if (Object.keys(metadata).length > 0) serverData.metadata = metadata;
@@ -53,7 +56,7 @@ function sceneToCreatePayload(projectId: string, scene: Scene) {
     label: scene.label,
     model: scene.model as 'turbo' | 'standard' | 'pro' | 'cinematic',
     duration: scene.duration,
-    metadata: { ck: scene.ck, sf: scene.sf, ef: scene.ef, enh: scene.enh, snd: scene.snd, chars: scene.chars },
+    metadata: { ck: scene.ck, sf: scene.sf, ef: scene.ef, enh: scene.enh, snd: scene.snd, chars: scene.chars, transition: scene.transition, voiceoverUrl: scene.voiceoverUrl, voiceoverStatus: scene.voiceoverStatus },
   };
 }
 

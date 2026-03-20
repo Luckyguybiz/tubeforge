@@ -7,6 +7,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
+import { trackEvent } from '@/lib/analytics-events';
 
 /* ── Icons ─────────────────────────────────────────────────────────── */
 
@@ -1223,6 +1224,7 @@ export function BillingPage() {
                 onMouseLeave={() => setHoveredBtn(null)}
                 onClick={() => {
                   if (selectedPlan !== 'FREE') {
+                    trackEvent('upgrade_click', { plan: selectedPlan });
                     createCheckout.mutate({ plan: selectedPlan });
                   }
                 }}

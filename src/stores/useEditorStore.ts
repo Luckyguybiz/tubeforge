@@ -2,7 +2,23 @@ import { create } from 'zustand';
 import { PK, GENERATION_TIMEOUT_MS } from '@/lib/constants';
 import { uid } from '@/lib/utils';
 import { HistoryManager } from '@/lib/history';
-import type { Scene, Character } from '@/lib/types';
+import type { Scene, Character, TransitionType } from '@/lib/types';
+
+/* ── Music tracks (royalty-free placeholders) ── */
+export interface MusicTrack {
+  id: string;
+  name: string;
+  category: string;
+  url: string;
+}
+
+export const MUSIC_TRACKS: MusicTrack[] = [
+  { id: 'energetic', name: 'Drive Forward', category: 'Энергичная', url: '/audio/music-energetic.mp3' },
+  { id: 'calm', name: 'Peaceful Waves', category: 'Спокойная', url: '/audio/music-calm.mp3' },
+  { id: 'corporate', name: 'Business Groove', category: 'Корпоративная', url: '/audio/music-corporate.mp3' },
+  { id: 'cinematic', name: 'Epic Rising', category: 'Кинематограф', url: '/audio/music-cinematic.mp3' },
+  { id: 'fun', name: 'Happy Vibes', category: 'Весёлая', url: '/audio/music-fun.mp3' },
+];
 
 /** Track generation timeouts by scene ID so they can be cancelled */
 const genTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -54,6 +70,14 @@ interface EditorState {
   confirmDel: string | null;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
 
+  // Background music
+  musicTrackId: string | null;
+  musicVolume: number; // 0–100
+
+  // Auto-save
+  autoSaveDirty: boolean;
+  autoSaveTimer: ReturnType<typeof setTimeout> | null;
+
   // Undo/Redo — exposed counts for UI
   historyCount: number;
   futureCount: number;
@@ -74,6 +98,10 @@ interface EditorState {
   setDragOv: (id: string | null) => void;
   setConfirmDel: (id: string | null) => void;
   setSaveStatus: (s: 'idle' | 'saving' | 'saved' | 'error') => void;
+  setMusicTrack: (id: string | null) => void;
+  setMusicVolume: (v: number) => void;
+  markDirty: () => void;
+  clearAutoSaveTimer: () => void;
 
   pushHistory: () => void;
   /** Debounced push — groups rapid calls into one undo step */
@@ -92,6 +120,7 @@ interface EditorState {
   delCh: (id: string) => void;
   reorderScenes: (fromId: string, toId: string) => void;
   addSceneFromPrompt: (prompt: string) => void;
+  setTransition: (sceneId: string, transition: TransitionType) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -120,6 +149,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   confirmDel: null,
   saveStatus: 'idle',
 
+  musicTrackId: null,
+  musicVolume: 50,
+
+  autoSaveDirty: false,
+  autoSaveTimer: null,
+
   historyCount: 0,
   futureCount: 0,
   history: [],
@@ -145,6 +180,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         chars: (meta.chars as string[]) ?? [],
         taskId: (s as Record<string, unknown>).taskId as string | null | undefined,
         videoUrl: s.videoUrl,
+        transition: (meta.transition as Scene['transition']) ?? 'none',
+        voiceoverUrl: (meta.voiceoverUrl as string | null) ?? null,
+        voiceoverStatus: (meta.voiceoverStatus as Scene['voiceoverStatus']) ?? 'idle',
       };
     });
     const chars = (project.characters ?? []) as Character[];
@@ -172,6 +210,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setDragOv: (id) => set({ dragOv: id }),
   setConfirmDel: (id) => set({ confirmDel: id }),
   setSaveStatus: (s) => set({ saveStatus: s }),
+  setMusicTrack: (id) => set({ musicTrackId: id }),
+  setMusicVolume: (v) => set({ musicVolume: Math.max(0, Math.min(100, v)) }),
+
+  markDirty: () => {
+    const st = get();
+    if (st.autoSaveTimer) clearTimeout(st.autoSaveTimer);
+    const timer = setTimeout(() => {
+      set({ autoSaveDirty: false, autoSaveTimer: null });
+      // The actual save is triggered in the UI layer (useProjectSync).
+      // We dispatch a custom event so the EditorPage can listen.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('tf-autosave'));
+      }
+    }, 30_000);
+    set({ autoSaveDirty: true, autoSaveTimer: timer });
+  },
+
+  clearAutoSaveTimer: () => {
+    const st = get();
+    if (st.autoSaveTimer) clearTimeout(st.autoSaveTimer);
+    set({ autoSaveDirty: false, autoSaveTimer: null });
+  },
 
   pushHistory: () => {
     const { scenes } = get();
@@ -232,6 +292,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ef: null,
       enh: true,
       snd: true,
+      transition: 'none',
+      voiceoverUrl: null,
+      voiceoverStatus: 'idle',
     };
     set((st) => {
       if (!afterId) return { scenes: [...st.scenes, ns], selId: ns.id };
@@ -346,6 +409,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  setTransition: (sceneId, transition) => {
+    set((s) => ({
+      scenes: s.scenes.map((sc) => (sc.id === sceneId ? { ...sc, transition } : sc)),
+    }));
+  },
+
   addSceneFromPrompt: (prompt) => {
     const s = get();
     const ns: Scene = {
@@ -361,6 +430,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ef: null,
       enh: true,
       snd: true,
+      transition: 'none',
+      voiceoverUrl: null,
+      voiceoverStatus: 'idle',
     };
     set((st) => ({ scenes: [...st.scenes, ns], selId: ns.id, genIn: '' }));
     // Track timeout so it can be cancelled on project load or re-generation

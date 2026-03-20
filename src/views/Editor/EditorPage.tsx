@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
-import { useEditorStore } from '@/stores/useEditorStore';
+import { useEditorStore, MUSIC_TRACKS } from '@/stores/useEditorStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
@@ -16,7 +16,8 @@ import { useCollaboration, useSceneEditLock } from '@/hooks/useCollaboration';
 import { useUndoHint } from '@/hooks/useUndoHint';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
-import type { Theme, Scene } from '@/lib/types';
+import type { Theme, Scene, TransitionType } from '@/lib/types';
+import { trackEvent } from '@/lib/analytics-events';
 
 /* ═══════════════════════════════════════════════════════════════════
    STATUS BADGE CONFIG
@@ -369,6 +370,11 @@ const SceneThumb = memo(function SceneThumb({
         position: 'relative',
       }}
     >
+      {/* Drop indicator line */}
+      {isDragOver && (
+        <div style={{ position: 'absolute', top: -2, left: 4, right: 4, height: 3, borderRadius: 2, background: col, zIndex: 5 }} />
+      )}
+
       {/* Color thumbnail area */}
       <div
         style={{
@@ -382,6 +388,25 @@ const SceneThumb = memo(function SceneThumb({
           position: 'relative',
         }}
       >
+        {/* Drag handle icon */}
+        <span
+          className="scene-drag-handle"
+          style={{
+            position: 'absolute',
+            top: 2,
+            left: 4,
+            fontSize: 10,
+            color: C.dim,
+            cursor: 'grab',
+            opacity: 0.4,
+            lineHeight: 1,
+            userSelect: 'none',
+          }}
+          title={useLocaleStore.getState().t('editor.dragHandle')}
+        >
+          &#8801;
+        </span>
+
         {sc.status === 'ready' ? (
           <span style={{ fontSize: 14, color: col, opacity: 0.7 }}>&#9654;</span>
         ) : sc.status === 'generating' ? (
@@ -442,6 +467,92 @@ const SceneThumb = memo(function SceneThumb({
     </div>
   );
 });
+
+/* ═══════════════════════════════════════════════════════════════════
+   TRANSITION PICKER — small dropdown between scene cards
+   ═══════════════════════════════════════════════════════════════════ */
+const TRANSITION_OPTIONS: { value: TransitionType; labelKey: string }[] = [
+  { value: 'none', labelKey: 'editor.transition.none' },
+  { value: 'fade', labelKey: 'editor.transition.fade' },
+  { value: 'slide', labelKey: 'editor.transition.slide' },
+  { value: 'zoom', labelKey: 'editor.transition.zoom' },
+];
+
+function TransitionPicker({ sceneId, current, C, onChange }: { sceneId: string; current: TransitionType; C: Theme; onChange: (id: string, v: TransitionType) => void }) {
+  const tFn = useLocaleStore.getState().t;
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', height: 18, margin: '-2px 0' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          fontSize: 8,
+          color: current !== 'none' ? C.accent : C.dim,
+          background: 'transparent',
+          border: `1px solid ${current !== 'none' ? C.accent + '40' : C.border}`,
+          borderRadius: 4,
+          padding: '1px 6px',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          fontWeight: 500,
+          transition: 'all .15s',
+          whiteSpace: 'nowrap',
+        }}
+        title={tFn('editor.transition.label')}
+      >
+        {current !== 'none' ? tFn(`editor.transition.${current}`) : '+ ' + tFn('editor.transition.label').toLowerCase()}
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          marginTop: 2,
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 6,
+          padding: 2,
+          zIndex: 30,
+          boxShadow: '0 4px 16px rgba(0,0,0,.25)',
+          minWidth: 90,
+        }}>
+          {TRANSITION_OPTIONS.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => { onChange(sceneId, opt.value); setOpen(false); }}
+              style={{
+                padding: '4px 8px',
+                fontSize: 9,
+                fontWeight: opt.value === current ? 600 : 400,
+                color: opt.value === current ? C.accent : C.text,
+                cursor: 'pointer',
+                borderRadius: 4,
+                background: opt.value === current ? C.accent + '10' : 'transparent',
+                transition: 'background .1s',
+              }}
+              onMouseEnter={(e) => { if (opt.value !== current) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = opt.value === current ? C.accent + '10' : 'transparent'; }}
+            >
+              {tFn(opt.labelKey)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    SCENE SETTINGS POPOVER — appears when clicking settings on selected scene
@@ -671,6 +782,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const confirmDel = useEditorStore((s) => s.confirmDel);
   const setConfirmDel = useEditorStore((s) => s.setConfirmDel);
   const saveStatus = useEditorStore((s) => s.saveStatus);
+  const autoSaveDirty = useEditorStore((s) => s.autoSaveDirty);
+  const musicTrackId = useEditorStore((s) => s.musicTrackId);
+  const musicVolume = useEditorStore((s) => s.musicVolume);
 
   // Real-time collaboration
   useCollaboration(projectId);
@@ -684,6 +798,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const [musicDropOpen, setMusicDropOpen] = useState(false);
+  const musicAudioRef = useRef<HTMLAudioElement | null>(null);
+  const musicDropRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const sceneListRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
@@ -691,6 +808,63 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   // Video generation hook for selected scene
   const videoGen = useVideoGeneration(selId);
+
+  // Auto-save: listen for custom event dispatched by store timer
+  useEffect(() => {
+    if (!projectId) return;
+    const handler = () => {
+      // Trigger a full save of the current project state
+      const store = useEditorStore.getState();
+      store.scenes.forEach((sc) => {
+        sync.updateScene(sc.id, { prompt: sc.prompt, label: sc.label, duration: sc.duration });
+      });
+    };
+    window.addEventListener('tf-autosave', handler);
+    return () => {
+      window.removeEventListener('tf-autosave', handler);
+      useEditorStore.getState().clearAutoSaveTimer();
+    };
+  }, [projectId, sync]);
+
+  // Background music playback
+  useEffect(() => {
+    if (!musicTrackId) {
+      if (musicAudioRef.current) { musicAudioRef.current.pause(); musicAudioRef.current = null; }
+      return;
+    }
+    const track = MUSIC_TRACKS.find((t) => t.id === musicTrackId);
+    if (!track) return;
+    if (!musicAudioRef.current || musicAudioRef.current.src !== track.url) {
+      if (musicAudioRef.current) musicAudioRef.current.pause();
+      const audio = new Audio(track.url);
+      audio.loop = true;
+      audio.volume = musicVolume / 100;
+      audio.play().catch(() => {/* autoplay blocked — user interaction required */});
+      musicAudioRef.current = audio;
+    } else {
+      musicAudioRef.current.volume = musicVolume / 100;
+    }
+    return () => {
+      // Don't stop on re-render, only on unmount
+    };
+  }, [musicTrackId, musicVolume]);
+
+  // Cleanup music on unmount
+  useEffect(() => {
+    return () => {
+      if (musicAudioRef.current) { musicAudioRef.current.pause(); musicAudioRef.current = null; }
+    };
+  }, []);
+
+  // Close music dropdown on outside click
+  useEffect(() => {
+    if (!musicDropOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (musicDropRef.current && !musicDropRef.current.contains(e.target as Node)) setMusicDropOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [musicDropOpen]);
 
   // Focus title input when editing starts
   useEffect(() => {
@@ -709,6 +883,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Sync wrappers
   const updScene = useCallback((id: string, patch: Partial<Scene>) => {
     if (projectId) { sync.updateScene(id, patch); } else { useEditorStore.getState().updScene(id, patch); }
+    useEditorStore.getState().markDirty();
   }, [projectId, sync]);
 
   const addScene = useCallback((afterId?: string) => {
@@ -727,10 +902,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     if (projectId) { sync.reorder(fromId, toId); } else { useEditorStore.getState().reorderScenes(fromId, toId); }
   }, [projectId, sync]);
 
+  const handleTransitionChange = useCallback((sceneId: string, transition: TransitionType) => {
+    useEditorStore.getState().setTransition(sceneId, transition);
+    if (projectId) { sync.updateScene(sceneId, { transition } as Partial<Scene>); }
+  }, [projectId, sync]);
+
   const handleGenerate = useCallback(() => {
     const store = useEditorStore.getState();
     const currentSel = store.scenes.find((s) => s.id === store.selId);
     if (!currentSel || !currentSel.prompt.trim() || videoGen.isGenerating) return;
+    trackEvent('video_generate', { model: currentSel.model, duration: currentSel.duration });
     videoGen.start(currentSel.prompt, currentSel.model, currentSel.duration);
   }, [videoGen]);
 
@@ -1014,26 +1195,138 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         {/* Divider */}
         <div style={{ width: 1, height: 18, background: C.border }} />
 
-        {/* Scene count + duration */}
+        {/* Scene count + total duration */}
         <span style={{ fontSize: 10, color: C.sub, fontWeight: 500 }}>
           {pluralRu(scenes.length, t('editor.scene.one'), t('editor.scene.few'), t('editor.scene.many'))} · {fmtDur(totalDur)}
         </span>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 18, background: C.border }} />
+
+        {/* Total duration badge */}
+        <span style={{ fontSize: 9, color: C.dim, fontWeight: 500, fontFamily: "'JetBrains Mono', monospace" }}>
+          {t('editor.totalDuration')}: {fmtDur(totalDur)}
+        </span>
+
+        {/* Background music dropdown */}
+        <div ref={musicDropRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setMusicDropOpen(!musicDropOpen)}
+            style={{
+              fontSize: 10,
+              padding: '4px 8px',
+              borderRadius: 6,
+              border: `1px solid ${musicTrackId ? C.accent + '55' : C.border}`,
+              background: musicTrackId ? C.accent + '08' : 'transparent',
+              color: musicTrackId ? C.accent : C.sub,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontWeight: 500,
+              transition: 'all .15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ fontSize: 12 }}>&#9835;</span>
+            {musicTrackId ? MUSIC_TRACKS.find((tr) => tr.id === musicTrackId)?.name ?? t('editor.music.label') : t('editor.music.label')}
+          </button>
+          {musicDropOpen && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: 4,
+              background: C.card,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              padding: 4,
+              zIndex: 60,
+              boxShadow: '0 8px 24px rgba(0,0,0,.3)',
+              minWidth: 180,
+            }}>
+              {/* None option */}
+              <div
+                onClick={() => { useEditorStore.getState().setMusicTrack(null); setMusicDropOpen(false); }}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: 10,
+                  fontWeight: !musicTrackId ? 600 : 400,
+                  color: !musicTrackId ? C.accent : C.text,
+                  cursor: 'pointer',
+                  borderRadius: 5,
+                  background: !musicTrackId ? C.accent + '10' : 'transparent',
+                  transition: 'background .1s',
+                }}
+                onMouseEnter={(e) => { if (musicTrackId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = !musicTrackId ? C.accent + '10' : 'transparent'; }}
+              >
+                {t('editor.music.none')}
+              </div>
+              {MUSIC_TRACKS.map((tr) => (
+                <div
+                  key={tr.id}
+                  onClick={() => { useEditorStore.getState().setMusicTrack(tr.id); setMusicDropOpen(false); }}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: 10,
+                    fontWeight: musicTrackId === tr.id ? 600 : 400,
+                    color: musicTrackId === tr.id ? C.accent : C.text,
+                    cursor: 'pointer',
+                    borderRadius: 5,
+                    background: musicTrackId === tr.id ? C.accent + '10' : 'transparent',
+                    transition: 'background .1s',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => { if (musicTrackId !== tr.id) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = musicTrackId === tr.id ? C.accent + '10' : 'transparent'; }}
+                >
+                  <span>{tr.name}</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{tr.category}</span>
+                </div>
+              ))}
+              {/* Volume slider */}
+              {musicTrackId && (
+                <div style={{ padding: '6px 10px 4px', borderTop: `1px solid ${C.border}`, marginTop: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                    <span style={{ fontSize: 8, color: C.sub, fontWeight: 600 }}>{t('editor.music.volume')}</span>
+                    <span style={{ fontSize: 8, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{musicVolume}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={musicVolume}
+                    onChange={(e) => useEditorStore.getState().setMusicVolume(Number(e.target.value))}
+                    style={{ width: '100%', accentColor: C.accent, cursor: 'pointer', height: 3 }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div style={{ flex: 1 }} />
 
         {/* Online collaborators */}
         <OnlineUsers />
 
-        {/* Save status */}
-        {saveStatus === 'saving' && (
-          <span style={{ fontSize: 9, color: C.dim, fontWeight: 500 }}>{t('editor.saving')}</span>
-        )}
-        {saveStatus === 'saved' && (
-          <span style={{ fontSize: 9, color: C.green, fontWeight: 500 }}>{t('editor.saved')} &#10003;</span>
-        )}
-        {saveStatus === 'error' && (
+        {/* Auto-save / Save status indicator */}
+        {saveStatus === 'saving' ? (
+          <span style={{ fontSize: 9, color: C.dim, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', border: '1.5px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
+            {t('editor.autoSave.saving')}
+          </span>
+        ) : saveStatus === 'saved' ? (
+          <span style={{ fontSize: 9, color: C.green, fontWeight: 500 }}>{t('editor.autoSave.saved')} &#10003;</span>
+        ) : saveStatus === 'error' ? (
           <span style={{ fontSize: 9, color: C.accent, fontWeight: 500 }}>{t('editor.saveError')}</span>
-        )}
+        ) : autoSaveDirty ? (
+          <span style={{ fontSize: 9, color: C.orange, fontWeight: 500 }}>{t('editor.autoSave.unsaved')}</span>
+        ) : null}
 
         {/* Undo / Redo */}
         <div style={{ display: 'flex', gap: 2 }}>
@@ -1263,19 +1556,29 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </div>
             ) : (
               scenes.map((sc, idx) => (
-                <SceneThumb
-                  key={sc.id}
-                  scene={sc}
-                  idx={idx}
-                  C={C}
-                  isSel={sc.id === selId}
-                  isDragOver={sc.id === dragOv}
-                  isDragging={dragId === sc.id}
-                  onSelect={handleSceneSelect}
-                  onDragStart={handleSceneDragStart}
-                  onDragEnter={handleSceneDragEnter}
-                  onDragEnd={handleSceneDragEnd}
-                />
+                <React.Fragment key={sc.id}>
+                  <SceneThumb
+                    scene={sc}
+                    idx={idx}
+                    C={C}
+                    isSel={sc.id === selId}
+                    isDragOver={sc.id === dragOv}
+                    isDragging={dragId === sc.id}
+                    onSelect={handleSceneSelect}
+                    onDragStart={handleSceneDragStart}
+                    onDragEnter={handleSceneDragEnter}
+                    onDragEnd={handleSceneDragEnd}
+                  />
+                  {/* Transition picker between scenes */}
+                  {idx < scenes.length - 1 && (
+                    <TransitionPicker
+                      sceneId={sc.id}
+                      current={sc.transition ?? 'none'}
+                      C={C}
+                      onChange={handleTransitionChange}
+                    />
+                  )}
+                </React.Fragment>
               ))
             )}
           </div>
@@ -1796,7 +2099,146 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
               </button>
+
+              {/* Voiceover (TTS) button */}
+              <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+              <button
+                className={sel.voiceoverStatus !== 'generating' ? 'ed-action-btn' : undefined}
+                onClick={() => {
+                  // TTS not yet configured — show "soon" tooltip
+                  useNotificationStore.getState().addToast('info', t('editor.voiceover.soon'), 2000);
+                }}
+                disabled={sel.voiceoverStatus === 'generating'}
+                title={!sel.prompt.trim() ? t('editor.voiceover.noText') : t('editor.voiceover.btn')}
+                style={{
+                  ...tinyBtnStyle(C, sel.voiceoverStatus === 'done'),
+                  minWidth: 'auto',
+                  width: 'auto',
+                  padding: '0 6px',
+                  gap: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: 9,
+                  fontWeight: 500,
+                  color: sel.voiceoverStatus === 'done' ? C.green : sel.voiceoverStatus === 'generating' ? C.orange : C.sub,
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                {sel.voiceoverStatus === 'generating' ? t('editor.voiceover.generating') : sel.voiceoverStatus === 'done' ? t('editor.voiceover.done') : t('editor.voiceover.btn')}
+              </button>
+
+              {/* Voiceover audio player (when available) */}
+              {sel.voiceoverUrl && (
+                <audio controls src={sel.voiceoverUrl} style={{ height: 24, maxWidth: 120, flexShrink: 0 }} />
+              )}
+
+              {/* Scene duration inline control */}
+              <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                <span style={{ fontSize: 8, color: C.sub, fontWeight: 500 }}>{t('editor.sceneDuration')}:</span>
+                <input
+                  type="range"
+                  min={3}
+                  max={30}
+                  value={sel.duration}
+                  onChange={(e) => updScene(sel.id, { duration: Number(e.target.value) })}
+                  style={{ width: 60, accentColor: selCol, cursor: 'pointer', height: 3 }}
+                />
+                <span style={{ fontSize: 9, fontWeight: 600, color: selCol, fontFamily: "'JetBrains Mono', monospace", minWidth: 20, textAlign: 'center' }}>
+                  {sel.duration}{t('editor.sec')}
+                </span>
+              </div>
             </div>
+
+            {/* Rich text formatting buttons + Prompt input area */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, width: '100%' }}>
+              {/* Bold / Italic toggle bar */}
+              <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                <button
+                  className="ed-action-btn"
+                  title={t('editor.richText.bold')}
+                  onClick={() => {
+                    if (!promptRef.current) return;
+                    const ta = promptRef.current;
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const text = sel.prompt;
+                    if (start === end) return;
+                    const selected = text.slice(start, end);
+                    // Toggle bold: wrap or unwrap **...**
+                    const isBold = selected.startsWith('**') && selected.endsWith('**');
+                    const newText = isBold
+                      ? text.slice(0, start) + selected.slice(2, -2) + text.slice(end)
+                      : text.slice(0, start) + '**' + selected + '**' + text.slice(end);
+                    updScene(sel.id, { prompt: newText });
+                    useEditorStore.getState().pushHistoryDebounced();
+                  }}
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 4,
+                    border: `1px solid ${C.border}`,
+                    background: 'transparent',
+                    color: C.sub,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'inherit',
+                    padding: 0,
+                    transition: 'all .15s',
+                  }}
+                >
+                  B
+                </button>
+                <button
+                  className="ed-action-btn"
+                  title={t('editor.richText.italic')}
+                  onClick={() => {
+                    if (!promptRef.current) return;
+                    const ta = promptRef.current;
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const text = sel.prompt;
+                    if (start === end) return;
+                    const selected = text.slice(start, end);
+                    // Toggle italic: wrap or unwrap *...*
+                    const isItalic = selected.startsWith('*') && selected.endsWith('*') && !selected.startsWith('**');
+                    const newText = isItalic
+                      ? text.slice(0, start) + selected.slice(1, -1) + text.slice(end)
+                      : text.slice(0, start) + '*' + selected + '*' + text.slice(end);
+                    updScene(sel.id, { prompt: newText });
+                    useEditorStore.getState().pushHistoryDebounced();
+                  }}
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 4,
+                    border: `1px solid ${C.border}`,
+                    background: 'transparent',
+                    color: C.sub,
+                    fontSize: 11,
+                    fontWeight: 400,
+                    fontStyle: 'italic',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'serif',
+                    padding: 0,
+                    transition: 'all .15s',
+                  }}
+                >
+                  I
+                </button>
+              </div>
 
             {/* Prompt input area */}
             <div
@@ -1876,6 +2318,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </span>
               </div>
             </div>
+            </div>{/* close rich text + prompt wrapper */}
           </div>
         )}
 
@@ -1990,6 +2433,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       {/* ── Global hover styles + keyframes ── */}
       <style>{`
         .scene-thumb:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .scene-thumb:hover .scene-drag-handle { opacity: 0.8 !important; }
         .scene-thumb { transition: all .15s ease !important; }
         .ed-action-btn:hover { background: ${C.cardHover} !important; border-color: ${C.borderActive} !important; color: ${C.text} !important; }
         .ed-timeline-tab:hover { border-color: ${C.borderActive} !important; }
@@ -2000,6 +2444,39 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         .ed-scene-list::-webkit-scrollbar-track { background: transparent; }
         .ed-scene-list::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
         .ed-scene-list::-webkit-scrollbar-thumb:hover { background: ${C.dim}; }
+
+        /* ── Mobile editor optimizations ── */
+        @media (max-width: 768px) {
+          .tf-editor-scene-panel {
+            position: fixed !important;
+            top: 0; left: 0; bottom: 0;
+            z-index: 900;
+            width: 160px !important;
+            max-width: 160px !important;
+            box-shadow: 4px 0 24px rgba(0,0,0,.4);
+          }
+          .tf-editor-topbar {
+            padding: 6px 8px !important;
+            gap: 6px !important;
+          }
+          .tf-editor-topbar button,
+          .tf-editor-topbar a {
+            min-width: 44px;
+            min-height: 44px;
+          }
+          .ed-action-btn {
+            min-width: 44px !important;
+            min-height: 44px !important;
+          }
+          .ed-timeline-tab {
+            min-height: 44px !important;
+            height: 44px !important;
+          }
+          .ed-gen-btn {
+            min-height: 44px !important;
+            padding: 10px 20px !important;
+          }
+        }
       `}</style>
     </div>
   );

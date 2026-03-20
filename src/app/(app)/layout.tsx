@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -9,6 +9,7 @@ import { ToastProvider } from '@/components/ui/ToastProvider';
 import { CookieConsent } from '@/components/ui/CookieConsent';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { FeedbackWidget } from '@/components/ui/FeedbackWidget';
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
@@ -125,6 +126,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           overflow-y:auto;
         }
         .tf-mobile-drawer.open{transform:translateX(0)}
+        .tf-bottom-tabs{display:none}
+        @media(max-width:768px){
+          .tf-bottom-tabs{
+            display:flex !important;
+            position:fixed;bottom:0;left:0;right:0;z-index:9990;
+            height:56px;
+            background:${C.surface};
+            border-top:1px solid ${C.border};
+            align-items:stretch;
+            justify-content:space-around;
+            padding:0;
+            padding-bottom:env(safe-area-inset-bottom,0);
+          }
+          .tf-bottom-tab{
+            flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+            gap:2px;border:none;background:transparent;cursor:pointer;
+            color:${C.dim};font-size:10px;font-weight:600;font-family:inherit;
+            padding:4px 0;transition:color .15s;
+            -webkit-tap-highlight-color:transparent;
+            min-height:44px;
+          }
+          .tf-bottom-tab.active{color:${C.accent}}
+          .tf-bottom-tab svg{transition:color .15s}
+          .tf-main-content{padding-bottom:68px!important}
+        }
       `}</style>
       <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
       <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
@@ -153,6 +179,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </>
       )}
 
+      {/* Mobile bottom tab bar */}
+      {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
+
+      <ServiceWorkerRegistration />
       <FeedbackWidget />
       <ToastProvider />
       <ErrorBoundary>
@@ -162,5 +192,91 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <CookieConsent />
       </ErrorBoundary>
     </>
+  );
+}
+
+/* ── Mobile Bottom Tab Bar ──────────────────────────── */
+
+interface TabDef {
+  id: string;
+  href: string;
+  labelKey: string;
+  icon: React.ReactNode;
+}
+
+const TABS: TabDef[] = [
+  {
+    id: 'dashboard',
+    href: '/dashboard',
+    labelKey: 'nav.dashboard',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+      </svg>
+    ),
+  },
+  {
+    id: 'editor',
+    href: '/editor',
+    labelKey: 'nav.editor',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+    ),
+  },
+  {
+    id: 'tools',
+    href: '/tools',
+    labelKey: 'nav.tools',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'settings',
+    href: '/settings',
+    labelKey: 'nav.settings',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+      </svg>
+    ),
+  },
+];
+
+function MobileBottomTabs({
+  pathname,
+  C,
+  t,
+}: {
+  pathname: string;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const router = useRouter();
+  const current = pathname.split('/').filter(Boolean)[0] || 'dashboard';
+
+  return (
+    <nav className="tf-bottom-tabs" aria-label="Mobile navigation">
+      {TABS.map((tab) => {
+        const isActive = tab.id === current;
+        return (
+          <button
+            key={tab.id}
+            className={`tf-bottom-tab${isActive ? ' active' : ''}`}
+            onClick={() => router.push(tab.href)}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {tab.icon}
+            <span>{t(tab.labelKey)}</span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }
