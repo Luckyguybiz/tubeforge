@@ -671,6 +671,7 @@ const ProjectCard = memo(function ProjectCard({
 }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hovBtn, setHovBtn] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   const stColor = STATUS_COLOR[p.status] ?? 'dim';
   const statusColor = C[stColor as keyof typeof C] ?? C.dim;
@@ -706,11 +707,13 @@ const ProjectCard = memo(function ProjectCard({
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {p.thumbnailUrl ? (
+        {p.thumbnailUrl && !imgError ? (
           <Image
             src={p.thumbnailUrl}
             alt={p.title}
             fill
+            unoptimized
+            onError={() => setImgError(true)}
             style={{
               objectFit: 'cover',
               transition: 'transform .4s cubic-bezier(.4,0,.2,1)',
@@ -1345,7 +1348,7 @@ export function Dashboard() {
                 fontSize: 12, color: C.sub, fontWeight: 500,
                 background: C.surface, padding: '2px 8px', borderRadius: 6,
               }}>
-                {'total' in projects.data ? projects.data.total : ''}
+                {'total' in projects.data ? String(projects.data.total ?? '') : ''}
               </span>
             )}
           </div>
