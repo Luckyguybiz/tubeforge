@@ -183,7 +183,7 @@ export const TopBar = memo(function TopBar() {
   const mobileMenuToggle = useMobileMenuStore((s) => s.toggle);
 
   return (
-    <div className="tf-topbar" style={{ height: 44, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, background: C.surface, flexShrink: 0 }}>
+    <div className="tf-topbar" style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10, background: C.surface, flexShrink: 0 }}>
       {/* Hamburger – visible only below 768px */}
       <button
         className="tf-hamburger"
@@ -229,15 +229,16 @@ export const TopBar = memo(function TopBar() {
         const segments = pathname.split('/').filter(Boolean);
         if (segments.length === 0) segments.push('dashboard');
         return (
-          <nav className="tf-topbar-breadcrumb" aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 0, fontSize: 13, minWidth: 0, overflow: 'hidden' }}>
+          <nav className="tf-topbar-breadcrumb" aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 400, minWidth: 0, overflow: 'hidden', letterSpacing: '-0.01em' }}>
             <span
               role="link"
               tabIndex={0}
               onClick={() => router.push('/dashboard')}
               onKeyDown={(e) => { if (e.key === 'Enter') router.push('/dashboard'); }}
-              style={{ color: segments.length > 1 ? C.sub : C.text, fontWeight: segments.length > 1 ? 500 : 600, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, color: segments.length > 1 ? C.sub : C.text, fontWeight: segments.length > 1 ? 400 : 500, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
             >
-              {t('nav.dashboard')}
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: `linear-gradient(135deg,${C.accent},${C.pink})`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#fff', flexShrink: 0 }}>TF</span>
+              {segments.length > 1 ? t('nav.dashboard') : ''}
             </span>
             {segments.length > 1 && segments.slice(1).map((seg, i) => {
               const isLast = i === segments.length - 2;
@@ -403,7 +404,7 @@ export const TopBar = memo(function TopBar() {
         {/* Notification dropdown */}
         {bellOpen && (
           <div style={{
-            position: 'absolute', top: 42, right: 0, width: 320,
+            position: 'absolute', top: 48, right: 0, width: 320,
             maxWidth: 'calc(100vw - 32px)',
             background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
             boxShadow: `0 8px 32px ${C.overlay}`, zIndex: Z_INDEX.DROPDOWN, overflow: 'hidden',

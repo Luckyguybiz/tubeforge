@@ -273,9 +273,9 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
           style={{
-            flex: '1 1 180px',
-            minWidth: 160,
-            height: 60,
+            flex: '1 1 220px',
+            minWidth: 200,
+            height: 72,
             background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
             borderRadius: 14,
             padding: '0 16px',
@@ -291,7 +291,7 @@ function WelcomeSection({
           <IconPlay size={18} color="#fff" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('dashboard.videoEditor')}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>{t('dashboard.videoEditorDesc')}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.videoEditorDesc')}</div>
           </div>
           <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
         </div>
@@ -306,9 +306,9 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
           style={{
-            flex: '1 1 180px',
-            minWidth: 160,
-            height: 60,
+            flex: '1 1 220px',
+            minWidth: 200,
+            height: 72,
             background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
             borderRadius: 14,
             padding: '0 16px',
@@ -324,7 +324,7 @@ function WelcomeSection({
           <IconSparkles size={18} color="#fff" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('dashboard.aiGeneration')}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>{t('dashboard.aiGenerationDesc')}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.aiGenerationDesc')}</div>
           </div>
           <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
         </div>
@@ -339,9 +339,9 @@ function WelcomeSection({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
           style={{
-            flex: '1 1 180px',
-            minWidth: 160,
-            height: 60,
+            flex: '1 1 220px',
+            minWidth: 200,
+            height: 72,
             background: C.card,
             border: `1px solid ${C.border}`,
             borderRadius: 14,
@@ -365,7 +365,7 @@ function WelcomeSection({
                 lineHeight: '16px', letterSpacing: '.02em',
               }}>FREE</span>
             </div>
-            <div style={{ fontSize: 12, color: C.sub }}>{t('dashboard.freeToolsDesc')}</div>
+            <div style={{ fontSize: 12, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.freeToolsDesc')}</div>
           </div>
           <IconArrowRight size={14} color={C.dim} />
         </div>

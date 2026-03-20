@@ -1,28 +1,17 @@
 /**
- * AUTH_URL is NOT needed when trustHost:true is set — NextAuth auto-detects
- * the URL from request headers (x-forwarded-host, x-forwarded-proto).
- * Having AUTH_URL set causes PKCE cookie domain mismatch: the cookie is set
- * on the user's current domain, but AUTH_URL overrides redirect_uri to a
- * different domain, so the callback can't read the cookie → "Configuration" error.
+ * AUTH_URL must be set to the production domain so Auth.js builds correct
+ * redirect URIs for OAuth providers. trustHost alone doesn't work behind
+ * reverse proxies that don't forward x-forwarded-host properly.
  */
 import { createLogger } from '@/lib/logger';
 import { sendEmail } from '@/lib/email';
 
 const authLog = createLogger('auth');
-
-const _hadAuthUrl = !!process.env.AUTH_URL;
-const _hadNextAuthUrl = !!process.env.NEXTAUTH_URL;
-delete process.env.AUTH_URL;
-delete process.env.NEXTAUTH_URL;
-if (_hadAuthUrl || _hadNextAuthUrl) {
-  authLog.warn('Deleted env vars to prevent PKCE cookie mismatch', {
-    AUTH_URL: _hadAuthUrl ? 'was set' : 'not set',
-    NEXTAUTH_URL: _hadNextAuthUrl ? 'was set' : 'not set',
-  });
-}
+authLog.info('Auth URL:', { AUTH_URL: process.env.AUTH_URL ?? 'not set' });
 
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
+import Credentials from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import type { Plan, Role } from '@prisma/client';
 import { db } from '@/server/db';
@@ -42,6 +31,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: env.AUTH_GOOGLE_ID,
       clientSecret: env.AUTH_GOOGLE_SECRET,
+    }),
+    // DEV-ONLY: email-based login without OAuth (remove before production)
+    Credentials({
+      id: 'dev-login',
+      name: 'Dev Login',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email as string;
+        if (!email) return null;
+        const user = await db.user.findUnique({ where: { email } });
+        if (!user) return null;
+        return { id: user.id, email: user.email, name: user.name, image: user.image };
+      },
     }),
   ],
   logger: {

@@ -3,7 +3,14 @@ import { withSentryConfig } from '@sentry/nextjs';
 import { securityHeaders } from './src/lib/security-headers';
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: __dirname,
   reactStrictMode: true,
+
+  /* ── Server env vars (ensure they survive turbopack bundling) ── */
+  env: {
+    AUTH_URL: process.env.AUTH_URL ?? 'https://tubeforge.co',
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? 'https://tubeforge.co',
+  },
 
   // Capacitor iOS builds: uncomment the line below to produce a static export
   // in the `out/` directory. Do NOT enable this for Vercel deployments.

@@ -69,7 +69,7 @@ export const STATUS: Record<string, StatusInfo> = {
 };
 
 export const NAV: NavItem[] = [
-  { id: 'dashboard', icon: '◉', label: 'Дашборд' },
+  { id: 'dashboard', icon: '◉', label: 'Главная' },
   { id: 'editor', icon: '▶', label: 'Редактор' },
   { id: 'metadata', icon: '✎', label: 'Метаданные' },
   { id: 'thumbnails', icon: '◫', label: 'Обложки' },
@@ -112,7 +112,7 @@ export const KEYBOARD_SHORTCUTS = [
   { keys: '?', label: 'Горячие клавиши', key: '?', description: 'Show keyboard shortcuts help', category: 'navigation' },
   { keys: 'Ctrl+/', label: 'Горячие клавиши', key: 'Ctrl+/', description: 'Show keyboard shortcuts help', category: 'navigation' },
   { keys: 'Escape', label: 'Закрыть / снять выделение', key: 'Escape', description: 'Close modal / deselect', category: 'navigation' },
-  { keys: 'G then D', label: 'Перейти к Дашборду', key: 'G then D', description: 'Navigate to Dashboard', category: 'navigation' },
+  { keys: 'G then D', label: 'Перейти на главную', key: 'G then D', description: 'Navigate to Dashboard', category: 'navigation' },
   { keys: 'G then E', label: 'Перейти к Редактору', key: 'G then E', description: 'Navigate to Editor', category: 'navigation' },
   { keys: 'G then T', label: 'Перейти к Инструментам', key: 'G then T', description: 'Navigate to Tools', category: 'navigation' },
   { keys: 'G then B', label: 'Перейти к Биллингу', key: 'G then B', description: 'Navigate to Billing', category: 'navigation' },
