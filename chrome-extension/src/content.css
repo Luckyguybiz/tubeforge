@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TubeForge Chrome Extension — Content Styles
+   Injected into YouTube pages for download button & format menu
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Download Button ─────────────────────────────────────────────── */
+
+.tubeforge-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  margin: 0 4px;
+  border: none;
+  border-radius: 18px;
+  background: #4f46e5;
+  color: #fff;
+  font-family: 'Roboto', 'YouTube Noto', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 36px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 100;
+  position: relative;
+  vertical-align: middle;
+}
+
+.tubeforge-dl-btn:hover {
+  background: #4338ca;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+  transform: translateY(-1px);
+}
+
+.tubeforge-dl-btn:active {
+  background: #3730a3;
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.tubeforge-dl-btn svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.tubeforge-dl-btn span {
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+/* Spinner animation */
+.tubeforge-spinner {
+  animation: tubeforge-spin 1s linear infinite;
+}
+
+@keyframes tubeforge-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Shorts layout — vertical action bar */
+ytd-reel-player-overlay-renderer .tubeforge-dl-btn,
+#actions .tubeforge-dl-btn {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+ytd-reel-player-overlay-renderer .tubeforge-dl-btn span,
+#actions .tubeforge-dl-btn span {
+  display: none;
+}
+
+/* ── Quick Download Menu ─────────────────────────────────────────── */
+
+.tubeforge-menu {
+  position: fixed;
+  z-index: 99999;
+  min-width: 280px;
+  max-width: 340px;
+  background: #1e1e2e;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+  overflow: hidden;
+  font-family: 'Roboto', 'YouTube Noto', Arial, sans-serif;
+  animation: tubeforge-menu-in 0.18s ease-out;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+@keyframes tubeforge-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Menu Header */
+.tubeforge-menu-header {
+  padding: 12px 14px 8px;
+}
+
+.tubeforge-menu-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.tubeforge-menu-logo strong {
+  color: #c7d2fe;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tubeforge-menu-title {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Section Labels */
+.tubeforge-menu-label {
+  padding: 8px 14px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Separator */
+.tubeforge-menu-sep {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.1);
+  margin: 4px 0;
+}
+
+/* Format Items */
+.tubeforge-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.tubeforge-menu-item:hover {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.tubeforge-menu-item:active {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.tubeforge-menu-item-label {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tubeforge-menu-item-size {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 400;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.tubeforge-menu-footer {
+  padding: 8px 14px;
+  text-align: center;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.tubeforge-menu-footer a {
+  color: #6366f1;
+  font-size: 11px;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.tubeforge-menu-footer a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* ── YouTube dark/light theme adaptive ───────────────────────────── */
+
+/* Light theme detection — YouTube uses html[dark] attribute */
+html:not([dark]) .tubeforge-menu {
+  background: #ffffff;
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(99, 102, 241, 0.08);
+}
+
+html:not([dark]) .tubeforge-menu-logo strong {
+  color: #4338ca;
+}
+
+html:not([dark]) .tubeforge-menu-title {
+  color: #64748b;
+}
+
+html:not([dark]) .tubeforge-menu-label {
+  color: #6366f1;
+}
+
+html:not([dark]) .tubeforge-menu-sep {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+html:not([dark]) .tubeforge-menu-item:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+html:not([dark]) .tubeforge-menu-item:active {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+html:not([dark]) .tubeforge-menu-item-label {
+  color: #1e293b;
+}
+
+html:not([dark]) .tubeforge-menu-item-size {
+  color: #94a3b8;
+}
+
+html:not([dark]) .tubeforge-menu-footer {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+/* ── Responsive / mobile YouTube ─────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .tubeforge-dl-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 16px;
+  }
+
+  .tubeforge-dl-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tubeforge-menu {
+    min-width: 240px;
+    max-width: 300px;
+  }
+}
