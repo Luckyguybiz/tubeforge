@@ -221,20 +221,21 @@ export function YoutubeDownloader() {
     setDownloadEta(0);
     setDownloadSpeed(0);
 
-    // Timeout for the initial API call (not the download stream)
+    // Timeout for the initial API response (resolution + first byte).
+    // Node runtime needs time to try multiple Innertube clients + fallbacks.
     const postTimeout = setTimeout(() => {
       if (!controller.signal.aborted) controller.abort();
-    }, 20_000);
+    }, 45_000);
 
     try {
       const isAudioOnly = quality === 'audio';
       const ext = isAudioOnly ? 'mp3' : (format?.toLowerCase() ?? 'mp4');
       const fname = `${videoInfo.title || videoInfo.videoId || 'video'}.${ext}`;
 
-      // Send videoId directly to the Edge stream route.
-      // CRITICAL: The Edge route resolves the innertube URL AND downloads it
-      // in the same request (same IP), because YouTube signs stream URLs
-      // to the requester's IP address.
+      // Send videoId to the stream route (Node runtime).
+      // The route resolves the URL via Innertube/VPS/Cobalt AND proxies
+      // the download in the same request (same IP), because YouTube
+      // signs stream URLs to the requester's IP address.
       const params = new URLSearchParams({
         videoId: videoInfo.videoId,
         quality,
