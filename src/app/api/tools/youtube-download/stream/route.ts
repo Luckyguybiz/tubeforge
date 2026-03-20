@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { decode } from '@auth/core/jwt';
 
 export const dynamic = 'force-dynamic';
 // Use Edge runtime for streaming — no body size limit & no execution timeout
@@ -8,7 +8,12 @@ export const dynamic = 'force-dynamic';
 //
 // IMPORTANT: Do NOT use auth() here — it calls Prisma (db.user.findUnique)
 // in the session callback, and Prisma does NOT work in Edge Runtime.
-// Use getToken() instead, which only decodes the JWT without DB access.
+// Use decode() from @auth/core/jwt to manually decrypt the Auth.js v5 JWE cookie.
+//
+// Auth.js v5 changed cookie names:
+//   Production (HTTPS): __Secure-authjs.session-token
+//   Development (HTTP):  authjs.session-token
+// The cookie value is encrypted with A256CBC-HS512 using AUTH_SECRET as key.
 export const runtime = 'edge';
 
 /* ─── Edge-compatible rate limiter (in-memory, best-effort) ──────── */
@@ -177,13 +182,38 @@ async function resolveYouTubeStream(
  *      → Direct proxy (for pre-resolved URLs, TikTok, etc.)
  * ═══════════════════════════════════════════════════════════════════════ */
 export async function GET(req: NextRequest) {
-  // Use getToken() instead of auth() — auth() triggers Prisma DB calls
-  // which crash in Edge Runtime. getToken() only decodes the JWT cookie.
-  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
-  const token = await getToken({ req, secret });
-  const userId = (token?.id as string) ?? token?.sub;
+  // Manually decrypt the Auth.js v5 JWE session cookie.
+  // Cannot use auth() — it triggers Prisma DB calls that crash in Edge Runtime.
+  // Cannot use getToken() — it looks for "next-auth.session-token" cookie name
+  // but Auth.js v5 uses "authjs.session-token" and encrypts as JWE.
+  const secret = process.env.AUTH_SECRET ?? '';
+  const isSecure = req.url.startsWith('https');
+  const cookieName = isSecure
+    ? '__Secure-authjs.session-token'
+    : 'authjs.session-token';
+  const cookieValue = req.cookies.get(cookieName)?.value;
+
+  if (!cookieValue) {
+    return NextResponse.json(
+      { error: 'Unauthorized — no session cookie' },
+      { status: 401 },
+    );
+  }
+
+  let userId: string | undefined;
+  try {
+    // decode() decrypts the JWE token using AUTH_SECRET + cookie name as salt
+    const decoded = await decode({ token: cookieValue, secret, salt: cookieName });
+    userId = (decoded?.id as string) ?? decoded?.sub;
+  } catch (err) {
+    console.error('[youtube-download/stream] JWT decode error:', err);
+  }
+
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Unauthorized — invalid session' },
+      { status: 401 },
+    );
   }
 
   // Simple in-memory rate limiting (best-effort in Edge)
