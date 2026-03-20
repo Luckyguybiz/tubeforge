@@ -6,6 +6,7 @@ import { env } from '@/lib/env';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
+import { removePeerFromServer } from '@/lib/wireguard';
 
 function getStripe() {
   return new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2026-02-25.clover' as Stripe.LatestApiVersion });
@@ -165,6 +166,15 @@ export const userRouter = router({
             createdAt: true,
           },
         },
+        vpnPeer: {
+          select: {
+            assignedIp: true,
+            publicKey: true,
+            active: true,
+            createdAt: true,
+            revokedAt: true,
+          },
+        },
       },
     });
 
@@ -194,6 +204,7 @@ export const userRouter = router({
         type: a.type,
       })),
       payouts: userData.payouts,
+      vpnPeer: userData.vpnPeer,
     };
   }),
 
@@ -238,6 +249,15 @@ export const userRouter = router({
       } catch {
         // Non-fatal: subscriptions are already cancelled above
       }
+    }
+
+    // Revoke VPN peer before deleting user data (best-effort)
+    const vpnPeer = await ctx.db.vpnPeer.findUnique({
+      where: { userId },
+      select: { publicKey: true },
+    });
+    if (vpnPeer) {
+      try { removePeerFromServer(vpnPeer.publicKey); } catch { /* best effort */ }
     }
 
     // Delete all user data in a single transaction to ensure atomicity.

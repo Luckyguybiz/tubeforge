@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { createLogger } from '@/lib/logger';
+import { removePeerFromServer } from '@/lib/wireguard';
 
 const log = createLogger('stripe');
 
@@ -76,6 +77,28 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  /** Revoke VPN access for a customer being downgraded to FREE */
+  async function revokeVpnForCustomer(stripeId: string) {
+    try {
+      const user = await db.user.findFirst({ where: { stripeId }, select: { id: true } });
+      if (!user) return;
+      const peer = await db.vpnPeer.findUnique({ where: { userId: user.id } });
+      if (!peer || !peer.active) return;
+      await db.vpnPeer.update({
+        where: { id: peer.id },
+        data: { active: false, revokedAt: new Date() },
+      });
+      try {
+        removePeerFromServer(peer.publicKey);
+      } catch (err) {
+        log.error('Failed to remove VPN peer from server during downgrade', { stripeId, error: String(err) });
+      }
+      log.info('VPN peer revoked due to plan downgrade', { stripeId, userId: user.id });
+    } catch (err) {
+      log.error('Failed to revoke VPN for customer', { stripeId, error: String(err) });
+    }
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -142,6 +165,7 @@ export async function POST(req: NextRequest) {
             throw err;
           }
         }
+        await revokeVpnForCustomer(sub.customer as string);
         break;
       }
       case 'customer.subscription.updated': {
@@ -176,6 +200,7 @@ export async function POST(req: NextRequest) {
               throw err;
             }
           }
+          await revokeVpnForCustomer(sub.customer as string);
           break;
         }
 
@@ -280,6 +305,7 @@ export async function POST(req: NextRequest) {
             throw err;
           }
         }
+        await revokeVpnForCustomer(sub.customer as string);
         break;
       }
       case 'customer.subscription.resumed': {

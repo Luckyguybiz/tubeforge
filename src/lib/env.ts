@@ -72,4 +72,9 @@ export const env = {
   // Email / SMTP
   SMTP_URL: process.env.SMTP_URL ?? '',
   EMAIL_FROM: process.env.EMAIL_FROM ?? '',
+
+  // VPN / WireGuard
+  VPN_ENCRYPTION_KEY: process.env.VPN_ENCRYPTION_KEY ?? '',
+  VPN_SERVER_PUBLIC_KEY: process.env.VPN_SERVER_PUBLIC_KEY ?? '',
+  VPN_SERVER_ENDPOINT: process.env.VPN_SERVER_ENDPOINT ?? '57.128.254.111:51820',
 } as const;

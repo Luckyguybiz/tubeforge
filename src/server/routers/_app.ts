@@ -12,6 +12,7 @@ import { assetRouter } from './asset';
 import { folderRouter } from './folder';
 import { referralRouter } from './referral';
 import { analyticsRouter } from './analytics';
+import { vpnRouter } from './vpn';
 
 export const appRouter = router({
   user: userRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   folder: folderRouter,
   referral: referralRouter,
   analytics: analyticsRouter,
+  vpn: vpnRouter,
 });
 
 export type AppRouter = typeof appRouter;

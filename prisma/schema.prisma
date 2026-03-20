@@ -69,6 +69,7 @@ model User {
   referredBy       String?
   referralEarnings Float        @default(0)
   payouts          Payout[]
+  vpnPeer          VpnPeer?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -243,4 +244,19 @@ model Payout {
 
   @@index([userId])
   @@index([userId, createdAt])
+}
+
+model VpnPeer {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicKey       String
+  encryptedPrivKey String   @db.Text
+  assignedIp      String    @unique
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  revokedAt       DateTime?
+
+  @@index([userId])
+  @@index([active])
 }

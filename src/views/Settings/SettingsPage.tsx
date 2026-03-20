@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { signOut, useSession } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/Skeleton';
+import QRCode from 'qrcode';
 import type { Theme } from '@/lib/types';
 
 /* ── Plan feature lists ──────────────────────────── */
@@ -104,6 +105,43 @@ export function SettingsPage() {
   const exportData = trpc.user.exportData.useQuery(undefined, {
     enabled: false, // only fetch on manual trigger via refetch()
   });
+
+  /* ── VPN / YouTube Access ──────────────────────── */
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [vpnGenerating, setVpnGenerating] = useState(false);
+  const vpnStatus = trpc.vpn.getStatus.useQuery();
+  const vpnGetConfig = trpc.vpn.getConfig.useQuery(undefined, { enabled: false });
+  const vpnRevoke = trpc.vpn.revokeConfig.useMutation({
+    onSuccess: () => { vpnStatus.refetch(); toast.success(t('settings.vpn.revoked')); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleVpnGenerate = useCallback(async () => {
+    setVpnGenerating(true);
+    try {
+      await vpnGetConfig.refetch();
+      await vpnStatus.refetch();
+    } finally {
+      setVpnGenerating(false);
+    }
+  }, [vpnGetConfig, vpnStatus]);
+
+  const handleVpnDownload = useCallback((config: string) => {
+    const blob = new Blob([config], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tubeforge-vpn.conf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const handleShowQr = useCallback(async (config: string) => {
+    const url = await QRCode.toDataURL(config, { width: 280, margin: 2 });
+    setQrDataUrl(url);
+  }, []);
 
   const handleNameBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     const val = e.target.value.trim();
@@ -700,6 +738,292 @@ export function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* ====================================================== */}
+      {/* SECTION: YouTube Access (VPN)                          */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <h2 style={sectionHeaderStyle}>{t('settings.vpn')}</h2>
+        <p style={sectionDescStyle}>{t('settings.vpnDesc')}</p>
+
+        {plan === 'FREE' ? (
+          /* Plan gate — upgrade prompt for free users */
+          <div style={{
+            padding: '24px 20px',
+            border: `1px dashed ${C.border}`,
+            borderRadius: 14,
+            textAlign: 'center',
+          }}>
+            <p style={{ color: C.sub, fontSize: 14, margin: '0 0 16px', lineHeight: 1.5 }}>
+              {t('settings.vpn.proRequired')}
+            </p>
+            <a
+              href="/billing"
+              style={{
+                ...btnBase,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: C.blue,
+                color: '#fff',
+                textDecoration: 'none',
+              }}
+            >
+              {t('settings.upgradeTo')} Pro
+            </a>
+          </div>
+        ) : vpnStatus.isLoading ? (
+          /* Loading state */
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Spinner size={16} color={C.sub} />
+            <span style={{ fontSize: 13, color: C.sub }}>{t('settings.loading')}</span>
+          </div>
+        ) : vpnStatus.data?.peer?.active ? (
+          /* Active config state */
+          <>
+            <div style={{
+              padding: '18px 20px',
+              background: C.surface,
+              borderRadius: 14,
+              border: `1px solid ${C.border}`,
+              marginBottom: 16,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: C.green,
+                  display: 'inline-block',
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  background: `${C.green}18`,
+                  color: C.green,
+                  letterSpacing: 0.3,
+                }}>
+                  {t('settings.vpn.active')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13 }}>
+                <div>
+                  <span style={{ color: C.sub, fontWeight: 600 }}>{t('settings.vpn.ip')}: </span>
+                  <span style={{ color: C.text, fontFamily: 'monospace' }}>{vpnStatus.data.peer.assignedIp}</span>
+                </div>
+                <div>
+                  <span style={{ color: C.sub, fontWeight: 600 }}>{t('settings.vpn.created')}: </span>
+                  <span style={{ color: C.text }}>{new Date(vpnStatus.data.peer.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              padding: '14px 18px',
+              background: `${C.blue}0a`,
+              border: `1px solid ${C.blue}20`,
+              borderRadius: 12,
+              marginBottom: 16,
+              fontSize: 13,
+              color: C.sub,
+              lineHeight: 1.6,
+            }}>
+              {t('settings.vpn.instructions')}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  vpnGetConfig.refetch().then((r) => {
+                    if (r.data?.config) handleVpnDownload(r.data.config);
+                  });
+                }}
+                disabled={vpnGetConfig.isFetching}
+                style={{
+                  ...btnBase,
+                  background: C.surface,
+                  color: C.text,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  opacity: vpnGetConfig.isFetching ? 0.7 : 1,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {t('settings.vpn.download')}
+              </button>
+              <button
+                onClick={() => {
+                  vpnGetConfig.refetch().then((r) => {
+                    if (r.data?.config) handleShowQr(r.data.config);
+                  });
+                }}
+                disabled={vpnGetConfig.isFetching}
+                style={{
+                  ...btnBase,
+                  background: C.surface,
+                  color: C.text,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  opacity: vpnGetConfig.isFetching ? 0.7 : 1,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                {t('settings.vpn.showQr')}
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm(t('settings.vpn.revokeConfirm'))) {
+                    vpnRevoke.mutate();
+                  }
+                }}
+                disabled={vpnRevoke.isPending}
+                style={{
+                  ...btnBase,
+                  background: 'transparent',
+                  color: C.accent,
+                  border: `1px solid ${C.accent}60`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  opacity: vpnRevoke.isPending ? 0.7 : 1,
+                }}
+              >
+                {vpnRevoke.isPending ? (
+                  <Spinner size={14} color={C.accent} />
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18" />
+                    <path d="M6 6l12 12" />
+                  </svg>
+                )}
+                {t('settings.vpn.revoke')}
+              </button>
+            </div>
+          </>
+        ) : vpnStatus.data?.peer && !vpnStatus.data.peer.active ? (
+          /* Revoked state */
+          <div style={{
+            padding: '24px 20px',
+            border: `1px dashed ${C.border}`,
+            borderRadius: 14,
+            textAlign: 'center',
+          }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 16,
+              padding: '4px 12px',
+              borderRadius: 6,
+              background: `${C.accent}15`,
+              color: C.accent,
+              fontSize: 12,
+              fontWeight: 700,
+            }}>
+              {t('settings.vpn.revoked')}
+            </div>
+            <p style={{ color: C.sub, fontSize: 13, margin: '0 0 16px', lineHeight: 1.5 }}>
+              {t('settings.vpn.instructions')}
+            </p>
+            <button
+              onClick={handleVpnGenerate}
+              disabled={vpnGenerating}
+              style={{
+                ...btnBase,
+                background: C.blue,
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                opacity: vpnGenerating ? 0.7 : 1,
+              }}
+            >
+              {vpnGenerating ? (
+                <><Spinner size={14} color="#fff" /> {t('settings.vpn.generating')}</>
+              ) : t('settings.vpn.regenerate')}
+            </button>
+          </div>
+        ) : (
+          /* No config state */
+          <div style={{
+            padding: '24px 20px',
+            border: `1px dashed ${C.border}`,
+            borderRadius: 14,
+            textAlign: 'center',
+          }}>
+            <p style={{ color: C.sub, fontSize: 13, margin: '0 0 16px', lineHeight: 1.5 }}>
+              {t('settings.vpn.instructions')}
+            </p>
+            <button
+              onClick={handleVpnGenerate}
+              disabled={vpnGenerating}
+              style={{
+                ...btnBase,
+                background: C.blue,
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                opacity: vpnGenerating ? 0.7 : 1,
+              }}
+            >
+              {vpnGenerating ? (
+                <><Spinner size={14} color="#fff" /> {t('settings.vpn.generating')}</>
+              ) : t('settings.vpn.generate')}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* QR Code overlay */}
+      {qrDataUrl && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => setQrDataUrl(null)}
+        >
+          <div
+            style={{
+              background: C.surface,
+              borderRadius: 16,
+              padding: 32,
+              textAlign: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>
+              {t('settings.vpn.qrTitle')}
+            </h3>
+            <img src={qrDataUrl} alt="QR" style={{ width: 280, height: 280 }} />
+            <p style={{ marginTop: 12, color: C.sub, fontSize: 13, maxWidth: 280, lineHeight: 1.5 }}>
+              {t('settings.vpn.instructions')}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ====================================================== */}
       {/* SECTION 4: Theme                                       */}
