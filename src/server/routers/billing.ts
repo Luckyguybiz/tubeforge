@@ -27,10 +27,13 @@ export const billingRouter = router({
     const stripe = getStripe();
     const subscriptions = await stripe.subscriptions.list({
       customer: user.stripeId,
-      status: 'active',
-      limit: 1,
+      limit: 5,
     });
-    const sub = subscriptions.data[0] ?? null;
+    // Filter to active, past_due, or trialing — ignore canceled/incomplete
+    const relevantSub = subscriptions.data.find(
+      (s) => s.status === 'active' || s.status === 'past_due' || s.status === 'trialing',
+    );
+    const sub = relevantSub ?? null;
     if (!sub) return { plan: user.plan, subscription: null };
     return {
       plan: user.plan,
@@ -108,6 +111,41 @@ export const billingRouter = router({
           code: 'INTERNAL_SERVER_ERROR',
           message: `Invalid Stripe price/product config: expected price_ or prod_ prefix, got: ${envRef.slice(0, 8)}...`,
         });
+      }
+
+      // Check if the user already has an active/trialing/past_due subscription.
+      // If so, update the existing subscription (plan change) instead of creating a new checkout.
+      if (customerId) {
+        const existingSubs = await stripe.subscriptions.list({
+          customer: customerId,
+          limit: 5,
+        });
+        const activeSub = existingSubs.data.find(
+          (s) => s.status === 'active' || s.status === 'past_due' || s.status === 'trialing',
+        );
+        if (activeSub) {
+          const currentItem = activeSub.items.data[0];
+          if (!currentItem) {
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Existing subscription has no items' });
+          }
+          // If they're already on this price, no change needed — send to portal
+          if (currentItem.price?.id === resolvedPriceId) {
+            const appUrl = env.NEXT_PUBLIC_APP_URL.startsWith('http')
+              ? env.NEXT_PUBLIC_APP_URL
+              : `https://${env.NEXT_PUBLIC_APP_URL}`;
+            const portalSession = await stripe.billingPortal.sessions.create({
+              customer: customerId,
+              return_url: `${appUrl}/dashboard`,
+            });
+            return { url: portalSession.url };
+          }
+          // Update the subscription to the new price with prorated billing
+          await stripe.subscriptions.update(activeSub.id, {
+            items: [{ id: currentItem.id, price: resolvedPriceId }],
+            proration_behavior: 'create_prorations',
+          });
+          return { url: null, updated: true };
+        }
       }
 
       const appUrl = env.NEXT_PUBLIC_APP_URL.startsWith('http')

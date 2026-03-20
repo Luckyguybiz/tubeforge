@@ -984,6 +984,24 @@ export function Dashboard() {
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
+  /* ── Auto-trigger checkout when arriving from pricing CTA ── */
+  const initCheckout = trpc.billing.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) window.location.href = data.url;
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get('initCheckout');
+    if (plan === 'PRO' || plan === 'STUDIO') {
+      window.history.replaceState({}, '', '/dashboard');
+      initCheckout.mutate({ plan });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Show toast on successful plan upgrade ───── */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "TubeForge — YouTube Video Downloader",
+  "name": "__MSG_extName__",
   "short_name": "TubeForge",
   "version": "1.0.0",
-  "description": "Скачивайте YouTube видео в один клик. Выбирайте качество от 360p до 1080p или только аудио MP3. Быстро, бесплатно, без рекламы.",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "author": "TubeForge",
   "homepage_url": "https://tubeforge.co",
   "icons": {
@@ -30,7 +31,7 @@
       "32": "icons/icon32.png",
       "48": "icons/icon48.png"
     },
-    "default_title": "TubeForge — Скачать видео"
+    "default_title": "__MSG_extTitle__"
   },
   "content_scripts": [
     {

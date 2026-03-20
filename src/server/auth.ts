@@ -5,14 +5,14 @@
  * on the user's current domain, but AUTH_URL overrides redirect_uri to a
  * different domain, so the callback can't read the cookie → "Configuration" error.
  */
-const _hadAuthUrl = process.env.AUTH_URL;
-const _hadNextAuthUrl = process.env.NEXTAUTH_URL;
+const _hadAuthUrl = !!process.env.AUTH_URL;
+const _hadNextAuthUrl = !!process.env.NEXTAUTH_URL;
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 if (_hadAuthUrl || _hadNextAuthUrl) {
   console.warn('[auth][init] Deleted env vars to prevent PKCE cookie mismatch:',
-    _hadAuthUrl ? `AUTH_URL=${_hadAuthUrl}` : '',
-    _hadNextAuthUrl ? `NEXTAUTH_URL=${_hadNextAuthUrl}` : '',
+    _hadAuthUrl ? 'AUTH_URL (was set)' : '',
+    _hadNextAuthUrl ? 'NEXTAUTH_URL (was set)' : '',
   );
 }
 
@@ -20,6 +20,7 @@ import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { db } from '@/server/db';
+import { env } from '@/lib/env';
 
 // Capture last auth error for diagnostics
 let _lastAuthError: unknown = null;
@@ -28,13 +29,13 @@ export function getLastAuthError() { return _lastAuthError; }
 export const { handlers, signIn, signOut, auth } = NextAuth({
   debug: process.env.NODE_ENV !== 'production',
   trustHost: true,
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  secret: env.AUTH_SECRET,
   adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
   providers: [
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID ?? '',
-      clientSecret: process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET ?? '',
+      clientId: env.AUTH_GOOGLE_ID,
+      clientSecret: env.AUTH_GOOGLE_SECRET,
     }),
   ],
   logger: {

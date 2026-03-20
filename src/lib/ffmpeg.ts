@@ -8,11 +8,17 @@
  * 4. Worker loads JS via importScripts(blobURL) — CSP allows blob:
  * 5. Worker passes wasmBinary (ArrayBuffer) directly to createFFmpegCore
  *    so Emscripten never does its own fetch() (which fails under CSP)
+ *
+ * License: Uses @ffmpeg/core@0.12.6 which is LGPL-2.1+ licensed.
+ * The GPL build (with --enable-gpl --enable-libx264 --enable-libx265) is a
+ * separate package (@ffmpeg/core-mt) and is intentionally NOT used here
+ * to maintain commercial SaaS compatibility.
  */
 
 const CORE_CDNS = [
-  'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd',
-  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd',
+  '/ffmpeg', // Local files in public/ffmpeg/ — preferred (no CORS, no CDN latency)
+  'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
+  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
 ];
 
 /* ── Worker inline code ── */

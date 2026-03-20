@@ -32,8 +32,8 @@ const puppeteer = require('puppeteer');
         const result = await page.evaluate(async (outputExt, ffArgs) => {
           const CDNS = [
             window.location.origin + '/ffmpeg',
-            'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd',
-            'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd',
+            'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
+            'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
           ];
 
           // Create raw YUV420p video: 4 frames of 64x64

@@ -14,7 +14,21 @@
 
   const COBALT_API = 'https://api.cobalt.tools';
 
-  /* ── DOM Elements ────────────────────────────────────────────────── */
+  /* ── i18n helper ──────────────────────────────────────────────── */
+
+  const msg = (key, substitutions) => chrome.i18n.getMessage(key, substitutions) || key;
+
+  /* ── Localize static HTML elements on load ────────────────────── */
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    const translated = msg(key);
+    if (translated && translated !== key) {
+      el.textContent = translated;
+    }
+  });
+
+  /* ── DOM Elements ────────────────────────────────────────────── */
 
   const stateLoading = document.getElementById('state-loading');
   const stateError = document.getElementById('state-error');
@@ -30,13 +44,13 @@
 
   const tabButtons = document.querySelectorAll('.tab');
 
-  /* ── State ────────────────────────────────────────────────────────── */
+  /* ── State ────────────────────────────────────────────────────── */
 
   let videoData = null;
   let currentTabUrl = null;
   let activeTab = 'combined';
 
-  /* ── Init ──────────────────────────────────────────────────────────── */
+  /* ── Init ──────────────────────────────────────────────────────── */
 
   async function init() {
     showState('loading');
@@ -44,7 +58,7 @@
     // First check if we're on a YouTube video page
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.url || !isYouTubeVideo(tab.url)) {
-      showError('Откройте видео на YouTube,<br>чтобы скачать его.');
+      showError(msg('errorNotYouTube'));
       return;
     }
 
@@ -71,7 +85,7 @@
     });
   }
 
-  /* ── UI States ───────────────────────────────────────────────────── */
+  /* ── UI States ───────────────────────────────────────────────── */
 
   function showState(state) {
     stateLoading.style.display = state === 'loading' ? '' : 'none';
@@ -79,8 +93,8 @@
     stateVideo.style.display = state === 'video' ? '' : 'none';
   }
 
-  function showError(msg) {
-    errorMessage.innerHTML = msg;
+  function showError(text) {
+    errorMessage.textContent = text;
     showState('error');
   }
 
@@ -89,7 +103,7 @@
     const videoId = extractVideoId(youtubeUrl);
     videoData = {
       videoId,
-      title: 'YouTube видео',
+      title: msg('youtubeVideo'),
       author: '',
       lengthSeconds: 0,
       thumbnail: videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '',
@@ -99,7 +113,7 @@
     if (videoId && videoData.thumbnail) {
       videoThumb.src = videoData.thumbnail;
     }
-    videoTitle.textContent = 'Видео (данные извлекаются через Cobalt)';
+    videoTitle.textContent = msg('cobaltFallbackTitle');
     videoAuthor.textContent = '';
     videoDuration.textContent = '';
 
@@ -117,10 +131,10 @@
     }
 
     // Title
-    videoTitle.textContent = videoData.title || 'Без названия';
+    videoTitle.textContent = videoData.title || msg('untitled');
 
     // Author
-    videoAuthor.textContent = videoData.author || 'Неизвестный автор';
+    videoAuthor.textContent = videoData.author || msg('unknownAuthor');
 
     // Duration
     videoDuration.textContent = formatDuration(videoData.lengthSeconds);
@@ -137,7 +151,7 @@
     }
   }
 
-  /* ── Direct format rendering ────────────────────────────────────── */
+  /* ── Direct format rendering ────────────────────────────────── */
 
   function renderFormats() {
     formatList.innerHTML = '';
@@ -177,7 +191,7 @@
     // Add Cobalt separator and options at the bottom
     const sep = document.createElement('div');
     sep.className = 'cobalt-separator';
-    sep.innerHTML = '<span>или скачать через Cobalt</span>';
+    sep.innerHTML = `<span>${msg('orDownloadViaCobalt')}</span>`;
     formatList.appendChild(sep);
 
     appendCobaltOptions();
@@ -225,11 +239,11 @@
     meta.className = 'format-meta';
 
     if (format.type === 'combined') {
-      meta.textContent = 'Видео + Аудио • MP4';
+      meta.textContent = `${msg('videoAndAudio')} \u2022 MP4`;
     } else if (format.type === 'video-only') {
-      meta.textContent = `Только видео • ${format.mimeType?.includes('webm') ? 'WebM' : 'MP4'}`;
+      meta.textContent = `${msg('videoOnly')} \u2022 ${format.mimeType?.includes('webm') ? 'WebM' : 'MP4'}`;
     } else {
-      meta.textContent = `Аудио • ${format.mimeType?.includes('mp4') ? 'M4A' : 'WebM'}`;
+      meta.textContent = `${msg('audioLabel')} \u2022 ${format.mimeType?.includes('mp4') ? 'M4A' : 'WebM'}`;
     }
     details.appendChild(meta);
     item.appendChild(details);
@@ -245,7 +259,7 @@
     // Download button
     const dlBtn = document.createElement('button');
     dlBtn.className = 'format-dl-btn';
-    dlBtn.title = 'Скачать';
+    dlBtn.title = msg('download');
     dlBtn.innerHTML = dlIconSvg;
     dlBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -259,7 +273,7 @@
     return item;
   }
 
-  /* ── Cobalt format rendering ───────────────────────────────────── */
+  /* ── Cobalt format rendering ───────────────────────────────── */
 
   function renderCobaltFormats() {
     formatList.innerHTML = '';
@@ -268,11 +282,11 @@
 
   function appendCobaltOptions() {
     const qualities = [
-      { quality: '1080', label: '1080p', desc: 'Full HD • MP4', iconClass: 'hd', iconText: 'FHD' },
-      { quality: '720', label: '720p', desc: 'HD • MP4', iconClass: 'video', iconText: 'HD' },
-      { quality: '480', label: '480p', desc: 'SD • MP4', iconClass: 'video', iconText: 'SD' },
-      { quality: '360', label: '360p', desc: 'Экономия трафика • MP4', iconClass: 'video', iconText: 'SD' },
-      { quality: 'audio', label: 'Аудио MP3', desc: '320kbps • MP3', iconClass: 'audio', iconText: 'MP3' },
+      { quality: '1080', label: '1080p', desc: 'Full HD \u2022 MP4', iconClass: 'hd', iconText: 'FHD' },
+      { quality: '720', label: '720p', desc: 'HD \u2022 MP4', iconClass: 'video', iconText: 'HD' },
+      { quality: '480', label: '480p', desc: 'SD \u2022 MP4', iconClass: 'video', iconText: 'SD' },
+      { quality: '360', label: '360p', desc: `${msg('dataSaver')} \u2022 MP4`, iconClass: 'video', iconText: 'SD' },
+      { quality: 'audio', label: msg('audioMp3'), desc: '320kbps \u2022 MP3', iconClass: 'audio', iconText: 'MP3' },
     ];
 
     // Filter based on active tab
@@ -315,7 +329,7 @@
       // Download button
       const dlBtn = document.createElement('button');
       dlBtn.className = 'format-dl-btn';
-      dlBtn.title = 'Скачать через Cobalt';
+      dlBtn.title = msg('downloadViaCobalt');
       dlBtn.innerHTML = dlIconSvg;
       dlBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -334,7 +348,7 @@
       if (audioQ) {
         const sep = document.createElement('div');
         sep.className = 'cobalt-separator';
-        sep.innerHTML = '<span>Аудио</span>';
+        sep.innerHTML = `<span>${msg('audioLabel')}</span>`;
         formatList.appendChild(sep);
 
         const item = document.createElement('div');
@@ -364,7 +378,7 @@
 
         const dlBtn = document.createElement('button');
         dlBtn.className = 'format-dl-btn';
-        dlBtn.title = 'Скачать аудио';
+        dlBtn.title = msg('downloadAudio');
         dlBtn.innerHTML = dlIconSvg;
         dlBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -378,7 +392,7 @@
     }
   }
 
-  /* ── Direct download ──────────────────────────────────────────── */
+  /* ── Direct download ──────────────────────────────────────── */
 
   function downloadDirect(format, btnEl) {
     if (!videoData) return;
@@ -401,7 +415,7 @@
     showDownloadFeedback(btnEl);
   }
 
-  /* ── Cobalt download ──────────────────────────────────────────── */
+  /* ── Cobalt download ──────────────────────────────────────── */
 
   async function downloadViaCobalt(quality, btnEl, rowEl) {
     const url = currentTabUrl;
@@ -472,10 +486,10 @@
       if (btnEl) {
         btnEl.classList.remove('downloading');
         btnEl.innerHTML = errorSvg;
-        btnEl.title = `Ошибка: ${err.message}`;
+        btnEl.title = msg('errorPrefix', [err.message]);
         setTimeout(() => {
           btnEl.innerHTML = dlIconSvg;
-          btnEl.title = 'Скачать';
+          btnEl.title = msg('download');
         }, 3000);
       }
     } finally {
@@ -486,7 +500,7 @@
     }
   }
 
-  /* ── Download feedback ─────────────────────────────────────────── */
+  /* ── Download feedback ─────────────────────────────────────── */
 
   function showDownloadFeedback(btnEl) {
     if (!btnEl) return;
@@ -498,7 +512,7 @@
     }, 3000);
   }
 
-  /* ── Tab handling ──────────────────────────────────────────────── */
+  /* ── Tab handling ──────────────────────────────────────────── */
 
   for (const tab of tabButtons) {
     tab.addEventListener('click', () => {
@@ -515,11 +529,11 @@
     });
   }
 
-  /* ── Retry button ─────────────────────────────────────────────── */
+  /* ── Retry button ─────────────────────────────────────────── */
 
   btnRetry.addEventListener('click', () => init());
 
-  /* ── SVG icons ────────────────────────────────────────────────── */
+  /* ── SVG icons ────────────────────────────────────────────── */
 
   const dlIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -540,7 +554,7 @@
     <line x1="6" y1="6" x2="18" y2="18"/>
   </svg>`;
 
-  /* ── Utilities ────────────────────────────────────────────────── */
+  /* ── Utilities ────────────────────────────────────────────── */
 
   function isYouTubeVideo(url) {
     try {
@@ -568,7 +582,7 @@
   }
 
   function formatDuration(seconds) {
-    if (!seconds || seconds <= 0) return 'Прямой эфир';
+    if (!seconds || seconds <= 0) return msg('liveStream');
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
@@ -591,7 +605,7 @@
       .slice(0, 150);
   }
 
-  /* ── Start ────────────────────────────────────────────────────── */
+  /* ── Start ────────────────────────────────────────────────── */
 
   init();
 })();

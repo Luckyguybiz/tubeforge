@@ -7,7 +7,7 @@ const puppeteer = require('puppeteer');
 
 const BASE_URL = 'https://tubeforge.co';
 
-const FFMPEG_JS_URL = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js';
+const FFMPEG_JS_URL = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js';
 const UTIL_JS_URL = 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js';
 const CORE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js';
 const WASM_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm';

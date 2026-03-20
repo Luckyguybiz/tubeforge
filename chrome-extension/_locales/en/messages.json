@@ -1,0 +1,104 @@
+{
+  "extName": {
+    "message": "TubeForge — YouTube Video Downloader",
+    "description": "Extension name shown in the Chrome Web Store and browser"
+  },
+  "extDescription": {
+    "message": "Download YouTube videos in one click. Choose quality from 360p to 1080p or audio-only MP3. Fast, free, no ads.",
+    "description": "Extension description for the Chrome Web Store"
+  },
+  "extTitle": {
+    "message": "TubeForge — Download Video",
+    "description": "Tooltip shown when hovering the extension icon"
+  },
+  "loadingText": {
+    "message": "Extracting video data…",
+    "description": "Loading state text in popup"
+  },
+  "errorNotYouTube": {
+    "message": "Open a YouTube video to download it.",
+    "description": "Error message when the user is not on a YouTube video page"
+  },
+  "btnRetry": {
+    "message": "Try again",
+    "description": "Retry button label"
+  },
+  "tabVideo": {
+    "message": "Video",
+    "description": "Tab label for combined video+audio formats"
+  },
+  "tabAudio": {
+    "message": "Audio",
+    "description": "Tab label for audio-only formats"
+  },
+  "footerHint": {
+    "message": "Downloads via your browser",
+    "description": "Footer hint text"
+  },
+  "youtubeVideo": {
+    "message": "YouTube video",
+    "description": "Fallback title when video data is not available"
+  },
+  "cobaltFallbackTitle": {
+    "message": "Video (data extracted via Cobalt)",
+    "description": "Title shown when using Cobalt as the extraction method"
+  },
+  "untitled": {
+    "message": "Untitled",
+    "description": "Fallback for missing video title"
+  },
+  "unknownAuthor": {
+    "message": "Unknown author",
+    "description": "Fallback for missing video author"
+  },
+  "orDownloadViaCobalt": {
+    "message": "or download via Cobalt",
+    "description": "Separator text for Cobalt download options"
+  },
+  "videoAndAudio": {
+    "message": "Video + Audio",
+    "description": "Format meta label for combined streams"
+  },
+  "videoOnly": {
+    "message": "Video only",
+    "description": "Format meta label for video-only streams"
+  },
+  "audioLabel": {
+    "message": "Audio",
+    "description": "Format meta label for audio-only streams"
+  },
+  "download": {
+    "message": "Download",
+    "description": "Download button tooltip"
+  },
+  "dataSaver": {
+    "message": "Data saver",
+    "description": "Label for low quality option"
+  },
+  "audioMp3": {
+    "message": "Audio MP3",
+    "description": "Label for audio MP3 format option"
+  },
+  "downloadViaCobalt": {
+    "message": "Download via Cobalt",
+    "description": "Tooltip for Cobalt download button"
+  },
+  "downloadAudio": {
+    "message": "Download audio",
+    "description": "Tooltip for audio download button"
+  },
+  "errorPrefix": {
+    "message": "Error: $ERROR$",
+    "description": "Error message prefix",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network timeout"
+      }
+    }
+  },
+  "liveStream": {
+    "message": "Live",
+    "description": "Label for live streams with no duration"
+  }
+}

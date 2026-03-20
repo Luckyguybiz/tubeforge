@@ -151,7 +151,14 @@ export function BillingPage() {
   const userPlan: PlanId = (session?.user?.plan as PlanId) ?? 'FREE';
 
   const createCheckout = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data) => { if (data.url) window.location.href = data.url; },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      } else if ('updated' in data && data.updated) {
+        toast.success(t('billing.planUpdated') || 'Plan updated successfully!');
+        router.refresh();
+      }
+    },
     onError: (err) => toast.error(err.message),
   });
 
@@ -167,6 +174,8 @@ export function BillingPage() {
   const [selectedDeals, setSelectedDeals] = useState<boolean[]>(() => DEALS.map(() => false));
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
@@ -182,9 +191,33 @@ export function BillingPage() {
     setSelectedDeals((prev) => prev.map((v, i) => (i === index ? !v : v)));
   }, []);
 
-  const handleApplyPromo = useCallback(() => {
-    if (promoCode.trim()) {
+  const handleApplyPromo = useCallback(async () => {
+    const code = promoCode.trim();
+    if (!code) return;
+
+    setPromoValidating(true);
+    setPromoError(null);
+    setPromoApplied(false);
+
+    try {
+      const res = await fetch('/api/tools/promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setPromoError(data.error || 'Invalid promo code');
+        return;
+      }
+
       setPromoApplied(true);
+      toast.success(data.label || 'Promo code applied!');
+    } catch {
+      setPromoError('Failed to validate promo code. Please try again.');
+    } finally {
+      setPromoValidating(false);
     }
   }, [promoCode]);
 
@@ -822,6 +855,7 @@ export function BillingPage() {
                     onChange={(e) => {
                       setPromoCode(e.target.value);
                       if (promoApplied) setPromoApplied(false);
+                      if (promoError) setPromoError(null);
                     }}
                     style={{
                       flex: 1,
@@ -846,6 +880,7 @@ export function BillingPage() {
                     onClick={handleApplyPromo}
                     onMouseEnter={() => setHoveredBtn('promo')}
                     onMouseLeave={() => setHoveredBtn(null)}
+                    disabled={promoValidating || promoApplied}
                     style={{
                       padding: '10px 18px',
                       borderRadius: 10,
@@ -858,15 +893,21 @@ export function BillingPage() {
                       color: promoApplied ? C.green : C.text,
                       fontSize: 13,
                       fontWeight: 600,
-                      cursor: 'pointer',
+                      cursor: promoValidating || promoApplied ? 'not-allowed' : 'pointer',
                       fontFamily: 'inherit',
                       transition: 'all .2s ease',
                       whiteSpace: 'nowrap',
+                      opacity: promoValidating ? 0.6 : 1,
                     }}
                   >
-                    {promoApplied ? t('billing.applied') : t('billing.apply')}
+                    {promoValidating ? '...' : promoApplied ? t('billing.applied') : t('billing.apply')}
                   </button>
                 </div>
+                {promoError && (
+                  <p style={{ fontSize: 12, color: C.red ?? '#ef4444', margin: '8px 0 0', lineHeight: 1.4 }}>
+                    {promoError}
+                  </p>
+                )}
               </div>
 
               {/* Divider */}

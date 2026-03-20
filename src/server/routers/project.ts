@@ -65,7 +65,12 @@ export const projectRouter = router({
     .query(async ({ ctx, input }) => {
       const { search, status, sortBy = 'updatedAt', sortOrder = 'desc', page = 1, limit = 20, cursor } = input ?? {};
 
-      const where: Record<string, unknown> = { userId: ctx.session.user.id };
+      const where: Record<string, unknown> = {
+        OR: [
+          { userId: ctx.session.user.id },
+          { team: { members: { some: { userId: ctx.session.user.id } } } },
+        ],
+      };
       if (search) {
         where.title = { contains: search, mode: 'insensitive' };
       }
@@ -302,7 +307,13 @@ export const projectRouter = router({
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
-        where: { id: input.id, userId: ctx.session.user.id },
+        where: {
+          id: input.id,
+          OR: [
+            { userId: ctx.session.user.id },
+            { team: { members: { some: { userId: ctx.session.user.id } } } },
+          ],
+        },
         select: {
           id: true,
           title: true,
@@ -387,8 +398,20 @@ export const projectRouter = router({
       const data: Prisma.ProjectUpdateInput = { ...rest };
       if (characters !== undefined) data.characters = characters as unknown as Prisma.InputJsonValue;
       if (thumbnailData !== undefined) data.thumbnailData = thumbnailData as unknown as Prisma.InputJsonValue;
+      // Verify ownership or team membership before updating
+      const existing = await ctx.db.project.findFirst({
+        where: {
+          id,
+          OR: [
+            { userId: ctx.session.user.id },
+            { team: { members: { some: { userId: ctx.session.user.id } } } },
+          ],
+        },
+        select: { id: true },
+      });
+      if (!existing) throw new TRPCError({ code: 'NOT_FOUND' });
       return ctx.db.project.update({
-        where: { id, userId: ctx.session.user.id },
+        where: { id },
         data,
         select: { id: true, title: true, status: true, updatedAt: true },
       });

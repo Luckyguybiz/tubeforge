@@ -124,7 +124,7 @@
             window.postMessage({
               type: 'TUBEFORGE_PLAYER_DATA',
               data: JSON.parse(JSON.stringify(data))
-            }, '*');
+            }, window.location.origin);
           }
         } catch(e) {
           console.log('[TubeForge injected] error:', e.message);
@@ -138,6 +138,7 @@
   // Listen for data from injected script
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
+    if (event.origin !== window.location.origin) return;
     if (event.data?.type === 'TUBEFORGE_PLAYER_DATA' && event.data.data) {
       processPlayerResponse(event.data.data);
     }
@@ -459,10 +460,18 @@
     for (const opt of cobaltOptions) {
       const item = document.createElement('div');
       item.className = 'tubeforge-menu-item';
-      item.innerHTML = `
-        <span class="tubeforge-menu-item-label">${opt.label}</span>
-        <span class="tubeforge-menu-item-size" style="color:#818cf8;font-size:10px">Cobalt</span>
-      `;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'tubeforge-menu-item-label';
+      labelSpan.textContent = opt.label;
+      item.appendChild(labelSpan);
+
+      const sizeSpan = document.createElement('span');
+      sizeSpan.className = 'tubeforge-menu-item-size';
+      sizeSpan.style.color = '#818cf8';
+      sizeSpan.style.fontSize = '10px';
+      sizeSpan.textContent = 'Cobalt';
+      item.appendChild(sizeSpan);
       item.addEventListener('click', () => {
         downloadViaCobalt(opt.quality);
         document.querySelector('.tubeforge-menu')?.remove();
@@ -496,10 +505,16 @@
   function createFormatItem(format, label, size) {
     const item = document.createElement('div');
     item.className = 'tubeforge-menu-item';
-    item.innerHTML = `
-      <span class="tubeforge-menu-item-label">${label}</span>
-      <span class="tubeforge-menu-item-size">${size}</span>
-    `;
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'tubeforge-menu-item-label';
+    labelSpan.textContent = label;
+    item.appendChild(labelSpan);
+
+    const sizeSpan = document.createElement('span');
+    sizeSpan.className = 'tubeforge-menu-item-size';
+    sizeSpan.textContent = size;
+    item.appendChild(sizeSpan);
     item.addEventListener('click', () => {
       downloadFormat(format);
       document.querySelector('.tubeforge-menu')?.remove();

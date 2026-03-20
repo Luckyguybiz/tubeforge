@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
@@ -123,6 +124,13 @@ export async function GET(req: NextRequest) {
  * Body: { url: string, quality?: 'hd' | 'sd', audioOnly?: boolean }
  */
 
+const tiktokDownloadSchema = z.object({
+  url: z.string().url().max(500),
+  quality: z.enum(['hd', 'sd']).optional(),
+  audioOnly: z.boolean().optional(),
+  removeWatermark: z.boolean().optional(),
+});
+
 const COBALT_API_URL =
   process.env.COBALT_API_URL || 'https://api.cobalt.tools';
 
@@ -150,23 +158,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: {
-    url?: string;
-    quality?: string;
-    audioOnly?: boolean;
-    removeWatermark?: boolean;
-  };
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { url, quality, audioOnly, removeWatermark } = body;
-
-  if (!url || !isValidTiktokUrl(url)) {
+  const parsed = tiktokDownloadSchema.safeParse(rawBody);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Missing or invalid TikTok URL' },
+      { error: 'Invalid request body', details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
+
+  const { url, quality, audioOnly, removeWatermark } = parsed.data;
+
+  if (!isValidTiktokUrl(url)) {
+    return NextResponse.json(
+      { error: 'Invalid TikTok URL' },
       { status: 400 },
     );
   }

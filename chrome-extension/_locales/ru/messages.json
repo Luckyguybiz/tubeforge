@@ -1,0 +1,104 @@
+{
+  "extName": {
+    "message": "TubeForge — YouTube Video Downloader",
+    "description": "Extension name shown in the Chrome Web Store and browser"
+  },
+  "extDescription": {
+    "message": "Скачивайте YouTube видео в один клик. Выбирайте качество от 360p до 1080p или только аудио MP3. Быстро, бесплатно, без рекламы.",
+    "description": "Extension description for the Chrome Web Store"
+  },
+  "extTitle": {
+    "message": "TubeForge — Скачать видео",
+    "description": "Tooltip shown when hovering the extension icon"
+  },
+  "loadingText": {
+    "message": "Извлечение данных видео…",
+    "description": "Loading state text in popup"
+  },
+  "errorNotYouTube": {
+    "message": "Откройте видео на YouTube, чтобы скачать его.",
+    "description": "Error message when the user is not on a YouTube video page"
+  },
+  "btnRetry": {
+    "message": "Попробовать снова",
+    "description": "Retry button label"
+  },
+  "tabVideo": {
+    "message": "Видео",
+    "description": "Tab label for combined video+audio formats"
+  },
+  "tabAudio": {
+    "message": "Аудио",
+    "description": "Tab label for audio-only formats"
+  },
+  "footerHint": {
+    "message": "Скачивание через ваш браузер",
+    "description": "Footer hint text"
+  },
+  "youtubeVideo": {
+    "message": "YouTube видео",
+    "description": "Fallback title when video data is not available"
+  },
+  "cobaltFallbackTitle": {
+    "message": "Видео (данные извлекаются через Cobalt)",
+    "description": "Title shown when using Cobalt as the extraction method"
+  },
+  "untitled": {
+    "message": "Без названия",
+    "description": "Fallback for missing video title"
+  },
+  "unknownAuthor": {
+    "message": "Неизвестный автор",
+    "description": "Fallback for missing video author"
+  },
+  "orDownloadViaCobalt": {
+    "message": "или скачать через Cobalt",
+    "description": "Separator text for Cobalt download options"
+  },
+  "videoAndAudio": {
+    "message": "Видео + Аудио",
+    "description": "Format meta label for combined streams"
+  },
+  "videoOnly": {
+    "message": "Только видео",
+    "description": "Format meta label for video-only streams"
+  },
+  "audioLabel": {
+    "message": "Аудио",
+    "description": "Format meta label for audio-only streams"
+  },
+  "download": {
+    "message": "Скачать",
+    "description": "Download button tooltip"
+  },
+  "dataSaver": {
+    "message": "Экономия трафика",
+    "description": "Label for low quality option"
+  },
+  "audioMp3": {
+    "message": "Аудио MP3",
+    "description": "Label for audio MP3 format option"
+  },
+  "downloadViaCobalt": {
+    "message": "Скачать через Cobalt",
+    "description": "Tooltip for Cobalt download button"
+  },
+  "downloadAudio": {
+    "message": "Скачать аудио",
+    "description": "Tooltip for audio download button"
+  },
+  "errorPrefix": {
+    "message": "Ошибка: $ERROR$",
+    "description": "Error message prefix",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network timeout"
+      }
+    }
+  },
+  "liveStream": {
+    "message": "Прямой эфир",
+    "description": "Label for live streams with no duration"
+  }
+}

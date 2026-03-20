@@ -43,6 +43,7 @@ function optionalInDev(name: string): string {
 /** Validated server-only environment variables. */
 export const env = {
   // Auth
+  AUTH_SECRET: requireEnv('AUTH_SECRET'),
   AUTH_GOOGLE_ID: requireEnv('AUTH_GOOGLE_ID'),
   AUTH_GOOGLE_SECRET: requireEnv('AUTH_GOOGLE_SECRET'),
 
@@ -62,4 +63,13 @@ export const env = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? '',
   RUNWAY_API_KEY: process.env.RUNWAY_API_KEY ?? '',
+
+  // YouTube / download APIs
+  YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY ?? '',
+  YT_DLP_API_URL: process.env.YT_DLP_API_URL ?? '',
+  COBALT_API_URL: process.env.COBALT_API_URL ?? '',
+
+  // Email / SMTP
+  SMTP_URL: process.env.SMTP_URL ?? '',
+  EMAIL_FROM: process.env.EMAIL_FROM ?? '',
 } as const;
