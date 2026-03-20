@@ -855,7 +855,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <HoverButton
-                  href="/register"
+                  href={plan.highlighted ? '/register?plan=PRO' : plan.price === '0\u20BD' ? '/register' : '/register?plan=STUDIO'}
                   style={plan.highlighted ? { ...primaryBtnStyle, width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px 28px' } : { ...outlineBtnStyle, width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px 28px' }}
                   hoverTransform={plan.highlighted ? 'translateY(-2px)' : 'translateY(-1px)'}
                   hoverBoxShadow={plan.highlighted ? '0 8px 32px rgba(79,70,229,0.5)' : undefined}
