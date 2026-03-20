@@ -100,7 +100,7 @@ function statusIcon(status) {
 
   console.log('='.repeat(72));
   console.log('  TubeForge E2E Test Suite');
-  console.log('  Target: https://tubeforge-omega.vercel.app');
+  console.log('  Target: https://tubeforge.co');
   console.log('  Date:   ' + new Date().toISOString());
   console.log('='.repeat(72));
   console.log('');

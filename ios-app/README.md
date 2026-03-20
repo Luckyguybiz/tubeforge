@@ -64,7 +64,7 @@ The default `capacitor.config.ts` points to the production Vercel deployment:
 
 ```typescript
 server: {
-  url: 'https://tubeforge-omega.vercel.app',
+  url: 'https://tubeforge.co',
   cleartext: false,
 }
 ```
@@ -256,7 +256,7 @@ PushNotifications.addListener('pushNotificationReceived', (notification) => {
 
 ## Universal Links
 
-The `public/apple-app-site-association` file enables universal links so that `tubeforge-omega.vercel.app` URLs open directly in the iOS app when installed.
+The `public/apple-app-site-association` file enables universal links so that `tubeforge.co` URLs open directly in the iOS app when installed.
 
 **Before deploying**, replace `TEAMID` with your actual Apple Developer Team ID:
 
@@ -273,7 +273,7 @@ The `public/apple-app-site-association` file enables universal links so that `tu
 }
 ```
 
-The file must be served from `https://tubeforge-omega.vercel.app/.well-known/apple-app-site-association` with `Content-Type: application/json`. Vercel serves files from `public/` at the root, so you may need to configure a rewrite or move it to `public/.well-known/apple-app-site-association`.
+The file must be served from `https://tubeforge.co/.well-known/apple-app-site-association` with `Content-Type: application/json`. Vercel serves files from `public/` at the root, so you may need to configure a rewrite or move it to `public/.well-known/apple-app-site-association`.
 
 ---
 

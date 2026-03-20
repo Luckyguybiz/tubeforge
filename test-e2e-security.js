@@ -4,7 +4,7 @@
  */
 const puppeteer = require('puppeteer');
 
-const BASE_URL = 'https://tubeforge-omega.vercel.app';
+const BASE_URL = 'https://tubeforge.co';
 
 async function runTests() {
   const results = {

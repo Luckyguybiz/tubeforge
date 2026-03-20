@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge.co';
 
   return [
     { url: baseUrl, lastModified: new Date('2026-03-17'), changeFrequency: 'weekly', priority: 1 },

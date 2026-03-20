@@ -17,7 +17,7 @@ interface ThemeState {
 
 /** Resolve system preference to dark/light */
 function getSystemPrefersDark(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true;
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
@@ -32,9 +32,9 @@ const CYCLE: ThemeMode[] = ['dark', 'light', 'system'];
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      mode: 'dark',
-      isDark: true,
-      theme: dark,
+      mode: 'light',
+      isDark: false,
+      theme: light,
       setMode: (mode) => {
         const resolved = resolveIsDark(mode);
         set({ mode, isDark: resolved, theme: resolved ? dark : light });

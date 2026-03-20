@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     // In production, load from the deployed Vercel URL
-    url: 'https://tubeforge-omega.vercel.app',
+    url: 'https://tubeforge.co',
     cleartext: false,
   },
   ios: {
