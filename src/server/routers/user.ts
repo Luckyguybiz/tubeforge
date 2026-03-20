@@ -68,6 +68,135 @@ export const userRouter = router({
       });
     }),
 
+  /**
+   * GDPR data export — returns all user-facing data as structured JSON.
+   * Rate-limited to 2 requests per hour per user (expensive query).
+   * NEVER returns OAuth tokens, secrets, stripeId, or internal IDs of other users.
+   */
+  exportData: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    // Strict rate limit: 2 requests per hour (3600 seconds)
+    const { success } = await rateLimit({
+      identifier: `export:${userId}`,
+      limit: 2,
+      window: 3600,
+    });
+    if (!success) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: RATE_LIMIT_ERROR,
+      });
+    }
+
+    const userData = await ctx.db.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        plan: true,
+        role: true,
+        referralCode: true,
+        referralEarnings: true,
+        aiUsage: true,
+        createdAt: true,
+        updatedAt: true,
+        projects: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            tags: true,
+            thumbnailUrl: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            scenes: {
+              select: {
+                id: true,
+                label: true,
+                prompt: true,
+                duration: true,
+                order: true,
+                status: true,
+                model: true,
+                videoUrl: true,
+              },
+            },
+          },
+        },
+        assets: {
+          select: {
+            id: true,
+            url: true,
+            filename: true,
+            type: true,
+            size: true,
+            folderId: true,
+            createdAt: true,
+          },
+        },
+        designFolders: {
+          select: {
+            id: true,
+            name: true,
+            parentId: true,
+            createdAt: true,
+          },
+        },
+        accounts: {
+          select: { provider: true, type: true },
+        },
+        payouts: {
+          select: {
+            id: true,
+            amount: true,
+            method: true,
+            note: true,
+            createdAt: true,
+          },
+        },
+        channels: {
+          select: {
+            id: true,
+            title: true,
+            thumbnail: true,
+            subscribers: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!userData) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+    }
+
+    return {
+      exportDate: new Date().toISOString(),
+      user: {
+        name: userData.name,
+        email: userData.email,
+        plan: userData.plan,
+        role: userData.role,
+        referralCode: userData.referralCode,
+        referralEarnings: userData.referralEarnings,
+        aiUsage: userData.aiUsage,
+        createdAt: userData.createdAt,
+        updatedAt: userData.updatedAt,
+      },
+      projects: userData.projects,
+      assets: userData.assets,
+      folders: userData.designFolders,
+      channels: userData.channels,
+      connectedAccounts: userData.accounts.map((a) => ({
+        provider: a.provider,
+        type: a.type,
+      })),
+      payouts: userData.payouts,
+    };
+  }),
+
   deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
     await checkUserRate(ctx.session.user.id);
     const userId = ctx.session.user.id;

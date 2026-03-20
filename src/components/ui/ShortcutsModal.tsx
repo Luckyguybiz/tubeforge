@@ -292,10 +292,10 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
             aria-label="Close"
             onClick={() => setShowShortcuts(false)}
             style={{
-              width: 36,
-              height: 36,
-              minWidth: 36,
-              minHeight: 36,
+              width: 44,
+              height: 44,
+              minWidth: 44,
+              minHeight: 44,
               borderRadius: 7,
               border: `1px solid ${C.border}`,
               background: 'transparent',

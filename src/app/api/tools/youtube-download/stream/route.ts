@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('yt-download');
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max
@@ -58,7 +61,7 @@ async function resolveViaCobalt(
 
   for (const cobaltUrl of COBALT_INSTANCES) {
     try {
-      console.log(`[yt-download] Trying Cobalt: ${cobaltUrl}`);
+      log.debug('Trying Cobalt instance', { instance: cobaltUrl });
       const res = await fetch(cobaltUrl, {
         method: 'POST',
         headers: {
@@ -70,15 +73,15 @@ async function resolveViaCobalt(
       });
 
       if (!res.ok) {
-        console.log(`[yt-download] Cobalt ${cobaltUrl} returned ${res.status}`);
+        log.debug('Cobalt returned non-OK status', { instance: cobaltUrl, status: res.status });
         continue;
       }
 
       const data = (await res.json()) as CobaltResponse;
-      console.log(`[yt-download] Cobalt response status: ${data.status}`);
+      log.debug('Cobalt response', { status: data.status });
 
       if (data.status === 'error') {
-        console.log(`[yt-download] Cobalt error: ${data.error}`);
+        log.debug('Cobalt error response', { error: data.error });
         continue;
       }
 
@@ -92,7 +95,7 @@ async function resolveViaCobalt(
         return data.picker[0].url;
       }
     } catch (err) {
-      console.log(`[yt-download] Cobalt ${cobaltUrl} failed:`, err instanceof Error ? err.message : 'unknown');
+      log.debug('Cobalt instance failed', { instance: cobaltUrl, error: err instanceof Error ? err.message : 'unknown' });
       continue;
     }
   }
@@ -208,7 +211,7 @@ async function resolveViaInnertube(
 ): Promise<{ url: string; mimeType: string; contentLength?: string; userAgent: string } | null> {
   for (const client of INNERTUBE_CLIENTS) {
     try {
-      console.log(`[yt-download] Trying Innertube client: ${client.name}`);
+      log.debug('Trying Innertube client', { client: client.name });
       const res = await fetch(
         'https://www.youtube.com/youtubei/v1/player?prettyPrint=false',
         {
@@ -226,7 +229,11 @@ async function resolveViaInnertube(
 
       const data = (await res.json()) as InnertubeResponse;
       if (data.playabilityStatus?.status !== 'OK') {
-        console.log(`[yt-download] Innertube ${client.name}: ${data.playabilityStatus?.status} - ${data.playabilityStatus?.reason}`);
+        log.debug('Innertube playability not OK', {
+          client: client.name,
+          status: data.playabilityStatus?.status,
+          reason: data.playabilityStatus?.reason,
+        });
         continue;
       }
 
@@ -236,7 +243,7 @@ async function resolveViaInnertube(
 
       const result = pickBestFormat(formats, adaptiveFormats, quality, audioOnly);
       if (result) {
-        console.log(`[yt-download] Innertube ${client.name} success!`);
+        log.debug('Innertube resolved successfully', { client: client.name });
         return { ...result, userAgent: client.userAgent };
       }
     } catch {
@@ -339,7 +346,7 @@ export async function GET(req: NextRequest) {
 
   // ── Mode A: Resolve videoId → download URL ─────────────────────────
   if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-    console.log(`[yt-download] Resolving videoId=${videoId} quality=${quality} audioOnly=${audioOnly}`);
+    log.info('Resolving video', { videoId, quality, audioOnly });
 
     // Strategy 1: Cobalt API (FASTEST — works from any IP)
     const cobaltUrl = await resolveViaCobalt(videoId, quality, audioOnly);
@@ -369,7 +376,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    console.log(`[yt-download] Resolution result: ${strategySummary || 'FAILED'}`);
+    log.info('Resolution result', { strategy: strategySummary || 'FAILED', videoId });
 
     if (!downloadUrl) {
       return NextResponse.json(
@@ -428,7 +435,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (!allowed) {
-    console.log(`[yt-download] URL not allowed: ${downloadUrl}`);
+    log.warn('URL not on allowlist', { hostname: new URL(downloadUrl).hostname });
     return NextResponse.json({ error: 'URL not allowed' }, { status: 403 });
   }
 
@@ -483,7 +490,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!upstream.ok && upstream.status !== 206) {
-      console.log(`[yt-download] Upstream returned ${upstream.status} from ${strategySummary}`);
+      log.warn('Upstream returned error', { status: upstream.status, strategy: strategySummary });
       return NextResponse.json(
         { error: 'Download source returned an error' },
         { status: 502 },
@@ -492,8 +499,7 @@ export async function GET(req: NextRequest) {
 
     return buildStreamResponse(upstream, filename);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[yt-download] Stream error:', message);
+    log.error('Stream error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'File download failed' }, { status: 502 });
   }
 }

@@ -223,10 +223,10 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
                   title={deletingId === p.id ? t('picker.confirmDelete') : t('picker.deleteProject')}
                   aria-label={deletingId === p.id ? `Confirm delete ${p.title || 'project'}` : `Delete ${p.title || 'project'}`}
                   style={{
-                    width: 32,
-                    height: 32,
-                    minWidth: 32,
-                    minHeight: 32,
+                    width: 44,
+                    height: 44,
+                    minWidth: 44,
+                    minHeight: 44,
                     borderRadius: 6,
                     border: 'none',
                     background: deletingId === p.id ? C.accent : 'transparent',

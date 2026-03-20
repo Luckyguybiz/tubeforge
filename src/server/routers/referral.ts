@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const referralRouter = router({
   /** Get current user's referral code and earnings */
@@ -28,6 +30,15 @@ export const referralRouter = router({
   claimReferral: protectedProcedure
     .input(z.object({ code: z.string().min(1).max(20) }))
     .mutation(async ({ ctx, input }) => {
+      const { success } = await rateLimit({
+        identifier: `referral-apply:${ctx.session.user.id}`,
+        limit: 5,
+        window: 60,
+      });
+      if (!success) {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
+      }
+
       const userId = ctx.session.user.id;
       const code = input.code.toUpperCase();
 

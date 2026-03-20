@@ -68,6 +68,8 @@ export function ExportButton({ projectId, projectTitle }: { projectId: string; p
       style={{
         width: 28,
         height: 28,
+        minWidth: 44,
+        minHeight: 44,
         borderRadius: 7,
         border: `1px solid ${isHovered ? C.borderActive : C.border}`,
         background: isHovered ? C.card : 'transparent',

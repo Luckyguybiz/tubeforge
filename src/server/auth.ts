@@ -5,15 +5,19 @@
  * on the user's current domain, but AUTH_URL overrides redirect_uri to a
  * different domain, so the callback can't read the cookie → "Configuration" error.
  */
+import { createLogger } from '@/lib/logger';
+
+const authLog = createLogger('auth');
+
 const _hadAuthUrl = !!process.env.AUTH_URL;
 const _hadNextAuthUrl = !!process.env.NEXTAUTH_URL;
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 if (_hadAuthUrl || _hadNextAuthUrl) {
-  console.warn('[auth][init] Deleted env vars to prevent PKCE cookie mismatch:',
-    _hadAuthUrl ? 'AUTH_URL (was set)' : '',
-    _hadNextAuthUrl ? 'NEXTAUTH_URL (was set)' : '',
-  );
+  authLog.warn('Deleted env vars to prevent PKCE cookie mismatch', {
+    AUTH_URL: _hadAuthUrl ? 'was set' : 'not set',
+    NEXTAUTH_URL: _hadNextAuthUrl ? 'was set' : 'not set',
+  });
 }
 
 import NextAuth from 'next-auth';
@@ -136,7 +140,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Only ignore unique constraint violations (P2002)
           const isPrismaConstraint = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
           if (!isPrismaConstraint) {
-            console.error('[auth] Failed to set referral code:', err);
+            authLog.error('Failed to set referral code', { error: err instanceof Error ? err.message : String(err) });
           }
         }
       }

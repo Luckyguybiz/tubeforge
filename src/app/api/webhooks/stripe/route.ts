@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('stripe');
 
 function getStripe() {
   return new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2026-02-25.clover' as Stripe.LatestApiVersion });
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
   function getPlanFromSub(sub: Stripe.Subscription): 'PRO' | 'STUDIO' | null {
     const item = sub.items?.data?.[0];
     if (!item) {
-      console.error('[Stripe] getPlanFromSub: subscription has no items, sub:', sub.id);
+      log.error('getPlanFromSub: subscription has no items', { subId: sub.id });
       return null;
     }
 
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
     if (priceId === proRef || productId === proRef) return 'PRO';
 
     // Unknown subscription — refuse to map to any plan
-    console.error('[Stripe] Unknown price/product, cannot determine plan. priceId:', priceId, 'productId:', productId, 'sub:', sub.id);
+    log.error('Unknown price/product, cannot determine plan', { priceId, productId, subId: sub.id });
     return null;
   }
 
@@ -69,7 +72,7 @@ export async function POST(req: NextRequest) {
       data: { plan },
     });
     if (result.count === 0) {
-      console.warn(`[Stripe webhook] No user found for stripeId: ${stripeId}`);
+      log.warn('No user found for stripeId', { stripeId });
     }
   }
 
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
           where: { stripeEventId: event.id },
         });
         if (existingCheckout) {
-          console.warn('[Stripe] Duplicate checkout.session.completed event, skipping:', event.id);
+          log.warn('Duplicate checkout.session.completed event, skipping', { eventId: event.id });
           break;
         }
 
@@ -102,7 +105,7 @@ export async function POST(req: NextRequest) {
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
-              console.warn('[Stripe] Duplicate checkout.session.completed event (unique constraint), skipping:', event.id);
+              log.warn('Duplicate checkout.session.completed event (unique constraint), skipping', { eventId: event.id });
             } else {
               throw err;
             }
@@ -119,7 +122,7 @@ export async function POST(req: NextRequest) {
           where: { stripeEventId: event.id },
         });
         if (existingDeletion) {
-          console.warn('[Stripe] Duplicate customer.subscription.deleted event, skipping:', event.id);
+          log.warn('Duplicate customer.subscription.deleted event, skipping', { eventId: event.id });
           break;
         }
 
@@ -134,7 +137,7 @@ export async function POST(req: NextRequest) {
         } catch (err) {
           const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
           if (isPrismaUnique) {
-            console.warn('[Stripe] Duplicate customer.subscription.deleted event (unique constraint), skipping:', event.id);
+            log.warn('Duplicate customer.subscription.deleted event (unique constraint), skipping', { eventId: event.id });
           } else {
             throw err;
           }
@@ -148,13 +151,13 @@ export async function POST(req: NextRequest) {
         // If the subscription is not active (e.g. past_due, canceled, unpaid),
         // downgrade to FREE instead of upgrading.
         if (sub.status !== 'active' && sub.status !== 'trialing') {
-          console.warn('[Stripe] Subscription not active, status:', sub.status, 'sub:', sub.id);
+          log.warn('Subscription not active', { status: sub.status, subId: sub.id });
           // Idempotency: skip if this event was already processed
           const existingInactive = await db.processedEvent.findUnique({
             where: { stripeEventId: event.id },
           });
           if (existingInactive) {
-            console.warn('[Stripe] Duplicate customer.subscription.updated event, skipping:', event.id);
+            log.warn('Duplicate customer.subscription.updated event, skipping', { eventId: event.id });
             break;
           }
           try {
@@ -168,7 +171,7 @@ export async function POST(req: NextRequest) {
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
-              console.warn('[Stripe] Duplicate customer.subscription.updated event (unique constraint), skipping:', event.id);
+              log.warn('Duplicate customer.subscription.updated event (unique constraint), skipping', { eventId: event.id });
             } else {
               throw err;
             }
@@ -181,7 +184,7 @@ export async function POST(req: NextRequest) {
           where: { stripeEventId: event.id },
         });
         if (existingUpdate) {
-          console.warn('[Stripe] Duplicate customer.subscription.updated event, skipping:', event.id);
+          log.warn('Duplicate customer.subscription.updated event, skipping', { eventId: event.id });
           break;
         }
 
@@ -198,7 +201,7 @@ export async function POST(req: NextRequest) {
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
-              console.warn('[Stripe] Duplicate customer.subscription.updated event (unique constraint), skipping:', event.id);
+              log.warn('Duplicate customer.subscription.updated event (unique constraint), skipping', { eventId: event.id });
             } else {
               throw err;
             }
@@ -212,7 +215,7 @@ export async function POST(req: NextRequest) {
 
         // Only activate if the subscription is active or trialing
         if (sub.status !== 'active' && sub.status !== 'trialing') {
-          console.warn('[Stripe] subscription.created but status is', sub.status, '— skipping plan update, sub:', sub.id);
+          log.warn('subscription.created but status is not active', { status: sub.status, subId: sub.id });
           break;
         }
 
@@ -221,7 +224,7 @@ export async function POST(req: NextRequest) {
           where: { stripeEventId: event.id },
         });
         if (existingCreated) {
-          console.warn('[Stripe] Duplicate customer.subscription.created event, skipping:', event.id);
+          log.warn('Duplicate customer.subscription.created event, skipping', { eventId: event.id });
           break;
         }
 
@@ -235,11 +238,11 @@ export async function POST(req: NextRequest) {
                 data: { plan: createdPlan },
               }),
             ]);
-            console.log('[Stripe] subscription.created — set plan to', createdPlan, 'for customer:', sub.customer);
+            log.info('subscription.created — plan set', { plan: createdPlan, customerId: sub.customer as string });
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
-              console.warn('[Stripe] Duplicate customer.subscription.created event (unique constraint), skipping:', event.id);
+              log.warn('Duplicate customer.subscription.created event (unique constraint), skipping', { eventId: event.id });
             } else {
               throw err;
             }
@@ -256,7 +259,7 @@ export async function POST(req: NextRequest) {
           where: { stripeEventId: event.id },
         });
         if (existingPaused) {
-          console.warn('[Stripe] Duplicate customer.subscription.paused event, skipping:', event.id);
+          log.warn('Duplicate customer.subscription.paused event, skipping', { eventId: event.id });
           break;
         }
 
@@ -268,11 +271,11 @@ export async function POST(req: NextRequest) {
               data: { plan: 'FREE' },
             }),
           ]);
-          console.log('[Stripe] subscription.paused — downgraded to FREE for customer:', sub.customer);
+          log.info('subscription.paused — downgraded to FREE', { customerId: sub.customer as string });
         } catch (err) {
           const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
           if (isPrismaUnique) {
-            console.warn('[Stripe] Duplicate customer.subscription.paused event (unique constraint), skipping:', event.id);
+            log.warn('Duplicate customer.subscription.paused event (unique constraint), skipping', { eventId: event.id });
           } else {
             throw err;
           }
@@ -288,7 +291,7 @@ export async function POST(req: NextRequest) {
           where: { stripeEventId: event.id },
         });
         if (existingResumed) {
-          console.warn('[Stripe] Duplicate customer.subscription.resumed event, skipping:', event.id);
+          log.warn('Duplicate customer.subscription.resumed event, skipping', { eventId: event.id });
           break;
         }
 
@@ -302,11 +305,11 @@ export async function POST(req: NextRequest) {
                 data: { plan: resumedPlan },
               }),
             ]);
-            console.log('[Stripe] subscription.resumed — restored plan to', resumedPlan, 'for customer:', sub.customer);
+            log.info('subscription.resumed — plan restored', { plan: resumedPlan, customerId: sub.customer as string });
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
-              console.warn('[Stripe] Duplicate customer.subscription.resumed event (unique constraint), skipping:', event.id);
+              log.warn('Duplicate customer.subscription.resumed event (unique constraint), skipping', { eventId: event.id });
             } else {
               throw err;
             }
@@ -344,11 +347,10 @@ export async function POST(req: NextRequest) {
             const restoredPlan = getPlanFromSub(paidSub);
             if (restoredPlan) {
               await updatePlan(invoiceCustomerId, restoredPlan);
-              console.log(
-                '[Stripe] invoice.paid — restored plan to', restoredPlan,
-                'for customer:', invoiceCustomerId,
-                '(was FREE due to prior payment failure)',
-              );
+              log.info('invoice.paid — restored plan (was FREE due to prior payment failure)', {
+                plan: restoredPlan,
+                customerId: invoiceCustomerId,
+              });
             }
           }
         }
@@ -387,7 +389,7 @@ export async function POST(req: NextRequest) {
           // P2002 = unique constraint violation → duplicate webhook, safe to ignore
           const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
           if (isPrismaUnique) {
-            console.warn('[Stripe] Duplicate invoice.paid event (unique constraint), skipping:', event.id);
+            log.warn('Duplicate invoice.paid event (unique constraint), skipping', { eventId: event.id });
           } else {
             throw err; // Re-throw real errors
           }
@@ -400,11 +402,11 @@ export async function POST(req: NextRequest) {
           ? failedInvoice.customer
           : failedInvoice.customer?.id;
 
-        console.warn(
-          '[Stripe] Payment failed for customer:', failedCustomerId,
-          'invoice:', failedInvoice.id,
-          'attempt:', failedInvoice.attempt_count,
-        );
+        log.warn('Payment failed', {
+          customerId: failedCustomerId ?? 'unknown',
+          invoiceId: failedInvoice.id,
+          attempt: failedInvoice.attempt_count ?? 0,
+        });
 
         if (failedCustomerId) {
           // Idempotency: skip if this event was already processed
@@ -412,7 +414,7 @@ export async function POST(req: NextRequest) {
             where: { stripeEventId: event.id },
           });
           if (existingFailed) {
-            console.warn('[Stripe] Duplicate invoice.payment_failed event, skipping:', event.id);
+            log.warn('Duplicate invoice.payment_failed event, skipping', { eventId: event.id });
             break;
           }
 
@@ -431,14 +433,14 @@ export async function POST(req: NextRequest) {
                   data: { plan: 'FREE' },
                 }),
               ]);
-              console.warn(
-                '[Stripe] Downgraded user to FREE after', attemptCount,
-                'failed payment attempts. Customer:', failedCustomerId,
-              );
+              log.warn('Downgraded user to FREE after failed payment attempts', {
+                attempts: attemptCount,
+                customerId: failedCustomerId,
+              });
             } catch (err) {
               const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
               if (isPrismaUnique) {
-                console.warn('[Stripe] Duplicate invoice.payment_failed event (unique constraint), skipping:', event.id);
+                log.warn('Duplicate invoice.payment_failed event (unique constraint), skipping', { eventId: event.id });
               } else {
                 throw err;
               }
@@ -451,17 +453,17 @@ export async function POST(req: NextRequest) {
               const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
               if (!isPrismaUnique) throw err;
             }
-            console.warn(
-              '[Stripe] Payment failed (attempt', attemptCount,
-              ') — not downgrading yet. Customer:', failedCustomerId,
-            );
+            log.warn('Payment failed — not downgrading yet', {
+              attempt: attemptCount,
+              customerId: failedCustomerId,
+            });
           }
         }
         break;
       }
     }
   } catch (err) {
-    console.error('[Stripe Webhook] Unhandled error:', err);
+    log.error('Unhandled webhook error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }

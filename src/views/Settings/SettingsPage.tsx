@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
@@ -64,6 +64,14 @@ export function SettingsPage() {
   const PLAN_FEATURES = useMemo(() => getPlanFeatures(t), [t]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
+  const [cookieConsent, setCookieConsent] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCookieConsent(localStorage.getItem('tf-cookie-consent'));
+    const handler = () => setCookieConsent(localStorage.getItem('tf-cookie-consent'));
+    window.addEventListener('tf-consent-changed', handler);
+    return () => window.removeEventListener('tf-consent-changed', handler);
+  }, []);
 
   const session = useSession();
   const profile = trpc.user.getProfile.useQuery();
@@ -91,6 +99,10 @@ export function SettingsPage() {
 
   const resetOnboarding = trpc.user.resetOnboarding.useMutation({
     onError: (err) => toast.error(err.message),
+  });
+
+  const exportData = trpc.user.exportData.useQuery(undefined, {
+    enabled: false, // only fetch on manual trigger via refetch()
   });
 
   const handleNameBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
@@ -960,7 +972,178 @@ export function SettingsPage() {
       </div>
 
       {/* ====================================================== */}
-      {/* SECTION 7: Account (Danger Zone)                       */}
+      {/* SECTION 7: Privacy & Cookies                           */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <h2 style={sectionHeaderStyle}>{t('settings.privacy')}</h2>
+        <p style={sectionDescStyle}>{t('settings.privacyDesc')}</p>
+
+        {/* Cookie status row */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 20px',
+          background: C.surface,
+          borderRadius: 12,
+          border: `1px solid ${C.border}`,
+          marginBottom: 16,
+          gap: 16,
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+              {t('settings.cookieStatus')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: cookieConsent === 'accepted' ? C.green : C.dim,
+                display: 'inline-block',
+                flexShrink: 0,
+              }} />
+              <span style={{ fontSize: 13, color: C.sub }}>
+                {cookieConsent === 'accepted' ? t('settings.cookieAccepted') : t('settings.cookieDeclined')}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const next = cookieConsent === 'accepted' ? 'declined' : 'accepted';
+              localStorage.setItem('tf-cookie-consent', next);
+              window.dispatchEvent(new Event('tf-consent-changed'));
+            }}
+            style={{
+              ...btnBase,
+              background: cookieConsent === 'accepted' ? C.surface : C.accent,
+              color: cookieConsent === 'accepted' ? C.text : '#fff',
+              border: `1px solid ${cookieConsent === 'accepted' ? C.border : C.accent}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            {cookieConsent === 'accepted' ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+                {t('settings.cookieToggleOff')}
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {t('settings.cookieToggleOn')}
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Info text */}
+        <div style={{
+          padding: '14px 18px',
+          background: `${C.blue}0a`,
+          border: `1px solid ${C.blue}20`,
+          borderRadius: 12,
+          marginBottom: 16,
+          fontSize: 13,
+          color: C.sub,
+          lineHeight: 1.6,
+        }}>
+          {t('settings.cookieInfo')}
+        </div>
+
+        {/* Privacy policy link */}
+        <a
+          href="/privacy"
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.accent,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            transition: 'opacity .15s',
+          }}
+        >
+          {t('settings.privacyPolicy')}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17l9.2-9.2M17 17V7H7" />
+          </svg>
+        </a>
+      </div>
+
+      {/* ====================================================== */}
+      {/* SECTION 8: Data Export (GDPR)                          */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <h2 style={sectionHeaderStyle}>{t('settings.exportData')}</h2>
+        <p style={sectionDescStyle}>{t('settings.exportDataDesc')}</p>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          flexWrap: 'wrap',
+        }}>
+          <button
+            onClick={() => {
+              exportData.refetch().then((result) => {
+                if (result.data) {
+                  const json = JSON.stringify(result.data, null, 2);
+                  const blob = new Blob([json], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `tubeforge-export-${new Date().toISOString().slice(0, 10)}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }
+              });
+            }}
+            disabled={exportData.isFetching}
+            style={{
+              ...btnBase,
+              background: C.surface,
+              color: C.text,
+              border: `1px solid ${C.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              opacity: exportData.isFetching ? 0.7 : 1,
+              cursor: exportData.isFetching ? 'wait' : 'pointer',
+            }}
+          >
+            {exportData.isFetching ? (
+              <>
+                <Spinner size={14} color={C.text} />
+                {t('settings.exportLoading')}
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {t('settings.exportData')}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ====================================================== */}
+      {/* SECTION 9: Account (Danger Zone)                       */}
       {/* ====================================================== */}
       <div style={{
         ...sectionStyle,

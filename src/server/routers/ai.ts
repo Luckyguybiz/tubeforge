@@ -20,8 +20,8 @@ async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 
   }
 }
 
-async function checkRateLimit(userId: string) {
-  const { success } = await rateLimit({ identifier: `ai:${userId}`, limit: 10, window: 60 });
+async function checkRateLimit(userId: string, endpoint: string = 'ai-gen', limit: number = 10) {
+  const { success } = await rateLimit({ identifier: `${endpoint}:${userId}`, limit, window: 60 });
   if (!success) {
     throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
   }
@@ -80,7 +80,7 @@ export const aiRouter = router({
       count: z.number().min(1).max(6).default(4),
     }))
     .mutation(async ({ ctx, input }) => {
-      await checkRateLimit(ctx.session.user.id);
+      await checkRateLimit(ctx.session.user.id, 'ai-thumbnail', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
       let res: Response;
@@ -124,7 +124,7 @@ export const aiRouter = router({
       style: z.enum(['realistic', 'anime', 'cinematic', 'minimalist', '3d', 'popart']).default('realistic'),
     }))
     .mutation(async ({ ctx, input }) => {
-      await checkRateLimit(ctx.session.user.id);
+      await checkRateLimit(ctx.session.user.id, 'ai-from-image', 10);
       // Charge 2 credits: one for GPT-4o Vision analysis, one for DALL-E generation
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
@@ -233,7 +233,7 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
       language: z.enum(['ru', 'en']).default('ru'),
     }))
     .mutation(async ({ ctx, input }) => {
-      await checkRateLimit(ctx.session.user.id);
+      await checkRateLimit(ctx.session.user.id, 'ai-metadata', 20);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
       let res: Response;
@@ -294,7 +294,7 @@ Return ONLY valid JSON, no markdown.`,
       duration: z.number().min(1).max(30).default(5),
     }))
     .mutation(async ({ ctx, input }) => {
-      await checkRateLimit(ctx.session.user.id);
+      await checkRateLimit(ctx.session.user.id, 'ai-video', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
       // Runway ML Gen-3 Alpha API

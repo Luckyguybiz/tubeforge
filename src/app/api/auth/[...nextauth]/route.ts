@@ -1,5 +1,8 @@
 import { handlers, getLastAuthError } from '@/server/auth';
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('auth-route');
 
 /**
  * Ensure the request is a proper NextRequest with nextUrl.
@@ -24,8 +27,10 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
 
   // Log domain info on callbacks so we can verify cookie domain matches
   if (isCallback) {
-    console.log('[auth-route] Callback domain:', url.hostname,
-      'cookies:', req.cookies.getAll().map(c => c.name).filter(n => n.includes('auth')).join(', ') || 'none');
+    log.debug('Callback domain check', {
+      hostname: url.hostname,
+      authCookies: req.cookies.getAll().map(c => c.name).filter(n => n.includes('auth')).join(', ') || 'none',
+    });
   }
 
   try {
@@ -36,7 +41,10 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
       const location = response.headers.get('location') ?? '';
       if (location.includes('error=Configuration') || location.includes('error=InvalidCheck')) {
         const lastError = getLastAuthError();
-        console.error('[auth-route] Callback failed. Location:', location, 'Last error:', lastError);
+        log.error('Callback failed', {
+          location,
+          lastError: lastError ? JSON.stringify(lastError) : 'none',
+        });
 
         // Never expose internal auth details to client
         return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
@@ -45,7 +53,7 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
 
     return response;
   } catch (error) {
-    console.error('[auth-route] Unhandled error:', error);
+    log.error('Unhandled error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Authentication service error' }, { status: 500 });
   }
 }

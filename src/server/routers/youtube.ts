@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
+import { rateLimit } from '@/lib/rate-limit';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
@@ -158,6 +159,15 @@ export const youtubeRouter = router({
       privacyStatus: z.enum(['public', 'private', 'unlisted']).default('private'),
     }))
     .mutation(async ({ ctx, input }) => {
+      const { success } = await rateLimit({
+        identifier: `youtube-mutation:${ctx.session.user.id}`,
+        limit: 30,
+        window: 60,
+      });
+      if (!success) {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
+      }
+
       const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
       // Upload video metadata
       const metadataRes = await fetchWithTimeout(

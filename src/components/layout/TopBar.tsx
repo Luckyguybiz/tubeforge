@@ -167,7 +167,7 @@ export const TopBar = memo(function TopBar() {
   const navItem = NAV.find((n) => n.id === current);
   const pageLabel = pageLabelKey ? t(pageLabelKey) : navItem ? t(`nav.${navItem.id}`) : '';
 
-  const btnBase: React.CSSProperties = { width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: 7, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
+  const btnBase: React.CSSProperties = { width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 7, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
 
   const handleBtnHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, entering: boolean) => {
     (e.currentTarget as HTMLButtonElement).style.background = entering ? C.surface : 'transparent';
@@ -191,10 +191,10 @@ export const TopBar = memo(function TopBar() {
         onClick={mobileMenuToggle}
         style={{
           display: 'none', /* shown via @media in layout.tsx */
-          width: 36,
-          height: 36,
-          minWidth: 36,
-          minHeight: 36,
+          width: 44,
+          height: 44,
+          minWidth: 44,
+          minHeight: 44,
           borderRadius: 7,
           border: `1px solid ${C.border}`,
           background: 'transparent',
@@ -294,10 +294,10 @@ export const TopBar = memo(function TopBar() {
             onClick={closeSearch}
             style={{
               ...btnBase,
-              width: 32,
-              height: 32,
-              minWidth: 32,
-              minHeight: 32,
+              width: 44,
+              height: 44,
+              minWidth: 44,
+              minHeight: 44,
               fontSize: 10,
             }}
           >
