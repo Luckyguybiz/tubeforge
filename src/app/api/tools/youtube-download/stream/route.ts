@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/server/auth';
-import { rateLimit } from '@/lib/rate-limit';
+import { getToken } from 'next-auth/jwt';
 
 export const dynamic = 'force-dynamic';
 // Use Edge runtime for streaming — no body size limit & no execution timeout
 // CRITICAL: innertube + download must happen in the SAME Edge request (same IP)
 // because YouTube signs stream URLs to the requester's IP address.
+//
+// IMPORTANT: Do NOT use auth() here — it calls Prisma (db.user.findUnique)
+// in the session callback, and Prisma does NOT work in Edge Runtime.
+// Use getToken() instead, which only decodes the JWT without DB access.
 export const runtime = 'edge';
+
+/* ─── Edge-compatible rate limiter (in-memory, best-effort) ──────── */
+const edgeRateLimit = new Map<string, { count: number; reset: number }>();
 
 /* ─── Innertube types ─────────────────────────────────────────────── */
 
@@ -171,19 +177,26 @@ async function resolveYouTubeStream(
  *      → Direct proxy (for pre-resolved URLs, TikTok, etc.)
  * ═══════════════════════════════════════════════════════════════════════ */
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  // Use getToken() instead of auth() — auth() triggers Prisma DB calls
+  // which crash in Edge Runtime. getToken() only decodes the JWT cookie.
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  const token = await getToken({ req, secret });
+  const userId = (token?.id as string) ?? token?.sub;
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Rate limit: 5 downloads per minute
-  const { success: rlOk } = await rateLimit({
-    identifier: `yt-dl-stream:${session.user.id}`,
-    limit: 5,
-    window: 60,
-  });
-  if (!rlOk) {
+  // Simple in-memory rate limiting (best-effort in Edge)
+  const now = Date.now();
+  const rlKey = `yt-dl:${userId}`;
+  const rlEntry = edgeRateLimit.get(rlKey);
+  if (rlEntry && now < rlEntry.reset && rlEntry.count >= 10) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+  if (!rlEntry || now >= rlEntry.reset) {
+    edgeRateLimit.set(rlKey, { count: 1, reset: now + 60_000 });
+  } else {
+    rlEntry.count++;
   }
 
   const videoId = req.nextUrl.searchParams.get('videoId');
