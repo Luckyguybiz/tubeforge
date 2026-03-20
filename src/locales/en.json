@@ -140,6 +140,7 @@
     "downloaders": "Downloaders",
     "aiTools": "AI Tools",
     "videoTools": "Video Tools",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "videoGenClientSideInfo": "Video generation happens entirely in your browser. No server resources or credits are used."
   }
 }

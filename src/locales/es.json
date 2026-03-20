@@ -140,6 +140,7 @@
     "downloaders": "Descargadores",
     "aiTools": "Herramientas de IA",
     "videoTools": "Herramientas de video",
-    "getStarted": "Comenzar"
+    "getStarted": "Comenzar",
+    "videoGenClientSideInfo": "La generación de video ocurre completamente en tu navegador. No se utilizan recursos del servidor ni créditos."
   }
 }

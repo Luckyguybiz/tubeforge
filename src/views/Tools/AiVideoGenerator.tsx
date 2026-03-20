@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Constants
@@ -426,6 +427,7 @@ function parseScenes(raw: string): Scene[] {
 export function AiVideoGenerator() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
 
   /* ── Script & scenes state ── */
   const [rawScript, setRawScript] = useState('');
@@ -546,20 +548,25 @@ export function AiVideoGenerator() {
      Compute scene durations
      ══════════════════════════════════════════════════════════════════════ */
 
+  const INTRO_BUFFER = 1.5; // seconds of fade-in before first scene
+  const OUTRO_BUFFER = 2.5; // seconds of outro after last narration ends
+
   const computeDurations = useCallback((): { durations: number[]; total: number } => {
     const durations: number[] = [];
-    let total = 0;
+    let total = INTRO_BUFFER; // start with intro buffer
     for (const scene of scenes) {
       if (durationMode === 'fixed') {
         durations.push(fixedDuration);
         total += fixedDuration;
       } else {
         const wordCount = scene.text.split(/\s+/).filter(Boolean).length;
-        const dur = Math.max(2, (wordCount / (150 / 60)) / speechRate);
+        // Add 20% safety margin so speech finishes before scene ends
+        const dur = Math.max(2, ((wordCount / (150 / 60)) / speechRate) * 1.2);
         durations.push(dur);
         total += dur;
       }
     }
+    total += OUTRO_BUFFER; // add outro buffer
     return { durations, total };
   }, [scenes, durationMode, fixedDuration, speechRate]);
 
@@ -576,15 +583,44 @@ export function AiVideoGenerator() {
     sceneList: Scene[],
     transition: TransitionType,
     fSize: number,
+    introBuffer: number,
   ) {
+    // ── Intro phase: fade-in title card ──
+    if (elapsed < introBuffer) {
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, w, h);
+      const alpha = Math.min(1, elapsed / Math.min(0.6, introBuffer));
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `bold ${Math.round(fSize * 1.3)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+      // Use first scene text as title, truncated
+      const titleText = sceneList.length > 0
+        ? (sceneList[0].text.length > 60 ? sceneList[0].text.slice(0, 57) + '...' : sceneList[0].text)
+        : '';
+      const titleLines = wrapText(ctx, titleText, w * 0.75, fSize * 1.6);
+      const titleLineH = fSize * 1.6;
+      const titleStartY = h / 2 - (titleLines.length * titleLineH) / 2;
+      titleLines.forEach((line, i) => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+        ctx.fillText(line, w / 2, titleStartY + i * titleLineH + titleLineH / 2);
+      });
+      ctx.textAlign = 'start';
+      ctx.textBaseline = 'alphabetic';
+      return -1;
+    }
+
+    // ── Scene phase: adjust elapsed to remove intro buffer ──
+    const sceneElapsed = elapsed - introBuffer;
+
     const transitionDur = 0.4;
     let cumTime = 0;
     let sceneIdx = 0;
     let sceneLocalTime = 0;
     for (let i = 0; i < sceneList.length; i++) {
-      if (elapsed < cumTime + sceneDurations[i]) {
+      if (sceneElapsed < cumTime + sceneDurations[i]) {
         sceneIdx = i;
-        sceneLocalTime = elapsed - cumTime;
+        sceneLocalTime = sceneElapsed - cumTime;
         break;
       }
       cumTime += sceneDurations[i];
@@ -664,10 +700,11 @@ export function AiVideoGenerator() {
 
     const { durations, total } = computeDurations();
 
-    // TTS for each scene sequentially
+    // TTS for each scene sequentially — start after intro buffer
+    let allSpeechDone = false;
     let currentSceneSpeaking = 0;
     function speakScene(idx: number) {
-      if (idx >= scenes.length) return;
+      if (idx >= scenes.length) { allSpeechDone = true; return; }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(scenes[idx].text);
       const voice = availableVoices[selectedVoiceIdx];
@@ -677,22 +714,32 @@ export function AiVideoGenerator() {
         currentSceneSpeaking = idx + 1;
         if (currentSceneSpeaking < scenes.length) {
           speakScene(currentSceneSpeaking);
+        } else {
+          allSpeechDone = true;
         }
       };
       window.speechSynthesis.speak(utterance);
     }
-    speakScene(0);
 
     const startTime = performance.now();
     let frame = 0;
+    let speechStarted = false;
 
     function drawLoop() {
       const elapsed = (performance.now() - startTime) / 1000;
       frame++;
 
-      renderFrame(ctx!, w, h, elapsed, frame, durations, scenes, transitionType, fontSize);
+      // Start speech after intro buffer
+      if (!speechStarted && elapsed >= INTRO_BUFFER) {
+        speechStarted = true;
+        speakScene(0);
+      }
 
-      if (elapsed < total) {
+      renderFrame(ctx!, w, h, elapsed, frame, durations, scenes, transitionType, fontSize, INTRO_BUFFER);
+
+      // Keep rendering until both the calculated total time has elapsed AND speech is done
+      const timeUp = elapsed >= total;
+      if (!timeUp || (!allSpeechDone && !timeUp)) {
         previewRafRef.current = requestAnimationFrame(drawLoop);
       } else {
         window.speechSynthesis?.cancel();
@@ -760,13 +807,14 @@ export function AiVideoGenerator() {
 
       recorder.start(100);
 
-      // TTS
+      // TTS — start after intro buffer, track when all speech completes
       setExportStatus('Rendering scenes with narration...');
       setExportProgress(10);
 
+      let allSpeechDone = false;
       let currentSceneSpeaking = 0;
       function speakScene(idx: number) {
-        if (idx >= scenes.length) return;
+        if (idx >= scenes.length) { allSpeechDone = true; return; }
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(scenes[idx].text);
         const voice = availableVoices[selectedVoiceIdx];
@@ -776,15 +824,17 @@ export function AiVideoGenerator() {
           currentSceneSpeaking = idx + 1;
           if (currentSceneSpeaking < scenes.length) {
             speakScene(currentSceneSpeaking);
+          } else {
+            allSpeechDone = true;
           }
         };
         window.speechSynthesis.speak(utterance);
       }
-      speakScene(0);
 
       // Render loop
       const startTime = performance.now();
       let frame = 0;
+      let speechStarted = false;
 
       await new Promise<void>((resolve) => {
         function draw() {
@@ -792,13 +842,25 @@ export function AiVideoGenerator() {
           const elapsed = (performance.now() - startTime) / 1000;
           frame++;
 
-          const sceneIdx = renderFrame(ctx, w, h, elapsed, frame, durations, scenes, transitionType, fontSize);
+          // Start speech after intro buffer
+          if (!speechStarted && elapsed >= INTRO_BUFFER) {
+            speechStarted = true;
+            speakScene(0);
+          }
+
+          const sceneIdx = renderFrame(ctx, w, h, elapsed, frame, durations, scenes, transitionType, fontSize, INTRO_BUFFER);
 
           const p = 10 + (elapsed / total) * 80;
           setExportProgress(Math.min(90, p));
-          setExportStatus(`Rendering scene ${sceneIdx + 1} of ${scenes.length}...`);
+          if (sceneIdx >= 0) {
+            setExportStatus(`Rendering scene ${sceneIdx + 1} of ${scenes.length}...`);
+          } else {
+            setExportStatus('Intro...');
+          }
 
-          if (elapsed < total && !abortRef.current) {
+          // Keep rendering until calculated time is up AND speech has finished
+          const timeUp = elapsed >= total;
+          if (!abortRef.current && (!timeUp || !allSpeechDone)) {
             requestAnimationFrame(draw);
           } else {
             resolve();
@@ -813,7 +875,10 @@ export function AiVideoGenerator() {
         return;
       }
 
-      // Outro frame for 1.5 seconds
+      // Wait a moment for any remaining speech to fully finish
+      window.speechSynthesis?.cancel();
+
+      // Outro frame for 2.5 seconds
       setExportStatus('Adding outro...');
       setExportProgress(92);
       const outroStart = performance.now();
@@ -822,19 +887,21 @@ export function AiVideoGenerator() {
           const ot = (performance.now() - outroStart) / 1000;
           ctx.fillStyle = '#0a0a1a';
           ctx.fillRect(0, 0, w, h);
-          const alpha = Math.min(1, ot / 0.4);
+          const alpha = Math.min(1, ot / 0.5);
+          // Fade out near the end
+          const fadeOut = ot > 1.8 ? Math.max(0, 1 - (ot - 1.8) / 0.7) : 1;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.font = `bold ${Math.round(fontSize * 1.2)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * fadeOut * 0.9})`;
           ctx.fillText('Thanks for watching!', w / 2, h / 2);
           ctx.font = `${Math.round(fontSize * 0.6)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * fadeOut * 0.4})`;
           ctx.fillText('Made with TubeForge', w / 2, h / 2 + fontSize);
           ctx.textAlign = 'start';
           ctx.textBaseline = 'alphabetic';
 
-          if (ot < 1.5) {
+          if (ot < OUTRO_BUFFER) {
             requestAnimationFrame(outroFrame);
           } else {
             resolve();
@@ -846,7 +913,6 @@ export function AiVideoGenerator() {
       // Stop recording and encode
       setExportStatus('Encoding video...');
       setExportProgress(95);
-      window.speechSynthesis?.cancel();
       recorder.stop();
       const videoBlob = await recordingDone;
 
@@ -1685,6 +1751,28 @@ export function AiVideoGenerator() {
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Client-side info card */}
+          <div style={{
+            padding: 14, borderRadius: 12,
+            background: `${C.green}10`,
+            border: `1px solid ${C.green}25`,
+            display: 'flex', gap: 10, alignItems: 'flex-start',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.text, lineHeight: 1.4 }}>
+                100% Client-Side
+              </span>
+              <span style={{ fontSize: 11, color: C.sub, lineHeight: 1.5, wordBreak: 'break-word' }}>
+                {t('tools.videoGenClientSideInfo')}
+              </span>
             </div>
           </div>
         </div>

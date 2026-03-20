@@ -680,6 +680,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.comingSoonDesc': 'Этот инструмент находится в разработке и будет доступен в ближайшее время',
     'tools.defaultDropLabel': 'Перетащите файл сюда или нажмите для загрузки',
     'tools.allFormatsSupported': 'Все форматы поддерживаются',
+    'tools.videoGenClientSideInfo': 'Генерация видео происходит полностью в вашем браузере. Не используются серверные ресурсы или кредиты.',
 
     // Tools — Mp3Converter
     'tools.mp3.title': 'Конвертер аудио',
@@ -2054,6 +2055,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'tools.comingSoonDesc': 'This tool is in development and will be available soon',
     'tools.defaultDropLabel': 'Drag and drop a file here or click to upload',
     'tools.allFormatsSupported': 'All formats supported',
+    'tools.videoGenClientSideInfo': 'Video generation happens entirely in your browser. No server resources or credits are used.',
 
     // Tools — Mp3Converter
     'tools.mp3.title': 'Audio Converter',
@@ -3373,6 +3375,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'toolshub.tool.content-planner.description': 'Барлық платформалар үшін контентті жоспарлаңыз, кестелеңіз және ұйымдастырыңыз.',
     'toolshub.tool.ai-video-generator.subtitle': 'Мәтін → Бейне · Canvas',
     'toolshub.tool.ai-video-generator.description': 'Кез келген сценарийді анимациялы сахналар, дауыс пен ауысулармен толық бейнеге айналдырыңыз.',
+    'tools.videoGenClientSideInfo': 'Бейне генерациясы толығымен браузеріңізде жүреді. Сервер ресурстары немесе кредиттер пайдаланылмайды.',
   },
   es: {
     // Navigation & Layout
@@ -3989,6 +3992,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'toolshub.tool.content-planner.description': 'Planifica, programa y organiza tu contenido en todas las plataformas con calendario, banco de ideas y plantillas.',
     'toolshub.tool.ai-video-generator.subtitle': 'Texto → Video · Canvas',
     'toolshub.tool.ai-video-generator.description': 'Convierte cualquier guión en un video completo con escenas animadas, narración y transiciones.',
+    'tools.videoGenClientSideInfo': 'La generación de video ocurre completamente en tu navegador. No se utilizan recursos del servidor ni créditos.',
   },
 };
 

@@ -854,9 +854,10 @@ const ProjectCard = memo(function ProjectCard({
                   onClick={() => onConfirmDelete(p.id)}
                   disabled={deleteIsPending}
                   style={{
-                    padding: '4px 10px', borderRadius: 6, border: 'none',
+                    padding: '6px 12px', borderRadius: 7, border: 'none',
                     background: '#ef4444', color: '#fff', fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+                    minHeight: 32,
                   }}
                 >
                   {deleteIsPending ? '...' : t('dashboard.yes')}
@@ -864,10 +865,11 @@ const ProjectCard = memo(function ProjectCard({
                 <button
                   onClick={() => onCancelDelete()}
                   style={{
-                    padding: '4px 10px', borderRadius: 6,
+                    padding: '6px 12px', borderRadius: 7,
                     border: `1px solid ${C.border}`, background: 'transparent',
                     color: C.sub, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
+                    minHeight: 32,
                   }}
                 >
                   {t('dashboard.no')}
@@ -885,15 +887,17 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseEnter={() => setHovBtn(`rename-${p.id}`)}
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
-                    width: 28, height: 28, borderRadius: 7,
+                    width: 32, height: 32, borderRadius: 8,
                     border: `1px solid ${hovBtn === `rename-${p.id}` ? C.borderActive : C.border}`,
                     background: hovBtn === `rename-${p.id}` ? C.card : 'transparent',
                     color: C.sub, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
+                    /* Invisible touch target expansion for mobile */
+                    position: 'relative',
                   }}
                 >
-                  <IconEdit size={13} color={C.sub} />
+                  <IconEdit size={14} color={C.sub} />
                 </button>
                 <button
                   onClick={(e) => {
@@ -905,7 +909,7 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseEnter={() => setHovBtn(`dup-${p.id}`)}
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
-                    width: 28, height: 28, borderRadius: 7,
+                    width: 32, height: 32, borderRadius: 8,
                     border: `1px solid ${hovBtn === `dup-${p.id}` ? C.borderActive : C.border}`,
                     background: hovBtn === `dup-${p.id}` ? C.card : 'transparent',
                     color: C.sub, cursor: 'pointer',
@@ -913,7 +917,7 @@ const ProjectCard = memo(function ProjectCard({
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconPlus size={13} color={C.sub} />
+                  <IconPlus size={14} color={C.sub} />
                 </button>
                 <ExportButton projectId={p.id} projectTitle={p.title} />
                 <button
@@ -926,7 +930,7 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseEnter={() => setHovBtn(`delete-${p.id}`)}
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
-                    width: 28, height: 28, borderRadius: 7,
+                    width: 32, height: 32, borderRadius: 8,
                     border: `1px solid ${hovBtn === `delete-${p.id}` ? '#ef444440' : C.border}`,
                     background: hovBtn === `delete-${p.id}` ? '#ef444412' : 'transparent',
                     color: hovBtn === `delete-${p.id}` ? '#ef4444' : C.sub,
@@ -935,7 +939,7 @@ const ProjectCard = memo(function ProjectCard({
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconTrash size={13} color={hovBtn === `delete-${p.id}` ? '#ef4444' : C.sub} />
+                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? '#ef4444' : C.sub} />
                 </button>
               </>
             )}
@@ -1248,8 +1252,8 @@ export function Dashboard() {
       {/* ── Stat cards ──────────────────────────────── */}
       <div className="tf-dash-stat-grid" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(min(150px, 100%), 1fr))',
-        gap: 14,
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 12,
         marginBottom: 28,
       }}>
         {profile.isLoading
@@ -1264,11 +1268,12 @@ export function Dashboard() {
                     background: C.card,
                     border: `1px solid ${C.border}`,
                     borderRadius: 14,
-                    padding: '18px 20px',
+                    padding: '16px',
                     position: 'relative',
                     overflow: 'hidden',
                     cursor: 'default',
                     transition: 'box-shadow .25s ease, transform .25s ease, border-color .25s ease',
+                    minWidth: 0,
                   }}
                 >
                   {/* Gradient accent stripe */}
@@ -1277,22 +1282,33 @@ export function Dashboard() {
                     background: `linear-gradient(90deg, ${s.iconColor}, transparent)`,
                     opacity: 0.6,
                   }} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginBottom: 10,
+                  }}>
                     <div style={{
-                      width: 40, height: 40, borderRadius: 10,
+                      width: 38, height: 38, borderRadius: 10,
                       background: s.gradient,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}>
-                      <StatIcon size={20} color={s.iconColor} />
+                      <StatIcon size={18} color={s.iconColor} />
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: C.sub, marginBottom: 2, fontWeight: 500, letterSpacing: '.01em' }}>
-                        {s.label}
-                      </div>
-                      <div className="tf-dash-stat-value" style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.1 }}>
-                        {s.value}
-                      </div>
+                  </div>
+                  <div style={{ textAlign: 'center', minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 11, color: C.sub, marginBottom: 4, fontWeight: 500,
+                      letterSpacing: '.02em', textTransform: 'uppercase',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {s.label}
+                    </div>
+                    <div className="tf-dash-stat-value" style={{
+                      fontSize: 20, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.2,
+                      color: C.text,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {s.value}
                     </div>
                   </div>
                 </div>
@@ -1398,7 +1414,7 @@ export function Dashboard() {
                     onMouseEnter={() => setHoveredBtn(`filter-${f.label}`)}
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
-                      padding: '6px 14px',
+                      padding: '8px 16px',
                       borderRadius: 9999,
                       border: `1px solid ${isActive ? C.accent : C.border}`,
                       fontSize: 12,
@@ -1408,6 +1424,8 @@ export function Dashboard() {
                       transition: 'all .2s ease',
                       background: isActive ? C.accentDim : (hoveredBtn === `filter-${f.label}` ? C.surface : 'transparent'),
                       color: isActive ? C.accent : C.sub,
+                      whiteSpace: 'nowrap',
+                      minHeight: 36,
                     }}
                   >
                     {f.label}
