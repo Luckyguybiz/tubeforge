@@ -206,4 +206,69 @@ export const teamRouter = router({
         select: { id: true, teamId: true },
       });
     }),
+
+  unshareProject: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await checkTeamRate(ctx.session.user.id);
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.projectId, userId: ctx.session.user.id },
+        select: { id: true, teamId: true },
+      });
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
+      if (!project.teamId) return { id: project.id, teamId: null };
+
+      return ctx.db.project.update({
+        where: { id: input.projectId, userId: ctx.session.user.id },
+        data: { teamId: null },
+        select: { id: true, teamId: true },
+      });
+    }),
+
+  /** Get project collaborators — returns team members who have access to this project */
+  getProjectCollaborators: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id: input.projectId,
+          OR: [
+            { userId: ctx.session.user.id },
+            { team: { members: { some: { userId: ctx.session.user.id } } } },
+          ],
+        },
+        select: {
+          id: true,
+          userId: true,
+          teamId: true,
+          user: { select: { id: true, name: true, email: true, image: true } },
+          team: {
+            select: {
+              members: {
+                select: {
+                  role: true,
+                  user: { select: { id: true, name: true, email: true, image: true } },
+                },
+                orderBy: { role: 'asc' },
+              },
+            },
+          },
+        },
+      });
+      if (!project) return { owner: null, members: [] };
+
+      const owner = {
+        ...project.user,
+        role: 'OWNER' as const,
+      };
+
+      const members = (project.team?.members ?? [])
+        .filter((m) => m.user.id !== project.userId)
+        .map((m) => ({
+          ...m.user,
+          role: m.role,
+        }));
+
+      return { owner, members };
+    }),
 });

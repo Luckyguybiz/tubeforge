@@ -1533,5 +1533,25 @@
   "billing.included": "Included from lower tier",
 
   "preview.exportNote720": "Export in 720p. With Pro — 1080p without watermark",
-  "preview.aiCreditsLeft": "Credits left: {count}. With Pro — 100/mo"
+  "preview.aiCreditsLeft": "Credits left: {count}. With Pro — 100/mo",
+
+  "collab.comments": "Comments",
+  "collab.noComments": "No comments yet. Start a discussion!",
+  "collab.addComment": "Add a comment...",
+  "collab.send": "Send",
+  "collab.resolve": "Resolve",
+  "collab.reopen": "Reopen",
+  "collab.delete": "Delete",
+  "collab.thisScene": "This scene",
+  "collab.versionHistory": "Version History",
+  "collab.noVersions": "No saved versions yet. Click \"Save version\" in the editor to create a snapshot.",
+  "collab.restore": "Restore",
+  "collab.clearAll": "Clear all",
+  "collab.saveVersion": "Save version",
+  "collab.versionSaved": "Version saved",
+  "collab.versionRestored": "Version restored",
+  "collab.activity": "Activity",
+  "collab.noActivity": "No recent activity",
+  "collab.panelComments": "Comments",
+  "collab.panelActivity": "Activity"
 }

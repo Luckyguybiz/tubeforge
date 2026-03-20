@@ -82,6 +82,9 @@ export const env = {
   VPN_SERVER_PUBLIC_KEY: process.env.VPN_SERVER_PUBLIC_KEY ?? '',
   VPN_SERVER_ENDPOINT: process.env.VPN_SERVER_ENDPOINT ?? '57.128.254.111:51820',
 
+  // ElevenLabs (voice cloning — optional)
+  ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY ?? '',
+
   // Error monitoring (Sentry) — disabled when not set
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
 } as const;

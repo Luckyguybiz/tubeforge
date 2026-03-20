@@ -467,10 +467,157 @@ function daySevenTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Re-engagement templates
+// ---------------------------------------------------------------------------
+
+function reengagementDay3Template(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Your project is waiting for you',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          We noticed you haven't been back in a few days. Your project is still here, ready for you to continue.
+        </p>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Pick up right where you left off &mdash; your AI-generated scenes, edits, and settings are all saved.
+        </p>
+        ${ctaButton('Continue Your Project', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u0412\u0430\u0448 \u043F\u0440\u043E\u0435\u043A\u0442 \u0436\u0434\u0451\u0442 \u0432\u0430\u0441',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041C\u044B \u0437\u0430\u043C\u0435\u0442\u0438\u043B\u0438, \u0447\u0442\u043E \u0432\u044B \u043D\u0435 \u0437\u0430\u0445\u043E\u0434\u0438\u043B\u0438 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0434\u043D\u0435\u0439. \u0412\u0430\u0448 \u043F\u0440\u043E\u0435\u043A\u0442 \u0432\u0441\u0451 \u0435\u0449\u0451 \u0437\u0434\u0435\u0441\u044C, \u0433\u043E\u0442\u043E\u0432 \u043A \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u044E.
+      </p>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u0435 \u0441 \u0442\u043E\u0433\u043E \u043C\u0435\u0441\u0442\u0430, \u0433\u0434\u0435 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0438\u0441\u044C &mdash; \u0432\u0441\u0435 \u0441\u0446\u0435\u043D\u044B, \u043F\u0440\u0430\u0432\u043A\u0438 \u0438 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B.
+      </p>
+      ${ctaButton('\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+function reengagementDay7Template(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'We added new features — check them out',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          While you were away, we've been busy improving TubeForge:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u2728</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Improved AI generation quality</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\uD83C\uDFA8</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">New templates and styles</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u26A1</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Faster export and rendering</span>
+          </td></tr>
+        </table>
+        ${ctaButton('Explore Updates', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u041C\u044B \u0434\u043E\u0431\u0430\u0432\u0438\u043B\u0438 \u043D\u043E\u0432\u044B\u0435 \u0444\u0438\u0447\u0438',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041F\u043E\u043A\u0430 \u0432\u0430\u0441 \u043D\u0435 \u0431\u044B\u043B\u043E, \u043C\u044B \u0443\u043B\u0443\u0447\u0448\u0438\u043B\u0438 TubeForge:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u2728</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u0423\u043B\u0443\u0447\u0448\u0435\u043D\u043D\u043E\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E AI \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\uD83C\uDFA8</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u041D\u043E\u0432\u044B\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0438 \u0441\u0442\u0438\u043B\u0438</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u26A1</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u0411\u044B\u0441\u0442\u0440\u0435\u0435 \u044D\u043A\u0441\u043F\u043E\u0440\u0442 \u0438 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433</span>
+        </td></tr>
+      </table>
+      ${ctaButton('\u041F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+function reengagementDay14Template(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Special 20% discount on Pro — just for you',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          We miss you! As a special offer, here's an exclusive <strong>20% discount</strong> on TubeForge Pro.
+        </p>
+        <div style="text-align:center;margin:24px 0;padding:20px;background:#6c5ce710;border-radius:12px;border:1px solid #6c5ce720;">
+          <span style="font-size:32px;font-weight:800;color:#6c5ce7;letter-spacing:-.02em;">20% OFF</span>
+          <p style="color:#555;font-size:14px;margin:8px 0 0;">Use code <strong style="color:#6c5ce7;">COMEBACK20</strong> at checkout</p>
+        </div>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Unlock unlimited projects, 1080p export, no watermark, and AI-powered tools.
+        </p>
+        ${ctaButton('Claim Your Discount', `${APP_URL}/billing?promo=COMEBACK20`)}
+        <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">Offer valid for 48 hours</p>
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u0421\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u0430\u044F \u0441\u043A\u0438\u0434\u043A\u0430 20% \u043D\u0430 Pro \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u0434\u043B\u044F \u0432\u0430\u0441',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041C\u044B \u0441\u043A\u0443\u0447\u0430\u0435\u043C! \u0421\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u0434\u043B\u044F \u0432\u0430\u0441 &mdash; \u044D\u043A\u0441\u043A\u043B\u044E\u0437\u0438\u0432\u043D\u0430\u044F <strong>\u0441\u043A\u0438\u0434\u043A\u0430 20%</strong> \u043D\u0430 TubeForge Pro.
+      </p>
+      <div style="text-align:center;margin:24px 0;padding:20px;background:#6c5ce710;border-radius:12px;border:1px solid #6c5ce720;">
+        <span style="font-size:32px;font-weight:800;color:#6c5ce7;letter-spacing:-.02em;">20% \u0421\u041A\u0418\u0414\u041A\u0410</span>
+        <p style="color:#555;font-size:14px;margin:8px 0 0;">\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u043A\u043E\u0434 <strong style="color:#6c5ce7;">COMEBACK20</strong> \u043F\u0440\u0438 \u043E\u043F\u043B\u0430\u0442\u0435</p>
+      </div>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        \u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u0443\u0439\u0442\u0435 \u0431\u0435\u0437\u043B\u0438\u043C\u0438\u0442\u043D\u044B\u0435 \u043F\u0440\u043E\u0435\u043A\u0442\u044B, \u044D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 1080p, \u0431\u0435\u0437 \u0432\u043E\u0434\u044F\u043D\u043E\u0433\u043E \u0437\u043D\u0430\u043A\u0430 \u0438 AI-\u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B.
+      </p>
+      ${ctaButton('\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u0441\u043A\u0438\u0434\u043A\u0443', `${APP_URL}/billing?promo=COMEBACK20`)}
+      <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E 48 \u0447\u0430\u0441\u043E\u0432</p>
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -479,6 +626,9 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'referral-commission': referralCommissionTemplate,
   'day-three': dayThreeTemplate,
   'day-seven': daySevenTemplate,
+  'reengagement-day3': reengagementDay3Template,
+  'reengagement-day7': reengagementDay7Template,
+  'reengagement-day14': reengagementDay14Template,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {
@@ -501,4 +651,25 @@ export function getDayThreeEmail(userName: string, projectCount: number, locale 
  */
 export function getDaySevenEmail(userName: string, usage: { projectCount: number; aiUsed: number }, locale = 'ru'): TemplateResult {
   return getTemplate('day-seven', { name: userName, projectCount: usage.projectCount, aiUsed: usage.aiUsed, locale });
+}
+
+/**
+ * Re-engagement email: Day 3 — "Ваш проект ждёт вас"
+ */
+export function getReengagementDay3(userName: string, locale = 'ru'): TemplateResult {
+  return getTemplate('reengagement-day3', { name: userName, locale });
+}
+
+/**
+ * Re-engagement email: Day 7 — "Мы добавили новые фичи"
+ */
+export function getReengagementDay7(userName: string, locale = 'ru'): TemplateResult {
+  return getTemplate('reengagement-day7', { name: userName, locale });
+}
+
+/**
+ * Re-engagement email: Day 14 — "Специальная скидка 20% на Pro"
+ */
+export function getReengagementDay14(userName: string, locale = 'ru'): TemplateResult {
+  return getTemplate('reengagement-day14', { name: userName, locale });
 }

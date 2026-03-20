@@ -161,6 +161,33 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M12 14L15 10L18 12" stroke="#ff0050" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity=".5" />
     </svg>
   ),
+  media: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="media-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="3" width="16" height="14" rx="2.5" stroke={a ? 'url(#media-g)' : c} strokeWidth="1.5" opacity=".85" />
+      <circle cx="7" cy="9" r="2" fill={c} opacity=".5" />
+      <path d="M4 15L7 11L10 14L13 10L18 15" stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity=".6" />
+    </svg>
+  ),
+  brand: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="brand-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <circle cx="10" cy="10" r="7.5" stroke={a ? 'url(#brand-g)' : c} strokeWidth="1.5" opacity=".85" />
+      <circle cx="8" cy="8" r="2" fill={c} opacity=".6" />
+      <circle cx="12" cy="8" r="2" fill={c} opacity=".4" />
+      <circle cx="10" cy="12" r="2" fill={c} opacity=".5" />
+    </svg>
+  ),
   analytics: (c, a) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
@@ -215,6 +242,8 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'tools', label: t('nav.tools') },
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'preview', label: t('nav.preview') },
+        { id: 'media', label: t('nav.media') },
+        { id: 'brand', label: t('nav.brand') },
         { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
         { id: 'tiktok-analytics', label: t('nav.tiktokAnalytics') },
         { id: 'analytics', label: t('nav.analytics') },
@@ -256,6 +285,8 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   'shorts-analytics': ['green', 'cyan'],
   'tiktok-analytics': ['cyan', 'pink'],
   analytics: ['cyan', 'purple'],
+  media: ['blue', 'purple'],
+  brand: ['pink', 'orange'],
 };
 
 /* ── Tooltip Component ─────────────────────────────────────────────── */

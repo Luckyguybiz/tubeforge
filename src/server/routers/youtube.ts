@@ -157,6 +157,9 @@ export const youtubeRouter = router({
       videoUrl: z.string().url(),
       thumbnailUrl: z.string().url().optional(),
       privacyStatus: z.enum(['public', 'private', 'unlisted']).default('private'),
+      /** ISO 8601 date for scheduled publishing. When set, privacyStatus
+       *  is forced to 'private' and YouTube auto-publishes at this time. */
+      publishAt: z.string().datetime().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { success } = await rateLimit({
@@ -168,8 +171,18 @@ export const youtubeRouter = router({
         throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
       }
 
+      // Scheduled videos must be private per YouTube API requirements
+      const effectivePrivacy = input.publishAt ? 'private' : input.privacyStatus;
+
       const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
-      // Upload video metadata
+
+      // Build status payload — include publishAt when scheduling
+      const status: Record<string, string> = { privacyStatus: effectivePrivacy };
+      if (input.publishAt) {
+        status.publishAt = input.publishAt;
+      }
+
+      // Initiate resumable upload session with YouTube Data API v3
       const metadataRes = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_UPLOAD}?uploadType=resumable&part=snippet,status`,
         {
@@ -180,11 +193,18 @@ export const youtubeRouter = router({
           },
           body: JSON.stringify({
             snippet: { title: input.title, description: input.description, tags: input.tags },
-            status: { privacyStatus: input.privacyStatus },
+            status,
           }),
         }
       );
       if (!metadataRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось начать загрузку видео' });
-      return { uploadUrl: metadataRes.headers.get('location'), message: 'Загрузка начата' };
+
+      const uploadUrl = metadataRes.headers.get('location');
+      return {
+        uploadUrl,
+        scheduled: !!input.publishAt,
+        publishAt: input.publishAt ?? null,
+        message: input.publishAt ? 'Публикация запланирована' : 'Загрузка начата',
+      };
     }),
 });

@@ -1591,6 +1591,130 @@ function TemplatePickerModal({
   );
 }
 
+/* ── Publishing History Widget ──────────────────────────── */
+
+interface PublishHistoryEntry {
+  platform: string;
+  title: string;
+  url: string;
+  publishedAt: string;
+  scheduled?: boolean;
+}
+
+function PublishHistoryWidget({
+  C,
+  t,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const [entries, setEntries] = useState<PublishHistoryEntry[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('tf-publish-history');
+      if (raw) {
+        const parsed = JSON.parse(raw) as PublishHistoryEntry[];
+        setEntries(parsed.slice(0, 5));
+      }
+    } catch { /* localStorage unavailable */ }
+  }, []);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: '20px 22px',
+      marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('dashboard.recentlyPublished')}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {entries.map((entry, i) => {
+          const date = new Date(entry.publishedAt);
+          const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+          return (
+            <div
+              key={`${entry.publishedAt}-${i}`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 12px', borderRadius: 10,
+                background: C.surface, border: `1px solid ${C.border}`,
+                transition: 'border-color .15s',
+              }}
+            >
+              {/* Platform icon */}
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: entry.platform === 'YouTube' ? '#ff000015' : `${C.accent}10`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                {entry.platform === 'YouTube' ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff0000">
+                    <path d="M23.5 6.19a3 3 0 00-2.11-2.13C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.39.56A3 3 0 00.5 6.19 31 31 0 000 12a31 31 0 00.5 5.81 3 3 0 002.11 2.13c1.89.56 9.39.56 9.39.56s7.5 0 9.39-.56a3 3 0 002.11-2.13A31 31 0 0024 12a31 31 0 00-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" />
+                  </svg>
+                )}
+              </div>
+
+              {/* Title + date */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 600, color: C.text,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {entry.title}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.dim, marginTop: 2 }}>
+                  <span>{entry.platform}</span>
+                  <span>&#183;</span>
+                  <span>{dateStr}</span>
+                  {entry.scheduled && (
+                    <>
+                      <span>&#183;</span>
+                      <span style={{ color: C.orange }}>{t('dashboard.scheduled')}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Link button */}
+              {entry.url && (
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    padding: '5px 12px', borderRadius: 6,
+                    border: `1px solid ${C.border}`,
+                    background: 'transparent', color: C.sub,
+                    fontSize: 11, fontWeight: 600, textDecoration: 'none',
+                    transition: 'all .15s', flexShrink: 0,
+                  }}
+                >
+                  {t('dashboard.openLink')}
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Dashboard Component ──────────────────────────── */
 
 export function Dashboard() {
@@ -2048,6 +2172,9 @@ export function Dashboard() {
 
       {/* ── Referral Widget ──────────────────────────── */}
       <ReferralWidget C={C} t={t} />
+
+      {/* ── Publishing History Widget ─────────────────── */}
+      <PublishHistoryWidget C={C} t={t} />
 
       {/* ── Projects section ────────────────────────── */}
       <div style={{

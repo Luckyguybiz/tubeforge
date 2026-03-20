@@ -332,4 +332,242 @@ Return ONLY valid JSON, no markdown.`,
       const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Runway API' }); });
       return { taskId: data.id, status: 'processing' };
     }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z1: AI Script Generator — uses OpenAI GPT to generate scenes
+     ═══════════════════════════════════════════════════════════════ */
+  generateScript: protectedProcedure
+    .input(z.object({
+      topic: z.string().min(1).max(500),
+      tone: z.enum(['professional', 'casual', 'fun']).default('professional'),
+      duration: z.enum(['30s', '1min', '3min']).default('1min'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API ключ не настроен. Обратитесь к администратору.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-script', 10);
+      // Costs 2 AI credits
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const durationMap: Record<string, { scenes: number; totalSec: number }> = {
+        '30s': { scenes: 3, totalSec: 30 },
+        '1min': { scenes: 5, totalSec: 60 },
+        '3min': { scenes: 10, totalSec: 180 },
+      };
+      const cfg = durationMap[input.duration] ?? durationMap['1min'];
+
+      const toneMap: Record<string, string> = {
+        professional: 'профессиональный, деловой',
+        casual: 'разговорный, дружелюбный',
+        fun: 'весёлый, энергичный, с юмором',
+      };
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content: `Ты — сценарист YouTube-видео. Создавай сценарии на русском языке. Отвечай ТОЛЬКО в JSON формате.`,
+              },
+              {
+                role: 'user',
+                content: `Создай сценарий YouTube-видео на тему: "${input.topic}".
+
+Тон: ${toneMap[input.tone] ?? 'профессиональный'}.
+Общая длительность: ~${cfg.totalSec} секунд.
+Количество сцен: ${cfg.scenes}.
+
+Верни JSON:
+{
+  "scenes": [
+    { "text": "Текст/описание для сцены (промпт для генерации видео)", "duration": <число секунд> }
+  ]
+}
+
+Каждая сцена должна содержать:
+- text: описание визуальной сцены для AI-генерации видео (что показывать, какая атмосфера)
+- duration: длительность в секундах (сумма должна быть ~${cfg.totalSec})
+
+Сделай сцены визуально разнообразными и увлекательными.`,
+              },
+            ],
+          }),
+        }, 60000);
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка AI сервиса. Попробуйте позже.' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'Ошибка OpenAI API' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ OpenAI API' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '';
+
+      try {
+        const parsed = JSON.parse(text) as { scenes?: { text: string; duration: number }[] };
+        if (!parsed.scenes || !Array.isArray(parsed.scenes)) {
+          throw new Error('Invalid format');
+        }
+        return {
+          scenes: parsed.scenes.map((s: { text: string; duration: number }) => ({
+            text: String(s.text || ''),
+            duration: Math.max(3, Math.min(30, Number(s.duration) || 5)),
+          })),
+        };
+      } catch {
+        // Try extracting JSON from possible markdown wrapping
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { scenes?: { text: string; duration: number }[] };
+            if (parsed.scenes && Array.isArray(parsed.scenes)) {
+              return {
+                scenes: parsed.scenes.map((s: { text: string; duration: number }) => ({
+                  text: String(s.text || ''),
+                  duration: Math.max(3, Math.min(30, Number(s.duration) || 5)),
+                })),
+              };
+            }
+          } catch {
+            // fall through
+          }
+        }
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать сценарий. Попробуйте ещё раз.' });
+      }
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z2: AI Auto-Captions — generates SRT-style captions from text
+     ═══════════════════════════════════════════════════════════════ */
+  generateCaptions: protectedProcedure
+    .input(z.object({
+      scenes: z.array(z.object({
+        text: z.string(),
+        duration: z.number(),
+      })).min(1).max(50),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API ключ не настроен. Функция скоро будет доступна.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-captions', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const sceneSummary = input.scenes.map((s, i) => `Сцена ${i + 1} (${s.duration}с): ${s.text}`).join('\n');
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            max_tokens: 3000,
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content: 'Ты генерируешь субтитры для видео в формате SRT. Отвечай ТОЛЬКО в JSON.',
+              },
+              {
+                role: 'user',
+                content: `Создай субтитры для видео на основе описаний сцен:
+
+${sceneSummary}
+
+Верни JSON:
+{
+  "srt": "полный текст SRT файла с таймкодами",
+  "captions": [
+    { "index": 1, "start": "00:00:00,000", "end": "00:00:03,000", "text": "Текст субтитра" }
+  ]
+}
+
+Разбей текст на короткие субтитры (макс 2 строки, ~10 слов). Таймкоды должны точно покрывать длительность каждой сцены.`,
+              },
+            ],
+          }),
+        }, 60000);
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка AI сервиса' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'Ошибка OpenAI API' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '';
+
+      try {
+        const parsed = JSON.parse(text) as { srt?: string; captions?: { index: number; start: string; end: string; text: string }[] };
+        return {
+          srt: parsed.srt ?? '',
+          captions: parsed.captions ?? [],
+        };
+      } catch {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { srt?: string; captions?: { index: number; start: string; end: string; text: string }[] };
+            return { srt: parsed.srt ?? '', captions: parsed.captions ?? [] };
+          } catch {
+            // fall through
+          }
+        }
+        return { srt: '', captions: [] };
+      }
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z4: AI Background Removal — placeholder
+     ═══════════════════════════════════════════════════════════════ */
+  removeBackground: protectedProcedure
+    .input(z.object({
+      imageUrl: z.string().min(1),
+    }))
+    .mutation(async () => {
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message: 'Удаление фона скоро будет доступно. Функция в разработке.',
+      });
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z3: Check ElevenLabs API status (for Settings page)
+     ═══════════════════════════════════════════════════════════════ */
+  checkVoiceCloneStatus: protectedProcedure
+    .query(async () => {
+      const hasKey = !!(process.env.ELEVENLABS_API_KEY);
+      return { available: hasKey };
+    }),
 });

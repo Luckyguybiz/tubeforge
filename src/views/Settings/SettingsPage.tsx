@@ -1661,7 +1661,393 @@ export function SettingsPage() {
       )}
 
       {/* ====================================================== */}
-      {/* SECTION 9: Account (Danger Zone)                       */}
+      {/* SECTION: SSO Placeholder (Studio only)                 */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
+              {'\u{1F512}'} {t('settings.sso.title') !== 'settings.sso.title' ? t('settings.sso.title') : '\u0415\u0434\u0438\u043D\u044B\u0439 \u0432\u0445\u043E\u0434 (SSO)'}
+            </h2>
+            <span style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 50,
+              background: `${C.purple}18`,
+              color: C.purple,
+              letterSpacing: '.03em',
+            }}>
+              COMING SOON
+            </span>
+          </div>
+          <p style={sectionDescStyle}>
+            {'\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 SSO \u0434\u043B\u044F \u0432\u0430\u0448\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B'}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            marginBottom: 20,
+          }}>
+            {['Google Workspace', 'Okta', 'Azure AD'].map((provider) => (
+              <div key={provider} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '14px 16px',
+                background: C.surface,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                opacity: 0.6,
+              }}>
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  background: C.bg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{provider}</div>
+                  <div style={{ fontSize: 12, color: C.dim }}>{'\u041D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D\u043E'}</div>
+                </div>
+                <button
+                  disabled
+                  style={{
+                    ...btnBase,
+                    padding: '6px 14px',
+                    fontSize: 12,
+                    background: 'transparent',
+                    color: C.dim,
+                    border: `1px solid ${C.border}`,
+                    cursor: 'not-allowed',
+                    opacity: 0.5,
+                  }}
+                >
+                  {'\u041D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C'}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            padding: '14px 18px',
+            background: `${C.purple}08`,
+            borderRadius: 12,
+            border: `1px solid ${C.purple}20`,
+            fontSize: 13,
+            color: C.sub,
+            lineHeight: 1.6,
+          }}>
+            {'\u0414\u043B\u044F \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 SSO \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+            <a href="mailto:enterprise@tubeforge.co" style={{ color: C.purple, fontWeight: 600 }}>
+              enterprise@tubeforge.co
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: White-Label (Studio only)                     */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>White-Label</h2>
+            <span style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 50,
+              background: `${C.purple}18`,
+              color: C.purple,
+              letterSpacing: '.03em',
+            }}>
+              COMING SOON
+            </span>
+          </div>
+          <p style={sectionDescStyle}>
+            {'\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0432\u0438\u0434\u0435\u043E \u043F\u043E\u0434 \u0432\u0430\u0448 \u0431\u0440\u0435\u043D\u0434'}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            marginBottom: 20,
+          }}>
+            {[
+              { icon: '\u{1F3AC}', text: '\u0423\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0440\u0435\u043D\u0434\u0438\u043D\u0433 TubeForge \u0438\u0437 \u0432\u0430\u0448\u0438\u0445 \u0432\u0438\u0434\u0435\u043E' },
+              { icon: '\u{1F310}', text: '\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0441\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u043C\u0435\u043D \u0434\u043B\u044F \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u0438' },
+              { icon: '\u{1F3A8}', text: '\u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0441\u0432\u043E\u0439 \u043B\u043E\u0433\u043E\u0442\u0438\u043F \u0438 \u0446\u0432\u0435\u0442\u043E\u0432\u0443\u044E \u0441\u0445\u0435\u043C\u0443' },
+            ].map((item) => (
+              <div key={item.text} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                background: C.surface,
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                opacity: 0.65,
+              }}>
+                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                <span style={{ fontSize: 13, color: C.text }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            padding: '14px 18px',
+            background: `${C.purple}08`,
+            borderRadius: 12,
+            border: `1px solid ${C.purple}20`,
+            fontSize: 13,
+            color: C.sub,
+            lineHeight: 1.6,
+          }}>
+            {'\u0414\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u0430\u0446\u0438\u0438 White-Label \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+            <a href="mailto:enterprise@tubeforge.co" style={{ color: C.purple, fontWeight: 600 }}>
+              enterprise@tubeforge.co
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: Enterprise Admin Console                      */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Enterprise</h2>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 700,
+            padding: '3px 10px',
+            borderRadius: 50,
+            background: `${C.blue}18`,
+            color: C.blue,
+            letterSpacing: '.03em',
+          }}>
+            ENTERPRISE
+          </span>
+        </div>
+        <p style={sectionDescStyle}>
+          {'\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043A\u043E\u043C\u0430\u043D\u0434\u043E\u0439, \u043E\u0442\u0447\u0451\u0442\u043D\u043E\u0441\u0442\u044C, \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u044C'}
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))',
+          gap: 10,
+          marginBottom: 20,
+        }}>
+          {[
+            { icon: '\u{1F465}', title: 'Team Management', desc: '\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0430\u043C\u0438 \u0438 \u0440\u043E\u043B\u044F\u043C\u0438' },
+            { icon: '\u{1F4CA}', title: 'Usage Reports', desc: '\u041E\u0442\u0447\u0451\u0442\u044B \u043E\u0431 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438' },
+            { icon: '\u{1F6E1}\uFE0F', title: 'IP Whitelist', desc: '\u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043F\u043E IP' },
+            { icon: '\u{23F1}\uFE0F', title: 'Session Timeout', desc: '\u0410\u0432\u0442\u043E-\u0432\u044B\u0445\u043E\u0434 \u0438\u0437 \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0441\u0435\u0441\u0441\u0438\u0439' },
+          ].map((feature) => (
+            <div key={feature.title} style={{
+              padding: '16px',
+              background: C.surface,
+              borderRadius: 12,
+              border: `1px solid ${C.border}`,
+              opacity: 0.6,
+            }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{feature.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{feature.title}</div>
+              <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.4 }}>{feature.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          padding: '14px 18px',
+          background: `${C.blue}08`,
+          borderRadius: 12,
+          border: `1px solid ${C.blue}20`,
+          fontSize: 13,
+          color: C.sub,
+          lineHeight: 1.6,
+        }}>
+          {'\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0432 Enterprise \u043F\u043B\u0430\u043D\u0435 \u2014 \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+          <a href="mailto:enterprise@tubeforge.co" style={{ color: C.blue, fontWeight: 600 }}>
+            enterprise@tubeforge.co
+          </a>
+        </div>
+      </div>
+
+      {/* ====================================================== */}
+      {/* SECTION 9b: AI Voice (Z3 placeholder)                  */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>AI Голос</h2>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+              background: `${C.purple}15`, color: C.purple,
+            }}>
+              STUDIO
+            </span>
+          </div>
+          <p style={sectionDescStyle}>
+            Клонирование голоса и озвучка с помощью ИИ. Создайте уникальный голос для вашего канала.
+          </p>
+
+          <div style={{
+            padding: '20px 24px',
+            background: C.surface,
+            borderRadius: 12,
+            border: `1px solid ${C.border}`,
+            marginBottom: 16,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: C.purple + '12',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                  Клонирование голоса — скоро
+                </div>
+                <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
+                  Загрузите образец вашего голоса, и ИИ создаст озвучку для всех ваших видео.
+                </div>
+              </div>
+            </div>
+
+            <VoiceCloneStatusBadge C={C} />
+          </div>
+
+          <div style={{
+            padding: '14px 18px',
+            background: C.bg,
+            borderRadius: 10,
+            border: `1px dashed ${C.border}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: C.dim }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              Мы работаем над интеграцией с ElevenLabs. Функция будет доступна в ближайшем обновлении.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: Integrations (Zapier, Make.com)               */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <h2 style={sectionHeaderStyle}>{t('settings.integrations')}</h2>
+        <p style={sectionDescStyle}>{t('settings.integrationsDesc')}</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Zapier */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '16px 18px', borderRadius: 12,
+            background: C.surface, border: `1px solid ${C.border}`,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10,
+              background: '#ff4a00', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                <path d="M15.54 8.46l-2.83 2.83L15.54 14.12l1.41-1.41-1.41-1.42 1.41-1.41-1.41-1.42zM8.46 15.54l2.83-2.83L8.46 9.88 7.05 11.29l1.41 1.42-1.41 1.41 1.41 1.42zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+              </svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>Zapier</div>
+              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{t('settings.zapierDesc')}</div>
+            </div>
+            <a
+              href="https://zapier.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '8px 16px', borderRadius: 8,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, fontSize: 12, fontWeight: 600,
+                textDecoration: 'none', flexShrink: 0,
+                transition: 'all .15s',
+              }}
+            >
+              zapier.com
+            </a>
+          </div>
+
+          {/* Make.com */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '16px 18px', borderRadius: 12,
+            background: C.surface, border: `1px solid ${C.border}`,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10,
+              background: '#6d28d9', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>Make.com</div>
+              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{t('settings.makeDesc')}</div>
+            </div>
+            <a
+              href="https://make.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '8px 16px', borderRadius: 8,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, fontSize: 12, fontWeight: 600,
+                textDecoration: 'none', flexShrink: 0,
+                transition: 'all .15s',
+              }}
+            >
+              make.com
+            </a>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: 14, padding: '12px 16px', borderRadius: 10,
+          background: `${C.blue}08`, border: `1px solid ${C.blue}15`,
+          fontSize: 12, color: C.sub, lineHeight: 1.6,
+        }}>
+          {t('settings.integrationsNote')}
+        </div>
+      </div>
+
+      {/* ====================================================== */}
+      {/* SECTION 10: Account (Danger Zone)                      */}
       {/* ====================================================== */}
       <div style={{
         ...sectionStyle,
@@ -2349,6 +2735,33 @@ function ApiKeysSection({
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Z3: Voice clone status badge — checks ElevenLabs API key on server */
+function VoiceCloneStatusBadge({ C }: { C: Theme }) {
+  const status = trpc.ai.checkVoiceCloneStatus.useQuery(undefined, { retry: false });
+  if (status.isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.bg, borderRadius: 8 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', border: '2px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
+        <span style={{ fontSize: 12, color: C.dim }}>Проверка...</span>
+      </div>
+    );
+  }
+  if (status.data?.available) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: `${C.green}0a`, borderRadius: 8, border: `1px solid ${C.green}25` }}>
+        <span style={{ fontSize: 14, color: C.green }}>&#10003;</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.green }}>API подключён</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.bg, borderRadius: 8, border: `1px solid ${C.border}` }}>
+      <span style={{ fontSize: 14, color: C.dim }}>&#9679;</span>
+      <span style={{ fontSize: 12, color: C.sub }}>Для активации свяжитесь с поддержкой</span>
     </div>
   );
 }

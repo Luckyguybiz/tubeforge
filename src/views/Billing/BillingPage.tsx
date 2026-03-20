@@ -432,6 +432,102 @@ export function BillingPage() {
               </div>
             </div>
 
+            {/* ── Section: Render Priority Queue ──── */}
+            <div
+              style={{
+                padding: 20,
+                borderRadius: 16,
+                border: `1px solid ${cardBorder}`,
+                background: cardBg,
+                marginBottom: 32,
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: C.dim,
+                  textTransform: 'uppercase',
+                  letterSpacing: '.12em',
+                  margin: '0 0 16px',
+                }}
+              >
+                {'\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433\u0430'}
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {([
+                  {
+                    plan: 'FREE' as PlanId,
+                    label: t('billing.planFree'),
+                    queue: '\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C',
+                    color: C.dim,
+                    bg: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)',
+                    borderColor: cardBorder,
+                  },
+                  {
+                    plan: 'PRO' as PlanId,
+                    label: 'Pro',
+                    queue: '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C',
+                    color: '#6366f1',
+                    bg: 'rgba(99, 102, 241, .06)',
+                    borderColor: 'rgba(99, 102, 241, .15)',
+                  },
+                  {
+                    plan: 'STUDIO' as PlanId,
+                    label: 'Studio',
+                    queue: '\u0412\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C \u2014 \u0431\u0435\u0437 \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u044F',
+                    color: '#8b5cf6',
+                    bg: 'rgba(139, 92, 246, .06)',
+                    borderColor: 'rgba(139, 92, 246, .15)',
+                  },
+                ] as const).map((item) => (
+                  <div
+                    key={item.plan}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '12px 16px',
+                      borderRadius: 10,
+                      border: `1px solid ${item.plan === userPlan ? item.borderColor : cardBorder}`,
+                      background: item.plan === userPlan ? item.bg : 'transparent',
+                      opacity: item.plan === userPlan ? 1 : 0.5,
+                      transition: 'all .2s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: item.color,
+                        flexShrink: 0,
+                      }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{item.label}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, color: item.plan === userPlan ? item.color : C.dim, fontWeight: 500 }}>
+                        {item.queue}
+                      </span>
+                      {item.plan === userPlan && (
+                        <span style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 50,
+                          background: `${item.color}18`,
+                          color: item.color,
+                        }}>
+                          {t('billing.currentPlanBtn')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* ── Section 2: Plan Selection ──────── */}
             <div style={{ marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>

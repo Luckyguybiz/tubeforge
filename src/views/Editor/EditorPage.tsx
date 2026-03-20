@@ -16,6 +16,8 @@ import { useCollaboration, useSceneEditLock } from '@/hooks/useCollaboration';
 import { useUndoHint } from '@/hooks/useUndoHint';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { trpc } from '@/lib/trpc';
+import { toast } from '@/stores/useNotificationStore';
 import type { Theme, Scene, TransitionType } from '@/lib/types';
 import { trackEvent } from '@/lib/analytics-events';
 
@@ -799,6 +801,20 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [musicDropOpen, setMusicDropOpen] = useState(false);
+
+  // Z1: AI Script Generator
+  const [showScriptModal, setShowScriptModal] = useState(false);
+  const [scriptTopic, setScriptTopic] = useState('');
+  const [scriptTone, setScriptTone] = useState<'professional' | 'casual' | 'fun'>('professional');
+  const [scriptDuration, setScriptDuration] = useState<'30s' | '1min' | '3min'>('1min');
+
+  // Z2: AI Captions
+  const [showCaptionsModal, setShowCaptionsModal] = useState(false);
+  const [captionsSrt, setCaptionsSrt] = useState<string | null>(null);
+
+  // Z5: AI Content Repurposing
+  const [showShortsModal, setShowShortsModal] = useState(false);
+
   const musicAudioRef = useRef<HTMLAudioElement | null>(null);
   const musicDropRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -808,6 +824,41 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   // Video generation hook for selected scene
   const videoGen = useVideoGeneration(selId);
+
+  // Z1: AI Script Generator mutation
+  const generateScript = trpc.ai.generateScript.useMutation({
+    onSuccess: (data) => {
+      const store = useEditorStore.getState();
+      // Create scenes from the generated script
+      data.scenes.forEach((s: { text: string; duration: number }) => {
+        const newScene = store.addScene();
+        store.updScene(newScene.id, {
+          prompt: s.text,
+          duration: s.duration,
+          status: 'editing',
+          label: s.text.slice(0, 30) + (s.text.length > 30 ? '...' : ''),
+        });
+        if (projectId) {
+          sync.updateScene(newScene.id, { prompt: s.text, duration: s.duration, label: s.text.slice(0, 30) });
+        }
+      });
+      setShowScriptModal(false);
+      setScriptTopic('');
+      toast.success('Сценарий сгенерирован! Создано сцен: ' + data.scenes.length);
+      trackEvent('ai_script_generated', { tone: scriptTone, duration: scriptDuration, scenesCount: data.scenes.length });
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Z2: AI Captions mutation
+  const generateCaptions = trpc.ai.generateCaptions.useMutation({
+    onSuccess: (data) => {
+      setCaptionsSrt(data.srt);
+      setShowCaptionsModal(true);
+      toast.success('Субтитры сгенерированы!');
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   // Auto-save: listen for custom event dispatched by store timer
   useEffect(() => {
@@ -1385,6 +1436,69 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             &#8618;{futureLen > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureLen})</span>}
           </button>
         </div>
+
+        {/* Z1: AI Script Generator button */}
+        <button
+          onClick={() => setShowScriptModal(true)}
+          title="Сгенерировать скрипт с помощью ИИ"
+          style={{
+            padding: '6px 12px',
+            borderRadius: 16,
+            border: `1px solid ${C.purple}44`,
+            background: C.purple + '0a',
+            color: C.purple,
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            transition: 'all .15s',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '18'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '0a'; }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Сгенерировать скрипт
+        </button>
+
+        {/* Z5: Create Shorts button (3+ scenes) */}
+        {scenes.length >= 3 && (
+          <button
+            onClick={() => setShowShortsModal(true)}
+            title="Создать Shorts из проекта"
+            style={{
+              padding: '6px 12px',
+              borderRadius: 16,
+              border: `1px solid ${C.cyan}44`,
+              background: C.cyan + '0a',
+              color: C.cyan,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              transition: 'all .15s',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '18'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '0a'; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="7" y="2" width="10" height="20" rx="2"/>
+              <line x1="12" y1="18" x2="12" y2="18"/>
+            </svg>
+            Создать Shorts
+          </button>
+        )}
 
         {/* Export / Generate pill */}
         <button
@@ -2137,6 +2251,43 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <audio controls src={sel.voiceoverUrl} style={{ height: 24, maxWidth: 120, flexShrink: 0 }} />
               )}
 
+              {/* Z2: Subtitles button */}
+              <button
+                className={!generateCaptions.isPending ? 'ed-action-btn' : undefined}
+                onClick={() => {
+                  if (generateCaptions.isPending) return;
+                  const scenesData = scenes.filter(s => s.prompt.trim()).map(s => ({
+                    text: s.prompt,
+                    duration: s.duration,
+                  }));
+                  if (scenesData.length === 0) {
+                    toast.info('Добавьте текст в сцены для генерации субтитров');
+                    return;
+                  }
+                  generateCaptions.mutate({ scenes: scenesData });
+                }}
+                disabled={generateCaptions.isPending}
+                title="Сгенерировать субтитры для всех сцен"
+                style={{
+                  ...tinyBtnStyle(C, false),
+                  minWidth: 'auto',
+                  width: 'auto',
+                  padding: '0 6px',
+                  gap: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: 9,
+                  fontWeight: 500,
+                  color: generateCaptions.isPending ? C.orange : captionsSrt ? C.green : C.sub,
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="M7 15h4m-4-3h10"/>
+                </svg>
+                {generateCaptions.isPending ? 'Генерация...' : 'Субтитры'}
+              </button>
+
               {/* Scene duration inline control */}
               <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
@@ -2429,6 +2580,297 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           </span>
         </div>
       </div>
+
+      {/* ═══ Z1: Script Generator Modal ═══ */}
+      {showScriptModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setShowScriptModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+              padding: '28px 24px', width: 420, maxWidth: 'calc(100vw - 32px)',
+              boxShadow: '0 20px 60px rgba(0,0,0,.4)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Сгенерировать скрипт
+              </h3>
+              <button
+                onClick={() => setShowScriptModal(false)}
+                style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
+              >
+                &#10005;
+              </button>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>Тема видео</label>
+              <input
+                value={scriptTopic}
+                onChange={(e) => setScriptTopic(e.target.value)}
+                placeholder="Напр. Как ИИ изменит YouTube в 2026"
+                maxLength={500}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 10,
+                  border: `1px solid ${C.border}`, background: C.surface,
+                  color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none',
+                  boxSizing: 'border-box', transition: 'border-color .15s',
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = C.purple + '55'; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>Тон</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {([
+                    { value: 'professional' as const, label: 'Профессиональный' },
+                    { value: 'casual' as const, label: 'Разговорный' },
+                    { value: 'fun' as const, label: 'Весёлый' },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setScriptTone(opt.value)}
+                      style={{
+                        padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                        border: `1px solid ${scriptTone === opt.value ? C.purple + '55' : C.border}`,
+                        background: scriptTone === opt.value ? C.purple + '10' : 'transparent',
+                        color: scriptTone === opt.value ? C.purple : C.text,
+                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                        transition: 'all .15s',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>Длительность</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {([
+                    { value: '30s' as const, label: '30 секунд' },
+                    { value: '1min' as const, label: '1 минута' },
+                    { value: '3min' as const, label: '3 минуты' },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setScriptDuration(opt.value)}
+                      style={{
+                        padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                        border: `1px solid ${scriptDuration === opt.value ? C.purple + '55' : C.border}`,
+                        background: scriptDuration === opt.value ? C.purple + '10' : 'transparent',
+                        color: scriptDuration === opt.value ? C.purple : C.text,
+                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                        transition: 'all .15s',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, color: C.dim, marginBottom: 16 }}>
+              Стоимость: 2 AI кредита. ИИ создаст сцены с описаниями для генерации видео.
+            </div>
+
+            <button
+              onClick={() => {
+                if (!scriptTopic.trim()) { toast.error('Укажите тему видео'); return; }
+                generateScript.mutate({ topic: scriptTopic, tone: scriptTone, duration: scriptDuration });
+              }}
+              disabled={generateScript.isPending || !scriptTopic.trim()}
+              style={{
+                width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
+                background: (!scriptTopic.trim() || generateScript.isPending) ? C.dim : `linear-gradient(135deg, ${C.purple}, ${C.pink})`,
+                color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!scriptTopic.trim() || generateScript.isPending) ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit', transition: 'all .2s',
+                opacity: (!scriptTopic.trim() || generateScript.isPending) ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              {generateScript.isPending ? (
+                <>
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,.3)', borderTopColor: '#fff', animation: 'spin .8s linear infinite', flexShrink: 0 }} />
+                  Генерация...
+                </>
+              ) : 'Сгенерировать сценарий'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Z2: Captions Modal (SRT preview + download) ═══ */}
+      {showCaptionsModal && captionsSrt && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setShowCaptionsModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+              padding: '28px 24px', width: 500, maxWidth: 'calc(100vw - 32px)',
+              maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
+              boxShadow: '0 20px 60px rgba(0,0,0,.4)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>Субтитры (SRT)</h3>
+              <button
+                onClick={() => setShowCaptionsModal(false)}
+                style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
+              >
+                &#10005;
+              </button>
+            </div>
+
+            <pre style={{
+              flex: 1, minHeight: 0, overflow: 'auto', padding: 16, borderRadius: 10,
+              background: C.surface, border: `1px solid ${C.border}`, color: C.text,
+              fontSize: 12, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.6,
+              whiteSpace: 'pre-wrap', margin: '0 0 16px 0',
+            }}>
+              {captionsSrt}
+            </pre>
+
+            <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+              <button
+                onClick={() => {
+                  const blob = new Blob([captionsSrt], { type: 'text/plain;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${sync.project?.title || 'video'}-subtitles.srt`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast.success('SRT файл скачан!');
+                }}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 10, border: 'none',
+                  background: C.green, color: '#fff', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Скачать .SRT
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(captionsSrt).then(() => toast.success('Скопировано!'));
+                }}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 10,
+                  border: `1px solid ${C.border}`, background: 'transparent',
+                  color: C.text, fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Копировать
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Z5: Create Shorts Modal ═══ */}
+      {showShortsModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setShowShortsModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+              padding: '32px 28px', width: 400, maxWidth: 'calc(100vw - 32px)',
+              boxShadow: '0 20px 60px rgba(0,0,0,.4)', textAlign: 'center',
+            }}
+          >
+            <div style={{
+              width: 56, height: 56, borderRadius: 16, margin: '0 auto 16px',
+              background: C.cyan + '12', border: `2px solid ${C.cyan}30`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.cyan} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="7" y="2" width="10" height="20" rx="2"/>
+                <line x1="12" y1="18" x2="12" y2="18"/>
+              </svg>
+            </div>
+
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>
+              Создать Shorts
+            </h3>
+            <p style={{ fontSize: 13, color: C.sub, margin: '0 0 20px', lineHeight: 1.6 }}>
+              ИИ анализирует ваше видео и создаёт короткие клипы для YouTube Shorts, TikTok и Reels.
+            </p>
+
+            <div style={{
+              background: C.surface, borderRadius: 10, padding: 16,
+              border: `1px solid ${C.border}`, marginBottom: 20, textAlign: 'left',
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8 }}>Что будет сделано:</div>
+              <ul style={{ margin: 0, paddingLeft: 18, color: C.sub, fontSize: 12, lineHeight: 1.8 }}>
+                <li>Анализ самых ярких моментов</li>
+                <li>Автоматическая обрезка до 60 секунд</li>
+                <li>Вертикальный формат 9:16</li>
+                <li>Оптимизация для алгоритмов</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowShortsModal(false);
+                toast.info('Скоро — эта функция в разработке');
+              }}
+              style={{
+                width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
+                background: `linear-gradient(135deg, ${C.cyan}, ${C.blue})`,
+                color: '#fff', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .2s',
+              }}
+            >
+              Сгенерировать
+            </button>
+            <button
+              onClick={() => setShowShortsModal(false)}
+              style={{
+                width: '100%', padding: '10px 0', marginTop: 8, borderRadius: 10,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Global hover styles + keyframes ── */}
       <style>{`

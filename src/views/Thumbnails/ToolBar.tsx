@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { toast } from '@/stores/useNotificationStore';
 import { Z_INDEX } from '@/lib/constants';
 
 interface ToolBarProps {
@@ -104,6 +105,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const [showInsert, setShowInsert] = useState(false);
   const [showTablePicker, setShowTablePicker] = useState(false);
   const [tableHover, setTableHover] = useState({ r: 0, c: 0 });
+  const [showABTestModal, setShowABTestModal] = useState(false);
 
   const closeAllSubmenus = useCallback(() => {
     setShowShapes(false);
@@ -367,6 +369,139 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
         />
         <span style={{ fontSize: 8, color: C.dim, fontWeight: 600 }}>{t('thumbs.toolbar.bg')}</span>
       </div>
+
+      {/* Z4: Remove Background button (placeholder) */}
+      {!isMobile && divider}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Убрать фон"
+        onClick={() => toast.info('Скоро — удаление фона в разработке')}
+        title="Убрать фон"
+        style={{
+          width: 44, height: 44, borderRadius: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          color: C.sub, background: 'transparent', cursor: 'pointer', transition: 'all .15s',
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.49 9A9 9 0 1 0 5.64 5.64L1 10h6V4"/>
+          <path d="M12 7v5l4 2"/>
+        </svg>
+        <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: C.dim }}>Фон</span>
+      </div>
+
+      {/* Z6: A/B Test button */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="A/B тест обложки"
+        onClick={() => setShowABTestModal(true)}
+        title="A/B тест обложки"
+        style={{
+          width: 44, height: 44, borderRadius: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          color: C.sub, background: 'transparent', cursor: 'pointer', transition: 'all .15s',
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <path d="M12 2v4"/>
+          <path d="M9 12h6"/>
+          <path d="M12 9v6"/>
+        </svg>
+        <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: C.dim }}>A/B</span>
+      </div>
+
+      {/* Z6: A/B Test Modal */}
+      {showABTestModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setShowABTestModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+              padding: '32px 28px', width: 420, maxWidth: 'calc(100vw - 32px)',
+              boxShadow: '0 20px 60px rgba(0,0,0,.4)', textAlign: 'center',
+            }}
+          >
+            <div style={{
+              width: 56, height: 56, borderRadius: 16, margin: '0 auto 16px',
+              background: `${C.orange}12`, border: `2px solid ${C.orange}30`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.orange} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <path d="M12 2v4"/>
+                <path d="M9 12h6"/>
+                <path d="M12 9v6"/>
+              </svg>
+            </div>
+
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>
+              A/B Тест обложки
+            </h3>
+            <p style={{ fontSize: 13, color: C.sub, margin: '0 0 20px', lineHeight: 1.6 }}>
+              Создайте 2-3 варианта обложки, и мы проверим какой работает лучше.
+            </p>
+
+            <div style={{
+              background: C.surface, borderRadius: 10, padding: 16,
+              border: `1px solid ${C.border}`, marginBottom: 20, textAlign: 'left',
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8 }}>Как это работает:</div>
+              <ul style={{ margin: 0, paddingLeft: 18, color: C.sub, fontSize: 12, lineHeight: 1.8 }}>
+                <li>Создайте несколько вариантов обложки</li>
+                <li>Подключите YouTube канал</li>
+                <li>ИИ автоматически чередует обложки</li>
+                <li>Аналитика покажет лучший вариант по CTR</li>
+              </ul>
+            </div>
+
+            <div style={{
+              padding: '10px 14px', background: `${C.orange}08`, borderRadius: 8,
+              border: `1px solid ${C.orange}20`, marginBottom: 20,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <span style={{ fontSize: 14 }}>&#9733;</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.orange }}>
+                Подключите YouTube канал для автоматического тестирования
+              </span>
+            </div>
+
+            <div style={{
+              padding: '8px 12px', background: C.bg, borderRadius: 8,
+              border: `1px dashed ${C.border}`, marginBottom: 20,
+              fontSize: 11, color: C.dim, display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <span style={{ fontWeight: 700, color: C.purple }}>PRO+</span>
+              Доступно на тарифах PRO и STUDIO
+            </div>
+
+            <button
+              onClick={() => setShowABTestModal(false)}
+              style={{
+                width: '100%', padding: '11px 0', borderRadius: 10,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.text, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Shapes submenu popover */}
       {showShapes && (
