@@ -8,6 +8,23 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
    AI Video Generation Providers — referral links page
    ═══════════════════════════════════════════════════════════════════════════ */
 
+interface StylePreset {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string;
+  color: string;
+}
+
+const STYLE_PRESETS: StylePreset[] = [
+  { id: 'cinematic', name: 'Cinematic', desc: 'Film-quality dramatic scenes', icon: '\uD83C\uDFAC', color: '#7c3aed' },
+  { id: 'anime', name: 'Anime', desc: 'Japanese animation aesthetic', icon: '\u2728', color: '#ec4899' },
+  { id: 'gaming', name: 'Gaming / Minecraft', desc: 'Pixel-art game world aesthetic', icon: '\uD83C\uDFAE', color: '#4CAF50' },
+  { id: 'vlog', name: 'Vlog / Talking Head', desc: 'Natural creator-style footage', icon: '\uD83D\uDCF7', color: '#0891b2' },
+  { id: 'explainer', name: 'Explainer', desc: 'Motion graphics & infographics', icon: '\uD83D\uDCA1', color: '#f59e0b' },
+  { id: 'nature', name: 'Nature / Drone', desc: 'Aerial & landscape cinematography', icon: '\uD83C\uDF3F', color: '#16a34a' },
+];
+
 interface Provider {
   id: string;
   name: string;
@@ -113,6 +130,7 @@ export function Veo3Generator() {
   const { locale } = useLocaleStore();
   const isRu = locale === 'ru' || locale === 'kk';
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: 1000, margin: '0 auto' }}>
@@ -128,6 +146,51 @@ export function Veo3Generator() {
             ? '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0418\u0418-\u0441\u0435\u0440\u0432\u0438\u0441 \u0434\u043b\u044f \u0433\u0435\u043d\u0435\u0440\u0430\u0446\u0438\u0438 \u0432\u0438\u0434\u0435\u043e. \u041e\u0442 \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u044b\u0445 \u043c\u043e\u0434\u0435\u043b\u0435\u0439 \u0434\u043e \u043f\u0440\u043e\u0444\u0435\u0441\u0441\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u044b\u0445 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432.'
             : 'Choose an AI service for video generation. From free models to professional-grade tools.'}
         </p>
+      </div>
+
+      {/* Style Presets */}
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 12 }}>
+          {isRu ? '\uD83C\uDFA8 \u0421\u0442\u0438\u043b\u044c \u0432\u0438\u0434\u0435\u043e' : '\uD83C\uDFA8 Style Presets'}
+        </h2>
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 8,
+        }}>
+          {STYLE_PRESETS.map((sp) => {
+            const active = activePreset === sp.id;
+            return (
+              <button
+                key={sp.id}
+                onClick={() => setActivePreset(active ? null : sp.id)}
+                style={{
+                  padding: '8px 14px', borderRadius: 10,
+                  border: `1.5px solid ${active ? sp.color : C.border}`,
+                  background: active ? `${sp.color}15` : C.surface,
+                  color: active ? sp.color : C.sub,
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  transition: 'all 0.2s ease', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  outline: 'none',
+                }}
+              >
+                <span style={{ fontSize: 16 }}>{sp.icon}</span>
+                <span>{sp.name}</span>
+              </button>
+            );
+          })}
+        </div>
+        {activePreset && (
+          <div style={{
+            marginTop: 10, padding: '10px 14px', borderRadius: 8,
+            background: `${STYLE_PRESETS.find((s) => s.id === activePreset)?.color ?? C.accent}0a`,
+            border: `1px solid ${STYLE_PRESETS.find((s) => s.id === activePreset)?.color ?? C.accent}20`,
+            fontSize: 13, color: C.sub,
+          }}>
+            {STYLE_PRESETS.find((s) => s.id === activePreset)?.desc}
+            {' \u2014 '}
+            {isRu ? '\u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043b\u044e\u0431\u043e\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u043d\u0438\u0436\u0435 \u0434\u043b\u044f \u044d\u0442\u043e\u0433\u043e \u0441\u0442\u0438\u043b\u044f.' : 'try any provider below for this style.'}
+          </div>
+        )}
       </div>
 
       {/* Tip box */}

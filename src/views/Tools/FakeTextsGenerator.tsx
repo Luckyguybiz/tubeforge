@@ -30,7 +30,7 @@ interface Message {
   direction: 'sent' | 'received';
 }
 
-type PlatformStyleId = 'imessage' | 'whatsapp' | 'telegram';
+type PlatformStyleId = 'imessage' | 'whatsapp' | 'telegram' | 'minecraft';
 
 interface PlatformStyle {
   id: PlatformStyleId;
@@ -98,14 +98,31 @@ const PLATFORM_STYLES: Record<PlatformStyleId, PlatformStyle> = {
     statusBarColor: '#3e6d8e',
     checkmarks: true,
   },
+  minecraft: {
+    id: 'minecraft',
+    label: 'Minecraft',
+    bgColor: '#2B2B2B',
+    headerColor: '#1a1a1a',
+    headerTextColor: '#FFFFFF',
+    sentColor: 'rgba(0,0,0,0.5)',
+    sentTextColor: '#55FF55',
+    receivedColor: 'rgba(0,0,0,0.5)',
+    receivedTextColor: '#FFFFFF',
+    inputBarBg: '#1a1a1a',
+    fontFamily: '"Courier New", Courier, monospace',
+    accentColor: '#4CAF50',
+    statusBarColor: '#1a1a1a',
+    checkmarks: false,
+  },
 };
 
-const PLATFORM_IDS: PlatformStyleId[] = ['imessage', 'whatsapp', 'telegram'];
+const PLATFORM_IDS: PlatformStyleId[] = ['imessage', 'whatsapp', 'telegram', 'minecraft'];
 
 const PLATFORM_COLORS: Record<PlatformStyleId, string> = {
   imessage: '#007AFF',
   whatsapp: '#25D366',
   telegram: '#0088cc',
+  minecraft: '#4CAF50',
 };
 
 /* ─── canvas drawing helpers ─── */
@@ -271,7 +288,7 @@ function drawHeader(
     // Avatar
     const ax = SCREEN_X + 44;
     const ay = headerY + headerH / 2;
-    ctx.fillStyle = style.id === 'whatsapp' ? '#128c7e' : '#5b9bd5';
+    ctx.fillStyle = style.id === 'whatsapp' ? '#128c7e' : style.id === 'minecraft' ? '#4CAF50' : '#5b9bd5';
     ctx.beginPath();
     ctx.arc(ax, ay, 16, 0, Math.PI * 2);
     ctx.fill();
@@ -303,7 +320,7 @@ function drawInputBar(ctx: CanvasRenderingContext2D, style: PlatformStyle) {
   const barY = SCREEN_Y + SCREEN_H - INPUT_BAR_H;
 
   // Separator
-  ctx.fillStyle = style.id === 'imessage' ? '#d1d1d6' : '#ddd';
+  ctx.fillStyle = style.id === 'imessage' ? '#d1d1d6' : style.id === 'minecraft' ? '#444' : '#ddd';
   ctx.fillRect(SCREEN_X, barY, SCREEN_W, 0.5);
 
   // Background
@@ -328,7 +345,7 @@ function drawInputBar(ctx: CanvasRenderingContext2D, style: PlatformStyle) {
   const fieldY = barY + 10;
   const fieldW = SCREEN_W - 68;
   const fieldH = 36;
-  ctx.strokeStyle = style.id === 'imessage' ? '#c7c7cc' : '#ddd';
+  ctx.strokeStyle = style.id === 'imessage' ? '#c7c7cc' : style.id === 'minecraft' ? '#555' : '#ddd';
   ctx.lineWidth = 1;
   ctx.beginPath();
   const fr = 18;
@@ -350,7 +367,7 @@ function drawInputBar(ctx: CanvasRenderingContext2D, style: PlatformStyle) {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillText(
-    style.id === 'imessage' ? 'iMessage' : 'Message',
+    style.id === 'imessage' ? 'iMessage' : style.id === 'minecraft' ? '<Steve> ...' : 'Message',
     fieldX + 14,
     fieldY + fieldH / 2,
   );

@@ -5,7 +5,7 @@ import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 const MODELS = ['DALL-E 3', 'Stable Diffusion', 'Midjourney'];
-const STYLES = ['Realistic', 'Anime', '3D', 'Digital Art', 'Oil Painting'];
+const STYLES = ['Realistic', 'Anime', '3D', 'Digital Art', 'Oil Painting', 'Pixel Art'];
 const SIZES = ['1024x1024', '1792x1024', '1024x1792'];
 const GRADIENT: [string, string] = ['#6366f1', '#8b5cf6'];
 

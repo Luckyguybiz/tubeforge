@@ -624,6 +624,10 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       if (!pro) params.set('limit', '10');
       params.set('platform', platform === 'tiktok' ? 'tiktok' : 'youtube');
 
+      const promoRaw = typeof window !== 'undefined' ? localStorage.getItem('tf-promo') : null;
+      const promoCode = promoRaw ? (JSON.parse(promoRaw) as { code?: string })?.code : '';
+      if (promoCode) params.set('promoCode', promoCode);
+
       const res = await fetch(`/api/tools/shorts-analytics?${params}`);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);

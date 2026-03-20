@@ -79,6 +79,7 @@ function getCategories(t: (key: string) => string): { key: string; label: string
     { key: 'fitness', label: t('tiktok.cat.fitness') },
     { key: 'music', label: t('tiktok.cat.music') },
     { key: 'gaming', label: t('tiktok.cat.gaming') },
+    { key: 'minecraft', label: t('tiktok.cat.minecraft') },
     { key: 'diy', label: t('tiktok.cat.diy') },
     { key: 'fashion', label: t('tiktok.cat.fashion') },
     { key: 'pets', label: t('tiktok.cat.pets') },
@@ -92,6 +93,7 @@ const TIKTOK_RPM: Record<string, number> = {
   dance: 0.02,
   comedy: 0.03,
   gaming: 0.05,
+  minecraft: 0.06,
   education: 0.04,
   food: 0.03,
   beauty: 0.03,
@@ -610,6 +612,10 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
       if (category) params.set('category', category);
       if (hashtag) params.set('hashtag', hashtag);
       if (!pro) params.set('limit', '10');
+
+      const promoRaw = typeof window !== 'undefined' ? localStorage.getItem('tf-promo') : null;
+      const promoCode = promoRaw ? (JSON.parse(promoRaw) as { code?: string })?.code : '';
+      if (promoCode) params.set('promoCode', promoCode);
 
       const res = await fetch(`/api/tools/tiktok-analytics?${params}`);
       if (!res.ok) {
