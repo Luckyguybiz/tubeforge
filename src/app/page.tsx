@@ -393,19 +393,19 @@ const FOOTER_COLUMNS = [
   {
     title: 'Юридическое',
     links: [
-      { label: 'Условия использования', href: '#' },
-      { label: 'Конфиденциальность', href: '#' },
-      { label: 'Возврат средств', href: '#' },
-      { label: 'Cookie-политика', href: '#' },
+      { label: 'Условия использования', href: '/terms' },
+      { label: 'Конфиденциальность', href: '/privacy' },
+      { label: 'Возврат средств', href: 'mailto:support@tubeforge.co' },
+      { label: 'Cookie-политика', href: '/privacy' },
     ],
   },
   {
     title: 'Соцсети',
     links: [
-      { label: 'YouTube', href: '#' },
-      { label: 'Telegram', href: '#' },
-      { label: 'Twitter / X', href: '#' },
-      { label: 'ВКонтакте', href: '#' },
+      { label: 'YouTube', href: 'https://youtube.com/@tubeforge' },
+      { label: 'Telegram', href: 'https://t.me/tubeforge' },
+      { label: 'Twitter / X', href: 'https://twitter.com/tubeforge' },
+      { label: 'ВКонтакте', href: 'https://vk.com/tubeforge' },
     ],
   },
 ];
@@ -921,16 +921,16 @@ export default function LandingPage() {
                 ИИ-платформа для YouTube-креаторов. Создавайте, оптимизируйте и публикуйте видео быстрее.
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <HoverLink href="#" ariaLabel="YouTube" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
+                <HoverLink href="https://youtube.com/@tubeforge" ariaLabel="YouTube" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
                 </HoverLink>
-                <HoverLink href="#" ariaLabel="Telegram" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
+                <HoverLink href="https://t.me/tubeforge" ariaLabel="Telegram" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>
                 </HoverLink>
-                <HoverLink href="#" ariaLabel="Twitter" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
+                <HoverLink href="https://twitter.com/tubeforge" ariaLabel="Twitter" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                 </HoverLink>
-                <HoverLink href="#" ariaLabel="ВКонтакте" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
+                <HoverLink href="https://vk.com/tubeforge" ariaLabel="ВКонтакте" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.598-.188 1.368 1.259 2.184 1.814.617.42 1.085.328 1.085.328l2.181-.03s1.14-.071.6-.97c-.045-.074-.32-.666-1.64-1.88-1.383-1.272-1.197-1.066.468-3.27.732-.965 1.532-2.166 1.396-2.453-.128-.27-.914-.198-.914-.198l-2.455.015s-.182-.025-.317.056c-.133.08-.218.265-.218.265s-.39 1.04-.911 1.926c-1.098 1.871-1.537 1.97-1.716 1.854-.416-.272-.312-1.092-.312-1.674 0-1.82.276-2.58-.537-2.777-.27-.065-.468-.108-1.155-.115-.881-.01-1.627.003-2.05.21-.28.137-.497.443-.365.46.163.022.532.1.728.364.253.342.244 1.108.244 1.108s.145 2.14-.34 2.404c-.332.182-.787-.19-1.765-1.893-.5-.872-.878-1.836-.878-1.836s-.073-.179-.203-.275c-.158-.116-.378-.153-.378-.153l-2.334.015s-.35.01-.478.162c-.114.135-.009.414-.009.414s1.839 4.302 3.921 6.468c1.91 1.987 4.078 1.857 4.078 1.857h.983z" /></svg>
                 </HoverLink>
               </div>

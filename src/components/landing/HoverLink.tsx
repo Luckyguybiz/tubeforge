@@ -9,6 +9,8 @@ interface HoverLinkProps {
   hoverColor?: string;
   resetColor?: string;
   ariaLabel?: string;
+  target?: string;
+  rel?: string;
 }
 
 /**
@@ -21,12 +23,17 @@ export function HoverLink({
   hoverColor,
   resetColor,
   ariaLabel,
+  target,
+  rel,
 }: HoverLinkProps) {
+  const isExternal = href.startsWith('http') || href.startsWith('mailto:');
   return (
     <a
       href={href}
       aria-label={ariaLabel}
       style={style}
+      target={target ?? (isExternal ? '_blank' : undefined)}
+      rel={rel ?? (isExternal ? 'noopener noreferrer' : undefined)}
       onMouseEnter={(e) => {
         if (hoverColor) e.currentTarget.style.color = hoverColor;
       }}
