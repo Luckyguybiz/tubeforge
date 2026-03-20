@@ -30,8 +30,8 @@ const puppeteer = require('puppeteer');
           // Use the site's own self-hosted FFmpeg files
           const CDNS = [
             window.location.origin + '/ffmpeg',
-            'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd',
-            'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd',
+            'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
+            'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
           ];
 
           // Create a 1-second 440Hz WAV (mono, 16-bit, 8000Hz)

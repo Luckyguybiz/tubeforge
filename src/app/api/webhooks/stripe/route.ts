@@ -78,25 +78,131 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         if (!session.subscription || !session.customer) break;
+
+        // Idempotency: skip if this event was already processed
+        const existingCheckout = await db.processedEvent.findUnique({
+          where: { stripeEventId: event.id },
+        });
+        if (existingCheckout) {
+          console.warn('[Stripe] Duplicate checkout.session.completed event, skipping:', event.id);
+          break;
+        }
+
         const sub = await stripe.subscriptions.retrieve(session.subscription as string);
         const plan = getPlanFromSub(sub);
         if (plan) {
-          await updatePlan(session.customer as string, plan);
+          try {
+            await db.$transaction([
+              db.processedEvent.create({ data: { stripeEventId: event.id } }),
+              db.user.updateMany({
+                where: { stripeId: session.customer as string },
+                data: { plan },
+              }),
+            ]);
+          } catch (err) {
+            const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+            if (isPrismaUnique) {
+              console.warn('[Stripe] Duplicate checkout.session.completed event (unique constraint), skipping:', event.id);
+            } else {
+              throw err;
+            }
+          }
         }
         break;
       }
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription;
         if (!sub.customer) break;
-        await updatePlan(sub.customer as string, 'FREE');
+
+        // Idempotency: skip if this event was already processed
+        const existingDeletion = await db.processedEvent.findUnique({
+          where: { stripeEventId: event.id },
+        });
+        if (existingDeletion) {
+          console.warn('[Stripe] Duplicate customer.subscription.deleted event, skipping:', event.id);
+          break;
+        }
+
+        try {
+          await db.$transaction([
+            db.processedEvent.create({ data: { stripeEventId: event.id } }),
+            db.user.updateMany({
+              where: { stripeId: sub.customer as string },
+              data: { plan: 'FREE' },
+            }),
+          ]);
+        } catch (err) {
+          const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+          if (isPrismaUnique) {
+            console.warn('[Stripe] Duplicate customer.subscription.deleted event (unique constraint), skipping:', event.id);
+          } else {
+            throw err;
+          }
+        }
         break;
       }
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;
         if (!sub.customer) break;
+
+        // If the subscription is not active (e.g. past_due, canceled, unpaid),
+        // downgrade to FREE instead of upgrading.
+        if (sub.status !== 'active' && sub.status !== 'trialing') {
+          console.warn('[Stripe] Subscription not active, status:', sub.status, 'sub:', sub.id);
+          // Idempotency: skip if this event was already processed
+          const existingInactive = await db.processedEvent.findUnique({
+            where: { stripeEventId: event.id },
+          });
+          if (existingInactive) {
+            console.warn('[Stripe] Duplicate customer.subscription.updated event, skipping:', event.id);
+            break;
+          }
+          try {
+            await db.$transaction([
+              db.processedEvent.create({ data: { stripeEventId: event.id } }),
+              db.user.updateMany({
+                where: { stripeId: sub.customer as string },
+                data: { plan: 'FREE' },
+              }),
+            ]);
+          } catch (err) {
+            const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+            if (isPrismaUnique) {
+              console.warn('[Stripe] Duplicate customer.subscription.updated event (unique constraint), skipping:', event.id);
+            } else {
+              throw err;
+            }
+          }
+          break;
+        }
+
+        // Idempotency: skip if this event was already processed
+        const existingUpdate = await db.processedEvent.findUnique({
+          where: { stripeEventId: event.id },
+        });
+        if (existingUpdate) {
+          console.warn('[Stripe] Duplicate customer.subscription.updated event, skipping:', event.id);
+          break;
+        }
+
         const updatedPlan = getPlanFromSub(sub);
         if (updatedPlan) {
-          await updatePlan(sub.customer as string, updatedPlan);
+          try {
+            await db.$transaction([
+              db.processedEvent.create({ data: { stripeEventId: event.id } }),
+              db.user.updateMany({
+                where: { stripeId: sub.customer as string },
+                data: { plan: updatedPlan },
+              }),
+            ]);
+          } catch (err) {
+            const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+            if (isPrismaUnique) {
+              console.warn('[Stripe] Duplicate customer.subscription.updated event (unique constraint), skipping:', event.id);
+            } else {
+              throw err;
+            }
+          }
         }
         break;
       }
@@ -112,7 +218,7 @@ export async function POST(req: NextRequest) {
         if (!payingUser?.referredBy) break;
 
         // Credit 20% commission to the referrer
-        const commission = Math.round((invoice.amount_paid * 20) / 10000);
+        const commission = Math.round((invoice.amount_paid * 20) / 100);
 
         // Find the referrer so we can link the payout record
         const referrer = await db.user.findFirst({
@@ -151,11 +257,67 @@ export async function POST(req: NextRequest) {
       }
       case 'invoice.payment_failed': {
         const failedInvoice = event.data.object as Stripe.Invoice;
-        // Don't immediately downgrade — Stripe will retry. Log for monitoring.
+        const failedCustomerId = typeof failedInvoice.customer === 'string'
+          ? failedInvoice.customer
+          : failedInvoice.customer?.id;
+
         console.warn(
-          '[Stripe] Payment failed for customer:', failedInvoice.customer,
+          '[Stripe] Payment failed for customer:', failedCustomerId,
           'invoice:', failedInvoice.id,
+          'attempt:', failedInvoice.attempt_count,
         );
+
+        if (failedCustomerId) {
+          // Idempotency: skip if this event was already processed
+          const existingFailed = await db.processedEvent.findUnique({
+            where: { stripeEventId: event.id },
+          });
+          if (existingFailed) {
+            console.warn('[Stripe] Duplicate invoice.payment_failed event, skipping:', event.id);
+            break;
+          }
+
+          // Check how many times Stripe has retried. On final attempt (typically 4th),
+          // downgrade the user to FREE so they lose access to paid features.
+          // On earlier attempts, just log — Stripe's smart retries may recover payment.
+          const attemptCount = failedInvoice.attempt_count ?? 0;
+
+          if (attemptCount >= 3) {
+            // Final retry exhausted — downgrade to FREE
+            try {
+              await db.$transaction([
+                db.processedEvent.create({ data: { stripeEventId: event.id } }),
+                db.user.updateMany({
+                  where: { stripeId: failedCustomerId },
+                  data: { plan: 'FREE' },
+                }),
+              ]);
+              console.warn(
+                '[Stripe] Downgraded user to FREE after', attemptCount,
+                'failed payment attempts. Customer:', failedCustomerId,
+              );
+            } catch (err) {
+              const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+              if (isPrismaUnique) {
+                console.warn('[Stripe] Duplicate invoice.payment_failed event (unique constraint), skipping:', event.id);
+              } else {
+                throw err;
+              }
+            }
+          } else {
+            // Early retry — record event for idempotency but don't downgrade yet
+            try {
+              await db.processedEvent.create({ data: { stripeEventId: event.id } });
+            } catch (err) {
+              const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
+              if (!isPrismaUnique) throw err;
+            }
+            console.warn(
+              '[Stripe] Payment failed (attempt', attemptCount,
+              ') — not downgrading yet. Customer:', failedCustomerId,
+            );
+          }
+        }
         break;
       }
     }

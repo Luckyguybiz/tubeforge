@@ -19,24 +19,64 @@ interface RateLimitEntry {
 
 /** IP -> sliding-window counter */
 const rateLimitMap = new Map<string, RateLimitEntry>();
+/** Separate stricter rate limit map for auth endpoints */
+const authRateLimitMap = new Map<string, RateLimitEntry>();
 
 /** Requests allowed per window per IP */
 const RATE_LIMIT_MAX = 120;
+/** Auth endpoint: stricter limit (10 requests per minute) */
+const AUTH_RATE_LIMIT_MAX = 10;
 /** Window duration in ms (1 minute) */
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** Purge stale entries every N calls to keep the Map bounded */
 const CLEANUP_INTERVAL = 1_000;
 /** Entries older than this are eligible for purge */
 const STALE_THRESHOLD_MS = 5 * 60_000; // 5 minutes
+/** Maximum number of entries per rate-limit map to prevent memory exhaustion */
+const MAX_ENTRIES = 10_000;
 
 let callCounter = 0;
 
 /**
- * Returns `true` if the request is within the rate limit for the given IP.
- * Returns `false` (should 429) when the IP has exceeded RATE_LIMIT_MAX
- * requests within the current window.
+ * Emergency cleanup when a map exceeds MAX_ENTRIES.
+ * First removes expired entries, then drops the oldest 50%.
  */
-function checkRateLimit(ip: string): boolean {
+function emergencyCleanup(map: Map<string, RateLimitEntry>): void {
+  const now = Date.now();
+
+  // Step 1: remove expired entries
+  for (const [key, entry] of map) {
+    if (now >= entry.resetAt) {
+      map.delete(key);
+    }
+  }
+
+  // Step 2: if still >= MAX_ENTRIES, drop the oldest half
+  if (map.size >= MAX_ENTRIES) {
+    const entries = [...map.entries()].sort(
+      (a, b) => a[1].resetAt - b[1].resetAt,
+    );
+    const toDelete = Math.ceil(entries.length * 0.5);
+    for (let i = 0; i < toDelete; i++) {
+      map.delete(entries[i][0]);
+    }
+  }
+}
+
+/**
+ * Returns `true` if the request is within the rate limit for the given IP.
+ * Returns `false` (should 429) when the IP has exceeded the allowed
+ * requests within the current window.
+ *
+ * @param ip - Client IP address
+ * @param map - Which rate limit map to use
+ * @param max - Maximum requests per window
+ */
+function checkRateLimit(
+  ip: string,
+  map: Map<string, RateLimitEntry> = rateLimitMap,
+  max: number = RATE_LIMIT_MAX,
+): boolean {
   const now = Date.now();
 
   // Periodic cleanup of stale entries
@@ -49,18 +89,28 @@ function checkRateLimit(ip: string): boolean {
         rateLimitMap.delete(key);
       }
     }
+    for (const [key, entry] of authRateLimitMap) {
+      if (entry.resetAt < cutoff) {
+        authRateLimitMap.delete(key);
+      }
+    }
   }
 
-  const entry = rateLimitMap.get(ip);
+  // Emergency cleanup if the map exceeds the size cap
+  if (map.size >= MAX_ENTRIES) {
+    emergencyCleanup(map);
+  }
+
+  const entry = map.get(ip);
 
   if (!entry || now > entry.resetAt) {
     // No record or window expired — start a fresh window
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    map.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     return true;
   }
 
   entry.count++;
-  return entry.count <= RATE_LIMIT_MAX;
+  return entry.count <= max;
 }
 
 /* ------------------------------------------------------------------ */
@@ -112,6 +162,19 @@ export default function middleware(req: NextRequest) {
         'Content-Type': 'text/plain',
       },
     });
+  }
+
+  // --- Stricter rate limiting for auth endpoints (brute-force protection) ---
+  if (pathname.startsWith('/api/auth/')) {
+    if (!checkRateLimit(ip, authRateLimitMap, AUTH_RATE_LIMIT_MAX)) {
+      return new NextResponse('Too Many Requests', {
+        status: 429,
+        headers: {
+          'Retry-After': '60',
+          'Content-Type': 'text/plain',
+        },
+      });
+    }
   }
 
   // Public routes that don't require auth

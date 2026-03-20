@@ -1,6 +1,14 @@
 import { clsx, type ClassValue } from 'clsx';
 
-export const uid = () => 'id_' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+/**
+ * Generate a cryptographically secure unique ID suitable for filenames.
+ * Uses crypto.getRandomValues() instead of Math.random() for security.
+ */
+export const uid = () => {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return 'id_' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+};
 
 export const fmtTime = (s: number) => {
   const m = Math.floor(s / 60);

@@ -290,6 +290,25 @@ function pickBestFormat(
   return null;
 }
 
+/** Build a streaming download response from an upstream fetch result */
+function buildStreamResponse(upstream: Response, filename: string): Response {
+  const headers = new Headers();
+  headers.set('Content-Type', upstream.headers.get('Content-Type') || 'application/octet-stream');
+
+  const contentRange = upstream.headers.get('Content-Range');
+  if (contentRange) {
+    const match = contentRange.match(/\/(\d+)$/);
+    if (match) headers.set('Content-Length', match[1]);
+  } else if (upstream.headers.get('Content-Length')) {
+    headers.set('Content-Length', upstream.headers.get('Content-Length')!);
+  }
+
+  headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+  headers.set('Cache-Control', 'no-cache, no-store');
+
+  return new Response(upstream.body, { status: 200, headers });
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
  * GET /api/tools/youtube-download/stream
  * ═══════════════════════════════════════════════════════════════════════ */
@@ -384,22 +403,26 @@ export async function GET(req: NextRequest) {
       } catch { /* invalid VPS URL */ }
     }
 
-    // Cobalt CDN domains
+    // Cobalt CDN domains — use endsWith to prevent subdomain spoofing
     if (
-      h.includes('cobalt.tools') ||
-      h.includes('co.wuk.sh') ||
-      h.includes('cobalt-cdn') ||
-      h.includes('imput.net') ||
-      h.endsWith('.worker.dev') ||
-      h.endsWith('.workers.dev') ||
-      h.endsWith('.r2.dev')
+      h === 'api.cobalt.tools' || h.endsWith('.cobalt.tools') ||
+      h === 'co.wuk.sh' || h.endsWith('.co.wuk.sh') ||
+      h.endsWith('.imput.net')
     ) allowed = true;
 
-    // YouTube / Google
-    if (h.includes('googlevideo.com') || h.includes('youtube.com') || h.includes('googleusercontent.com')) allowed = true;
+    // YouTube / Google — endsWith prevents googlevideo.com.evil.com bypass
+    if (
+      h.endsWith('.googlevideo.com') ||
+      h.endsWith('.youtube.com') || h === 'youtube.com' ||
+      h.endsWith('.googleusercontent.com')
+    ) allowed = true;
 
-    // TikTok
-    if (h.includes('tiktok.com') || h.includes('tiktokcdn.com') || h.includes('musical.ly')) allowed = true;
+    // TikTok — endsWith for safety
+    if (
+      h.endsWith('.tiktok.com') || h === 'tiktok.com' ||
+      h.endsWith('.tiktokcdn.com') ||
+      h.endsWith('.musical.ly')
+    ) allowed = true;
   } catch {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
@@ -423,32 +446,51 @@ export async function GET(req: NextRequest) {
     const upstream = await fetch(downloadUrl, {
       signal: AbortSignal.timeout(300_000),
       headers: fetchHeaders,
-      redirect: 'follow', // follow Cobalt redirects
+      redirect: 'manual', // prevent SSRF via redirect to internal IPs
     });
+
+    // Handle redirects safely — only follow if target is also on allowlist
+    if (upstream.status >= 300 && upstream.status < 400) {
+      const location = upstream.headers.get('location');
+      if (location) {
+        try {
+          const redir = new URL(location, downloadUrl);
+          const rh = redir.hostname;
+          const redirectAllowed =
+            rh.endsWith('.googlevideo.com') ||
+            rh.endsWith('.youtube.com') || rh === 'youtube.com' ||
+            rh.endsWith('.googleusercontent.com') ||
+            rh === 'api.cobalt.tools' || rh.endsWith('.cobalt.tools') ||
+            rh.endsWith('.imput.net') ||
+            rh.endsWith('.tiktok.com') || rh === 'tiktok.com' ||
+            rh.endsWith('.tiktokcdn.com');
+          if (redirectAllowed && redir.protocol === 'https:') {
+            // Re-fetch the redirect target
+            const redirected = await fetch(redir.toString(), {
+              signal: AbortSignal.timeout(300_000),
+              headers: fetchHeaders,
+              redirect: 'manual',
+            });
+            if (redirected.ok || redirected.status === 206) {
+              // Continue with redirected response (fall through to streaming logic below)
+              // We replace upstream reference via a wrapper
+              return buildStreamResponse(redirected, filename);
+            }
+          }
+        } catch { /* invalid redirect URL */ }
+      }
+      return NextResponse.json({ error: 'Redirect to disallowed host' }, { status: 403 });
+    }
 
     if (!upstream.ok && upstream.status !== 206) {
       console.log(`[yt-download] Upstream returned ${upstream.status} from ${strategySummary}`);
       return NextResponse.json(
-        { error: `Источник загрузки вернул ошибку ${upstream.status}` },
+        { error: 'Download source returned an error' },
         { status: 502 },
       );
     }
 
-    const headers = new Headers();
-    headers.set('Content-Type', upstream.headers.get('Content-Type') || 'application/octet-stream');
-
-    const contentRange = upstream.headers.get('Content-Range');
-    if (contentRange) {
-      const match = contentRange.match(/\/(\d+)$/);
-      if (match) headers.set('Content-Length', match[1]);
-    } else if (upstream.headers.get('Content-Length')) {
-      headers.set('Content-Length', upstream.headers.get('Content-Length')!);
-    }
-
-    headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    headers.set('Cache-Control', 'no-cache, no-store');
-
-    return new Response(upstream.body, { status: 200, headers });
+    return buildStreamResponse(upstream, filename);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[yt-download] Stream error:', message);

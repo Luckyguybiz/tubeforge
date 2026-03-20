@@ -1,14 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
-// Promo codes with duration in hours
-const PROMO_CODES: Record<string, { hours: number; label: string }> = {
+/**
+ * Promo codes with duration in hours.
+ *
+ * Set the PROMO_CODES env var as a JSON object to override, e.g.:
+ *   PROMO_CODES='{"SHORTS2026":{"hours":24,"label":"24h access"}}'
+ *
+ * Falls back to built-in defaults when the env var is not set.
+ * TODO: migrate promo codes to a database table for runtime management.
+ */
+const DEFAULT_PROMO_CODES: Record<string, { hours: number; label: string }> = {
   'SHORTS2026': { hours: 24, label: '24 часа полного доступа' },
   'TUBEFORGE': { hours: 24, label: '24 часа полного доступа' },
-  'CREATOR': { hours: 168, label: '7 дней полного доступа' },  // 7 days
-  '\u041F\u0415\u0420\u0412\u042B\u0419': { hours: 72, label: '3 дня полного доступа' },     // 3 days (ПЕРВЫЙ)
+  'CREATOR': { hours: 168, label: '7 дней полного доступа' },
+  '\u041F\u0415\u0420\u0412\u042B\u0419': { hours: 72, label: '3 дня полного доступа' },
 };
+
+const PROMO_CODES: Record<string, { hours: number; label: string }> = (() => {
+  const raw = process.env.PROMO_CODES;
+  if (!raw) return DEFAULT_PROMO_CODES;
+  try {
+    return JSON.parse(raw) as Record<string, { hours: number; label: string }>;
+  } catch {
+    console.error('[promo] Failed to parse PROMO_CODES env var, using defaults');
+    return DEFAULT_PROMO_CODES;
+  }
+})();
+
+const promoSchema = z.object({
+  code: z.string().min(1).max(30),
+});
 
 export async function POST(req: NextRequest) {
   // Auth required
@@ -26,17 +50,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let code: unknown;
+  let rawBody: unknown;
   try {
-    const body = await req.json();
-    code = body?.code;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
-  const normalized = (code ?? '').toString().trim().toUpperCase();
+
+  const parsed = promoSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Invalid promo code format', details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
+
+  const normalized = parsed.data.code.trim().toUpperCase();
 
   // Validate format before lookup to prevent prototype pollution / abuse
-  if (!normalized || normalized.length > 30 || !/^[\p{L}\p{N}]+$/u.test(normalized)) {
+  if (!/^[\p{L}\p{N}]+$/u.test(normalized)) {
     return NextResponse.json({ error: 'Invalid promo code format' }, { status: 400 });
   }
 

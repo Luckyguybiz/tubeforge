@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/server/auth';
+import { db } from '@/server/db';
+import { rateLimit } from '@/lib/rate-limit';
 
 /* ═══════════════════════════════════════════════════════════════════
    SSE Collaboration Stream
@@ -110,6 +113,49 @@ function cleanupExpiredLocks(projectId: string) {
 /** Exported for use by broadcast/lock endpoints */
 export { broadcastToProject, getClientsForProject, getLocksForProject, cleanupExpiredLocks, sceneLocks, LOCK_TIMEOUT_MS };
 
+// ─── Zod validation schema for POST body ───────────────────────
+
+const collaborationEventSchema = z.object({
+  projectId: z.string().min(1).max(100),
+  type: z.enum(['cursor_move', 'scene_locked', 'scene_unlocked', 'content_updated']),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
+
+// ─── Project authorization helper ──────────────────────────────
+
+/**
+ * Verify that the user owns the project or is a member of the project's team.
+ * Returns true if authorized, false otherwise.
+ */
+async function verifyProjectAccess(projectId: string, userId: string): Promise<boolean> {
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    select: { userId: true, teamId: true },
+  });
+
+  if (!project) return false;
+
+  // Owner has access
+  if (project.userId === userId) return true;
+
+  // Team member has access
+  if (project.teamId) {
+    const membership = await db.teamMember.findUnique({
+      where: { teamId_userId: { teamId: project.teamId, userId } },
+    });
+    if (membership) return true;
+
+    // Team owner also has access (they may not be in TeamMember table)
+    const team = await db.team.findUnique({
+      where: { id: project.teamId },
+      select: { ownerId: true },
+    });
+    if (team?.ownerId === userId) return true;
+  }
+
+  return false;
+}
+
 // ─── GET: SSE stream ───────────────────────────────────────────
 
 export const dynamic = 'force-dynamic';
@@ -125,6 +171,12 @@ export async function GET(req: NextRequest) {
   const projectId = searchParams.get('projectId');
   if (!projectId) {
     return new Response('Missing projectId', { status: 400 });
+  }
+
+  // Verify user has access to this project
+  const hasAccess = await verifyProjectAccess(projectId, session.user.id);
+  if (!hasAccess) {
+    return new Response('Forbidden: no access to this project', { status: 403 });
   }
 
   const userId = session.user.id;
@@ -240,18 +292,44 @@ export async function POST(req: NextRequest) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const body = await req.json() as {
-    projectId: string;
-    type: CollaborationEvent['type'];
-    data?: Record<string, unknown>;
-  };
+  const userId = session.user.id;
 
-  const { projectId, type, data } = body;
-  if (!projectId || !type) {
-    return new Response('Missing projectId or type', { status: 400 });
+  // Rate limiting: 60 requests per 60 seconds (cursor moves are frequent)
+  const { success: rlOk, reset } = await rateLimit({
+    identifier: `collab:${userId}`,
+    limit: 60,
+    window: 60,
+  });
+  if (!rlOk) {
+    return Response.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
   }
 
-  const userId = session.user.id;
+  // Zod validation
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const parsed = collaborationEventSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json(
+      { error: 'Invalid request body', details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const { projectId, type, data } = parsed.data;
+
+  // Project authorization
+  const hasAccess = await verifyProjectAccess(projectId, userId);
+  if (!hasAccess) {
+    return Response.json({ error: 'Forbidden: no access to this project' }, { status: 403 });
+  }
   const clients = getClientsForProject(projectId);
 
   // Find the sender's user info

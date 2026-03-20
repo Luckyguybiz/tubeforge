@@ -223,6 +223,13 @@ model DesignFolder {
   @@index([parentId])
 }
 
+/// Tracks already-processed Stripe webhook events for idempotency.
+model ProcessedEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  createdAt     DateTime @default(now())
+}
+
 model Payout {
   id            String   @id @default(cuid())
   userId        String

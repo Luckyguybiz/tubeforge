@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=400">
@@ -24,7 +24,7 @@
           <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
         </svg>
       </div>
-      <p class="state-text">Извлечение данных видео…</p>
+      <p class="state-text" data-i18n="loadingText">Extracting video data…</p>
     </div>
 
     <!-- Error / Not YouTube -->
@@ -36,8 +36,8 @@
           <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <p class="state-text" id="error-message">Откройте видео на YouTube,<br>чтобы скачать его.</p>
-      <button id="btn-retry" class="btn btn-secondary">Попробовать снова</button>
+      <p class="state-text" id="error-message" data-i18n="errorNotYouTube">Open a YouTube video<br>to download it.</p>
+      <button id="btn-retry" class="btn btn-secondary" data-i18n="btnRetry">Try again</button>
     </div>
 
     <!-- Video Found -->
@@ -62,7 +62,7 @@
             <polygon points="23 7 16 12 23 17 23 7"/>
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
           </svg>
-          Видео
+          <span data-i18n="tabVideo">Video</span>
         </button>
         <button class="tab" data-tab="video-only">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -83,7 +83,7 @@
             <circle cx="6" cy="18" r="3"/>
             <circle cx="18" cy="16" r="3"/>
           </svg>
-          Аудио
+          <span data-i18n="tabAudio">Audio</span>
         </button>
       </div>
 
@@ -95,7 +95,7 @@
     <footer class="footer">
       <a href="https://tubeforge.co" target="_blank">tubeforge.co</a>
       <span class="footer-sep">·</span>
-      <span class="footer-hint">Скачивание через ваш браузер</span>
+      <span class="footer-hint" data-i18n="footerHint">Downloads via your browser</span>
     </footer>
   </div>
 

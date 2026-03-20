@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { router, adminProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
 
@@ -244,8 +245,38 @@ export const adminRouter = router({
     .input(z.object({ userId: z.string(), amount: z.number().positive(), note: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
-      return ctx.db.payout.create({
-        data: { userId: input.userId, amount: input.amount, note: input.note },
-      });
+
+      return ctx.db.$transaction(async (tx) => {
+        // 1. Fetch user's referralEarnings
+        const user = await tx.user.findUnique({
+          where: { id: input.userId },
+          select: { referralEarnings: true },
+        });
+
+        if (!user) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+        }
+
+        // 2. Fetch sum of existing payouts for this user
+        const existingPayouts = await tx.payout.aggregate({
+          _sum: { amount: true },
+          where: { userId: input.userId },
+        });
+        const totalPaidOut = existingPayouts._sum.amount ?? 0;
+
+        // 3. Verify amount does not exceed pending earnings
+        const pendingEarnings = user.referralEarnings - totalPaidOut;
+        if (input.amount > pendingEarnings) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Payout amount ($${input.amount}) exceeds pending earnings ($${pendingEarnings.toFixed(2)})`,
+          });
+        }
+
+        // 4. Create the payout record
+        return tx.payout.create({
+          data: { userId: input.userId, amount: input.amount, note: input.note },
+        });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     }),
 });

@@ -57,8 +57,19 @@ async function checkAndIncrementAIUsage(userId: string, db: PrismaClient) {
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
-async function decrementAIUsage(userId: string, db: PrismaClient) {
-  await db.user.update({ where: { id: userId }, data: { aiUsage: { decrement: 1 } }, select: { id: true } });
+async function decrementAIUsage(userId: string, db: PrismaClient, amount = 1) {
+  await db.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { aiUsage: true },
+    });
+    if (!user || user.aiUsage < amount) return;
+    await tx.user.update({
+      where: { id: userId },
+      data: { aiUsage: { decrement: amount } },
+      select: { id: true },
+    });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 
 export const aiRouter = router({
@@ -111,6 +122,8 @@ export const aiRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       await checkRateLimit(ctx.session.user.id);
+      // Charge 2 credits: one for GPT-4o Vision analysis, one for DALL-E generation
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
       // Step 1: GPT-4o Vision describes the canvas image
@@ -151,12 +164,12 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
           }),
         });
       } catch (e) {
-        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
       if (!visionRes.ok) {
-        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
         const err = await visionRes.json().catch(() => ({}));
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка GPT-4o Vision API' });
       }
@@ -192,11 +205,13 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
           }),
         });
       } catch (e) {
+        // Vision succeeded (1 credit consumed), refund only the DALL-E credit
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
       if (!dalleRes.ok) {
+        // Vision succeeded (1 credit consumed), refund only the DALL-E credit
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         const err = await dalleRes.json().catch(() => ({}));
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
@@ -280,6 +295,12 @@ Return ONLY valid JSON, no markdown.`,
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
       // Runway ML Gen-3 Alpha API
+      const runwayModelMap: Record<string, string> = {
+        turbo: 'gen3a_turbo',
+        standard: 'gen3a',
+        pro: 'gen3a',
+        cinematic: 'gen3a',
+      };
       let res: Response;
       try {
         res = await fetchWithTimeout(API_ENDPOINTS.RUNWAY_VIDEO, {
@@ -290,7 +311,7 @@ Return ONLY valid JSON, no markdown.`,
           },
           body: JSON.stringify({
             promptText: input.prompt,
-            model: 'gen3a_turbo',
+            model: runwayModelMap[input.model] ?? 'gen3a_turbo',
             duration: input.duration,
             ratio: '16:9',
           }),

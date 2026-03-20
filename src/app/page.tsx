@@ -1,14 +1,15 @@
-'use client';
-
-import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-
-const CookieConsent = dynamic(
-  () => import('@/components/ui/CookieConsent').then((m) => ({ default: m.CookieConsent })),
-  { ssr: false },
-);
+import type { CSSProperties } from 'react';
+import {
+  LandingHeader,
+  AnimatedHero,
+  ScrollRevealProvider,
+  FaqAccordion,
+  HoverCard,
+  HoverLink,
+  HoverButton,
+  ClientCookieConsent,
+} from '@/components/landing';
 
 /* ── Color constants ──────────────────────────────────────── */
 
@@ -52,15 +53,6 @@ const primaryBtnStyle: CSSProperties = {
   border: 'none',
   cursor: 'pointer',
   fontFamily: 'inherit',
-};
-
-const primaryHoverIn = (e: React.MouseEvent<HTMLElement>) => {
-  e.currentTarget.style.transform = 'translateY(-2px)';
-  e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,70,229,0.5)';
-};
-const primaryHoverOut = (e: React.MouseEvent<HTMLElement>) => {
-  e.currentTarget.style.transform = 'translateY(0)';
-  e.currentTarget.style.boxShadow = '0 4px 24px rgba(79,70,229,0.35)';
 };
 
 const outlineBtnStyle: CSSProperties = {
@@ -401,71 +393,26 @@ const FOOTER_COLUMNS = [
   {
     title: 'Юридическое',
     links: [
-      { label: 'Условия использования', href: '#' },
-      { label: 'Конфиденциальность', href: '#' },
-      { label: 'Возврат средств', href: '#' },
-      { label: 'Cookie-политика', href: '#' },
+      { label: 'Условия использования', href: '/terms' },
+      { label: 'Конфиденциальность', href: '/privacy' },
+      { label: 'Возврат средств', href: 'mailto:support@tubeforge.co' },
+      { label: 'Cookie-политика', href: '/privacy' },
     ],
   },
   {
     title: 'Соцсети',
     links: [
-      { label: 'YouTube', href: '#' },
-      { label: 'Telegram', href: '#' },
-      { label: 'Twitter / X', href: '#' },
-      { label: 'ВКонтакте', href: '#' },
+      { label: 'YouTube', href: 'https://youtube.com/@tubeforge' },
+      { label: 'Telegram', href: 'https://t.me/tubeforge' },
+      { label: 'Twitter / X', href: 'https://twitter.com/tubeforge' },
+      { label: 'ВКонтакте', href: 'https://vk.com/tubeforge' },
     ],
   },
 ];
 
-/* ── Main component ───────────────────────────────────────── */
+/* ── Main component (Server Component) ───────────────────── */
 
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [heroVisible, setHeroVisible] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  /* Trigger hero entrance */
-  useEffect(() => {
-    const t = setTimeout(() => setHeroVisible(true), 100);
-    return () => clearTimeout(t);
-  }, []);
-
-  /* Intersection Observer for scroll-triggered reveals */
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('tf-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -60px 0px' },
-    );
-    document.querySelectorAll('.tf-reveal').forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
-    return () => {
-      document.documentElement.style.scrollBehavior = '';
-    };
-  }, []);
-
-  const toggleFaq = (index: number) => {
-    setOpenFaq((prev) => (prev === index ? null : index));
-  };
-
   return (
     <div
       style={{
@@ -475,6 +422,9 @@ export default function LandingPage() {
         minHeight: '100vh',
       }}
     >
+      {/* Client island: sets up IntersectionObserver + smooth scroll */}
+      <ScrollRevealProvider />
+
       {/* ========== JSON-LD STRUCTURED DATA ========== */}
       <script
         type="application/ld+json"
@@ -528,119 +478,8 @@ export default function LandingPage() {
         }}
       />
 
-      {/* ========== HEADER ========== */}
-      <header
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(12px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : '1px solid transparent',
-          transition: 'all 0.3s ease',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: '0 auto',
-            padding: '16px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: WHITE,
-                fontWeight: 800,
-                fontSize: 14,
-                letterSpacing: -0.5,
-              }}
-            >
-              TF
-            </div>
-            <span style={{ fontSize: 20, fontWeight: 700, color: GRAY_900, letterSpacing: -0.5 }}>TubeForge</span>
-          </Link>
-
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="desktop-nav">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, transition: 'color 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_900; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_600; }}
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link href="/login" style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, padding: '8px 16px', transition: 'color 0.2s' }}>
-              Войти
-            </Link>
-            <Link
-              href="/register"
-              style={{ ...primaryBtnStyle, fontSize: 15, padding: '10px 24px' }}
-              onMouseEnter={primaryHoverIn}
-              onMouseLeave={primaryHoverOut}
-            >
-              <LightningIcon /> Начать бесплатно
-            </Link>
-          </div>
-
-          <button
-            className="mobile-menu-btn"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Открыть меню"
-            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GRAY_700} strokeWidth="2" strokeLinecap="round">
-              {mobileMenuOpen ? (
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </>
-              ) : (
-                <>
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </>
-              )}
-            </svg>
-          </button>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="mobile-menu-dropdown" style={{ background: WHITE, borderTop: `1px solid ${GRAY_100}`, padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>
-                {link.label}
-              </a>
-            ))}
-            <div style={{ borderTop: `1px solid ${GRAY_100}`, paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Link href="/login" style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>Войти</Link>
-              <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 16, padding: '12px 24px', justifyContent: 'center' }}>
-                <LightningIcon /> Начать бесплатно
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      {/* ========== HEADER (client island) ========== */}
+      <LandingHeader navLinks={NAV_LINKS} lightningIcon={<LightningIcon />} />
 
       {/* ========== HERO ========== */}
       <section style={{ paddingTop: 160, paddingBottom: 100, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -674,21 +513,14 @@ export default function LandingPage() {
           }}
         />
 
-        <div style={{
-          maxWidth: 800, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1,
-          opacity: heroVisible ? 1 : 0,
-          transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
-          transition: 'opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1)',
-        }}>
+        {/* Client island: animated entrance for hero content */}
+        <AnimatedHero>
           <div
             className="tf-badge-pulse"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: INDIGO_50, border: '1px solid rgba(99,102,241,0.2)',
               borderRadius: 50, padding: '8px 20px', marginBottom: 32,
-              opacity: heroVisible ? 1 : 0,
-              transform: heroVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.9)',
-              transition: 'all 0.6s cubic-bezier(.4,0,.2,1) 0.1s',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z" fill={INDIGO_600} /></svg>
@@ -697,9 +529,6 @@ export default function LandingPage() {
 
           <h1 style={{
             fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 24px', color: GRAY_900,
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 0.8s cubic-bezier(.4,0,.2,1) 0.2s',
           }}>
             Создавайте<br />
             <span className="tf-gradient-text" style={{ display: 'inline-block', background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500}, #ec4899, ${INDIGO_600})`, backgroundSize: '300% 100%', color: WHITE, padding: '4px 20px', borderRadius: 14, margin: '8px 0' }}>
@@ -710,26 +539,33 @@ export default function LandingPage() {
 
           <p style={{
             fontSize: 'clamp(16px, 2vw, 20px)', color: GRAY_500, lineHeight: 1.6, maxWidth: 600, margin: '0 auto 40px', fontWeight: 400,
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.8s cubic-bezier(.4,0,.2,1) 0.35s',
           }}>
             Ваш универсальный инструмент для создания видео с ИИ-озвучкой, обложками, метаданными и аналитикой.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 18, padding: '16px 40px' }} onMouseEnter={primaryHoverIn} onMouseLeave={primaryHoverOut}>
+            <HoverButton
+              href="/register"
+              style={{ ...primaryBtnStyle, fontSize: 18, padding: '16px 40px' }}
+              hoverTransform="translateY(-2px)"
+              hoverBoxShadow="0 8px 32px rgba(79,70,229,0.5)"
+              resetTransform="translateY(0)"
+              resetBoxShadow="0 4px 24px rgba(79,70,229,0.35)"
+            >
               <LightningIcon /> Попробовать бесплатно
-            </Link>
-            <a
+            </HoverButton>
+            <HoverButton
               href="#editor"
+              isAnchor
               style={{ ...outlineBtnStyle, fontSize: 18, padding: '16px 40px' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = GRAY_50; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = WHITE; e.currentTarget.style.transform = 'translateY(0)'; }}
+              hoverBackground={GRAY_50}
+              hoverTransform="translateY(-2px)"
+              resetBackground={WHITE}
+              resetTransform="translateY(0)"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
               Смотреть демо
-            </a>
+            </HoverButton>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginTop: 56, flexWrap: 'wrap' }}>
@@ -746,7 +582,7 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </AnimatedHero>
       </section>
 
       {/* ========== FEATURES ========== */}
@@ -757,19 +593,21 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
           {FEATURES.map((feature, i) => (
-            <div
+            <HoverCard
               key={i}
               className="tf-reveal tf-card-hover"
               style={{ background: WHITE, border: `1px solid ${GRAY_100}`, borderRadius: 20, padding: 32, transition: 'transform 0.25s ease, box-shadow 0.25s ease', cursor: 'default', transitionDelay: `${i * 100}ms` }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.1)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
+              hoverTransform="translateY(-6px) scale(1.02)"
+              hoverBoxShadow="0 16px 48px rgba(0,0,0,0.1)"
+              resetTransform="translateY(0) scale(1)"
+              resetBoxShadow="none"
             >
               <div className="tf-icon-bounce" style={{ width: 56, height: 56, borderRadius: 14, background: feature.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, transition: 'transform 0.3s ease' }}>
                 {feature.icon}
               </div>
               <h3 style={{ fontSize: 19, fontWeight: 700, color: GRAY_900, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{feature.title}</h3>
               <p style={{ fontSize: 15, color: GRAY_500, lineHeight: 1.6, margin: 0 }}>{feature.desc}</p>
-            </div>
+            </HoverCard>
           ))}
         </div>
       </section>
@@ -815,9 +653,16 @@ export default function LandingPage() {
             <p style={{ fontSize: 17, color: GRAY_500, lineHeight: 1.7, margin: '0 0 32px' }}>
               Таймлайн, слои, эффекты, субтитры, обрезка, цветокоррекция — все инструменты профессионального редактора доступны в интуитивном интерфейсе.
             </p>
-            <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 16, padding: '14px 32px' }} onMouseEnter={primaryHoverIn} onMouseLeave={primaryHoverOut}>
+            <HoverButton
+              href="/register"
+              style={{ ...primaryBtnStyle, fontSize: 16, padding: '14px 32px' }}
+              hoverTransform="translateY(-2px)"
+              hoverBoxShadow="0 8px 32px rgba(79,70,229,0.5)"
+              resetTransform="translateY(0)"
+              resetBoxShadow="0 4px 24px rgba(79,70,229,0.35)"
+            >
               <LightningIcon /> Попробовать редактор <span aria-hidden="true" style={{ marginLeft: 2 }}>{'\u2192'}</span>
-            </Link>
+            </HoverButton>
           </div>
 
           {/* Mock editor UI */}
@@ -875,18 +720,22 @@ export default function LandingPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
             {TOOLS.map((tool, i) => (
-              <div
+              <HoverCard
                 key={i}
                 style={{ background: WHITE, border: `1px solid ${GRAY_100}`, borderRadius: 16, padding: 28, transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease', cursor: 'default' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = GRAY_100; }}
+                hoverTransform="translateY(-4px)"
+                hoverBoxShadow="0 12px 40px rgba(0,0,0,0.06)"
+                hoverBorderColor="rgba(99,102,241,0.3)"
+                resetTransform="translateY(0)"
+                resetBoxShadow="none"
+                resetBorderColor={GRAY_100}
               >
                 <div style={{ width: 52, height: 52, borderRadius: 12, background: INDIGO_50, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                   {tool.icon}
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, color: GRAY_900, margin: '0 0 8px' }}>{tool.title}</h3>
                 <p style={{ fontSize: 14, color: GRAY_500, lineHeight: 1.6, margin: 0 }}>{tool.desc}</p>
-              </div>
+              </HoverCard>
             ))}
           </div>
         </div>
@@ -929,11 +778,13 @@ export default function LandingPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
             {TESTIMONIALS.map((t, i) => (
-              <div
+              <HoverCard
                 key={i}
                 style={{ background: WHITE, borderRadius: 16, padding: 28, border: `1px solid ${GRAY_100}`, transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.06)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                hoverTransform="translateY(-3px)"
+                hoverBoxShadow="0 8px 32px rgba(0,0,0,0.06)"
+                resetTransform="translateY(0)"
+                resetBoxShadow="none"
               >
                 <div style={{ display: 'flex', gap: 2, marginBottom: 16 }}>
                   {Array.from({ length: 5 }).map((_, si) => (
@@ -952,7 +803,7 @@ export default function LandingPage() {
                     <div style={{ fontSize: 13, color: GRAY_400 }}>{t.role}</div>
                   </div>
                 </div>
-              </div>
+              </HoverCard>
             ))}
           </div>
         </div>
@@ -967,15 +818,17 @@ export default function LandingPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1060, margin: '0 auto' }}>
             {PRICING_PLANS.map((plan, i) => (
-              <div
+              <HoverCard
                 key={i}
                 style={{
                   background: WHITE, borderRadius: 20, padding: 36,
                   border: plan.highlighted ? `2px solid ${INDIGO_500}` : `1px solid ${GRAY_100}`,
                   position: 'relative', transition: 'transform 0.25s ease, box-shadow 0.25s ease', overflow: 'hidden',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = plan.highlighted ? '0 16px 48px rgba(79,70,229,0.2)' : '0 12px 40px rgba(0,0,0,0.08)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                hoverTransform="translateY(-4px)"
+                hoverBoxShadow={plan.highlighted ? '0 16px 48px rgba(79,70,229,0.2)' : '0 12px 40px rgba(0,0,0,0.08)'}
+                resetTransform="translateY(0)"
+                resetBoxShadow="none"
               >
                 {plan.accent && !plan.highlighted && (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: plan.accent }} />
@@ -1001,50 +854,34 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/register"
+                <HoverButton
+                  href={plan.highlighted ? '/register?plan=PRO' : plan.price === '0\u20BD' ? '/register' : '/register?plan=STUDIO'}
                   style={plan.highlighted ? { ...primaryBtnStyle, width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px 28px' } : { ...outlineBtnStyle, width: '100%', justifyContent: 'center', fontSize: 16, padding: '14px 28px' }}
-                  onMouseEnter={plan.highlighted ? primaryHoverIn : (e) => { e.currentTarget.style.background = GRAY_50; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                  onMouseLeave={plan.highlighted ? primaryHoverOut : (e) => { e.currentTarget.style.background = WHITE; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  hoverTransform={plan.highlighted ? 'translateY(-2px)' : 'translateY(-1px)'}
+                  hoverBoxShadow={plan.highlighted ? '0 8px 32px rgba(79,70,229,0.5)' : undefined}
+                  hoverBackground={plan.highlighted ? undefined : GRAY_50}
+                  resetTransform="translateY(0)"
+                  resetBoxShadow={plan.highlighted ? '0 4px 24px rgba(79,70,229,0.35)' : undefined}
+                  resetBackground={plan.highlighted ? undefined : WHITE}
                 >
                   {plan.highlighted && <LightningIcon />}
                   {plan.highlighted ? 'Начать с Pro' : plan.price === '0\u20BD' ? 'Начать бесплатно' : 'Выбрать Studio'}
                   {plan.highlighted && <span aria-hidden="true">{'\u2192'}</span>}
-                </Link>
-              </div>
+                </HoverButton>
+              </HoverCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ========== FAQ ========== */}
+      {/* ========== FAQ (client island) ========== */}
       <section id="faq" style={{ padding: '100px 24px', background: GRAY_50 }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <h2 style={sectionHeadingStyle}>Частые вопросы</h2>
             <p style={sectionSubStyle}>Всё, что нужно знать о TubeForge</p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {FAQ_DATA.map((item, i) => {
-              const isOpen = openFaq === i;
-              return (
-                <div key={i} style={{ background: WHITE, borderRadius: 14, border: `1px solid ${isOpen ? 'rgba(99,102,241,0.3)' : GRAY_100}`, overflow: 'hidden', transition: 'border-color 0.2s ease' }}>
-                  <button
-                    onClick={() => toggleFaq(i)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '20px 24px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
-                  >
-                    <span style={{ fontSize: 16, fontWeight: 600, color: GRAY_900 }}>{item.q}</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GRAY_400} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transition: 'transform 0.3s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                  <div style={{ maxHeight: isOpen ? 300 : 0, overflow: 'hidden', transition: 'max-height 0.3s ease, padding 0.3s ease', padding: isOpen ? '0 24px 20px' : '0 24px 0' }}>
-                    <p style={{ fontSize: 15, color: GRAY_500, lineHeight: 1.65, margin: 0 }}>{item.a}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <FaqAccordion items={FAQ_DATA} />
         </div>
       </section>
 
@@ -1058,9 +895,16 @@ export default function LandingPage() {
           <p style={{ fontSize: 18, color: GRAY_500, fontWeight: 400, margin: '0 0 40px', lineHeight: 1.6 }}>
             Присоединяйтесь к TubeForge и начните создавать контент, который смотрят миллионы
           </p>
-          <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 18, padding: '16px 40px' }} onMouseEnter={primaryHoverIn} onMouseLeave={primaryHoverOut}>
+          <HoverButton
+            href="/register"
+            style={{ ...primaryBtnStyle, fontSize: 18, padding: '16px 40px' }}
+            hoverTransform="translateY(-2px)"
+            hoverBoxShadow="0 8px 32px rgba(79,70,229,0.5)"
+            resetTransform="translateY(0)"
+            resetBoxShadow="0 4px 24px rgba(79,70,229,0.35)"
+          >
             <LightningIcon /> Создать аккаунт <span aria-hidden="true">{'\u2192'}</span>
-          </Link>
+          </HoverButton>
         </div>
       </section>
 
@@ -1077,18 +921,18 @@ export default function LandingPage() {
                 ИИ-платформа для YouTube-креаторов. Создавайте, оптимизируйте и публикуйте видео быстрее.
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <a href="#" aria-label="YouTube" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                <HoverLink href="https://youtube.com/@tubeforge" ariaLabel="YouTube" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
-                </a>
-                <a href="#" aria-label="Telegram" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                </HoverLink>
+                <HoverLink href="https://t.me/tubeforge" ariaLabel="Telegram" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>
-                </a>
-                <a href="#" aria-label="Twitter" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                </HoverLink>
+                <HoverLink href="https://twitter.com/tubeforge" ariaLabel="Twitter" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                </a>
-                <a href="#" aria-label="ВКонтакте" style={{ color: GRAY_400, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_700; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                </HoverLink>
+                <HoverLink href="https://vk.com/tubeforge" ariaLabel="ВКонтакте" style={{ color: GRAY_400, transition: 'color 0.2s' }} hoverColor={GRAY_700} resetColor={GRAY_400}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.598-.188 1.368 1.259 2.184 1.814.617.42 1.085.328 1.085.328l2.181-.03s1.14-.071.6-.97c-.045-.074-.32-.666-1.64-1.88-1.383-1.272-1.197-1.066.468-3.27.732-.965 1.532-2.166 1.396-2.453-.128-.27-.914-.198-.914-.198l-2.455.015s-.182-.025-.317.056c-.133.08-.218.265-.218.265s-.39 1.04-.911 1.926c-1.098 1.871-1.537 1.97-1.716 1.854-.416-.272-.312-1.092-.312-1.674 0-1.82.276-2.58-.537-2.777-.27-.065-.468-.108-1.155-.115-.881-.01-1.627.003-2.05.21-.28.137-.497.443-.365.46.163.022.532.1.728.364.253.342.244 1.108.244 1.108s.145 2.14-.34 2.404c-.332.182-.787-.19-1.765-1.893-.5-.872-.878-1.836-.878-1.836s-.073-.179-.203-.275c-.158-.116-.378-.153-.378-.153l-2.334.015s-.35.01-.478.162c-.114.135-.009.414-.009.414s1.839 4.302 3.921 6.468c1.91 1.987 4.078 1.857 4.078 1.857h.983z" /></svg>
-                </a>
+                </HoverLink>
               </div>
             </div>
             {FOOTER_COLUMNS.map((col, ci) => (
@@ -1096,9 +940,9 @@ export default function LandingPage() {
                 <div style={{ fontSize: 14, fontWeight: 700, color: GRAY_900, marginBottom: 16, letterSpacing: '-0.01em' }}>{col.title}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {col.links.map((link, li) => (
-                    <a key={li} href={link.href} style={{ textDecoration: 'none', color: GRAY_400, fontSize: 14, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_600; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                    <HoverLink key={li} href={link.href} style={{ textDecoration: 'none', color: GRAY_400, fontSize: 14, transition: 'color 0.2s' }} hoverColor={GRAY_600} resetColor={GRAY_400}>
                       {link.label}
-                    </a>
+                    </HoverLink>
                   ))}
                 </div>
               </div>
@@ -1108,9 +952,9 @@ export default function LandingPage() {
             <span style={{ fontSize: 13, color: GRAY_400 }}>{'\u00A9'} 2026 TubeForge. Все права защищены.</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
               {([['Условия использования', '/terms'], ['Конфиденциальность', '/privacy'], ['Cookie', '/privacy']] as const).map(([text, href], idx) => (
-                <a key={idx} href={href} style={{ textDecoration: 'none', color: GRAY_400, fontSize: 13, transition: 'color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_600; }} onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_400; }}>
+                <HoverLink key={idx} href={href} style={{ textDecoration: 'none', color: GRAY_400, fontSize: 13, transition: 'color 0.2s' }} hoverColor={GRAY_600} resetColor={GRAY_400}>
                   {text}
-                </a>
+                </HoverLink>
               ))}
             </div>
           </div>
@@ -1119,7 +963,7 @@ export default function LandingPage() {
 
       {/* ========== RESPONSIVE STYLES ========== */}
       <style>{`
-        /* ═══ Keyframes ═══ */
+        /* === Keyframes === */
         @keyframes tf-float {
           0%, 100% { transform: translateX(-50%) translateY(0); }
           50% { transform: translateX(-50%) translateY(-30px); }
@@ -1150,18 +994,18 @@ export default function LandingPage() {
           100% { transform: rotate(360deg); }
         }
 
-        /* ═══ Floating background orbs ═══ */
+        /* === Floating background orbs === */
         .tf-float { animation: tf-float 8s ease-in-out infinite; }
         .tf-float-slow { animation: tf-float-slow 12s ease-in-out infinite; }
         .tf-float-reverse { animation: tf-float-reverse 10s ease-in-out infinite; }
 
-        /* ═══ Gradient text shimmer ═══ */
+        /* === Gradient text shimmer === */
         .tf-gradient-text { animation: tf-gradient-shift 4s ease infinite; }
 
-        /* ═══ Badge pulse ═══ */
+        /* === Badge pulse === */
         .tf-badge-pulse { animation: tf-pulse 3s ease-in-out infinite 1s; }
 
-        /* ═══ Scroll reveal ═══ */
+        /* === Scroll reveal === */
         .tf-reveal {
           opacity: 0;
           transform: translateY(40px);
@@ -1172,12 +1016,12 @@ export default function LandingPage() {
           transform: translateY(0);
         }
 
-        /* ═══ Card hover effects ═══ */
+        /* === Card hover effects === */
         .tf-card-hover:hover .tf-icon-bounce {
           transform: scale(1.1) rotate(-3deg);
         }
 
-        /* ═══ Responsive ═══ */
+        /* === Responsive === */
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: block !important; }
@@ -1200,13 +1044,13 @@ export default function LandingPage() {
           background: rgba(99,102,241,0.2);
         }
 
-        /* ═══ Smooth scrollbar ═══ */
+        /* === Smooth scrollbar === */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 
-        /* ═══ Prefers reduced motion ═══ */
+        /* === Prefers reduced motion === */
         @media (prefers-reduced-motion: reduce) {
           .tf-float, .tf-float-slow, .tf-float-reverse { animation: none; }
           .tf-gradient-text { animation: none; }
@@ -1214,9 +1058,7 @@ export default function LandingPage() {
           .tf-reveal { opacity: 1; transform: none; transition: none; }
         }
       `}</style>
-      <ErrorBoundary>
-        <CookieConsent />
-      </ErrorBoundary>
+      <ClientCookieConsent />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
@@ -358,6 +359,13 @@ export async function GET(req: NextRequest) {
 const YT_API_BASE = process.env.YT_DLP_API_URL;
 const COBALT_API_URL = process.env.COBALT_API_URL;
 
+const youtubeDownloadSchema = z.object({
+  videoId: z.string().regex(/^[a-zA-Z0-9_-]{11}$/, 'Invalid videoId'),
+  quality: z.enum(['1080p', '720p', '480p', '360p', 'Audio']).optional(),
+  format: z.string().max(10).optional(),
+  audioOnly: z.boolean().optional(),
+});
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -376,18 +384,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { videoId?: string; quality?: string; format?: string; audioOnly?: boolean };
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { videoId, quality, format, audioOnly } = body;
-
-  if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-    return NextResponse.json({ error: 'Missing or invalid videoId' }, { status: 400 });
+  const parsed = youtubeDownloadSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Invalid request body', details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
   }
+
+  const { videoId, quality, format, audioOnly } = parsed.data;
 
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 

@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { Instrument_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+import { Analytics } from '@/components/Analytics';
 
 const instrumentSans = Instrument_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' });
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin', 'cyrillic'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
   title: { default: 'TubeForge — ИИ-студия для YouTube', template: '%s | TubeForge' },
@@ -15,6 +16,14 @@ export const metadata: Metadata = {
     description: 'Создавайте профессиональный YouTube-контент с ИИ. Генерация обложек, оптимизация метаданных, видеомонтаж.',
     type: 'website',
     locale: 'ru_RU',
+    images: [
+      {
+        url: '/api/og',
+        width: 1200,
+        height: 630,
+        alt: 'TubeForge — AI Studio for YouTube Creators',
+      },
+    ],
   },
   alternates: {
     canonical: 'https://tubeforge.co',
@@ -23,6 +32,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TubeForge — ИИ-студия для YouTube',
     description: 'Создавайте профессиональный YouTube-контент с ИИ.',
+    images: ['/api/og'],
   },
   icons: {
     icon: [
@@ -65,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <Analytics />
         <Providers>{children}</Providers>
       </body>
     </html>

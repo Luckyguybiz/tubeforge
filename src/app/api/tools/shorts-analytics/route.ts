@@ -1,8 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
+import { db } from '@/server/db';
 
 const FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * Promo codes loaded from env (mirrors the promo route logic).
+ * TODO: replace with a DB-backed promo activation table so we can track
+ * per-user activation time and expiry server-side.
+ */
+const PROMO_CODES: Record<string, { hours: number }> = (() => {
+  const raw = process.env.PROMO_CODES;
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, { hours: number }>;
+  } catch {
+    return {};
+  }
+})();
+
+/**
+ * Check if the user has access to analytics (PRO/STUDIO plan, or a valid promo code).
+ * The `promoCode` query param is validated against the server-side promo list.
+ */
+async function hasAnalyticsAccess(
+  userId: string,
+  plan: string,
+  promoCode?: string | null,
+): Promise<boolean> {
+  // PRO and STUDIO plans always have access
+  if (plan === 'PRO' || plan === 'STUDIO') return true;
+
+  // Check promo code server-side
+  if (promoCode) {
+    const normalized = promoCode.trim().toUpperCase();
+    if (Object.prototype.hasOwnProperty.call(PROMO_CODES, normalized)) {
+      return true;
+    }
+  }
+
+  // Double-check plan from DB in case session is stale
+  const dbUser = await db.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+  if (dbUser?.plan === 'PRO' || dbUser?.plan === 'STUDIO') return true;
+
+  return false;
+}
 
 // In-memory cache: key = period+country+category, value = { data, timestamp }
 const cache = new Map<string, { data: unknown; ts: number }>();
@@ -55,6 +101,17 @@ export async function GET(req: NextRequest) {
   }
 
   const sp = req.nextUrl.searchParams;
+
+  // Server-side plan/promo enforcement
+  const promoCode = sp.get('promoCode');
+  const allowed = await hasAnalyticsAccess(session.user.id, session.user.plan, promoCode);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Upgrade to PRO or STUDIO to access analytics, or enter a valid promo code.' },
+      { status: 403 },
+    );
+  }
+
   const period = sp.get('period') ?? '7d';
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';

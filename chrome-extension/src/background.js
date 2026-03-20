@@ -63,9 +63,73 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
+/* ── Download URL validation ────────────────────────────────────────── */
+
+const ALLOWED_HOSTNAME_PATTERNS = [
+  /^[a-z0-9.-]*\.googlevideo\.com$/,
+  /^[a-z0-9.-]*\.youtube\.com$/,
+  /^api\.cobalt\.tools$/,
+  /^tubeforge\.co$/,
+  /^[a-z0-9.-]*\.tubeforge\.co$/,
+];
+
+const BLOCKED_SCHEMES = ['file:', 'javascript:', 'data:', 'blob:'];
+
+/** RFC 1918 / loopback / link-local / reserved private IP ranges */
+function isPrivateIP(hostname) {
+  // IPv4 patterns
+  if (/^127\./.test(hostname)) return true;
+  if (/^10\./.test(hostname)) return true;
+  if (/^192\.168\./.test(hostname)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return true;
+  if (/^169\.254\./.test(hostname)) return true;
+  if (/^0\./.test(hostname)) return true;
+  if (hostname === 'localhost') return true;
+  // IPv6 loopback
+  if (hostname === '[::1]' || hostname === '::1') return true;
+  return false;
+}
+
+function isAllowedDownloadUrl(url) {
+  // Must be a string
+  if (typeof url !== 'string') return false;
+
+  // Block dangerous schemes
+  const lowerUrl = url.toLowerCase().trim();
+  for (const scheme of BLOCKED_SCHEMES) {
+    if (lowerUrl.startsWith(scheme)) return false;
+  }
+
+  // Must start with https://
+  if (!lowerUrl.startsWith('https://')) return false;
+
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+
+  // Block private / internal IPs
+  if (isPrivateIP(parsed.hostname)) return false;
+
+  // Check hostname against allowlist
+  const hostname = parsed.hostname.toLowerCase();
+  for (const pattern of ALLOWED_HOSTNAME_PATTERNS) {
+    if (pattern.test(hostname)) return true;
+  }
+
+  return false;
+}
+
 /* ── Download handler ───────────────────────────────────────────────── */
 
 function handleDownload(url, filename, tabId) {
+  if (!isAllowedDownloadUrl(url)) {
+    console.warn('[TubeForge] Blocked download from disallowed URL:', url);
+    return;
+  }
+
   chrome.downloads.download(
     {
       url,

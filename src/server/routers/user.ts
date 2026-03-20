@@ -1,9 +1,15 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
+import Stripe from 'stripe';
+import { env } from '@/lib/env';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
+
+function getStripe() {
+  return new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2026-02-25.clover' as Stripe.LatestApiVersion });
+}
 
 /** Mutation rate limit: 10 user actions per minute per user */
 async function checkUserRate(userId: string) {
@@ -65,6 +71,45 @@ export const userRouter = router({
   deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
     await checkUserRate(ctx.session.user.id);
     const userId = ctx.session.user.id;
+
+    // Cancel Stripe subscriptions before deleting user data.
+    // This must happen BEFORE the DB transaction so billing stops.
+    const user = await ctx.db.user.findUnique({
+      where: { id: userId },
+      select: { stripeId: true },
+    });
+
+    if (user?.stripeId) {
+      const stripe = getStripe();
+
+      // Cancel all active subscriptions for this customer
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeId,
+        status: 'active',
+      });
+      for (const sub of subscriptions.data) {
+        await stripe.subscriptions.cancel(sub.id);
+      }
+
+      // Also cancel any past_due or trialing subscriptions
+      for (const status of ['past_due', 'trialing'] as const) {
+        const subs = await stripe.subscriptions.list({
+          customer: user.stripeId,
+          status,
+        });
+        for (const sub of subs.data) {
+          await stripe.subscriptions.cancel(sub.id);
+        }
+      }
+
+      // Delete the Stripe customer to clean up payment methods and prevent
+      // any future invoicing. This is a best-effort operation.
+      try {
+        await stripe.customers.del(user.stripeId);
+      } catch {
+        // Non-fatal: subscriptions are already cancelled above
+      }
+    }
 
     // Delete all user data in a single transaction to ensure atomicity.
     // Order respects FK constraints.
