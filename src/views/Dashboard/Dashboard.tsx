@@ -262,9 +262,10 @@ function WelcomeSection({
     <div style={{ marginBottom: 28 }}>
 
       {/* ── Row 1: Three action cards (compact, horizontal) ── */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div className="tf-dash-welcome-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
         {/* Card 1: Video Editor */}
         <div
+          className="tf-dash-welcome-card"
           onClick={() => router.push('/editor')}
           onMouseEnter={() => setHov('ac-0')}
           onMouseLeave={() => setHov(null)}
@@ -297,6 +298,7 @@ function WelcomeSection({
 
         {/* Card 2: AI Generation */}
         <div
+          className="tf-dash-welcome-card"
           onClick={() => router.push('/editor')}
           onMouseEnter={() => setHov('ac-1')}
           onMouseLeave={() => setHov(null)}
@@ -329,6 +331,7 @@ function WelcomeSection({
 
         {/* Card 3: Free tools */}
         <div
+          className="tf-dash-welcome-card"
           onClick={() => router.push('/tools')}
           onMouseEnter={() => setHov('ac-2')}
           onMouseLeave={() => setHov(null)}
@@ -369,9 +372,10 @@ function WelcomeSection({
       </div>
 
       {/* ── Row 2: Two featured tool cards ────────────────── */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div className="tf-dash-featured-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
         {/* AutoClip */}
         <div
+          className="tf-dash-featured-card"
           onClick={() => router.push('/tools/autoclip')}
           onMouseEnter={() => setHov('ft-0')}
           onMouseLeave={() => setHov(null)}
@@ -427,6 +431,7 @@ function WelcomeSection({
 
         {/* Cut & Crop */}
         <div
+          className="tf-dash-featured-card"
           onClick={() => router.push('/tools/cut-crop')}
           onMouseEnter={() => setHov('ft-1')}
           onMouseLeave={() => setHov(null)}
@@ -953,6 +958,160 @@ const ProjectCard = memo(function ProjectCard({
 });
 
 
+/* ── Referral Widget ────────────────────────────────── */
+
+function ReferralWidget({
+  C,
+  t,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const router = useRouter();
+  const [copied, setCopied] = useState(false);
+  const [hov, setHov] = useState(false);
+
+  const myReferral = trpc.referral.getMyReferral.useQuery();
+  const referralCode = myReferral.data?.code ?? null;
+  const referralLink = referralCode ? `https://tubeforge.co?ref=${referralCode}` : '';
+
+  const handleCopy = useCallback(async () => {
+    if (!referralLink) return;
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = referralLink;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [referralLink]);
+
+  if (myReferral.isLoading) return null;
+
+  return (
+    <div
+      style={{
+        marginBottom: 28,
+        padding: 2,
+        borderRadius: 16,
+        background: 'linear-gradient(135deg, #6366f1, #a855f7, #6366f1)',
+        cursor: 'pointer',
+        transition: 'all .15s ease',
+        transform: hov ? 'translateY(-1px)' : 'none',
+        boxShadow: hov ? '0 8px 24px rgba(99,102,241,.2)' : '0 2px 8px rgba(0,0,0,.05)',
+      }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      onClick={() => router.push('/referral')}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/referral'); } }}
+    >
+      <div style={{
+        background: C.card,
+        borderRadius: 14,
+        padding: '18px 22px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+        flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="2" y="8" width="16" height="10" rx="2" stroke="#fff" strokeWidth="1.5" />
+              <path d="M10 8V18" stroke="#fff" strokeWidth="1.5" />
+              <path d="M2 11H18" stroke="#fff" strokeWidth="1.5" />
+              <path d="M10 8C10 8 10 4 7 4C5.5 4 4 5 5 6.5C6 8 10 8 10 8Z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 8C10 8 10 4 13 4C14.5 4 16 5 15 6.5C14 8 10 8 10 8Z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>
+              {t('dashboard.referralWidget.title')}
+            </div>
+            <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
+              {t('dashboard.referralWidget.desc')}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {referralCode ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCopy(); }}
+              style={{
+                height: 36,
+                padding: '0 14px',
+                borderRadius: 8,
+                border: 'none',
+                background: copied
+                  ? 'linear-gradient(135deg, #16a34a, #22c55e)'
+                  : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                transition: 'all .2s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {copied ? t('dashboard.referralWidget.copied') : t('dashboard.referralWidget.copy')}
+            </button>
+          ) : (
+            <span style={{
+              height: 36,
+              padding: '0 14px',
+              borderRadius: 8,
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              whiteSpace: 'nowrap',
+            }}>
+              {t('dashboard.referralWidget.activate')}
+            </span>
+          )}
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#6366f1',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('dashboard.referralWidget.goToReferral')}
+            <span style={{ marginLeft: 4 }}>&rarr;</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Dashboard Component ──────────────────────────── */
 
 export function Dashboard() {
@@ -1203,13 +1362,13 @@ export function Dashboard() {
   const totalPages = projects.data?.pages ?? 1;
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
+    <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
       {/* ── Welcome Hero Section (Crayo-style) ───────── */}
       <WelcomeSection C={C} router={router} t={t} />
 
       {/* ── Header ──────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
-        <div>
+      <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ minWidth: 0 }}>
           <h1 className="tf-dash-heading" style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-.03em', lineHeight: 1.2 }}>
             {profile.isLoading ? <Skeleton width={260} height={34} /> : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}!`}
           </h1>
@@ -1221,51 +1380,54 @@ export function Dashboard() {
             )}
           </p>
         </div>
-        <button
-          className="tf-dash-create-btn"
-          data-tour="new-project"
-          onClick={() => createProject.mutate({})}
-          disabled={createProject.isPending}
-          onMouseEnter={() => setHoveredBtn('create-main')}
-          onMouseLeave={() => setHoveredBtn(null)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: hoveredBtn === 'create-main' ? C.accent : C.accent,
-            color: '#fff', border: 'none', borderRadius: 12,
-            padding: '12px 24px', minHeight: 44, fontSize: 15, fontWeight: 700,
-            cursor: createProject.isPending ? 'wait' : 'pointer',
-            fontFamily: 'inherit', opacity: createProject.isPending ? 0.6 : 1,
-            boxShadow: hoveredBtn === 'create-main'
-              ? `0 6px 24px ${C.accent}44, 0 0 0 3px ${C.accent}20`
-              : `0 4px 16px ${C.accent}33`,
-            transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-            transform: hoveredBtn === 'create-main' ? 'translateY(-1px)' : 'none',
-            letterSpacing: '-.01em',
-            flexShrink: 0,
-          }}
-        >
-          <IconPlus size={18} color="#fff" />
-          {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
-        </button>
-        <button
-          onClick={() => setImportOpen(true)}
-          onMouseEnter={() => setHoveredBtn('import-main')}
-          onMouseLeave={() => setHoveredBtn(null)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'transparent',
-            color: C.text, border: `1px solid ${C.border}`, borderRadius: 12,
-            padding: '12px 20px', minHeight: 44, fontSize: 14, fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            transition: 'all .2s ease',
-            boxShadow: hoveredBtn === 'import-main' ? `0 2px 8px rgba(0,0,0,.08)` : 'none',
-            flexShrink: 0,
-          }}
-        >
-          <IconUploadSmall size={16} color={C.sub} />
-          {t('dashboard.importProject')}
-        </button>
+        <div className="tf-dash-header-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button
+            className="tf-dash-create-btn"
+            data-tour="new-project"
+            onClick={() => createProject.mutate({})}
+            disabled={createProject.isPending}
+            onMouseEnter={() => setHoveredBtn('create-main')}
+            onMouseLeave={() => setHoveredBtn(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: hoveredBtn === 'create-main' ? C.accent : C.accent,
+              color: '#fff', border: 'none', borderRadius: 12,
+              padding: '12px 24px', minHeight: 44, fontSize: 15, fontWeight: 700,
+              cursor: createProject.isPending ? 'wait' : 'pointer',
+              fontFamily: 'inherit', opacity: createProject.isPending ? 0.6 : 1,
+              boxShadow: hoveredBtn === 'create-main'
+                ? `0 6px 24px ${C.accent}44, 0 0 0 3px ${C.accent}20`
+                : `0 4px 16px ${C.accent}33`,
+              transition: 'all .25s cubic-bezier(.4,0,.2,1)',
+              transform: hoveredBtn === 'create-main' ? 'translateY(-1px)' : 'none',
+              letterSpacing: '-.01em',
+              flexShrink: 0,
+            }}
+          >
+            <IconPlus size={18} color="#fff" />
+            {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
+          </button>
+          <button
+            className="tf-dash-import-btn"
+            onClick={() => setImportOpen(true)}
+            onMouseEnter={() => setHoveredBtn('import-main')}
+            onMouseLeave={() => setHoveredBtn(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'transparent',
+              color: C.text, border: `1px solid ${C.border}`, borderRadius: 12,
+              padding: '12px 20px', minHeight: 44, fontSize: 14, fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .2s ease',
+              boxShadow: hoveredBtn === 'import-main' ? `0 2px 8px rgba(0,0,0,.08)` : 'none',
+              flexShrink: 0,
+            }}
+          >
+            <IconUploadSmall size={16} color={C.sub} />
+            {t('dashboard.importProject')}
+          </button>
+        </div>
       </div>
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
@@ -1336,6 +1498,9 @@ export function Dashboard() {
             })}
       </div>
 
+      {/* ── Referral Widget ──────────────────────────── */}
+      <ReferralWidget C={C} t={t} />
+
       {/* ── Projects section ────────────────────────── */}
       <div style={{
         background: C.card,
@@ -1403,6 +1568,7 @@ export function Dashboard() {
 
             {/* Sort */}
             <select
+              className="tf-dash-sort-select"
               value={sortBy}
               onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
               aria-label={t('dashboard.sortProjects')}

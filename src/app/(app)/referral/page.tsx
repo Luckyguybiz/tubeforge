@@ -6,7 +6,7 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { Skeleton } from '@/components/ui/Skeleton';
+import QRCode from 'qrcode';
 
 /* ── SVG Icons ─────────────────────────────────────────────────────── */
 
@@ -27,10 +27,27 @@ function TelegramIcon({ size = 16 }: { size?: number }) {
   );
 }
 
+function WhatsAppIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" fill="currentColor" />
+    </svg>
+  );
+}
+
 function TwitterIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function EmailIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M22 4L12 13L2 4" />
     </svg>
   );
 }
@@ -56,6 +73,17 @@ function GiftIcon({ color }: { color: string }) {
   );
 }
 
+function TrophyIcon({ color }: { color: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9H4.5a2.5 2.5 0 010-5H6" /><path d="M18 9h1.5a2.5 2.5 0 000-5H18" />
+      <path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+      <path d="M18 2H6v7a6 6 0 1012 0V2z" />
+    </svg>
+  );
+}
+
 /* ── Main Component ────────────────────────────────────────────────── */
 
 function ReferralContent() {
@@ -65,6 +93,7 @@ function ReferralContent() {
 
   const [copied, setCopied] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const myReferral = trpc.referral.getMyReferral.useQuery();
   const stats = trpc.referral.getStats.useQuery(undefined, {
@@ -86,6 +115,21 @@ function ReferralContent() {
   const invited = stats.data?.invited ?? 0;
   const paid = stats.data?.paid ?? 0;
   const earnings = stats.data?.earnings ?? 0;
+  const pending = (stats.data as { pending?: number } | undefined)?.pending ?? 0;
+
+  /* ── Generate QR code when referral link is available ──── */
+  useEffect(() => {
+    if (referralLink) {
+      QRCode.toDataURL(referralLink, {
+        width: 180,
+        margin: 2,
+        color: {
+          dark: isDark ? '#e2e8f0' : '#1e1b4b',
+          light: '#00000000',
+        },
+      }).then(setQrDataUrl).catch(() => setQrDataUrl(null));
+    }
+  }, [referralLink, isDark]);
 
   const handleActivate = useCallback(async () => {
     setActivating(true);
@@ -119,14 +163,27 @@ function ReferralContent() {
       `${t('referral.shareText')} ${referralLink}`
     );
     window.open(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${text}`, '_blank');
-  }, [referralLink]);
+  }, [referralLink, t]);
+
+  const handleShareWhatsApp = useCallback(() => {
+    const text = encodeURIComponent(
+      `${t('referral.shareText')} ${referralLink}`
+    );
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  }, [referralLink, t]);
 
   const handleShareTwitter = useCallback(() => {
     const text = encodeURIComponent(
-      `Check out TubeForge — the best AI video creation platform! Sign up with my link: ${referralLink}`
+      `${t('referral.shareText')} ${referralLink}`
     );
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-  }, [referralLink]);
+  }, [referralLink, t]);
+
+  const handleShareEmail = useCallback(() => {
+    const subject = encodeURIComponent(t('referral.shareEmailSubject'));
+    const body = encodeURIComponent(`${t('referral.shareEmailBody')}\n\n${referralLink}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+  }, [referralLink, t]);
 
   /* ── Save ref code from URL to localStorage on landing page ──── */
   useEffect(() => {
@@ -165,43 +222,42 @@ function ReferralContent() {
     background: C.bg,
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: '60px 48px',
+    padding: '40px 48px',
     overflowY: 'auto',
   };
 
   const cardStyle: React.CSSProperties = {
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 560,
   };
 
   const inputRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 12,
   };
 
   const inputStyle: React.CSSProperties = {
     flex: 1,
-    height: 44,
-    padding: '0 14px',
-    borderRadius: 10,
-    border: `1px solid ${C.border}`,
+    height: 48,
+    padding: '0 16px',
+    borderRadius: 12,
+    border: `1.5px solid ${C.border}`,
     background: C.surface,
     color: C.text,
-    fontSize: 13,
-    fontFamily: 'inherit',
-    fontWeight: 500,
+    fontSize: 14,
+    fontFamily: 'monospace',
+    fontWeight: 600,
     outline: 'none',
-    letterSpacing: '0.02em',
+    letterSpacing: '0.01em',
   };
 
   const primaryBtnStyle: React.CSSProperties = {
-    height: 44,
+    height: 48,
     padding: '0 24px',
-    borderRadius: 10,
+    borderRadius: 12,
     border: 'none',
     background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
     color: '#fff',
@@ -220,15 +276,16 @@ function ReferralContent() {
 
   const statCardStyle: React.CSSProperties = {
     flex: 1,
-    padding: '18px 16px',
-    borderRadius: 12,
+    padding: '20px 16px',
+    borderRadius: 14,
     background: C.surface,
     border: `1px solid ${C.border}`,
     textAlign: 'center',
+    minWidth: 0,
   };
 
   const shareButtonStyle: React.CSSProperties = {
-    height: 40,
+    height: 42,
     padding: '0 16px',
     borderRadius: 10,
     border: `1px solid ${C.border}`,
@@ -243,6 +300,8 @@ function ReferralContent() {
     justifyContent: 'center',
     gap: 6,
     transition: 'all .2s ease',
+    flex: 1,
+    minWidth: 0,
   };
 
   /* ── Benefits list ──────────────────────────────────────────── */
@@ -251,6 +310,13 @@ function ReferralContent() {
     t('referral.benefit2'),
     t('referral.benefit3'),
     t('referral.benefit4'),
+  ];
+
+  /* ── Referral tiers ─────────────────────────────────────────── */
+  const tiers = [
+    { label: t('referral.tier1Label'), commission: t('referral.tier1Commission'), active: invited <= 5 || invited === 0, comingSoon: false },
+    { label: t('referral.tier2Label'), commission: t('referral.tier2Commission'), active: false, comingSoon: true },
+    { label: t('referral.tier3Label'), commission: t('referral.tier3Commission'), active: false, comingSoon: true },
   ];
 
   /* ── Render ─────────────────────────────────────────────────── */
@@ -412,17 +478,18 @@ function ReferralContent() {
                 {t('referral.joinDesc')}
               </p>
 
-              {/* How it works */}
+              {/* How it works (4 steps) */}
               <div style={{ marginBottom: 32 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16 }}>
                   {t('referral.howItWorks')}
                 </div>
                 {[
-                  { step: '1', title: t('referral.step1Title'), desc: t('referral.step1Desc') },
-                  { step: '2', title: t('referral.step2Title'), desc: t('referral.step2Desc') },
-                  { step: '3', title: t('referral.step3Title'), desc: t('referral.step3Desc') },
+                  { step: '1', text: t('referral.howStep1') },
+                  { step: '2', text: t('referral.howStep2') },
+                  { step: '3', text: t('referral.howStep3') },
+                  { step: '4', text: t('referral.howStep4') },
                 ].map((item) => (
-                  <div key={item.step} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
+                  <div key={item.step} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
                     <div style={{
                       width: 32,
                       height: 32,
@@ -438,12 +505,71 @@ function ReferralContent() {
                     }}>
                       {item.step}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>{item.title}</div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>{item.desc}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: C.text, lineHeight: 1.4 }}>
+                      {item.text}
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Referral Tiers */}
+              <div style={{ marginBottom: 32 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
+                  {t('referral.tiersTitle')}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {tiers.map((tier, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      borderRadius: 10,
+                      border: `1px solid ${tier.active && !tier.comingSoon ? (isDark ? 'rgba(99,102,241,.3)' : 'rgba(99,102,241,.2)') : C.border}`,
+                      background: tier.active && !tier.comingSoon
+                        ? (isDark ? 'rgba(99,102,241,.08)' : 'rgba(99,102,241,.04)')
+                        : C.surface,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <TrophyIcon color={tier.active && !tier.comingSoon ? '#6366f1' : C.dim} />
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{tier.label}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: tier.active && !tier.comingSoon ? '#6366f1' : C.sub }}>
+                          {tier.commission}
+                        </span>
+                        {tier.comingSoon && (
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: '#fff',
+                            background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+                            borderRadius: 4,
+                            padding: '2px 6px',
+                            lineHeight: '14px',
+                            letterSpacing: '.02em',
+                          }}>
+                            {t('referral.comingSoon')}
+                          </span>
+                        )}
+                        {tier.active && !tier.comingSoon && (
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: '#fff',
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            borderRadius: 4,
+                            padding: '2px 6px',
+                            lineHeight: '14px',
+                            letterSpacing: '.02em',
+                          }}>
+                            {t('referral.currentTier')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <button
@@ -483,9 +609,17 @@ function ReferralContent() {
                 {t('referral.dashboardDesc')}
               </p>
 
-              {/* Referral link */}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
+              {/* ── Invite Widget: Big referral link ──────────────── */}
+              <div style={{
+                marginBottom: 24,
+                padding: '24px',
+                borderRadius: 16,
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.06))'
+                  : 'linear-gradient(135deg, rgba(99,102,241,.04), rgba(139,92,246,.03))',
+                border: `1.5px solid ${isDark ? 'rgba(99,102,241,.2)' : 'rgba(99,102,241,.12)'}`,
+              }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 10 }}>
                   {t('referral.yourLink')}
                 </label>
                 <div style={inputRowStyle}>
@@ -500,8 +634,8 @@ function ReferralContent() {
                     onClick={handleCopy}
                     style={{
                       ...primaryBtnStyle,
-                      padding: '0 16px',
-                      minWidth: copied ? 120 : 90,
+                      padding: '0 20px',
+                      minWidth: copied ? 130 : 100,
                       background: copied
                         ? 'linear-gradient(135deg, #16a34a, #22c55e)'
                         : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
@@ -523,74 +657,29 @@ function ReferralContent() {
                     )}
                   </button>
                 </div>
-              </div>
 
-              {/* Referral code badge */}
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '8px 14px',
-                borderRadius: 10,
-                background: isDark ? 'rgba(99,102,241,.1)' : 'rgba(99,102,241,.06)',
-                border: `1px solid ${isDark ? 'rgba(99,102,241,.2)' : 'rgba(99,102,241,.12)'}`,
-                marginBottom: 28,
-              }}>
-                <span style={{ fontSize: 11, color: C.sub, fontWeight: 500 }}>{t('referral.yourCode')}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#6366f1', letterSpacing: '.05em', fontFamily: 'monospace' }}>
-                  {referralCode}
-                </span>
-              </div>
-
-              {/* Stats cards */}
-              <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
-                <div style={statCardStyle}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
-                    {invited}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.invited')}</div>
-                </div>
-                <div style={statCardStyle}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
-                    {paid}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.paid')}</div>
-                </div>
+                {/* Referral code badge */}
                 <div style={{
-                  ...statCardStyle,
-                  background: isDark
-                    ? 'linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08))'
-                    : 'linear-gradient(135deg, rgba(99,102,241,.05), rgba(139,92,246,.05))',
-                  border: `1px solid ${isDark ? 'rgba(99,102,241,.2)' : 'rgba(99,102,241,.12)'}`,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.08)',
                 }}>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: '#6366f1', letterSpacing: '-.03em', lineHeight: 1 }}>
-                    ${earnings.toFixed(0)}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.earned')}</div>
+                  <span style={{ fontSize: 11, color: C.sub, fontWeight: 500 }}>{t('referral.yourCode')}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#6366f1', letterSpacing: '.05em', fontFamily: 'monospace' }}>
+                    {referralCode}
+                  </span>
                 </div>
               </div>
 
-              {/* Share buttons */}
-              <div style={{ marginBottom: 28 }}>
+              {/* ── Share buttons (Telegram, WhatsApp, Twitter/X, Email) ── */}
+              <div style={{ marginBottom: 24 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 10 }}>
                   {t('referral.share')}
                 </label>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button
-                    onClick={handleCopy}
-                    style={shareButtonStyle}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = C.cardHover;
-                      e.currentTarget.style.borderColor = C.borderActive;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = C.surface;
-                      e.currentTarget.style.borderColor = C.border;
-                    }}
-                  >
-                    <CopyIcon color={C.sub} />
-                    {copied ? t('referral.copied') : t('referral.copyLink')}
-                  </button>
+                <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={handleShareTelegram}
                     style={{
@@ -600,7 +689,7 @@ function ReferralContent() {
                       color: '#0088cc',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = isDark ? 'rgba(0,136,204,.15)' : 'rgba(0,136,204,.1)';
+                      e.currentTarget.style.background = isDark ? 'rgba(0,136,204,.18)' : 'rgba(0,136,204,.12)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = isDark ? 'rgba(0,136,204,.1)' : 'rgba(0,136,204,.06)';
@@ -608,6 +697,24 @@ function ReferralContent() {
                   >
                     <TelegramIcon size={14} />
                     Telegram
+                  </button>
+                  <button
+                    onClick={handleShareWhatsApp}
+                    style={{
+                      ...shareButtonStyle,
+                      background: isDark ? 'rgba(37,211,102,.08)' : 'rgba(37,211,102,.05)',
+                      borderColor: isDark ? 'rgba(37,211,102,.2)' : 'rgba(37,211,102,.12)',
+                      color: '#25D366',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = isDark ? 'rgba(37,211,102,.15)' : 'rgba(37,211,102,.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = isDark ? 'rgba(37,211,102,.08)' : 'rgba(37,211,102,.05)';
+                    }}
+                  >
+                    <WhatsAppIcon size={14} />
+                    {t('referral.shareWhatsApp')}
                   </button>
                   <button
                     onClick={handleShareTwitter}
@@ -627,6 +734,208 @@ function ReferralContent() {
                     <TwitterIcon size={13} />
                     Twitter
                   </button>
+                  <button
+                    onClick={handleShareEmail}
+                    style={{
+                      ...shareButtonStyle,
+                      color: C.text,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = C.cardHover;
+                      e.currentTarget.style.borderColor = C.borderActive;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = C.surface;
+                      e.currentTarget.style.borderColor = C.border;
+                    }}
+                  >
+                    <EmailIcon size={13} />
+                    {t('referral.shareEmail')}
+                  </button>
+                </div>
+              </div>
+
+              {/* ── QR Code ──────────────────────────────────────── */}
+              {qrDataUrl && (
+                <div style={{
+                  marginBottom: 28,
+                  padding: '20px',
+                  borderRadius: 14,
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 20,
+                }}>
+                  <div style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: 12,
+                    background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    padding: 8,
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={qrDataUrl} alt="Referral QR Code" style={{ width: '100%', height: '100%', borderRadius: 8 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>
+                      {t('referral.qrTitle')}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
+                      {t('referral.qrDesc')}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Stats Dashboard ──────────────────────────────── */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
+                  {t('referral.statsTitle')}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                  <div style={statCardStyle}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
+                      {invited}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.statTotalReferrals')}</div>
+                  </div>
+                  <div style={statCardStyle}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: '#10b981', letterSpacing: '-.03em', lineHeight: 1 }}>
+                      {paid}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.statActiveReferrals')}</div>
+                  </div>
+                  <div style={{
+                    ...statCardStyle,
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08))'
+                      : 'linear-gradient(135deg, rgba(99,102,241,.05), rgba(139,92,246,.05))',
+                    border: `1px solid ${isDark ? 'rgba(99,102,241,.2)' : 'rgba(99,102,241,.12)'}`,
+                  }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: '#6366f1', letterSpacing: '-.03em', lineHeight: 1 }}>
+                      ${earnings.toFixed(0)}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.statTotalEarned')}</div>
+                  </div>
+                  <div style={statCardStyle}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b', letterSpacing: '-.03em', lineHeight: 1 }}>
+                      ${pending.toFixed(0)}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.statPendingPayout')}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── How It Works (4 steps) ───────────────────────── */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
+                  {t('referral.howItWorks')}
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: 10,
+                }}>
+                  {[
+                    { step: '1', text: t('referral.howStep1') },
+                    { step: '2', text: t('referral.howStep2') },
+                    { step: '3', text: t('referral.howStep3') },
+                    { step: '4', text: t('referral.howStep4') },
+                  ].map((item) => (
+                    <div key={item.step} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '14px 14px',
+                      borderRadius: 12,
+                      background: C.surface,
+                      border: `1px solid ${C.border}`,
+                    }}>
+                      <div style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 8,
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#fff',
+                        flexShrink: 0,
+                      }}>
+                        {item.step}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: C.text, lineHeight: 1.4 }}>
+                        {item.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Referral Tiers ────────────────────────────────── */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
+                  {t('referral.tiersTitle')}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {tiers.map((tier, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '14px 16px',
+                      borderRadius: 12,
+                      border: `1px solid ${tier.active && !tier.comingSoon ? (isDark ? 'rgba(99,102,241,.3)' : 'rgba(99,102,241,.2)') : C.border}`,
+                      background: tier.active && !tier.comingSoon
+                        ? (isDark ? 'rgba(99,102,241,.08)' : 'rgba(99,102,241,.04)')
+                        : C.surface,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <TrophyIcon color={tier.active && !tier.comingSoon ? '#6366f1' : C.dim} />
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{tier.label}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: tier.active && !tier.comingSoon ? '#6366f1' : C.sub }}>
+                          {tier.commission}
+                        </span>
+                        {tier.comingSoon && (
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: '#fff',
+                            background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+                            borderRadius: 4,
+                            padding: '2px 6px',
+                            lineHeight: '14px',
+                            letterSpacing: '.02em',
+                          }}>
+                            {t('referral.comingSoon')}
+                          </span>
+                        )}
+                        {tier.active && !tier.comingSoon && (
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: '#fff',
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            borderRadius: 4,
+                            padding: '2px 6px',
+                            lineHeight: '14px',
+                            letterSpacing: '.02em',
+                          }}>
+                            {t('referral.currentTier')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

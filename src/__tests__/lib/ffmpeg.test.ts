@@ -6,7 +6,7 @@ type MessageHandler = ((evt: { data: unknown }) => void) | null;
 
 // Mutable handler that tests can override before calling load()
 let postMessageHandler: (msg: { id: number; t: string; p?: Record<string, unknown> }, onmessage: MessageHandler) => void;
-let workerTerminateFn: ReturnType<typeof vi.fn>;
+let workerTerminateFn: ReturnType<typeof vi.fn<() => void>>;
 let lastWorkerOnMessage: MessageHandler = null;
 let postMessageCallCount = 0;
 

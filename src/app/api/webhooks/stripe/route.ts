@@ -4,6 +4,7 @@ import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { createLogger } from '@/lib/logger';
 import { removePeerFromServer } from '@/lib/wireguard';
+import { sendEmail } from '@/lib/email';
 
 const log = createLogger('stripe');
 
@@ -75,6 +76,16 @@ export async function POST(req: NextRequest) {
     if (result.count === 0) {
       log.warn('No user found for stripeId', { stripeId });
     }
+  }
+
+  /** Look up user email + name by Stripe customer ID (for sending emails) */
+  async function getUserEmailByStripeId(stripeId: string): Promise<{ email: string; name: string; plan: string } | null> {
+    const user = await db.user.findFirst({
+      where: { stripeId },
+      select: { email: true, name: true, plan: true },
+    });
+    if (!user?.email) return null;
+    return { email: user.email, name: user.name ?? '', plan: user.plan ?? 'FREE' };
   }
 
   /** Revoke VPN access for a customer being downgraded to FREE */
@@ -215,6 +226,10 @@ export async function POST(req: NextRequest) {
 
         const updatedPlan = getPlanFromSub(sub);
         if (updatedPlan) {
+          // Capture old plan before updating for the email notification
+          const preUpdateUser = await getUserEmailByStripeId(sub.customer as string);
+          const oldPlan = preUpdateUser?.plan ?? 'FREE';
+
           try {
             await db.$transaction([
               db.processedEvent.create({ data: { stripeEventId: event.id } }),
@@ -223,6 +238,23 @@ export async function POST(req: NextRequest) {
                 data: { plan: updatedPlan },
               }),
             ]);
+
+            // Send plan change email (non-blocking)
+            if (preUpdateUser?.email && oldPlan !== updatedPlan) {
+              try {
+                sendEmail({
+                  to: preUpdateUser.email,
+                  template: 'plan-change',
+                  data: {
+                    oldPlan,
+                    newPlan: updatedPlan,
+                    locale: 'ru',
+                  },
+                }).catch((err) => log.error('Plan change email failed', { error: String(err) }));
+              } catch {
+                // Never block webhook due to email
+              }
+            }
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
@@ -381,6 +413,29 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // --- Send payment receipt email (non-blocking) ---
+        try {
+          const paymentUser = await getUserEmailByStripeId(invoiceCustomerId);
+          if (paymentUser?.email) {
+            const amountFormatted = (invoice.amount_paid / 100).toFixed(2);
+            const paidDate = invoice.status_transitions?.paid_at
+              ? new Date((invoice.status_transitions as { paid_at?: number }).paid_at! * 1000).toLocaleDateString('ru-RU')
+              : new Date().toLocaleDateString('ru-RU');
+            sendEmail({
+              to: paymentUser.email,
+              template: 'payment-receipt',
+              data: {
+                plan: paymentUser.plan,
+                amount: `${amountFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
+                date: paidDate,
+                locale: 'ru',
+              },
+            }).catch((err) => log.error('Payment receipt email failed', { error: String(err) }));
+          }
+        } catch {
+          // Never block webhook due to email
+        }
+
         // --- Referral commission ---
         if (!paidUser?.referredBy) break;
 
@@ -411,6 +466,29 @@ export async function POST(req: NextRequest) {
               },
             }),
           ]);
+
+          // Send referral commission email to the referrer (non-blocking)
+          try {
+            const referrerUser = await db.user.findUnique({
+              where: { id: referrer.id },
+              select: { email: true, name: true, referralEarnings: true },
+            });
+            if (referrerUser?.email) {
+              const commissionFormatted = (commission / 100).toFixed(2);
+              const totalFormatted = ((referrerUser.referralEarnings ?? 0) / 100).toFixed(2);
+              sendEmail({
+                to: referrerUser.email,
+                template: 'referral-commission',
+                data: {
+                  amount: `${commissionFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
+                  totalBalance: `${totalFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
+                  locale: 'ru',
+                },
+              }).catch((err) => log.error('Referral commission email failed', { error: String(err) }));
+            }
+          } catch {
+            // Never block webhook due to email
+          }
         } catch (err) {
           // P2002 = unique constraint violation → duplicate webhook, safe to ignore
           const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';

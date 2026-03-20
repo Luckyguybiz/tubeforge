@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 import { securityHeaders } from './src/lib/security-headers';
 
 const nextConfig: NextConfig = {
@@ -47,4 +48,11 @@ const nextConfig: NextConfig = {
   transpilePackages: ['superjson'],
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Suppresses all Sentry CLI logs during build
+  silent: true,
+  // Disable source map upload (no auth token configured)
+  sourcemaps: {
+    disable: true,
+  },
+});

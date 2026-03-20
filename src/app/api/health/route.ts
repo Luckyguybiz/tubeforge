@@ -14,7 +14,7 @@ export async function GET() {
   }
 
   return NextResponse.json(
-    { status: dbOk ? 'ok' : 'degraded', db: dbOk },
+    { status: dbOk ? 'ok' : 'degraded', db: dbOk, timestamp: new Date().toISOString() },
     { status: dbOk ? 200 : 503 },
   );
 }

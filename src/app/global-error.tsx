@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import * as Sentry from '@sentry/nextjs';
+import { useEffect, useState } from 'react';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /**
@@ -18,6 +19,10 @@ export default function GlobalError({
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const t = useLocaleStore((s) => s.t);
+
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
 
   /* Hardcoded dark colors since theme store may be broken */
   const bg = '#06060b';

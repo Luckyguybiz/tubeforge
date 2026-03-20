@@ -73,8 +73,14 @@ export const env = {
   SMTP_URL: process.env.SMTP_URL ?? '',
   EMAIL_FROM: process.env.EMAIL_FROM ?? '',
 
+  // Email (Resend)
+  RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
+
   // VPN / WireGuard
   VPN_ENCRYPTION_KEY: process.env.VPN_ENCRYPTION_KEY ?? '',
   VPN_SERVER_PUBLIC_KEY: process.env.VPN_SERVER_PUBLIC_KEY ?? '',
   VPN_SERVER_ENDPOINT: process.env.VPN_SERVER_ENDPOINT ?? '57.128.254.111:51820',
+
+  // Error monitoring (Sentry) — disabled when not set
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
 } as const;

@@ -1,832 +1,153 @@
 'use client';
 
-import { useState, useCallback, useRef, useMemo } from 'react';
-import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
+import { useState } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
-import type { Theme } from '@/lib/types';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
-const GRADIENT: [string, string] = ['#6366f1', '#8b5cf6'];
+/* ═══════════════════════════════════════════════════════════════════════════
+   Subtitle Editor Providers — referral links page
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-interface SubtitleEntry {
+interface Provider {
   id: string;
-  index: number;
-  startTime: number; // seconds
-  endTime: number;   // seconds
-  text: string;
+  name: string;
+  logo: string;
+  description: string;
+  descriptionRu: string;
+  features: string[];
+  featuresRu: string[];
+  url: string;
+  pricing: string;
+  pricingRu: string;
+  badge?: string;
+  gradient: [string, string];
 }
 
-type ExportFormat = 'srt' | 'vtt';
-
-/* ------------------------------------------------------------------ */
-/*  Time helpers                                                       */
-/* ------------------------------------------------------------------ */
-
-/** Parse "HH:MM:SS,mmm" (SRT) or "HH:MM:SS.mmm" (VTT) into seconds */
-function parseTime(raw: string): number {
-  const cleaned = raw.trim().replace(',', '.');
-  const parts = cleaned.split(':');
-  if (parts.length !== 3) return 0;
-  const hours = parseInt(parts[0], 10) || 0;
-  const minutes = parseInt(parts[1], 10) || 0;
-  const secParts = parts[2].split('.');
-  const seconds = parseInt(secParts[0], 10) || 0;
-  const millis = parseInt((secParts[1] ?? '0').padEnd(3, '0').slice(0, 3), 10) || 0;
-  return hours * 3600 + minutes * 60 + seconds + millis / 1000;
-}
-
-/** Format seconds into "HH:MM:SS,mmm" (SRT) or "HH:MM:SS.mmm" (VTT) */
-function formatTime(totalSeconds: number, format: ExportFormat = 'srt'): string {
-  const clamped = Math.max(0, totalSeconds);
-  const h = Math.floor(clamped / 3600);
-  const m = Math.floor((clamped % 3600) / 60);
-  const s = Math.floor(clamped % 60);
-  const ms = Math.round((clamped % 1) * 1000);
-  const sep = format === 'vtt' ? '.' : ',';
-  return (
-    String(h).padStart(2, '0') + ':' +
-    String(m).padStart(2, '0') + ':' +
-    String(s).padStart(2, '0') + sep +
-    String(ms).padStart(3, '0')
-  );
-}
-
-/** Format seconds for display in inputs: "HH:MM:SS.mmm" (always dot for editing) */
-function formatTimeForInput(totalSeconds: number): string {
-  const clamped = Math.max(0, totalSeconds);
-  const h = Math.floor(clamped / 3600);
-  const m = Math.floor((clamped % 3600) / 60);
-  const s = Math.floor(clamped % 60);
-  const ms = Math.round((clamped % 1) * 1000);
-  return (
-    String(h).padStart(2, '0') + ':' +
-    String(m).padStart(2, '0') + ':' +
-    String(s).padStart(2, '0') + '.' +
-    String(ms).padStart(3, '0')
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Parsers                                                            */
-/* ------------------------------------------------------------------ */
-
-let idCounter = 0;
-function nextId(): string {
-  idCounter += 1;
-  return 'sub-' + idCounter + '-' + Date.now().toString(36);
-}
-
-function parseSRT(content: string): SubtitleEntry[] {
-  const entries: SubtitleEntry[] = [];
-  // Normalise line endings and split into blocks
-  const blocks = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split(/\n\n+/);
-
-  for (const block of blocks) {
-    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
-    if (lines.length < 3) continue;
-
-    const indexLine = parseInt(lines[0], 10);
-    if (isNaN(indexLine)) continue;
-
-    const timeLine = lines[1];
-    const arrowMatch = timeLine.match(/^([\d:,.\s]+)\s*-->\s*([\d:,.\s]+)$/);
-    if (!arrowMatch) continue;
-
-    const startTime = parseTime(arrowMatch[1]);
-    const endTime = parseTime(arrowMatch[2]);
-    const text = lines.slice(2).join('\n');
-
-    entries.push({ id: nextId(), index: indexLine, startTime, endTime, text });
-  }
-
-  return entries;
-}
-
-function parseVTT(content: string): SubtitleEntry[] {
-  const entries: SubtitleEntry[] = [];
-  // Strip header
-  const withoutHeader = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const headerEnd = withoutHeader.indexOf('\n\n');
-  const body = headerEnd >= 0 ? withoutHeader.slice(headerEnd + 2) : withoutHeader;
-  const blocks = body.trim().split(/\n\n+/);
-
-  let idx = 1;
-  for (const block of blocks) {
-    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
-    if (lines.length < 2) continue;
-
-    // Lines might start with an optional numeric cue id
-    let timeLineIdx = 0;
-    if (!lines[0].includes('-->')) {
-      timeLineIdx = 1;
-    }
-    if (timeLineIdx >= lines.length) continue;
-
-    const timeLine = lines[timeLineIdx];
-    const arrowMatch = timeLine.match(/^([\d:.\s]+)\s*-->\s*([\d:.\s]+)/);
-    if (!arrowMatch) continue;
-
-    const startTime = parseTime(arrowMatch[1]);
-    const endTime = parseTime(arrowMatch[2]);
-    const text = lines.slice(timeLineIdx + 1).join('\n');
-
-    entries.push({ id: nextId(), index: idx, startTime, endTime, text });
-    idx++;
-  }
-
-  return entries;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Exporters                                                          */
-/* ------------------------------------------------------------------ */
-
-function exportSRT(entries: SubtitleEntry[]): string {
-  return entries
-    .sort((a, b) => a.startTime - b.startTime)
-    .map((e, i) =>
-      `${i + 1}\n${formatTime(e.startTime, 'srt')} --> ${formatTime(e.endTime, 'srt')}\n${e.text}`
-    )
-    .join('\n\n') + '\n';
-}
-
-function exportVTT(entries: SubtitleEntry[]): string {
-  const cues = entries
-    .sort((a, b) => a.startTime - b.startTime)
-    .map(
-      (e) =>
-        `${formatTime(e.startTime, 'vtt')} --> ${formatTime(e.endTime, 'vtt')}\n${e.text}`
-    )
-    .join('\n\n');
-  return `WEBVTT\n\n${cues}\n`;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+const PROVIDERS: Provider[] = [
+  {
+    id: 'capcut',
+    name: 'CapCut',
+    logo: '\uD83C\uDFAC',
+    description: 'Free all-in-one video editor with powerful auto-captioning. AI generates accurate subtitles in 20+ languages with customizable styles.',
+    descriptionRu: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u0432\u0438\u0434\u0435\u043E\u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u0441 \u043C\u043E\u0449\u043D\u044B\u043C \u0430\u0432\u0442\u043E-\u0441\u0443\u0431\u0442\u0438\u0442\u0440\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435\u043C. \u0418\u0418 \u0433\u0435\u043D\u0435\u0440\u0438\u0440\u0443\u0435\u0442 \u0442\u043E\u0447\u043D\u044B\u0435 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u044B \u043D\u0430 20+ \u044F\u0437\u044B\u043A\u0430\u0445.',
+    features: ['Auto-Captions', 'Style Templates', 'Free to Use', 'Mobile + Desktop', 'Export SRT'],
+    featuresRu: ['\u0410\u0432\u0442\u043E-\u0441\u0443\u0431\u0442\u0438\u0442\u0440\u044B', '\u0428\u0430\u0431\u043B\u043E\u043D\u044B \u0441\u0442\u0438\u043B\u0435\u0439', '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E', '\u041C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0439 + \u041F\u041A', '\u042D\u043A\u0441\u043F\u043E\u0440\u0442 SRT'],
+    url: 'https://www.capcut.com/?ref=tubeforge',
+    pricing: 'Free \u2022 Pro from $7.99/mo',
+    pricingRu: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E \u2022 Pro \u043E\u0442 $7.99/\u043C\u0435\u0441',
+    badge: 'Free',
+    gradient: ['#6366f1', '#8b5cf6'],
+  },
+  {
+    id: 'descript',
+    name: 'Descript',
+    logo: '\u270F\uFE0F',
+    description: 'Edit video and audio by editing text. AI-powered transcription with the ability to edit media as easily as a Google Doc.',
+    descriptionRu: '\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u0443\u0439\u0442\u0435 \u0432\u0438\u0434\u0435\u043E \u0438 \u0430\u0443\u0434\u0438\u043E, \u0440\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u0443\u044F \u0442\u0435\u043A\u0441\u0442. \u0418\u0418-\u0442\u0440\u0430\u043D\u0441\u043A\u0440\u0438\u043F\u0446\u0438\u044F \u0441 \u0440\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435\u043C \u043A\u0430\u043A \u0432 Google Doc.',
+    features: ['Text-Based Editing', 'AI Transcription', 'Screen Recording', 'Filler Word Removal', 'Collaboration'],
+    featuresRu: ['\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u043E\u043C', '\u0418\u0418-\u0442\u0440\u0430\u043D\u0441\u043A\u0440\u0438\u043F\u0446\u0438\u044F', '\u0417\u0430\u043F\u0438\u0441\u044C \u044D\u043A\u0440\u0430\u043D\u0430', '\u0423\u0434\u0430\u043B\u0435\u043D\u0438\u0435 \u0441\u043B\u043E\u0432-\u043F\u0430\u0440\u0430\u0437\u0438\u0442\u043E\u0432', '\u041A\u043E\u043B\u043B\u0430\u0431\u043E\u0440\u0430\u0446\u0438\u044F'],
+    url: 'https://www.descript.com/?ref=tubeforge',
+    pricing: 'Free tier \u2022 From $24/mo',
+    pricingRu: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u0442\u0430\u0440\u0438\u0444 \u2022 \u041E\u0442 $24/\u043C\u0435\u0441',
+    badge: 'Popular',
+    gradient: ['#10b981', '#059669'],
+  },
+  {
+    id: 'happyscribe',
+    name: 'Happy Scribe',
+    logo: '\uD83D\uDE0A',
+    description: 'Professional transcription and subtitle service with 99% accuracy. Supports 120+ languages with human proofreading option.',
+    descriptionRu: '\u041F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u0442\u0440\u0430\u043D\u0441\u043A\u0440\u0438\u043F\u0446\u0438\u0438 \u0438 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432 \u0441 \u0442\u043E\u0447\u043D\u043E\u0441\u0442\u044C\u044E 99%. 120+ \u044F\u0437\u044B\u043A\u043E\u0432 \u0441 \u043E\u043F\u0446\u0438\u0435\u0439 \u0440\u0443\u0447\u043D\u043E\u0439 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438.',
+    features: ['120+ Languages', '99% Accuracy', 'Human Proofing', 'SRT/VTT Export', 'API Access'],
+    featuresRu: ['120+ \u044F\u0437\u044B\u043A\u043E\u0432', '99% \u0442\u043E\u0447\u043D\u043E\u0441\u0442\u044C', '\u0420\u0443\u0447\u043D\u0430\u044F \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0430', '\u042D\u043A\u0441\u043F\u043E\u0440\u0442 SRT/VTT', 'API \u0434\u043E\u0441\u0442\u0443\u043F'],
+    url: 'https://www.happyscribe.com/?ref=tubeforge',
+    pricing: 'From $0.10/min (AI) \u2022 $1.70/min (human)',
+    pricingRu: '\u041E\u0442 $0.10/\u043C\u0438\u043D (\u0418\u0418) \u2022 $1.70/\u043C\u0438\u043D (\u0447\u0435\u043B\u043E\u0432\u0435\u043A)',
+    gradient: ['#f59e0b', '#f97316'],
+  },
+  {
+    id: 'rev',
+    name: 'Rev.com',
+    logo: '\uD83D\uDCDD',
+    description: 'Trusted by 170,000+ customers. Fast AI and human transcription with guaranteed accuracy for subtitles and captions.',
+    descriptionRu: '\u0414\u043E\u0432\u0435\u0440\u044F\u044E\u0442 170,000+ \u043A\u043B\u0438\u0435\u043D\u0442\u043E\u0432. \u0411\u044B\u0441\u0442\u0440\u0430\u044F \u0418\u0418 \u0438 \u0440\u0443\u0447\u043D\u0430\u044F \u0442\u0440\u0430\u043D\u0441\u043A\u0440\u0438\u043F\u0446\u0438\u044F \u0441 \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u0435\u0439 \u0442\u043E\u0447\u043D\u043E\u0441\u0442\u0438.',
+    features: ['AI + Human', '99% Accuracy', 'Fast Turnaround', 'Captions/Subtitles', 'YouTube Integration'],
+    featuresRu: ['\u0418\u0418 + \u0427\u0435\u043B\u043E\u0432\u0435\u043A', '99% \u0442\u043E\u0447\u043D\u043E\u0441\u0442\u044C', '\u0411\u044B\u0441\u0442\u0440\u0430\u044F \u043E\u0442\u0434\u0430\u0447\u0430', '\u0421\u0443\u0431\u0442\u0438\u0442\u0440\u044B', '\u0418\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F YouTube'],
+    url: 'https://www.rev.com/?ref=tubeforge',
+    pricing: 'From $0.25/min (AI) \u2022 $1.50/min (human)',
+    pricingRu: '\u041E\u0442 $0.25/\u043C\u0438\u043D (\u0418\u0418) \u2022 $1.50/\u043C\u0438\u043D (\u0447\u0435\u043B\u043E\u0432\u0435\u043A)',
+    badge: 'Trusted',
+    gradient: ['#ef4444', '#dc2626'],
+  },
+];
 
 export function SubtitleEditor() {
   const C = useThemeStore((s) => s.theme);
-
-  const [subtitleFile, setSubtitleFile] = useState<File | null>(null);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [entries, setEntries] = useState<SubtitleEntry[]>([]);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>('srt');
-  const [parseError, setParseError] = useState<string | null>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  /* ---- Derived values ---- */
-  const totalDuration = useMemo(() => {
-    if (entries.length === 0) return 60;
-    return Math.max(...entries.map((e) => e.endTime), 60);
-  }, [entries]);
-
-  /* ---- File handlers ---- */
-  const handleSubtitleFile = useCallback((file: File) => {
-    setSubtitleFile(file);
-    setParseError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
-      const name = file.name.toLowerCase();
-      let parsed: SubtitleEntry[];
-      if (name.endsWith('.vtt')) {
-        parsed = parseVTT(text);
-      } else {
-        parsed = parseSRT(text);
-      }
-      if (parsed.length === 0) {
-        setParseError('Could not parse any subtitle entries from this file. Please check the format.');
-      }
-      setEntries(parsed);
-    };
-    reader.onerror = () => {
-      setParseError('Failed to read file.');
-    };
-    reader.readAsText(file);
-  }, []);
-
-  const handleVideoFile = useCallback((file: File) => {
-    setVideoFile(file);
-    const url = URL.createObjectURL(file);
-    setVideoUrl(url);
-  }, []);
-
-  /* ---- Entry mutation helpers ---- */
-  const updateEntry = useCallback((id: string, patch: Partial<SubtitleEntry>) => {
-    setEntries((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, ...patch } : e))
-    );
-  }, []);
-
-  const deleteEntry = useCallback((id: string) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
-  }, []);
-
-  const addEntry = useCallback(() => {
-    const lastEnd = entries.length > 0 ? Math.max(...entries.map((e) => e.endTime)) : 0;
-    const newEntry: SubtitleEntry = {
-      id: nextId(),
-      index: entries.length + 1,
-      startTime: lastEnd + 0.5,
-      endTime: lastEnd + 3.5,
-      text: '',
-    };
-    setEntries((prev) => [...prev, newEntry]);
-    // Scroll to bottom after adding
-    setTimeout(() => {
-      if (listRef.current) {
-        listRef.current.scrollTop = listRef.current.scrollHeight;
-      }
-    }, 50);
-  }, [entries]);
-
-  /* ---- Export / Download ---- */
-  const handleDownload = useCallback(() => {
-    if (entries.length === 0) return;
-    const content = exportFormat === 'vtt' ? exportVTT(entries) : exportSRT(entries);
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const baseName = subtitleFile
-      ? subtitleFile.name.replace(/\.(srt|vtt)$/i, '')
-      : 'subtitles';
-    a.download = `${baseName}.${exportFormat}`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [entries, exportFormat, subtitleFile]);
-
-  /* ---- Reset ---- */
-  const handleReset = useCallback(() => {
-    setSubtitleFile(null);
-    setVideoFile(null);
-    if (videoUrl) URL.revokeObjectURL(videoUrl);
-    setVideoUrl(null);
-    setEntries([]);
-    setParseError(null);
-  }, [videoUrl]);
-
-  /* ---- Time input change handler (returns seconds or null if invalid) ---- */
-  const handleTimeChange = useCallback(
-    (id: string, field: 'startTime' | 'endTime', raw: string) => {
-      const seconds = parseTime(raw);
-      updateEntry(id, { [field]: seconds });
-    },
-    [updateEntry]
-  );
-
-  /* ================================================================ */
-  /*  Upload screen (no file loaded yet)                               */
-  /* ================================================================ */
-
-  if (!subtitleFile) {
-    return (
-      <ToolPageShell
-        title="Subtitle Editor"
-        subtitle="Edit, create, and export SRT/VTT subtitle files"
-        gradient={GRADIENT}
-        badge="TOOL"
-        badgeColor="#6366f1"
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <UploadArea
-            C={C}
-            accept=".srt,.vtt,text/plain"
-            onFile={handleSubtitleFile}
-            label="Upload an SRT or VTT subtitle file to start editing"
-          />
-          <div style={{
-            padding: 16, borderRadius: 12,
-            background: C.card, border: `1px solid ${C.border}`,
-            textAlign: 'center',
-          }}>
-            <span style={{ fontSize: 13, color: C.sub }}>
-              Or{' '}
-            </span>
-            <button
-              onClick={() => {
-                // Create an empty project to start from scratch
-                setSubtitleFile(new File([''], 'new-subtitles.srt', { type: 'text/plain' }));
-                setEntries([{
-                  id: nextId(),
-                  index: 1,
-                  startTime: 0,
-                  endTime: 3,
-                  text: 'First subtitle',
-                }]);
-              }}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: GRADIENT[0], fontWeight: 600, fontSize: 13,
-                textDecoration: 'underline', fontFamily: 'inherit',
-              }}
-            >
-              start from scratch
-            </button>
-          </div>
-        </div>
-      </ToolPageShell>
-    );
-  }
-
-  /* ================================================================ */
-  /*  Main editor screen                                               */
-  /* ================================================================ */
+  const { locale } = useLocaleStore();
+  const isRu = locale === 'ru' || locale === 'kk';
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
-    <ToolPageShell
-      title="Subtitle Editor"
-      subtitle="Edit, create, and export SRT/VTT subtitle files"
-      gradient={GRADIENT}
-      badge="TOOL"
-      badgeColor="#6366f1"
-    >
-      {/* Parse error */}
-      {parseError && (
-        <div role="alert" style={{
-          padding: 14, borderRadius: 10, marginBottom: 16,
-          background: '#ef444412', border: '1px solid #ef444433',
-          display: 'flex', alignItems: 'center', gap: 10,
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 600 }}>
-            {parseError}
-          </span>
-        </div>
-      )}
-
-      {/* Top bar: file info, video upload, format selector, download */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        marginBottom: 16, flexWrap: 'wrap',
-      }}>
-        {/* File info */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '8px 14px', borderRadius: 10,
-          background: C.card, border: `1px solid ${C.border}`,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GRADIENT[0]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-          <span style={{ fontSize: 12, fontWeight: 600, color: C.text, maxWidth: '40vw', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-            {subtitleFile.name}
-          </span>
-          <span style={{ fontSize: 11, color: C.dim }}>
-            ({entries.length} entries)
-          </span>
-        </div>
-
-        {/* Optional video upload */}
-        {!videoFile && (
-          <label style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 10,
-            border: `1px solid ${C.border}`, background: C.card,
-            cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.sub,
-            transition: 'all 0.2s ease', minHeight: 44,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-            Add Video Preview
-            <input type="file" accept="video/*" style={{ display: 'none' }} onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) handleVideoFile(f);
-              e.target.value = '';
-            }} />
-          </label>
-        )}
-
-        <div style={{ flex: 1 }} />
-
-        {/* Export format selector */}
-        <div style={{
-          display: 'flex', borderRadius: 10,
-          border: `1px solid ${C.border}`, overflow: 'hidden',
-        }}>
-          {(['srt', 'vtt'] as const).map((fmt) => (
-            <button
-              key={fmt}
-              onClick={() => setExportFormat(fmt)}
-              style={{
-                padding: '8px 16px', border: 'none',
-                background: exportFormat === fmt
-                  ? `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`
-                  : C.card,
-                color: exportFormat === fmt ? '#fff' : C.sub,
-                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                textTransform: 'uppercase', fontFamily: 'inherit',
-                transition: 'all 0.2s ease', minHeight: 44,
-              }}
-            >
-              .{fmt}
-            </button>
-          ))}
-        </div>
-
-        {/* Download */}
-        <ActionButton
-          label="Download"
-          gradient={GRADIENT}
-          onClick={handleDownload}
-          disabled={entries.length === 0}
-        />
+    <div style={{ padding: '32px 24px', maxWidth: 1000, margin: '0 auto' }}>
+      <div style={{ marginBottom: 32, textAlign: 'center' }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>
+          {isRu ? '\uD83D\uDCDD \u0420\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432' : '\uD83D\uDCDD Subtitle Editor & Captioning'}
+        </h1>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, maxWidth: 600, margin: '0 auto' }}>
+          {isRu
+            ? '\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u0435\u0440\u0432\u0438\u0441 \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0438 \u0440\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432. \u0410\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0442\u0440\u0430\u043D\u0441\u043A\u0440\u0438\u043F\u0446\u0438\u044F \u0438 \u0441\u0442\u0438\u043B\u0438\u0437\u0430\u0446\u0438\u044F.'
+            : 'Choose a service for creating and editing subtitles. Automatic transcription, styling, and professional captioning.'}
+        </p>
       </div>
 
-      {/* Main layout: subtitle list + optional video preview */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: videoUrl ? 'repeat(auto-fill, minmax(280px, 1fr))' : '1fr',
-        gap: 20,
-        alignItems: 'start',
-      }}>
-        {/* Left column: subtitle entries + timeline */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Action bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              onClick={addEntry}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 16px', borderRadius: 10,
-                border: `1px solid ${GRADIENT[0]}44`,
-                background: `${GRADIENT[0]}12`,
-                color: GRADIENT[0], fontSize: 12, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.2s ease', minHeight: 44,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `${GRADIENT[0]}22`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = `${GRADIENT[0]}12`; }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Add Subtitle
-            </button>
+      <div style={{ padding: '14px 18px', background: `${C.blue}0a`, border: `1px solid ${C.blue}20`, borderRadius: 12, marginBottom: 28, fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
+        {isRu
+          ? '\uD83D\uDCA1 \u0421\u043E\u0432\u0435\u0442: CapCut \u2014 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u0432\u0430\u0440\u0438\u0430\u043D\u0442 \u0441 \u0430\u0432\u0442\u043E-\u0441\u0443\u0431\u0442\u0438\u0442\u0440\u0430\u043C\u0438. Descript \u2014 \u0438\u043D\u043D\u043E\u0432\u0430\u0446\u0438\u043E\u043D\u043D\u044B\u0439 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u043D\u0430 \u0431\u0430\u0437\u0435 \u0442\u0435\u043A\u0441\u0442\u0430. Happy Scribe \u0438 Rev.com \u2014 \u0434\u043B\u044F \u043F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0439 \u0442\u043E\u0447\u043D\u043E\u0441\u0442\u0438.'
+          : '\uD83D\uDCA1 Tip: CapCut is a free option with auto-captions. Descript offers innovative text-based editing. Happy Scribe and Rev.com are best for professional accuracy.'}
+      </div>
 
-            <div style={{ flex: 1 }} />
-
-            {/* Sort hint */}
-            <span style={{ fontSize: 11, color: C.dim }}>
-              {entries.length} subtitle{entries.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-
-          {/* Subtitle entry list */}
-          <div
-            ref={listRef}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+        {PROVIDERS.map((p) => (
+          <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer"
+            onMouseEnter={() => setHoveredId(p.id)} onMouseLeave={() => setHoveredId(null)}
             style={{
-              display: 'flex', flexDirection: 'column', gap: 8,
-              maxHeight: 520, overflowY: 'auto',
-              paddingRight: 4,
+              display: 'block', textDecoration: 'none', padding: '20px', background: C.surface,
+              border: `1px solid ${hoveredId === p.id ? C.accent : C.border}`, borderRadius: 16,
+              transition: 'all 0.2s ease', transform: hoveredId === p.id ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredId === p.id ? `0 8px 24px ${C.accent}15` : 'none',
+              position: 'relative', overflow: 'hidden',
             }}
           >
-            {entries.length === 0 && (
-              <div style={{
-                padding: 40, textAlign: 'center', borderRadius: 12,
-                background: C.card, border: `1px solid ${C.border}`,
-              }}>
-                <p style={{ fontSize: 14, color: C.dim, margin: 0 }}>
-                  No subtitle entries. Click &quot;Add Subtitle&quot; to create one.
-                </p>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${p.gradient[0]}, ${p.gradient[1]})` }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 28 }}>{p.logo}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{p.name}</span>
+                  {p.badge && (<span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: `linear-gradient(135deg, ${p.gradient[0]}, ${p.gradient[1]})`, color: '#fff', letterSpacing: 0.3 }}>{p.badge}</span>)}
+                </div>
+                <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>{isRu ? p.pricingRu : p.pricing}</div>
               </div>
-            )}
-
-            {entries
-              .slice()
-              .sort((a, b) => a.startTime - b.startTime)
-              .map((entry, displayIdx) => (
-                <SubtitleRow
-                  key={entry.id}
-                  entry={entry}
-                  displayIndex={displayIdx + 1}
-                  C={C}
-                  gradient={GRADIENT}
-                  onUpdate={updateEntry}
-                  onDelete={deleteEntry}
-                  onTimeChange={handleTimeChange}
-                  onSeek={(t) => {
-                    if (videoRef.current) {
-                      videoRef.current.currentTime = t;
-                    }
-                  }}
-                />
+            </div>
+            <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5, margin: '0 0 14px' }}>{isRu ? p.descriptionRu : p.description}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {(isRu ? p.featuresRu : p.features).map((f, i) => (
+                <span key={i} style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: `${p.gradient[0]}12`, color: p.gradient[0], border: `1px solid ${p.gradient[0]}20` }}>{f}</span>
               ))}
-          </div>
-
-          {/* Timeline bar */}
-          <div style={{
-            padding: '14px 16px', borderRadius: 12,
-            background: C.card, border: `1px solid ${C.border}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Timeline</span>
-              <span style={{ fontSize: 10, color: C.dim, fontFamily: 'monospace' }}>
-                {formatTimeForInput(0)} - {formatTimeForInput(totalDuration)}
-              </span>
             </div>
-            <div style={{
-              position: 'relative', height: 32, borderRadius: 6,
-              background: C.surface, border: `1px solid ${C.border}`,
-              overflow: 'hidden',
-            }}>
-              {/* Time markers */}
-              {Array.from({ length: 5 }).map((_, i) => {
-                const pct = (i + 1) * 20;
-                return (
-                  <div key={i} style={{
-                    position: 'absolute', left: `${pct}%`, top: 0, bottom: 0,
-                    width: 1, background: C.border, opacity: 0.5,
-                  }} />
-                );
-              })}
-
-              {/* Subtitle blocks */}
-              {entries.map((e) => {
-                const left = (e.startTime / totalDuration) * 100;
-                const width = Math.max(((e.endTime - e.startTime) / totalDuration) * 100, 0.5);
-                return (
-                  <div
-                    key={e.id}
-                    title={`${formatTimeForInput(e.startTime)} - ${formatTimeForInput(e.endTime)}\n${e.text.slice(0, 60)}`}
-                    style={{
-                      position: 'absolute',
-                      left: `${left}%`,
-                      width: `${width}%`,
-                      top: 4, bottom: 4,
-                      borderRadius: 3,
-                      background: `linear-gradient(135deg, ${GRADIENT[0]}cc, ${GRADIENT[1]}cc)`,
-                      cursor: 'pointer',
-                      transition: 'opacity 0.15s ease',
-                      minWidth: 3,
-                    }}
-                    onClick={() => {
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = e.startTime;
-                      }
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.7'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
-                  />
-                );
-              })}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 14, fontSize: 13, fontWeight: 600, color: C.accent, gap: 6 }}>
+              {isRu ? '\u041F\u0435\u0440\u0435\u0439\u0442\u0438' : 'Visit'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
             </div>
-
-            {/* Time labels */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-              {Array.from({ length: 6 }).map((_, i) => {
-                const t = (totalDuration / 5) * i;
-                return (
-                  <span key={i} style={{ fontSize: 9, color: C.dim, fontFamily: 'monospace' }}>
-                    {formatTimeForInput(t)}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Right column: optional video preview */}
-        {videoUrl && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 20 }}>
-            <div style={{
-              borderRadius: 12, overflow: 'hidden',
-              border: `1px solid ${C.border}`, background: '#000',
-              position: 'relative',
-            }}>
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                controls
-                style={{ width: '100%', display: 'block', maxHeight: 400 }}
-              />
-            </div>
-
-            {/* Remove video */}
-            <button
-              onClick={() => {
-                setVideoFile(null);
-                if (videoUrl) URL.revokeObjectURL(videoUrl);
-                setVideoUrl(null);
-              }}
-              style={{
-                padding: '8px 0', borderRadius: 10,
-                border: `1px solid ${C.border}`, background: C.card,
-                color: C.dim, fontSize: 12, cursor: 'pointer',
-                fontFamily: 'inherit', transition: 'all 0.2s ease',
-                minHeight: 44, width: '100%',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.color = C.text; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = C.card; e.currentTarget.style.color = C.dim; }}
-            >
-              Remove Video
-            </button>
-          </div>
-        )}
+          </a>
+        ))}
       </div>
 
-      {/* Bottom bar: reset + re-upload */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        marginTop: 20, paddingTop: 16,
-        borderTop: `1px solid ${C.border}`,
-        flexWrap: 'wrap',
-      }}>
-        <button
-          onClick={handleReset}
-          style={{
-            padding: '8px 20px', borderRadius: 10,
-            border: `1px solid ${C.border}`, background: C.card,
-            color: C.dim, fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-            minHeight: 44,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.color = C.text; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = C.card; e.currentTarget.style.color = C.dim; }}
-        >
-          Start Over
-        </button>
-
-        {/* Re-upload subtitle */}
-        <label style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 20px', borderRadius: 10,
-          border: `1px solid ${C.border}`, background: C.card,
-          cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.sub,
-          transition: 'all 0.2s ease', minHeight: 44,
-        }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-          Load Different File
-          <input type="file" accept=".srt,.vtt,text/plain" style={{ display: 'none' }} onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleSubtitleFile(f);
-            e.target.value = '';
-          }} />
-        </label>
+      <div style={{ marginTop: 28, padding: '16px 20px', background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13, color: C.dim, lineHeight: 1.6, textAlign: 'center' }}>
+        {isRu
+          ? '\u2699\uFE0F \u041F\u043E\u043B\u043D\u0430\u044F \u0438\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0430 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432 \u0432 TubeForge \u2014 \u0432 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0435. \u0421\u043B\u0435\u0434\u0438\u0442\u0435 \u0437\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F\u043C\u0438!'
+          : '\u2699\uFE0F Full subtitle editor integration inside TubeForge \u2014 coming soon. Stay tuned!'}
       </div>
-    </ToolPageShell>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  SubtitleRow component                                              */
-/* ------------------------------------------------------------------ */
-
-interface SubtitleRowProps {
-  entry: SubtitleEntry;
-  displayIndex: number;
-  C: Theme;
-  gradient: [string, string];
-  onUpdate: (id: string, patch: Partial<SubtitleEntry>) => void;
-  onDelete: (id: string) => void;
-  onTimeChange: (id: string, field: 'startTime' | 'endTime', raw: string) => void;
-  onSeek: (time: number) => void;
-}
-
-function SubtitleRow({
-  entry, displayIndex, C, gradient, onUpdate, onDelete, onTimeChange, onSeek,
-}: SubtitleRowProps) {
-  const [startStr, setStartStr] = useState(formatTimeForInput(entry.startTime));
-  const [endStr, setEndStr] = useState(formatTimeForInput(entry.endTime));
-
-  // Keep local strings in sync if external changes happen
-  // (We use local state for smooth editing, commit on blur)
-  const commitStart = useCallback(() => {
-    onTimeChange(entry.id, 'startTime', startStr);
-  }, [entry.id, startStr, onTimeChange]);
-
-  const commitEnd = useCallback(() => {
-    onTimeChange(entry.id, 'endTime', endStr);
-  }, [entry.id, endStr, onTimeChange]);
-
-  return (
-    <div style={{
-      display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-start',
-      padding: '12px 14px', borderRadius: 10,
-      background: C.card, border: `1px solid ${C.border}`,
-      transition: 'all 0.15s ease',
-    }}>
-      {/* Top row: index + time fields + delete */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%' }}>
-        {/* Index number */}
-        <button
-          onClick={() => onSeek(entry.startTime)}
-          title="Seek to this subtitle"
-          style={{
-            width: 36, height: 36, borderRadius: 8, border: 'none',
-            background: `${gradient[0]}18`,
-            color: gradient[0], fontSize: 11, fontWeight: 700,
-            cursor: 'pointer', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', flexShrink: 0, fontFamily: 'inherit',
-            transition: 'all 0.2s ease', marginTop: 2,
-            minWidth: 36, minHeight: 36,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = `${gradient[0]}30`; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = `${gradient[0]}18`; }}
-        >
-          {displayIndex}
-        </button>
-
-        {/* Time fields */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 0 }}>
-          <input
-            value={startStr}
-            onChange={(e) => setStartStr(e.target.value)}
-            onBlur={commitStart}
-            onKeyDown={(e) => { if (e.key === 'Enter') commitStart(); }}
-            placeholder="00:00:00.000"
-            aria-label={`Start time for subtitle ${displayIndex}`}
-            style={{
-              width: 110, maxWidth: '100%', padding: '5px 8px', borderRadius: 6,
-              border: `1px solid ${C.border}`, background: C.surface,
-              color: C.text, fontSize: 11, fontFamily: 'monospace',
-              outline: 'none', transition: 'border-color 0.2s ease',
-              boxSizing: 'border-box',
-            }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
-          />
-          <input
-            value={endStr}
-            onChange={(e) => setEndStr(e.target.value)}
-            onBlur={commitEnd}
-            onKeyDown={(e) => { if (e.key === 'Enter') commitEnd(); }}
-            placeholder="00:00:00.000"
-            aria-label={`End time for subtitle ${displayIndex}`}
-            style={{
-              width: 110, maxWidth: '100%', padding: '5px 8px', borderRadius: 6,
-              border: `1px solid ${C.border}`, background: C.surface,
-              color: C.text, fontSize: 11, fontFamily: 'monospace',
-              outline: 'none', transition: 'border-color 0.2s ease',
-              boxSizing: 'border-box',
-            }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
-          />
-          <span style={{ fontSize: 9, color: C.dim, fontFamily: 'monospace', paddingLeft: 2 }}>
-            {((entry.endTime - entry.startTime)).toFixed(1)}s
-          </span>
-        </div>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Delete button */}
-        <button
-          onClick={() => onDelete(entry.id)}
-          title="Delete this subtitle"
-          aria-label={`Delete subtitle ${displayIndex}`}
-          style={{
-            width: 36, height: 36, borderRadius: 8, border: 'none',
-            background: 'transparent', color: C.dim,
-            cursor: 'pointer', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', flexShrink: 0,
-            transition: 'all 0.2s ease', marginTop: 2,
-            minWidth: 36, minHeight: 36,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#ef444418';
-            e.currentTarget.style.color = '#ef4444';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = C.dim;
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Text area - full width row */}
-      <textarea
-        value={entry.text}
-        onChange={(e) => onUpdate(entry.id, { text: e.target.value })}
-        placeholder="Subtitle text..."
-        aria-label={`Text for subtitle ${displayIndex}`}
-        rows={2}
-        style={{
-          width: '100%', padding: '6px 10px', borderRadius: 8,
-          border: `1px solid ${C.border}`, background: C.surface,
-          color: C.text, fontSize: 13, outline: 'none',
-          fontFamily: 'inherit', resize: 'vertical',
-          minHeight: 44, transition: 'border-color 0.2s ease',
-          lineHeight: 1.4, boxSizing: 'border-box',
-        }}
-        onFocus={(e) => { e.currentTarget.style.borderColor = gradient[0]; }}
-        onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-      />
     </div>
   );
 }

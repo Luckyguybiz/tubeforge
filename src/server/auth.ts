@@ -6,6 +6,7 @@
  * different domain, so the callback can't read the cookie → "Configuration" error.
  */
 import { createLogger } from '@/lib/logger';
+import { sendEmail } from '@/lib/email';
 
 const authLog = createLogger('auth');
 
@@ -126,8 +127,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user }) {
       if (user.id) {
         // Auto-generate referral code on first login if not yet set
+        let isFirstSignIn = false;
         try {
-          await db.user.updateMany({
+          const result = await db.user.updateMany({
             where: { id: user.id, referralCode: null },
             data: {
               referralCode: Array.from(crypto.getRandomValues(new Uint8Array(4)))
@@ -136,11 +138,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 .toUpperCase(),
             },
           });
+          isFirstSignIn = result.count > 0;
         } catch (err: unknown) {
           // Only ignore unique constraint violations (P2002)
           const isPrismaConstraint = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
           if (!isPrismaConstraint) {
             authLog.error('Failed to set referral code', { error: err instanceof Error ? err.message : String(err) });
+          }
+        }
+
+        // Send welcome email on first sign-in (non-blocking)
+        if (isFirstSignIn && user.email) {
+          try {
+            sendEmail({
+              to: user.email,
+              template: 'welcome',
+              data: { name: user.name ?? '', locale: 'ru' },
+            }).catch((err) => {
+              authLog.error('Welcome email failed', { error: err instanceof Error ? err.message : String(err) });
+            });
+          } catch {
+            // Never block auth flow due to email
           }
         }
       }

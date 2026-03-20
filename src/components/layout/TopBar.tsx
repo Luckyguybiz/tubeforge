@@ -183,7 +183,7 @@ export const TopBar = memo(function TopBar() {
   const mobileMenuToggle = useMobileMenuStore((s) => s.toggle);
 
   return (
-    <div style={{ height: 44, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, background: C.surface, flexShrink: 0 }}>
+    <div className="tf-topbar" style={{ height: 44, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, background: C.surface, flexShrink: 0 }}>
       {/* Hamburger – visible only below 768px */}
       <button
         className="tf-hamburger"
@@ -229,7 +229,7 @@ export const TopBar = memo(function TopBar() {
         const segments = pathname.split('/').filter(Boolean);
         if (segments.length === 0) segments.push('dashboard');
         return (
-          <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 0, fontSize: 13 }}>
+          <nav className="tf-topbar-breadcrumb" aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 0, fontSize: 13, minWidth: 0, overflow: 'hidden' }}>
             <span
               role="link"
               tabIndex={0}
@@ -266,7 +266,7 @@ export const TopBar = memo(function TopBar() {
 
       {/* Search input */}
       {searchExpanded && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative', flex: '1 1 auto', maxWidth: 320 }}>
+        <div className="tf-topbar-search-wrap" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative', flex: '1 1 auto', maxWidth: 320 }}>
           <input
             ref={searchInputRef}
             type="text"
@@ -304,6 +304,23 @@ export const TopBar = memo(function TopBar() {
             ✕
           </button>
         </div>
+      )}
+
+      {/* Search icon button (always visible, opens search) */}
+      {!searchExpanded && (
+        <button
+          className="tf-topbar-btn"
+          title={t('sidebar.search')}
+          aria-label={t('sidebar.search')}
+          onClick={openSearch}
+          onMouseEnter={(e) => handleBtnHover(e, true)}
+          onMouseLeave={(e) => handleBtnHover(e, false)}
+          style={btnBase}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
       )}
 
       {/* Referral CTA */}
@@ -353,11 +370,14 @@ export const TopBar = memo(function TopBar() {
       </button>
 
       {/* What's New badge */}
-      <WhatsNewBadge onClick={() => setShowWhatsNew(true)} />
+      <span className="tf-topbar-whatsnew">
+        <WhatsNewBadge onClick={() => setShowWhatsNew(true)} />
+      </span>
 
       {/* Notification bell */}
       <div ref={bellRef} style={{ position: 'relative' }}>
         <button
+          className="tf-topbar-btn"
           title={t('topbar.notifications')}
           aria-label={t('topbar.notifications')}
           aria-expanded={bellOpen}
@@ -448,6 +468,7 @@ export const TopBar = memo(function TopBar() {
 
       {/* Theme toggle: cycles dark -> light -> system */}
       <button
+        className="tf-topbar-btn"
         title={t(THEME_MODE_LABELS[themeMode])}
         aria-label={`${t('settings.themeTitle')}: ${t(THEME_MODE_LABELS[themeMode])}`}
         onClick={toggle}

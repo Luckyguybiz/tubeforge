@@ -1,0 +1,365 @@
+/**
+ * Email templates for TubeForge transactional emails.
+ *
+ * All templates use inline CSS for maximum email client compatibility,
+ * include dark-mode support via @media (prefers-color-scheme: dark),
+ * and support Russian (default) and English locales.
+ */
+
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission';
+
+interface TemplateResult {
+  subject: string;
+  html: string;
+}
+
+type TemplateData = Record<string, string | number>;
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.co';
+
+// ---------------------------------------------------------------------------
+// Shared layout
+// ---------------------------------------------------------------------------
+
+function layout(body: string, locale: string): string {
+  const unsubscribeText = locale === 'en'
+    ? 'Unsubscribe'
+    : 'Отписаться от рассылки';
+  const legalText = locale === 'en'
+    ? 'You are receiving this email because you have a TubeForge account. If you did not create an account, please ignore this email.'
+    : 'Вы получили это письмо, потому что у вас есть аккаунт TubeForge. Если вы не создавали аккаунт, просто проигнорируйте это письмо.';
+
+  return `<!DOCTYPE html>
+<html lang="${locale === 'en' ? 'en' : 'ru'}">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="light dark"/>
+<meta name="supported-color-schemes" content="light dark"/>
+<title>TubeForge</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    body, .email-body { background-color: #1a1a2e !important; }
+    .email-container { background-color: #16213e !important; }
+    .email-header { background-color: #0f3460 !important; }
+    .text-primary { color: #e0e0e0 !important; }
+    .text-secondary { color: #b0b0b0 !important; }
+    .email-footer { background-color: #0f0f23 !important; color: #888 !important; }
+  }
+</style>
+</head>
+<body class="email-body" style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;">
+<tr><td align="center" style="padding:24px 16px;">
+
+<!-- Container -->
+<table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);max-width:600px;width:100%;">
+
+<!-- Header -->
+<tr>
+  <td class="email-header" style="background-color:#6c5ce7;padding:28px 32px;text-align:center;">
+    <span style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:1px;">TUBEFORGE</span>
+  </td>
+</tr>
+
+<!-- Body -->
+<tr>
+  <td style="padding:32px 32px 24px;">
+    ${body}
+  </td>
+</tr>
+
+<!-- Footer -->
+<tr>
+  <td class="email-footer" style="background-color:#fafafa;padding:20px 32px;text-align:center;font-size:12px;color:#888;line-height:1.6;">
+    <p style="margin:0 0 8px;">${legalText}</p>
+    <a href="${APP_URL}/settings/notifications" style="color:#6c5ce7;text-decoration:underline;">${unsubscribeText}</a>
+    <p style="margin:8px 0 0;color:#aaa;">&copy; ${new Date().getFullYear()} TubeForge. All rights reserved.</p>
+  </td>
+</tr>
+
+</table>
+</td></tr></table>
+</body>
+</html>`;
+}
+
+function ctaButton(text: string, href: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;">
+<tr><td style="background-color:#6c5ce7;border-radius:8px;">
+  <a href="${href}" target="_blank" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;">${text}</a>
+</td></tr></table>`;
+}
+
+// ---------------------------------------------------------------------------
+// Templates
+// ---------------------------------------------------------------------------
+
+function welcomeTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Welcome!';
+    return {
+      subject: 'Welcome to TubeForge!',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Thanks for joining TubeForge. Here is how to get started:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Download videos from YouTube, TikTok, and more</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Explore AI-powered analytics and tools</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">3</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Upgrade your plan to unlock all features</span>
+          </td></tr>
+        </table>
+        ${ctaButton('Go to Dashboard', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  // Russian (default)
+  const greeting = name ? `Привет, ${name}!` : 'Добро пожаловать!';
+  return {
+    subject: 'Добро пожаловать в TubeForge!',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Спасибо, что присоединились к TubeForge. Вот как начать:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Скачивайте видео с YouTube, TikTok и других платформ</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Используйте AI-аналитику и инструменты</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">3</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Обновите план, чтобы разблокировать все возможности</span>
+        </td></tr>
+      </table>
+      ${ctaButton('Перейти в панель', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+function paymentReceiptTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const plan = String(data.plan || 'PRO');
+  const amount = String(data.amount || '0');
+  const date = String(data.date || new Date().toLocaleDateString());
+  const nextBilling = String(data.nextBilling || '');
+
+  if (locale === 'en') {
+    return {
+      subject: `Payment received - TubeForge ${plan}`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Payment Received</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Your payment has been processed successfully.
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+          <tr style="background:#fafafa;">
+            <td style="padding:12px 16px;font-weight:600;color:#555;width:40%;">Plan</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;">${plan}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Amount</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${amount}</td>
+          </tr>
+          <tr style="background:#fafafa;">
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Date</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${date}</td>
+          </tr>
+          ${nextBilling ? `<tr>
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Next billing</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${nextBilling}</td>
+          </tr>` : ''}
+        </table>
+        ${ctaButton('View Billing', `${APP_URL}/settings/billing`)}
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `Оплата получена \u2014 TubeForge ${plan}`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Оплата получена</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Ваш платёж успешно обработан.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        <tr style="background:#fafafa;">
+          <td style="padding:12px 16px;font-weight:600;color:#555;width:40%;">План</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;">${plan}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Сумма</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${amount}</td>
+        </tr>
+        <tr style="background:#fafafa;">
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Дата</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${date}</td>
+        </tr>
+        ${nextBilling ? `<tr>
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Следующее списание</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${nextBilling}</td>
+        </tr>` : ''}
+      </table>
+      ${ctaButton('Управление подпиской', `${APP_URL}/settings/billing`)}
+    `, locale),
+  };
+}
+
+function planChangeTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const oldPlan = String(data.oldPlan || 'FREE');
+  const newPlan = String(data.newPlan || 'PRO');
+
+  const featuresByPlan: Record<string, string[]> = {
+    en: {
+      PRO: ['Unlimited downloads', '1080p quality', 'Priority support'],
+      STUDIO: ['Everything in PRO', '4K quality', 'API access', 'Team collaboration'],
+    } as unknown as string[],
+    ru: {
+      PRO: ['Безлимитные загрузки', 'Качество 1080p', 'Приоритетная поддержка'],
+      STUDIO: ['Все из PRO', 'Качество 4K', 'Доступ к API', 'Командная работа'],
+    } as unknown as string[],
+  };
+
+  const features = ((featuresByPlan[locale] ?? featuresByPlan.ru) as unknown as Record<string, string[]>)[newPlan] ?? [];
+
+  if (locale === 'en') {
+    return {
+      subject: `Your plan has been updated - ${newPlan}`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Plan Updated</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 8px;">
+          Your plan has been changed:
+        </p>
+        <p style="text-align:center;margin:20px 0;">
+          <span style="display:inline-block;padding:8px 16px;background:#eee;border-radius:6px;color:#888;font-weight:600;">${oldPlan}</span>
+          <span style="display:inline-block;padding:0 12px;color:#6c5ce7;font-size:20px;font-weight:700;">&rarr;</span>
+          <span style="display:inline-block;padding:8px 16px;background:#6c5ce7;border-radius:6px;color:#fff;font-weight:600;">${newPlan}</span>
+        </p>
+        ${features.length > 0 ? `
+        <p class="text-primary" style="color:#555;font-size:15px;margin:20px 0 12px;font-weight:600;">New features unlocked:</p>
+        <ul style="margin:0 0 20px;padding-left:20px;">
+          ${features.map((f: string) => `<li class="text-primary" style="color:#555;padding:4px 0;font-size:15px;">${f}</li>`).join('')}
+        </ul>` : ''}
+        ${ctaButton('Explore Features', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `Ваш план обновлён \u2014 ${newPlan}`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">План обновлён</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 8px;">
+        Ваш план был изменён:
+      </p>
+      <p style="text-align:center;margin:20px 0;">
+        <span style="display:inline-block;padding:8px 16px;background:#eee;border-radius:6px;color:#888;font-weight:600;">${oldPlan}</span>
+        <span style="display:inline-block;padding:0 12px;color:#6c5ce7;font-size:20px;font-weight:700;">&rarr;</span>
+        <span style="display:inline-block;padding:8px 16px;background:#6c5ce7;border-radius:6px;color:#fff;font-weight:600;">${newPlan}</span>
+      </p>
+      ${features.length > 0 ? `
+      <p class="text-primary" style="color:#555;font-size:15px;margin:20px 0 12px;font-weight:600;">Новые возможности:</p>
+      <ul style="margin:0 0 20px;padding-left:20px;">
+        ${features.map((f: string) => `<li class="text-primary" style="color:#555;padding:4px 0;font-size:15px;">${f}</li>`).join('')}
+      </ul>` : ''}
+      ${ctaButton('Открыть панель', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+function referralCommissionTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const amount = String(data.amount || '0');
+  const totalBalance = String(data.totalBalance || '0');
+  const referredUser = String(data.referredUser || '');
+
+  if (locale === 'en') {
+    return {
+      subject: `You earned ${amount} from a referral!`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Referral Commission Earned!</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Great news! Someone you referred just made a payment.
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+          ${referredUser ? `<tr style="background:#fafafa;">
+            <td style="padding:12px 16px;font-weight:600;color:#555;width:40%;">Referred user</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;">${referredUser}</td>
+          </tr>` : ''}
+          <tr>
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Commission</td>
+            <td style="padding:12px 16px;color:#6c5ce7;font-weight:700;border-top:1px solid #eee;">${amount}</td>
+          </tr>
+          <tr style="background:#fafafa;">
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Total balance</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${totalBalance}</td>
+          </tr>
+        </table>
+        ${ctaButton('View Referrals', `${APP_URL}/referral`)}
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `Вы заработали ${amount} по реферальной программе!`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Реферальная комиссия!</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Отличные новости! Приглашённый вами пользователь совершил оплату.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        ${referredUser ? `<tr style="background:#fafafa;">
+          <td style="padding:12px 16px;font-weight:600;color:#555;width:40%;">Пользователь</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;">${referredUser}</td>
+        </tr>` : ''}
+        <tr>
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Комиссия</td>
+          <td style="padding:12px 16px;color:#6c5ce7;font-weight:700;border-top:1px solid #eee;">${amount}</td>
+        </tr>
+        <tr style="background:#fafafa;">
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">Общий баланс</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;border-top:1px solid #eee;">${totalBalance}</td>
+        </tr>
+      </table>
+      ${ctaButton('Реферальная программа', `${APP_URL}/referral`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
+  'welcome': welcomeTemplate,
+  'payment-receipt': paymentReceiptTemplate,
+  'plan-change': planChangeTemplate,
+  'referral-commission': referralCommissionTemplate,
+};
+
+export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {
+  const fn = templates[template];
+  if (!fn) {
+    throw new Error(`[email] Unknown template: ${template}`);
+  }
+  return fn(data);
+}

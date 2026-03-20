@@ -1,279 +1,152 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { ToolPageShell, ActionButton } from './ToolPageShell';
+import { useState } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
-const GRADIENT: [string, string] = ['#3b82f6', '#6366f1'];
+/* ═══════════════════════════════════════════════════════════════════════════
+   Voiceover Generator Providers — referral links page
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-const VOICES = [
-  { id: 'dan', name: 'Dan', desc: 'Deep, authoritative', color: '#3b82f6' },
-  { id: 'sara', name: 'Sara', desc: 'Warm, friendly', color: '#ec4899' },
-  { id: 'mike', name: 'Mike', desc: 'Energetic, youthful', color: '#f59e0b' },
-  { id: 'anna', name: 'Anna', desc: 'Calm, professional', color: '#8b5cf6' },
-  { id: 'james', name: 'James', desc: 'British narrator', color: '#10b981' },
-  { id: 'lisa', name: 'Lisa', desc: 'Soft, soothing', color: '#ef4444' },
-  { id: 'alex', name: 'Alex', desc: 'Casual, upbeat', color: '#06b6d4' },
-  { id: 'emma', name: 'Emma', desc: 'Clear, articulate', color: '#d946ef' },
-  { id: 'ryan', name: 'Ryan', desc: 'Bold, cinematic', color: '#f97316' },
-  { id: 'zoe', name: 'Zoe', desc: 'Playful, bright', color: '#14b8a6' },
+interface Provider {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  descriptionRu: string;
+  features: string[];
+  featuresRu: string[];
+  url: string;
+  pricing: string;
+  pricingRu: string;
+  badge?: string;
+  gradient: [string, string];
+}
+
+const PROVIDERS: Provider[] = [
+  {
+    id: 'elevenlabs',
+    name: 'ElevenLabs',
+    logo: '\uD83C\uDF99\uFE0F',
+    description: 'Industry-leading text-to-speech with the most natural-sounding AI voices. Perfect for YouTube narration, audiobooks, and podcasts.',
+    descriptionRu: '\u041B\u0438\u0434\u0435\u0440 \u0438\u043D\u0434\u0443\u0441\u0442\u0440\u0438\u0438 \u0442\u0435\u043A\u0441\u0442-\u0432-\u0440\u0435\u0447\u044C \u0441 \u0441\u0430\u043C\u044B\u043C\u0438 \u043D\u0430\u0442\u0443\u0440\u0430\u043B\u044C\u043D\u044B\u043C\u0438 \u0433\u043E\u043B\u043E\u0441\u0430\u043C\u0438. \u0418\u0434\u0435\u0430\u043B\u0435\u043D \u0434\u043B\u044F YouTube, \u0430\u0443\u0434\u0438\u043E\u043A\u043D\u0438\u0433 \u0438 \u043F\u043E\u0434\u043A\u0430\u0441\u0442\u043E\u0432.',
+    features: ['29+ Languages', 'Voice Cloning', 'Voice Library', 'Emotion Control', 'API Access'],
+    featuresRu: ['29+ \u044F\u0437\u044B\u043A\u043E\u0432', '\u041A\u043B\u043E\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 \u0433\u043E\u043B\u043E\u0441\u0430', '\u0411\u0438\u0431\u043B\u0438\u043E\u0442\u0435\u043A\u0430 \u0433\u043E\u043B\u043E\u0441\u043E\u0432', '\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u044C \u044D\u043C\u043E\u0446\u0438\u0439', 'API \u0434\u043E\u0441\u0442\u0443\u043F'],
+    url: 'https://elevenlabs.io/?ref=tubeforge',
+    pricing: 'Free tier \u2022 From $5/mo',
+    pricingRu: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u0442\u0430\u0440\u0438\u0444 \u2022 \u041E\u0442 $5/\u043C\u0435\u0441',
+    badge: 'Best Quality',
+    gradient: ['#3b82f6', '#6366f1'],
+  },
+  {
+    id: 'playht',
+    name: 'PlayHT',
+    logo: '\u25B6\uFE0F',
+    description: 'Ultra-realistic AI voices with fine-grained control over speech style, tone, and pacing. Great for long-form content.',
+    descriptionRu: '\u0421\u0432\u0435\u0440\u0445\u0440\u0435\u0430\u043B\u0438\u0441\u0442\u0438\u0447\u043D\u044B\u0435 \u0418\u0418-\u0433\u043E\u043B\u043E\u0441\u0430 \u0441 \u0442\u043E\u043D\u043A\u043E\u0439 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u043E\u0439 \u0441\u0442\u0438\u043B\u044F, \u0442\u043E\u043D\u0430 \u0438 \u0442\u0435\u043C\u043F\u0430. \u041E\u0442\u043B\u0438\u0447\u043D\u043E \u0434\u043B\u044F \u0434\u043B\u0438\u043D\u043D\u043E\u0433\u043E \u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430.',
+    features: ['800+ Voices', 'Voice Cloning', 'SSML Support', 'Podcast Hosting', 'WordPress Plugin'],
+    featuresRu: ['800+ \u0433\u043E\u043B\u043E\u0441\u043E\u0432', '\u041A\u043B\u043E\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435', 'SSML \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430', '\u0425\u043E\u0441\u0442\u0438\u043D\u0433 \u043F\u043E\u0434\u043A\u0430\u0441\u0442\u043E\u0432', '\u041F\u043B\u0430\u0433\u0438\u043D WordPress'],
+    url: 'https://play.ht/?ref=tubeforge',
+    pricing: 'Free trial \u2022 From $29/mo',
+    pricingRu: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u0440\u043E\u0431\u043D\u044B\u0439 \u2022 \u041E\u0442 $29/\u043C\u0435\u0441',
+    gradient: ['#ec4899', '#f43f5e'],
+  },
+  {
+    id: 'wellsaid',
+    name: 'WellSaid Labs',
+    logo: '\uD83D\uDDE3\uFE0F',
+    description: 'Enterprise text-to-speech designed for professional video production. Studio-quality voices with fast turnaround times.',
+    descriptionRu: '\u041F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442-\u0432-\u0440\u0435\u0447\u044C \u0434\u043B\u044F \u0432\u0438\u0434\u0435\u043E\u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0441\u0442\u0432\u0430. \u0421\u0442\u0443\u0434\u0438\u0439\u043D\u043E\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E \u0433\u043E\u043B\u043E\u0441\u043E\u0432 \u0441 \u0431\u044B\u0441\u0442\u0440\u043E\u0439 \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0435\u0439.',
+    features: ['Studio Quality', 'Team Workspace', 'Pronunciation Guide', 'SSML Editor', 'Commercial Rights'],
+    featuresRu: ['\u0421\u0442\u0443\u0434\u0438\u0439\u043D\u043E\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E', '\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u043E\u0435 \u043F\u0440\u043E\u0441\u0442\u0440\u0430\u043D\u0441\u0442\u0432\u043E', '\u0413\u0438\u0434 \u043F\u0440\u043E\u0438\u0437\u043D\u043E\u0448\u0435\u043D\u0438\u044F', 'SSML \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440', '\u041A\u043E\u043C\u043C. \u043F\u0440\u0430\u0432\u0430'],
+    url: 'https://wellsaidlabs.com/?ref=tubeforge',
+    pricing: 'From $44/mo \u2022 Enterprise plans',
+    pricingRu: '\u041E\u0442 $44/\u043C\u0435\u0441 \u2022 \u041A\u043E\u0440\u043F. \u043F\u043B\u0430\u043D\u044B',
+    gradient: ['#8b5cf6', '#7c3aed'],
+  },
+  {
+    id: 'amazon-polly',
+    name: 'Amazon Polly',
+    logo: '\u2601\uFE0F',
+    description: 'AWS cloud text-to-speech service with Neural TTS. Pay-per-use pricing, ideal for developers and high-volume needs.',
+    descriptionRu: 'AWS \u043E\u0431\u043B\u0430\u0447\u043D\u044B\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u0442\u0435\u043A\u0441\u0442-\u0432-\u0440\u0435\u0447\u044C \u0441 Neural TTS. \u041E\u043F\u043B\u0430\u0442\u0430 \u043F\u043E \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044E, \u0438\u0434\u0435\u0430\u043B\u044C\u043D\u043E \u0434\u043B\u044F \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0447\u0438\u043A\u043E\u0432.',
+    features: ['Neural TTS', '60+ Voices', 'SSML Support', 'Pay-Per-Use', 'AWS Integration'],
+    featuresRu: ['Neural TTS', '60+ \u0433\u043E\u043B\u043E\u0441\u043E\u0432', 'SSML \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430', '\u041E\u043F\u043B\u0430\u0442\u0430 \u043F\u043E \u0438\u0441\u043F.', '\u0418\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F AWS'],
+    url: 'https://aws.amazon.com/polly/?ref=tubeforge',
+    pricing: 'Free tier \u2022 $4/1M chars (Neural)',
+    pricingRu: '\u0411\u0435\u0441\u043F\u043B. \u0442\u0430\u0440\u0438\u0444 \u2022 $4/1M \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432 (Neural)',
+    badge: 'Developer',
+    gradient: ['#f59e0b', '#f97316'],
+  },
 ];
-
-const LANGUAGES = ['English', 'Russian', 'Spanish', 'French', 'German', 'Japanese', 'Korean', 'Portuguese', 'Hindi', 'Arabic'];
 
 export function VoiceoverGenerator() {
   const C = useThemeStore((s) => s.theme);
-  const [script, setScript] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
-  const [speed, setSpeed] = useState(1);
-  const [pitch, setPitch] = useState(0);
-  const [language, setLanguage] = useState('English');
-  const [loading, setLoading] = useState(false);
-  const [generated, setGenerated] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [downloadHover, setDownloadHover] = useState(false);
-  const [hoveredVoice, setHoveredVoice] = useState<string | null>(null);
-
-  const handleGenerate = useCallback(() => {
-    if (!script.trim() || loading) return;
-    setGenerated(false);
-    setIsPlaying(false);
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setGenerated(true); }, 2500);
-  }, [script, loading]);
-
-  const handlePlay = useCallback(() => {
-    setIsPlaying((prev) => !prev);
-  }, []);
-
-  const handleDownload = useCallback(() => {
-    /* Simulate download action */
-  }, []);
-
-  // Generate deterministic waveform bars to avoid hydration issues
-  const waveformBars = Array.from({ length: 40 }, (_, i) => {
-    const h = 15 + Math.sin(i * 0.5) * 25 + ((i * 17 + 7) % 20);
-    return h;
-  });
+  const { locale } = useLocaleStore();
+  const isRu = locale === 'ru' || locale === 'kk';
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
-    <ToolPageShell
-      title="AI Voiceover Generator"
-      subtitle="Generate realistic AI voiceovers from your scripts with customizable voices"
-      gradient={GRADIENT}
-    >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-        {/* Left column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-          {/* Script input */}
-          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Script</span>
-            <textarea
-              value={script}
-              onChange={(e) => setScript(e.target.value)}
-              placeholder="Type your script here..."
-              style={{
-                width: '100%', minHeight: 140, padding: 14, borderRadius: 12,
-                border: `1px solid ${C.border}`, background: C.surface,
-                color: C.text, fontSize: 14, fontFamily: 'inherit',
-                resize: 'vertical', outline: 'none',
-                transition: 'border-color 0.2s ease',
-                boxSizing: 'border-box',
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-              <span style={{ fontSize: 12, color: C.dim }}>{script.length} characters</span>
-            </div>
-          </div>
-
-          {/* Language */}
-          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>Language</span>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: 10,
-                border: `1px solid ${C.border}`, background: C.surface,
-                color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none',
-                cursor: 'pointer', transition: 'border-color 0.2s ease',
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-            >
-              {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-
-          {/* Speed */}
-          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Speed</span>
-              <span style={{ fontSize: 13, color: GRADIENT[0], fontWeight: 600 }}>{speed.toFixed(1)}x</span>
-            </div>
-            <input
-              type="range" min={0.5} max={2} step={0.1} value={speed}
-              onChange={(e) => setSpeed(Number(e.target.value))}
-              aria-label="Voice speed"
-              style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>
-              <span>0.5x</span><span>1.0x</span><span>1.5x</span><span>2.0x</span>
-            </div>
-          </div>
-
-          {/* Pitch */}
-          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Pitch</span>
-              <span style={{ fontSize: 13, color: GRADIENT[0], fontWeight: 600 }}>{pitch > 0 ? '+' : ''}{pitch}</span>
-            </div>
-            <input
-              type="range" min={-5} max={5} step={1} value={pitch}
-              onChange={(e) => setPitch(Number(e.target.value))}
-              aria-label="Voice pitch"
-              style={{ width: '100%', accentColor: GRADIENT[0], cursor: 'pointer' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginTop: 4 }}>
-              <span>-5</span><span>0</span><span>+5</span>
-            </div>
-          </div>
-
-          <ActionButton label="Generate Voiceover" gradient={GRADIENT} onClick={handleGenerate} loading={loading} disabled={!script.trim()} />
-        </div>
-
-        {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-          {/* Voice selector */}
-          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 16 }}>Select Voice</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-              {VOICES.map((v) => {
-                const isSelected = selectedVoice === v.id;
-                const isHovered = hoveredVoice === v.id;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVoice(v.id)}
-                    onMouseEnter={() => setHoveredVoice(v.id)}
-                    onMouseLeave={() => setHoveredVoice(null)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-                      minHeight: 44,
-                      borderRadius: 12,
-                      border: `1px solid ${isSelected ? v.color : isHovered ? `${v.color}88` : C.border}`,
-                      background: isSelected ? `${v.color}11` : isHovered ? `${v.color}08` : C.surface,
-                      cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit', textAlign: 'left',
-                      outline: 'none', minWidth: 0,
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${v.color}44`; }}
-                    onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <div style={{
-                      width: 38, height: 38, borderRadius: '50%',
-                      background: `linear-gradient(135deg, ${v.color}, ${v.color}aa)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0,
-                    }}>
-                      {v.name[0]}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</div>
-                      <div style={{ fontSize: 11, color: C.dim, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Audio preview */}
-          <div style={{ padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 16 }}>Audio Preview</span>
-            <div style={{
-              height: 80, borderRadius: 12, background: C.surface,
-              border: `1px solid ${C.border}`, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', gap: 3, padding: '0 12px',
-              overflow: 'hidden',
-            }}>
-              {generated ? (
-                waveformBars.map((h, i) => (
-                  <div key={i} style={{
-                    width: 3, borderRadius: 2,
-                    height: `${h}%`,
-                    background: `linear-gradient(180deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
-                    opacity: 0.7,
-                    transition: 'height 0.3s ease',
-                  }} />
-                ))
-              ) : (
-                <span style={{ fontSize: 13, color: C.dim }}>Waveform will appear here</span>
-              )}
-            </div>
-            {generated && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
-                <button
-                  onClick={handlePlay}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                  style={{
-                    width: 44, height: 44, borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
-                    border: 'none', cursor: 'pointer', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                    transition: 'transform 0.2s ease', outline: 'none',
-                    flexShrink: 0,
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 3px ${GRADIENT[0]}44`; }}
-                  onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  {isPlaying ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                      <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
-                    </svg>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  )}
-                </button>
-                <div style={{ flex: 1, height: 4, borderRadius: 2, background: C.border }}>
-                  <div style={{ width: isPlaying ? '35%' : '0%', height: '100%', borderRadius: 2, background: GRADIENT[0], transition: 'width 0.3s ease' }} />
-                </div>
-                <span style={{ fontSize: 12, color: C.dim }}>0:00 / 0:42</span>
-              </div>
-            )}
-          </div>
-
-          {/* Download */}
-          {generated && (
-            <button
-              onClick={handleDownload}
-              onMouseEnter={() => setDownloadHover(true)}
-              onMouseLeave={() => setDownloadHover(false)}
-              style={{
-                padding: '14px 24px', minHeight: 44, borderRadius: 12,
-                border: `1px solid ${C.border}`, background: downloadHover ? C.surface : C.card,
-                color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                transition: 'all 0.2s ease', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                outline: 'none',
-              }}
-              onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
-              onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download MP3
-            </button>
-          )}
-        </div>
+    <div style={{ padding: '32px 24px', maxWidth: 1000, margin: '0 auto' }}>
+      <div style={{ marginBottom: 32, textAlign: 'center' }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-0.02em' }}>
+          {isRu ? '\uD83C\uDF99\uFE0F \u0418\u0418-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u043E\u0437\u0432\u0443\u0447\u043A\u0438' : '\uD83C\uDF99\uFE0F AI Voiceover Generator'}
+        </h1>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.6, maxWidth: 600, margin: '0 auto' }}>
+          {isRu
+            ? '\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0440\u043E\u0432\u0430\u0439\u0434\u0435\u0440\u0430 \u0434\u043B\u044F \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438 \u043E\u0437\u0432\u0443\u0447\u043A\u0438 \u0438\u0437 \u0442\u0435\u043A\u0441\u0442\u0430. \u041A\u0430\u0436\u0434\u044B\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u043F\u0440\u0435\u0434\u043B\u0430\u0433\u0430\u0435\u0442 \u0443\u043D\u0438\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u0433\u043E\u043B\u043E\u0441\u0430 \u0438 \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u0438.'
+            : 'Choose a provider for AI text-to-speech voiceover. Each service offers unique voices and capabilities.'}
+        </p>
       </div>
-    </ToolPageShell>
+
+      <div style={{ padding: '14px 18px', background: `${C.blue}0a`, border: `1px solid ${C.blue}20`, borderRadius: 12, marginBottom: 28, fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
+        {isRu
+          ? '\uD83D\uDCA1 \u0421\u043E\u0432\u0435\u0442: ElevenLabs \u2014 \u043B\u0443\u0447\u0448\u0435\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E \u0434\u043B\u044F YouTube. PlayHT \u2014 \u0434\u043B\u044F \u0434\u043B\u0438\u043D\u043D\u043E\u0433\u043E \u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430. Amazon Polly \u2014 \u0434\u043B\u044F \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0447\u0438\u043A\u043E\u0432 \u0441 \u0432\u044B\u0441\u043E\u043A\u0438\u043C\u0438 \u043E\u0431\u044A\u0451\u043C\u0430\u043C\u0438.'
+          : '\uD83D\uDCA1 Tip: ElevenLabs offers the best quality for YouTube. PlayHT is great for long-form content. Amazon Polly is ideal for developers with high-volume needs.'}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+        {PROVIDERS.map((p) => (
+          <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer"
+            onMouseEnter={() => setHoveredId(p.id)} onMouseLeave={() => setHoveredId(null)}
+            style={{
+              display: 'block', textDecoration: 'none', padding: '20px', background: C.surface,
+              border: `1px solid ${hoveredId === p.id ? C.accent : C.border}`, borderRadius: 16,
+              transition: 'all 0.2s ease', transform: hoveredId === p.id ? 'translateY(-2px)' : 'none',
+              boxShadow: hoveredId === p.id ? `0 8px 24px ${C.accent}15` : 'none',
+              position: 'relative', overflow: 'hidden',
+            }}
+          >
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${p.gradient[0]}, ${p.gradient[1]})` }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 28 }}>{p.logo}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{p.name}</span>
+                  {p.badge && (<span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: `linear-gradient(135deg, ${p.gradient[0]}, ${p.gradient[1]})`, color: '#fff', letterSpacing: 0.3 }}>{p.badge}</span>)}
+                </div>
+                <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>{isRu ? p.pricingRu : p.pricing}</div>
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5, margin: '0 0 14px' }}>{isRu ? p.descriptionRu : p.description}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {(isRu ? p.featuresRu : p.features).map((f, i) => (
+                <span key={i} style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: `${p.gradient[0]}12`, color: p.gradient[0], border: `1px solid ${p.gradient[0]}20` }}>{f}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 14, fontSize: 13, fontWeight: 600, color: C.accent, gap: 6 }}>
+              {isRu ? '\u041F\u0435\u0440\u0435\u0439\u0442\u0438' : 'Visit'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 28, padding: '16px 20px', background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13, color: C.dim, lineHeight: 1.6, textAlign: 'center' }}>
+        {isRu
+          ? '\u2699\uFE0F \u041F\u043E\u043B\u043D\u0430\u044F \u0438\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438 \u043E\u0437\u0432\u0443\u0447\u043A\u0438 \u0432 TubeForge \u2014 \u0432 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0435. \u0421\u043B\u0435\u0434\u0438\u0442\u0435 \u0437\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F\u043C\u0438!'
+          : '\u2699\uFE0F Full voiceover generation integration inside TubeForge \u2014 coming soon. Stay tuned!'}
+      </div>
+    </div>
   );
 }

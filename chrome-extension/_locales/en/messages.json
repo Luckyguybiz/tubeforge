@@ -1,11 +1,11 @@
 {
   "extName": {
-    "message": "TubeForge — YouTube Video Downloader",
+    "message": "TubeForge — YouTube Creator Tools",
     "description": "Extension name shown in the Chrome Web Store and browser"
   },
   "extDescription": {
-    "message": "Download YouTube videos in one click. Choose quality from 360p to 1080p or audio-only MP3. Fast, free, no ads.",
-    "description": "Extension description for the Chrome Web Store"
+    "message": "AI-powered tools for YouTube creators: download videos, analyze channels, generate thumbnails and more.",
+    "description": "Extension description for the Chrome Web Store (max 132 chars)"
   },
   "extTitle": {
     "message": "TubeForge — Download Video",

@@ -424,6 +424,7 @@ export const Sidebar = memo(function Sidebar() {
     const btn = (
       <button
         key={id}
+        className="tf-mobile-nav-item"
         aria-current={isActive ? 'page' : undefined}
         data-tour={tourId}
         onClick={() => navigate(id)}
