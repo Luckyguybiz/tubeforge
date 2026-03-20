@@ -1,9 +1,10 @@
 /**
  * Tests for the middleware configuration and auth behavior.
  *
- * We test two middleware files:
- *   - src/middleware.ts  (used by Next.js via the src/ directory convention)
- *   - middleware.ts      (root-level, broader matcher with runtime public-path logic)
+ * After consolidation, src/middleware.ts is the ONLY active middleware
+ * (Next.js with src/ directory ignores root middleware.ts).
+ * It uses a catch-all matcher with runtime public-path checks and
+ * edge-level IP rate limiting.
  *
  * We also verify security headers are correctly wired in next.config.ts.
  */
@@ -12,7 +13,19 @@ import { securityHeaders } from '@/lib/security-headers';
 
 /* ── src/middleware.ts — config & matcher ──────────────────────── */
 
-describe('src/middleware — matcher-based auth', () => {
+describe('src/middleware — consolidated middleware', () => {
+  const publicPaths = [
+    '/',
+    '/login',
+    '/register',
+    '/api/auth',
+    '/api/stripe/webhook',
+    '/api/webhooks',
+    '/api/health',
+    '/privacy',
+    '/terms',
+  ];
+
   const protectedRoutes = [
     '/dashboard',
     '/editor',
@@ -22,16 +35,9 @@ describe('src/middleware — matcher-based auth', () => {
     '/settings',
     '/team',
     '/admin',
-  ];
-
-  const publicRoutes = [
-    '/',
-    '/login',
-    '/register',
-    '/privacy',
-    '/terms',
-    '/api/auth/callback',
-    '/api/stripe/webhook',
+    '/tools',
+    '/shorts-analytics',
+    '/referral',
   ];
 
   // Import the config directly — it's a plain object, no runtime deps.
@@ -47,98 +53,39 @@ describe('src/middleware — matcher-based auth', () => {
     config = mod.config;
   });
 
-  it('should export a matcher array', () => {
+  it('should export a catch-all matcher excluding _next/static, _next/image, and favicon.ico', () => {
     expect(Array.isArray(config.matcher)).toBe(true);
-    expect(config.matcher.length).toBeGreaterThan(0);
+    expect(config.matcher).toHaveLength(1);
+    expect(config.matcher[0]).toBe('/((?!_next/static|_next/image|favicon.ico).*)');
   });
 
-  it('matcher should include all protected app routes', () => {
-    for (const route of protectedRoutes) {
-      const pattern = `${route}/:path*`;
-      expect(config.matcher).toContain(pattern);
-    }
-  });
-
-  it('matcher should have exactly 11 protected route patterns', () => {
-    expect(config.matcher).toHaveLength(11);
-  });
-
-  it('matcher should NOT include public routes', () => {
-    for (const route of publicRoutes) {
-      const hasMatch = config.matcher.some(
-        (m: string) => m === route || m.startsWith(route + '/')
-      );
-      expect(hasMatch).toBe(false);
-    }
-  });
-
-  it('matcher patterns should all end with /:path*', () => {
-    for (const pattern of config.matcher) {
-      expect(pattern).toMatch(/\/:path\*$/);
-    }
-  });
-
-  it('matcher patterns should all start with /', () => {
-    for (const pattern of config.matcher) {
-      expect(pattern).toMatch(/^\//);
-    }
-  });
-});
-
-/* ── Root middleware.ts — runtime public-path logic ────────────── */
-
-describe('root middleware — runtime public-path checks', () => {
-  const publicPaths = ['/', '/login', '/register', '/api/auth', '/api/stripe/webhook', '/privacy', '/terms'];
-
-  // We replicate the logic from root middleware.ts for testability.
+  // Replicate the runtime public-path logic for testability
   function isPublicPath(pathname: string): boolean {
     return publicPaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
   }
 
   function isStaticAsset(pathname: string): boolean {
-    return pathname.startsWith('/_next') || pathname.startsWith('/favicon') || /\.\w{2,5}$/.test(pathname);
+    return (
+      pathname.startsWith('/_next') ||
+      pathname.startsWith('/favicon') ||
+      /\.\w{2,5}$/.test(pathname)
+    );
   }
 
-  it('should treat "/" as public', () => {
-    expect(isPublicPath('/')).toBe(true);
+  it('should treat all public paths as public', () => {
+    for (const p of publicPaths) {
+      expect(isPublicPath(p)).toBe(true);
+    }
   });
 
-  it('should treat "/login" as public', () => {
-    expect(isPublicPath('/login')).toBe(true);
-  });
-
-  it('should treat "/register" as public', () => {
-    expect(isPublicPath('/register')).toBe(true);
-  });
-
-  it('should treat "/api/auth" and sub-paths as public', () => {
-    expect(isPublicPath('/api/auth')).toBe(true);
+  it('should treat "/api/auth/callback/google" as public (sub-path)', () => {
     expect(isPublicPath('/api/auth/callback/google')).toBe(true);
   });
 
-  it('should treat "/api/stripe/webhook" as public', () => {
-    expect(isPublicPath('/api/stripe/webhook')).toBe(true);
-  });
-
-  it('should treat "/privacy" and "/terms" as public', () => {
-    expect(isPublicPath('/privacy')).toBe(true);
-    expect(isPublicPath('/terms')).toBe(true);
-  });
-
-  it('should NOT treat "/dashboard" as public', () => {
-    expect(isPublicPath('/dashboard')).toBe(false);
-  });
-
-  it('should NOT treat "/editor/abc" as public', () => {
-    expect(isPublicPath('/editor/abc')).toBe(false);
-  });
-
-  it('should NOT treat "/settings" as public', () => {
-    expect(isPublicPath('/settings')).toBe(false);
-  });
-
-  it('should NOT treat "/admin" as public', () => {
-    expect(isPublicPath('/admin')).toBe(false);
+  it('should NOT treat protected routes as public', () => {
+    for (const route of protectedRoutes) {
+      expect(isPublicPath(route)).toBe(false);
+    }
   });
 
   it('should detect /_next paths as static assets', () => {
@@ -162,30 +109,6 @@ describe('root middleware — runtime public-path checks', () => {
     expect(isStaticAsset('/dashboard')).toBe(false);
     expect(isStaticAsset('/editor/project-1')).toBe(false);
     expect(isStaticAsset('/api/auth/callback')).toBe(false);
-  });
-
-  describe('root middleware matcher config', () => {
-    let rootConfig: { matcher: string[] };
-
-    beforeEach(async () => {
-      vi.resetModules();
-      vi.doMock('@/server/auth', () => ({
-        auth: (handler: unknown) => handler,
-      }));
-      vi.doMock('next/server', () => ({
-        NextResponse: { next: vi.fn(), redirect: vi.fn() },
-      }));
-      // The root middleware is at the project root, outside src/
-      // We import its config to verify the matcher pattern.
-      // Since it uses @/server/auth alias, we mock it.
-      const mod = await import('../../middleware');
-      rootConfig = mod.config;
-    });
-
-    it('should export a catch-all matcher excluding _next/static, _next/image, and favicon.ico', () => {
-      expect(rootConfig.matcher).toHaveLength(1);
-      expect(rootConfig.matcher[0]).toBe('/((?!_next/static|_next/image|favicon.ico).*)');
-    });
   });
 });
 
@@ -225,7 +148,7 @@ describe('security headers integration', () => {
 
   it('X-Permitted-Cross-Domain-Policies should be none', () => {
     const header = securityHeaders.find(
-      (h) => h.key === 'X-Permitted-Cross-Domain-Policies'
+      (h) => h.key === 'X-Permitted-Cross-Domain-Policies',
     );
     expect(header).toBeDefined();
     expect(header!.value).toBe('none');
@@ -233,7 +156,7 @@ describe('security headers integration', () => {
 
   it('X-DNS-Prefetch-Control should be on', () => {
     const header = securityHeaders.find(
-      (h) => h.key === 'X-DNS-Prefetch-Control'
+      (h) => h.key === 'X-DNS-Prefetch-Control',
     );
     expect(header).toBeDefined();
     expect(header!.value).toBe('on');

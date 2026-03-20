@@ -211,8 +211,13 @@ export function VideoCompressor() {
       activeProgressCbRef.current = null;
 
       if (exitCode !== 0) {
-        if (process.env.NODE_ENV === 'development') console.error('FFmpeg logs:', logs);
-        throw new Error(`${t('tools.compressor.ffmpegExitCode')} ${exitCode}`);
+        console.error('FFmpeg logs:', logs);
+        // Show last few FFmpeg log lines in the error so user can diagnose
+        const lastLogs = (logs ?? []).slice(-5).join('\n');
+        const detail = lastLogs
+          ? `\n\nFFmpeg: ${lastLogs}`
+          : '';
+        throw new Error(`${t('tools.compressor.ffmpegExitCode')} ${exitCode}${detail}`);
       }
 
       // Read output
@@ -495,7 +500,7 @@ export function VideoCompressor() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              <span style={{ fontSize: 13, color: '#ef4444', wordBreak: 'break-word', minWidth: 0 }}>{error}</span>
+              <span style={{ fontSize: 13, color: '#ef4444', wordBreak: 'break-word', minWidth: 0, whiteSpace: 'pre-wrap' }}>{error}</span>
             </div>
           )}
 
