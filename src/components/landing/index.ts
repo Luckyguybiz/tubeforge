@@ -1,8 +1,5 @@
-export { LandingHeader } from './LandingHeader';
-export { AnimatedHero } from './AnimatedHero';
+export { LandingNav } from './LandingNav';
+export { LandingHero } from './LandingHero';
 export { ScrollRevealProvider } from './ScrollRevealProvider';
 export { FaqAccordion } from './FaqAccordion';
-export { HoverCard } from './HoverCard';
-export { HoverLink } from './HoverLink';
-export { HoverButton } from './HoverButton';
 export { ClientCookieConsent } from './ClientCookieConsent';
