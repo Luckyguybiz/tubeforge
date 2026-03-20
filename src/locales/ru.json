@@ -140,6 +140,7 @@
     "downloaders": "Downloaders",
     "aiTools": "AI Tools",
     "videoTools": "Video Tools",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "videoGenClientSideInfo": "Генерация видео происходит полностью в вашем браузере. Не используются серверные ресурсы или кредиты."
   }
 }
