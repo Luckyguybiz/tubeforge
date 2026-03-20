@@ -8,6 +8,7 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { trackEvent } from '@/lib/analytics-events';
+import { PLAN_LIMITS } from '@/lib/constants';
 
 /* ── Icons ─────────────────────────────────────────────────────────── */
 
@@ -66,8 +67,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       price: 0,
       priceLabel: '0\u20BD',
       features: [
-        t('billing.feat.projects3'),
-        t('billing.feat.ai5'),
+        `${PLAN_LIMITS.FREE.projects} ${t('billing.feat.projectsUnit')}`,
+        `${PLAN_LIMITS.FREE.aiGenerations} ${t('billing.feat.aiUnit')}`,
         t('billing.feat.export720'),
         t('billing.feat.basicThumbs'),
         t('billing.feat.watermark'),
@@ -82,8 +83,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       badge: t('billing.popular'),
       badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
       features: [
-        t('billing.feat.unlimitedProjects'),
-        t('billing.feat.ai50'),
+        `${PLAN_LIMITS.PRO.projects} ${t('billing.feat.projectsUnit')}`,
+        `${PLAN_LIMITS.PRO.aiGenerations} ${t('billing.feat.aiUnit')}`,
         t('billing.feat.export1080'),
         t('billing.feat.advancedThumbs'),
         t('billing.feat.seo'),
@@ -103,7 +104,7 @@ function getPlans(t: (key: string) => string): PlanDef[] {
         t('billing.feat.allPro'),
         t('billing.feat.unlimitedAi'),
         t('billing.feat.export4k'),
-        t('billing.feat.team5'),
+        `${t('billing.feat.teamUnit')} (${PLAN_LIMITS.STUDIO.teamMembers})`,
         t('billing.feat.api'),
         t('billing.feat.whiteLabel'),
         t('billing.feat.personalManager'),

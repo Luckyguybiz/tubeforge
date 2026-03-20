@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { toast } from '@/stores/useNotificationStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 export function useVideoGeneration(sceneId: string | null) {
   const sceneStatus = useEditorStore((s) => {
@@ -63,11 +64,11 @@ export function useVideoGeneration(sceneId: string | null) {
       setActiveTaskId(null);
       // Persist videoUrl and clear taskId in DB
       updateSceneRef.current.mutate({ id: sceneId, videoUrl: output, status: 'READY', taskId: null });
-      toast.success('Видео сгенерировано!');
+      toast.success(useLocaleStore.getState().t('videoGen.success'));
     }
 
     if (taskStatus.data.status === 'FAILED') {
-      const errMsg = taskStatus.data.error || 'Ошибка генерации видео';
+      const errMsg = taskStatus.data.error || useLocaleStore.getState().t('videoGen.error');
       updScene(sceneId, { status: 'error', taskId: null });
       setActiveTaskId(null);
       setLastError(errMsg);

@@ -15,6 +15,9 @@ import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trackEvent } from '@/lib/analytics-events';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
+import { ActivityStreak } from '@/components/dashboard/ActivityStreak';
+import { UsageMilestones } from '@/components/dashboard/UsageMilestones';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -2034,6 +2037,17 @@ export function Dashboard() {
     <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
       {/* ── Welcome Hero Section (Crayo-style) ───────── */}
       <WelcomeSection C={C} router={router} t={t} />
+
+      {/* ── Onboarding Checklist ─────────────────────── */}
+      <OnboardingChecklist />
+
+      {/* ── Activity Streak ──────────────────────────── */}
+      <div style={{ marginBottom: 20 }}>
+        <ActivityStreak />
+      </div>
+
+      {/* ── Usage Milestones (floating toast) ────────── */}
+      <UsageMilestones />
 
       {/* ── Header ──────────────────────────────────── */}
       <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>

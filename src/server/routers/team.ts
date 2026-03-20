@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
-import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { RATE_LIMIT_ERROR, PLAN_LIMITS } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
 
 /** Mutation rate limit: 10 team actions per minute per user */
@@ -112,8 +112,9 @@ export const teamRouter = router({
         if (!team) throw new TRPCError({ code: 'NOT_FOUND', message: 'Команда не найдена' });
 
         // Check member limit
-        if (team._count.members >= 10) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Максимум 10 участников в команде' });
+        const maxMembers = PLAN_LIMITS.STUDIO.teamMembers;
+        if (team._count.members >= maxMembers) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: `Максимум ${maxMembers} участников в команде` });
         }
 
         // Check if already a member

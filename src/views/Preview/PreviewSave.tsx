@@ -101,6 +101,9 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const [exportAspect, setExportAspect] = useState<'16:9' | '9:16' | '1:1'>('16:9');
   const planInfo = usePlanLimits();
 
+  // Z2: SRT captions — state kept for potential future "view in modal" feature
+  const [, setSrtContent] = useState<string | null>(null);
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -175,6 +178,29 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
   }, []);
+
+  // Z2: AI Captions mutation for SRT download
+  const generateCaptions = trpc.ai.generateCaptions.useMutation({
+    onSuccess: (data) => {
+      if (data.srt) {
+        setSrtContent(data.srt);
+        // Auto-download
+        const blob = new Blob([data.srt], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${p?.title || 'video'}-subtitles.srt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('SRT файл скачан!');
+      } else {
+        toast.error('Не удалось сгенерировать субтитры');
+      }
+    },
+    onError: (err: { message: string }) => toast.error(err.message),
+  });
 
   /* ── Derived data (memoized) ─────────────────────── */
   /* All hooks must be called unconditionally (React Rules of Hooks).
@@ -497,6 +523,47 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           >
             <span style={{ fontSize: 15 }}>&#8681;</span>
             {t('preview.downloadVideo')}
+          </button>
+          {/* Z2: Download SRT captions */}
+          <button
+            onClick={() => {
+              const scenesData = scenes.filter((s: { prompt?: string | null; duration: number }) => (s.prompt ?? '').trim()).map((s: { prompt?: string | null; duration: number }) => ({
+                text: s.prompt || '',
+                duration: s.duration,
+              }));
+              if (scenesData.length === 0) {
+                toast.info('Нет текста сцен для генерации субтитров');
+                return;
+              }
+              generateCaptions.mutate({ scenes: scenesData });
+            }}
+            disabled={generateCaptions.isPending || scenes.length === 0}
+            title="Сгенерировать и скачать субтитры (.SRT)"
+            style={{
+              padding: '9px 18px', minHeight: 44, borderRadius: 10, border: `1px solid ${C.border}`,
+              background: 'transparent', color: scenes.length > 0 && !generateCaptions.isPending ? C.text : C.dim,
+              fontSize: 13, fontWeight: 600,
+              cursor: scenes.length > 0 && !generateCaptions.isPending ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              opacity: scenes.length > 0 ? 1 : 0.5, transition: 'all .15s',
+            }}
+            onMouseEnter={e => { if (scenes.length > 0) e.currentTarget.style.borderColor = C.green; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}
+          >
+            {generateCaptions.isPending ? (
+              <>
+                <span style={{ width: 12, height: 12, borderRadius: '50%', border: `2px solid ${C.dim}44`, borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
+                Генерация...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="M7 15h4m-4-3h10"/>
+                </svg>
+                Скачать .SRT
+              </>
+            )}
           </button>
         </div>
       </div>

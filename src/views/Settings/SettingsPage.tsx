@@ -2047,6 +2047,17 @@ export function SettingsPage() {
       </div>
 
       {/* ====================================================== */}
+      {/* SECTION: Your Year in TubeForge (Wrapped)              */}
+      {/* ====================================================== */}
+      <WrappedSection
+        C={C}
+        isDark={isDark}
+        sectionStyle={sectionStyle}
+        sectionHeaderStyle={sectionHeaderStyle}
+        sectionDescStyle={sectionDescStyle}
+      />
+
+      {/* ====================================================== */}
       {/* SECTION 10: Account (Danger Zone)                      */}
       {/* ====================================================== */}
       <div style={{
@@ -2442,6 +2453,113 @@ function ChannelsSkeleton() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Wrapped section — Your Year in TubeForge */
+function WrappedSection({
+  C,
+  isDark,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+}: {
+  C: Theme;
+  isDark: boolean;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+}) {
+  const profile = trpc.user.getProfile.useQuery();
+  const user = profile.data;
+
+  if (!user) return null;
+
+  // Only show if user has been active > 30 days
+  const createdAt = user.createdAt ? new Date(user.createdAt as string | number | Date) : null;
+  if (!createdAt) return null;
+
+  const daysSinceCreation = Math.floor(
+    (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  if (daysSinceCreation < 30) return null;
+
+  const projectCount = user._count?.projects ?? 0;
+  const aiUsage = (user as Record<string, unknown>).aiUsage as number ?? 0;
+
+  const statItems = [
+    {
+      icon: '\uD83C\uDFAC',
+      label: '\u041F\u0440\u043E\u0435\u043A\u0442\u043E\u0432 \u0441\u043E\u0437\u0434\u0430\u043D\u043E',
+      value: String(projectCount),
+      gradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
+    },
+    {
+      icon: '\u2728',
+      label: 'AI \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0439',
+      value: String(aiUsage),
+      gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    },
+    {
+      icon: '\uD83D\uDCC5',
+      label: '\u0414\u043D\u0435\u0439 \u0441 \u043D\u0430\u043C\u0438',
+      value: String(daysSinceCreation),
+      gradient: 'linear-gradient(135deg, #ec4899, #f472b6)',
+    },
+  ];
+
+  return (
+    <div style={sectionStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
+          {'\u0412\u0430\u0448 \u0433\u043E\u0434 \u0432 TubeForge'}
+        </h2>
+        <span style={{ fontSize: 16 }}>{'\uD83C\uDF89'}</span>
+      </div>
+      <p style={sectionDescStyle}>
+        {'\u0412\u0430\u0448\u0430 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B'}
+      </p>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 12,
+      }}>
+        {statItems.map((item) => (
+          <div
+            key={item.label}
+            style={{
+              background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.02)',
+              border: `1px solid ${C.border}`,
+              borderRadius: 14,
+              padding: '20px 16px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+            <div style={{
+              fontSize: 28,
+              fontWeight: 800,
+              letterSpacing: '-.03em',
+              background: item.gradient,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: 4,
+            }}>
+              {item.value}
+            </div>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: C.sub,
+              letterSpacing: '.01em',
+            }}>
+              {item.label}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

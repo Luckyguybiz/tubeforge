@@ -1,12 +1,6 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
-
-/** Storage limits in bytes per plan */
-const STORAGE_LIMITS: Record<string, number> = {
-  FREE: 500 * 1024 * 1024,     // 500 MB
-  PRO: 5 * 1024 * 1024 * 1024, // 5 GB
-  STUDIO: 50 * 1024 * 1024 * 1024, // 50 GB
-};
+import { getPlanLimits } from '@/lib/constants';
 
 export const mediaRouter = router({
   /** List user's media assets with search/filter */
@@ -75,7 +69,7 @@ export const mediaRouter = router({
     });
 
     const usedBytes = result._sum.size ?? 0;
-    const totalBytes = STORAGE_LIMITS[plan] ?? STORAGE_LIMITS.FREE;
+    const totalBytes = getPlanLimits(plan).storageBytes;
     const fileCount = result._count;
 
     return {

@@ -403,14 +403,12 @@ export async function GET(req: NextRequest) {
 
   // ── Mode A: Resolve videoId → download URL ─────────────────────────
   if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-    console.log('[YT-STREAM] === START ===', { videoId, quality, audioOnly });
-    // Debug ENV logging removed for security
     log.info('Resolving video', { videoId, quality, audioOnly });
 
     // Strategy 1: Cobalt API (self-hosted first, then public with auth)
-    console.log('[YT-STREAM] Trying Cobalt...');
+    log.debug('Trying Cobalt');
     const cobaltUrl = await resolveViaCobalt(videoId, quality, audioOnly);
-    console.log('[YT-STREAM] Cobalt result:', cobaltUrl ? cobaltUrl.substring(0, 80) : 'NULL');
+    log.debug('Cobalt result', { resolved: !!cobaltUrl });
     if (cobaltUrl) {
       downloadUrl = cobaltUrl;
       downloadUserAgent = 'TubeForge/1.0';
@@ -419,9 +417,9 @@ export async function GET(req: NextRequest) {
 
     // Strategy 2: VPS get-url (yt-dlp extracts direct CDN URL)
     if (!downloadUrl) {
-      console.log('[YT-STREAM] Trying VPS get-url...');
+      log.debug('Trying VPS get-url');
       const cdnUrl = await resolveViaVPSGetUrl(videoId, quality, audioOnly);
-      console.log('[YT-STREAM] VPS get-url result:', cdnUrl ? cdnUrl.substring(0, 80) : 'NULL');
+      log.debug('VPS get-url result', { resolved: !!cdnUrl });
       if (cdnUrl) {
         downloadUrl = cdnUrl;
         downloadUserAgent = 'TubeForge/1.0';

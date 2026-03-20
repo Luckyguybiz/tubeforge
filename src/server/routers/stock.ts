@@ -59,7 +59,7 @@ export const stockRouter = router({
           photos: [],
           total: 0,
           page: input.page,
-          note: 'Стоковые фото временно недоступны',
+          note: 'Stock photos temporarily unavailable',
         };
       }
 
@@ -80,7 +80,7 @@ export const stockRouter = router({
             photos: [],
             total: 0,
             page: input.page,
-            note: 'Не удалось загрузить стоковые фото',
+            note: 'Failed to load stock photos',
           };
         }
 
@@ -111,7 +111,7 @@ export const stockRouter = router({
           photos: [],
           total: 0,
           page: input.page,
-          note: 'Ошибка при загрузке стоковых фото',
+          note: 'Error loading stock photos',
         };
       }
     }),

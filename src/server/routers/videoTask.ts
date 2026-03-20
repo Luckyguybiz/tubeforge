@@ -25,7 +25,7 @@ export const videoTaskRouter = router({
         select: { id: true, project: { select: { userId: true } } },
       });
       if (!scene || scene.project.userId !== ctx.session.user.id) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Нет доступа к этой задаче' });
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
       }
 
       let res: Response;
@@ -38,18 +38,18 @@ export const videoTaskRouter = router({
       } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Не удалось проверить статус задачи',
+          message: 'Failed to check task status',
         });
       }
 
       if (!res.ok) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Не удалось проверить статус задачи',
+          message: 'Failed to check task status',
         });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Runway API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Runway API response' }); });
       return {
         status: data.status as 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED',
         progress: data.progress as number | undefined,

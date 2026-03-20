@@ -70,7 +70,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authLog.warn('Auth warning', { code });
     },
     debug(message: string, metadata?: unknown) {
-      console.log('[auth][debug]', message, metadata);
+      authLog.debug(message, typeof metadata === 'object' && metadata !== null ? metadata as Record<string, unknown> : undefined);
     },
   },
   callbacks: {

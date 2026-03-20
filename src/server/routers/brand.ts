@@ -88,7 +88,7 @@ export const brandRouter = router({
       if (user?.plan !== 'STUDIO') {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'Бренд-кит доступен только на тарифе Studio',
+          message: 'Brand kit is available on Studio plan only',
         });
       }
 

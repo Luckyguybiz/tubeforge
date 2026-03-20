@@ -2,12 +2,10 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
-import { API_ENDPOINTS, RATE_LIMIT_ERROR } from '@/lib/constants';
+import { API_ENDPOINTS, RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
 import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
-
-const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
 
 /** Fetch wrapper with AbortController timeout */
 async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 30000): Promise<Response> {
@@ -47,9 +45,9 @@ async function checkAndIncrementAIUsage(userId: string, db: PrismaClient) {
       user.aiUsage = 0;
     }
 
-    const limit = AI_LIMITS[user.plan];
+    const limit = getPlanLimits(user.plan).aiGenerations;
     if (user.aiUsage >= limit) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: `Лимит ИИ исчерпан (${limit}/мес). Обновите тарифный план.` });
+      throw new TRPCError({ code: 'FORBIDDEN', message: `AI limit exceeded (${limit}/mo). Please upgrade your plan.` });
     }
 
     // Increment within the same transaction
@@ -107,10 +105,10 @@ export const aiRouter = router({
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         const err = await res.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'DALL-E API error' });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ DALL-E API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
       return { images: data.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [] };
     }),
 
@@ -174,10 +172,10 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
       if (!visionRes.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
         const err = await visionRes.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка GPT-4o Vision API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'GPT-4o Vision API error' });
       }
 
-      const visionData = await visionRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ GPT-4o Vision API' }); });
+      const visionData = await visionRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse GPT-4o Vision API response' }); });
       const description = visionData.choices?.[0]?.message?.content ?? '';
 
       // Step 2: DALL-E 3 generates based on description + user prompt
@@ -217,10 +215,10 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
         // Vision succeeded (1 credit consumed), refund only the DALL-E credit
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         const err = await dalleRes.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'DALL-E API error' });
       }
 
-      const dalleData = await dalleRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ DALL-E API' }); });
+      const dalleData = await dalleRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
       return {
         description,
         images: dalleData.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [],
@@ -266,10 +264,10 @@ Return ONLY valid JSON, no markdown.`,
 
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Claude API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Claude API error' });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Claude API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Claude API response' }); });
       const text = data.content?.[0]?.text ?? '';
       try {
         return JSON.parse(text);
@@ -283,7 +281,7 @@ Return ONLY valid JSON, no markdown.`,
             // fall through to error fallback
           }
         }
-        return { title: 'Ошибка генерации', description: 'Не удалось сгенерировать метаданные. Попробуйте ещё раз.', tags: [] };
+        return { title: 'Generation error', description: 'Failed to generate metadata. Please try again.', tags: [] };
       }
     }),
 
@@ -326,10 +324,10 @@ Return ONLY valid JSON, no markdown.`,
 
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Runway API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Runway API error' });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Runway API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Runway API response' }); });
       return { taskId: data.id, status: 'processing' };
     }),
 
@@ -344,7 +342,7 @@ Return ONLY valid JSON, no markdown.`,
     }))
     .mutation(async ({ ctx, input }) => {
       if (!env.OPENAI_API_KEY) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API ключ не настроен. Обратитесь к администратору.' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured. Contact the administrator.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-script', 10);
@@ -408,17 +406,17 @@ Return ONLY valid JSON, no markdown.`,
         }, 60000);
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка AI сервиса. Попробуйте позже.' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error. Please try again later.' });
       }
 
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
         const err = await res.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'Ошибка OpenAI API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
       }
 
       const data = await res.json().catch(() => {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ OpenAI API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse OpenAI API response' });
       });
       const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '';
 
@@ -452,7 +450,7 @@ Return ONLY valid JSON, no markdown.`,
           }
         }
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать сценарий. Попробуйте ещё раз.' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse script. Please try again.' });
       }
     }),
 
@@ -468,7 +466,7 @@ Return ONLY valid JSON, no markdown.`,
     }))
     .mutation(async ({ ctx, input }) => {
       if (!env.OPENAI_API_KEY) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API ключ не настроен. Функция скоро будет доступна.' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured. This feature will be available soon.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-captions', 10);
@@ -514,17 +512,17 @@ ${sceneSummary}
         }, 60000);
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка AI сервиса' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         const err = await res.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'Ошибка OpenAI API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
       }
 
       const data = await res.json().catch(() => {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse response' });
       });
       const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '';
 
@@ -558,7 +556,7 @@ ${sceneSummary}
     .mutation(async () => {
       throw new TRPCError({
         code: 'PRECONDITION_FAILED',
-        message: 'Удаление фона скоро будет доступно. Функция в разработке.',
+        message: 'Background removal coming soon. Feature is under development.',
       });
     }),
 

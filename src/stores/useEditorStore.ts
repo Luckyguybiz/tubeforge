@@ -13,11 +13,11 @@ export interface MusicTrack {
 }
 
 export const MUSIC_TRACKS: MusicTrack[] = [
-  { id: 'energetic', name: 'Drive Forward', category: 'Энергичная', url: '/audio/music-energetic.mp3' },
-  { id: 'calm', name: 'Peaceful Waves', category: 'Спокойная', url: '/audio/music-calm.mp3' },
-  { id: 'corporate', name: 'Business Groove', category: 'Корпоративная', url: '/audio/music-corporate.mp3' },
-  { id: 'cinematic', name: 'Epic Rising', category: 'Кинематограф', url: '/audio/music-cinematic.mp3' },
-  { id: 'fun', name: 'Happy Vibes', category: 'Весёлая', url: '/audio/music-fun.mp3' },
+  { id: 'energetic', name: 'Drive Forward', category: 'Energetic', url: '/audio/music-energetic.mp3' },
+  { id: 'calm', name: 'Peaceful Waves', category: 'Calm', url: '/audio/music-calm.mp3' },
+  { id: 'corporate', name: 'Business Groove', category: 'Corporate', url: '/audio/music-corporate.mp3' },
+  { id: 'cinematic', name: 'Epic Rising', category: 'Cinematic', url: '/audio/music-cinematic.mp3' },
+  { id: 'fun', name: 'Happy Vibes', category: 'Fun', url: '/audio/music-fun.mp3' },
 ];
 
 /** Track generation timeouts by scene ID so they can be cancelled */
@@ -168,7 +168,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         id: s.id,
         prompt: s.prompt ?? '',
-        label: s.label || `\u0421\u0446\u0435\u043D\u0430 ${i + 1}`,
+        label: s.label || `Scene ${i + 1}`,
         duration: s.duration,
         status: s.status.toLowerCase(),
         model: s.model || 'standard',
@@ -281,7 +281,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     const ns: Scene = {
       id: uid(),
-      label: `\u0421\u0446\u0435\u043D\u0430 ${s.scenes.length + 1}`,
+      label: `Scene ${s.scenes.length + 1}`,
       prompt: '',
       duration: 5,
       status: 'empty',
@@ -324,7 +324,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((s) => {
       const i = s.scenes.findIndex((sc) => sc.id === id);
       if (i === -1) return s;
-      const c = { ...s.scenes[i], id: uid(), label: s.scenes[i].label + ' (\u043A\u043E\u043F\u0438\u044F)', status: 'editing' };
+      const c = { ...s.scenes[i], id: uid(), label: s.scenes[i].label + ' (copy)', status: 'editing' };
       const n = [...s.scenes];
       n.splice(i + 1, 0, c);
       return { scenes: n };
@@ -419,7 +419,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     const ns: Scene = {
       id: uid(),
-      label: `\u0421\u0446\u0435\u043D\u0430 ${s.scenes.length + 1}`,
+      label: `Scene ${s.scenes.length + 1}`,
       prompt,
       duration: 5,
       status: 'generating',
