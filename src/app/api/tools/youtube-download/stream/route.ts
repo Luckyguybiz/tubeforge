@@ -21,15 +21,16 @@ export const maxDuration = 300; // 5 minutes max
 
 /* ─── Cobalt API ─────────────────────────────────────────────────────── */
 
-/** Known Cobalt API instances (tried in order) */
-const COBALT_INSTANCES: { url: string; needsAuth: boolean }[] = [
+/** Build Cobalt instances list at call time (not module load) so env vars are fresh */
+function getCobaltInstances(): { url: string; needsAuth: boolean }[] {
+  const instances: { url: string; needsAuth: boolean }[] = [];
   // Self-hosted takes priority — no auth needed
-  ...(process.env.COBALT_API_URL
-    ? [{ url: process.env.COBALT_API_URL, needsAuth: false }]
-    : []),
+  const selfHosted = process.env.COBALT_API_URL;
+  if (selfHosted) instances.push({ url: selfHosted, needsAuth: false });
   // Public instance — requires JWT auth via COBALT_API_KEY env var
-  { url: 'https://api.cobalt.tools', needsAuth: true },
-];
+  instances.push({ url: 'https://api.cobalt.tools', needsAuth: true });
+  return instances;
+}
 
 interface CobaltResponse {
   status?: 'tunnel' | 'redirect' | 'stream' | 'picker' | 'error';
@@ -61,7 +62,7 @@ async function resolveViaCobalt(
     body.audioFormat = 'mp3';
   }
 
-  for (const instance of COBALT_INSTANCES) {
+  for (const instance of getCobaltInstances()) {
     try {
       log.debug('Trying Cobalt instance', { instance: instance.url, needsAuth: instance.needsAuth });
 
@@ -442,7 +443,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    log.info('Resolution result', { strategy: strategySummary || 'FAILED', videoId });
+    log.info('Resolution result', { strategy: strategySummary || 'FAILED', videoId, hasUrl: !!downloadUrl, urlHost: downloadUrl ? new URL(downloadUrl).hostname : 'none' });
 
     if (!downloadUrl) {
       return NextResponse.json(
@@ -519,6 +520,7 @@ export async function GET(req: NextRequest) {
   // ── Fetch and stream ──────────────────────────────────────────────
   try {
     const isGoogleVideo = downloadUrl.includes('googlevideo.com');
+    const isLocalhost = downloadUrl.startsWith('http://localhost') || downloadUrl.startsWith('http://127.0.0.1');
 
     const fetchHeaders: Record<string, string> = {
       'User-Agent': downloadUserAgent,
@@ -527,10 +529,12 @@ export async function GET(req: NextRequest) {
       fetchHeaders['Range'] = 'bytes=0-';
     }
 
+    // For localhost (self-hosted Cobalt/VPS) — follow redirects (no SSRF risk).
+    // For external URLs — manual redirect handling for SSRF protection.
     const upstream = await fetch(downloadUrl, {
       signal: AbortSignal.timeout(300_000),
       headers: fetchHeaders,
-      redirect: 'manual', // prevent SSRF via redirect to internal IPs
+      redirect: isLocalhost ? 'follow' : 'manual',
     });
 
     // Handle redirects safely — only follow if target is also on allowlist
