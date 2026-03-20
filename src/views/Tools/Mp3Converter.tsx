@@ -25,6 +25,8 @@ const MIME_MAP: Record<OutputFormat, string> = {
   ogg: 'audio/ogg',
 };
 
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
+
 function formatSize(bytes: number) {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} ${useLocaleStore.getState().t('tools.sizeMB')}`;
   return `${(bytes / 1024).toFixed(1)} ${useLocaleStore.getState().t('tools.sizeKB')}`;
@@ -201,6 +203,7 @@ export function Mp3Converter() {
     setDragOver(false);
     const f = e.dataTransfer.files[0];
     if (f && (f.type.startsWith('audio/') || f.type.startsWith('video/'))) {
+      if (f.size > MAX_FILE_SIZE) { setError('File is too large. Maximum size is 200 MB.'); return; }
       setFile(f);
       setDone(false);
       setConvertedBlob(null);
@@ -251,7 +254,7 @@ export function Mp3Converter() {
               style={{ display: 'none' }}
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) { setFile(f); setDone(false); setConvertedBlob(null); setConvertedSize(0); setProgress(0); setError(null); }
+                if (f) { if (f.size > MAX_FILE_SIZE) { setError('File is too large. Maximum size is 200 MB.'); return; } setFile(f); setDone(false); setConvertedBlob(null); setConvertedSize(0); setProgress(0); setError(null); }
               }}
             />
           </label>
