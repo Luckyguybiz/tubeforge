@@ -38,6 +38,7 @@ const eslintConfig = [
       'out/**',
       'coverage/**',
       'prisma/generated/**',
+            'public/ffmpeg/**',
     ],
   },
 ];
