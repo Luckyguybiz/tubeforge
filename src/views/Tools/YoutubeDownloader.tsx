@@ -198,6 +198,92 @@ export function YoutubeDownloader() {
   }, []);
 
 
+  // ── Core download logic (supports retry with lower quality) ───
+  const doDownload = async (
+    controller: AbortController,
+    retryQuality?: string,
+  ): Promise<boolean> => {
+    const effectiveQuality = retryQuality || quality;
+    const isAudioOnly = effectiveQuality === 'audio';
+    const ext = isAudioOnly ? 'mp3' : (format?.toLowerCase() ?? 'mp4');
+    const fname = `${videoInfo!.title || videoInfo!.videoId || 'video'}.${ext}`;
+
+    const params = new URLSearchParams({
+      videoId: videoInfo!.videoId,
+      quality: effectiveQuality,
+      audioOnly: isAudioOnly ? 'true' : 'false',
+      filename: fname,
+    });
+    const streamUrl = `/api/tools/youtube-download/stream?${params}`;
+
+    const downloadRes = await fetch(streamUrl, { signal: controller.signal });
+
+    if (!downloadRes.ok) {
+      let errorMsg = t('tools.ytdl.downloadLinkError');
+      try {
+        const ct = downloadRes.headers.get('content-type') ?? '';
+        if (ct.includes('application/json')) {
+          const errData = await downloadRes.json();
+          if (errData.error) errorMsg = errData.error;
+        }
+      } catch { /* ignore parse errors */ }
+
+      setStreamError(errorMsg);
+      return false;
+    }
+
+    const MAX_DOWNLOAD_SIZE = 500 * 1024 * 1024; // 500 MB safety limit
+    const contentLength = parseInt(downloadRes.headers.get('content-length') || '0', 10);
+
+    if (contentLength > MAX_DOWNLOAD_SIZE) {
+      setStreamError(t('tools.ytdl.fileTooLarge'));
+      return false;
+    }
+
+    const reader = downloadRes.body?.getReader();
+    if (!reader) throw new Error('No reader');
+
+    const chunks: BlobPart[] = [];
+    let received = 0;
+    const startTime = Date.now();
+
+    while (true) {
+      const { done: readerDone, value } = await reader.read();
+      if (readerDone) break;
+      received += value.length;
+
+      if (received > MAX_DOWNLOAD_SIZE) {
+        reader.cancel();
+        setStreamError(t('tools.ytdl.fileTooLarge'));
+        return false;
+      }
+
+      chunks.push(value);
+
+      const elapsed = (Date.now() - startTime) / 1000;
+      const speed = elapsed > 0 ? received / elapsed : 0;
+      const progress = contentLength > 0 ? received / contentLength : 0;
+      const remaining = contentLength > 0 && speed > 0 ? (contentLength - received) / speed : 0;
+
+      setDownloadProgress(Math.round(progress * 100));
+      setDownloadEta(remaining);
+      setDownloadSpeed(speed);
+    }
+
+    setDownloadProgress(100);
+
+    const blob = new Blob(chunks);
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fname;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+
+    showToast(t('tools.ytdl.downloadComplete'));
+    return true;
+  };
+
   // ── Download handler ───────────────────────────────────────────
   const handleDownload = async () => {
     if (!url.trim() || !isValidYoutubeUrl(url)) {
@@ -222,115 +308,45 @@ export function YoutubeDownloader() {
     setDownloadEta(0);
     setDownloadSpeed(0);
 
-    // Timeout for the initial API response (resolution + first byte).
-    // Node runtime needs time to try multiple Innertube clients + fallbacks.
+    // 3-minute timeout for the full resolution + first byte flow
     const postTimeout = setTimeout(() => {
       if (!controller.signal.aborted) controller.abort();
-    }, 45_000);
+    }, 180_000);
 
     try {
-      const isAudioOnly = quality === 'audio';
-      const ext = isAudioOnly ? 'mp3' : (format?.toLowerCase() ?? 'mp4');
-      const fname = `${videoInfo.title || videoInfo.videoId || 'video'}.${ext}`;
+      const success = await doDownload(controller);
 
-      // Send videoId to the stream route (Node runtime).
-      // The route resolves the URL via Innertube/VPS/Cobalt AND proxies
-      // the download in the same request (same IP), because YouTube
-      // signs stream URLs to the requester's IP address.
-      const params = new URLSearchParams({
-        videoId: videoInfo.videoId,
-        quality,
-        audioOnly: isAudioOnly ? 'true' : 'false',
-        filename: fname,
-      });
-      const streamUrl = `/api/tools/youtube-download/stream?${params}`;
-
-      const downloadRes = await fetch(streamUrl, { signal: controller.signal });
-
-      // Clear the timeout — we got a response
-      clearTimeout(postTimeout);
-
-      if (!downloadRes.ok) {
-        // Try to read error message from JSON response
-        let errorMsg = t('tools.ytdl.downloadLinkError');
-        try {
-          const ct = downloadRes.headers.get('content-type') ?? '';
-          if (ct.includes('application/json')) {
-            const errData = await downloadRes.json();
-            if (errData.error) errorMsg = errData.error;
+      if (!success && !controller.signal.aborted) {
+        // Auto-retry with lower quality if first attempt failed
+        const retryMap: Record<string, string> = {
+          '1080p': '720p', '720p': '480p', '480p': '360p',
+        };
+        const lowerQuality = retryMap[quality];
+        if (lowerQuality) {
+          setStreamError('');
+          setDownloadProgress(0);
+          setDownloadEta(0);
+          setDownloadSpeed(0);
+          const retrySuccess = await doDownload(controller, lowerQuality);
+          if (retrySuccess) {
+            setDone(true);
+            return;
           }
-        } catch { /* ignore parse errors */ }
-
-        setStreamError(errorMsg);
-        setDone(true);
-        return;
-      }
-
-      const MAX_DOWNLOAD_SIZE = 500 * 1024 * 1024; // 500 MB safety limit
-      const contentLength = parseInt(downloadRes.headers.get('content-length') || '0', 10);
-
-      // Reject early if Content-Length already exceeds the limit
-      if (contentLength > MAX_DOWNLOAD_SIZE) {
-        setStreamError(t('tools.ytdl.fileTooLarge'));
-        setDone(true);
-        return;
-      }
-
-      const reader = downloadRes.body?.getReader();
-      if (!reader) throw new Error('No reader');
-
-      const chunks: BlobPart[] = [];
-      let received = 0;
-      const startTime = Date.now();
-
-      while (true) {
-        const { done: readerDone, value } = await reader.read();
-        if (readerDone) break;
-        received += value.length;
-
-        // Abort if accumulated size exceeds the safety limit
-        if (received > MAX_DOWNLOAD_SIZE) {
-          reader.cancel();
-          setStreamError(t('tools.ytdl.fileTooLarge'));
-          setDone(true);
-          return;
         }
-
-        chunks.push(value);
-
-        const elapsed = (Date.now() - startTime) / 1000;
-        const speed = elapsed > 0 ? received / elapsed : 0;
-        const progress = contentLength > 0 ? received / contentLength : 0;
-        const remaining = contentLength > 0 && speed > 0 ? (contentLength - received) / speed : 0;
-
-        setDownloadProgress(Math.round(progress * 100));
-        setDownloadEta(remaining);
-        setDownloadSpeed(speed);
+        setDone(true);
+      } else {
+        setDone(true);
       }
-
-      setDownloadProgress(100);
-
-      // Combine chunks into a blob and trigger download
-      const blob = new Blob(chunks);
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fname;
-      a.click();
-      URL.revokeObjectURL(blobUrl);
-
-      showToast(t('tools.ytdl.downloadComplete'));
-      setDone(true);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        // Only show timeout error if this was our timeout, not user navigation
         if (controller.signal.aborted && abortRef.current === controller) {
           setStreamError(t('tools.ytdl.serverTimeout'));
           setDone(true);
         }
         return;
       }
-      setStreamError(t('tools.ytdl.networkError'));
+      const errMsg = err instanceof Error ? err.message : t('tools.ytdl.networkError');
+      setStreamError(errMsg);
       setDone(true);
     } finally {
       clearTimeout(postTimeout);

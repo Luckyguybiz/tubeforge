@@ -68,6 +68,7 @@ export const env = {
   YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY ?? '',
   YT_DLP_API_URL: process.env.YT_DLP_API_URL ?? '',
   COBALT_API_URL: process.env.COBALT_API_URL ?? '',
+  COBALT_API_KEY: process.env.COBALT_API_KEY ?? '',
 
   // Email / SMTP
   SMTP_URL: process.env.SMTP_URL ?? '',

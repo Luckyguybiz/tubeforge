@@ -219,10 +219,10 @@ export function TiktokDownloader() {
     setDownloadEta(0);
     setDownloadSpeed(0);
 
-    // Timeout for the initial API call (not the download stream)
+    // 3-minute timeout for the full resolution + download flow
     const postTimeout = setTimeout(() => {
       if (!controller.signal.aborted) controller.abort();
-    }, 20_000);
+    }, 180_000);
 
     try {
       const isAudioOnly = quality === 'audio' || format === 'MP3';
@@ -355,7 +355,8 @@ export function TiktokDownloader() {
         }
         return;
       }
-      setStreamError(t('tools.ttdl.networkError'));
+      const errMsg = err instanceof Error ? err.message : t('tools.ttdl.networkError');
+      setStreamError(errMsg);
       setDone(true);
     } finally {
       clearTimeout(postTimeout);

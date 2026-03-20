@@ -12,22 +12,24 @@ export const maxDuration = 300; // 5 minutes max
  * YouTube Download Stream API
  *
  * Strategy order (fastest → slowest):
- *   1. Cobalt API  — public service, works from any IP, fast (~2-5s)
- *   2. VPS yt-dlp  — self-hosted, if configured
- *   3. Innertube   — direct YouTube API, often blocked from datacenter IPs
- *
- * Key insight: YouTube blocks Vercel/AWS/GCP datacenter IPs from the
- * Innertube API. Cobalt runs on its own infrastructure with IPs that
- * YouTube doesn't block. So Cobalt should be the PRIMARY strategy.
+ *   1. Self-hosted Cobalt (localhost:9000) — local, no auth needed
+ *   2. VPS get-url   — yt-dlp extracts direct CDN URL
+ *   3. Public Cobalt  — api.cobalt.tools (requires JWT if configured)
+ *   4. VPS full download — yt-dlp downloads the file on VPS
+ *   5. Innertube     — direct YouTube API, often blocked from datacenter IPs
  * ═══════════════════════════════════════════════════════════════════════ */
 
 /* ─── Cobalt API ─────────────────────────────────────────────────────── */
 
-/** Known public Cobalt API instances (tried in order) */
-const COBALT_INSTANCES = [
-  process.env.COBALT_API_URL, // user-configured takes priority
-  'https://api.cobalt.tools',
-].filter(Boolean) as string[];
+/** Known Cobalt API instances (tried in order) */
+const COBALT_INSTANCES: { url: string; needsAuth: boolean }[] = [
+  // Self-hosted takes priority — no auth needed
+  ...(process.env.COBALT_API_URL
+    ? [{ url: process.env.COBALT_API_URL, needsAuth: false }]
+    : []),
+  // Public instance — requires JWT auth via COBALT_API_KEY env var
+  { url: 'https://api.cobalt.tools', needsAuth: true },
+];
 
 interface CobaltResponse {
   status?: 'tunnel' | 'redirect' | 'stream' | 'picker' | 'error';
@@ -59,21 +61,35 @@ async function resolveViaCobalt(
     body.audioFormat = 'mp3';
   }
 
-  for (const cobaltUrl of COBALT_INSTANCES) {
+  for (const instance of COBALT_INSTANCES) {
     try {
-      log.debug('Trying Cobalt instance', { instance: cobaltUrl });
-      const res = await fetch(cobaltUrl, {
+      log.debug('Trying Cobalt instance', { instance: instance.url, needsAuth: instance.needsAuth });
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+
+      // Add Authorization header for instances that require JWT auth
+      if (instance.needsAuth) {
+        const apiKey = process.env.COBALT_API_KEY;
+        if (!apiKey) {
+          log.debug('Skipping authed Cobalt instance — no COBALT_API_KEY set', { instance: instance.url });
+          continue;
+        }
+        headers['Authorization'] = `Api-Key ${apiKey}`;
+      }
+
+      const res = await fetch(instance.url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
+        headers,
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(15_000),
       });
 
       if (!res.ok) {
-        log.debug('Cobalt returned non-OK status', { instance: cobaltUrl, status: res.status });
+        const text = await res.text().catch(() => '');
+        log.debug('Cobalt returned non-OK status', { instance: instance.url, status: res.status, body: text.slice(0, 200) });
         continue;
       }
 
@@ -95,14 +111,54 @@ async function resolveViaCobalt(
         return data.picker[0].url;
       }
     } catch (err) {
-      log.debug('Cobalt instance failed', { instance: cobaltUrl, error: err instanceof Error ? err.message : 'unknown' });
+      log.debug('Cobalt instance failed', { instance: instance.url, error: err instanceof Error ? err.message : 'unknown' });
       continue;
     }
   }
   return null;
 }
 
-/* ─── VPS yt-dlp ─────────────────────────────────────────────────────── */
+/* ─── VPS get-url (extracts direct CDN URL via yt-dlp) ────────────── */
+
+async function resolveViaVPSGetUrl(
+  videoId: string,
+  quality: string,
+  audioOnly: boolean,
+): Promise<string | null> {
+  const vpsBase = process.env.YT_DLP_API_URL;
+  if (!vpsBase) return null;
+
+  try {
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const params = new URLSearchParams({
+      url: youtubeUrl,
+      quality,
+      audioOnly: audioOnly ? 'true' : 'false',
+    });
+
+    const res = await fetch(`${vpsBase}/get-url?${params}`, {
+      signal: AbortSignal.timeout(20_000),
+    });
+
+    if (!res.ok) {
+      log.debug('VPS get-url returned error', { status: res.status });
+      return null;
+    }
+
+    const data = await res.json();
+    if (data.videoUrl) {
+      log.debug('VPS get-url resolved', { urlCount: data.count });
+      return data.videoUrl;
+    }
+
+    return null;
+  } catch (err) {
+    log.debug('VPS get-url failed', { error: err instanceof Error ? err.message : 'unknown' });
+    return null;
+  }
+}
+
+/* ─── VPS full download ─────────────────────────────────────────────── */
 
 async function resolveViaVPS(
   videoId: string,
@@ -348,7 +404,7 @@ export async function GET(req: NextRequest) {
   if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
     log.info('Resolving video', { videoId, quality, audioOnly });
 
-    // Strategy 1: Cobalt API (FASTEST — works from any IP)
+    // Strategy 1: Cobalt API (self-hosted first, then public with auth)
     const cobaltUrl = await resolveViaCobalt(videoId, quality, audioOnly);
     if (cobaltUrl) {
       downloadUrl = cobaltUrl;
@@ -356,7 +412,17 @@ export async function GET(req: NextRequest) {
       strategySummary = 'cobalt';
     }
 
-    // Strategy 2: VPS yt-dlp (if configured)
+    // Strategy 2: VPS get-url (yt-dlp extracts direct CDN URL)
+    if (!downloadUrl) {
+      const cdnUrl = await resolveViaVPSGetUrl(videoId, quality, audioOnly);
+      if (cdnUrl) {
+        downloadUrl = cdnUrl;
+        downloadUserAgent = 'TubeForge/1.0';
+        strategySummary = 'vps-get-url';
+      }
+    }
+
+    // Strategy 3: VPS full download (yt-dlp downloads the whole file)
     if (!downloadUrl) {
       const vpsUrl = await resolveViaVPS(videoId, quality, audioOnly, format);
       if (vpsUrl) {
@@ -366,7 +432,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Strategy 3: Innertube (often blocked from datacenter IPs)
+    // Strategy 4: Innertube (often blocked from datacenter IPs)
     if (!downloadUrl) {
       const innertube = await resolveViaInnertube(videoId, quality, audioOnly);
       if (innertube) {
@@ -396,6 +462,7 @@ export async function GET(req: NextRequest) {
 
   // ── URL validation ──────────────────────────────────────────────────
   const YT_API_BASE = process.env.YT_DLP_API_URL || '';
+  const COBALT_BASE = process.env.COBALT_API_URL || '';
   let allowed = false;
 
   try {
@@ -409,6 +476,16 @@ export async function GET(req: NextRequest) {
         if (h === vpsUrl.hostname) allowed = true;
       } catch { /* invalid VPS URL */ }
     }
+
+    // Self-hosted Cobalt (localhost / configured URL)
+    if (COBALT_BASE) {
+      try {
+        const cobaltParsed = new URL(COBALT_BASE);
+        if (h === cobaltParsed.hostname) allowed = true;
+      } catch { /* invalid Cobalt URL */ }
+    }
+    // Always allow localhost (self-hosted Cobalt)
+    if (h === 'localhost' || h === '127.0.0.1') allowed = true;
 
     // Cobalt CDN domains — use endsWith to prevent subdomain spoofing
     if (
@@ -469,9 +546,10 @@ export async function GET(req: NextRequest) {
             rh.endsWith('.googleusercontent.com') ||
             rh === 'api.cobalt.tools' || rh.endsWith('.cobalt.tools') ||
             rh.endsWith('.imput.net') ||
+            rh === 'localhost' || rh === '127.0.0.1' ||
             rh.endsWith('.tiktok.com') || rh === 'tiktok.com' ||
             rh.endsWith('.tiktokcdn.com');
-          if (redirectAllowed && redir.protocol === 'https:') {
+          if (redirectAllowed) {
             // Re-fetch the redirect target
             const redirected = await fetch(redir.toString(), {
               signal: AbortSignal.timeout(300_000),
@@ -479,8 +557,6 @@ export async function GET(req: NextRequest) {
               redirect: 'manual',
             });
             if (redirected.ok || redirected.status === 206) {
-              // Continue with redirected response (fall through to streaming logic below)
-              // We replace upstream reference via a wrapper
               return buildStreamResponse(redirected, filename);
             }
           }
