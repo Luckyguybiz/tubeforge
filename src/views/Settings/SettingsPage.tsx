@@ -109,11 +109,17 @@ export function SettingsPage() {
   /* ── VPN / YouTube Access ──────────────────────── */
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [vpnGenerating, setVpnGenerating] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [vpnGuideOpen, setVpnGuideOpen] = useState(false);
   const vpnStatus = trpc.vpn.getStatus.useQuery();
   const vpnGetConfig = trpc.vpn.getConfig.useQuery(undefined, { enabled: false });
   const vpnRevoke = trpc.vpn.revokeConfig.useMutation({
     onSuccess: () => { vpnStatus.refetch(); toast.success(t('settings.vpn.revoked')); },
     onError: (err) => toast.error(err.message),
+  });
+  const vpnPromo = trpc.vpn.unlockWithPromo.useMutation({
+    onSuccess: () => { vpnStatus.refetch(); toast.success(t('settings.vpn.promoSuccess')); setPromoCode(''); },
+    onError: (e) => toast.error(e.message),
   });
 
   const handleVpnGenerate = useCallback(async () => {
@@ -746,31 +752,129 @@ export function SettingsPage() {
         <h2 style={sectionHeaderStyle}>{t('settings.vpn')}</h2>
         <p style={sectionDescStyle}>{t('settings.vpnDesc')}</p>
 
-        {plan === 'FREE' ? (
-          /* Plan gate — upgrade prompt for free users */
+        {plan === 'FREE' && !vpnStatus.data?.peer?.active ? (
+          /* Plan gate — feature preview for free users */
           <div style={{
-            padding: '24px 20px',
-            border: `1px dashed ${C.border}`,
             borderRadius: 14,
-            textAlign: 'center',
+            border: `1px solid ${C.border}`,
+            overflow: 'hidden',
           }}>
-            <p style={{ color: C.sub, fontSize: 14, margin: '0 0 16px', lineHeight: 1.5 }}>
-              {t('settings.vpn.proRequired')}
-            </p>
-            <a
-              href="/billing"
-              style={{
-                ...btnBase,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                background: C.blue,
-                color: '#fff',
-                textDecoration: 'none',
-              }}
-            >
-              {t('settings.upgradeTo')} Pro
-            </a>
+            {/* Semi-transparent mockup of active VPN section */}
+            <div style={{ opacity: 0.5, pointerEvents: 'none', padding: '18px 20px', background: C.surface, borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%', background: C.green,
+                  display: 'inline-block', flexShrink: 0,
+                }} />
+                <span style={{
+                  padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                  background: `${C.green}18`, color: C.green, letterSpacing: 0.3,
+                }}>
+                  {t('settings.vpn.active')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13 }}>
+                <div>
+                  <span style={{ color: C.sub, fontWeight: 600 }}>{t('settings.vpn.ip')}: </span>
+                  <span style={{ color: C.text, fontFamily: 'monospace' }}>10.8.0.xx</span>
+                </div>
+                <div>
+                  <span style={{ color: C.sub, fontWeight: 600 }}>{t('settings.vpn.created')}: </span>
+                  <span style={{ color: C.text }}>{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
+                <button disabled style={{ ...btnBase, background: C.surface, color: C.text, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, cursor: 'not-allowed' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                  {t('settings.vpn.download')}
+                </button>
+                <button disabled style={{ ...btnBase, background: C.surface, color: C.text, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, cursor: 'not-allowed' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+                  {t('settings.vpn.showQr')}
+                </button>
+              </div>
+            </div>
+
+            {/* Feature list + CTA */}
+            <div style={{ padding: '20px 20px 24px' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 14px' }}>
+                {t('settings.vpn.preview.title')}
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                {[
+                  t('settings.vpn.preview.feature1'),
+                  t('settings.vpn.preview.feature2'),
+                  t('settings.vpn.preview.feature3'),
+                  t('settings.vpn.preview.feature4'),
+                  t('settings.vpn.preview.feature5'),
+                ].map((f, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span style={{ fontSize: 13, color: C.text }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
+                <a
+                  href="/billing"
+                  style={{
+                    ...btnBase,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: C.blue,
+                    color: '#fff',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {t('settings.upgradeTo')} Pro
+                </a>
+              </div>
+
+              {/* Promo code input */}
+              <div style={{
+                padding: '14px 16px',
+                background: C.surface,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 10 }}>
+                  {t('settings.vpn.promo')}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder={t('settings.vpn.promoPlaceholder')}
+                    style={{
+                      ...inputStyle,
+                      flex: 1,
+                    }}
+                    maxLength={50}
+                  />
+                  <button
+                    onClick={() => { if (promoCode.trim()) vpnPromo.mutate({ code: promoCode.trim() }); }}
+                    disabled={vpnPromo.isPending || !promoCode.trim()}
+                    style={{
+                      ...btnBase,
+                      background: C.blue,
+                      color: '#fff',
+                      padding: '10px 18px',
+                      opacity: vpnPromo.isPending || !promoCode.trim() ? 0.6 : 1,
+                      cursor: vpnPromo.isPending || !promoCode.trim() ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {vpnPromo.isPending ? (
+                      <Spinner size={14} color="#fff" />
+                    ) : t('settings.vpn.promoApply')}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         ) : vpnStatus.isLoading ? (
           /* Loading state */
@@ -821,17 +925,80 @@ export function SettingsPage() {
               </div>
             </div>
 
+            {/* Collapsible step-by-step VPN setup guide */}
             <div style={{
-              padding: '14px 18px',
-              background: `${C.blue}0a`,
-              border: `1px solid ${C.blue}20`,
               borderRadius: 12,
+              border: `1px solid ${C.blue}20`,
               marginBottom: 16,
-              fontSize: 13,
-              color: C.sub,
-              lineHeight: 1.6,
+              overflow: 'hidden',
             }}>
-              {t('settings.vpn.instructions')}
+              <button
+                onClick={() => setVpnGuideOpen(!vpnGuideOpen)}
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  background: `${C.blue}0a`,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontFamily: 'inherit',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: C.text,
+                }}
+              >
+                <span>{t('settings.vpn.guide')}</span>
+                <svg
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub}
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ transform: vpnGuideOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .2s' }}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              {vpnGuideOpen && (
+                <div style={{ padding: '16px 18px', fontSize: 13, color: C.sub, lineHeight: 1.7 }}>
+                  {/* Mobile */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontWeight: 700, color: C.text, marginBottom: 6, fontSize: 13 }}>
+                      {t('settings.vpn.guide.mobile')}
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: 18 }}>
+                      <li>{t('settings.vpn.guide.mobile.step1')} <a href="https://play.google.com/store/apps/details?id=com.wireguard.android" target="_blank" rel="noopener noreferrer" style={{ color: C.blue }}>Google Play</a> / <a href="https://apps.apple.com/app/wireguard/id1441195209" target="_blank" rel="noopener noreferrer" style={{ color: C.blue }}>App Store</a></li>
+                      <li>{t('settings.vpn.guide.mobile.step2')}</li>
+                      <li>{t('settings.vpn.guide.mobile.step3')}</li>
+                      <li>{t('settings.vpn.guide.mobile.step4')}</li>
+                      <li>{t('settings.vpn.guide.mobile.step5')}</li>
+                    </ol>
+                  </div>
+                  {/* Desktop */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontWeight: 700, color: C.text, marginBottom: 6, fontSize: 13 }}>
+                      {t('settings.vpn.guide.desktop')}
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: 18 }}>
+                      <li>{t('settings.vpn.guide.desktop.step1')} <a href="https://www.wireguard.com/install/" target="_blank" rel="noopener noreferrer" style={{ color: C.blue }}>wireguard.com/install</a></li>
+                      <li>{t('settings.vpn.guide.desktop.step2')}</li>
+                      <li>{t('settings.vpn.guide.desktop.step3')}</li>
+                      <li>{t('settings.vpn.guide.desktop.step4')}</li>
+                    </ol>
+                  </div>
+                  {/* AmneziaVPN */}
+                  <div>
+                    <div style={{ fontWeight: 700, color: C.text, marginBottom: 6, fontSize: 13 }}>
+                      {t('settings.vpn.guide.amnezia')}
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: 18 }}>
+                      <li>{t('settings.vpn.guide.amnezia.step1')} <a href="https://amnezia.org" target="_blank" rel="noopener noreferrer" style={{ color: C.blue }}>amnezia.org</a></li>
+                      <li>{t('settings.vpn.guide.amnezia.step2')}</li>
+                      <li>{t('settings.vpn.guide.amnezia.step3')}</li>
+                      <li>{t('settings.vpn.guide.amnezia.step4')}</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
