@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
 import { useState } from 'react';
 import { trpc, getTRPCClient } from '@/lib/trpc';
+import { toast } from '@/stores/useNotificationStore';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -22,10 +23,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       mutations: {
         retry: false, // Никогда не повторять мутации автоматически
         onError: (error: unknown) => {
-          // Логировать только неожиданные ошибки, не перенаправления по авторизации
           const message = (error as { message?: string })?.message;
           if (message && !message.includes('UNAUTHORIZED')) {
             console.error('[mutation error]', message);
+            toast.error(message);
           }
         },
       },

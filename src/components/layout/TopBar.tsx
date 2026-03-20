@@ -292,6 +292,7 @@ export const TopBar = memo(function TopBar() {
             }}
           />
           <button
+            aria-label={t('sidebar.search') + ' — ' + 'close'}
             onClick={closeSearch}
             style={{
               ...btnBase,

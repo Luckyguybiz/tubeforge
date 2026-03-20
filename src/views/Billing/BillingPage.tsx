@@ -182,6 +182,7 @@ export function BillingPage() {
   const [promoError, setPromoError] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   /* ── Calculations ──────────────────────────────── */
 
@@ -432,18 +433,79 @@ export function BillingPage() {
 
             {/* ── Section 2: Plan Selection ──────── */}
             <div style={{ marginBottom: 40 }}>
-              <h2
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: C.dim,
-                  textTransform: 'uppercase',
-                  letterSpacing: '.12em',
-                  margin: '0 0 20px',
-                }}
-              >
-                {t('billing.choosePlan')}
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+                <h2
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.dim,
+                    textTransform: 'uppercase',
+                    letterSpacing: '.12em',
+                    margin: 0,
+                  }}
+                >
+                  {t('billing.choosePlan')}
+                </h2>
+
+                {/* Monthly / Annual toggle */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px',
+                  borderRadius: 50,
+                  background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)',
+                  border: `1px solid ${cardBorder}`,
+                }}>
+                  <button
+                    onClick={() => setIsAnnual(false)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 50,
+                      border: 'none',
+                      background: !isAnnual ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'transparent',
+                      color: !isAnnual ? '#fff' : C.sub,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .2s ease',
+                    }}
+                  >
+                    {t('billing.monthlyLabel')}
+                  </button>
+                  <button
+                    onClick={() => setIsAnnual(true)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 50,
+                      border: 'none',
+                      background: isAnnual ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'transparent',
+                      color: isAnnual ? '#fff' : C.sub,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    {t('billing.annualLabel')}
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: isAnnual ? '#fff' : C.green,
+                      background: isAnnual ? 'rgba(255,255,255,.2)' : `${C.green}15`,
+                      padding: '1px 6px',
+                      borderRadius: 50,
+                    }}>
+                      -20%
+                    </span>
+                  </button>
+                </div>
+              </div>
 
               <div
                 className="tf-billing-plan-grid"
@@ -524,17 +586,40 @@ export function BillingPage() {
                       </div>
 
                       {/* Price */}
-                      <div
-                        style={{
-                          fontSize: 28,
-                          fontWeight: 800,
-                          color: C.text,
-                          letterSpacing: '-.03em',
-                          marginBottom: 20,
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        {plan.priceLabel}
+                      <div style={{ marginBottom: 20 }}>
+                        <div
+                          style={{
+                            fontSize: 28,
+                            fontWeight: 800,
+                            color: C.text,
+                            letterSpacing: '-.03em',
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          {isAnnual && plan.price > 0
+                            ? `${Math.round(plan.price * 0.8)}\u20BD`
+                            : plan.priceLabel}
+                          {plan.price > 0 && (
+                            <span style={{ fontSize: 13, fontWeight: 500, color: C.sub }}>
+                              {t('billing.perMonth')}
+                            </span>
+                          )}
+                        </div>
+                        {isAnnual && plan.price > 0 && (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6, marginTop: 4,
+                          }}>
+                            <span style={{ fontSize: 12, color: C.dim, textDecoration: 'line-through' }}>
+                              {plan.priceLabel}{t('billing.perMonth')}
+                            </span>
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, color: C.green,
+                              background: `${C.green}12`, padding: '1px 6px', borderRadius: 50,
+                            }}>
+                              {t('billing.annualSave').replace('{amount}', String(Math.round(plan.price * 0.2 * 12)))}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Features */}
@@ -615,6 +700,27 @@ export function BillingPage() {
                           <LightningIcon />
                           {plan.buttonLabel}
                         </button>
+                      )}
+
+                      {/* Guarantee badge for paid plans */}
+                      {plan.price > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 5,
+                          marginTop: 12,
+                          padding: '6px 0',
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" fill={C.green} opacity=".15" />
+                            <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" stroke={C.green} strokeWidth="1" opacity=".6" />
+                            <path d="M5.5 8L7 9.5L10.5 6" stroke={C.green} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span style={{ fontSize: 11, fontWeight: 500, color: C.green }}>
+                            {t('billing.guarantee')}
+                          </span>
+                        </div>
                       )}
                     </div>
                   );

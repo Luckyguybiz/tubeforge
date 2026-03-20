@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 type PrivacyStatus = 'public' | 'unlisted' | 'private';
 type PublishState = 'idle' | 'publishing' | 'published' | 'error';
@@ -62,6 +63,8 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const planInfo = usePlanLimits();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -98,6 +101,14 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       toast.success(useLocaleStore.getState().t('preview.videoUploaded'));
       if (projectId) saveProject.mutate({ id: projectId, status: 'PUBLISHED' });
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      // First video celebration
+      try {
+        const celebKey = 'tf-first-video-celebrated';
+        if (typeof window !== 'undefined' && !localStorage.getItem(celebKey)) {
+          localStorage.setItem(celebKey, '1');
+          setShowCelebration(true);
+        }
+      } catch { /* localStorage unavailable */ }
     },
     onError: (err) => {
       setPublishState('error');
@@ -305,6 +316,93 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   /* ── RENDER ───────────────────────────────────────── */
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '0 12px' : 0, boxSizing: 'border-box' as const }}>
+
+      {/* ── First Video Celebration Overlay ─────────── */}
+      {showCelebration && (
+        <>
+          <style>{`
+            @keyframes tf-confetti-fall {
+              0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+              100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+            @keyframes tf-celebrate-in {
+              0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+              100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div
+            onClick={() => setShowCelebration(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9998,
+              background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(6px)',
+            }}
+          />
+          {/* Confetti particles (CSS only) */}
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div key={i} style={{
+              position: 'fixed',
+              zIndex: 9999,
+              top: 0,
+              left: `${4 + (i * 4) % 92}%`,
+              width: 8 + (i % 3) * 4,
+              height: 8 + (i % 3) * 4,
+              borderRadius: i % 3 === 0 ? '50%' : i % 3 === 1 ? 2 : 0,
+              background: ['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'][i % 6],
+              animation: `tf-confetti-fall ${2 + (i % 4) * 0.5}s ease-in ${(i % 8) * 0.15}s forwards`,
+              pointerEvents: 'none',
+            }} />
+          ))}
+          {/* Celebration card */}
+          <div style={{
+            position: 'fixed', zIndex: 10000,
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 20, padding: '36px 28px',
+            textAlign: 'center', maxWidth: 380, width: 'calc(100% - 32px)',
+            boxShadow: '0 24px 60px rgba(0,0,0,.3)',
+            animation: 'tf-celebrate-in .4s cubic-bezier(.4,0,.2,1) forwards',
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>&#127916;</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-.02em' }}>
+              {t('celebration.title')}
+            </h2>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20 }}>
+              <button
+                onClick={() => { setShowCelebration(false); handleDownload(); }}
+                style={{
+                  padding: '11px 24px', borderRadius: 10,
+                  border: `1px solid ${C.border}`, background: 'transparent',
+                  color: C.text, fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all .15s',
+                }}
+              >
+                {t('celebration.download')}
+              </button>
+              <button
+                onClick={() => { setShowCelebration(false); router.push('/editor'); }}
+                style={{
+                  padding: '11px 24px', borderRadius: 10,
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+                  color: '#fff', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all .15s',
+                  boxShadow: `0 4px 16px ${C.accent}33`,
+                }}
+              >
+                {t('celebration.createMore')}
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: C.dim, marginTop: 16, lineHeight: 1.5 }}>
+              {t('celebration.proNote')}
+            </p>
+          </div>
+        </>
+      )}
+
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 16 : 24, flexWrap: 'wrap', gap: isMobile ? 10 : 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -351,6 +449,25 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           </button>
         </div>
       </div>
+
+      {/* ── Contextual export note for FREE users ──── */}
+      {planInfo.plan === 'FREE' && (
+        <div style={{
+          padding: '8px 14px',
+          borderRadius: 10,
+          background: `${C.accent}08`,
+          border: `1px solid ${C.accent}15`,
+          fontSize: 12,
+          color: C.sub,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <span style={{ fontSize: 14 }}>&#9432;</span>
+          {t('preview.exportNote720')}
+        </div>
+      )}
 
       {/* ── Main grid ───────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: isMobile ? 16 : 24, alignItems: 'start' }}>

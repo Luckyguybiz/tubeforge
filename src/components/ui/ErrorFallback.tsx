@@ -59,6 +59,7 @@ export function ErrorFallback({
 
   return (
     <div
+      role="alert"
       style={{
         display: 'flex',
         flexDirection: 'column',

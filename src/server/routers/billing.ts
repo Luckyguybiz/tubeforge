@@ -5,6 +5,9 @@ import Stripe from 'stripe';
 import { env } from '@/lib/env';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { cache } from '@/lib/cache';
+
+const SUBSCRIPTION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /** Billing rate limit: 5 checkout/portal actions per minute per user */
 async function checkBillingRate(userId: string) {
@@ -18,11 +21,20 @@ function getStripe() {
 
 export const billingRouter = router({
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
+    const cacheKey = `billing:sub:${ctx.session.user.id}`;
+    type SubResult = { plan: string; subscription: { id: string; status: string; cancelAt: number | null; cancelAtPeriodEnd: boolean } | null };
+    const cached = cache.get<SubResult>(cacheKey);
+    if (cached) return cached;
+
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: { plan: true, stripeId: true },
     });
-    if (!user?.stripeId) return { plan: user?.plan ?? 'FREE', subscription: null };
+    if (!user?.stripeId) {
+      const result = { plan: user?.plan ?? 'FREE', subscription: null };
+      cache.set(cacheKey, result, SUBSCRIPTION_CACHE_TTL);
+      return result;
+    }
 
     const stripe = getStripe();
     const subscriptions = await stripe.subscriptions.list({
@@ -34,11 +46,15 @@ export const billingRouter = router({
       (s) => s.status === 'active' || s.status === 'past_due' || s.status === 'trialing',
     );
     const sub = relevantSub ?? null;
-    if (!sub) return { plan: user.plan, subscription: null };
+    if (!sub) {
+      const result = { plan: user.plan, subscription: null };
+      cache.set(cacheKey, result, SUBSCRIPTION_CACHE_TTL);
+      return result;
+    }
     if (!sub.items.data[0]) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Subscription has no items' });
     }
-    return {
+    const result = {
       plan: user.plan,
       subscription: {
         id: sub.id,
@@ -47,12 +63,15 @@ export const billingRouter = router({
         cancelAtPeriodEnd: sub.cancel_at_period_end,
       },
     };
+    cache.set(cacheKey, result, SUBSCRIPTION_CACHE_TTL);
+    return result;
   }),
 
   createCheckout: protectedProcedure
     .input(z.object({ plan: z.enum(['PRO', 'STUDIO']) }))
     .mutation(async ({ ctx, input }) => {
       await checkBillingRate(ctx.session.user.id);
+      cache.delete(`billing:sub:${ctx.session.user.id}`);
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
         select: { email: true, stripeId: true },

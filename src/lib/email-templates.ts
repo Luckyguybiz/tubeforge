@@ -6,8 +6,6 @@
  * and support Russian (default) and English locales.
  */
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission';
-
 interface TemplateResult {
   subject: string;
   html: string;
@@ -346,14 +344,141 @@ function referralCommissionTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Drip campaign templates
+// ---------------------------------------------------------------------------
+
+function dayThreeTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+  const projectCount = Number(data.projectCount || 0);
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: `You created ${projectCount} project${projectCount !== 1 ? 's' : ''} — here's what else you can do`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          You've already created <strong>${projectCount}</strong> project${projectCount !== 1 ? 's' : ''}! Here's what else you can do with TubeForge:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Generate AI thumbnails for your videos</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Use AI to optimize your video metadata for SEO</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">3</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Publish directly to YouTube from TubeForge</span>
+          </td></tr>
+        </table>
+        ${ctaButton('Explore Tools', `${APP_URL}/tools`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `Привет, ${name}!` : 'Привет!';
+  return {
+    subject: `Вы создали ${projectCount} проект${projectCount === 1 ? '' : projectCount < 5 ? 'а' : 'ов'} — вот что ещё можно сделать`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Вы уже создали <strong>${projectCount}</strong> проект${projectCount === 1 ? '' : projectCount < 5 ? 'а' : 'ов'}! Вот что ещё можно сделать в TubeForge:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Генерируйте AI-обложки для видео</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Используйте ИИ для оптимизации метаданных и SEO</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">3</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Публикуйте видео на YouTube прямо из TubeForge</span>
+        </td></tr>
+      </table>
+      ${ctaButton('Открыть инструменты', `${APP_URL}/tools`)}
+    `, locale),
+  };
+}
+
+function daySevenTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+  const projectCount = Number(data.projectCount || 0);
+  const aiUsed = Number(data.aiUsed || 0);
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Your free plan usage — ready to scale up?',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          It's been a week! Here's your usage so far:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+          <tr style="background:#fafafa;">
+            <td style="padding:12px 16px;font-weight:600;color:#555;width:50%;">Projects created</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;">${projectCount} / 3</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">AI generations used</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;border-top:1px solid #eee;">${aiUsed} / 5</td>
+          </tr>
+        </table>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+          Upgrade to <strong>Pro</strong> for 25 projects, 100 AI generations per month, 1080p export, and no watermark.
+        </p>
+        ${ctaButton('Upgrade to Pro', `${APP_URL}/billing`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `Привет, ${name}!` : 'Привет!';
+  return {
+    subject: 'Ваш бесплатный план — готовы масштабироваться?',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Прошла неделя! Вот ваша статистика:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        <tr style="background:#fafafa;">
+          <td style="padding:12px 16px;font-weight:600;color:#555;width:50%;">Создано проектов</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;">${projectCount} / 3</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">AI генераций использовано</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;border-top:1px solid #eee;">${aiUsed} / 5</td>
+        </tr>
+      </table>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+        Обновитесь до <strong>Pro</strong>: 25 проектов, 100 AI генераций в месяц, экспорт в 1080p и без водяного знака.
+      </p>
+      ${ctaButton('Обновить до Pro', `${APP_URL}/billing`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
   'payment-receipt': paymentReceiptTemplate,
   'plan-change': planChangeTemplate,
   'referral-commission': referralCommissionTemplate,
+  'day-three': dayThreeTemplate,
+  'day-seven': daySevenTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {
@@ -362,4 +487,18 @@ export function getTemplate(template: EmailTemplate, data: TemplateData): Templa
     throw new Error(`[email] Unknown template: ${template}`);
   }
   return fn(data);
+}
+
+/**
+ * Convenience function for day-3 drip email.
+ */
+export function getDayThreeEmail(userName: string, projectCount: number, locale = 'ru'): TemplateResult {
+  return getTemplate('day-three', { name: userName, projectCount, locale });
+}
+
+/**
+ * Convenience function for day-7 drip email.
+ */
+export function getDaySevenEmail(userName: string, usage: { projectCount: number; aiUsed: number }, locale = 'ru'): TemplateResult {
+  return getTemplate('day-seven', { name: userName, projectCount: usage.projectCount, aiUsed: usage.aiUsed, locale });
 }

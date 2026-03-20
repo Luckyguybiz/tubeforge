@@ -13,6 +13,7 @@ import { pluralRu, timeAgo } from '@/lib/utils';
 import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -644,6 +645,8 @@ interface ProjectCardProps {
   renameValue: string;
   renameRef: React.RefObject<HTMLInputElement | null>;
   deleteIsPending: boolean;
+  selected: boolean;
+  selectMode: boolean;
   onNavigate: (id: string) => void;
   onDelete: (id: string) => void;
   onConfirmDelete: (id: string) => void;
@@ -653,6 +656,7 @@ interface ProjectCardProps {
   onCancelRename: () => void;
   onRenameChange: (val: string) => void;
   onDuplicate: (id: string) => void;
+  onToggleSelect: (id: string) => void;
 }
 
 const ProjectCard = memo(function ProjectCard({
@@ -664,6 +668,8 @@ const ProjectCard = memo(function ProjectCard({
   renameValue,
   renameRef,
   deleteIsPending,
+  selected,
+  selectMode,
   onNavigate,
   onDelete,
   onConfirmDelete,
@@ -673,6 +679,7 @@ const ProjectCard = memo(function ProjectCard({
   onCancelRename,
   onRenameChange,
   onDuplicate,
+  onToggleSelect,
 }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hovBtn, setHovBtn] = useState<string | null>(null);
@@ -701,9 +708,32 @@ const ProjectCard = memo(function ProjectCard({
         position: 'relative',
       }}
       onClick={() => {
+        if (selectMode) { onToggleSelect(p.id); return; }
         if (!isDeleting && !isRenaming) onNavigate(p.id);
       }}
     >
+      {/* Selection checkbox */}
+      {(selectMode || isHovered) && !isDeleting && !isRenaming && (
+        <div
+          onClick={(e) => { e.stopPropagation(); onToggleSelect(p.id); }}
+          style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 3,
+            width: 24, height: 24, borderRadius: 6,
+            background: selected ? C.accent : 'rgba(255,255,255,.9)',
+            border: `2px solid ${selected ? C.accent : 'rgba(0,0,0,.2)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'all .15s ease',
+            boxShadow: '0 1px 4px rgba(0,0,0,.15)',
+          }}
+        >
+          {selected && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </div>
+      )}
+
       {/* Thumbnail area */}
       <div style={{
         width: '100%',
@@ -1112,6 +1142,421 @@ function ReferralWidget({
   );
 }
 
+/* ── Plan Usage Widget ──────────────────────────────────── */
+
+function DashboardUsageBar({
+  label,
+  used,
+  total,
+  C,
+  isDark,
+}: {
+  label: string;
+  used: number;
+  total: number;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  isDark: boolean;
+}) {
+  const isInfinite = !isFinite(total);
+  const pct = isInfinite ? 0 : total > 0 ? Math.min((used / total) * 100, 100) : 0;
+  const barColor = pct > 90 ? '#ef4444' : pct > 60 ? '#eab308' : '#22c55e';
+  const displayTotal = isInfinite ? '\u221E' : String(total);
+
+  return (
+    <div style={{ flex: 1, minWidth: 120 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        <span style={{ fontSize: 12, fontWeight: 500, color: C.sub }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{used}/{displayTotal}</span>
+      </div>
+      <div style={{
+        height: 6,
+        borderRadius: 3,
+        background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          borderRadius: 3,
+          width: isInfinite ? '0%' : `${pct}%`,
+          background: barColor,
+          transition: 'width .4s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function PlanUsageWidget({
+  C,
+  t,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const isDark = useThemeStore((s) => s.isDark);
+  const router = useRouter();
+  const { plan, projectCount, aiCount, limits, isLoading } = usePlanLimits();
+
+  if (isLoading) return null;
+
+  const planLabel = getPlanLabel(plan, t);
+  const planGradient =
+    plan === 'STUDIO'
+      ? 'linear-gradient(135deg, #8b5cf6, #6366f1)'
+      : plan === 'PRO'
+        ? 'linear-gradient(135deg, #6366f1, #818cf8)'
+        : isDark
+          ? 'rgba(255,255,255,.08)'
+          : 'rgba(0,0,0,.06)';
+  const planColor = plan === 'FREE' ? C.sub : '#fff';
+
+  return (
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: '20px 22px',
+      marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('dashboard.yourPlan')}</span>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: planColor,
+            padding: '3px 10px',
+            borderRadius: 50,
+            background: planGradient,
+            letterSpacing: '.02em',
+          }}>
+            {planLabel}
+          </span>
+        </div>
+        {plan === 'FREE' && (
+          <button
+            onClick={() => router.push('/billing')}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 10,
+              border: 'none',
+              background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .2s ease',
+              boxShadow: '0 2px 10px rgba(99,102,241,.25)',
+            }}
+          >
+            {t('dashboard.upgradeCta')}
+          </button>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+        <DashboardUsageBar
+          label={t('dashboard.usageProjects')}
+          used={projectCount}
+          total={limits.projects}
+          C={C}
+          isDark={isDark}
+        />
+        <DashboardUsageBar
+          label={t('dashboard.usageAi')}
+          used={aiCount}
+          total={limits.ai}
+          C={C}
+          isDark={isDark}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ── Project Templates ─────────────────────────────────── */
+
+interface ProjectTemplate {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  scenes: Array<{ label: string; prompt: string; duration: number }>;
+}
+
+const PROJECT_TEMPLATES: ProjectTemplate[] = [
+  {
+    id: 'shorts',
+    name: 'YouTube Shorts',
+    icon: '\u25B6',
+    description: '3 scenes optimized for short-form vertical video',
+    scenes: [
+      { label: 'Hook', prompt: 'Attention-grabbing opening hook', duration: 5 },
+      { label: 'Main Content', prompt: 'Core message or demonstration', duration: 15 },
+      { label: 'CTA', prompt: 'Call to action — subscribe, like, follow', duration: 5 },
+    ],
+  },
+  {
+    id: 'tutorial',
+    name: 'Tutorial',
+    icon: '\uD83D\uDCDA',
+    description: '5 scenes: intro, step-by-step walkthrough, outro',
+    scenes: [
+      { label: 'Intro', prompt: 'Introduction — what the viewer will learn', duration: 10 },
+      { label: 'Step 1', prompt: 'First step of the tutorial', duration: 15 },
+      { label: 'Step 2', prompt: 'Second step of the tutorial', duration: 15 },
+      { label: 'Step 3', prompt: 'Third step of the tutorial', duration: 15 },
+      { label: 'Outro', prompt: 'Summary and closing remarks', duration: 10 },
+    ],
+  },
+  {
+    id: 'review',
+    name: 'Product Review',
+    icon: '\u2605',
+    description: '4 scenes: intro, features, pros/cons, verdict',
+    scenes: [
+      { label: 'Intro', prompt: 'Product introduction and first impressions', duration: 10 },
+      { label: 'Features', prompt: 'Key features overview and demonstration', duration: 20 },
+      { label: 'Pros & Cons', prompt: 'Advantages and disadvantages', duration: 15 },
+      { label: 'Verdict', prompt: 'Final verdict and recommendation', duration: 10 },
+    ],
+  },
+];
+
+/* ── Template Picker Modal ─────────────────────────────── */
+
+function TemplatePickerModal({
+  open,
+  onClose,
+  C,
+  t,
+}: {
+  open: boolean;
+  onClose: () => void;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const utils = trpc.useUtils();
+  const router = useRouter();
+  const [hov, setHov] = useState<string | null>(null);
+
+  const createProject = trpc.project.create.useMutation({
+    onSuccess: (project) => {
+      toast.success(t('dashboard.projectCreated'));
+      utils.project.list.invalidate();
+      utils.user.getProfile.invalidate();
+      onClose();
+      router.push(`/editor?projectId=${project.id}`);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const importProject = trpc.project.import.useMutation({
+    onSuccess: (result) => {
+      toast.success(t('dashboard.projectCreated'));
+      utils.project.list.invalidate();
+      utils.user.getProfile.invalidate();
+      onClose();
+      router.push(`/editor?projectId=${result.id}`);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const isCreating = createProject.isPending || importProject.isPending;
+
+  const handleSelectBlank = () => {
+    if (isCreating) return;
+    createProject.mutate({});
+  };
+
+  const handleSelectTemplate = (template: ProjectTemplate) => {
+    if (isCreating) return;
+    importProject.mutate({
+      formatVersion: 1,
+      project: {
+        title: template.name,
+        tags: [template.id],
+      },
+      scenes: template.scenes.map((s, i) => ({
+        label: s.label,
+        prompt: s.prompt,
+        duration: s.duration,
+        order: i,
+        model: 'standard' as const,
+      })),
+    });
+  };
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={() => { if (!isCreating) onClose(); }}
+        style={{
+          position: 'fixed', inset: 0,
+          background: C.overlay,
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          zIndex: 999,
+        }}
+      />
+
+      {/* Modal */}
+      <div style={{
+        position: 'fixed',
+        top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        width: '90%', maxWidth: 560,
+        maxHeight: '85dvh',
+        overflow: 'auto',
+        zIndex: 1000,
+        boxShadow: '0 24px 80px rgba(0,0,0,.3)',
+        fontFamily: 'var(--font-sans), sans-serif',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 22px 0',
+        }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
+            {t('dashboard.newProject')}
+          </h2>
+          <button
+            onClick={() => { if (!isCreating) onClose(); }}
+            disabled={isCreating}
+            style={{
+              background: 'none', border: 'none',
+              color: C.sub, cursor: isCreating ? 'not-allowed' : 'pointer',
+              padding: 4, display: 'flex', borderRadius: 6,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 22px 22px' }}>
+          <p style={{ fontSize: 13, color: C.sub, margin: '0 0 16px', lineHeight: 1.5 }}>
+            {t('dashboard.templatePickerDesc')}
+          </p>
+
+          {/* Blank project */}
+          <div
+            onClick={handleSelectBlank}
+            onMouseEnter={() => setHov('blank')}
+            onMouseLeave={() => setHov(null)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectBlank(); } }}
+            style={{
+              padding: '16px 18px',
+              borderRadius: 12,
+              border: `2px solid ${hov === 'blank' ? C.accent : C.border}`,
+              background: hov === 'blank' ? `${C.accent}08` : C.card,
+              cursor: isCreating ? 'wait' : 'pointer',
+              transition: 'all .15s ease',
+              marginBottom: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              opacity: isCreating ? 0.6 : 1,
+            }}
+          >
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: `${C.accent}12`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, fontSize: 20,
+            }}>
+              <IconPlus size={22} color={C.accent} />
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                {t('dashboard.blankProject')}
+              </div>
+              <div style={{ fontSize: 12, color: C.sub }}>
+                {t('dashboard.blankProjectDesc')}
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            margin: '16px 0',
+          }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <span style={{ fontSize: 11, color: C.dim, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              {t('dashboard.orTemplate')}
+            </span>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
+
+          {/* Templates */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {PROJECT_TEMPLATES.map((tpl) => (
+              <div
+                key={tpl.id}
+                onClick={() => handleSelectTemplate(tpl)}
+                onMouseEnter={() => setHov(tpl.id)}
+                onMouseLeave={() => setHov(null)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectTemplate(tpl); } }}
+                style={{
+                  padding: '14px 18px',
+                  borderRadius: 12,
+                  border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
+                  background: hov === tpl.id ? `${C.accent}06` : C.card,
+                  cursor: isCreating ? 'wait' : 'pointer',
+                  transition: 'all .15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  opacity: isCreating ? 0.6 : 1,
+                }}
+              >
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, fontSize: 20,
+                }}>
+                  {tpl.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                    {tpl.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.sub }}>
+                    {tpl.description}
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: C.dim,
+                  background: C.surface,
+                  padding: '3px 8px', borderRadius: 6,
+                  border: `1px solid ${C.border}`,
+                  flexShrink: 0, whiteSpace: 'nowrap',
+                }}>
+                  {tpl.scenes.length} {tpl.scenes.length === 1 ? 'scene' : 'scenes'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ── Main Dashboard Component ──────────────────────────── */
 
 export function Dashboard() {
@@ -1141,6 +1586,8 @@ export function Dashboard() {
   const renameRef = useRef<HTMLInputElement>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   /* ── Auto-trigger checkout when arriving from pricing CTA ── */
   const initCheckout = trpc.billing.createCheckout.useMutation({
@@ -1295,6 +1742,51 @@ export function Dashboard() {
     duplicateProject.mutate({ id });
   }, [duplicateProject]);
 
+  /* ── Bulk selection handlers ─────────────────── */
+  const selectMode = selectedIds.size > 0;
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    const allIds = (projects.data?.items ?? []).map((p) => p.id);
+    setSelectedIds((prev) => {
+      if (prev.size === allIds.length) return new Set();
+      return new Set(allIds);
+    });
+  }, [projects.data?.items]);
+
+  const handleCancelSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const ids = Array.from(selectedIds);
+      for (const id of ids) {
+        await deleteProject.mutateAsync({ id });
+      }
+      toast.success(t('dashboard.bulkDeleted'));
+      setSelectedIds(new Set());
+      utils.project.list.invalidate();
+      utils.user.getProfile.invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('dashboard.bulkDeleteError'));
+    } finally {
+      setBulkDeleting(false);
+    }
+  }, [selectedIds, deleteProject, t, utils]);
+
   /* ── Compute stats ────────────────────────────── */
   const user = profile.data;
   const plan = user?.plan ?? 'FREE';
@@ -1384,7 +1876,7 @@ export function Dashboard() {
           <button
             className="tf-dash-create-btn"
             data-tour="new-project"
-            onClick={() => createProject.mutate({})}
+            onClick={() => setTemplateModalOpen(true)}
             disabled={createProject.isPending}
             onMouseEnter={() => setHoveredBtn('create-main')}
             onMouseLeave={() => setHoveredBtn(null)}
@@ -1497,6 +1989,9 @@ export function Dashboard() {
               );
             })}
       </div>
+
+      {/* ── Plan Usage Widget ─────────────────────────── */}
+      <PlanUsageWidget C={C} t={t} />
 
       {/* ── Referral Widget ──────────────────────────── */}
       <ReferralWidget C={C} t={t} />
@@ -1691,7 +2186,7 @@ export function Dashboard() {
                     {t('dashboard.createFirstDesc')}
                   </p>
                   <button
-                    onClick={() => createProject.mutate({})}
+                    onClick={() => setTemplateModalOpen(true)}
                     disabled={createProject.isPending}
                     onMouseEnter={() => setHoveredBtn('create-empty')}
                     onMouseLeave={() => setHoveredBtn(null)}
@@ -1739,6 +2234,8 @@ export function Dashboard() {
                     renameValue={renameValue}
                     renameRef={renameRef}
                     deleteIsPending={deleteProject.isPending}
+                    selected={selectedIds.has(p.id)}
+                    selectMode={selectMode}
                     onNavigate={handleNavigate}
                     onDelete={handleSetDeleteId}
                     onConfirmDelete={handleConfirmDelete}
@@ -1748,6 +2245,7 @@ export function Dashboard() {
                     onCancelRename={handleCancelRename}
                     onRenameChange={handleRenameChange}
                     onDuplicate={handleDuplicate}
+                    onToggleSelect={handleToggleSelect}
                   />
                 ))}
               </div>
@@ -1845,6 +2343,103 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Bulk selection floating toolbar ──────── */}
+      {selectMode && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 14,
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          boxShadow: '0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.1)',
+          zIndex: 1000,
+          fontFamily: 'inherit',
+        }}>
+          {/* Select all checkbox */}
+          <button
+            onClick={handleSelectAll}
+            style={{
+              width: 22, height: 22, borderRadius: 5,
+              background: selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : 'transparent',
+              border: `2px solid ${selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : C.dim}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all .15s ease', flexShrink: 0,
+            }}
+            title={t('dashboard.selectAll')}
+          >
+            {selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </button>
+
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, whiteSpace: 'nowrap' }}>
+            {t('dashboard.selected')}: {selectedIds.size}
+          </span>
+
+          <div style={{ width: 1, height: 24, background: C.border, flexShrink: 0 }} />
+
+          <button
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              border: 'none',
+              background: '#ef4444',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: bulkDeleting ? 'wait' : 'pointer',
+              fontFamily: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              opacity: bulkDeleting ? 0.6 : 1,
+              transition: 'opacity .15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <IconTrash size={14} color="#fff" />
+            {bulkDeleting ? '...' : t('dashboard.deleteProject')}
+          </button>
+
+          <button
+            onClick={handleCancelSelection}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              background: 'transparent',
+              color: C.sub,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('dashboard.cancel')}
+          </button>
+        </div>
+      )}
+
+      {/* ── Template Picker Modal ────────────────── */}
+      <TemplatePickerModal
+        open={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+        C={C}
+        t={t}
+      />
     </div>
   );
 }

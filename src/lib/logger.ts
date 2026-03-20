@@ -78,3 +78,6 @@ export function createLogger(module: string) {
     error: (msg: string, data?: Record<string, unknown>) => log('error', module, msg, data),
   };
 }
+
+/** Default logger for ad-hoc usage without a dedicated module name */
+export const logger = createLogger('app');

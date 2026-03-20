@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import { db } from '@/server/db';
+import { createLogger } from '@/lib/logger';
+
+const shortsLog = createLogger('shorts-analytics');
 
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -308,7 +311,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ mock: false, shorts: shortsWithAvatars.slice(0, limit), cached: false });
   } catch (err) {
-    console.error('[shorts-analytics] Error:', err);
+    shortsLog.error('Fetch error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({
       mock: true,
       shorts: getMockData().slice(0, limit),
