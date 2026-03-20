@@ -15,6 +15,7 @@ import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trackEvent } from '@/lib/analytics-events';
+import { TEMPLATES, TEMPLATE_CATEGORIES, CATEGORY_INFO, type ProjectTemplate, type TemplateCategory } from '@/lib/templates';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { ActivityStreak } from '@/components/dashboard/ActivityStreak';
 import { UsageMilestones } from '@/components/dashboard/UsageMilestones';
@@ -1309,54 +1310,7 @@ function PlanUsageWidget({
   );
 }
 
-/* ── Project Templates ─────────────────────────────────── */
-
-interface ProjectTemplate {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  scenes: Array<{ label: string; prompt: string; duration: number }>;
-}
-
-const PROJECT_TEMPLATES: ProjectTemplate[] = [
-  {
-    id: 'shorts',
-    name: 'YouTube Shorts',
-    icon: '\u25B6',
-    description: '3 scenes optimized for short-form vertical video',
-    scenes: [
-      { label: 'Hook', prompt: 'Attention-grabbing opening hook', duration: 5 },
-      { label: 'Main Content', prompt: 'Core message or demonstration', duration: 15 },
-      { label: 'CTA', prompt: 'Call to action — subscribe, like, follow', duration: 5 },
-    ],
-  },
-  {
-    id: 'tutorial',
-    name: 'Tutorial',
-    icon: '\uD83D\uDCDA',
-    description: '5 scenes: intro, step-by-step walkthrough, outro',
-    scenes: [
-      { label: 'Intro', prompt: 'Introduction — what the viewer will learn', duration: 10 },
-      { label: 'Step 1', prompt: 'First step of the tutorial', duration: 15 },
-      { label: 'Step 2', prompt: 'Second step of the tutorial', duration: 15 },
-      { label: 'Step 3', prompt: 'Third step of the tutorial', duration: 15 },
-      { label: 'Outro', prompt: 'Summary and closing remarks', duration: 10 },
-    ],
-  },
-  {
-    id: 'review',
-    name: 'Product Review',
-    icon: '\u2605',
-    description: '4 scenes: intro, features, pros/cons, verdict',
-    scenes: [
-      { label: 'Intro', prompt: 'Product introduction and first impressions', duration: 10 },
-      { label: 'Features', prompt: 'Key features overview and demonstration', duration: 20 },
-      { label: 'Pros & Cons', prompt: 'Advantages and disadvantages', duration: 15 },
-      { label: 'Verdict', prompt: 'Final verdict and recommendation', duration: 10 },
-    ],
-  },
-];
+/* ── Project Templates (imported from src/lib/templates.ts) ── */
 
 /* ── Template Picker Modal ─────────────────────────────── */
 
@@ -1373,7 +1327,10 @@ function TemplatePickerModal({
 }) {
   const utils = trpc.useUtils();
   const router = useRouter();
+  const locale = useLocaleStore((s) => s.locale);
+  const isRu = locale === 'ru' || locale === 'kk';
   const [hov, setHov] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<TemplateCategory | null>(null);
 
   const createProject = trpc.project.create.useMutation({
     onSuccess: (project) => {
@@ -1389,7 +1346,7 @@ function TemplatePickerModal({
 
   const importProject = trpc.project.import.useMutation({
     onSuccess: (result) => {
-      trackEvent('project_create', { source: 'import' });
+      trackEvent('project_create', { source: 'template', template: result.id });
       toast.success(t('dashboard.projectCreated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -1411,8 +1368,8 @@ function TemplatePickerModal({
     importProject.mutate({
       formatVersion: 1,
       project: {
-        title: template.name,
-        tags: [template.id],
+        title: isRu ? template.name : template.nameEn,
+        tags: [template.id, template.category],
       },
       scenes: template.scenes.map((s, i) => ({
         label: s.label,
@@ -1423,6 +1380,10 @@ function TemplatePickerModal({
       })),
     });
   };
+
+  const filteredTemplates = categoryFilter
+    ? TEMPLATES.filter((tpl) => tpl.category === categoryFilter)
+    : TEMPLATES;
 
   if (!open) return null;
 
@@ -1448,9 +1409,11 @@ function TemplatePickerModal({
         background: C.surface,
         border: `1px solid ${C.border}`,
         borderRadius: 16,
-        width: '90%', maxWidth: 560,
-        maxHeight: '85dvh',
-        overflow: 'auto',
+        width: '92%', maxWidth: 720,
+        maxHeight: '88dvh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
         zIndex: 1000,
         boxShadow: '0 24px 80px rgba(0,0,0,.3)',
         fontFamily: 'var(--font-sans), sans-serif',
@@ -1459,6 +1422,7 @@ function TemplatePickerModal({
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '18px 22px 0',
+          flexShrink: 0,
         }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
             {t('dashboard.newProject')}
@@ -1478,8 +1442,8 @@ function TemplatePickerModal({
           </button>
         </div>
 
-        <div style={{ padding: '16px 22px 22px' }}>
-          <p style={{ fontSize: 13, color: C.sub, margin: '0 0 16px', lineHeight: 1.5 }}>
+        <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
+          <p style={{ fontSize: 13, color: C.sub, margin: '0 0 14px', lineHeight: 1.5 }}>
             {t('dashboard.templatePickerDesc')}
           </p>
 
@@ -1492,7 +1456,7 @@ function TemplatePickerModal({
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectBlank(); } }}
             style={{
-              padding: '16px 18px',
+              padding: '14px 16px',
               borderRadius: 12,
               border: `2px solid ${hov === 'blank' ? C.accent : C.border}`,
               background: hov === 'blank' ? `${C.accent}08` : C.card,
@@ -1506,7 +1470,7 @@ function TemplatePickerModal({
             }}
           >
             <div style={{
-              width: 44, height: 44, borderRadius: 12,
+              width: 42, height: 42, borderRadius: 11,
               background: `${C.accent}12`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, fontSize: 20,
@@ -1526,7 +1490,7 @@ function TemplatePickerModal({
           {/* Divider */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12,
-            margin: '16px 0',
+            margin: '14px 0',
           }}>
             <div style={{ flex: 1, height: 1, background: C.border }} />
             <span style={{ fontSize: 11, color: C.dim, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -1535,59 +1499,149 @@ function TemplatePickerModal({
             <div style={{ flex: 1, height: 1, background: C.border }} />
           </div>
 
-          {/* Templates */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {PROJECT_TEMPLATES.map((tpl) => (
-              <div
-                key={tpl.id}
-                onClick={() => handleSelectTemplate(tpl)}
-                onMouseEnter={() => setHov(tpl.id)}
-                onMouseLeave={() => setHov(null)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectTemplate(tpl); } }}
-                style={{
-                  padding: '14px 18px',
-                  borderRadius: 12,
-                  border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
-                  background: hov === tpl.id ? `${C.accent}06` : C.card,
-                  cursor: isCreating ? 'wait' : 'pointer',
-                  transition: 'all .15s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  opacity: isCreating ? 0.6 : 1,
-                }}
-              >
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, fontSize: 20,
-                }}>
-                  {tpl.icon}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-                    {tpl.name}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.sub }}>
-                    {tpl.description}
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: C.dim,
-                  background: C.surface,
-                  padding: '3px 8px', borderRadius: 6,
-                  border: `1px solid ${C.border}`,
-                  flexShrink: 0, whiteSpace: 'nowrap',
-                }}>
-                  {tpl.scenes.length} {tpl.scenes.length === 1 ? 'scene' : 'scenes'}
-                </span>
-              </div>
-            ))}
+          {/* Category filter pills */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+            <button
+              onClick={() => setCategoryFilter(null)}
+              style={{
+                padding: '5px 14px',
+                borderRadius: 20,
+                border: `1px solid ${!categoryFilter ? C.accent : C.border}`,
+                background: !categoryFilter ? `${C.accent}14` : 'transparent',
+                color: !categoryFilter ? C.accent : C.sub,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all .15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {isRu ? 'Все' : 'All'}
+            </button>
+            {TEMPLATE_CATEGORIES.map((cat) => {
+              const info = CATEGORY_INFO[cat];
+              const isActive = categoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(isActive ? null : cat)}
+                  style={{
+                    padding: '5px 14px',
+                    borderRadius: 20,
+                    border: `1px solid ${isActive ? info.color : C.border}`,
+                    background: isActive ? `${info.color}14` : 'transparent',
+                    color: isActive ? info.color : C.sub,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all .15s ease',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isRu ? info.name : info.nameEn}
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {/* Scrollable template grid */}
+        <div style={{ overflowY: 'auto', padding: '0 22px 22px', flex: 1 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
+            gap: 10,
+          }}>
+            {filteredTemplates.map((tpl) => {
+              const catInfo = CATEGORY_INFO[tpl.category];
+              return (
+                <div
+                  key={tpl.id}
+                  onClick={() => handleSelectTemplate(tpl)}
+                  onMouseEnter={() => setHov(tpl.id)}
+                  onMouseLeave={() => setHov(null)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectTemplate(tpl); } }}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: 12,
+                    border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
+                    background: hov === tpl.id ? `${C.accent}06` : C.card,
+                    cursor: isCreating ? 'wait' : 'pointer',
+                    transition: 'all .15s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    opacity: isCreating ? 0.6 : 1,
+                  }}
+                >
+                  {/* Top row: icon + name + category badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: C.surface,
+                      border: `1px solid ${C.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, fontSize: 18,
+                    }}>
+                      {tpl.icon}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+                        {isRu ? tpl.name : tpl.nameEn}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div style={{
+                    fontSize: 12, color: C.sub, lineHeight: 1.5,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical' as const,
+                    overflow: 'hidden',
+                  }}>
+                    {isRu ? tpl.description : tpl.descriptionEn}
+                  </div>
+
+                  {/* Bottom row: category badge + scene count */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700,
+                      color: catInfo.color,
+                      background: `${catInfo.color}12`,
+                      padding: '2px 8px', borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '.5px',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {isRu ? catInfo.name : catInfo.nameEn}
+                    </span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, color: C.dim,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {tpl.sceneCount} {isRu
+                        ? (tpl.sceneCount === 1 ? 'сцена' : tpl.sceneCount < 5 ? 'сцены' : 'сцен')
+                        : (tpl.sceneCount === 1 ? 'scene' : 'scenes')}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filteredTemplates.length === 0 && (
+            <div style={{
+              textAlign: 'center', padding: '24px 0',
+              color: C.dim, fontSize: 13,
+            }}>
+              {isRu ? 'Нет шаблонов в этой категории' : 'No templates in this category'}
+            </div>
+          )}
         </div>
       </div>
     </>
