@@ -188,6 +188,14 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <circle cx="10" cy="12" r="2" fill={c} opacity=".5" />
     </svg>
   ),
+  blog: (c) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="2" width="14" height="16" rx="2.5" stroke={c} strokeWidth="1.5" opacity=".85" />
+      <path d="M6.5 6H13.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".7" />
+      <path d="M6.5 9.5H13.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".5" />
+      <path d="M6.5 13H10.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".35" />
+    </svg>
+  ),
   analytics: (c, a) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
@@ -259,6 +267,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
     {
       label: t('sidebar.system'),
       items: [
+        { id: 'blog', label: t('nav.blog') },
         { id: 'referral', label: t('nav.referral') },
         { id: 'settings', label: t('nav.settings') },
         { id: 'billing', label: t('nav.billing') },
@@ -285,6 +294,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   'shorts-analytics': ['green', 'cyan'],
   'tiktok-analytics': ['cyan', 'pink'],
   analytics: ['cyan', 'purple'],
+  blog: ['blue', 'purple'],
   media: ['blue', 'purple'],
   brand: ['pink', 'orange'],
 };

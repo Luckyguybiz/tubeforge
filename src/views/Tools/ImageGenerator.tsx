@@ -508,6 +508,7 @@ export function ImageGenerator() {
                     <img
                       src={img.url}
                       alt={img.prompt}
+                      loading="lazy"
                       style={{
                         width: '100%',
                         height: '100%',

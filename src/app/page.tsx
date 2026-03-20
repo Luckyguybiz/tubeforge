@@ -7,6 +7,7 @@ import {
   ScrollRevealProvider,
   FaqAccordion,
   ClientCookieConsent,
+  StickyMobileCTA,
 } from "@/components/landing";
 
 /* ── SEO Metadata ─────────────────────────────────────────── */
@@ -116,6 +117,114 @@ const STATS = [
   { value: "Next-Gen", label: "ИИ-технологии" },
   { value: "99.9%", label: "uptime" },
   { value: "EU", label: "защита данных" },
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: "1",
+    title: "\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0438\u0434\u0435\u044E",
+    desc: "\u0420\u0430\u0441\u0441\u043A\u0430\u0436\u0438\u0442\u0435 \u0418\u0418, \u043A\u0430\u043A\u043E\u0435 \u0432\u0438\u0434\u0435\u043E \u0432\u044B \u0445\u043E\u0442\u0438\u0442\u0435 \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u2014 \u0442\u0435\u043C\u0430, \u0441\u0442\u0438\u043B\u044C, \u0446\u0435\u043B\u0435\u0432\u0430\u044F \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F. \u0418\u0418 \u043F\u043E\u043D\u0438\u043C\u0430\u0435\u0442 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+      </svg>
+    ),
+  },
+  {
+    step: "2",
+    title: "AI \u0441\u043E\u0437\u0434\u0430\u0451\u0442 \u043A\u043E\u043D\u0442\u0435\u043D\u0442",
+    desc: "\u041F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0430 \u0433\u0435\u043D\u0435\u0440\u0438\u0440\u0443\u0435\u0442 \u0441\u043A\u0440\u0438\u043F\u0442, \u043E\u0431\u043B\u043E\u0436\u043A\u0443, \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0438 \u0442\u0435\u0433\u0438 \u2014 \u0432\u0441\u0451 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u043F\u043E\u0434 YouTube.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+      </svg>
+    ),
+  },
+  {
+    step: "3",
+    title: "\u041F\u0443\u0431\u043B\u0438\u043A\u0443\u0439\u0442\u0435 \u043D\u0430 YouTube",
+    desc: "\u0413\u043E\u0442\u043E\u0432\u044B\u0439 \u043A\u043E\u043D\u0442\u0435\u043D\u0442 \u2014 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0439\u0442\u0435 \u043D\u0430 \u043A\u0430\u043D\u0430\u043B \u0438 \u043D\u0430\u0431\u043B\u044E\u0434\u0430\u0439\u0442\u0435 \u0437\u0430 \u0440\u043E\u0441\u0442\u043E\u043C \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432 \u0432 \u0440\u0435\u0430\u043B\u044C\u043D\u043E\u043C \u0432\u0440\u0435\u043C\u0435\u043D\u0438.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </svg>
+    ),
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "\u0410\u043B\u0435\u043A\u0441\u0435\u0439 \u041C.",
+    role: "YouTuber, 150K \u043F\u043E\u0434\u043F\u0438\u0441\u0447\u0438\u043A\u043E\u0432",
+    text: "TubeForge \u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E \u0437\u0430\u043C\u0435\u043D\u0438\u043B \u043C\u043D\u0435 5 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0445 \u0441\u0435\u0440\u0432\u0438\u0441\u043E\u0432. \u041E\u0431\u043B\u043E\u0436\u043A\u0438, SEO, \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430 \u2014 \u0432\u0441\u0451 \u0432 \u043E\u0434\u043D\u043E\u043C \u043C\u0435\u0441\u0442\u0435. \u042D\u043A\u043E\u043D\u043E\u043C\u043B\u044E \u043C\u0438\u043D\u0438\u043C\u0443\u043C 3 \u0447\u0430\u0441\u0430 \u0432 \u043D\u0435\u0434\u0435\u043B\u044E.",
+  },
+  {
+    name: "\u041C\u0430\u0440\u0438\u043D\u0430 \u041A.",
+    role: "\u041C\u0430\u0440\u043A\u0435\u0442\u043E\u043B\u043E\u0433",
+    text: "\u0418\u0418-\u0433\u0435\u043D\u0435\u0440\u0430\u0442\u043E\u0440 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0439 \u043F\u0440\u043E\u0441\u0442\u043E \u0432\u043E\u043B\u0448\u0435\u0431\u043D\u044B\u0439 \u2014 \u043A\u0430\u0436\u0434\u043E\u0435 \u0432\u0438\u0434\u0435\u043E \u0441 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u0433\u0430\u043C\u0438 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432. \u0420\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u044E \u0432\u0441\u0435\u043C \u043C\u0430\u0440\u043A\u0435\u0442\u043E\u043B\u043E\u0433\u0430\u043C!",
+  },
+  {
+    name: "\u0414\u043C\u0438\u0442\u0440\u0438\u0439 \u0420.",
+    role: "\u0411\u043B\u043E\u0433\u0435\u0440",
+    text: "VPN \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0431\u0435\u0437\u0443\u043F\u0440\u0435\u0447\u043D\u043E, \u0430 \u043A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430 \u043D\u0430 Studio-\u0442\u0430\u0440\u0438\u0444\u0435 \u2014 \u0438\u043C\u0435\u043D\u043D\u043E \u0442\u043E, \u0447\u0442\u043E \u043D\u0443\u0436\u043D\u043E \u043C\u043E\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u0435. \u041B\u0443\u0447\u0448\u0430\u044F \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0430 \u0434\u043B\u044F \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u043E\u0432!",
+  },
+];
+
+const COMPARISON_FEATURES = [
+  "\u0418\u0418 \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0432\u0438\u0434\u0435\u043E",
+  "YouTube \u0438\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F",
+  "\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D",
+  "\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441",
+  "\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430",
+  "\u0428\u0430\u0431\u043B\u043E\u043D\u044B",
+] as const;
+
+type ComparisonEntry = { name: string; values: boolean[] };
+
+const COMPARISON_DATA: ComparisonEntry[] = [
+  { name: "TubeForge", values: [true, true, true, true, true, true] },
+  { name: "Canva", values: [false, false, true, false, true, true] },
+  { name: "CapCut", values: [true, false, true, false, false, true] },
+  { name: "InVideo", values: [true, false, false, false, true, true] },
+];
+
+const TARGET_AUDIENCE = [
+  {
+    title: "YouTube \u0441\u043E\u0437\u0434\u0430\u0442\u0435\u043B\u0438",
+    desc: "\u041F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B \u0434\u043B\u044F \u0440\u043E\u0441\u0442\u0430 \u043A\u0430\u043D\u0430\u043B\u0430 \u0438 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u0438 \u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430 \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u0418\u0418.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </svg>
+    ),
+  },
+  {
+    title: "\u041C\u0430\u0440\u043A\u0435\u0442\u043E\u043B\u043E\u0433\u0438",
+    desc: "\u0411\u044B\u0441\u0442\u0440\u043E\u0435 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E\u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430 \u0434\u043B\u044F \u0440\u0435\u043A\u043B\u0430\u043C\u043D\u044B\u0445 \u043A\u0430\u043C\u043F\u0430\u043D\u0438\u0439 \u0438 \u0441\u043E\u0446\u0441\u0435\u0442\u0435\u0439.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    ),
+  },
+  {
+    title: "\u0410\u0433\u0435\u043D\u0442\u0441\u0442\u0432\u0430",
+    desc: "\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430, API-\u0434\u043E\u0441\u0442\u0443\u043F \u0438 \u043C\u0443\u043B\u044C\u0442\u0438-\u043A\u0430\u043D\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C \u0434\u043B\u044F \u043C\u0430\u0441\u0448\u0442\u0430\u0431\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u0440\u043E\u0434\u0430\u043A\u0448\u043D\u0430.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    title: "\u041F\u0440\u0435\u043F\u043E\u0434\u0430\u0432\u0430\u0442\u0435\u043B\u0438",
+    desc: "\u0421\u043E\u0437\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u043E\u0431\u0443\u0447\u0430\u044E\u0449\u0438\u0435 \u0432\u0438\u0434\u0435\u043E \u0438 \u043E\u043D\u043B\u0430\u0439\u043D-\u043A\u0443\u0440\u0441\u044B \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u0418\u0418 \u0431\u0435\u0437 \u0441\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0445 \u043D\u0430\u0432\u044B\u043A\u043E\u0432.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </svg>
+    ),
+  },
 ];
 
 const PLANS = [
@@ -297,6 +406,134 @@ export default function LandingPage() {
               >
                 {stat.label}
               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== HOW IT WORKS (Y1) ===== */}
+      <section
+        style={{
+          padding: "120px 24px",
+          maxWidth: 1200,
+          margin: "0 auto",
+        }}
+      >
+        <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 72 }}>
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#818cf8",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              marginBottom: 16,
+            }}
+          >
+            Как это работает
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(32px, 5vw, 52px)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              margin: "0 0 16px",
+              color: "#ffffff",
+            }}
+          >
+            Три простых шага
+          </h2>
+          <p
+            style={{
+              fontSize: 18,
+              color: "rgba(255,255,255,0.45)",
+              maxWidth: 520,
+              margin: "0 auto",
+              lineHeight: 1.6,
+            }}
+          >
+            От идеи до публикации за считанные минуты
+          </p>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 24,
+          }}
+          className="how-it-works-grid"
+        >
+          {HOW_IT_WORKS.map((item, i) => (
+            <div
+              key={i}
+              className="tf-reveal tf-feature-card"
+              style={{
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 20,
+                padding: "40px 32px",
+                textAlign: "center",
+                transition: "all 0.4s cubic-bezier(.4,0,.2,1)",
+                cursor: "default",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05))",
+                  border: "1px solid rgba(99,102,241,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "#818cf8",
+                }}
+              >
+                {item.step}
+              </div>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: "rgba(99,102,241,0.08)",
+                  border: "1px solid rgba(99,102,241,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                }}
+              >
+                {item.icon}
+              </div>
+              <h3
+                style={{
+                  fontSize: 19,
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  margin: "0 0 10px",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {item.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: 15,
+                  color: "rgba(255,255,255,0.45)",
+                  lineHeight: 1.65,
+                  margin: 0,
+                }}
+              >
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -508,6 +745,282 @@ export default function LandingPage() {
                 >
                   {tool.desc}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== COMPARISON TABLE (Y3) ===== */}
+      <section
+        style={{
+          padding: "120px 24px",
+          maxWidth: 1000,
+          margin: "0 auto",
+        }}
+      >
+        <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 72 }}>
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#818cf8",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              marginBottom: 16,
+            }}
+          >
+            Сравнение
+          </p>
+          <h2
+            style={{
+              fontSize: "clamp(32px, 5vw, 52px)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              margin: "0 0 16px",
+              color: "#ffffff",
+            }}
+          >
+            TubeForge vs альтернативы
+          </h2>
+          <p
+            style={{
+              fontSize: 18,
+              color: "rgba(255,255,255,0.45)",
+              maxWidth: 520,
+              margin: "0 auto",
+              lineHeight: 1.6,
+            }}
+          >
+            Почему креаторы выбирают TubeForge
+          </p>
+        </div>
+        <div
+          className="tf-reveal"
+          style={{
+            overflowX: "auto",
+            borderRadius: 20,
+            border: "1px solid rgba(255,255,255,0.06)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              minWidth: 600,
+            }}
+          >
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    textAlign: "left",
+                    padding: "20px 24px",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.5)",
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  Функция
+                </th>
+                {COMPARISON_DATA.map((col, ci) => (
+                  <th
+                    key={ci}
+                    style={{
+                      textAlign: "center",
+                      padding: "20px 16px",
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: ci === 0 ? "#818cf8" : "rgba(255,255,255,0.7)",
+                      borderBottom: "1px solid rgba(255,255,255,0.06)",
+                      ...(ci === 0
+                        ? { background: "rgba(99,102,241,0.06)" }
+                        : {}),
+                    }}
+                  >
+                    {col.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON_FEATURES.map((feature, fi) => (
+                <tr key={fi}>
+                  <td
+                    style={{
+                      padding: "16px 24px",
+                      fontSize: 14,
+                      color: "rgba(255,255,255,0.6)",
+                      borderBottom:
+                        fi < COMPARISON_FEATURES.length - 1
+                          ? "1px solid rgba(255,255,255,0.04)"
+                          : "none",
+                    }}
+                  >
+                    {feature}
+                  </td>
+                  {COMPARISON_DATA.map((col, ci) => (
+                    <td
+                      key={ci}
+                      style={{
+                        textAlign: "center",
+                        padding: "16px",
+                        borderBottom:
+                          fi < COMPARISON_FEATURES.length - 1
+                            ? "1px solid rgba(255,255,255,0.04)"
+                            : "none",
+                        ...(ci === 0
+                          ? { background: "rgba(99,102,241,0.06)" }
+                          : {}),
+                      }}
+                    >
+                      {col.values[fi] ? (
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={ci === 0 ? "#818cf8" : "#4ade80"}
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: "inline-block" }}
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: "inline-block" }}
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ===== FOR WHOM? (Y4) ===== */}
+      <section
+        style={{
+          padding: "120px 24px",
+          background: "rgba(255,255,255,0.015)",
+          borderTop: "1px solid rgba(255,255,255,0.04)",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 72 }}>
+            <p
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#818cf8",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                marginBottom: 16,
+              }}
+            >
+              Аудитория
+            </p>
+            <h2
+              style={{
+                fontSize: "clamp(32px, 5vw, 52px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.1,
+                margin: "0 0 16px",
+                color: "#ffffff",
+              }}
+            >
+              Для кого TubeForge?
+            </h2>
+            <p
+              style={{
+                fontSize: 18,
+                color: "rgba(255,255,255,0.45)",
+                maxWidth: 520,
+                margin: "0 auto",
+                lineHeight: 1.6,
+              }}
+            >
+              Инструменты для каждого, кто создаёт видеоконтент
+            </p>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {TARGET_AUDIENCE.map((item, i) => (
+              <div
+                key={i}
+                className="tf-reveal tf-feature-card"
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 20,
+                  padding: "36px 32px",
+                  transition: "all 0.4s cubic-bezier(.4,0,.2,1)",
+                  cursor: "default",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 14,
+                    background: "rgba(99,102,241,0.08)",
+                    border: "1px solid rgba(99,102,241,0.12)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 24,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <h3
+                  style={{
+                    fontSize: 19,
+                    fontWeight: 700,
+                    color: "#ffffff",
+                    margin: "0 0 10px",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: 15,
+                    color: "rgba(255,255,255,0.45)",
+                    lineHeight: 1.65,
+                    margin: 0,
+                  }}
+                >
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -743,10 +1256,78 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          {/* Guarantee Badge (Y6) */}
+          <div
+            className="tf-reveal"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 16,
+              marginTop: 48,
+              padding: "24px 32px",
+              borderRadius: 16,
+              background: "rgba(99,102,241,0.04)",
+              border: "1px solid rgba(99,102,241,0.12)",
+              maxWidth: 480,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            <div
+              style={{
+                flexShrink: 0,
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                background: "rgba(99,102,241,0.1)",
+                border: "1px solid rgba(99,102,241,0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#818cf8"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  marginBottom: 4,
+                }}
+              >
+                14 дней гарантия возврата
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.4)",
+                  lineHeight: 1.5,
+                }}
+              >
+                Не понравится — вернём деньги без вопросов
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS ===== */}
+      {/* ===== TESTIMONIALS (Y2) ===== */}
       <section
         style={{
           padding: "120px 24px",
@@ -778,7 +1359,7 @@ export default function LandingPage() {
                 margin: 0,
               }}
             >
-              Что говорят креаторы
+              Что говорят создатели контента
             </h2>
           </div>
           <div
@@ -788,32 +1369,19 @@ export default function LandingPage() {
               gap: 16,
             }}
           >
-            {[
-              {
-                name: "Алексей М.",
-                role: "150K подписчиков",
-                text: "TubeForge заменил мне 5 отдельных сервисов. Обложки, SEO, аналитика — всё в одном месте. Экономлю минимум 3 часа в неделю.",
-              },
-              {
-                name: "Марина К.",
-                role: "YouTube-блогер",
-                text: "VPN работает безупречно — YouTube грузится мгновенно. А ИИ-генератор описаний просто волшебный, каждое видео выходит в топ.",
-              },
-              {
-                name: "Дмитрий Р.",
-                role: "Продакшн-студия",
-                text: "Взяли Studio-тариф для команды из 8 человек. API-доступ и совместная работа — именно то, что нам было нужно. Рекомендую.",
-              },
-            ].map((testimonial, i) => (
+            {TESTIMONIALS.map((testimonial, i) => (
               <div
                 key={i}
-                className="tf-reveal"
+                className="tf-reveal tf-feature-card"
                 style={{
                   background: "rgba(255,255,255,0.02)",
                   border: "1px solid rgba(255,255,255,0.06)",
                   borderRadius: 20,
                   padding: "36px 32px",
-                  transition: "all 0.3s ease",
+                  transition: "all 0.4s cubic-bezier(.4,0,.2,1)",
+                  cursor: "default",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
                 <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
@@ -1225,6 +1793,9 @@ export default function LandingPage() {
 
       <ClientCookieConsent />
 
+      {/* Sticky Mobile CTA (Y5) */}
+      <StickyMobileCTA />
+
       {/* ===== GLOBAL STYLES ===== */}
       <style>{`
         @keyframes tf-gradient-shift {
@@ -1299,6 +1870,13 @@ export default function LandingPage() {
           .stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 32px !important;
+          }
+        }
+
+        /* Sticky mobile CTA - show only on mobile */
+        @media (max-width: 768px) {
+          .sticky-mobile-cta {
+            display: block !important;
           }
         }
 

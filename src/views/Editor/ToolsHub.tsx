@@ -851,17 +851,20 @@ const CategoryTab = memo(function CategoryTab({
   label,
   active,
   C,
-  onClick,
+  categoryKey,
+  onSelect,
 }: {
   label: string;
   active: boolean;
   C: Theme;
-  onClick: () => void;
+  categoryKey: ToolCategory;
+  onSelect: (key: ToolCategory) => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const handleClick = useCallback(() => onSelect(categoryKey), [onSelect, categoryKey]);
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -918,7 +921,7 @@ export function ToolsHub() {
     }
     // Available first, then coming soon
     return [...list].sort((a, b) => (a.available === b.available ? 0 : a.available ? -1 : 1));
-  }, [search, category]);
+  }, [TOOLS, search, category]);
 
   const handleOpen = useCallback(
     (tool: ToolDef) => {
@@ -929,8 +932,12 @@ export function ToolsHub() {
     [router],
   );
 
-  const availableCount = TOOLS.filter((t) => t.available).length;
-  const comingSoonCount = TOOLS.filter((t) => !t.available).length;
+  const handleSetCategory = useCallback((key: ToolCategory) => {
+    setCategory(key);
+  }, []);
+
+  const availableCount = useMemo(() => TOOLS.filter((t) => t.available).length, [TOOLS]);
+  const comingSoonCount = useMemo(() => TOOLS.filter((t) => !t.available).length, [TOOLS]);
 
   return (
     <div style={{
@@ -1094,7 +1101,8 @@ export function ToolsHub() {
             label={cat.label}
             active={category === cat.key}
             C={C}
-            onClick={() => setCategory(cat.key)}
+            categoryKey={cat.key}
+            onSelect={handleSetCategory}
           />
         ))}
       </div>
