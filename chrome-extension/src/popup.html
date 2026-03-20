@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400">
+  <link rel="stylesheet" href="popup.css">
+  <title>TubeForge</title>
+</head>
+<body>
+  <div class="popup">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-logo">
+        <img src="../icons/icon32.png" alt="TubeForge" width="24" height="24">
+        <span class="header-title">TubeForge</span>
+      </div>
+      <span class="header-version">v1.0</span>
+    </header>
+
+    <!-- Loading State -->
+    <div id="state-loading" class="state">
+      <div class="spinner-container">
+        <svg class="spinner" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
+        </svg>
+      </div>
+      <p class="state-text">Извлечение данных видео…</p>
+    </div>
+
+    <!-- Error / Not YouTube -->
+    <div id="state-error" class="state" style="display:none">
+      <div class="error-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p class="state-text" id="error-message">Откройте видео на YouTube,<br>чтобы скачать его.</p>
+      <button id="btn-retry" class="btn btn-secondary">Попробовать снова</button>
+    </div>
+
+    <!-- Video Found -->
+    <div id="state-video" class="state" style="display:none">
+      <!-- Video info card -->
+      <div class="video-card">
+        <img id="video-thumb" class="video-thumb" src="" alt="">
+        <div class="video-info">
+          <h2 id="video-title" class="video-title"></h2>
+          <p class="video-meta">
+            <span id="video-author"></span>
+            <span class="meta-sep">·</span>
+            <span id="video-duration"></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Format tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="combined">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          Видео
+        </button>
+        <button class="tab" data-tab="video-only">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+            <line x1="7" y1="2" x2="7" y2="22"/>
+            <line x1="17" y1="2" x2="17" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="2" y1="7" x2="7" y2="7"/>
+            <line x1="2" y1="17" x2="7" y2="17"/>
+            <line x1="17" y1="7" x2="22" y2="7"/>
+            <line x1="17" y1="17" x2="22" y2="17"/>
+          </svg>
+          HD
+        </button>
+        <button class="tab" data-tab="audio">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+          Аудио
+        </button>
+      </div>
+
+      <!-- Format list -->
+      <div id="format-list" class="format-list"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="https://tubeforge.co" target="_blank">tubeforge.co</a>
+      <span class="footer-sep">·</span>
+      <span class="footer-hint">Скачивание через ваш браузер</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "TubeForge — YouTube Video Downloader",
+  "short_name": "TubeForge",
+  "version": "1.0.0",
+  "description": "Скачивайте YouTube видео в один клик. Выбирайте качество от 360p до 1080p или только аудио MP3. Быстро, бесплатно, без рекламы.",
+  "author": "TubeForge",
+  "homepage_url": "https://tubeforge.co",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*",
+    "https://m.youtube.com/*",
+    "https://*.googlevideo.com/*",
+    "https://api.cobalt.tools/*"
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "TubeForge — Скачать видео"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/watch*",
+        "https://www.youtube.com/shorts/*",
+        "https://m.youtube.com/watch*"
+      ],
+      "js": ["src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"]
+    }
+  ]
+}
