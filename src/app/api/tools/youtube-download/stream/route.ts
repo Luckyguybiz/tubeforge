@@ -404,7 +404,7 @@ export async function GET(req: NextRequest) {
   // ── Mode A: Resolve videoId → download URL ─────────────────────────
   if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
     console.log('[YT-STREAM] === START ===', { videoId, quality, audioOnly });
-    console.log('[YT-STREAM] ENV:', { COBALT_API_URL: process.env.COBALT_API_URL, YT_DLP_API_URL: process.env.YT_DLP_API_URL });
+    // Debug ENV logging removed for security
     log.info('Resolving video', { videoId, quality, audioOnly });
 
     // Strategy 1: Cobalt API (self-hosted first, then public with auth)
