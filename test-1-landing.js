@@ -19,7 +19,7 @@ const puppeteer = require('puppeteer');
     });
 
     // Navigate to landing page
-    const response = await page.goto('https://tubeforge-omega.vercel.app', {
+    const response = await page.goto('https://tubeforge.co', {
       waitUntil: 'networkidle2',
       timeout: 30000
     });

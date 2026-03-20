@@ -10,7 +10,7 @@ const puppeteer = require('puppeteer');
     browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
     const page = await browser.newPage();
 
-    await page.goto('https://tubeforge-omega.vercel.app', { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto('https://tubeforge.co', { waitUntil: 'networkidle2', timeout: 30000 });
 
     // Test various API routes
     const apiRoutes = [

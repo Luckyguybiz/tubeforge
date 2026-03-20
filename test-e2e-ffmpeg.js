@@ -5,7 +5,7 @@
  */
 const puppeteer = require('puppeteer');
 
-const BASE_URL = 'https://tubeforge-omega.vercel.app';
+const BASE_URL = 'https://tubeforge.co';
 
 const FFMPEG_JS_URL = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js';
 const UTIL_JS_URL = 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js';

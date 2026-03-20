@@ -19,7 +19,7 @@ const puppeteer = require('puppeteer');
     page.on('console', msg => consoleLogs.push(`[${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => consoleLogs.push(`[pageerror] ${err.message}`));
 
-    await page.goto('https://tubeforge-omega.vercel.app', { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto('https://tubeforge.co', { waitUntil: 'networkidle2', timeout: 30000 });
 
     const formats = [
       { ext: 'mp4', args: ['-f', 'rawvideo', '-pix_fmt', 'yuv420p', '-s', '64x64', '-r', '2', '-i', 'input.raw', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p', '-an', '-y', 'output.mp4'] },

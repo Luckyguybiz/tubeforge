@@ -9,7 +9,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mon
 export const metadata: Metadata = {
   title: { default: 'TubeForge — ИИ-студия для YouTube', template: '%s | TubeForge' },
   description: 'ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge-luckyguybizs-projects.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge.co'),
   openGraph: {
     title: 'TubeForge — ИИ-студия для YouTube',
     description: 'Создавайте профессиональный YouTube-контент с ИИ. Генерация обложек, оптимизация метаданных, видеомонтаж.',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
   },
   alternates: {
-    canonical: 'https://tubeforge.ai',
+    canonical: 'https://tubeforge.co',
   },
   twitter: {
     card: 'summary_large_image',
@@ -41,7 +41,7 @@ const jsonLd = {
   description: 'ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных.',
   applicationCategory: 'MultimediaApplication',
   operatingSystem: 'Web',
-  url: 'https://tubeforge.ai',
+  url: 'https://tubeforge.co',
   offers: [
     { '@type': 'Offer', price: '0', priceCurrency: 'RUB', name: 'Free' },
     { '@type': 'Offer', price: '990', priceCurrency: 'RUB', name: 'Pro' },
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Prevent flash of wrong theme: read persisted mode before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=JSON.parse(localStorage.getItem('tubeforge-theme')||'{}');var m=s.state&&s.state.mode||'dark';var d=m==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches:m==='dark';document.documentElement.style.colorScheme=d?'dark':'light';document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.style.background=d?'#06060b':'#f3f3f7'}catch(e){}})()`
+            __html: `(function(){try{var s=JSON.parse(localStorage.getItem('tubeforge-theme')||'{}');var m=s.state&&s.state.mode||'light';var d=m==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches:m==='dark';document.documentElement.style.colorScheme=d?'dark':'light';document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.style.background=d?'#06060b':'#f3f3f7'}catch(e){}})()`
           }}
         />
       </head>

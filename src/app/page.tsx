@@ -486,7 +486,7 @@ export default function LandingPage() {
             description: 'ИИ-студия для YouTube-креаторов. Генерация видео, редактирование обложек, SEO-оптимизация метаданных и аналитика канала.',
             applicationCategory: 'MultimediaApplication',
             operatingSystem: 'Web',
-            url: 'https://tubeforge.ai',
+            url: 'https://tubeforge.co',
             offers: [
               {
                 '@type': 'Offer',

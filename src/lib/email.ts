@@ -9,9 +9,9 @@
 
 const isDev = process.env.NODE_ENV !== 'production';
 
-/** Resolved sender address — falls back to noreply@tubeforge.app */
+/** Resolved sender address — falls back to noreply@tubeforge.co */
 function getFrom(): string {
-  return process.env.EMAIL_FROM || 'noreply@tubeforge.app';
+  return process.env.EMAIL_FROM || 'noreply@tubeforge.co';
 }
 
 /** Resolved SMTP relay / webhook endpoint */
@@ -149,7 +149,7 @@ export function welcomeEmail(name: string | null): SendEmailOptions & { to: '' }
       <li style="margin-bottom:8px;">Generate AI videos from text prompts</li>
       <li style="margin-bottom:8px;">Share your referral code and earn commissions</li>
     </ul>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.app'}/dashboard"
+    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.co'}/dashboard"
        style="display:inline-block;padding:12px 28px;background:#ff2d55;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
       Go to Dashboard
     </a>
@@ -176,7 +176,7 @@ export function planUpgradeEmail(name: string | null, plan: 'PRO' | 'STUDIO'): S
       Thank you for supporting TubeForge. If you have any questions about your
       plan, just reply to this email.
     </p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.app'}/dashboard"
+    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.co'}/dashboard"
        style="display:inline-block;padding:12px 28px;background:#ff2d55;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
       Explore Your New Features
     </a>
@@ -205,7 +205,7 @@ export function planCancellationEmail(name: string | null): SendEmailOptions & {
       If this was a mistake or you&rsquo;d like to resubscribe, you can upgrade
       again at any time from your dashboard.
     </p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.app'}/dashboard"
+    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.co'}/dashboard"
        style="display:inline-block;padding:12px 28px;background:#ff2d55;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
       Go to Dashboard
     </a>
@@ -234,7 +234,7 @@ export function referralNotificationEmail(
       Keep sharing your referral code to earn even more. You can view your
       total earnings and payout history on your dashboard.
     </p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.app'}/dashboard"
+    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tubeforge.co'}/dashboard"
        style="display:inline-block;padding:12px 28px;background:#ff2d55;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
       View Your Earnings
     </a>

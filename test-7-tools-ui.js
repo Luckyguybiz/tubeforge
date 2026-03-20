@@ -7,11 +7,11 @@
 //   4. A non-existent tool returns 404
 //   5. No console errors on any page
 //
-// Uses Puppeteer against the live site: https://tubeforge-omega.vercel.app
+// Uses Puppeteer against the live site: https://tubeforge.co
 
 const puppeteer = require('puppeteer');
 
-const BASE = 'https://tubeforge-omega.vercel.app';
+const BASE = 'https://tubeforge.co';
 
 // All tool IDs from src/views/Tools/index.tsx
 const ALL_TOOLS = [

@@ -19,7 +19,7 @@ const puppeteer = require('puppeteer');
     page.on('console', msg => consoleLogs.push(`[${msg.type()}] ${msg.text()}`));
     page.on('pageerror', err => consoleLogs.push(`[pageerror] ${err.message}`));
 
-    await page.goto('https://tubeforge-omega.vercel.app', { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto('https://tubeforge.co', { waitUntil: 'networkidle2', timeout: 30000 });
 
     const formats = ['mp3', 'aac', 'ogg', 'wav'];
 

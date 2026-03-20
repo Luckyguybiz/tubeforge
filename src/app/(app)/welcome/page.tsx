@@ -298,7 +298,7 @@ function WelcomeInner() {
           Telegram
         </a>
         <a
-          href="mailto:support@tubeforge.ai"
+          href="mailto:support@tubeforge.co"
           style={{
             ...outlineBtn,
             padding: '12px 28px',
@@ -307,7 +307,7 @@ function WelcomeInner() {
           }}
         >
           <MailIcon />
-          support@tubeforge.ai
+          support@tubeforge.co
         </a>
       </div>
 

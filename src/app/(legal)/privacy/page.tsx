@@ -155,8 +155,8 @@ export default function PrivacyPage() {
         </p>
         <p style={paraStyle}>
           Email:{' '}
-          <a href="mailto:support@tubeforge.app" style={{ color: C.accent }}>
-            support@tubeforge.app
+          <a href="mailto:support@tubeforge.co" style={{ color: C.accent }}>
+            support@tubeforge.co
           </a>
         </p>
         <p style={paraStyle}>
