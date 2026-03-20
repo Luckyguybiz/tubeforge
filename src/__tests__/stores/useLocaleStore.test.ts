@@ -22,7 +22,7 @@ describe('useLocaleStore', () => {
   describe('t() translation function', () => {
     it('should translate known Russian keys', () => {
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Дашборд');
+      expect(t('nav.dashboard')).toBe('Главная');
     });
 
     it('should return the key when translation is not found', () => {
@@ -83,7 +83,7 @@ describe('useLocaleStore', () => {
       useLocaleStore.getState().setLocale('en');
       useLocaleStore.getState().setLocale('ru');
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Дашборд');
+      expect(t('nav.dashboard')).toBe('Главная');
     });
   });
 

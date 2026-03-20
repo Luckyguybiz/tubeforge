@@ -179,10 +179,11 @@ describe('downloadAndStore', () => {
   });
 
   it('should fetch the given URL', async () => {
-    const fakeArrayBuffer = new ArrayBuffer(8);
+    // Valid PNG magic bytes so security checks pass
+    const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0]);
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      arrayBuffer: () => Promise.resolve(fakeArrayBuffer),
+      arrayBuffer: () => Promise.resolve(pngBytes.buffer),
       headers: new Headers({ 'content-type': 'image/png' }),
     });
 
@@ -191,10 +192,10 @@ describe('downloadAndStore', () => {
   });
 
   it('should delegate to uploadFile and return the resulting URL', async () => {
-    const fakeArrayBuffer = new ArrayBuffer(8);
+    const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0]);
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      arrayBuffer: () => Promise.resolve(fakeArrayBuffer),
+      arrayBuffer: () => Promise.resolve(pngBytes.buffer),
       headers: new Headers({ 'content-type': 'image/png' }),
     });
 
@@ -205,17 +206,17 @@ describe('downloadAndStore', () => {
   });
 
   it('should convert the fetched arrayBuffer to a Buffer and write it', async () => {
-    const data = new Uint8Array([1, 2, 3, 4]).buffer;
+    const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0, 0, 0, 0, 0]);
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      arrayBuffer: () => Promise.resolve(data),
-      headers: new Headers({ 'content-type': 'application/octet-stream' }),
+      arrayBuffer: () => Promise.resolve(pngBytes.buffer),
+      headers: new Headers({ 'content-type': 'image/png' }),
     });
 
-    await downloadAndStore('https://example.com/data.bin', 'data.bin');
+    await downloadAndStore('https://example.com/data.png', 'data.png');
     const writtenBuffer = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as Buffer;
     expect(Buffer.isBuffer(writtenBuffer)).toBe(true);
-    expect(writtenBuffer.length).toBe(4);
+    expect(writtenBuffer.length).toBe(16);
   });
 
   it('should throw on non-ok response', async () => {
@@ -240,23 +241,25 @@ describe('downloadAndStore', () => {
     ).rejects.toThrow('Internal Server Error');
   });
 
-  it('should use application/octet-stream when content-type header is missing', async () => {
-    const fakeArrayBuffer = new ArrayBuffer(4);
+  it('should reject when content-type is missing (not in allowed types)', async () => {
+    const fakeArrayBuffer = new ArrayBuffer(16);
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       arrayBuffer: () => Promise.resolve(fakeArrayBuffer),
       headers: new Headers({}),
     });
 
-    const url = await downloadAndStore('https://example.com/data', 'file.bin');
-    expect(url).toBe('/uploads/test-uid-123.bin');
+    await expect(
+      downloadAndStore('https://example.com/data', 'file.bin')
+    ).rejects.toThrow('Disallowed content type');
   });
 
   it('should pass the filename through to uploadFile for extension extraction', async () => {
-    const fakeArrayBuffer = new ArrayBuffer(2);
+    // JPEG magic bytes
+    const jpegBytes = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      arrayBuffer: () => Promise.resolve(fakeArrayBuffer),
+      arrayBuffer: () => Promise.resolve(jpegBytes.buffer),
       headers: new Headers({ 'content-type': 'image/jpeg' }),
     });
 

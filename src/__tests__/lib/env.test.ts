@@ -47,6 +47,7 @@ describe('env module', () => {
   });
 
   it('should export all required env vars when they are set', async () => {
+    process.env.AUTH_SECRET = 'test-auth-secret';
     process.env.AUTH_GOOGLE_ID = 'test-google-id';
     process.env.AUTH_GOOGLE_SECRET = 'test-google-secret';
     process.env.DATABASE_URL = 'postgresql://test';
@@ -58,6 +59,7 @@ describe('env module', () => {
 
     const { env } = await import('@/lib/env');
 
+    expect(env.AUTH_SECRET).toBe('test-auth-secret');
     expect(env.AUTH_GOOGLE_ID).toBe('test-google-id');
     expect(env.AUTH_GOOGLE_SECRET).toBe('test-google-secret');
     expect(env.DATABASE_URL).toBe('postgresql://test');
@@ -69,6 +71,7 @@ describe('env module', () => {
   });
 
   it('should default optional AI keys to empty string', async () => {
+    process.env.AUTH_SECRET = 'test';
     process.env.AUTH_GOOGLE_ID = 'test';
     process.env.AUTH_GOOGLE_SECRET = 'test';
     process.env.DATABASE_URL = 'test';
@@ -90,6 +93,7 @@ describe('env module', () => {
   });
 
   it('should use provided optional AI keys when set', async () => {
+    process.env.AUTH_SECRET = 'test';
     process.env.AUTH_GOOGLE_ID = 'test';
     process.env.AUTH_GOOGLE_SECRET = 'test';
     process.env.DATABASE_URL = 'test';
@@ -112,6 +116,7 @@ describe('env module', () => {
   it('should include descriptive error message with variable name', async () => {
     delete process.env.NEXT_PHASE;
     delete process.env.DATABASE_URL;
+    process.env.AUTH_SECRET = 'test';
     process.env.AUTH_GOOGLE_ID = 'test';
     process.env.AUTH_GOOGLE_SECRET = 'test';
 

@@ -108,9 +108,9 @@ describe('TopBar', () => {
     expect(breadcrumb).toBeDefined();
   });
 
-  it('renders the dashboard link in breadcrumbs', () => {
+  it('renders the TF logo badge in breadcrumbs', () => {
     render(<TopBar />);
-    expect(screen.getByText('Dashboard')).toBeDefined();
+    expect(screen.getByText('TF')).toBeDefined();
   });
 
   it('renders the referral CTA button', () => {
@@ -146,7 +146,7 @@ describe('TopBar', () => {
   it('renders the TopBar container with correct height', () => {
     const { container } = render(<TopBar />);
     const topBarDiv = container.firstChild as HTMLElement;
-    expect(topBarDiv.style.height).toBe('44px');
+    expect(topBarDiv.style.height).toBe('52px');
   });
 
   it('renders the hamburger menu button', () => {

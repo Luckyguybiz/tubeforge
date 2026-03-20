@@ -8,9 +8,9 @@ describe('uid', () => {
     expect(uid()).toMatch(/^id_/);
   });
 
-  it('has correct length (id_ + 8 + 4 = 15 chars)', () => {
+  it('has correct length (id_ + 24 hex = 27 chars)', () => {
     const id = uid();
-    expect(id.length).toBe(15);
+    expect(id.length).toBe(27);
   });
 
   it('generates unique IDs across multiple calls', () => {

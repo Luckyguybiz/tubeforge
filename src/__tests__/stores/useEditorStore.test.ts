@@ -677,7 +677,7 @@ describe('useEditorStore – timers', () => {
     expect(useEditorStore.getState().scenes[0].status).toBe('generating');
     expect(useEditorStore.getState().scenes[0].prompt).toBe('new prompt');
 
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(120000);
     expect(useEditorStore.getState().scenes[0].status).toBe('error');
   });
 
@@ -686,7 +686,7 @@ describe('useEditorStore – timers', () => {
     // Simulate successful generation before timeout
     useEditorStore.getState().updScene('s1', { status: 'ready' });
 
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(120000);
     // Should still be ready, not error
     expect(useEditorStore.getState().scenes[0].status).toBe('ready');
   });
@@ -699,7 +699,7 @@ describe('useEditorStore – timers', () => {
     expect(added.status).toBe('generating');
     expect(added.prompt).toBe('тестовый промпт');
 
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(120000);
     expect(useEditorStore.getState().scenes[1].status).toBe('error');
   });
 
@@ -715,7 +715,7 @@ describe('useEditorStore – timers', () => {
     });
 
     // Advance past the original 30s timeout
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(120000);
     // The new project's scene should NOT be changed to error
     expect(useEditorStore.getState().scenes[0].status).toBe('ready');
   });
@@ -724,7 +724,7 @@ describe('useEditorStore – timers', () => {
     useEditorStore.getState().regenScene('s1');
     useEditorStore.getState().delScene('s1');
 
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(120000);
     // Scene was deleted, no error should be set
     expect(useEditorStore.getState().scenes.length).toBe(0);
   });

@@ -79,7 +79,7 @@ describe('FFmpegClient', () => {
       };
 
       await client.load();
-      expect(receivedBaseURL).toContain('unpkg');
+      expect(receivedBaseURL).toBe('/ffmpeg');
       expect(postMessageCallCount).toBe(1);
     });
 
