@@ -30,15 +30,15 @@ function LoginContent() {
 
   if (status === 'loading' || status === 'authenticated') {
     return (
-      <div style={{ width: '100%', minHeight: '100dvh' /* dvh accounts for mobile address bar */, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.sub }}>
+      <div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg, color: C.sub, padding: '0 16px', boxSizing: 'border-box' }}>
         {t('common.loading')}
       </div>
     );
   }
 
   return (
-    <main style={{ width: '100%', minHeight: '100dvh' /* dvh accounts for mobile address bar */, background: C.bg, fontFamily: "'Instrument Sans',sans-serif", color: C.text, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ width: '100%', maxWidth: 400, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 40, textAlign: 'center' }}>
+    <main style={{ width: '100%', minHeight: '100dvh', background: C.bg, fontFamily: "'Instrument Sans',sans-serif", color: C.text, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: 400, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 40, textAlign: 'center', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 32 }}>
           <div style={{ width: 36, height: 36, borderRadius: 8, background: `linear-gradient(135deg,${C.accent},${C.pink})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff' }}>TF</div>
           <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em' }}>TubeForge</span>
@@ -75,7 +75,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh' /* dvh accounts for mobile address bar */, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />}>
+    <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />}>
       <LoginContent />
     </Suspense>
   );

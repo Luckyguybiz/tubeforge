@@ -36,7 +36,7 @@ export default function NotFound() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: C.bg,
         color: C.text,
         fontFamily: 'var(--font-sans), system-ui, sans-serif',

@@ -10,7 +10,7 @@ export default function AboutPage() {
   return (
     <main
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: '#fff',
         color: '#18181b',
         fontFamily: "'Instrument Sans', sans-serif",

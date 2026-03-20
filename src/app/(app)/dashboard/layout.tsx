@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Дашборд',
-  description: 'Обзор проектов и быстрый доступ к ИИ-инструментам TubeForge.',
+  title: 'Dashboard',
+  description: 'Overview of your projects and quick access to TubeForge AI tools for YouTube content creation.',
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -244,7 +244,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
           padding: 0,
           width: 'calc(100vw - 32px)',
           maxWidth: 560,
-          maxHeight: '85vh',
+          maxHeight: '85dvh',
           boxShadow: `0 24px 64px rgba(0,0,0,.3), 0 0 0 1px ${isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)'}`,
           overflow: 'hidden',
           display: 'flex',
@@ -292,10 +292,10 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
             aria-label="Close"
             onClick={() => setShowShortcuts(false)}
             style={{
-              width: 44,
-              height: 44,
-              minWidth: 44,
-              minHeight: 44,
+              width: 36,
+              height: 36,
+              minWidth: 36,
+              minHeight: 36,
               borderRadius: 7,
               border: `1px solid ${C.border}`,
               background: 'transparent',

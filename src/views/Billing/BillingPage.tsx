@@ -22,13 +22,6 @@ const CheckIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
-const VpnShieldIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-    <path d="M8 1L2 4V7.5C2 11.1 4.5 14.4 8 15.5C11.5 14.4 14 11.1 14 7.5V4L8 1Z" fill="currentColor" opacity=".9" />
-    <path d="M6.5 8L7.5 9L9.5 6.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 const ArrowLeftIcon = ({ color }: { color: string }) => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
     <path d="M10 3L5 8L10 13" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -95,7 +88,6 @@ function getPlans(t: (key: string) => string): PlanDef[] {
         t('billing.feat.seo'),
         t('billing.feat.noWatermark'),
         t('billing.feat.prioritySupport'),
-        t('billing.feat.vpnAccess'),
       ],
       buttonLabel: t('billing.planPro'),
       buttonGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
@@ -114,7 +106,6 @@ function getPlans(t: (key: string) => string): PlanDef[] {
         t('billing.feat.api'),
         t('billing.feat.whiteLabel'),
         t('billing.feat.personalManager'),
-        t('billing.feat.vpnAccess'),
       ],
       buttonLabel: t('billing.planStudio'),
       buttonGradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
@@ -252,7 +243,7 @@ export function BillingPage() {
     <div
       style={{
         flex: 1,
-        minHeight: '100dvh', /* dvh accounts for mobile address bar */
+        minHeight: '100dvh',
         background: C.bg,
         color: C.text,
         fontFamily: 'inherit',
@@ -513,28 +504,6 @@ export function BillingPage() {
                           }}
                         >
                           {plan.badge}
-                        </span>
-                      )}
-
-                      {/* VPN Included badge for Pro & Studio */}
-                      {(plan.id === 'PRO' || plan.id === 'STUDIO') && (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            padding: '3px 10px',
-                            borderRadius: 50,
-                            background: isDark ? 'rgba(34, 197, 94, .12)' : 'rgba(34, 197, 94, .1)',
-                            color: C.green,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            letterSpacing: '.02em',
-                            marginBottom: 4,
-                          }}
-                        >
-                          <VpnShieldIcon />
-                          {t('billing.vpnIncluded')}
                         </span>
                       )}
 

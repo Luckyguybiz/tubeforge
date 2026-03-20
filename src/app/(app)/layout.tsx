@@ -43,16 +43,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', handler);
   }, [mobileMenuOpen, closeMobileMenu]);
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen]);
-
   const handleBackdropClick = useCallback(() => {
     closeMobileMenu();
   }, [closeMobileMenu]);
@@ -86,23 +76,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-hamburger{display:flex!important}
           .tf-topbar-referral{display:none!important}
           .tf-topbar-shortcuts{display:none!important}
-          .tf-topbar-whatsnew{display:none!important}
           .tf-dash-heading{font-size:20px!important}
           .tf-dash-stat-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
           .tf-dash-project-grid{grid-template-columns:1fr!important}
           .tf-dash-toolbar{padding:12px 12px 10px!important}
           .tf-dash-toolbar-right{flex-direction:column!important;align-items:stretch!important}
-          .tf-dash-search-input{width:100%!important;max-width:100%!important}
+          .tf-dash-search-input{width:100%!important}
           .tf-dash-content{padding:12px 12px 16px!important}
           .tf-dash-create-btn{padding:10px 16px!important;font-size:13px!important}
-          .tf-dash-import-btn{padding:10px 14px!important;font-size:13px!important}
           .tf-dash-filter-pills{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important}
-          .tf-dash-header{flex-direction:column!important;align-items:stretch!important;gap:12px!important}
-          .tf-dash-header-actions{display:flex;gap:8px;flex-wrap:wrap}
-          .tf-dash-welcome-row{flex-direction:column!important}
-          .tf-dash-welcome-card{min-width:0!important;flex:1 1 100%!important}
-          .tf-dash-featured-row{flex-direction:column!important}
-          .tf-dash-featured-card{min-height:140px!important}
           .tf-billing-inner{padding:16px 12px 32px!important}
           .tf-billing-heading{font-size:22px!important}
           .tf-billing-cols{flex-direction:column!important}
@@ -117,11 +99,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-shorts-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
           .tf-topbar-breadcrumb{font-size:12px!important}
           .tf-topbar-breadcrumb span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
-          .tf-topbar{padding:0 8px!important;height:48px!important}
-          .tf-topbar-btn{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}
-          .tf-mobile-nav-item{min-height:48px!important}
-          .tf-topbar-search-wrap{max-width:100%!important;flex:1 1 0!important}
-          .tf-dash-container{padding:0 4px!important}
         }
         @media(max-width:480px){
           .tf-main-content{padding:6px!important}
@@ -131,10 +108,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-dash-stat-value{font-size:18px!important}
           .tf-billing-inner{padding:10px 8px 24px!important}
           .tf-billing-heading{font-size:20px!important}
-          .tf-dash-create-btn{width:100%!important;justify-content:center!important}
-          .tf-dash-import-btn{width:100%!important;justify-content:center!important}
-          .tf-dash-toolbar-right>*{width:100%}
-          .tf-dash-sort-select{width:100%!important}
         }
         @media(max-width:320px){
           .tf-main-content{padding:4px!important}
@@ -146,15 +119,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
         .tf-mobile-backdrop.open{opacity:1;pointer-events:auto}
         .tf-mobile-drawer{
-          position:fixed;top:0;left:0;bottom:0;width:280px;max-width:85vw;z-index:9999;
+          position:fixed;top:0;left:0;bottom:0;width:260px;z-index:9999;
           transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
-          overflow-y:auto;-webkit-overflow-scrolling:touch;
-          box-shadow:4px 0 24px rgba(0,0,0,.2);
+          overflow-y:auto;
         }
         .tf-mobile-drawer.open{transform:translateX(0)}
       `}</style>
       <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
-      <div style={{ width: '100%', height: '100dvh' /* dvh accounts for mobile address bar; fallback: 100vh */, background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
         {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <TopBar />
@@ -174,7 +146,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={handleBackdropClick}
             aria-hidden="true"
           />
-          <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`} style={{ background: C.bg }}>
+          <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
             <Sidebar />
           </div>
         </>

@@ -21,7 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         *:focus-visible{outline:2px solid ${C.accent};outline-offset:2px}
       `}</style>
       <a className="tf-skip-link" href="#main-content">Skip to content</a>
-      <div style={{ width: '100vw', height: '100vh', background: C.bg, fontFamily: "'Instrument Sans',sans-serif", color: C.text, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ width: '100vw', height: '100dvh', background: C.bg, fontFamily: "'Instrument Sans',sans-serif", color: C.text, display: 'flex', overflow: 'hidden' }}>
         {!isEditor && <Sidebar />}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <TopBar />

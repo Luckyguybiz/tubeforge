@@ -45,7 +45,7 @@ interface ImportData {
     description?: string | null;
     tags?: string[];
     status?: string;
-    thumbnailData?: Record<string, string | number | boolean | null> | null;
+    thumbnailData?: Record<string, unknown> | null;
     characters?: Array<{
       id: string;
       name: string;
@@ -61,7 +61,7 @@ interface ImportData {
     duration: number;
     order: number;
     model: string;
-    metadata?: Record<string, string | number | boolean | null> | null;
+    metadata?: Record<string, unknown> | null;
   }>;
 }
 
@@ -176,7 +176,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         description: importData.project.description,
         tags: importData.project.tags ?? [],
         status: (importData.project.status as 'DRAFT') ?? 'DRAFT',
-        thumbnailData: importData.project.thumbnailData,
+        thumbnailData: importData.project.thumbnailData as Record<string, string | number | boolean | null> | null | undefined,
         characters: importData.project.characters,
       },
       scenes: importData.scenes.map((scene) => ({
@@ -185,7 +185,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         duration: scene.duration ?? 5,
         order: scene.order ?? 0,
         model: (scene.model as 'standard') ?? 'standard',
-        metadata: scene.metadata,
+        metadata: scene.metadata as Record<string, string | number | boolean | null> | null | undefined,
       })),
     });
   }, [importData, importMutation]);
@@ -216,7 +216,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         border: `1px solid ${C.border}`,
         borderRadius: 16,
         width: '90%', maxWidth: 520,
-        maxHeight: '85vh',
+        maxHeight: '85dvh',
         overflow: 'auto',
         zIndex: Z_INDEX.MODAL_BACKDROP + 1,
         boxShadow: '0 24px 80px rgba(0,0,0,.3)',

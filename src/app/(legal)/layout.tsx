@@ -12,7 +12,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <main
       role="main"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: C.bg,
         color: C.text,
         fontFamily: "'Instrument Sans', sans-serif",

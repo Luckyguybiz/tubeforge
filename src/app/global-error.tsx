@@ -1,7 +1,6 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /**
@@ -19,10 +18,6 @@ export default function GlobalError({
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const t = useLocaleStore((s) => s.t);
-
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
 
   /* Hardcoded dark colors since theme store may be broken */
   const bg = '#06060b';
@@ -45,7 +40,7 @@ export default function GlobalError({
       <body
         style={{
           margin: 0,
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

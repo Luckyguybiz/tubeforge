@@ -1249,7 +1249,7 @@ export function ContentPlanner() {
             tabIndex={-1}
             style={{
               width: 'calc(100vw - 32px)', maxWidth: 640,
-              maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+              maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto',
               borderRadius: 18, background: C.card,
               border: `1px solid ${C.border}`,
               boxShadow: `0 24px 64px ${isDark ? 'rgba(0,0,0,.5)' : 'rgba(0,0,0,.15)'}`,

@@ -48,15 +48,17 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: 'TubeForge',
-  description: 'ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных.',
+  description: 'AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer.',
   applicationCategory: 'MultimediaApplication',
   operatingSystem: 'Web',
   url: 'https://tubeforge.co',
-  offers: [
-    { '@type': 'Offer', price: '0', priceCurrency: 'RUB', name: 'Free' },
-    { '@type': 'Offer', price: '990', priceCurrency: 'RUB', name: 'Pro' },
-    { '@type': 'Offer', price: '2490', priceCurrency: 'RUB', name: 'Studio' },
-  ],
+  offers: {
+    '@type': 'AggregateOffer',
+    lowPrice: '0',
+    highPrice: '2490',
+    priceCurrency: 'RUB',
+    offerCount: '3',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
