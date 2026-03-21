@@ -19,6 +19,7 @@ import { TEMPLATES, TEMPLATE_CATEGORIES, CATEGORY_INFO, type ProjectTemplate, ty
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { ActivityStreak } from '@/components/dashboard/ActivityStreak';
 import { UsageMilestones } from '@/components/dashboard/UsageMilestones';
+import { logActivity, getRecentActivity, type ActivityEntry, type ActivityType } from '@/lib/activity-log';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -257,6 +258,124 @@ function IconChart({ size = 20, color = 'currentColor' }: { size?: number; color
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
     </svg>
+  );
+}
+
+function IconSortAsc({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
+    </svg>
+  );
+}
+
+function IconSortDesc({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><polyline points="19 12 12 19 5 12" />
+    </svg>
+  );
+}
+
+function IconClock({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function IconLayout({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" />
+    </svg>
+  );
+}
+
+/* ── Activity type to locale key mapping ─────────────── */
+
+const ACTIVITY_LABEL_MAP: Record<ActivityType, string> = {
+  project_created: 'dashboard.activity.projectCreated',
+  project_deleted: 'dashboard.activity.projectDeleted',
+  project_renamed: 'dashboard.activity.projectRenamed',
+  project_duplicated: 'dashboard.activity.projectDuplicated',
+  video_generated: 'dashboard.activity.videoGenerated',
+  project_exported: 'dashboard.activity.projectExported',
+  project_imported: 'dashboard.activity.projectImported',
+};
+
+/* ── Recent Activity Feed ────────────────────────────── */
+
+function RecentActivityFeed({
+  C,
+  t,
+  activities,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+  activities: ActivityEntry[];
+}) {
+  if (activities.length === 0) {
+    return (
+      <div style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        padding: '20px 22px',
+        marginBottom: 20,
+      }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: C.text }}>
+          {t('dashboard.recentActivityTitle')}
+        </h3>
+        <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>
+          {t('dashboard.noRecentActivity')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: '20px 22px',
+      marginBottom: 20,
+    }}>
+      <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 14px', color: C.text }}>
+        {t('dashboard.recentActivityTitle')}
+      </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {activities.map((a) => (
+          <div key={a.id} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '8px 0',
+            borderBottom: `1px solid ${C.border}22`,
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: `${C.accent}14`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <IconClock size={14} color={C.accent} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {t(ACTIVITY_LABEL_MAP[a.type] ?? 'dashboard.activity.projectCreated')}
+              </div>
+              <div style={{ fontSize: 12, color: C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {a.label}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: C.dim, whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {timeAgo(new Date(a.timestamp))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1836,6 +1955,8 @@ function PublishHistoryWidget({
 export function Dashboard() {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
+  const locale = useLocaleStore((s) => s.locale);
+  const isRuLocale = locale === 'ru' || locale === 'kk';
   const router = useRouter();
   const searchParams = useSearchParams();
   const utils = trpc.useUtils();
@@ -1853,6 +1974,11 @@ export function Dashboard() {
     if (sp === 'updatedAt' || sp === 'createdAt' || sp === 'title') return sp;
     return 'updatedAt';
   });
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() => {
+    const sp = searchParams?.get('order');
+    if (sp === 'asc' || sp === 'desc') return sp;
+    return 'desc';
+  });
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
@@ -1861,6 +1987,7 @@ export function Dashboard() {
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [recentActivities, setRecentActivities] = useState<ActivityEntry[]>([]);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   /* ── Auto-trigger checkout when arriving from pricing CTA ── */
@@ -1900,15 +2027,25 @@ export function Dashboard() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  /* ── Load recent activity from localStorage ── */
+  useEffect(() => {
+    setRecentActivities(getRecentActivity(5));
+  }, []);
+
+  const refreshActivities = useCallback(() => {
+    setRecentActivities(getRecentActivity(5));
+  }, []);
+
   /* ── Sync filter state to URL ───────────────── */
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set('q', debouncedSearch);
     if (statusFilter) params.set('status', statusFilter);
     if (sortBy !== 'updatedAt') params.set('sort', sortBy);
+    if (sortOrder !== 'desc') params.set('order', sortOrder);
     const qs = params.toString();
     router.replace(`/dashboard${qs ? `?${qs}` : ''}`, { scroll: false });
-  }, [debouncedSearch, statusFilter, sortBy, router]);
+  }, [debouncedSearch, statusFilter, sortBy, sortOrder, router]);
 
   /* ── tRPC queries ─────────────────────────────── */
   const profile = trpc.user.getProfile.useQuery();
@@ -1917,6 +2054,7 @@ export function Dashboard() {
     search: debouncedSearch || undefined,
     status: statusFilter,
     sortBy,
+    sortOrder,
     page,
     limit: 12,
   });
@@ -1926,6 +2064,8 @@ export function Dashboard() {
     onSuccess: (project) => {
       trackEvent('project_create', { source: 'dashboard' });
       toast.success(t('dashboard.projectCreated'));
+      logActivity('project_created', project.title ?? t('dashboard.newProject'));
+      refreshActivities();
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
       router.push(`/editor?projectId=${project.id}`);
@@ -1936,6 +2076,8 @@ export function Dashboard() {
   const deleteProject = trpc.project.delete.useMutation({
     onSuccess: () => {
       toast.success(t('dashboard.projectDeleted'));
+      logActivity('project_deleted', '');
+      refreshActivities();
       setDeleteId(null);
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -1949,6 +2091,8 @@ export function Dashboard() {
   const renameProject = trpc.project.update.useMutation({
     onSuccess: () => {
       toast.success(t('dashboard.projectRenamed'));
+      logActivity('project_renamed', renameValue.trim());
+      refreshActivities();
       setRenameId(null);
       utils.project.list.invalidate();
     },
@@ -1958,6 +2102,8 @@ export function Dashboard() {
   const duplicateProject = trpc.project.duplicate.useMutation({
     onSuccess: () => {
       toast.success(t('dashboard.projectDuplicated'));
+      logActivity('project_duplicated', '');
+      refreshActivities();
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
     },
@@ -2227,6 +2373,65 @@ export function Dashboard() {
       </div>
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
+      {/* ── Quick Actions Bar ────────────────────────── */}
+      <div style={{
+        display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap',
+      }}>
+        <button
+          onClick={() => createProject.mutate({ title: t('dashboard.newProject') })}
+          disabled={createProject.isPending}
+          onMouseEnter={() => setHoveredBtn('qa-new')}
+          onMouseLeave={() => setHoveredBtn(null)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', borderRadius: 12,
+            border: `1px solid ${C.border}`,
+            background: hoveredBtn === 'qa-new' ? C.surface : C.card,
+            color: C.text, fontSize: 13, fontWeight: 600,
+            cursor: createProject.isPending ? 'wait' : 'pointer',
+            fontFamily: 'inherit', transition: 'all .15s ease',
+            opacity: createProject.isPending ? 0.6 : 1,
+          }}
+        >
+          <IconPlus size={16} color={C.accent} />
+          {t('dashboard.newProject')}
+        </button>
+        <button
+          onClick={() => setImportOpen(true)}
+          onMouseEnter={() => setHoveredBtn('qa-import')}
+          onMouseLeave={() => setHoveredBtn(null)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', borderRadius: 12,
+            border: `1px solid ${C.border}`,
+            background: hoveredBtn === 'qa-import' ? C.surface : C.card,
+            color: C.text, fontSize: 13, fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all .15s ease',
+          }}
+        >
+          <IconUploadSmall size={16} color={C.sub} />
+          {t('dashboard.importProject')}
+        </button>
+        <button
+          onClick={() => setTemplateModalOpen(true)}
+          onMouseEnter={() => setHoveredBtn('qa-template')}
+          onMouseLeave={() => setHoveredBtn(null)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', borderRadius: 12,
+            border: `1px solid ${C.border}`,
+            background: hoveredBtn === 'qa-template' ? C.surface : C.card,
+            color: C.text, fontSize: 13, fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all .15s ease',
+          }}
+        >
+          <IconLayout size={16} color={C.sub} />
+          {t('dashboard.fromTemplate')}
+        </button>
+      </div>
+
       {/* ── Stat cards ──────────────────────────────── */}
       <div className="tf-dash-stat-grid" style={{
         display: 'grid',
@@ -2296,6 +2501,9 @@ export function Dashboard() {
 
       {/* ── Plan Usage Widget ─────────────────────────── */}
       <PlanUsageWidget C={C} t={t} />
+
+      {/* ── Recent Activity Feed ────────────────────── */}
+      <RecentActivityFeed C={C} t={t} activities={recentActivities} />
 
       {/* ── Referral Widget ──────────────────────────── */}
       <ReferralWidget C={C} t={t} />
@@ -2369,26 +2577,49 @@ export function Dashboard() {
             </div>
 
             {/* Sort */}
-            <select
-              className="tf-dash-sort-select"
-              value={sortBy}
-              onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
-              aria-label={t('dashboard.sortProjects')}
-              style={{
-                padding: '8px 10px',
-                background: C.surface,
-                border: `1px solid ${C.border}`,
-                borderRadius: 10,
-                color: C.text,
-                fontSize: 13,
-                fontFamily: 'inherit',
-                cursor: 'pointer',
-              }}
-            >
-              {getSortOptions(t).map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <select
+                className="tf-dash-sort-select"
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
+                aria-label={t('dashboard.sortProjects')}
+                style={{
+                  padding: '8px 10px',
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 10,
+                  color: C.text,
+                  fontSize: 13,
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                }}
+              >
+                {getSortOptions(t).map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => { setSortOrder((prev) => prev === 'desc' ? 'asc' : 'desc'); setPage(1); }}
+                aria-label={sortOrder === 'desc' ? t('dashboard.sortDesc') : t('dashboard.sortAsc')}
+                title={sortOrder === 'desc' ? t('dashboard.sortDesc') : t('dashboard.sortAsc')}
+                onMouseEnter={() => setHoveredBtn('sort-dir')}
+                onMouseLeave={() => setHoveredBtn(null)}
+                style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  border: `1px solid ${C.border}`,
+                  background: hoveredBtn === 'sort-dir' ? C.surface : 'transparent',
+                  color: C.sub, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'inherit', transition: 'all .15s ease',
+                  flexShrink: 0,
+                }}
+              >
+                {sortOrder === 'desc'
+                  ? <IconSortDesc size={15} color={C.sub} />
+                  : <IconSortAsc size={15} color={C.sub} />
+                }
+              </button>
+            </div>
 
             {/* Status filter pills */}
             <div className="tf-dash-filter-pills" style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }} role="group" aria-label={t('dashboard.filterStatus')}>
@@ -2519,6 +2750,64 @@ export function Dashboard() {
                     <IconPlus size={18} color="#fff" />
                     {createProject.isPending ? t('dashboard.creating') : t('dashboard.createProject')}
                   </button>
+
+                  {/* ── Template suggestions ── */}
+                  <div style={{ marginTop: 32, width: '100%', maxWidth: 640 }}>
+                    <p style={{ color: C.sub, fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
+                      {t('dashboard.emptyTemplateSuggestions')}
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+                      {TEMPLATES.slice(0, 3).map((tpl) => (
+                          <div
+                            key={tpl.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setTemplateModalOpen(true)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTemplateModalOpen(true); } }}
+                            onMouseEnter={() => setHoveredBtn(`tpl-${tpl.id}`)}
+                            onMouseLeave={() => setHoveredBtn(null)}
+                            style={{
+                              padding: '14px 16px',
+                              borderRadius: 12,
+                              border: `1px solid ${C.border}`,
+                              background: hoveredBtn === `tpl-${tpl.id}` ? C.surface : C.card,
+                              cursor: 'pointer',
+                              transition: 'all .15s ease',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <div style={{ fontSize: 20, marginBottom: 6 }}>{tpl.icon}</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                              {isRuLocale ? tpl.name : tpl.nameEn}
+                            </div>
+                            <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.4 }}>
+                              {tpl.sceneCount} {t('dashboard.scene.many')}
+                            </div>
+                          </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setTemplateModalOpen(true)}
+                      onMouseEnter={() => setHoveredBtn('explore-tpl')}
+                      onMouseLeave={() => setHoveredBtn(null)}
+                      style={{
+                        marginTop: 12,
+                        padding: '8px 16px',
+                        borderRadius: 8,
+                        border: 'none',
+                        background: 'transparent',
+                        color: C.accent,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        opacity: hoveredBtn === 'explore-tpl' ? 1 : 0.8,
+                        transition: 'opacity .15s ease',
+                      }}
+                    >
+                      {t('dashboard.exploreTemplates')} →
+                    </button>
+                  </div>
                 </>
               )}
             </div>
