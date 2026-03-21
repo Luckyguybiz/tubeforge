@@ -37,4 +37,40 @@ describe('useNotificationStore', () => {
     const types = useNotificationStore.getState().toasts.map((t) => t.type);
     expect(types).toEqual(['success', 'error', 'info', 'warning']);
   });
+
+  it('should use 5s duration for success toasts', () => {
+    toast.success('Done');
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(4999);
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(useNotificationStore.getState().toasts).toHaveLength(0);
+  });
+
+  it('should use 5s duration for info toasts', () => {
+    toast.info('FYI');
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(4999);
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(useNotificationStore.getState().toasts).toHaveLength(0);
+  });
+
+  it('should use 8s duration for error toasts', () => {
+    toast.error('Oops');
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(7999);
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(useNotificationStore.getState().toasts).toHaveLength(0);
+  });
+
+  it('should use 8s duration for warning toasts', () => {
+    toast.warning('Careful');
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(7999);
+    expect(useNotificationStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(useNotificationStore.getState().toasts).toHaveLength(0);
+  });
 });

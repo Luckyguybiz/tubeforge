@@ -110,9 +110,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   setShowShortcuts: (v) => set({ showShortcuts: v }),
 }));
 
+/** Default auto-dismiss durations per toast type (ms) */
+const TOAST_DURATION: Record<ToastType, number> = {
+  success: 5000,
+  info: 5000,
+  error: 8000,
+  warning: 8000,
+};
+
 export const toast = {
-  success: (msg: string) => useNotificationStore.getState().addToast('success', msg),
-  error: (msg: string) => useNotificationStore.getState().addToast('error', msg),
-  info: (msg: string) => useNotificationStore.getState().addToast('info', msg),
-  warning: (msg: string) => useNotificationStore.getState().addToast('warning', msg),
+  success: (msg: string) => useNotificationStore.getState().addToast('success', msg, TOAST_DURATION.success),
+  error: (msg: string) => useNotificationStore.getState().addToast('error', msg, TOAST_DURATION.error),
+  info: (msg: string) => useNotificationStore.getState().addToast('info', msg, TOAST_DURATION.info),
+  warning: (msg: string) => useNotificationStore.getState().addToast('warning', msg, TOAST_DURATION.warning),
 };

@@ -11,6 +11,14 @@ const ICONS: Record<ToastType, string> = {
   warning: '\u26A0',
 };
 
+/** Fixed toast type colors per spec — not theme-dependent */
+const TYPE_COLORS: Record<ToastType, string> = {
+  success: '#22c55e',
+  error: '#ef4444',
+  warning: '#f59e0b',
+  info: '#6366f1',
+};
+
 export function Toast({
   id,
   type,
@@ -25,14 +33,7 @@ export function Toast({
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
 
-  const colorMap: Record<ToastType, string> = {
-    success: C.green,
-    error: C.accent,
-    info: C.blue,
-    warning: C.orange,
-  };
-
-  const color = colorMap[type];
+  const color = TYPE_COLORS[type];
 
   return (
     <div

@@ -114,6 +114,26 @@ function checkRateLimit(
 }
 
 /* ------------------------------------------------------------------ */
+/*  Security headers                                                   */
+/* ------------------------------------------------------------------ */
+const securityHeaders: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+
+/** Create a NextResponse.next() with security headers applied. */
+function nextWithSecurityHeaders() {
+  const response = NextResponse.next();
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Auth.js v5 session cookie names                                   */
 /* ------------------------------------------------------------------ */
 const SESSION_COOKIE_NAMES = [
@@ -143,7 +163,7 @@ export default function middleware(req: NextRequest) {
     pathname.startsWith('/favicon') ||
     /\.\w{2,5}$/.test(pathname)
   ) {
-    return NextResponse.next();
+    return nextWithSecurityHeaders();
   }
 
   // --- IP rate limiting (applies to all non-static requests) ---
@@ -194,7 +214,7 @@ export default function middleware(req: NextRequest) {
   );
 
   if (isPublic) {
-    return NextResponse.next();
+    return nextWithSecurityHeaders();
   }
 
   // Check for session cookie (Auth.js v5 uses different names in dev vs prod)
@@ -222,7 +242,7 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return nextWithSecurityHeaders();
 }
 
 export const config = {

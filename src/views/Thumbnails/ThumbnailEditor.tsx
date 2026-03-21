@@ -454,7 +454,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'image') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         onMouseDown={elDrag}>
-        <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
+        <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
         {resizeHandle}{deleteHandle}
       </div>
     );

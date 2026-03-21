@@ -71,16 +71,33 @@ describe('Toast', () => {
   it('should apply green border for success type', () => {
     const { container } = render(<Toast {...defaultProps} type="success" />);
     const el = container.firstChild as HTMLElement;
-    // jsdom converts hex to rgb
+    // jsdom converts hex #22c55e to rgb(34, 197, 94)
     expect(el.style.borderLeft).toContain('3px solid');
     expect(el.style.borderLeft).toContain('34, 197, 94');
   });
 
-  it('should apply accent border for error type', () => {
+  it('should apply red border for error type', () => {
     const { container } = render(<Toast {...defaultProps} type="error" />);
     const el = container.firstChild as HTMLElement;
+    // jsdom converts hex #ef4444 to rgb(239, 68, 68)
     expect(el.style.borderLeft).toContain('3px solid');
-    expect(el.style.borderLeft).toContain('124, 92, 252');
+    expect(el.style.borderLeft).toContain('239, 68, 68');
+  });
+
+  it('should apply orange border for warning type', () => {
+    const { container } = render(<Toast {...defaultProps} type="warning" />);
+    const el = container.firstChild as HTMLElement;
+    // jsdom converts hex #f59e0b to rgb(245, 158, 11)
+    expect(el.style.borderLeft).toContain('3px solid');
+    expect(el.style.borderLeft).toContain('245, 158, 11');
+  });
+
+  it('should apply indigo border for info type', () => {
+    const { container } = render(<Toast {...defaultProps} type="info" />);
+    const el = container.firstChild as HTMLElement;
+    // jsdom converts hex #6366f1 to rgb(99, 102, 241)
+    expect(el.style.borderLeft).toContain('3px solid');
+    expect(el.style.borderLeft).toContain('99, 102, 241');
   });
 
   it('should apply slide-in animation', () => {

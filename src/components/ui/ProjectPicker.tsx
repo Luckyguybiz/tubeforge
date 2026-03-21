@@ -194,7 +194,7 @@ export function ProjectPicker({ target, title }: ProjectPickerProps) {
               >
                 {/* Thumbnail preview */}
                 {p.thumbnailUrl ? (
-                  <img src={p.thumbnailUrl} alt={p.title} loading="lazy" style={{ width: 44, height: 28, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />
+                  <img src={p.thumbnailUrl} alt={p.title} loading="lazy" decoding="async" width={44} height={28} style={{ width: 44, height: 28, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
                   <div style={{ width: 44, height: 28, borderRadius: 4, background: C.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <span style={{ fontSize: 12, opacity: 0.3 }}>▶</span>

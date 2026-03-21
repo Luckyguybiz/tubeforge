@@ -29,9 +29,9 @@ export async function GET(request: Request) {
       signal: AbortSignal.timeout(15_000),
     });
 
-    const data = (await res.json()) as { status?: string; db?: boolean };
+    const data = (await res.json()) as { status?: string; db?: string };
     healthStatus = data.status ?? 'unknown';
-    dbOk = data.db ?? false;
+    dbOk = data.db === 'connected';
   } catch (err) {
     healthStatus = 'error';
     log.error('Health check failed', {
