@@ -26,6 +26,9 @@ export const adminRouter = router({
       videosToday,
       usersThisWeek,
       projectsThisWeek,
+      newUsersToday,
+      proCount,
+      studioCount,
     ] = await Promise.all([
       ctx.db.user.count(),
       ctx.db.user.count({ where: { plan: { not: 'FREE' } } }),
@@ -36,7 +39,13 @@ export const adminRouter = router({
       }),
       ctx.db.user.count({ where: { createdAt: { gte: weekAgo } } }),
       ctx.db.project.count({ where: { createdAt: { gte: weekAgo } } }),
+      ctx.db.user.count({ where: { createdAt: { gte: todayStart } } }),
+      ctx.db.user.count({ where: { plan: 'PRO' } }),
+      ctx.db.user.count({ where: { plan: 'STUDIO' } }),
     ]);
+
+    // Estimated MRR based on current subscriber counts
+    const estimatedMrr = proCount * 9.90 + studioCount * 24.90;
 
     return {
       totalUsers,
@@ -46,6 +55,8 @@ export const adminRouter = router({
       videosToday,
       usersThisWeek,
       projectsThisWeek,
+      newUsersToday,
+      estimatedMrr: Math.round(estimatedMrr * 100) / 100,
     };
   }),
 
@@ -659,6 +670,41 @@ export const adminRouter = router({
         createdAt: u.createdAt.toISOString(),
         projectCount: u._count.projects,
       }));
+    }),
+
+  /* ── CSV Export: Audit Log ──────────────────────── */
+
+  exportAuditLog: adminProcedure
+    .query(async ({ ctx }) => {
+      await checkAdminRate(ctx.session.user.id);
+
+      try {
+        const logs = await (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.findMany?.({
+          select: {
+            id: true,
+            userId: true,
+            action: true,
+            target: true,
+            metadata: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10000, // Safety cap
+        }) ?? [];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (logs as any[]).map((log: { id: string; userId: string | null; action: string; target: string | null; metadata: Record<string, unknown> | null; createdAt: Date }) => ({
+          id: log.id,
+          userId: log.userId ?? '',
+          action: log.action,
+          target: log.target ?? '',
+          metadata: log.metadata ? JSON.stringify(log.metadata) : '',
+          createdAt: log.createdAt.toISOString(),
+        }));
+      } catch {
+        // AuditLog table may not exist yet
+        return [];
+      }
     }),
 
   referralStats: adminProcedure.query(async ({ ctx }) => {

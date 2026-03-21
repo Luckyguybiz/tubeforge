@@ -27,6 +27,35 @@ function useRecharts() {
   return mod;
 }
 
+/* ── CSV Download Helper ──────────────────────────── */
+
+function downloadCsv(rows: Record<string, string | number>[], filename: string) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]!);
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row =>
+      headers.map(h => {
+        const val = String(row[h] ?? '');
+        // Escape values containing commas, quotes, or newlines
+        return val.includes(',') || val.includes('"') || val.includes('\n')
+          ? `"${val.replace(/"/g, '""')}"`
+          : val;
+      }).join(',')
+    ),
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 /* ── Helpers ─────────────────────────────────────── */
 
 type SortKey = 'createdAt' | 'name' | 'plan' | 'role';
@@ -190,6 +219,49 @@ export function AdminPage() {
     onError: (err) => toast.error(err.message),
   });
 
+  // CSV export state
+  const [isExportingUsers, setIsExportingUsers] = useState(false);
+  const [isExportingAudit, setIsExportingAudit] = useState(false);
+  const exportUsersQuery = trpc.admin.exportUsers.useQuery(
+    { planFilter, search: searchDebounced || undefined },
+    { enabled: false },
+  );
+  const exportAuditQuery = trpc.admin.exportAuditLog.useQuery(undefined, { enabled: false });
+
+  const handleExportUsers = useCallback(async () => {
+    setIsExportingUsers(true);
+    try {
+      const result = await exportUsersQuery.refetch();
+      if (result.data && result.data.length > 0) {
+        downloadCsv(result.data, `users_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        toast.success(`Exported ${result.data.length} users`);
+      } else {
+        toast.error('No users to export');
+      }
+    } catch {
+      toast.error('Failed to export users');
+    } finally {
+      setIsExportingUsers(false);
+    }
+  }, [exportUsersQuery]);
+
+  const handleExportAudit = useCallback(async () => {
+    setIsExportingAudit(true);
+    try {
+      const result = await exportAuditQuery.refetch();
+      if (result.data && result.data.length > 0) {
+        downloadCsv(result.data, `audit_log_${new Date().toISOString().slice(0, 10)}.csv`);
+        toast.success(`Exported ${result.data.length} audit entries`);
+      } else {
+        toast.error('No audit entries to export');
+      }
+    } catch {
+      toast.error('Failed to export audit log');
+    } finally {
+      setIsExportingAudit(false);
+    }
+  }, [exportAuditQuery]);
+
   /* ── Loading state ─────────────────────────────── */
 
   if (profile.isLoading) {
@@ -256,15 +328,16 @@ export function AdminPage() {
       sub: stats.data ? `+${stats.data.usersThisWeek} ${t('admin.stat.thisWeek')}` : null,
     },
     {
-      label: t('admin.stat.projects'),
-      value: stats.data?.totalProjects,
+      label: 'Revenue (MRR)',
+      value: stats.data?.estimatedMrr != null ? `$${stats.data.estimatedMrr.toFixed(2)}` : undefined,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       ),
-      color: C.purple,
-      sub: stats.data ? `+${stats.data.projectsThisWeek} ${t('admin.stat.thisWeek')}` : null,
+      color: C.green,
+      sub: stats.data ? `${stats.data.activeSubscriptions} paid subscribers` : null,
+      valueIsString: true,
     },
     {
       label: t('admin.stat.subscriptions'),
@@ -274,20 +347,22 @@ export function AdminPage() {
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ),
-      color: C.green,
+      color: C.purple,
       sub: stats.data ? `PRO + Studio` : null,
     },
     {
-      label: t('admin.stat.videosToday'),
-      value: stats.data?.videosToday,
+      label: 'New Users Today',
+      value: stats.data?.newUsersToday,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="23 7 16 12 23 17 23 7" />
-          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" />
+          <line x1="20" y1="8" x2="20" y2="14" />
+          <line x1="23" y1="11" x2="17" y2="11" />
         </svg>
       ),
       color: C.orange,
-      sub: `${t('admin.stat.aiGen')} ${stats.data?.totalAIUsage ?? '..'}`,
+      sub: stats.data ? `${t('admin.stat.aiGen')} ${stats.data.totalAIUsage}` : null,
     },
   ];
 
@@ -379,7 +454,7 @@ export function AdminPage() {
               {stats.isLoading ? (
                 <Skeleton width="60px" height="32px" />
               ) : (
-                (stat.value ?? 0).toLocaleString('ru-RU')
+                typeof stat.value === 'string' ? stat.value : (stat.value ?? 0).toLocaleString()
               )}
             </div>
             {stat.sub && (
@@ -505,6 +580,37 @@ export function AdminPage() {
               );
             })}
           </div>
+
+          {/* Export CSV */}
+          <button
+            onClick={handleExportUsers}
+            disabled={isExportingUsers}
+            title="Export users as CSV"
+            style={{
+              padding: '5px 14px',
+              minHeight: 36,
+              borderRadius: 6,
+              border: `1px solid ${C.green}`,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: isExportingUsers ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              background: `${C.green}14`,
+              color: C.green,
+              opacity: isExportingUsers ? 0.5 : 1,
+              transition: 'all .15s',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {isExportingUsers ? 'Exporting...' : 'Export CSV'}
+          </button>
         </div>
 
         {/* Table */}
@@ -816,7 +922,7 @@ export function AdminPage() {
 
       {/* ── Audit Log (O5) ──────────────────────────── */}
       {activeTab === 'audit' && (
-        <AuditLogPanel C={C} auditLog={auditLog} auditPage={auditPage} setAuditPage={setAuditPage} />
+        <AuditLogPanel C={C} auditLog={auditLog} auditPage={auditPage} setAuditPage={setAuditPage} onExport={handleExportAudit} isExporting={isExportingAudit} />
       )}
 
       {/* ── Bulk Email (O6) ─────────────────────────── */}
@@ -1145,7 +1251,7 @@ function UserRow({ user, C, tdBase, currentUserId, expanded, onToggle, onUpdateP
 
         {/* Joined Date */}
         <td style={{ ...tdBase, color: C.dim, fontSize: 12 }}>
-          {new Date(user.createdAt).toLocaleDateString('ru-RU', {
+          {new Date(user.createdAt).toLocaleDateString(undefined, {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -1436,7 +1542,7 @@ function AnalyticsDashboard({
   const summaryCards = [
     { label: 'Total Users', value: totalUsers.toLocaleString('en-US'), color: C.blue },
     { label: 'Paid Users', value: paidUsers.toLocaleString('en-US'), color: C.green },
-    { label: 'Revenue (12mo)', value: `$${totalRevenue.toFixed(2)}`, color: C.accent },
+    { label: 'Revenue (6mo)', value: `$${totalRevenue.toFixed(2)}`, color: C.accent },
     { label: 'Active (7d)', value: (Array.isArray(activeUsers.data) ? activeUsers.data.reduce((sum: number, d: { active?: number }) => sum + (d.active ?? 0), 0) : activeUsers.data?.count ?? 0).toLocaleString('en-US'), color: C.purple },
   ];
 
@@ -2115,9 +2221,11 @@ interface AuditLogPanelProps {
   auditLog: { data?: { logs: any[]; total: number; page: number; pages: number }; isLoading: boolean; isError: boolean };
   auditPage: number;
   setAuditPage: (page: number) => void;
+  onExport: () => void;
+  isExporting: boolean;
 }
 
-function AuditLogPanel({ C, auditLog, auditPage, setAuditPage }: AuditLogPanelProps) {
+function AuditLogPanel({ C, auditLog, auditPage, setAuditPage, onExport, isExporting }: AuditLogPanelProps) {
   const thStyle: React.CSSProperties = {
     textAlign: 'left', padding: '10px 14px', fontSize: 10, fontWeight: 600,
     color: C.sub, textTransform: 'uppercase', letterSpacing: '.05em',
@@ -2146,6 +2254,35 @@ function AuditLogPanel({ C, auditLog, auditPage, setAuditPage }: AuditLogPanelPr
         {auditLog.data && (
           <span style={{ fontSize: 12, color: C.dim, marginLeft: 4 }}>{auditLog.data.total} entries</span>
         )}
+        <button
+          onClick={onExport}
+          disabled={isExporting}
+          title="Export audit log as CSV"
+          style={{
+            marginLeft: 'auto',
+            padding: '5px 14px',
+            borderRadius: 6,
+            border: `1px solid ${C.green}`,
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: isExporting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            background: `${C.green}14`,
+            color: C.green,
+            opacity: isExporting ? 0.5 : 1,
+            transition: 'all .15s',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {isExporting ? 'Exporting...' : 'Export CSV'}
+        </button>
       </div>
 
       {auditLog.isLoading ? (

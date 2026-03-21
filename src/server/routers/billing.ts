@@ -125,7 +125,7 @@ export const billingRouter = router({
         // Lookup the default price from the product
         const prices = await stripe.prices.list({ product: envRef, active: true, limit: 1 });
         if (!prices.data[0]) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не найдена цена для продукта в Stripe' });
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No active price found for product in Stripe' });
         }
         resolvedPriceId = prices.data[0].id;
       } else {
@@ -157,7 +157,7 @@ export const billingRouter = router({
               : `https://${env.NEXT_PUBLIC_APP_URL}`;
             const portalSession = await stripe.billingPortal.sessions.create({
               customer: customerId,
-              return_url: `${appUrl}/dashboard`,
+              return_url: `${appUrl}/billing`,
             });
             return { url: portalSession.url };
           }
@@ -180,8 +180,8 @@ export const billingRouter = router({
         metadata: { userId: ctx.session.user.id, plan: input.plan },
         mode: 'subscription',
         line_items: [{ price: resolvedPriceId, quantity: 1 }],
-        success_url: `${appUrl}/dashboard?upgraded=true`,
-        cancel_url: `${appUrl}/dashboard`,
+        success_url: `${appUrl}/billing?success=true`,
+        cancel_url: `${appUrl}/billing`,
       });
       return { url: session.url };
     }),
@@ -192,14 +192,14 @@ export const billingRouter = router({
       where: { id: ctx.session.user.id },
       select: { stripeId: true },
     });
-    if (!user?.stripeId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Stripe-аккаунт не найден' });
+    if (!user?.stripeId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'No Stripe account found' });
     const stripe = getStripe();
     const appUrl = env.NEXT_PUBLIC_APP_URL.startsWith('http')
       ? env.NEXT_PUBLIC_APP_URL
       : `https://${env.NEXT_PUBLIC_APP_URL}`;
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeId,
-      return_url: `${appUrl}/dashboard`,
+      return_url: `${appUrl}/billing`,
     });
     return { url: session.url };
   }),
