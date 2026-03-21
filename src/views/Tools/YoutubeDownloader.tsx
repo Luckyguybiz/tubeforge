@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ToolPageShell } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -422,18 +422,31 @@ export function YoutubeDownloader() {
       {/* ══════════════════════════════════════════════════════
           Analysis Results
          ══════════════════════════════════════════════════════ */}
-      {analysis && (
+      {analysis && (() => {
+        // Safe defaults for all nested objects to prevent crashes
+        const a = {
+          ...analysis,
+          analysis: analysis.analysis ?? { hookScore: 0, titleScore: 0, engagementRate: 0, estimatedCTR: 'medium', contentType: '', tips: [], structure: [], viralFactors: [] },
+          stats: analysis.stats ?? { views: null, likes: null, comments: null },
+          seo: analysis.seo ?? null,
+          shortsAnalysis: analysis.shortsAnalysis ?? null,
+          thumbnailAnalysis: analysis.thumbnailAnalysis ?? null,
+          engagement: analysis.engagement ?? null,
+          strategy: analysis.strategy ?? null,
+          competition: analysis.competition ?? null,
+        };
+        return (
         <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* ═══ 1. Overall Score Banner ═══════════════════════ */}
-          {analysis.overallScore != null && (
+          {a.overallScore != null && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <div className="yt-overall-banner" style={{
                 display: 'flex', alignItems: 'center', gap: 24, justifyContent: 'center', flexWrap: 'wrap',
               }}>
                 <OverallScoreGauge
-                  value={analysis.overallScore}
-                  color={scoreColor100(analysis.overallScore)}
+                  value={a.overallScore}
+                  color={scoreColor100(a.overallScore)}
                   bg={gaugeBg}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
@@ -441,20 +454,20 @@ export function YoutubeDownloader() {
                     Общий балл анализа
                   </span>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {analysis.categoryName && (
-                      <Badge text={analysis.categoryName} color="#6366f1" />
+                    {a.categoryName && (
+                      <Badge text={a.categoryName} color="#6366f1" />
                     )}
-                    {analysis.isShorts && (
+                    {a.isShorts && (
                       <Badge text="Shorts" color="#8b5cf6" />
                     )}
-                    {analysis.analysis?.contentType && (
-                      <Badge text={analysis.analysis.contentType} color={C.sub} />
+                    {a.analysis?.contentType && (
+                      <Badge text={a.analysis.contentType} color={C.sub} />
                     )}
                   </div>
                   <span style={{ fontSize: 13, color: C.sub }}>
-                    {analysis.overallScore >= 70
+                    {a.overallScore >= 70
                       ? 'Отличный результат! Видео хорошо оптимизировано.'
-                      : analysis.overallScore >= 40
+                      : a.overallScore >= 40
                         ? 'Неплохо, но есть потенциал для улучшения.'
                         : 'Есть значительный потенциал для роста.'}
                   </span>
@@ -472,10 +485,10 @@ export function YoutubeDownloader() {
                 <div style={{ width: 200, height: 112, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={thumbnailSrc} alt={analysis.title}
+                    src={thumbnailSrc} alt={a.title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  {analysis.isShorts && (
+                  {a.isShorts && (
                     <span style={{
                       position: 'absolute', top: 6, right: 6,
                       background: '#8b5cf6', color: '#fff', fontSize: 10, fontWeight: 700,
@@ -488,20 +501,20 @@ export function YoutubeDownloader() {
               )}
               <div style={{ flex: 1, minWidth: 200 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: '0 0 6px', lineHeight: 1.3 }}>
-                  {analysis.title}
+                  {a.title}
                 </h3>
                 <p style={{ fontSize: 13, color: C.sub, margin: '0 0 8px' }}>
-                  {analysis.channel}{views > 0 ? ` · ${formatNumber(views)} просмотров` : ''}{analysis.publishedAt ? ` · ${analysis.publishedAt}` : ''}
+                  {a.channel}{views > 0 ? ` · ${formatNumber(views)} просмотров` : ''}{a.publishedAt ? ` · ${a.publishedAt}` : ''}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {analysis.duration && (
+                  {a.duration && (
                     <span style={{ fontSize: 12, color: C.dim, background: subtleBg, padding: '3px 8px', borderRadius: 6 }}>
-                      {analysis.duration}
+                      {a.duration}
                     </span>
                   )}
-                  {analysis.categoryName && (
+                  {a.categoryName && (
                     <span style={{ fontSize: 12, color: '#6366f1', background: 'rgba(99,102,241,.1)', padding: '3px 8px', borderRadius: 6, fontWeight: 600 }}>
-                      {analysis.categoryName}
+                      {a.categoryName}
                     </span>
                   )}
                   {likes > 0 && (
@@ -523,13 +536,13 @@ export function YoutubeDownloader() {
           <SectionCard surface={C.surface} borderColor={C.border}>
             <SectionHeader icon="▶️" text="Просмотр видео" color={C.text} />
             <div style={{
-              position: 'relative', width: '100%', paddingBottom: analysis.isShorts ? '177.78%' : '56.25%',
-              borderRadius: 12, overflow: 'hidden', maxWidth: analysis.isShorts ? 360 : '100%',
-              margin: analysis.isShorts ? '0 auto' : undefined,
+              position: 'relative', width: '100%', paddingBottom: a.isShorts ? '177.78%' : '56.25%',
+              borderRadius: 12, overflow: 'hidden', maxWidth: a.isShorts ? 360 : '100%',
+              margin: a.isShorts ? '0 auto' : undefined,
             }}>
               <iframe
-                src={`https://www.youtube.com/embed/${analysis.videoId}?rel=0&modestbranding=1`}
-                title={analysis.title}
+                src={`https://www.youtube.com/embed/${a.videoId}?rel=0&modestbranding=1`}
+                title={a.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 style={{
@@ -545,19 +558,19 @@ export function YoutubeDownloader() {
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
             padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
           }}>
-            <ScoreGauge value={analysis.analysis?.hookScore ?? 0} label="Хук" color={scoreColor(analysis.analysis?.hookScore ?? 0)} bg={gaugeBg} />
-            <ScoreGauge value={analysis.analysis?.titleScore ?? 0} label="Заголовок" color={scoreColor(analysis.analysis?.titleScore ?? 0)} bg={gaugeBg} />
+            <ScoreGauge value={a.analysis?.hookScore ?? 0} label="Хук" color={scoreColor(a.analysis?.hookScore ?? 0)} bg={gaugeBg} />
+            <ScoreGauge value={a.analysis?.titleScore ?? 0} label="Заголовок" color={scoreColor(a.analysis?.titleScore ?? 0)} bg={gaugeBg} />
             <ScoreGauge
-              value={analysis.analysis?.estimatedCTR === 'very_high' ? 10 : analysis.analysis?.estimatedCTR === 'high' ? 8 : analysis.analysis?.estimatedCTR === 'medium' ? 5 : 3}
+              value={a.analysis?.estimatedCTR === 'very_high' ? 10 : a.analysis?.estimatedCTR === 'high' ? 8 : a.analysis?.estimatedCTR === 'medium' ? 5 : 3}
               label="CTR"
-              color={scoreColor(analysis.analysis?.estimatedCTR === 'very_high' ? 10 : analysis.analysis?.estimatedCTR === 'high' ? 8 : analysis.analysis?.estimatedCTR === 'medium' ? 5 : 3)}
+              color={scoreColor(a.analysis?.estimatedCTR === 'very_high' ? 10 : a.analysis?.estimatedCTR === 'high' ? 8 : a.analysis?.estimatedCTR === 'medium' ? 5 : 3)}
               bg={gaugeBg}
             />
             <ScoreGauge value={Math.min(10, Math.round(engPct * 2))} label="Вовлечение" color={scoreColor(Math.min(10, Math.round(engPct * 2)))} bg={gaugeBg} />
           </div>
 
           {/* ═══ 4. Shorts Analysis ═══════════════════════════ */}
-          {analysis.isShorts && analysis.shortsAnalysis && (
+          {a.isShorts && a.shortsAnalysis && (
             <div style={{
               background: C.surface, border: `2px solid #8b5cf6`,
               borderRadius: 14, padding: 20,
@@ -570,8 +583,8 @@ export function YoutubeDownloader() {
                 {/* Hook Quality */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                   <Badge
-                    text={badgeLabel(analysis.shortsAnalysis.hookQuality)}
-                    color={badgeColor(analysis.shortsAnalysis.hookQuality)}
+                    text={badgeLabel(a.shortsAnalysis.hookQuality)}
+                    color={badgeColor(a.shortsAnalysis.hookQuality)}
                   />
                   <span style={{ fontSize: 11, color: C.sub }}>Качество хука</span>
                 </div>
@@ -579,9 +592,9 @@ export function YoutubeDownloader() {
                 {/* Loop Potential */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                   <ScoreGauge
-                    value={analysis.shortsAnalysis.loopPotential ?? 0}
+                    value={a.shortsAnalysis.loopPotential ?? 0}
                     label="Зацикливание"
-                    color={scoreColor(analysis.shortsAnalysis.loopPotential ?? 0)}
+                    color={scoreColor(a.shortsAnalysis.loopPotential ?? 0)}
                     bg={gaugeBg}
                   />
                 </div>
@@ -589,9 +602,9 @@ export function YoutubeDownloader() {
                 {/* Shareability */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                   <ScoreGauge
-                    value={analysis.shortsAnalysis.shareability ?? 0}
+                    value={a.shortsAnalysis.shareability ?? 0}
                     label="Шеринг"
-                    color={scoreColor(analysis.shortsAnalysis.shareability ?? 0)}
+                    color={scoreColor(a.shortsAnalysis.shareability ?? 0)}
                     bg={gaugeBg}
                   />
                 </div>
@@ -600,9 +613,9 @@ export function YoutubeDownloader() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
                   <span style={{
                     fontSize: 28,
-                    color: analysis.shortsAnalysis.verticalOptimized ? '#22c55e' : '#ef4444',
+                    color: a.shortsAnalysis.verticalOptimized ? '#22c55e' : '#ef4444',
                   }}>
-                    {analysis.shortsAnalysis.verticalOptimized ? '✓' : '✗'}
+                    {a.shortsAnalysis.verticalOptimized ? '✓' : '✗'}
                   </span>
                   <span style={{ fontSize: 11, color: C.sub, textAlign: 'center' }}>Вертикальный формат</span>
                 </div>
@@ -610,18 +623,18 @@ export function YoutubeDownloader() {
 
               {/* Extra info row */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                {analysis.shortsAnalysis.optimalLength && (
-                  <Badge text={`Опт. длина: ${analysis.shortsAnalysis.optimalLength}`} color="#8b5cf6" />
+                {a.shortsAnalysis.optimalLength && (
+                  <Badge text={`Опт. длина: ${a.shortsAnalysis.optimalLength}`} color="#8b5cf6" />
                 )}
-                {analysis.shortsAnalysis.trendAlignment && (
-                  <Badge text={`Тренды: ${badgeLabel(analysis.shortsAnalysis.trendAlignment)}`} color={badgeColor(analysis.shortsAnalysis.trendAlignment)} />
+                {a.shortsAnalysis.trendAlignment && (
+                  <Badge text={`Тренды: ${badgeLabel(a.shortsAnalysis.trendAlignment)}`} color={badgeColor(a.shortsAnalysis.trendAlignment)} />
                 )}
               </div>
 
               {/* Shorts tips */}
-              {analysis.shortsAnalysis.tips && analysis.shortsAnalysis.tips.length > 0 && (
+              {a.shortsAnalysis.tips && a.shortsAnalysis.tips.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {analysis.shortsAnalysis.tips.map((tip, i) => (
+                  {a.shortsAnalysis.tips.map((tip, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
                       <span style={{ color: '#8b5cf6', fontSize: 14, flexShrink: 0 }}>▸</span> {tip}
                     </div>
@@ -632,7 +645,7 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 5. SEO Analysis ══════════════════════════════ */}
-          {analysis.seo && (
+          {a.seo && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="SEO-анализ" color={C.text} icon="🔍" />
 
@@ -640,8 +653,8 @@ export function YoutubeDownloader() {
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Длина заголовка</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: titleLenColor(analysis.seo.titleLength) }}>
-                    {analysis.seo.titleLength} символов
+                  <span style={{ fontSize: 13, fontWeight: 600, color: titleLenColor(a.seo.titleLength) }}>
+                    {a.seo.titleLength} символов
                   </span>
                 </div>
                 <div style={{ position: 'relative', height: 10, borderRadius: 5, background: gaugeBg, overflow: 'hidden' }}>
@@ -652,25 +665,25 @@ export function YoutubeDownloader() {
                   }} />
                   <div style={{
                     height: '100%',
-                    width: `${Math.min(100, (analysis.seo.titleLength / 100) * 100)}%`,
+                    width: `${Math.min(100, (a.seo.titleLength / 100) * 100)}%`,
                     borderRadius: 5,
-                    background: titleLenColor(analysis.seo.titleLength),
+                    background: titleLenColor(a.seo.titleLength),
                     transition: 'width 0.5s ease',
                   }} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                   <span style={{ fontSize: 10, color: C.dim }}>0</span>
-                  <span style={{ fontSize: 10, color: '#22c55e' }}>Оптимально: {analysis.seo.optimalTitleRange || '40-60'}</span>
+                  <span style={{ fontSize: 10, color: '#22c55e' }}>Оптимально: {a.seo.optimalTitleRange || '40-60'}</span>
                   <span style={{ fontSize: 10, color: C.dim }}>100</span>
                 </div>
               </div>
 
               {/* Keywords */}
-              {analysis.seo.titleKeywords && analysis.seo.titleKeywords.length > 0 && (
+              {a.seo.titleKeywords && a.seo.titleKeywords.length > 0 && (
                 <div style={{ marginBottom: 14 }}>
                   <span style={{ fontSize: 13, color: C.sub, display: 'block', marginBottom: 6 }}>Ключевые слова заголовка</span>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {analysis.seo.titleKeywords.map((kw, i) => (
+                    {a.seo.titleKeywords.map((kw, i) => (
                       <Badge key={i} text={kw} color="#6366f1" />
                     ))}
                   </div>
@@ -678,13 +691,13 @@ export function YoutubeDownloader() {
               )}
 
               {/* Tags */}
-              {analysis.seo.tags && analysis.seo.tags.length > 0 && (
+              {a.seo.tags && a.seo.tags.length > 0 && (
                 <div style={{ marginBottom: 14 }}>
                   <span style={{ fontSize: 13, color: C.sub, display: 'block', marginBottom: 6 }}>
-                    Теги ({analysis.seo.tagsCount ?? analysis.seo.tags.length})
+                    Теги ({a.seo.tagsCount ?? a.seo.tags.length})
                   </span>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {analysis.seo.tags.map((tag, i) => (
+                    {a.seo.tags.map((tag, i) => (
                       <Badge key={i} text={tag} color={C.sub} bg={subtleBg} />
                     ))}
                   </div>
@@ -695,52 +708,52 @@ export function YoutubeDownloader() {
               <div className="yt-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: subtleBg, borderRadius: 8 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Язык</span>
-                  <Badge text={analysis.seo.languageDetected ?? '—'} color="#6366f1" />
+                  <Badge text={a.seo.languageDetected ?? '—'} color="#6366f1" />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: subtleBg, borderRadius: 8 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Хэштеги в заголовке</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{analysis.seo.hashtagsInTitle ?? 0}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{a.seo.hashtagsInTitle ?? 0}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: subtleBg, borderRadius: 8 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Описание</span>
                   <span style={{ fontSize: 12, color: C.dim }}>
-                    {analysis.seo.descriptionLength != null ? `${analysis.seo.descriptionLength} сим.` : '—'}
-                    {analysis.seo.descriptionHasLinks ? ' · Ссылки ✓' : ''}
-                    {analysis.seo.descriptionHasTimestamps ? ' · Таймкоды ✓' : ''}
+                    {a.seo.descriptionLength != null ? `${a.seo.descriptionLength} сим.` : '—'}
+                    {a.seo.descriptionHasLinks ? ' · Ссылки ✓' : ''}
+                    {a.seo.descriptionHasTimestamps ? ' · Таймкоды ✓' : ''}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: subtleBg, borderRadius: 8 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Поисковая оптимизация</span>
-                  <Badge text={badgeLabel(analysis.seo.searchOptimization ?? '')} color={badgeColor(analysis.seo.searchOptimization ?? '')} />
+                  <Badge text={badgeLabel(a.seo.searchOptimization ?? '')} color={badgeColor(a.seo.searchOptimization ?? '')} />
                 </div>
               </div>
 
               {/* Readability */}
-              {analysis.seo.readabilityScore != null && (
+              {a.seo.readabilityScore != null && (
                 <div style={{ marginTop: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <span style={{ fontSize: 13, color: C.sub }}>Читабельность</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: scoreColor(analysis.seo.readabilityScore) }}>
-                      {analysis.seo.readabilityScore}/10
+                    <span style={{ fontSize: 13, fontWeight: 600, color: scoreColor(a.seo.readabilityScore) }}>
+                      {a.seo.readabilityScore}/10
                     </span>
                   </div>
-                  <MiniBar value={analysis.seo.readabilityScore} max={10} color={scoreColor(analysis.seo.readabilityScore)} bg={gaugeBg} />
+                  <MiniBar value={a.seo.readabilityScore} max={10} color={scoreColor(a.seo.readabilityScore)} bg={gaugeBg} />
                 </div>
               )}
             </SectionCard>
           )}
 
           {/* ═══ 6. Thumbnail Analysis ════════════════════════ */}
-          {analysis.thumbnailAnalysis && (
+          {a.thumbnailAnalysis && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Анализ превью" color={C.text} icon="🖼️" />
 
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                {analysis.thumbnailAnalysis.url && (
+                {a.thumbnailAnalysis.url && (
                   <div style={{ width: 200, height: 112, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={analysis.thumbnailAnalysis.url} alt="Thumbnail"
+                      src={a.thumbnailAnalysis.url} alt="Thumbnail"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   </div>
@@ -748,20 +761,20 @@ export function YoutubeDownloader() {
                 <div style={{ flex: 1, minWidth: 180, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Badge
-                      text={analysis.thumbnailAnalysis.hasCustomThumbnail ? 'Кастомное превью' : 'Автоматическое превью'}
-                      color={analysis.thumbnailAnalysis.hasCustomThumbnail ? '#22c55e' : '#ef4444'}
+                      text={a.thumbnailAnalysis.hasCustomThumbnail ? 'Кастомное превью' : 'Автоматическое превью'}
+                      color={a.thumbnailAnalysis.hasCustomThumbnail ? '#22c55e' : '#ef4444'}
                     />
-                    {analysis.thumbnailAnalysis.resolution && (
-                      <Badge text={analysis.thumbnailAnalysis.resolution} color={C.sub} bg={subtleBg} />
+                    {a.thumbnailAnalysis.resolution && (
+                      <Badge text={a.thumbnailAnalysis.resolution} color={C.sub} bg={subtleBg} />
                     )}
-                    {analysis.thumbnailAnalysis.aspectRatio && (
-                      <Badge text={analysis.thumbnailAnalysis.aspectRatio} color={C.sub} bg={subtleBg} />
+                    {a.thumbnailAnalysis.aspectRatio && (
+                      <Badge text={a.thumbnailAnalysis.aspectRatio} color={C.sub} bg={subtleBg} />
                     )}
                   </div>
 
-                  {analysis.thumbnailAnalysis.tips && analysis.thumbnailAnalysis.tips.length > 0 && (
+                  {a.thumbnailAnalysis.tips && a.thumbnailAnalysis.tips.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {analysis.thumbnailAnalysis.tips.map((tip, i) => (
+                      {a.thumbnailAnalysis.tips.map((tip, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
                           <span style={{ color: '#f59e0b', flexShrink: 0 }}>●</span> {tip}
                         </div>
@@ -774,7 +787,7 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 7. Engagement Deep Dive ══════════════════════ */}
-          {analysis.engagement && (
+          {a.engagement && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Глубокий анализ вовлечённости" color={C.text} icon="📊" />
 
@@ -782,31 +795,31 @@ export function YoutubeDownloader() {
                 <div style={{ padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 11, color: C.dim, display: 'block', marginBottom: 4 }}>Лайки (на 1000 просмотров)</span>
                   <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>
-                    {analysis.engagement.likeRate != null ? analysis.engagement.likeRate.toFixed(1) : '—'}
+                    {a.engagement.likeRate != null ? a.engagement.likeRate.toFixed(1) : '—'}
                   </span>
                 </div>
                 <div style={{ padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 11, color: C.dim, display: 'block', marginBottom: 4 }}>Комментарии (на 1000 просмотров)</span>
                   <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>
-                    {analysis.engagement.commentRate != null ? analysis.engagement.commentRate.toFixed(2) : '—'}
+                    {a.engagement.commentRate != null ? a.engagement.commentRate.toFixed(2) : '—'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Удержание аудитории</span>
-                  <Badge text={badgeLabel(analysis.engagement.audienceRetentionEstimate ?? '')} color={badgeColor(analysis.engagement.audienceRetentionEstimate ?? '')} />
+                  <Badge text={badgeLabel(a.engagement.audienceRetentionEstimate ?? '')} color={badgeColor(a.engagement.audienceRetentionEstimate ?? '')} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Сравнение с бенчмарком</span>
-                  <Badge text={badgeLabel(analysis.engagement.benchmarkComparison ?? '')} color={badgeColor(analysis.engagement.benchmarkComparison ?? '')} />
+                  <Badge text={badgeLabel(a.engagement.benchmarkComparison ?? '')} color={badgeColor(a.engagement.benchmarkComparison ?? '')} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Оценка лайк/дизлайк</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{analysis.engagement.likeToDislikeEstimate ?? '—'}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{a.engagement.likeToDislikeEstimate ?? '—'}</span>
                 </div>
-                {analysis.engagement.viralCoefficient && (
+                {a.engagement.viralCoefficient && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                     <span style={{ fontSize: 13, color: C.sub }}>Вирусный коэффициент</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{analysis.engagement.viralCoefficient}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{a.engagement.viralCoefficient}</span>
                   </div>
                 )}
               </div>
@@ -814,35 +827,35 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 8. Content Strategy ══════════════════════════ */}
-          {analysis.strategy && (
+          {a.strategy && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Контент-стратегия" color={C.text} icon="🎯" />
 
               <div className="yt-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 <div style={{ padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 11, color: C.dim, display: 'block', marginBottom: 4 }}>Лучшее время публикации</span>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{analysis.strategy.bestPostingTime ?? '—'}</span>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{a.strategy.bestPostingTime ?? '—'}</span>
                 </div>
                 <div style={{ padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 11, color: C.dim, display: 'block', marginBottom: 4 }}>Рекомендуемая частота</span>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{analysis.strategy.recommendedFrequency ?? '—'}</span>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{a.strategy.recommendedFrequency ?? '—'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Монетизация</span>
-                  <Badge text={badgeLabel(analysis.strategy.monetizationPotential ?? '')} color={badgeColor(analysis.strategy.monetizationPotential ?? '')} />
+                  <Badge text={badgeLabel(a.strategy.monetizationPotential ?? '')} color={badgeColor(a.strategy.monetizationPotential ?? '')} />
                 </div>
                 <div style={{ padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 11, color: C.dim, display: 'block', marginBottom: 4 }}>Целевой возраст</span>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{analysis.strategy.audienceAge ?? '—'}</span>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{a.strategy.audienceAge ?? '—'}</span>
                 </div>
               </div>
 
               {/* Cross-platform */}
-              {analysis.strategy.crossPlatformPotential && analysis.strategy.crossPlatformPotential.length > 0 && (
+              {a.strategy.crossPlatformPotential && a.strategy.crossPlatformPotential.length > 0 && (
                 <div style={{ marginTop: 14 }}>
                   <span style={{ fontSize: 13, color: C.sub, display: 'block', marginBottom: 6 }}>Кроссплатформенный потенциал</span>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {analysis.strategy.crossPlatformPotential.map((platform, i) => (
+                    {a.strategy.crossPlatformPotential.map((platform, i) => (
                       <Badge key={i} text={platform} color="#6366f1" />
                     ))}
                   </div>
@@ -852,26 +865,26 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 9. Competition Context ═══════════════════════ */}
-          {analysis.competition && (
+          {a.competition && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Конкурентный контекст" color={C.text} icon="⚔️" />
 
               <div className="yt-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Популярность ниши</span>
-                  <Badge text={badgeLabel(analysis.competition.nichePopularity ?? '')} color={badgeColor(analysis.competition.nichePopularity ?? '')} />
+                  <Badge text={badgeLabel(a.competition.nichePopularity ?? '')} color={badgeColor(a.competition.nichePopularity ?? '')} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: subtleBg, borderRadius: 10 }}>
                   <span style={{ fontSize: 13, color: C.sub }}>Насыщенность контента</span>
-                  <Badge text={badgeLabel(analysis.competition.contentSaturation ?? '')} color={badgeColor(analysis.competition.contentSaturation ?? '')} />
+                  <Badge text={badgeLabel(a.competition.contentSaturation ?? '')} color={badgeColor(a.competition.contentSaturation ?? '')} />
                 </div>
               </div>
 
-              {analysis.competition.differentiationTips && analysis.competition.differentiationTips.length > 0 && (
+              {a.competition.differentiationTips && a.competition.differentiationTips.length > 0 && (
                 <div>
                   <span style={{ fontSize: 13, color: C.sub, display: 'block', marginBottom: 8 }}>Советы по дифференциации</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {analysis.competition.differentiationTips.map((tip, i) => (
+                    {a.competition.differentiationTips.map((tip, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
                         <span style={{ color: '#22c55e', fontSize: 14, flexShrink: 0 }}>▸</span> {tip}
                       </div>
@@ -883,11 +896,11 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 10. Video Structure ═════════════════════════ */}
-          {analysis.analysis?.structure && analysis.analysis.structure.length > 0 && (
+          {a.analysis?.structure && a.analysis.structure.length > 0 && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Структура видео" color={C.text} icon="🎬" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {analysis.analysis.structure.map((seg, i) => (
+                {a.analysis.structure.map((seg, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 18, width: 28, textAlign: 'center' }}>{seg.icon}</span>
                     <div style={{
@@ -907,11 +920,11 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 11. Viral Factors ═══════════════════════════ */}
-          {analysis.analysis?.viralFactors && analysis.analysis.viralFactors.length > 0 && (
+          {a.analysis?.viralFactors && a.analysis.viralFactors.length > 0 && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Вирусные факторы" color={C.text} icon="🚀" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {analysis.analysis.viralFactors.map((f, i) => (
+                {a.analysis.viralFactors.map((f, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: C.text }}>
                     <span style={{ color: '#22c55e', fontSize: 16 }}>✓</span> {f}
                   </div>
@@ -921,11 +934,11 @@ export function YoutubeDownloader() {
           )}
 
           {/* ═══ 12. Tips ════════════════════════════════════ */}
-          {analysis.analysis?.tips && analysis.analysis.tips.length > 0 && (
+          {a.analysis?.tips && a.analysis.tips.length > 0 && (
             <SectionCard surface={C.surface} borderColor={C.border}>
               <SectionHeader text="Советы по улучшению" color={C.text} icon="💡" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {analysis.analysis.tips.map((tip, i) => (
+                {a.analysis.tips.map((tip, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
                     <span style={{ color: '#f59e0b', fontSize: 16, flexShrink: 0 }}>💡</span> {tip}
                   </div>
@@ -936,7 +949,7 @@ export function YoutubeDownloader() {
 
           {/* ═══ 13. Open on YouTube ═════════════════════════ */}
           <a
-            href={`https://www.youtube.com/watch?v=${analysis.videoId}`}
+            href={`https://www.youtube.com/watch?v=${a.videoId}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -954,7 +967,8 @@ export function YoutubeDownloader() {
             Открыть на YouTube
           </a>
         </div>
-      )}
+        );
+      })()}
     </ToolPageShell>
   );
 }
