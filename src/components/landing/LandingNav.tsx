@@ -14,9 +14,9 @@ export function LandingNav() {
   }, []);
 
   const navLinks = [
-    { label: 'Возможности', href: '#features' },
-    { label: 'Инструменты', href: '#tools' },
-    { label: 'Тарифы', href: '#pricing' },
+    { label: 'Features', href: '#features' },
+    { label: 'Tools', href: '#tools' },
+    { label: 'Pricing', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
   ];
 
@@ -105,7 +105,7 @@ export function LandingNav() {
             onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
           >
-            Войти
+            Log In
           </Link>
           <Link
             href="/register"
@@ -132,7 +132,7 @@ export function LandingNav() {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
             }}
           >
-            Начать бесплатно
+            Start Free
           </Link>
         </div>
 
@@ -140,7 +140,7 @@ export function LandingNav() {
         <button
           className="mobile-menu-btn"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Меню"
+          aria-label="Menu"
           style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round">
@@ -179,7 +179,7 @@ export function LandingNav() {
             </a>
           ))}
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: 500, padding: '10px 0' }}>Войти</Link>
+            <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: 500, padding: '10px 0' }}>Log In</Link>
             <Link
               href="/register"
               onClick={() => setMobileOpen(false)}
@@ -198,7 +198,7 @@ export function LandingNav() {
                 border: 'none',
               }}
             >
-              Начать бесплатно
+              Start Free
             </Link>
           </div>
         </div>

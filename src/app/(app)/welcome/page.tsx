@@ -123,9 +123,7 @@ function WelcomeInner() {
       {STEPS.map((step, i) => {
         const isCompleted = i < currentStep;
         const isCurrent = i === currentStep;
-        const isFuture = i > currentStep;
 
-        const circleColor = isCompleted ? C.green : isCurrent ? C.purple : C.dim;
         const textColor = isCompleted ? C.green : isCurrent ? C.purple : C.dim;
 
         return (

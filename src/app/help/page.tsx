@@ -133,6 +133,56 @@ export default function HelpPage() {
         </div>
       </div>
 
+      {/* Popular articles — shown when no search and 'all' category */}
+      {!search.trim() && activeCategory === 'all' && (
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 28px' }}>
+          <h2
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              margin: '0 0 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 18 }}>&#9733;</span> Популярные статьи
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            {HELP_ARTICLES.slice(0, 5).map((article) => {
+              const catInfo = HELP_CATEGORIES[article.category];
+              return (
+                <button
+                  key={article.id}
+                  onClick={() => {
+                    setExpandedId(article.id);
+                    // scroll to articles section
+                    document.getElementById('help-articles')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  style={{
+                    padding: '14px 16px',
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    color: C.text,
+                    transition: 'border-color .2s',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{catInfo.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{article.title}</span>
+                  <span style={{ fontSize: 11, color: C.dim }}>{catInfo.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Category pills */}
       <div
         style={{
@@ -174,7 +224,15 @@ export default function HelpPage() {
       </div>
 
       {/* Articles */}
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 64px' }}>
+      <div id="help-articles" style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 64px' }}>
+        {/* Result count when filtering */}
+        {(search.trim() || activeCategory !== 'all') && filtered.length > 0 && (
+          <p style={{ fontSize: 13, color: C.dim, marginBottom: 12 }}>
+            {filtered.length === 1
+              ? 'Найдена 1 статья'
+              : `Найдено ${filtered.length} ${filtered.length < 5 ? 'статьи' : 'статей'}`}
+          </p>
+        )}
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: C.dim }}>
             <p style={{ fontSize: 18, fontWeight: 600 }}>Ничего не найдено</p>

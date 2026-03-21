@@ -202,7 +202,7 @@ export const PLAN_LIMITS = {
     projects: Infinity,
     aiGenerations: Infinity,
     scenes: 200,           // per project
-    teamMembers: 5,        // 5 team members
+    teamMembers: 10,       // 10 team members
     storageMB: 51200,      // 50 GB
     storageBytes: 50 * 1024 * 1024 * 1024,
   },

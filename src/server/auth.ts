@@ -157,7 +157,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             sendEmail({
               to: user.email,
               template: 'welcome',
-              data: { name: user.name ?? '', locale: 'ru' },
+              data: { name: user.name ?? '', locale: 'en' },
             }).catch((err) => {
               authLog.error('Welcome email failed', { error: err instanceof Error ? err.message : String(err) });
             });
