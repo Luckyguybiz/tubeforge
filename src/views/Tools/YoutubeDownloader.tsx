@@ -46,10 +46,7 @@ function scoreColor(score: number): string {
   return '#ef4444';
 }
 
-/* ── Quality & Format options (visual only — same as original design) ── */
-
-const QUALITIES = ['1080p', '720p', '480p', '360p', 'Audio only'] as const;
-const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
+/* ── No download options — pure analysis tool ── */
 
 /* ── Score Gauge ────────────────────────────────────────────────── */
 
@@ -82,8 +79,6 @@ export function YoutubeDownloader() {
   const t = useLocaleStore((s) => s.t);
 
   const [url, setUrl] = useState('');
-  const [quality, setQuality] = useState<typeof QUALITIES[number]>('1080p');
-  const [format, setFormat] = useState<typeof FORMATS[number]>('MP4');
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [urlError, setUrlError] = useState('');
@@ -102,7 +97,7 @@ export function YoutubeDownloader() {
   }, [t]);
 
   /* ── Download/Analyze handler ──────────────────────────────── */
-  const handleDownload = async () => {
+  const handleAnalyze = async () => {
     if (!url.trim() || !isValidYoutubeUrl(url)) {
       setUrlError(t('tools.ytdl.invalidUrl'));
       return;
@@ -161,19 +156,6 @@ export function YoutubeDownloader() {
     } catch { /* clipboard not available */ }
   };
 
-  const pillStyle = (active: boolean) => ({
-    padding: '8px 20px',
-    borderRadius: 10,
-    border: active ? '2px solid #ef4444' : `1px solid ${C.border}`,
-    background: active ? (isDark ? 'rgba(239,68,68,.1)' : 'rgba(239,68,68,.05)') : C.surface,
-    color: active ? '#ef4444' : C.text,
-    fontSize: 14,
-    fontWeight: active ? 700 : 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'all .15s ease',
-  } as const);
-
   const thumbnailSrc = analysis ? (thumbError ? analysis.thumbnailMq : analysis.thumbnail) : null;
   const engPct = analysis && analysis.viewCount > 0
     ? (((analysis.likeCount + analysis.commentCount) / analysis.viewCount) * 100)
@@ -183,7 +165,7 @@ export function YoutubeDownloader() {
     <ToolPageShell
       title={t('tools.ytdl.title')}
       subtitle={t('tools.ytdl.subtitle')}
-      gradient={['#ff0000', '#cc0000']}
+      gradient={['#6366f1', '#8b5cf6']}
     >
       {/* ── URL Input ─────────────────────────────────────── */}
       <div style={{
@@ -199,7 +181,7 @@ export function YoutubeDownloader() {
         <input
           value={url}
           onChange={(e) => { setUrl(e.target.value); setUrlError(''); setFetchError(''); setAnalysis(null); }}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleDownload(); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleAnalyze(); }}
           placeholder={t('tools.ytdl.placeholder') || 'Insert YouTube link...'}
           style={{
             flex: 1, background: 'transparent', border: 'none', outline: 'none',
@@ -226,40 +208,16 @@ export function YoutubeDownloader() {
       {urlError && <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 16px' }}>{urlError}</p>}
       {fetchError && <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 16px' }}>{fetchError}</p>}
 
-      {/* ── Quality selector ─────────────────────────────── */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 10 }}>Quality</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {QUALITIES.map((q) => (
-            <button key={q} onClick={() => setQuality(q)} style={pillStyle(quality === q)}>
-              {q === 'Audio only' ? (t('tools.ytdl.audioOnly') || 'Audio only') : q}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Format selector ──────────────────────────────── */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 10 }}>Format</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {FORMATS.map((f) => (
-            <button key={f} onClick={() => setFormat(f)} style={pillStyle(format === f)}>
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Download (Analyze) button ────────────────────── */}
+      {/* ── Analyze button ────────────────────────────── */}
       <button
-        onClick={handleDownload}
+        onClick={handleAnalyze}
         disabled={loading || !url.trim()}
         style={{
-          width: '100%', maxWidth: 280, padding: '14px 32px',
+          width: '100%', maxWidth: 320, padding: '14px 32px',
           borderRadius: 12, border: 'none',
           background: loading || !url.trim()
             ? (isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)')
-            : 'linear-gradient(135deg, #ff0000, #cc0000)',
+            : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
           color: loading || !url.trim() ? C.dim : '#fff',
           fontSize: 16, fontWeight: 700, cursor: loading || !url.trim() ? 'not-allowed' : 'pointer',
           fontFamily: 'inherit', transition: 'all .2s ease',
@@ -271,16 +229,15 @@ export function YoutubeDownloader() {
             <svg width="18" height="18" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}>
               <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" />
             </svg>
-            {t('tools.ytdl.analyzing') || 'Analyzing...'}
+            {t('tools.ytdl.analyzing') || 'Анализируем...'}
           </>
         ) : (
           <>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            Download
+            {t('tools.ytdl.analyze') || 'Анализировать'}
           </>
         )}
       </button>

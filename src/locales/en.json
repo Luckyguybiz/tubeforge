@@ -750,7 +750,7 @@
   "tools.compressor.ffmpegExitCode": "FFmpeg exited with code",
   "tools.compressor.fileTooBig": "File is too large for browser compression (max 200 MB). Use desktop FFmpeg.",
   "tools.compressor.compressError": "Failed to compress video",
-  "tools.ytdl.title": "Download YouTube Video",
+  "tools.ytdl.title": "YouTube Video Analyzer",
   "tools.ytdl.subtitle": "Analyze video structure and success factors",
   "tools.ytdl.placeholder": "Paste a YouTube link...",
   "tools.ytdl.paste": "Paste",
