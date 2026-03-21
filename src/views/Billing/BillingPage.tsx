@@ -993,6 +993,39 @@ export function BillingPage() {
 
                 {invoicesQuery.isLoading ? (
                   <p style={{ fontSize: 13, color: C.sub }}>{t('common.loading')}</p>
+                ) : invoicesQuery.isError ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '14px 18px',
+                      background: `${C.accent}10`,
+                      border: `1px solid ${C.accent}25`,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>{'\u26A0\uFE0F'}</span>
+                    <span style={{ fontSize: 13, color: C.sub, flex: 1 }}>
+                      {t('billing.invoiceLoadError') || '\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u0438\u0441\u0442\u043E\u0440\u0438\u0438'}
+                    </span>
+                    <button
+                      onClick={() => invoicesQuery.refetch()}
+                      style={{
+                        padding: '6px 14px',
+                        background: C.accent,
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {t('error.tryAgain')}
+                    </button>
+                  </div>
                 ) : !invoicesQuery.data || invoicesQuery.data.length === 0 ? (
                   <p style={{ fontSize: 13, color: C.sub }}>{t('billing.noInvoices') || 'No invoices yet.'}</p>
                 ) : (

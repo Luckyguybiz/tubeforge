@@ -13,22 +13,22 @@ import {
 /* ── SEO Metadata ─────────────────────────────────────────── */
 
 export const metadata: Metadata = {
-  title: "TubeForge — ИИ-студия для YouTube",
+  title: "TubeForge — AI Studio for YouTube Creators",
   description:
-    "ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных, VPN, аналитика.",
+    "AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer, VPN, analytics, and free tools.",
   openGraph: {
-    title: "TubeForge — ИИ-студия для YouTube",
+    title: "TubeForge — AI Studio for YouTube Creators",
     description:
-      "Создавайте профессиональный YouTube-контент с ИИ. Генерация обложек, оптимизация метаданных, видеомонтаж.",
+      "Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing, analytics.",
     type: "website",
-    locale: "ru_RU",
-    images: [{ url: "/api/og", width: 1200, height: 630, alt: "TubeForge" }],
+    locale: "en_US",
+    images: [{ url: "/api/og", width: 1200, height: 630, alt: "TubeForge — AI Studio for YouTube Creators" }],
   },
   alternates: { canonical: "https://tubeforge.co" },
   twitter: {
     card: "summary_large_image",
-    title: "TubeForge — ИИ-студия для YouTube",
-    description: "Создавайте профессиональный YouTube-контент с ИИ.",
+    title: "TubeForge — AI Studio for YouTube Creators",
+    description: "Create professional YouTube content with AI. Thumbnails, SEO, video editing, and free tools.",
     images: ["/api/og"],
   },
 };

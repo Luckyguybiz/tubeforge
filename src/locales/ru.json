@@ -515,6 +515,8 @@
   "editor.toolbar.undo": "Отменить",
   "editor.toolbar.redo": "Повторить",
   "editor.toolbar.save": "Сохранить",
+  "editor.toolbar.generateScript": "Сгенерировать скрипт с помощью ИИ",
+  "editor.toolbar.createShorts": "Создать Shorts из проекта",
   "editor.actionUndone": "Действие отменено",
   "editor.actionRedone": "Действие восстановлено",
   "editor.undoHint": "Ctrl+Z для отмены",

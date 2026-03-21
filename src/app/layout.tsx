@@ -9,14 +9,21 @@ const instrumentSans = Instrument_Sans({ subsets: ['latin', 'latin-ext'], variab
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin', 'cyrillic'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: { default: 'TubeForge — ИИ-студия для YouTube', template: '%s | TubeForge' },
-  description: 'ИИ-платформа для YouTube-креаторов. Видеоредактор, генерация обложек, оптимизация метаданных.',
+  title: { default: 'TubeForge — AI Studio for YouTube Creators', template: '%s | TubeForge' },
+  description: 'AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer, analytics, and free tools.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge.co'),
+  applicationName: 'TubeForge',
+  keywords: ['YouTube', 'AI video editor', 'thumbnail generator', 'YouTube SEO', 'video creator', 'TubeForge', 'YouTube tools'],
+  authors: [{ name: 'TubeForge', url: 'https://tubeforge.co' }],
+  creator: 'TubeForge',
+  publisher: 'TubeForge',
+  robots: { index: true, follow: true },
   openGraph: {
-    title: 'TubeForge — ИИ-студия для YouTube',
-    description: 'Создавайте профессиональный YouTube-контент с ИИ. Генерация обложек, оптимизация метаданных, видеомонтаж.',
+    siteName: 'TubeForge',
+    title: 'TubeForge — AI Studio for YouTube Creators',
+    description: 'Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing, analytics, and free tools.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
     images: [
       {
         url: '/api/og',
@@ -31,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TubeForge — ИИ-студия для YouTube',
-    description: 'Создавайте профессиональный YouTube-контент с ИИ.',
+    title: 'TubeForge — AI Studio for YouTube Creators',
+    description: 'Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing.',
     images: ['/api/og'],
   },
   manifest: '/manifest.json',
@@ -50,7 +57,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: 'TubeForge',
-  description: 'AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer.',
+  description: 'AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer, analytics, and free tools.',
   applicationCategory: 'MultimediaApplication',
   operatingSystem: 'Web',
   url: 'https://tubeforge.co',
@@ -65,7 +72,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script

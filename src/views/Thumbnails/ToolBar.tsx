@@ -420,6 +420,10 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
       {/* Z6: A/B Test Modal */}
       {showABTestModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="A/B Test"
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowABTestModal(false); }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',

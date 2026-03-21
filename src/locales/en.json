@@ -513,6 +513,8 @@
   "editor.toolbar.undo": "Undo",
   "editor.toolbar.redo": "Redo",
   "editor.toolbar.save": "Save",
+  "editor.toolbar.generateScript": "Generate script with AI",
+  "editor.toolbar.createShorts": "Create Shorts from project",
   "editor.actionUndone": "Action undone",
   "editor.actionRedone": "Action redone",
   "editor.undoHint": "Ctrl+Z to undo",

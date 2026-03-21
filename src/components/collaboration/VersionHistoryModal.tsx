@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useVersionStore, type VersionSnapshot } from '@/stores/useVersionStore';
@@ -39,8 +39,20 @@ export function VersionHistoryModal({ onClose, onRestore }: VersionHistoryModalP
   const deleteVersion = useVersionStore((s) => s.deleteVersion);
   const clearVersions = useVersionStore((s) => s.clearVersions);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+
   // Show newest first
   const sortedVersions = useMemo(() => [...versions].reverse(), [versions]);
+
+  // Focus trap + Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKey);
+    dialogRef.current?.focus();
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
 
   const handleRestore = useCallback(
     (v: VersionSnapshot) => {
@@ -58,6 +70,11 @@ export function VersionHistoryModal({ onClose, onRestore }: VersionHistoryModalP
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('collab.versionHistory')}
+      tabIndex={-1}
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -68,6 +85,7 @@ export function VersionHistoryModal({ onClose, onRestore }: VersionHistoryModalP
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
+        outline: 'none',
       }}
     >
       <div

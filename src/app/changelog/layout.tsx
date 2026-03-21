@@ -1,18 +1,25 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Changelog — TubeForge',
+  title: 'Changelog',
   description:
-    'Последние обновления TubeForge: новые функции, исправления ошибок, улучшения платформы.',
+    'Latest TubeForge updates: new features, bug fixes, and platform improvements.',
   openGraph: {
     title: 'Changelog — TubeForge',
     description:
-      'Следите за обновлениями TubeForge: AI-генерация видео, скачивание, VPN, аналитика и многое другое.',
+      'Stay up to date with TubeForge releases: AI video generation, tools, analytics, and more.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'TubeForge Changelog' }],
   },
   alternates: {
     canonical: 'https://tubeforge.co/changelog',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Changelog — TubeForge',
+    description: 'Latest TubeForge updates: new features, bug fixes, and improvements.',
+    images: ['/api/og'],
   },
 };
 

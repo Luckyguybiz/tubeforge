@@ -1,34 +1,33 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'VPN для YouTube из России — TubeForge',
+  title: 'VPN for YouTube',
   description:
-    'Персональный WireGuard VPN от TubeForge. Быстрый и безопасный доступ к YouTube из России. Серверы в Европе, включён в подписку Pro и Studio.',
+    'Personal WireGuard VPN by TubeForge. Fast and secure access to YouTube. European servers, included with Pro and Studio plans.',
   openGraph: {
-    title: 'VPN для YouTube из России — TubeForge',
+    title: 'VPN for YouTube — TubeForge',
     description:
-      'Персональный WireGuard VPN. Быстрый доступ к YouTube из России. Серверы в Европе, шифрование WireGuard, работает на всех устройствах.',
+      'Personal WireGuard VPN. Fast YouTube access. European servers, WireGuard encryption, works on all devices.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'TubeForge VPN' }],
   },
   alternates: {
     canonical: 'https://tubeforge.co/vpn',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VPN для YouTube из России — TubeForge',
-    description: 'Персональный WireGuard VPN. Быстрый доступ к YouTube из России.',
+    title: 'VPN for YouTube — TubeForge',
+    description: 'Personal WireGuard VPN. Fast and secure YouTube access.',
+    images: ['/api/og'],
   },
   keywords: [
     'VPN',
     'YouTube VPN',
-    'VPN Россия',
-    'доступ к YouTube',
     'WireGuard VPN',
     'TubeForge VPN',
-    'YouTube из России',
-    'разблокировать YouTube',
-    'VPN для YouTube',
+    'VPN for YouTube',
+    'secure VPN',
   ],
 };
 

@@ -1,18 +1,25 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Центр помощи — TubeForge',
+  title: 'Help Center',
   description:
-    'Ответы на частые вопросы о TubeForge: начало работы, оплата, редактор, AI-генерация и решение проблем.',
+    'Find answers to common questions about TubeForge: getting started, billing, editor, AI generation, and troubleshooting.',
   openGraph: {
-    title: 'Центр помощи — TubeForge',
+    title: 'Help Center — TubeForge',
     description:
-      'Найдите ответы на вопросы о платформе TubeForge: подписки, редактор, AI-инструменты, устранение неполадок.',
+      'Find answers about TubeForge: subscriptions, editor, AI tools, and troubleshooting.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'TubeForge Help Center' }],
   },
   alternates: {
     canonical: 'https://tubeforge.co/help',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Help Center — TubeForge',
+    description: 'Find answers about TubeForge: subscriptions, editor, AI tools, and troubleshooting.',
+    images: ['/api/og'],
   },
 };
 

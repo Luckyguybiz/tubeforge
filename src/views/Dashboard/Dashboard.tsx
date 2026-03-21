@@ -1381,6 +1381,16 @@ function TemplatePickerModal({
   const [hov, setHov] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<TemplateCategory | null>(null);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open, onClose]);
+
   const createProject = trpc.project.create.useMutation({
     onSuccess: (project) => {
       trackEvent('project_create', { source: 'template_modal' });
@@ -1451,7 +1461,7 @@ function TemplatePickerModal({
       />
 
       {/* Modal */}
-      <div style={{
+      <div role="dialog" aria-modal="true" aria-label={t('dashboard.newProject')} style={{
         position: 'fixed',
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',

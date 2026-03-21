@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 
@@ -45,6 +45,16 @@ export function FeedbackWidget() {
       setSubmitting(false);
     }, 500);
   }, [feedbackType, text, addToast]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open]);
 
   return (
     <>
@@ -93,6 +103,9 @@ export function FeedbackWidget() {
 
           {/* Panel */}
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Feedback"
             style={{
               position: 'fixed',
               bottom: 84,

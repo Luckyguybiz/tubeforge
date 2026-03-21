@@ -22,7 +22,7 @@ function getStripe() {
 export const billingRouter = router({
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
     const cacheKey = `billing:sub:${ctx.session.user.id}`;
-    type SubResult = { plan: string; subscription: { id: string; status: string; cancelAt: number | null; cancelAtPeriodEnd: boolean } | null };
+    type SubResult = { plan: string; subscription: { id: string; status: string; cancelAt: number | null; cancelAtPeriodEnd: boolean; currentPeriodEnd: number | null } | null };
     const cached = cache.get<SubResult>(cacheKey);
     if (cached) return cached;
 
@@ -61,6 +61,7 @@ export const billingRouter = router({
         status: sub.status,
         cancelAt: sub.cancel_at,
         cancelAtPeriodEnd: sub.cancel_at_period_end,
+        currentPeriodEnd: sub.items.data[0]?.current_period_end ?? null,
       },
     };
     cache.set(cacheKey, result, SUBSCRIPTION_CACHE_TTL);
@@ -223,5 +224,68 @@ export const billingRouter = router({
     } catch {
       return [];
     }
+  }),
+
+  cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
+    await checkBillingRate(ctx.session.user.id);
+    cache.delete(`billing:sub:${ctx.session.user.id}`);
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { stripeId: true },
+    });
+    if (!user?.stripeId) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'No Stripe account found' });
+    }
+
+    const stripe = getStripe();
+    const subscriptions = await stripe.subscriptions.list({
+      customer: user.stripeId,
+      limit: 5,
+    });
+    const activeSub = subscriptions.data.find(
+      (s) => s.status === 'active' || s.status === 'past_due' || s.status === 'trialing',
+    );
+    if (!activeSub) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'No active subscription found' });
+    }
+
+    // Cancel at period end — user keeps access until the current billing period expires
+    await stripe.subscriptions.update(activeSub.id, {
+      cancel_at_period_end: true,
+    });
+
+    return { cancelAtPeriodEnd: true, currentPeriodEnd: activeSub.items.data[0]?.current_period_end ?? null };
+  }),
+
+  reactivateSubscription: protectedProcedure.mutation(async ({ ctx }) => {
+    await checkBillingRate(ctx.session.user.id);
+    cache.delete(`billing:sub:${ctx.session.user.id}`);
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { stripeId: true },
+    });
+    if (!user?.stripeId) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'No Stripe account found' });
+    }
+
+    const stripe = getStripe();
+    const subscriptions = await stripe.subscriptions.list({
+      customer: user.stripeId,
+      limit: 5,
+    });
+    // Find a subscription that was cancelled at period end but is still active
+    const cancelledSub = subscriptions.data.find(
+      (s) => (s.status === 'active' || s.status === 'trialing') && s.cancel_at_period_end,
+    );
+    if (!cancelledSub) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'No cancelled subscription to reactivate' });
+    }
+
+    // Remove the scheduled cancellation — subscription continues as normal
+    await stripe.subscriptions.update(cancelledSub.id, {
+      cancel_at_period_end: false,
+    });
+
+    return { reactivated: true };
   }),
 });

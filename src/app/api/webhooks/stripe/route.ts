@@ -527,6 +527,24 @@ export async function POST(req: NextRequest) {
           // On earlier attempts, just log — Stripe's smart retries may recover payment.
           const attemptCount = failedInvoice.attempt_count ?? 0;
 
+          // Send payment-failed notification email (non-blocking, on every attempt)
+          try {
+            const failedUser = await getUserEmailByStripeId(failedCustomerId);
+            if (failedUser?.email) {
+              sendEmail({
+                to: failedUser.email,
+                template: 'payment-failed',
+                data: {
+                  plan: failedUser.plan,
+                  attempt: attemptCount,
+                  locale: 'ru',
+                },
+              }).catch((err) => log.error('Payment-failed email failed', { error: String(err) }));
+            }
+          } catch {
+            // Never block webhook due to email
+          }
+
           if (attemptCount >= 3) {
             // Final retry exhausted — downgrade to FREE
             try {

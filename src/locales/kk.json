@@ -513,6 +513,8 @@
   "editor.toolbar.undo": "Қайтару",
   "editor.toolbar.redo": "Қайталау",
   "editor.toolbar.save": "Сақтау",
+  "editor.toolbar.generateScript": "AI көмегімен сценарий жасау",
+  "editor.toolbar.createShorts": "Жобадан Shorts жасау",
   "editor.actionUndone": "Әрекет қайтарылды",
   "editor.actionRedone": "Әрекет қалпына келтірілді",
   "editor.undoHint": "Қайтару үшін Ctrl+Z",

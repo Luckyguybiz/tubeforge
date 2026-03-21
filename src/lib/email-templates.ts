@@ -748,10 +748,64 @@ function reengagementDay14Template(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Payment failed template
+// ---------------------------------------------------------------------------
+
+function paymentFailedTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const plan = String(data.plan || 'PRO');
+  const attempt = Number(data.attempt || 1);
+
+  if (locale === 'en') {
+    return {
+      subject: `Payment failed - TubeForge ${plan}`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Payment Failed</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          We were unable to process your payment for TubeForge <strong>${plan}</strong> (attempt ${attempt}).
+          Please update your payment method to keep your subscription active.
+        </p>
+        ${attempt >= 3
+          ? `<p style="color:#e74c3c;font-size:15px;line-height:1.6;margin:0 0 20px;font-weight:600;">
+              This was the final retry. Your account has been downgraded to the Free plan.
+              Update your payment method and resubscribe to restore access.
+            </p>`
+          : `<p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+              We will retry automatically, but we recommend updating your payment details now.
+            </p>`
+        }
+        ${ctaButton('Update Payment Method', `${APP_URL}/settings/billing`)}
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u043F\u043B\u0430\u0442\u044B \u2014 TubeForge ${plan}`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u043F\u043B\u0430\u0442\u044B</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C \u043F\u043B\u0430\u0442\u0451\u0436 \u0437\u0430 TubeForge <strong>${plan}</strong> (\u043F\u043E\u043F\u044B\u0442\u043A\u0430 ${attempt}).
+        \u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0441\u043F\u043E\u0441\u043E\u0431 \u043E\u043F\u043B\u0430\u0442\u044B, \u0447\u0442\u043E\u0431\u044B \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443.
+      </p>
+      ${attempt >= 3
+        ? `<p style="color:#e74c3c;font-size:15px;line-height:1.6;margin:0 0 20px;font-weight:600;">
+            \u042D\u0442\u043E \u0431\u044B\u043B\u0430 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u043E\u043F\u044B\u0442\u043A\u0430. \u0412\u0430\u0448 \u0430\u043A\u043A\u0430\u0443\u043D\u0442 \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0451\u043D \u043D\u0430 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D.
+            \u041E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0441\u043F\u043E\u0441\u043E\u0431 \u043E\u043F\u043B\u0430\u0442\u044B \u0438 \u043E\u0444\u043E\u0440\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443 \u0437\u0430\u043D\u043E\u0432\u043E.
+          </p>`
+        : `<p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+            \u041C\u044B \u043F\u043E\u0432\u0442\u043E\u0440\u0438\u043C \u043F\u043E\u043F\u044B\u0442\u043A\u0443 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438, \u043D\u043E \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u0435\u043C \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435 \u043E\u043F\u043B\u0430\u0442\u044B \u0441\u0435\u0439\u0447\u0430\u0441.
+          </p>`
+      }
+      ${ctaButton('\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u043F\u043E\u0441\u043E\u0431 \u043E\u043F\u043B\u0430\u0442\u044B', `${APP_URL}/settings/billing`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -766,6 +820,7 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'team-invite': teamInviteTemplate,
   'plan-change-confirmation': planChangeConfirmationTemplate,
   'comment-mention': commentMentionTemplate,
+  'payment-failed': paymentFailedTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {

@@ -135,6 +135,7 @@ model Scene {
   @@index([projectId])
   @@index([projectId, order])
   @@index([taskId])
+  @@index([status])
 }
 
 enum Role {
@@ -210,6 +211,7 @@ model Asset {
 
   @@index([userId])
   @@index([userId, folderId])
+  @@index([userId, createdAt])
   @@index([folderId])
 }
 
@@ -276,4 +278,6 @@ model AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@index([action])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
 }

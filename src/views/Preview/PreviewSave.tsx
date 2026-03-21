@@ -430,7 +430,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             }} />
           ))}
           {/* Celebration card */}
-          <div style={{
+          <div role="dialog" aria-modal="true" aria-label={t('celebration.title')} style={{
             position: 'fixed', zIndex: 10000,
             top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',

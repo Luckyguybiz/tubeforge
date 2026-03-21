@@ -3,6 +3,12 @@
  *
  * The enhanced OnboardingTour now uses tRPC (user.getProfile, user.completeOnboarding)
  * and next-auth for session data. We mock all external dependencies.
+ *
+ * Current steps (4 total):
+ *   0 – Welcome (center modal)
+ *   1 – New Project (spotlight)
+ *   2 – AI Tools (spotlight)
+ *   3 – Done / All Set (center modal)
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -35,16 +41,12 @@ vi.mock('@/lib/constants', () => ({
 const ruTranslations: Record<string, string> = {
   'onboarding.welcomeTitle': 'Добро пожаловать, {name}!',
   'onboarding.welcomeDesc': 'Ваша ИИ-студия для YouTube.',
-  'onboarding.sidebarTitle': 'Навигация',
-  'onboarding.sidebarDesc': 'Используйте боковое меню.',
   'onboarding.newProjectTitle': 'Создайте первый проект',
   'onboarding.newProjectDesc': 'Нажмите «Новый проект».',
-  'onboarding.toolsTitle': 'Бесплатные инструменты',
-  'onboarding.toolsDesc': 'Конвертируйте видео в MP3.',
-  'onboarding.billingTitle': 'Расширьте возможности',
-  'onboarding.billingDesc': 'Обновите план.',
-  'onboarding.doneTitle': 'Всё готово!',
-  'onboarding.doneDesc': 'Вы готовы к работе.',
+  'onboarding.aiTitle': 'ИИ-инструменты',
+  'onboarding.aiDesc': 'Генерируйте контент с помощью ИИ.',
+  'onboarding.doneNewTitle': 'Всё готово!',
+  'onboarding.doneNewDesc': 'Вы готовы к работе.',
   'onboarding.next': 'Далее',
   'onboarding.start': 'Начать создавать',
   'onboarding.back': 'Назад',
@@ -116,14 +118,14 @@ describe('OnboardingTour', () => {
   it('should show first step initially with step indicator', () => {
     render(<OnboardingTour />);
     expect(screen.getByText('Добро пожаловать, Test User!')).toBeDefined();
-    expect(screen.getByText('1 из 6')).toBeDefined();
+    expect(screen.getByText('1 из 4')).toBeDefined();
   });
 
   it('should advance to next step when Далее is clicked', () => {
     render(<OnboardingTour />);
     fireEvent.click(screen.getByText('Далее'));
-    expect(screen.getByText('Навигация')).toBeDefined();
-    expect(screen.getByText('2 из 6')).toBeDefined();
+    expect(screen.getByText('Создайте первый проект')).toBeDefined();
+    expect(screen.getByText('2 из 4')).toBeDefined();
   });
 
   it('should show Назад button on second step', () => {
@@ -141,7 +143,8 @@ describe('OnboardingTour', () => {
 
   it('should show Начать создавать on last step', () => {
     render(<OnboardingTour />);
-    for (let i = 0; i < 5; i++) {
+    // 4 steps total, click Далее 3 times to reach the last step (index 3)
+    for (let i = 0; i < 3; i++) {
       fireEvent.click(screen.getByText('Далее'));
     }
     expect(screen.getByText('Начать создавать')).toBeDefined();
@@ -150,7 +153,7 @@ describe('OnboardingTour', () => {
 
   it('should call completeOnboarding mutation when finishing', () => {
     const { container } = render(<OnboardingTour />);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       fireEvent.click(screen.getByText('Далее'));
     }
     fireEvent.click(screen.getByText('Начать создавать'));
@@ -175,7 +178,7 @@ describe('OnboardingTour', () => {
   it('should advance on ArrowRight key', () => {
     render(<OnboardingTour />);
     fireEvent.keyDown(window, { key: 'ArrowRight' });
-    expect(screen.getByText('Навигация')).toBeDefined();
+    expect(screen.getByText('Создайте первый проект')).toBeDefined();
   });
 
   it('should go back on ArrowLeft key', () => {
@@ -188,7 +191,7 @@ describe('OnboardingTour', () => {
   it('should advance on Enter key', () => {
     render(<OnboardingTour />);
     fireEvent.keyDown(window, { key: 'Enter' });
-    expect(screen.getByText('Навигация')).toBeDefined();
+    expect(screen.getByText('Создайте первый проект')).toBeDefined();
   });
 
   it('should have accessible dialog role', () => {
