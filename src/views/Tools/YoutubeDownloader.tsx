@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { ToolPageShell } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -12,20 +11,21 @@ interface AnalysisResult {
   videoId: string;
   title: string;
   channel: string;
-  channelUrl: string;
   thumbnail: string;
-  thumbnailHq: string;
-  thumbnailMq: string;
-  watchUrl: string;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
-  publishedAt: string;
-  duration: string;
-  scores: { hook: number; title: number; ctr: number; engagement: number };
-  structure: { label: string; icon: string; start: string; end: string; color: string }[];
-  viralFactors: string[];
-  tips: string[];
+  publishedAt: string | null;
+  duration: string | null;
+  stats: { views: number | null; likes: number | null; comments: number | null };
+  analysis: {
+    hookScore: number;
+    titleScore: number;
+    thumbnailPresent: boolean;
+    engagementRate: number;
+    estimatedCTR: string;
+    contentType: string;
+    tips: string[];
+    structure: { label: string; icon: string; start: string; end: string; color: string }[];
+    viralFactors: string[];
+  };
 }
 
 /* ── Helpers ───────────────────────────────────────────────────── */
@@ -83,7 +83,7 @@ export function YoutubeDownloader() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [urlError, setUrlError] = useState('');
   const [fetchError, setFetchError] = useState('');
-  const [thumbError, setThumbError] = useState(false);
+  /* thumbnail error handling removed — using plain img */
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -110,7 +110,7 @@ export function YoutubeDownloader() {
     setLoading(true);
     setAnalysis(null);
     setFetchError('');
-    setThumbError(false);
+    /* reset */
 
     const timeout = setTimeout(() => controller.abort(), 30_000);
 
@@ -156,10 +156,11 @@ export function YoutubeDownloader() {
     } catch { /* clipboard not available */ }
   };
 
-  const thumbnailSrc = analysis ? (thumbError ? analysis.thumbnailMq : analysis.thumbnail) : null;
-  const engPct = analysis && analysis.viewCount > 0
-    ? (((analysis.likeCount + analysis.commentCount) / analysis.viewCount) * 100)
-    : 0;
+  const thumbnailSrc = analysis?.thumbnail ?? null;
+  const views = analysis?.stats.views ?? 0;
+  const likes = analysis?.stats.likes ?? 0;
+  const comments = analysis?.stats.comments ?? 0;
+  const engPct = views > 0 ? (((likes + comments) / views) * 100) : 0;
 
   return (
     <ToolPageShell
@@ -258,11 +259,10 @@ export function YoutubeDownloader() {
           }}>
             {thumbnailSrc && (
               <div style={{ width: 200, height: 112, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                <Image
-                  src={thumbnailSrc} alt={analysis.title} fill
-                  style={{ objectFit: 'cover' }}
-                  onError={() => setThumbError(true)}
-                  unoptimized
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={thumbnailSrc} alt={analysis.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
             )}
@@ -271,7 +271,7 @@ export function YoutubeDownloader() {
                 {analysis.title}
               </h3>
               <p style={{ fontSize: 13, color: C.sub, margin: '0 0 8px' }}>
-                {analysis.channel} · {formatNumber(analysis.viewCount)} views · {analysis.publishedAt}
+                {analysis.channel}{views > 0 ? ` · ${formatNumber(views)} views` : ''}{analysis.publishedAt ? ` · ${analysis.publishedAt}` : ''}
               </p>
               {analysis.duration && (
                 <span style={{ fontSize: 12, color: C.dim, background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)', padding: '3px 8px', borderRadius: 6 }}>
@@ -286,20 +286,20 @@ export function YoutubeDownloader() {
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
             padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
           }}>
-            <ScoreGauge value={analysis.scores.hook} label={t('tools.ytdl.hookScore') || 'Hook'} color={scoreColor(analysis.scores.hook)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
-            <ScoreGauge value={analysis.scores.title} label={t('tools.ytdl.titleScore') || 'Title'} color={scoreColor(analysis.scores.title)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
-            <ScoreGauge value={analysis.scores.ctr} label="CTR" color={scoreColor(analysis.scores.ctr)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
-            <ScoreGauge value={Math.round(engPct * 10)} label={t('tools.ytdl.engagement') || 'Engagement'} color={scoreColor(Math.min(10, Math.round(engPct * 2)))} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={analysis.analysis.hookScore} label={t('tools.ytdl.hookScore') || 'Hook'} color={scoreColor(analysis.analysis.hookScore)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={analysis.analysis.titleScore} label={t('tools.ytdl.titleScore') || 'Title'} color={scoreColor(analysis.analysis.titleScore)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={analysis.analysis.estimatedCTR === 'very_high' ? 10 : analysis.analysis.estimatedCTR === 'high' ? 8 : analysis.analysis.estimatedCTR === 'medium' ? 5 : 3} label="CTR" color={scoreColor(analysis.analysis.estimatedCTR === 'very_high' ? 10 : analysis.analysis.estimatedCTR === 'high' ? 8 : analysis.analysis.estimatedCTR === 'medium' ? 5 : 3)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={Math.min(10, Math.round(engPct * 2))} label={t('tools.ytdl.engagement') || 'Engagement'} color={scoreColor(Math.min(10, Math.round(engPct * 2)))} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
           </div>
 
           {/* ── Video Structure ────────────────────────────── */}
-          {analysis.structure.length > 0 && (
+          {analysis.analysis.structure.length > 0 && (
             <div style={{ padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}` }}>
               <h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 14px' }}>
                 {t('tools.ytdl.structure') || 'Video Structure'}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {analysis.structure.map((seg, i) => (
+                {analysis.analysis.structure.map((seg, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 18, width: 28, textAlign: 'center' }}>{seg.icon}</span>
                     <div style={{
@@ -319,13 +319,13 @@ export function YoutubeDownloader() {
           )}
 
           {/* ── Viral Factors ──────────────────────────────── */}
-          {analysis.viralFactors.length > 0 && (
+          {analysis.analysis.viralFactors.length > 0 && (
             <div style={{ padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}` }}>
               <h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
                 {t('tools.ytdl.viralFactors') || 'Why This Video Works'}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {analysis.viralFactors.map((f, i) => (
+                {analysis.analysis.viralFactors.map((f, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: C.text }}>
                     <span style={{ color: '#22c55e', fontSize: 16 }}>✓</span> {f}
                   </div>
@@ -335,13 +335,13 @@ export function YoutubeDownloader() {
           )}
 
           {/* ── Tips ───────────────────────────────────────── */}
-          {analysis.tips.length > 0 && (
+          {analysis.analysis.tips.length > 0 && (
             <div style={{ padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}` }}>
               <h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
                 {t('tools.ytdl.tips') || 'Tips for Improvement'}
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {analysis.tips.map((tip, i) => (
+                {analysis.analysis.tips.map((tip, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
                     <span style={{ color: '#f59e0b', fontSize: 16, flexShrink: 0 }}>💡</span> {tip}
                   </div>
@@ -352,7 +352,7 @@ export function YoutubeDownloader() {
 
           {/* ── Open on YouTube ─────────────────────────────── */}
           <a
-            href={analysis.watchUrl}
+            href={`https://www.youtube.com/watch?v=${analysis.videoId}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
