@@ -820,7 +820,6 @@ interface ContentStrategy {
   bestPostingTime: string;
   recommendedFrequency: string;
   crossPlatformPotential: string[];
-  monetizationPotential: { level: 'high' | 'medium' | 'low'; reason: string };
   audienceAge: string;
 }
 
@@ -880,28 +879,6 @@ function analyzeStrategy(
     crossPlatform.push('Telegram', 'VK', 'Дзен');
   }
 
-  // Monetization potential
-  const highMonetization = ['tutorial', 'review', 'podcast'];
-  const lowMonetization = ['music', 'gaming'];
-  let monetizationLevel: 'high' | 'medium' | 'low';
-  let monetizationReason: string;
-
-  if (highMonetization.includes(contentType)) {
-    monetizationLevel = 'high';
-    monetizationReason = 'Высокий CPM в нише и возможности для спонсорских интеграций';
-  } else if (lowMonetization.includes(contentType)) {
-    monetizationLevel = 'low';
-    monetizationReason = 'Низкий CPM в нише, но возможны донаты и мерч';
-  } else {
-    monetizationLevel = 'medium';
-    monetizationReason = 'Средний CPM, рассмотрите диверсификацию доходов';
-  }
-
-  if (isShort) {
-    monetizationLevel = 'low';
-    monetizationReason = 'Shorts монетизируются через фонд Shorts — CPM значительно ниже обычных видео';
-  }
-
   // Audience age estimate based on content type
   const ageEstimates: Record<string, string> = {
     tutorial: '25-44 — профессионалы и студенты',
@@ -921,7 +898,6 @@ function analyzeStrategy(
     bestPostingTime,
     recommendedFrequency,
     crossPlatformPotential: [...new Set(crossPlatform)],
-    monetizationPotential: { level: monetizationLevel, reason: monetizationReason },
     audienceAge,
   };
 }

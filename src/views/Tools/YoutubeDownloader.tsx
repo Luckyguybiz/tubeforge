@@ -347,7 +347,7 @@ export function YoutubeDownloader() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {strategy?.bestPostingTime != null && <StatCell label={'\u041B\u0443\u0447\u0448\u0435\u0435 \u0432\u0440\u0435\u043C\u044F'} value={String(strategy.bestPostingTime)} />}
                   {strategy?.recommendedFrequency != null && <StatCell label={'\u0427\u0430\u0441\u0442\u043E\u0442\u0430'} value={String(strategy.recommendedFrequency)} />}
-                  {strategy?.monetizationPotential != null && <StatCell label={'\u041C\u043E\u043D\u0435\u0442\u0438\u0437\u0430\u0446\u0438\u044F'} value={safeStr(strategy.monetizationPotential)} />}
+  
                   {strategy?.audienceAge != null && <StatCell label={'\u0410\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F'} value={String(strategy.audienceAge)} />}
                 </div>
                 {((strategy?.crossPlatformPotential ?? []) as string[]).length > 0 && (
@@ -518,24 +518,30 @@ export function YoutubeDownloader() {
             </div>
           )}
 
-          {/* Open on YouTube */}
-          {data?.videoId && (
-            <div style={{ marginTop: 8 }}>
+          {/* Disclosure + YouTube branding (required by YouTube API TOS) */}
+          <div style={{ ...card, background: isDark ? 'rgba(255,255,255,0.02)' : '#fafafa', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="24" height="17" viewBox="0 0 159 110" fill="none"><path d="M154 17.5c-1.8-6.7-7.1-12-13.8-13.8C128 0 78.8 0 78.8 0S29.5 0 17.3 3.7C10.6 5.5 5.3 10.8 3.5 17.5 0 29.7 0 55 0 55s0 25.3 3.5 37.5c1.8 6.7 7.1 12 13.8 13.8C29.5 110 78.8 110 78.8 110s49.2 0 61.5-3.7c6.7-1.8 12-7.1 13.8-13.8C157.5 80.3 157.5 55 157.5 55s0-25.3-3.5-37.5z" fill="#FF0000"/><path d="M63 79.5L104 55 63 30.5v49z" fill="#fff"/></svg>
+              <span style={{ fontSize: 11, color: C?.dim ?? '#999' }}>
+                {'\u0414\u0430\u043D\u043D\u044B\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B \u0447\u0435\u0440\u0435\u0437 YouTube Data API. \u041E\u0446\u0435\u043D\u043A\u0438 (\u0445\u0443\u043A, CTR, \u0432\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C) \u2014 \u0440\u0430\u0441\u0447\u0451\u0442\u044B TubeForge, \u043D\u0435 \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0435 \u043C\u0435\u0442\u0440\u0438\u043A\u0438 YouTube.'}
+              </span>
+            </div>
+            {data?.videoId && (
               <a
                 href={`https://www.youtube.com/watch?v=${String(data.videoId)}`}
                 target="_blank" rel="noopener noreferrer"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '10px 20px', borderRadius: 10,
-                  border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
-                  color: C?.text ?? '#111', fontWeight: 600, fontSize: 13, textDecoration: 'none', fontFamily: 'inherit',
+                  display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+                  padding: '8px 16px', borderRadius: 8,
+                  background: '#ff0000', color: '#fff',
+                  fontWeight: 600, fontSize: 12, textDecoration: 'none', fontFamily: 'inherit',
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                {'\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043D\u0430 YouTube'}
+                <svg width="14" height="10" viewBox="0 0 159 110" fill="none"><path d="M154 17.5c-1.8-6.7-7.1-12-13.8-13.8C128 0 78.8 0 78.8 0S29.5 0 17.3 3.7C10.6 5.5 5.3 10.8 3.5 17.5 0 29.7 0 55 0 55s0 25.3 3.5 37.5c1.8 6.7 7.1 12 13.8 13.8C29.5 110 78.8 110 78.8 110s49.2 0 61.5-3.7c6.7-1.8 12-7.1 13.8-13.8C157.5 80.3 157.5 55 157.5 55s0-25.3-3.5-37.5z" fill="#fff"/><path d="M63 79.5L104 55 63 30.5v49z" fill="#ff0000"/></svg>
+                {'\u0421\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043D\u0430 YouTube'}
               </a>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Responsive */}
           <style>{`
