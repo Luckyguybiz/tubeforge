@@ -40,6 +40,7 @@ export function VideoTranslator() {
   const [error, setError] = useState<string | null>(null);
   const [dubbingId, setDubbingId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState('');
   const [expectedDuration, setExpectedDuration] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -76,12 +77,23 @@ export function VideoTranslator() {
           setError(data.error ?? '\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0435');
           if (pollRef.current) clearInterval(pollRef.current);
         } else {
-          // Estimate progress
-          if (expectedDuration > 0) {
-            setProgress(Math.min(Math.round((elapsed / expectedDuration) * 100), 95));
-          } else {
-            setProgress(Math.min(elapsed * 2, 95));
-          }
+          // Show real status from ElevenLabs
+          const statusMap: Record<string, string> = {
+            preparing: '\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430 \u0432\u0438\u0434\u0435\u043E...',
+            transcribing: '\u0420\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u0451\u043C \u0440\u0435\u0447\u044C...',
+            translating: '\u041F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0442\u0435\u043A\u0441\u0442...',
+            generating: '\u0413\u0435\u043D\u0435\u0440\u0438\u0440\u0443\u0435\u043C \u043E\u0437\u0432\u0443\u0447\u043A\u0443...',
+            rendering: '\u0421\u0431\u043E\u0440\u043A\u0430 \u0432\u0438\u0434\u0435\u043E...',
+          };
+          const phaseProgress: Record<string, number> = {
+            preparing: 15,
+            transcribing: 35,
+            translating: 55,
+            generating: 75,
+            rendering: 90,
+          };
+          setStatusText(statusMap[data.status] ?? data.status);
+          setProgress(phaseProgress[data.status] ?? Math.min(elapsed * 2, 90));
         }
       } catch { /* network error, retry */ }
     }, 5000);
@@ -284,10 +296,10 @@ export function VideoTranslator() {
             </svg>
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 8 }}>
-            {status === 'uploading' ? '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...' : '\u041F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0432\u0438\u0434\u0435\u043E...'}
+            {status === 'uploading' ? '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...' : (statusText || '\u041F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0432\u0438\u0434\u0435\u043E...')}
           </div>
           <div style={{ fontSize: 13, color: C?.sub ?? '#888', marginBottom: 20 }}>
-            {'\u041A\u043B\u043E\u043D\u0438\u0440\u0443\u0435\u043C \u0433\u043E\u043B\u043E\u0441, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0438 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0435\u043C'}
+            {expectedDuration > 0 ? `\u041E\u0436\u0438\u0434\u0430\u0435\u043C\u043E\u0435 \u0432\u0440\u0435\u043C\u044F: ~${Math.ceil(expectedDuration / 60)} \u043C\u0438\u043D.` : '\u041A\u043B\u043E\u043D\u0438\u0440\u0443\u0435\u043C \u0433\u043E\u043B\u043E\u0441, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0438 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0435\u043C'}
           </div>
           {/* Progress bar */}
           <div style={{ height: 6, borderRadius: 3, background: C?.border ?? '#eee', overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
