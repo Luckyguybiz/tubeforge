@@ -2503,6 +2503,111 @@ function PushNotificationSection({
   );
 }
 
+/** Email notification preferences section — persisted in localStorage */
+function EmailNotificationSection({
+  C,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+  t,
+}: {
+  C: Theme;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+  t: (key: string) => string;
+}) {
+  const STORAGE_KEY = 'tf-email-notif-prefs';
+
+  const getPrefs = useCallback(() => {
+    if (typeof window === 'undefined') return { marketing: false, product: true, security: true };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw) as { marketing: boolean; product: boolean; security: boolean };
+    } catch { /* ignore */ }
+    return { marketing: false, product: true, security: true };
+  }, []);
+
+  const [prefs, setPrefs] = useState(getPrefs);
+
+  const togglePref = useCallback((key: 'marketing' | 'product' | 'security') => {
+    setPrefs((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const items: { key: 'marketing' | 'product' | 'security'; label: string; desc: string }[] = [
+    { key: 'marketing', label: t('settings.emailMarketing'), desc: t('settings.emailMarketingDesc') },
+    { key: 'product', label: t('settings.emailProduct'), desc: t('settings.emailProductDesc') },
+    { key: 'security', label: t('settings.emailSecurity'), desc: t('settings.emailSecurityDesc') },
+  ];
+
+  return (
+    <div style={sectionStyle}>
+      <h2 style={sectionHeaderStyle}>{t('settings.emailNotifications')}</h2>
+      <p style={sectionDescStyle}>{t('settings.emailNotificationsDesc')}</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {items.map(({ key, label, desc }) => (
+          <div
+            key={key}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              padding: '14px 18px',
+              background: C.surface,
+              borderRadius: 12,
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>{label}</div>
+              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{desc}</div>
+            </div>
+            <button
+              onClick={() => togglePref(key)}
+              style={{
+                position: 'relative',
+                width: 44,
+                height: 24,
+                borderRadius: 12,
+                border: 'none',
+                cursor: key === 'security' ? 'not-allowed' : 'pointer',
+                background: prefs[key] ? '#6366f1' : C.border,
+                transition: 'background .2s',
+                padding: 0,
+                flexShrink: 0,
+                opacity: key === 'security' ? 0.7 : 1,
+              }}
+              disabled={key === 'security'}
+              aria-label={label}
+              title={key === 'security' ? 'Always enabled for your safety' : undefined}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: prefs[key] ? 22 : 2,
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  background: '#fff',
+                  transition: 'left .2s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+                }}
+              />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Channels section skeleton */
 function ChannelsSkeleton() {
   return (
