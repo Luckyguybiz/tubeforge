@@ -214,13 +214,49 @@ export default function ContactPage() {
                 padding: '24px',
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Email поддержки</div>
-              <a
-                href="mailto:support@tubeforge.co"
-                style={{ color: C.accent, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}
-              >
-                support@tubeforge.co
-              </a>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Контакты</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <div style={{ fontSize: 12, color: C.dim, marginBottom: 4, fontWeight: 500 }}>Email</div>
+                  <a
+                    href="mailto:support@tubeforge.co"
+                    style={{ color: C.accent, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    support@tubeforge.co
+                  </a>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: C.dim, marginBottom: 4, fontWeight: 500 }}>Telegram</div>
+                  <a
+                    href="https://t.me/tubeforge_support"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: C.accent, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    @tubeforge_support
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Office hours */}
+            <div
+              style={{
+                background: C.card,
+                border: `1px solid ${C.border}`,
+                borderRadius: 14,
+                padding: '24px',
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
+                Часы работы
+              </div>
+              <p style={{ fontSize: 14, color: C.sub, margin: 0, lineHeight: 1.6 }}>
+                Пн — Пт, 9:00 — 18:00 UTC
+              </p>
+              <p style={{ fontSize: 12, color: C.dim, margin: '8px 0 0', lineHeight: 1.5 }}>
+                В выходные и праздники мы обрабатываем запросы с задержкой. Срочные вопросы — пишите в Telegram.
+              </p>
             </div>
 
             {/* Response times */}
