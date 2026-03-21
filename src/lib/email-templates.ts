@@ -801,11 +801,247 @@ function paymentFailedTemplate(data: TemplateData): TemplateResult {
   };
 }
 
+
+// ---------------------------------------------------------------------------
+// Feature discovery template (Day 3 welcome sequence)
+// ---------------------------------------------------------------------------
+
+function featureDiscoveryTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Did you know? TubeForge can translate videos',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Many creators don&rsquo;t realize TubeForge can automatically translate your videos into multiple languages, reaching a global audience effortlessly.
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">&#127760;</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">AI-powered video translation in 50+ languages</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">&#127908;</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Natural voice cloning keeps your unique tone</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">&#128200;</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Reach 10x more viewers with localized content</span>
+          </td></tr>
+        </table>
+        ${ctaButton('Try Video Translation', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u0412\u044B \u0437\u043D\u0430\u043B\u0438? TubeForge \u0443\u043C\u0435\u0435\u0442 \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u0442\u044C \u0432\u0438\u0434\u0435\u043E',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041C\u043D\u043E\u0433\u0438\u0435 \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u044B \u043D\u0435 \u0437\u043D\u0430\u044E\u0442, \u0447\u0442\u043E TubeForge \u043C\u043E\u0436\u0435\u0442 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u0442\u044C \u0432\u0430\u0448\u0438 \u0432\u0438\u0434\u0435\u043E \u043D\u0430 \u0434\u0435\u0441\u044F\u0442\u043A\u0438 \u044F\u0437\u044B\u043A\u043E\u0432, \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u044F \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u043E\u0439 \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u0438.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">&#127760;</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">AI-\u043F\u0435\u0440\u0435\u0432\u043E\u0434 \u0432\u0438\u0434\u0435\u043E \u043D\u0430 50+ \u044F\u0437\u044B\u043A\u043E\u0432</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">&#127908;</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u041A\u043B\u043E\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 \u0433\u043E\u043B\u043E\u0441\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442 \u0432\u0430\u0448\u0443 \u0443\u043D\u0438\u043A\u0430\u043B\u044C\u043D\u0443\u044E \u0438\u043D\u0442\u043E\u043D\u0430\u0446\u0438\u044E</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">&#128200;</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u041E\u0445\u0432\u0430\u0442\u0438\u0442\u0435 \u0432 10 \u0440\u0430\u0437 \u0431\u043E\u043B\u044C\u0448\u0435 \u0437\u0440\u0438\u0442\u0435\u043B\u0435\u0439 \u0441 \u043B\u043E\u043A\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u043C \u043A\u043E\u043D\u0442\u0435\u043D\u0442\u043E\u043C</span>
+        </td></tr>
+      </table>
+      ${ctaButton('\u041F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C \u043F\u0435\u0440\u0435\u0432\u043E\u0434', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Social proof template (Day 7 welcome sequence)
+// ---------------------------------------------------------------------------
+
+function socialProofTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'How creators use TubeForge',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Thousands of creators already use TubeForge to grow their channels. Here&rsquo;s what they&rsquo;ve achieved:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:16px;background:#f8f7ff;border-radius:8px;margin-bottom:12px;">
+            <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#6c5ce7;">50,000+</p>
+            <p class="text-secondary" style="margin:0;font-size:14px;color:#777;">Videos analyzed &amp; optimized</p>
+          </td></tr>
+          <tr><td style="height:12px;"></td></tr>
+          <tr><td style="padding:16px;background:#f8f7ff;border-radius:8px;margin-bottom:12px;">
+            <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#6c5ce7;">3x</p>
+            <p class="text-secondary" style="margin:0;font-size:14px;color:#777;">Average view growth after 30 days</p>
+          </td></tr>
+          <tr><td style="height:12px;"></td></tr>
+          <tr><td style="padding:16px;background:#f8f7ff;border-radius:8px;">
+            <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#6c5ce7;">12,000+</p>
+            <p class="text-secondary" style="margin:0;font-size:14px;color:#777;">Active creators on the platform</p>
+          </td></tr>
+        </table>
+        <div style="background:#f0efff;border-left:4px solid #6c5ce7;padding:16px;border-radius:0 8px 8px 0;margin-bottom:24px;">
+          <p style="margin:0 0 8px;color:#333;font-size:15px;font-style:italic;">&ldquo;TubeForge helped me double my subscriber count in just 2 months. The AI analytics are a game-changer.&rdquo;</p>
+          <p style="margin:0;color:#6c5ce7;font-size:13px;font-weight:600;">&mdash; Alex K., YouTube creator</p>
+        </div>
+        ${ctaButton('Upgrade to Pro', `${APP_URL}/settings/billing`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u041A\u0430\u043A \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u044B \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0442 TubeForge',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u0422\u044B\u0441\u044F\u0447\u0438 \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u043E\u0432 \u0443\u0436\u0435 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044E\u0442 TubeForge \u0434\u043B\u044F \u0440\u043E\u0441\u0442\u0430 \u0441\u0432\u043E\u0438\u0445 \u043A\u0430\u043D\u0430\u043B\u043E\u0432. \u0412\u043E\u0442 \u0447\u0435\u0433\u043E \u043E\u043D\u0438 \u0434\u043E\u0441\u0442\u0438\u0433\u043B\u0438:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:16px;background:#f8f7ff;border-radius:8px;margin-bottom:12px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#6c5ce7;">50 000+</p>
+          <p class="text-secondary" style="margin:0;font-size:14px;color:#777;">\u0412\u0438\u0434\u0435\u043E \u043F\u0440\u043E\u0430\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u0438 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043E</p>
+        </td></tr>
+        <tr><td style="height:12px;"></td></tr>
+        <tr><td style="padding:16px;background:#f8f7ff;border-radius:8px;margin-bottom:12px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#6c5ce7;">3x</p>
+          <p class="text-secondary" style="margin:0;font-size:14px;color:#777;">\u0421\u0440\u0435\u0434\u043D\u0438\u0439 \u0440\u043E\u0441\u0442 \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432 \u0437\u0430 30 \u0434\u043D\u0435\u0439</p>
+        </td></tr>
+        <tr><td style="height:12px;"></td></tr>
+        <tr><td style="padding:16px;background:#f8f7ff;border-radius:8px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#6c5ce7;">12 000+</p>
+          <p class="text-secondary" style="margin:0;font-size:14px;color:#777;">\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u043E\u0432 \u043D\u0430 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0435</p>
+        </td></tr>
+      </table>
+      <div style="background:#f0efff;border-left:4px solid #6c5ce7;padding:16px;border-radius:0 8px 8px 0;margin-bottom:24px;">
+        <p style="margin:0 0 8px;color:#333;font-size:15px;font-style:italic;">&laquo;TubeForge \u043F\u043E\u043C\u043E\u0433 \u043C\u043D\u0435 \u0443\u0434\u0432\u043E\u0438\u0442\u044C \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043F\u043E\u0434\u043F\u0438\u0441\u0447\u0438\u043A\u043E\u0432 \u0432\u0441\u0435\u0433\u043E \u0437\u0430 2 \u043C\u0435\u0441\u044F\u0446\u0430. AI-\u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430 &mdash; \u044D\u0442\u043E \u0440\u0435\u0432\u043E\u043B\u044E\u0446\u0438\u044F.&raquo;</p>
+        <p style="margin:0;color:#6c5ce7;font-size:13px;font-weight:600;">&mdash; \u0410\u043B\u0435\u043A\u0441 \u041A., YouTube-\u043A\u0440\u0435\u0430\u0442\u043E\u0440</p>
+      </div>
+      ${ctaButton('\u041F\u0435\u0440\u0435\u0439\u0442\u0438 \u043D\u0430 Pro', `${APP_URL}/settings/billing`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Upgrade nudge template (Day 14 welcome sequence)
+// ---------------------------------------------------------------------------
+
+function upgradeNudgeTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: "Unlock your channel's full potential",
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          You&rsquo;ve been using TubeForge for two weeks now. Ready to take your channel to the next level?
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+          <tr style="background:#f8f7ff;">
+            <td style="padding:12px 16px;font-weight:700;color:#333;font-size:15px;"></td>
+            <td style="padding:12px 16px;font-weight:700;color:#888;font-size:14px;text-align:center;">Free</td>
+            <td style="padding:12px 16px;font-weight:700;color:#6c5ce7;font-size:14px;text-align:center;">Pro</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">Video analyses / mo</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">5</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">Unlimited</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">AI generation</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">Basic</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">Advanced</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">Video translation</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">&mdash;</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">&check; 50+ languages</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">Priority support</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">&mdash;</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">&check;</td>
+          </tr>
+        </table>
+        <div style="background:#f0efff;padding:16px;border-radius:8px;text-align:center;margin-bottom:24px;">
+          <p style="margin:0 0 4px;font-size:14px;color:#6c5ce7;font-weight:600;">Limited time offer</p>
+          <p style="margin:0;font-size:13px;color:#777;">Upgrade now and get 20% off your first month</p>
+        </div>
+        ${ctaButton('Upgrade to Pro &mdash; 20% Off', `${APP_URL}/settings/billing?promo=WELCOME20`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u0443\u0439\u0442\u0435 \u043F\u043E\u043B\u043D\u044B\u0439 \u043F\u043E\u0442\u0435\u043D\u0446\u0438\u0430\u043B \u0432\u0430\u0448\u0435\u0433\u043E \u043A\u0430\u043D\u0430\u043B\u0430',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u0412\u044B \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0435 TubeForge \u0443\u0436\u0435 \u0434\u0432\u0435 \u043D\u0435\u0434\u0435\u043B\u0438. \u0413\u043E\u0442\u043E\u0432\u044B \u0432\u044B\u0432\u0435\u0441\u0442\u0438 \u0441\u0432\u043E\u0439 \u043A\u0430\u043D\u0430\u043B \u043D\u0430 \u043D\u043E\u0432\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C?
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        <tr style="background:#f8f7ff;">
+          <td style="padding:12px 16px;font-weight:700;color:#333;font-size:15px;"></td>
+          <td style="padding:12px 16px;font-weight:700;color:#888;font-size:14px;text-align:center;">Free</td>
+          <td style="padding:12px 16px;font-weight:700;color:#6c5ce7;font-size:14px;text-align:center;">Pro</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">\u0410\u043D\u0430\u043B\u0438\u0437\u043E\u0432 / \u043C\u0435\u0441.</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">5</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">\u0411\u0435\u0437 \u043B\u0438\u043C\u0438\u0442\u0430</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">AI \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">\u0411\u0430\u0437\u043E\u0432\u0430\u044F</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">\u041F\u0440\u043E\u0434\u0432\u0438\u043D\u0443\u0442\u0430\u044F</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">\u041F\u0435\u0440\u0435\u0432\u043E\u0434 \u0432\u0438\u0434\u0435\u043E</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">&mdash;</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">&check; 50+ \u044F\u0437\u044B\u043A\u043E\u0432</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 16px;border-top:1px solid #eee;color:#555;font-size:14px;">\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u043D\u0430\u044F \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#888;font-size:14px;">&mdash;</td>
+          <td style="padding:10px 16px;border-top:1px solid #eee;text-align:center;color:#6c5ce7;font-size:14px;font-weight:600;">&check;</td>
+        </tr>
+      </table>
+      <div style="background:#f0efff;padding:16px;border-radius:8px;text-align:center;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:14px;color:#6c5ce7;font-weight:600;">\u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u043D\u043E\u0435 \u043F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0435</p>
+        <p style="margin:0;font-size:13px;color:#777;">\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u0435\u0441\u044C \u0441\u0435\u0439\u0447\u0430\u0441 \u0438 \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u0435 \u0441\u043A\u0438\u0434\u043A\u0443 20% \u043D\u0430 \u043F\u0435\u0440\u0432\u044B\u0439 \u043C\u0435\u0441\u044F\u0446</p>
+      </div>
+      ${ctaButton('\u041F\u0435\u0440\u0435\u0439\u0442\u0438 \u043D\u0430 Pro &mdash; \u0441\u043A\u0438\u0434\u043A\u0430 20%', `${APP_URL}/settings/billing?promo=WELCOME20`)}
+    `, locale),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed' | 'feature_discovery' | 'social_proof' | 'upgrade_nudge';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -821,6 +1057,9 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'plan-change-confirmation': planChangeConfirmationTemplate,
   'comment-mention': commentMentionTemplate,
   'payment-failed': paymentFailedTemplate,
+  'feature_discovery': featureDiscoveryTemplate,
+  'social_proof': socialProofTemplate,
+  'upgrade_nudge': upgradeNudgeTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {

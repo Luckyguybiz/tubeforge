@@ -2,6 +2,14 @@ import type { MetadataRoute } from 'next';
 
 import { BLOG_POSTS } from '@/lib/blog-posts';
 
+const COMPARISON_SLUGS = [
+  'tubeforge-vs-invideo',
+  'tubeforge-vs-capcut',
+  'tubeforge-vs-pictory',
+  'tubeforge-vs-synthesia',
+  'tubeforge-vs-fliki',
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://tubeforge.co';
 
@@ -11,8 +19,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
     priority: number;
   }[] = [
-    { path: '', lastModified: '2026-03-20', changeFrequency: 'weekly', priority: 1.0 },
-    { path: '/blog', lastModified: '2026-03-20', changeFrequency: 'weekly', priority: 0.9 },
+    { path: '', lastModified: '2026-03-21', changeFrequency: 'weekly', priority: 1.0 },
+    { path: '/blog', lastModified: '2026-03-21', changeFrequency: 'weekly', priority: 0.9 },
     { path: '/help', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.7 },
     { path: '/contact', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/changelog', lastModified: '2026-03-20', changeFrequency: 'weekly', priority: 0.7 },
@@ -27,11 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/login', lastModified: '2026-01-01', changeFrequency: 'monthly', priority: 0.5 },
     { path: '/register', lastModified: '2026-01-01', changeFrequency: 'monthly', priority: 0.5 },
     { path: '/about', lastModified: '2026-03-01', changeFrequency: 'monthly', priority: 0.5 },
-    { path: '/compare/tubeforge-vs-invideo', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/compare/tubeforge-vs-capcut', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/compare/tubeforge-vs-pictory', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/compare/tubeforge-vs-synthesia', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/compare/tubeforge-vs-fliki', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   const staticEntries: MetadataRoute.Sitemap = staticPages.map((page) => ({
@@ -48,5 +51,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticEntries, ...blogEntries];
+  const comparisonEntries: MetadataRoute.Sitemap = COMPARISON_SLUGS.map((slug) => ({
+    url: `${baseUrl}/compare/${slug}`,
+    lastModified: new Date('2026-03-21'),
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
+
+  return [...staticEntries, ...blogEntries, ...comparisonEntries];
 }
