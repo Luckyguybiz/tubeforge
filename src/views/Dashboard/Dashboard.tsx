@@ -501,6 +501,55 @@ function WelcomeSection({
         </div>
       </div>
 
+      {/* ── ChannelLens Extension Banner ──────────────────── */}
+      <a
+        href="/downloads/channellens-v1.0.0.zip"
+        download
+        onMouseEnter={() => setHov('cl-ext')}
+        onMouseLeave={() => setHov(null)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          padding: '14px 18px',
+          marginBottom: 20,
+          borderRadius: 14,
+          background: 'linear-gradient(135deg, #0a84ff, #bf5af2)',
+          cursor: 'pointer',
+          transition: 'all .15s ease',
+          transform: hov === 'cl-ext' ? 'translateY(-1px)' : 'none',
+          boxShadow: hov === 'cl-ext' ? '0 8px 24px rgba(10,132,255,.3)' : '0 2px 8px rgba(0,0,0,.08)',
+          textDecoration: 'none',
+          color: '#fff',
+        }}
+      >
+        <div style={{
+          width: 44, height: 44, borderRadius: 12,
+          background: 'rgba(255,255,255,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            <path d="M8 11h6" strokeWidth="1.5"/><path d="M11 8v6" strokeWidth="1.5"/>
+          </svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-.01em' }}>ChannelLens</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginTop: 1 }}>
+            Chrome extension — analyze any YouTube channel's revenue & competitors
+          </div>
+        </div>
+        <div style={{
+          padding: '6px 14px', borderRadius: 8,
+          background: 'rgba(255,255,255,0.2)',
+          fontSize: 12, fontWeight: 700,
+          whiteSpace: 'nowrap',
+        }}>
+          Download
+        </div>
+      </a>
+
       {/* ── Row 3: Quick tools strip ─────────────────────── */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
