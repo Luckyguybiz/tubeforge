@@ -618,6 +618,63 @@ function WelcomeSection({
             </div>
           </div>
         </div>
+
+        {/* Video Translator */}
+        <div
+          className="tf-dash-featured-card"
+          onClick={() => router.push('/tools/video-translator')}
+          onMouseEnter={() => setHov('ft-2')}
+          onMouseLeave={() => setHov(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/video-translator'); } }}
+          style={{
+            flex: '1 1 260px',
+            minWidth: 0,
+            minHeight: 180,
+            borderRadius: 16,
+            padding: 2,
+            background: 'linear-gradient(135deg, #7c5cfc, #a78bfa, #7c5cfc)',
+            cursor: 'pointer',
+            transition: 'all .15s ease',
+            transform: hov === 'ft-2' ? 'translateY(-1px)' : 'none',
+            boxShadow: hov === 'ft-2' ? '0 8px 24px rgba(124,92,252,.2)' : '0 2px 8px rgba(0,0,0,.05)',
+          }}
+        >
+          <div style={{
+            background: 'linear-gradient(135deg, #6d4ddb, #7c5cfc)',
+            borderRadius: 14,
+            padding: '22px 20px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.913 17H20.087M3.913 17H11.087"/><circle cx="12" cy="17" r="1"/><path d="M5.5 7H18.5"/><path d="M3 12H21"/><path d="M16 3L8 21"/></svg>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>Video Translator</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#fff',
+                  background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
+                  lineHeight: '16px',
+                }}>NEW</span>
+              </div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>
+                {'\u041F\u0435\u0440\u0435\u0432\u043E\u0434 \u0432\u0438\u0434\u0435\u043E \u043D\u0430 32 \u044F\u0437\u044B\u043A\u0430 \u0441 \u043A\u043B\u043E\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435\u043C \u0433\u043E\u043B\u043E\u0441\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442 \u044D\u043C\u043E\u0446\u0438\u0438 \u0438 \u0442\u0430\u0439\u043C\u0438\u043D\u0433.'}
+              </div>
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 13, fontWeight: 600, color: '#fff',
+              opacity: hov === 'ft-2' ? 1 : 0.8, transition: 'opacity .15s ease',
+              marginTop: 14,
+            }}>
+              {t('dashboard.tryIt')}
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* ── ChannelLens Extension Banner ──────────────────── */}
