@@ -65,6 +65,11 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'nav.tools': 'All Tools',
           'nav.referral': 'Referral',
           'nav.shortsAnalytics': 'Shorts Analytics',
+          'nav.tiktokAnalytics': 'TikTok Analytics',
+          'nav.analytics': 'Analytics',
+          'nav.media': 'Media',
+          'nav.brand': 'Brand',
+          'nav.blog': 'Blog',
           'sidebar.creation': 'Creation',
           'sidebar.tools': 'Tools',
           'sidebar.team': 'Team',
@@ -78,6 +83,9 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'sidebar.upgrade': 'Upgrade',
           'sidebar.upgradeDesc': 'Unlock more features',
           'sidebar.upgradeCta': 'Upgrade Now',
+          'sidebar.upgradePlan': 'Upgrade Plan',
+          'sidebar.usageProjects': 'Projects',
+          'sidebar.usageAi': 'AI Usage',
           'sidebar.logout': 'Logout',
           'sidebar.logoutLabel': 'Sign out',
           'sidebar.settingsLabel': 'Settings',
@@ -89,6 +97,28 @@ vi.mock('@/stores/useLocaleStore', () => ({
         return translations[key] ?? key;
       },
     }),
+}));
+
+// Mock tRPC — needed by usePlanLimits hook used by SidebarUsageWidget
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    user: {
+      getProfile: {
+        useQuery: () => ({
+          data: {
+            plan: 'FREE',
+            onboardingDone: true,
+            _count: { projects: 1 },
+            aiUsage: 2,
+          },
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: vi.fn(),
+        }),
+      },
+    },
+  },
 }));
 
 import React from 'react';
@@ -156,13 +186,14 @@ describe('Sidebar', () => {
 
   it('renders the plan badge', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Free')).toBeDefined();
+    // Plan badge appears in both the user panel and the usage widget
+    const badges = screen.getAllByText('Free');
+    expect(badges.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders upgrade prompt for FREE users', () => {
+  it('renders upgrade button for FREE users in usage widget', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Upgrade')).toBeDefined();
-    expect(screen.getByText('Upgrade Now')).toBeDefined();
+    expect(screen.getByText('Upgrade Plan')).toBeDefined();
   });
 
   it('marks the current page as active with aria-current', () => {
@@ -211,7 +242,7 @@ describe('Sidebar', () => {
 
   it('navigates to billing when upgrade CTA is clicked', () => {
     render(<Sidebar />);
-    const upgradeBtn = screen.getByText('Upgrade Now');
+    const upgradeBtn = screen.getByText('Upgrade Plan');
     fireEvent.click(upgradeBtn);
     expect(mockPush).toHaveBeenCalledWith('/billing');
   });
