@@ -732,21 +732,35 @@ export const projectRouter = router({
   listPublic: publicProcedure
     .input(z.object({
       sortBy: z.enum(['createdAt', 'likesCount']).default('createdAt'),
+      tag: z.string().max(100).optional(),
+      search: z.string().max(100).optional(),
       cursor: z.string().nullish(),
       limit: z.number().min(1).max(50).default(20),
     }).optional())
     .query(async ({ ctx, input }) => {
-      const { sortBy = 'createdAt', cursor, limit = 20 } = input ?? {};
+      const { sortBy = 'createdAt', tag, search, cursor, limit = 20 } = input ?? {};
       const orderBy = sortBy === 'likesCount'
         ? [{ likesCount: 'desc' as const }, { createdAt: 'desc' as const }]
         : [{ createdAt: 'desc' as const }];
 
+      const where: Prisma.ProjectWhereInput = { isPublic: true };
+      if (tag) {
+        where.tags = { has: tag };
+      }
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
       const items = await ctx.db.project.findMany({
-        where: { isPublic: true },
+        where,
         select: {
           id: true,
           title: true,
           description: true,
+          tags: true,
           thumbnailUrl: true,
           status: true,
           likesCount: true,
@@ -761,8 +775,22 @@ export const projectRouter = router({
 
       const hasMore = items.length > limit;
       const results = hasMore ? items.slice(0, limit) : items;
+
+      // Collect popular tags from results for tag filter suggestions
+      const tagCounts: Record<string, number> = {};
+      for (const item of results) {
+        for (const t of item.tags) {
+          tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+        }
+      }
+      const popularTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([name, count]) => ({ name, count }));
+
       return {
         items: results,
+        popularTags,
         nextCursor: hasMore ? results[results.length - 1]?.id : null,
       };
     }),
