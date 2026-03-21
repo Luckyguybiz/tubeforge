@@ -36,6 +36,8 @@ export function VideoTranslator() {
   const [file, setFile] = useState<File | null>(null);
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLang, setTargetLang] = useState('en');
+  const [numSpeakers, setNumSpeakers] = useState(1);
+  const [dropBg, setDropBg] = useState(true);
   const [status, setStatus] = useState<DubStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [dubbingId, setDubbingId] = useState<string | null>(null);
@@ -114,6 +116,8 @@ export function VideoTranslator() {
       formData.append('source_lang', sourceLang);
       formData.append('target_lang', targetLang);
       formData.append('watermark', 'false');
+      formData.append('num_speakers', String(numSpeakers));
+      formData.append('drop_background_audio', String(dropBg));
 
       const res = await fetch('/api/tools/video-translate', {
         method: 'POST',
@@ -270,6 +274,49 @@ export function VideoTranslator() {
                 <option value="">{'\u0412\u0441\u0435 \u044F\u0437\u044B\u043A\u0438...'}</option>
                 {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
               </select>
+            </div>
+          </div>
+
+          {/* Settings */}
+          <div style={{ ...card, marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 16 }}>{String.fromCharCode(0x41D, 0x430, 0x441, 0x442, 0x440, 0x43E, 0x439, 0x43A, 0x438)}</div>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Num speakers */}
+              <div>
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{String.fromCharCode(0x421, 0x43F, 0x438, 0x43A, 0x435, 0x440, 0x43E, 0x432, 0x20, 0x432, 0x20, 0x432, 0x438, 0x434, 0x435, 0x43E)}</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[1, 2, 3].map((n) => (
+                    <button key={n} onClick={() => setNumSpeakers(n)} style={{
+                      width: 40, height: 36, borderRadius: 8,
+                      border: numSpeakers === n ? `2px solid ${accent}` : `1px solid ${C?.border ?? '#eee'}`,
+                      background: numSpeakers === n ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
+                      color: numSpeakers === n ? accent : (C?.text ?? '#111'),
+                      fontSize: 14, fontWeight: numSpeakers === n ? 700 : 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}>{n}</button>
+                  ))}
+                  <button onClick={() => setNumSpeakers(0)} style={{
+                    padding: '0 12px', height: 36, borderRadius: 8,
+                    border: numSpeakers === 0 ? `2px solid ${accent}` : `1px solid ${C?.border ?? '#eee'}`,
+                    background: numSpeakers === 0 ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
+                    color: numSpeakers === 0 ? accent : (C?.text ?? '#111'),
+                    fontSize: 12, fontWeight: numSpeakers === 0 ? 700 : 500,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}>{'\u0410\u0432\u0442\u043E'}</button>
+                </div>
+              </div>
+              {/* Drop background */}
+              <div>
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{String.fromCharCode(0x423, 0x431, 0x440, 0x430, 0x442, 0x44C, 0x20, 0x0444, 0x043E, 0x043D)}</div>
+                <button onClick={() => setDropBg(!dropBg)} style={{
+                  padding: '8px 16px', borderRadius: 8,
+                  border: `1px solid ${dropBg ? accent : (C?.border ?? '#eee')}`,
+                  background: dropBg ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
+                  color: dropBg ? accent : (C?.sub ?? '#888'),
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                }}>{dropBg ? String.fromCharCode(0x2705) + ' ' + String.fromCharCode(0x0414, 0x0430) : String.fromCharCode(0x274C) + ' ' + String.fromCharCode(0x041D, 0x0435, 0x0442)}</button>
+                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{String.fromCharCode(0x041B, 0x0443, 0x0447, 0x0448, 0x0435, 0x20, 0x0434, 0x043B, 0x044F, 0x20, 0x0440, 0x0435, 0x0447, 0x0438, 0x20, 0x0431, 0x0435, 0x0437, 0x20, 0x043C, 0x0443, 0x0437, 0x044B, 0x043A, 0x0438)}</div>
+              </div>
             </div>
           </div>
 

@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
     let file: Blob | undefined;
     let fileName: string | undefined;
     let watermark = false;
-    let dropBgAudio = false;
+    let dropBgAudio = true;
+    let numSpeakers = 1;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
       targetLang = (formData.get('target_lang') as string) || 'en';
       watermark = formData.get('watermark') === 'true';
       dropBgAudio = formData.get('drop_background_audio') === 'true';
+      numSpeakers = parseInt(formData.get('num_speakers') as string || '1', 10) || 1;
       const uploadedFile = formData.get('file') as File | null;
       if (uploadedFile && uploadedFile.size > 0) {
         file = uploadedFile;
@@ -70,6 +72,7 @@ export async function POST(req: NextRequest) {
       targetLang = body.target_lang || 'en';
       watermark = body.watermark ?? false;
       dropBgAudio = body.drop_background_audio ?? false;
+      numSpeakers = body.num_speakers ?? 1;
     }
 
     if (!sourceUrl && !file) {
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
     const elForm = new FormData();
     elForm.append('target_lang', targetLang);
     elForm.append('source_lang', sourceLang);
-    elForm.append('num_speakers', '0'); // auto-detect
+    elForm.append('num_speakers', String(numSpeakers));
     elForm.append('watermark', String(watermark));
     elForm.append('drop_background_audio', String(dropBgAudio));
     elForm.append('highest_resolution', 'true');
