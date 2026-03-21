@@ -213,7 +213,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'optimization',
     route: '/tools/youtube-downloader',
     available: true,
-    gradient: ['#6366f1', '#8b5cf6'],
+    gradient: ['#ff0000', '#cc0000'],
   },
   {
     id: 'tiktok-downloader',

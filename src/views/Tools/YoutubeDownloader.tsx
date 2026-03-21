@@ -333,7 +333,7 @@ export function YoutubeDownloader() {
     <ToolPageShell
       title={t('tools.ytdl.title')}
       subtitle={t('tools.ytdl.subtitle')}
-      gradient={['#6366f1', '#8b5cf6']}
+      gradient={['#ff0000', '#cc0000']}
     >
       {/* ── URL Input ─────────────────────────────────────── */}
       <div style={{
@@ -385,7 +385,7 @@ export function YoutubeDownloader() {
           borderRadius: 12, border: 'none',
           background: loading || !url.trim()
             ? (isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)')
-            : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            : 'linear-gradient(135deg, #ff0000, #cc0000)',
           color: loading || !url.trim() ? C.dim : '#fff',
           fontSize: 16, fontWeight: 700, cursor: loading || !url.trim() ? 'not-allowed' : 'pointer',
           fontFamily: 'inherit', transition: 'all .2s ease',
