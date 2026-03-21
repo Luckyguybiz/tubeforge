@@ -23,9 +23,9 @@ const rateLimitMap = new Map<string, RateLimitEntry>();
 const authRateLimitMap = new Map<string, RateLimitEntry>();
 
 /** Requests allowed per window per IP */
-const RATE_LIMIT_MAX = 120;
-/** Auth endpoint: stricter limit (10 requests per minute) */
-const AUTH_RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_MAX = 300;
+/** Auth endpoint: stricter limit (30 requests per minute) */
+const AUTH_RATE_LIMIT_MAX = 30;
 /** Window duration in ms (1 minute) */
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** Purge stale entries every N calls to keep the Map bounded */
