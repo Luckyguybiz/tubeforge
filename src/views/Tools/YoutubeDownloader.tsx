@@ -2,26 +2,11 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { ToolPageShell, ActionButton } from './ToolPageShell';
+import { ToolPageShell } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ── Types ─────────────────────────────────────────────────────── */
-
-interface AnalysisScores {
-  hook: number;
-  title: number;
-  ctr: number;
-  engagement: number;
-}
-
-interface VideoSegment {
-  label: string;
-  icon: string;
-  start: string;
-  end: string;
-  color: string;
-}
 
 interface AnalysisResult {
   videoId: string;
@@ -37,8 +22,8 @@ interface AnalysisResult {
   commentCount: number;
   publishedAt: string;
   duration: string;
-  scores: AnalysisScores;
-  structure: VideoSegment[];
+  scores: { hook: number; title: number; ctr: number; engagement: number };
+  structure: { label: string; icon: string; start: string; end: string; color: string }[];
   viralFactors: string[];
   tips: string[];
 }
@@ -61,66 +46,30 @@ function scoreColor(score: number): string {
   return '#ef4444';
 }
 
-/* ── Circular Score Gauge (SVG) ────────────────────────────────── */
+/* ── Quality & Format options (visual only — same as original design) ── */
 
-function ScoreGauge({ value, max, label, color, C }: {
-  value: number;
-  max: number;
-  label: string;
-  color: string;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
+const QUALITIES = ['1080p', '720p', '480p', '360p', 'Audio only'] as const;
+const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
+
+/* ── Score Gauge ────────────────────────────────────────────────── */
+
+function ScoreGauge({ value, label, color, bg }: {
+  value: number; label: string; color: string; bg: string;
 }) {
-  const radius = 32;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (value / max) * circumference;
-
+  const r = 32, c = 2 * Math.PI * r, p = (value / 10) * c;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <svg width={80} height={80} viewBox="0 0 80 80">
-        {/* Background circle */}
-        <circle
-          cx="40" cy="40" r={radius}
-          fill="none"
-          stroke={C.surface}
-          strokeWidth="6"
-        />
-        {/* Progress circle */}
-        <circle
-          cx="40" cy="40" r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={`${progress} ${circumference - progress}`}
-          strokeDashoffset={circumference / 4}
-          style={{ transition: 'stroke-dasharray 0.6s ease' }}
-        />
-        {/* Value text */}
-        <text
-          x="40" y="38"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={C.text}
-          fontSize="18"
-          fontWeight="700"
-          fontFamily="inherit"
-        >
-          {typeof value === 'number' && max === 10 ? value : value + '%'}
-        </text>
-        {max === 10 && (
-          <text
-            x="40" y="52"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill={C.dim}
-            fontSize="10"
-            fontFamily="inherit"
-          >
-            /10
-          </text>
-        )}
+        <circle cx="40" cy="40" r={r} fill="none" stroke={bg} strokeWidth="6" />
+        <circle cx="40" cy="40" r={r} fill="none" stroke={color} strokeWidth="6"
+          strokeLinecap="round" strokeDasharray={`${p} ${c - p}`} strokeDashoffset={c / 4}
+          style={{ transition: 'stroke-dasharray 0.6s ease' }} />
+        <text x="40" y="38" textAnchor="middle" dominantBaseline="central" fill={color}
+          fontSize="18" fontWeight="700" fontFamily="inherit">{value}</text>
+        <text x="40" y="52" textAnchor="middle" dominantBaseline="central" fill={bg}
+          fontSize="10" fontFamily="inherit">/10</text>
       </svg>
-      <span style={{ fontSize: 12, fontWeight: 600, color: C.sub }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color }}>{label}</span>
     </div>
   );
 }
@@ -129,40 +78,31 @@ function ScoreGauge({ value, max, label, color, C }: {
 
 export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
+  const isDark = useThemeStore((s) => s.isDark);
   const t = useLocaleStore((s) => s.t);
 
   const [url, setUrl] = useState('');
+  const [quality, setQuality] = useState<typeof QUALITIES[number]>('1080p');
+  const [format, setFormat] = useState<typeof FORMATS[number]>('MP4');
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [urlError, setUrlError] = useState('');
   const [fetchError, setFetchError] = useState('');
-  const [pasteHover, setPasteHover] = useState(false);
   const [thumbError, setThumbError] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-    };
-  }, []);
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
-  /* ── URL validation ──────────────────────────────────────────── */
   const validateUrl = useCallback((value: string) => {
-    if (!value.trim()) {
-      setUrlError('');
-      return false;
-    }
-    if (!isValidYoutubeUrl(value)) {
-      setUrlError(t('tools.ytdl.invalidUrl'));
-      return false;
-    }
+    if (!value.trim()) { setUrlError(''); return false; }
+    if (!isValidYoutubeUrl(value)) { setUrlError(t('tools.ytdl.invalidUrl')); return false; }
     setUrlError('');
     return true;
   }, [t]);
 
-  /* ── Analyze handler ─────────────────────────────────────────── */
-  const handleAnalyze = async () => {
+  /* ── Download/Analyze handler ──────────────────────────────── */
+  const handleDownload = async () => {
     if (!url.trim() || !isValidYoutubeUrl(url)) {
       setUrlError(t('tools.ytdl.invalidUrl'));
       return;
@@ -189,20 +129,12 @@ export function YoutubeDownloader() {
 
       const ct = res.headers.get('content-type') ?? '';
       if (!ct.includes('application/json')) {
-        if (res.status === 401 || res.redirected) {
-          setFetchError(t('tools.ytdl.sessionExpired'));
-        } else {
-          setFetchError(`${t('tools.ytdl.serverError')} (${res.status})`);
-        }
+        setFetchError(res.status === 401 ? t('tools.ytdl.sessionExpired') : `${t('tools.ytdl.serverError')} (${res.status})`);
         return;
       }
 
       const data = await res.json();
-
-      if (!res.ok) {
-        setFetchError(data.error ?? t('tools.ytdl.fetchError'));
-        return;
-      }
+      if (!res.ok) { setFetchError(data.error ?? t('tools.ytdl.fetchError')); return; }
 
       setAnalysis(data as AnalysisResult);
     } catch (err) {
@@ -212,7 +144,6 @@ export function YoutubeDownloader() {
         }
         return;
       }
-      console.error('[YoutubeAnalyzer] analyze error:', err);
       setFetchError(t('tools.ytdl.networkError'));
     } finally {
       clearTimeout(timeout);
@@ -227,313 +158,202 @@ export function YoutubeDownloader() {
       setUrlError('');
       setAnalysis(null);
       setFetchError('');
-    } catch {
-      /* clipboard not available */
-    }
+    } catch { /* clipboard not available */ }
   };
 
-  const clearUrl = () => {
-    setUrl('');
-    setAnalysis(null);
-    setUrlError('');
-    setFetchError('');
-    setThumbError(false);
-  };
+  const pillStyle = (active: boolean) => ({
+    padding: '8px 20px',
+    borderRadius: 10,
+    border: active ? '2px solid #ef4444' : `1px solid ${C.border}`,
+    background: active ? (isDark ? 'rgba(239,68,68,.1)' : 'rgba(239,68,68,.05)') : C.surface,
+    color: active ? '#ef4444' : C.text,
+    fontSize: 14,
+    fontWeight: active ? 700 : 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'all .15s ease',
+  } as const);
 
-  const thumbnailSrc = analysis
-    ? thumbError
-      ? analysis.thumbnailMq
-      : analysis.thumbnail
-    : null;
-
-  const engagementPct = analysis
-    ? analysis.viewCount > 0
-      ? (((analysis.likeCount + analysis.commentCount) / analysis.viewCount) * 100)
-      : 0
+  const thumbnailSrc = analysis ? (thumbError ? analysis.thumbnailMq : analysis.thumbnail) : null;
+  const engPct = analysis && analysis.viewCount > 0
+    ? (((analysis.likeCount + analysis.commentCount) / analysis.viewCount) * 100)
     : 0;
 
   return (
     <ToolPageShell
       title={t('tools.ytdl.title')}
       subtitle={t('tools.ytdl.subtitle')}
-      gradient={['#6366f1', '#8b5cf6']}
+      gradient={['#ff0000', '#cc0000']}
     >
-      {/* URL Input */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: urlError || fetchError ? 8 : 24, flexWrap: 'wrap' }}>
-        <div
+      {/* ── URL Input ─────────────────────────────────────── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: C.surface, border: `1px solid ${urlError ? '#ef4444' : C.border}`,
+        borderRadius: 12, padding: '0 14px', marginBottom: urlError || fetchError ? 8 : 20,
+      }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.dim}
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+        <input
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setUrlError(''); setFetchError(''); setAnalysis(null); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleDownload(); }}
+          placeholder={t('tools.ytdl.placeholder') || 'Insert YouTube link...'}
           style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            background: C.surface,
-            border: `1px solid ${urlError ? '#ef4444' : C.border}`,
-            borderRadius: 12,
-            padding: '0 16px',
-            gap: 8,
-            transition: 'all 0.2s ease',
+            flex: 1, background: 'transparent', border: 'none', outline: 'none',
+            color: C.text, fontSize: 15, padding: '14px 0', fontFamily: 'inherit',
           }}
-        >
-          {/* Search / magnifying glass icon */}
-          <svg
-            width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              setUrlError('');
-              setFetchError('');
-              setAnalysis(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAnalyze();
-            }}
-            onBlur={() => {
-              if (url.trim()) validateUrl(url);
-            }}
-            placeholder={t('tools.ytdl.placeholder')}
-            aria-label="YouTube video URL"
-            aria-invalid={!!urlError || undefined}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: C.text,
-              fontSize: 14,
-              padding: '14px 0',
-              fontFamily: 'inherit',
-            }}
-          />
-          {/* Loading spinner */}
-          {loading && (
-            <svg
-              width="18" height="18" viewBox="0 0 16 16"
-              style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}
-            >
-              <circle cx="8" cy="8" r="6" stroke={C.dim} strokeWidth="2" fill="none" opacity={0.3} />
-              <path d="M8 2a6 6 0 014.47 2" stroke={C.text} strokeWidth="2" strokeLinecap="round" fill="none" />
-            </svg>
-          )}
-          {url && !loading && (
-            <button
-              onClick={clearUrl}
-              aria-label="Clear URL"
-              style={{
-                background: 'none', border: 'none', color: C.dim,
-                cursor: 'pointer', padding: 4, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          )}
-        </div>
-        <button
-          onClick={handlePaste}
-          onMouseEnter={() => setPasteHover(true)}
-          onMouseLeave={() => setPasteHover(false)}
+        />
+        {url && (
+          <button onClick={() => { setUrl(''); setAnalysis(null); setUrlError(''); setFetchError(''); }}
+            style={{ background: 'none', border: 'none', color: C.dim, cursor: 'pointer', fontSize: 18, padding: 4 }}>
+            ×
+          </button>
+        )}
+        <button onClick={handlePaste}
           style={{
-            padding: '0 20px', minHeight: 44, borderRadius: 12,
-            border: `1px solid ${C.border}`,
-            background: pasteHover ? C.surface : C.card,
-            color: C.text, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            transition: 'all 0.2s ease', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-          </svg>
-          {t('tools.ytdl.paste')}
+            background: 'none', border: `1px solid ${C.border}`, borderRadius: 8,
+            color: C.sub, padding: '6px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+            fontWeight: 500, whiteSpace: 'nowrap',
+          }}>
+          {t('tools.ytdl.paste') || 'Paste'}
         </button>
       </div>
 
-      {/* URL Error */}
-      {urlError && (
-        <div role="alert" style={{ fontSize: 12, color: '#ef4444', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {urlError}
+      {/* Error messages */}
+      {urlError && <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 16px' }}>{urlError}</p>}
+      {fetchError && <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 16px' }}>{fetchError}</p>}
+
+      {/* ── Quality selector ─────────────────────────────── */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 10 }}>Quality</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {QUALITIES.map((q) => (
+            <button key={q} onClick={() => setQuality(q)} style={pillStyle(quality === q)}>
+              {q === 'Audio only' ? (t('tools.ytdl.audioOnly') || 'Audio only') : q}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* Fetch Error */}
-      {fetchError && !urlError && (
-        <div style={{ fontSize: 12, color: '#f59e0b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {fetchError}
+      {/* ── Format selector ──────────────────────────────── */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 10 }}>Format</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {FORMATS.map((f) => (
+            <button key={f} onClick={() => setFormat(f)} style={pillStyle(format === f)}>
+              {f}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* Analyze Button */}
-      {!analysis && (
-        <ActionButton
-          label={loading ? t('tools.ytdl.analyzing') : t('tools.ytdl.analyze')}
-          gradient={['#6366f1', '#8b5cf6']}
-          onClick={handleAnalyze}
-          disabled={!url.trim() || !!urlError}
-          loading={loading}
-        />
-      )}
+      {/* ── Download (Analyze) button ────────────────────── */}
+      <button
+        onClick={handleDownload}
+        disabled={loading || !url.trim()}
+        style={{
+          width: '100%', maxWidth: 280, padding: '14px 32px',
+          borderRadius: 12, border: 'none',
+          background: loading || !url.trim()
+            ? (isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)')
+            : 'linear-gradient(135deg, #ff0000, #cc0000)',
+          color: loading || !url.trim() ? C.dim : '#fff',
+          fontSize: 16, fontWeight: 700, cursor: loading || !url.trim() ? 'not-allowed' : 'pointer',
+          fontFamily: 'inherit', transition: 'all .2s ease',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}
+      >
+        {loading ? (
+          <>
+            <svg width="18" height="18" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}>
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+            </svg>
+            {t('tools.ytdl.analyzing') || 'Analyzing...'}
+          </>
+        ) : (
+          <>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download
+          </>
+        )}
+      </button>
 
-      {/* ═══════════════════════════════════════════════════════════
-          ANALYSIS RESULTS
-          ═══════════════════════════════════════════════════════════ */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {/* ══════════════════════════════════════════════════════
+          Analysis Results (shown after "download")
+         ══════════════════════════════════════════════════════ */}
       {analysis && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* ── Video Info Card ─────────────────────────────────── */}
-          <div
-            style={{
-              display: 'flex', gap: 16, padding: 16, borderRadius: 14,
-              border: `1px solid ${C.border}`, background: C.card, flexWrap: 'wrap',
-            }}
-          >
-            {/* Thumbnail */}
-            <div style={{
-              width: 200, maxWidth: '100%', height: 112, borderRadius: 10,
-              background: C.surface, overflow: 'hidden', flexShrink: 0, position: 'relative',
-            }}>
-              {thumbnailSrc ? (
+          {/* ── Video info card ───────────────────────────── */}
+          <div style={{
+            display: 'flex', gap: 16, padding: 16,
+            background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
+            flexWrap: 'wrap',
+          }}>
+            {thumbnailSrc && (
+              <div style={{ width: 200, height: 112, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
                 <Image
-                  src={thumbnailSrc}
-                  alt={analysis.title}
-                  width={200} height={112}
+                  src={thumbnailSrc} alt={analysis.title} fill
+                  style={{ objectFit: 'cover' }}
                   onError={() => setThumbError(true)}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   unoptimized
                 />
-              ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
-                    <rect x="2" y="4" width="20" height="16" rx="2" />
-                    <polygon points="10 8 16 12 10 16" fill={C.dim} stroke="none" />
-                  </svg>
-                </div>
+              </div>
+            )}
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: '0 0 6px', lineHeight: 1.3 }}>
+                {analysis.title}
+              </h3>
+              <p style={{ fontSize: 13, color: C.sub, margin: '0 0 8px' }}>
+                {analysis.channel} · {formatNumber(analysis.viewCount)} views · {analysis.publishedAt}
+              </p>
+              {analysis.duration && (
+                <span style={{ fontSize: 12, color: C.dim, background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)', padding: '3px 8px', borderRadius: 6 }}>
+                  {analysis.duration}
+                </span>
               )}
             </div>
-
-            {/* Meta info */}
-            <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              justifyContent: 'center', gap: 6, minWidth: 0, flexBasis: 200,
-            }}>
-              <div style={{
-                fontSize: 15, fontWeight: 700, color: C.text,
-                overflow: 'hidden', textOverflow: 'ellipsis',
-                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                wordBreak: 'break-word' as const,
-              }}>
-                {analysis.title}
-              </div>
-              <div style={{ fontSize: 12, color: C.sub, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <a
-                  href={analysis.channelUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: C.sub, textDecoration: 'none', fontWeight: 600 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
-                >
-                  {analysis.channel}
-                </a>
-                <span style={{ color: C.dim }}>•</span>
-                <span>{formatNumber(analysis.viewCount)} views</span>
-              </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: C.dim }}>
-                {analysis.publishedAt && (
-                  <span style={{ background: C.surface, padding: '3px 8px', borderRadius: 6 }}>
-                    {analysis.publishedAt}
-                  </span>
-                )}
-                {analysis.duration && (
-                  <span style={{ background: C.surface, padding: '3px 8px', borderRadius: 6 }}>
-                    {analysis.duration}
-                  </span>
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* ── Scores Section ─────────────────────────────────── */}
-          <div
-            style={{
-              padding: 20, borderRadius: 14,
-              border: `1px solid ${C.border}`, background: C.card,
-            }}
-          >
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('tools.ytdl.scores')}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 16 }}>
-              <ScoreGauge
-                value={analysis.scores.hook}
-                max={10}
-                label={t('tools.ytdl.hookScore')}
-                color={scoreColor(analysis.scores.hook)}
-                C={C}
-              />
-              <ScoreGauge
-                value={analysis.scores.title}
-                max={10}
-                label={t('tools.ytdl.titleScore')}
-                color={scoreColor(analysis.scores.title)}
-                C={C}
-              />
-              <ScoreGauge
-                value={analysis.scores.ctr}
-                max={10}
-                label={t('tools.ytdl.ctr')}
-                color={scoreColor(analysis.scores.ctr)}
-                C={C}
-              />
-              <ScoreGauge
-                value={Math.round(engagementPct * 10) / 10}
-                max={10}
-                label={t('tools.ytdl.engagement')}
-                color={engagementPct >= 3.5 ? '#22c55e' : engagementPct >= 1.5 ? '#f59e0b' : '#ef4444'}
-                C={C}
-              />
-            </div>
+          {/* ── Scores ────────────────────────────────────── */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
+            padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`,
+          }}>
+            <ScoreGauge value={analysis.scores.hook} label={t('tools.ytdl.hookScore') || 'Hook'} color={scoreColor(analysis.scores.hook)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={analysis.scores.title} label={t('tools.ytdl.titleScore') || 'Title'} color={scoreColor(analysis.scores.title)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={analysis.scores.ctr} label="CTR" color={scoreColor(analysis.scores.ctr)} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
+            <ScoreGauge value={Math.round(engPct * 10)} label={t('tools.ytdl.engagement') || 'Engagement'} color={scoreColor(Math.min(10, Math.round(engPct * 2)))} bg={isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'} />
           </div>
 
-          {/* ── Video Structure Timeline ───────────────────────── */}
-          {analysis.structure && analysis.structure.length > 0 && (
-            <div
-              style={{
-                padding: 20, borderRadius: 14,
-                border: `1px solid ${C.border}`, background: C.card,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {t('tools.ytdl.structure')}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {/* ── Video Structure ────────────────────────────── */}
+          {analysis.structure.length > 0 && (
+            <div style={{ padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}` }}>
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 14px' }}>
+                {t('tools.ytdl.structure') || 'Video Structure'}
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {analysis.structure.map((seg, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '10px 12px',
-                      borderLeft: `3px solid ${seg.color}`,
-                      background: i % 2 === 0 ? 'transparent' : `${C.surface}44`,
-                      borderRadius: i === 0 ? '8px 8px 0 0' : i === analysis.structure.length - 1 ? '0 0 8px 8px' : 0,
-                    }}
-                  >
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 18, width: 28, textAlign: 'center' }}>{seg.icon}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text, flex: 1 }}>{seg.label}</span>
-                    <span style={{ fontSize: 12, color: C.dim, fontFamily: 'monospace' }}>
-                      {seg.start} - {seg.end}
+                    <div style={{
+                      flex: 1, height: 32, borderRadius: 8, background: seg.color + '22',
+                      display: 'flex', alignItems: 'center', padding: '0 12px',
+                      border: `1px solid ${seg.color}44`,
+                    }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: seg.color }}>{seg.label}</span>
+                    </div>
+                    <span style={{ fontSize: 12, color: C.dim, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      {seg.start} – {seg.end}
                     </span>
                   </div>
                 ))}
@@ -541,101 +361,59 @@ export function YoutubeDownloader() {
             </div>
           )}
 
-          {/* ── Why This Video Works ───────────────────────────── */}
-          {analysis.viralFactors && analysis.viralFactors.length > 0 && (
-            <div
-              style={{
-                padding: 20, borderRadius: 14,
-                border: `1px solid ${C.border}`, background: C.card,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {t('tools.ytdl.viralFactors')}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {analysis.viralFactors.map((factor, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                    <span style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{factor}</span>
+          {/* ── Viral Factors ──────────────────────────────── */}
+          {analysis.viralFactors.length > 0 && (
+            <div style={{ padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}` }}>
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+                {t('tools.ytdl.viralFactors') || 'Why This Video Works'}
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {analysis.viralFactors.map((f, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: C.text }}>
+                    <span style={{ color: '#22c55e', fontSize: 16 }}>✓</span> {f}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── Tips for Improvement ───────────────────────────── */}
-          {analysis.tips && analysis.tips.length > 0 && (
-            <div
-              style={{
-                padding: 20, borderRadius: 14,
-                border: `1px solid ${C.border}`, background: C.card,
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {t('tools.ytdl.tips')}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* ── Tips ───────────────────────────────────────── */}
+          {analysis.tips.length > 0 && (
+            <div style={{ padding: 20, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}` }}>
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+                {t('tools.ytdl.tips') || 'Tips for Improvement'}
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {analysis.tips.map((tip, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
-                    <span style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{tip}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
+                    <span style={{ color: '#f59e0b', fontSize: 16, flexShrink: 0 }}>💡</span> {tip}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── Open on YouTube + Analyze Again ────────────────── */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <a
-              href={analysis.watchUrl || `https://www.youtube.com/watch?v=${analysis.videoId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '12px 24px', borderRadius: 12,
-                background: '#ff0000', color: '#fff',
-                fontSize: 14, fontWeight: 600, textDecoration: 'none',
-                transition: 'opacity 0.2s ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.5 6.2a3.02 3.02 0 00-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.56A3.02 3.02 0 00.5 6.2 31.6 31.6 0 000 12a31.6 31.6 0 00.5 5.8 3.02 3.02 0 002.12 2.14c1.88.56 9.38.56 9.38.56s7.5 0 9.38-.56a3.02 3.02 0 002.12-2.14A31.6 31.6 0 0024 12a31.6 31.6 0 00-.5-5.8zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-              </svg>
-              {t('tools.ytdl.openOnYoutube')}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-            </a>
-            <ActionButton
-              label={t('tools.ytdl.analyze')}
-              gradient={['#6366f1', '#8b5cf6']}
-              onClick={() => {
-                setAnalysis(null);
-                setUrl('');
-              }}
-              disabled={false}
-              loading={false}
-            />
-          </div>
+          {/* ── Open on YouTube ─────────────────────────────── */}
+          <a
+            href={analysis.watchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              padding: '12px 24px', borderRadius: 12, border: `1px solid ${C.border}`,
+              background: C.surface, color: C.text, fontSize: 14, fontWeight: 600,
+              textDecoration: 'none', fontFamily: 'inherit', transition: 'all .15s ease',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            {t('tools.ytdl.openOnYoutube') || 'Open on YouTube'}
+          </a>
         </div>
       )}
-
-      {/* CSS Keyframes */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </ToolPageShell>
   );
 }
