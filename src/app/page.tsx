@@ -230,7 +230,7 @@ const TARGET_AUDIENCE = [
 const PLANS = [
   {
     name: "Free",
-    price: "0₽",
+    price: "$0",
     period: "",
     desc: "Для знакомства с платформой",
     features: [
@@ -245,8 +245,8 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "990₽",
-    period: "/мес",
+    price: "$12",
+    period: "/mo",
     desc: "Для активных креаторов",
     features: [
       "Безлимит скачиваний",
@@ -262,8 +262,8 @@ const PLANS = [
   },
   {
     name: "Studio",
-    price: "2490₽",
-    period: "/мес",
+    price: "$30",
+    period: "/mo",
     desc: "Для команд и агентств",
     features: [
       "Все Pro-функции",

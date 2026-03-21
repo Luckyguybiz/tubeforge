@@ -779,6 +779,7 @@ export const Sidebar = memo(function Sidebar() {
       aria-label="Main navigation"
       style={{
         width: W,
+        height: '100vh',
         borderRight: `1px solid ${isDark ? 'rgba(255,255,255,.06)' : C.border}`,
         background: isDark
           ? `linear-gradient(180deg, rgba(14,14,22,.98) 0%, rgba(8,8,14,.99) 100%)`
@@ -786,7 +787,8 @@ export const Sidebar = memo(function Sidebar() {
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
-        overflow: 'hidden',
+        overflowX: 'hidden',
+        overflowY: 'hidden',
         transition: 'width .3s cubic-bezier(.4,0,.2,1)',
         position: 'relative',
         backdropFilter: 'blur(20px)',
