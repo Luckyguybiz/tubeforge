@@ -84,7 +84,7 @@ function getCategories(t: (key: string) => string): { key: string; label: string
   ];
 }
 
-type Platform = 'youtube' | 'tiktok';
+type Platform = 'youtube';
 
 const SHORTS_RPM: Record<string, number> = {
   'minecraft': 0.07,
@@ -622,7 +622,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       if (category) params.set('category', category);
       if (game) params.set('game', game);
       if (!pro) params.set('limit', '10');
-      params.set('platform', platform === 'tiktok' ? 'tiktok' : 'youtube');
+      params.set('platform', 'youtube');
 
       const promoRaw = typeof window !== 'undefined' ? localStorage.getItem('tf-promo') : null;
       const promoCode = promoRaw ? (JSON.parse(promoRaw) as { code?: string })?.code : '';
@@ -825,33 +825,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
             )}
           </div>
           <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.5 }}>
-            {platform === 'youtube' ? t('shorts.subtitle') : t('shorts.subtitleTiktok')}
+            {t('shorts.subtitle')}
           </p>
-          {/* Platform tabs */}
-          <div style={{ display: 'flex', gap: 4, marginTop: 12, background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)', borderRadius: 10, padding: 3 }}>
-            {([
-              { key: 'youtube' as Platform, label: 'YouTube Shorts', color: '#ff0000' },
-              { key: 'tiktok' as Platform, label: 'TikTok', color: '#00f2ea' },
-            ]).map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setPlatform(p.key)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '7px 16px', borderRadius: 8, border: 'none',
-                  background: platform === p.key ? (isDark ? 'rgba(255,255,255,.1)' : '#fff') : 'transparent',
-                  color: platform === p.key ? C.text : C.dim,
-                  fontSize: 12.5, fontWeight: platform === p.key ? 700 : 500,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: platform === p.key ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
-                  transition: 'all .2s ease',
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: platform === p.key ? p.color : C.dim, flexShrink: 0 }} />
-                {p.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Period badge */}

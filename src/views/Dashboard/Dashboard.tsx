@@ -571,7 +571,7 @@ function WelcomeSection({
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
           {([
-            { title: 'YouTube Downloader', href: '/tools/youtube-downloader', Icon: IconDownload, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', badge: 'Free', badgeColor: '#10b981' },
+            { title: t('tools.ytdl.title'), href: '/tools/youtube-downloader', Icon: IconDownload, gradient: 'linear-gradient(135deg, #ff0000, #cc0000)', badge: 'Free', badgeColor: '#10b981' },
             { title: t('dashboard.tool.mp3Converter'), href: '/tools/mp3-converter', Icon: IconMusic, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', badge: 'Free', badgeColor: '#10b981' },
             { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)', badge: 'Free', badgeColor: '#10b981' },
             { title: t('dashboard.tool.aiThumbnails'), href: '/thumbnails', Icon: IconImage, gradient: 'linear-gradient(135deg, #ec4899, #f472b6)', badge: 'Pro', badgeColor: '#8b5cf6' },

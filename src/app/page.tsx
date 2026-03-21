@@ -102,7 +102,7 @@ const FEATURE_ICONS: Record<string, React.JSX.Element> = {
 };
 
 const TOOLS = [
-  { title: "YouTube Downloader", desc: "Скачивание видео с YouTube в любом качестве" },
+  { title: "YouTube Анализ", desc: "Разбор структуры и факторов успеха видео" },
   { title: "MP3 Конвертер", desc: "Извлечение аудио из любого видео" },
   { title: "Компрессор видео", desc: "Сжатие без потери качества" },
   { title: "ИИ-редактор текстов", desc: "Генерация описаний и скриптов" },

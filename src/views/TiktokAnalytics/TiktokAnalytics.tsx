@@ -1498,7 +1498,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                             {item.thumbnail ? (
                               isPro ? (
                                 <a
-                                  href={`https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
+                                  href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
@@ -1631,7 +1631,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                               {isPro ? (
                                 <a
-                                  href={`https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
+                                  href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
@@ -1793,7 +1793,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                             {/* Creator name - clickable only for Pro */}
                             {isPro ? (
                               <a
-                                href={`https://www.tiktok.com/@${item.creator}`}
+                                href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{

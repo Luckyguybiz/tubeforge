@@ -6,22 +6,24 @@ import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
-const QUALITY_VALUES = ['1080p', '720p', '480p', '360p', 'audio'] as const;
-const FORMATS = ['MP4', 'WebM', 'MP3'] as const;
+/* ── Types ─────────────────────────────────────────────────────── */
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B/s';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB/s';
-  return (bytes / 1048576).toFixed(1) + ' MB/s';
+interface AnalysisScores {
+  hook: number;
+  title: number;
+  ctr: number;
+  engagement: number;
 }
 
-function formatEta(seconds: number): string {
-  if (!isFinite(seconds) || seconds <= 0) return '';
-  if (seconds < 60) return `~${Math.ceil(seconds)}s`;
-  return `~${Math.floor(seconds / 60)}m ${Math.ceil(seconds % 60)}s`;
+interface VideoSegment {
+  label: string;
+  icon: string;
+  start: string;
+  end: string;
+  color: string;
 }
 
-interface VideoInfo {
+interface AnalysisResult {
   videoId: string;
   title: string;
   channel: string;
@@ -30,81 +32,161 @@ interface VideoInfo {
   thumbnailHq: string;
   thumbnailMq: string;
   watchUrl: string;
-  formats: { quality: string; ext: string; label: string }[];
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  publishedAt: string;
+  duration: string;
+  scores: AnalysisScores;
+  structure: VideoSegment[];
+  viralFactors: string[];
+  tips: string[];
 }
 
+/* ── Helpers ───────────────────────────────────────────────────── */
 
 function isValidYoutubeUrl(url: string): boolean {
   return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?.*v=|shorts\/|embed\/|live\/)|youtu\.be\/)[\w-]+/.test(url.trim());
 }
 
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function scoreColor(score: number): string {
+  if (score >= 8) return '#22c55e';
+  if (score >= 5) return '#f59e0b';
+  return '#ef4444';
+}
+
+/* ── Circular Score Gauge (SVG) ────────────────────────────────── */
+
+function ScoreGauge({ value, max, label, color, C }: {
+  value: number;
+  max: number;
+  label: string;
+  color: string;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+}) {
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (value / max) * circumference;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <svg width={80} height={80} viewBox="0 0 80 80">
+        {/* Background circle */}
+        <circle
+          cx="40" cy="40" r={radius}
+          fill="none"
+          stroke={C.surface}
+          strokeWidth="6"
+        />
+        {/* Progress circle */}
+        <circle
+          cx="40" cy="40" r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={`${progress} ${circumference - progress}`}
+          strokeDashoffset={circumference / 4}
+          style={{ transition: 'stroke-dasharray 0.6s ease' }}
+        />
+        {/* Value text */}
+        <text
+          x="40" y="38"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill={C.text}
+          fontSize="18"
+          fontWeight="700"
+          fontFamily="inherit"
+        >
+          {typeof value === 'number' && max === 10 ? value : value + '%'}
+        </text>
+        {max === 10 && (
+          <text
+            x="40" y="52"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill={C.dim}
+            fontSize="10"
+            fontFamily="inherit"
+          >
+            /10
+          </text>
+        )}
+      </svg>
+      <span style={{ fontSize: 12, fontWeight: 600, color: C.sub }}>{label}</span>
+    </div>
+  );
+}
+
+/* ── Main Component ────────────────────────────────────────────── */
+
 export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
 
-  const QUALITY_LABELS: Record<(typeof QUALITY_VALUES)[number], string> = {
-    '1080p': '1080p',
-    '720p': '720p',
-    '480p': '480p',
-    '360p': '360p',
-    audio: t('tools.ytdl.audioOnly'),
-  };
-
   const [url, setUrl] = useState('');
-  const [quality, setQuality] = useState<(typeof QUALITY_VALUES)[number]>('1080p');
-  const [format, setFormat] = useState<(typeof FORMATS)[number]>('MP4');
   const [loading, setLoading] = useState(false);
-  const [fetchingInfo, setFetchingInfo] = useState(false);
-  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
-  const [done, setDone] = useState(false);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [urlError, setUrlError] = useState('');
   const [fetchError, setFetchError] = useState('');
-  const [hoveredQuality, setHoveredQuality] = useState<string | null>(null);
-  const [hoveredFormat, setHoveredFormat] = useState<string | null>(null);
   const [pasteHover, setPasteHover] = useState(false);
   const [thumbError, setThumbError] = useState(false);
-  const [toastMsg, setToastMsg] = useState('');
-  const [streamError, setStreamError] = useState('');
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [downloadEta, setDownloadEta] = useState(0);
-  const [downloadSpeed, setDownloadSpeed] = useState(0);
 
-  // Debounce timer ref
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // AbortController ref for cancelling in-flight fetch requests on unmount
   const abortRef = useRef<AbortController | null>(null);
 
-  // Cancel any in-flight requests on unmount
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
     };
   }, []);
 
-  // ── Fetch video info from our API ──────────────────────────────
-  const fetchVideoInfo = useCallback(async (videoUrl: string) => {
-    // Abort any previous in-flight request
+  /* ── URL validation ──────────────────────────────────────────── */
+  const validateUrl = useCallback((value: string) => {
+    if (!value.trim()) {
+      setUrlError('');
+      return false;
+    }
+    if (!isValidYoutubeUrl(value)) {
+      setUrlError(t('tools.ytdl.invalidUrl'));
+      return false;
+    }
+    setUrlError('');
+    return true;
+  }, [t]);
+
+  /* ── Analyze handler ─────────────────────────────────────────── */
+  const handleAnalyze = async () => {
+    if (!url.trim() || !isValidYoutubeUrl(url)) {
+      setUrlError(t('tools.ytdl.invalidUrl'));
+      return;
+    }
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setFetchingInfo(true);
+    setLoading(true);
+    setAnalysis(null);
     setFetchError('');
-    setVideoInfo(null);
     setThumbError(false);
-    setDone(false);
 
-    // Auto-abort after 15 seconds to prevent hanging spinner
-    const timeout = setTimeout(() => controller.abort(), 15_000);
+    const timeout = setTimeout(() => controller.abort(), 30_000);
 
     try {
-      const res = await fetch(
-        `/api/tools/youtube-download?url=${encodeURIComponent(videoUrl)}`,
-        { signal: controller.signal },
-      );
+      const res = await fetch('/api/tools/youtube-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+        signal: controller.signal,
+      });
 
-      // Check content-type BEFORE trying to parse JSON — API may return
-      // HTML (e.g. redirect to login) which would crash res.json()
       const ct = res.headers.get('content-type') ?? '';
       if (!ct.includes('application/json')) {
         if (res.status === 401 || res.redirected) {
@@ -122,60 +204,29 @@ export function YoutubeDownloader() {
         return;
       }
 
-      setVideoInfo(data as VideoInfo);
+      setAnalysis(data as AnalysisResult);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
-        // If the abort was triggered by our timeout (not by user navigation),
-        // show a user-friendly timeout message.
         if (controller.signal.aborted && abortRef.current === controller) {
           setFetchError(t('tools.ytdl.serverTimeout'));
         }
         return;
       }
-      console.error('[YoutubeDownloader] fetchVideoInfo error:', err);
+      console.error('[YoutubeAnalyzer] analyze error:', err);
       setFetchError(t('tools.ytdl.networkError'));
     } finally {
       clearTimeout(timeout);
-      setFetchingInfo(false);
+      setLoading(false);
     }
-  }, []);
-
-  // ── Auto-fetch when a valid URL is entered (debounced 600ms) ──
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (!url.trim() || !isValidYoutubeUrl(url)) return;
-
-    debounceRef.current = setTimeout(() => {
-      fetchVideoInfo(url);
-    }, 600);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [url, fetchVideoInfo]);
-
-  // ── URL validation (immediate) ─────────────────────────────────
-  const validateUrl = useCallback((value: string) => {
-    if (!value.trim()) {
-      setUrlError('');
-      return false;
-    }
-    if (!isValidYoutubeUrl(value)) {
-      setUrlError(t('tools.ytdl.invalidUrl'));
-      return false;
-    }
-    setUrlError('');
-    return true;
-  }, []);
+  };
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setUrl(text);
       setUrlError('');
-      setDone(false);
-      // Validation + fetch will be triggered by useEffect
+      setAnalysis(null);
+      setFetchError('');
     } catch {
       /* clipboard not available */
     }
@@ -183,219 +234,30 @@ export function YoutubeDownloader() {
 
   const clearUrl = () => {
     setUrl('');
-    setVideoInfo(null);
+    setAnalysis(null);
     setUrlError('');
     setFetchError('');
-    setDone(false);
     setThumbError(false);
-    setStreamError('');
   };
 
-  // ── Show toast helper ──────────────────────────────────────────
-  const showToast = useCallback((msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 4000);
-  }, []);
-
-
-  // ── Core download logic (supports retry with lower quality) ───
-  const doDownload = async (
-    controller: AbortController,
-    retryQuality?: string,
-  ): Promise<boolean> => {
-    const effectiveQuality = retryQuality || quality;
-    const isAudioOnly = effectiveQuality === 'audio';
-    const ext = isAudioOnly ? 'mp3' : (format?.toLowerCase() ?? 'mp4');
-    const fname = `${videoInfo!.title || videoInfo!.videoId || 'video'}.${ext}`;
-
-    const params = new URLSearchParams({
-      videoId: videoInfo!.videoId,
-      quality: effectiveQuality,
-      audioOnly: isAudioOnly ? 'true' : 'false',
-      filename: fname,
-    });
-    const streamUrl = `/api/tools/youtube-download/stream?${params}`;
-
-    const downloadRes = await fetch(streamUrl, { signal: controller.signal });
-
-    if (!downloadRes.ok) {
-      let errorMsg = t('tools.ytdl.downloadLinkError');
-      try {
-        const ct = downloadRes.headers.get('content-type') ?? '';
-        if (ct.includes('application/json')) {
-          const errData = await downloadRes.json();
-          if (errData.error) errorMsg = errData.error;
-        }
-      } catch { /* ignore parse errors */ }
-
-      setStreamError(errorMsg);
-      return false;
-    }
-
-    const MAX_DOWNLOAD_SIZE = 500 * 1024 * 1024; // 500 MB safety limit
-    const contentLength = parseInt(downloadRes.headers.get('content-length') || '0', 10);
-
-    if (contentLength > MAX_DOWNLOAD_SIZE) {
-      setStreamError(t('tools.ytdl.fileTooLarge'));
-      return false;
-    }
-
-    const reader = downloadRes.body?.getReader();
-    if (!reader) throw new Error('No reader');
-
-    const chunks: BlobPart[] = [];
-    let received = 0;
-    const startTime = Date.now();
-
-    while (true) {
-      const { done: readerDone, value } = await reader.read();
-      if (readerDone) break;
-      received += value.length;
-
-      if (received > MAX_DOWNLOAD_SIZE) {
-        reader.cancel();
-        setStreamError(t('tools.ytdl.fileTooLarge'));
-        return false;
-      }
-
-      chunks.push(value);
-
-      const elapsed = (Date.now() - startTime) / 1000;
-      const speed = elapsed > 0 ? received / elapsed : 0;
-      const progress = contentLength > 0 ? received / contentLength : 0;
-      const remaining = contentLength > 0 && speed > 0 ? (contentLength - received) / speed : 0;
-
-      setDownloadProgress(Math.round(progress * 100));
-      setDownloadEta(remaining);
-      setDownloadSpeed(speed);
-    }
-
-    setDownloadProgress(100);
-
-    const blob = new Blob(chunks);
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = fname;
-    a.click();
-    URL.revokeObjectURL(blobUrl);
-
-    showToast(t('tools.ytdl.downloadComplete'));
-    return true;
-  };
-
-  // ── Download handler ───────────────────────────────────────────
-  const handleDownload = async () => {
-    if (!url.trim() || !isValidYoutubeUrl(url)) {
-      setUrlError(t('tools.ytdl.invalidUrl'));
-      return;
-    }
-
-    if (!videoInfo) {
-      showToast(t('tools.ytdl.waitForInfo'));
-      return;
-    }
-
-    // Abort any previous in-flight request
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setLoading(true);
-    setDone(false);
-    setStreamError('');
-    setDownloadProgress(0);
-    setDownloadEta(0);
-    setDownloadSpeed(0);
-
-    // 3-minute timeout for the full resolution + first byte flow
-    const postTimeout = setTimeout(() => {
-      if (!controller.signal.aborted) controller.abort();
-    }, 180_000);
-
-    try {
-      const success = await doDownload(controller);
-
-      if (!success && !controller.signal.aborted) {
-        // Auto-retry with lower quality if first attempt failed
-        const retryMap: Record<string, string> = {
-          '1080p': '720p', '720p': '480p', '480p': '360p',
-        };
-        const lowerQuality = retryMap[quality];
-        if (lowerQuality) {
-          setStreamError('');
-          setDownloadProgress(0);
-          setDownloadEta(0);
-          setDownloadSpeed(0);
-          const retrySuccess = await doDownload(controller, lowerQuality);
-          if (retrySuccess) {
-            setDone(true);
-            return;
-          }
-        }
-        setDone(true);
-      } else {
-        setDone(true);
-      }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        if (controller.signal.aborted && abortRef.current === controller) {
-          setStreamError(t('tools.ytdl.serverTimeout'));
-          setDone(true);
-        }
-        return;
-      }
-      const errMsg = err instanceof Error ? err.message : t('tools.ytdl.networkError');
-      setStreamError(errMsg);
-      setDone(true);
-    } finally {
-      clearTimeout(postTimeout);
-      setLoading(false);
-    }
-  };
-
-  // Determine the thumbnail src (fall back to hq/mq if maxres fails)
-  const thumbnailSrc = videoInfo
+  const thumbnailSrc = analysis
     ? thumbError
-      ? videoInfo.thumbnailMq
-      : videoInfo.thumbnail
+      ? analysis.thumbnailMq
+      : analysis.thumbnail
     : null;
+
+  const engagementPct = analysis
+    ? analysis.viewCount > 0
+      ? (((analysis.likeCount + analysis.commentCount) / analysis.viewCount) * 100)
+      : 0
+    : 0;
 
   return (
     <ToolPageShell
       title={t('tools.ytdl.title')}
       subtitle={t('tools.ytdl.subtitle')}
-      gradient={['#ef4444', '#dc2626']}
+      gradient={['#6366f1', '#8b5cf6']}
     >
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            top: 24,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 9999,
-            padding: '12px 24px',
-            borderRadius: 12,
-            background: C.card,
-            border: `1px solid ${C.border}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,.25)',
-            color: C.text,
-            fontSize: 14,
-            fontWeight: 600,
-            width: 'calc(100vw - 32px)',
-            maxWidth: 480,
-            textAlign: 'center',
-            wordBreak: 'break-word' as const,
-          }}
-        >
-          {toastMsg}
-        </div>
-      )}
-
       {/* URL Input */}
       <div style={{ display: 'flex', gap: 8, marginBottom: urlError || fetchError ? 8 : 24, flexWrap: 'wrap' }}>
         <div
@@ -411,18 +273,13 @@ export function YoutubeDownloader() {
             transition: 'all 0.2s ease',
           }}
         >
+          {/* Search / magnifying glass icon */}
           <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={C.dim}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
-            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
             value={url}
@@ -430,12 +287,10 @@ export function YoutubeDownloader() {
               setUrl(e.target.value);
               setUrlError('');
               setFetchError('');
-              setDone(false);
+              setAnalysis(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                validateUrl(url);
-              }
+              if (e.key === 'Enter') handleAnalyze();
             }}
             onBlur={() => {
               if (url.trim()) validateUrl(url);
@@ -454,59 +309,28 @@ export function YoutubeDownloader() {
               fontFamily: 'inherit',
             }}
           />
-          {/* Loading spinner inside input */}
-          {fetchingInfo && (
+          {/* Loading spinner */}
+          {loading && (
             <svg
-              width="18"
-              height="18"
-              viewBox="0 0 16 16"
+              width="18" height="18" viewBox="0 0 16 16"
               style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}
             >
-              <circle
-                cx="8"
-                cy="8"
-                r="6"
-                stroke={C.dim}
-                strokeWidth="2"
-                fill="none"
-                opacity={0.3}
-              />
-              <path
-                d="M8 2a6 6 0 014.47 2"
-                stroke={C.text}
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
-              />
+              <circle cx="8" cy="8" r="6" stroke={C.dim} strokeWidth="2" fill="none" opacity={0.3} />
+              <path d="M8 2a6 6 0 014.47 2" stroke={C.text} strokeWidth="2" strokeLinecap="round" fill="none" />
             </svg>
           )}
-          {url && !fetchingInfo && (
+          {url && !loading && (
             <button
               onClick={clearUrl}
               aria-label="Clear URL"
               style={{
-                background: 'none',
-                border: 'none',
-                color: C.dim,
-                cursor: 'pointer',
-                padding: 4,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                background: 'none', border: 'none', color: C.dim,
+                cursor: 'pointer', padding: 4, display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           )}
@@ -516,35 +340,16 @@ export function YoutubeDownloader() {
           onMouseEnter={() => setPasteHover(true)}
           onMouseLeave={() => setPasteHover(false)}
           style={{
-            padding: '0 20px',
-            minHeight: 44,
-            borderRadius: 12,
+            padding: '0 20px', minHeight: 44, borderRadius: 12,
             border: `1px solid ${C.border}`,
             background: pasteHover ? C.surface : C.card,
-            color: C.text,
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 600,
-            transition: 'all 0.2s ease',
-            fontFamily: 'inherit',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            flexShrink: 0,
+            color: C.text, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+            transition: 'all 0.2s ease', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
           }}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" />
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
           </svg>
           {t('tools.ytdl.paste')}
         </button>
@@ -552,30 +357,9 @@ export function YoutubeDownloader() {
 
       {/* URL Error */}
       {urlError && (
-        <div
-          role="alert"
-          style={{
-            fontSize: 12,
-            color: '#ef4444',
-            marginBottom: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+        <div role="alert" style={{ fontSize: 12, color: '#ef4444', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {urlError}
         </div>
@@ -583,452 +367,265 @@ export function YoutubeDownloader() {
 
       {/* Fetch Error */}
       {fetchError && !urlError && (
-        <div
-          style={{
-            fontSize: 12,
-            color: '#f59e0b',
-            marginBottom: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+        <div style={{ fontSize: 12, color: '#f59e0b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {fetchError}
         </div>
       )}
 
-      {/* Video Info Preview - Real data from API */}
-      {videoInfo && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 16,
-            padding: 16,
-            borderRadius: 14,
-            border: `1px solid ${C.border}`,
-            background: C.card,
-            marginBottom: 24,
-            flexWrap: 'wrap',
-          }}
-        >
-          {/* Real Thumbnail */}
+      {/* Analyze Button */}
+      {!analysis && (
+        <ActionButton
+          label={loading ? t('tools.ytdl.analyzing') : t('tools.ytdl.analyze')}
+          gradient={['#6366f1', '#8b5cf6']}
+          onClick={handleAnalyze}
+          disabled={!url.trim() || !!urlError}
+          loading={loading}
+        />
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          ANALYSIS RESULTS
+          ═══════════════════════════════════════════════════════════ */}
+      {analysis && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* ── Video Info Card ─────────────────────────────────── */}
           <div
             style={{
-              width: 200,
-              maxWidth: '100%',
-              height: 112,
-              borderRadius: 10,
-              background: C.surface,
-              overflow: 'hidden',
-              flexShrink: 0,
-              position: 'relative',
+              display: 'flex', gap: 16, padding: 16, borderRadius: 14,
+              border: `1px solid ${C.border}`, background: C.card, flexWrap: 'wrap',
             }}
           >
-            {thumbnailSrc ? (
-              <Image
-                src={thumbnailSrc}
-                alt={videoInfo.title}
-                width={200}
-                height={112}
-                onError={() => setThumbError(true)}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-                unoptimized
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={C.dim}
-                  strokeWidth="1.5"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <polygon points="10 8 16 12 10 16" fill={C.dim} stroke="none" />
-                </svg>
+            {/* Thumbnail */}
+            <div style={{
+              width: 200, maxWidth: '100%', height: 112, borderRadius: 10,
+              background: C.surface, overflow: 'hidden', flexShrink: 0, position: 'relative',
+            }}>
+              {thumbnailSrc ? (
+                <Image
+                  src={thumbnailSrc}
+                  alt={analysis.title}
+                  width={200} height={112}
+                  onError={() => setThumbError(true)}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  unoptimized
+                />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <polygon points="10 8 16 12 10 16" fill={C.dim} stroke="none" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* Meta info */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              justifyContent: 'center', gap: 6, minWidth: 0, flexBasis: 200,
+            }}>
+              <div style={{
+                fontSize: 15, fontWeight: 700, color: C.text,
+                overflow: 'hidden', textOverflow: 'ellipsis',
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                wordBreak: 'break-word' as const,
+              }}>
+                {analysis.title}
               </div>
-            )}
+              <div style={{ fontSize: 12, color: C.sub, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <a
+                  href={analysis.channelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: C.sub, textDecoration: 'none', fontWeight: 600 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                >
+                  {analysis.channel}
+                </a>
+                <span style={{ color: C.dim }}>•</span>
+                <span>{formatNumber(analysis.viewCount)} views</span>
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: C.dim }}>
+                {analysis.publishedAt && (
+                  <span style={{ background: C.surface, padding: '3px 8px', borderRadius: 6 }}>
+                    {analysis.publishedAt}
+                  </span>
+                )}
+                {analysis.duration && (
+                  <span style={{ background: C.surface, padding: '3px 8px', borderRadius: 6 }}>
+                    {analysis.duration}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* ── Scores Section ─────────────────────────────────── */}
           <div
             style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 6,
-              minWidth: 0,
-              flexBasis: 200,
+              padding: 20, borderRadius: 14,
+              border: `1px solid ${C.border}`, background: C.card,
             }}
           >
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('tools.ytdl.scores')}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 16 }}>
+              <ScoreGauge
+                value={analysis.scores.hook}
+                max={10}
+                label={t('tools.ytdl.hookScore')}
+                color={scoreColor(analysis.scores.hook)}
+                C={C}
+              />
+              <ScoreGauge
+                value={analysis.scores.title}
+                max={10}
+                label={t('tools.ytdl.titleScore')}
+                color={scoreColor(analysis.scores.title)}
+                C={C}
+              />
+              <ScoreGauge
+                value={analysis.scores.ctr}
+                max={10}
+                label={t('tools.ytdl.ctr')}
+                color={scoreColor(analysis.scores.ctr)}
+                C={C}
+              />
+              <ScoreGauge
+                value={Math.round(engagementPct * 10) / 10}
+                max={10}
+                label={t('tools.ytdl.engagement')}
+                color={engagementPct >= 3.5 ? '#22c55e' : engagementPct >= 1.5 ? '#f59e0b' : '#ef4444'}
+                C={C}
+              />
+            </div>
+          </div>
+
+          {/* ── Video Structure Timeline ───────────────────────── */}
+          {analysis.structure && analysis.structure.length > 0 && (
             <div
               style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: C.text,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                wordBreak: 'break-word' as const,
+                padding: 20, borderRadius: 14,
+                border: `1px solid ${C.border}`, background: C.card,
               }}
             >
-              {videoInfo.title}
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('tools.ytdl.structure')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {analysis.structure.map((seg, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '10px 12px',
+                      borderLeft: `3px solid ${seg.color}`,
+                      background: i % 2 === 0 ? 'transparent' : `${C.surface}44`,
+                      borderRadius: i === 0 ? '8px 8px 0 0' : i === analysis.structure.length - 1 ? '0 0 8px 8px' : 0,
+                    }}
+                  >
+                    <span style={{ fontSize: 18, width: 28, textAlign: 'center' }}>{seg.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text, flex: 1 }}>{seg.label}</span>
+                    <span style={{ fontSize: 12, color: C.dim, fontFamily: 'monospace' }}>
+                      {seg.start} - {seg.end}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* ── Why This Video Works ───────────────────────────── */}
+          {analysis.viralFactors && analysis.viralFactors.length > 0 && (
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                border: `1px solid ${C.border}`, background: C.card,
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('tools.ytdl.viralFactors')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {analysis.viralFactors.map((factor, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    <span style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{factor}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Tips for Improvement ───────────────────────────── */}
+          {analysis.tips && analysis.tips.length > 0 && (
+            <div
+              style={{
+                padding: 20, borderRadius: 14,
+                border: `1px solid ${C.border}`, background: C.card,
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('tools.ytdl.tips')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {analysis.tips.map((tip, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
+                    <span style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Open on YouTube + Analyze Again ────────────────── */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a
-              href={videoInfo.channelUrl}
+              href={analysis.watchUrl || `https://www.youtube.com/watch?v=${analysis.videoId}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                fontSize: 12,
-                color: C.sub,
-                textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '12px 24px', borderRadius: 12,
+                background: '#ff0000', color: '#fff',
+                fontSize: 14, fontWeight: 600, textDecoration: 'none',
+                transition: 'opacity 0.2s ease',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.textDecoration = 'underline';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.textDecoration = 'none';
-              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
             >
-              {videoInfo.channel}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.5 6.2a3.02 3.02 0 00-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.56A3.02 3.02 0 00.5 6.2 31.6 31.6 0 000 12a31.6 31.6 0 00.5 5.8 3.02 3.02 0 002.12 2.14c1.88.56 9.38.56 9.38.56s7.5 0 9.38-.56a3.02 3.02 0 002.12-2.14A31.6 31.6 0 0024 12a31.6 31.6 0 00-.5-5.8zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+              </svg>
+              {t('tools.ytdl.openOnYoutube')}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
             </a>
-            <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-              {videoInfo.formats.slice(0, 3).map((f) => (
-                <span
-                  key={f.quality}
-                  style={{
-                    fontSize: 11,
-                    color: C.dim,
-                    background: C.surface,
-                    padding: '3px 8px',
-                    borderRadius: 6,
-                  }}
-                >
-                  {f.quality} {f.ext.toUpperCase()}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Fetching Info Skeleton */}
-      {fetchingInfo && !videoInfo && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 16,
-            padding: 16,
-            borderRadius: 14,
-            border: `1px solid ${C.border}`,
-            background: C.card,
-            marginBottom: 24,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div
-            style={{
-              width: 200,
-              maxWidth: '100%',
-              height: 112,
-              borderRadius: 10,
-              background: C.surface,
-              flexShrink: 0,
-              animation: 'pulse 1.5s ease-in-out infinite',
-            }}
-          />
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                width: '80%',
-                height: 16,
-                borderRadius: 4,
-                background: C.surface,
-                animation: 'pulse 1.5s ease-in-out infinite',
+            <ActionButton
+              label={t('tools.ytdl.analyze')}
+              gradient={['#6366f1', '#8b5cf6']}
+              onClick={() => {
+                setAnalysis(null);
+                setUrl('');
               }}
-            />
-            <div
-              style={{
-                width: '40%',
-                height: 12,
-                borderRadius: 4,
-                background: C.surface,
-                animation: 'pulse 1.5s ease-in-out infinite',
-                animationDelay: '0.2s',
-              }}
-            />
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              {[60, 50, 50].map((w, i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: w,
-                    height: 20,
-                    borderRadius: 6,
-                    background: C.surface,
-                    animation: 'pulse 1.5s ease-in-out infinite',
-                    animationDelay: `${0.1 * (i + 1)}s`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Quality Selector */}
-      <div style={{ marginBottom: 20 }}>
-        <label
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: C.sub,
-            display: 'block',
-            marginBottom: 8,
-          }}
-        >
-          {t('tools.ytdl.quality')}
-        </label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {QUALITY_VALUES.map((q) => (
-            <button
-              key={q}
-              onClick={() => setQuality(q)}
-              onMouseEnter={() => setHoveredQuality(q)}
-              onMouseLeave={() => setHoveredQuality(null)}
-              style={{
-                padding: '8px 18px',
-                minHeight: 44,
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 600,
-                border: quality === q ? '2px solid #ef4444' : `1px solid ${C.border}`,
-                background:
-                  quality === q
-                    ? 'rgba(239,68,68,.12)'
-                    : hoveredQuality === q
-                      ? C.surface
-                      : C.card,
-                color: quality === q ? '#ef4444' : C.text,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: 'inherit',
-              }}
-            >
-              {QUALITY_LABELS[q]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Format Selector */}
-      <div style={{ marginBottom: 28 }}>
-        <label
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: C.sub,
-            display: 'block',
-            marginBottom: 8,
-          }}
-        >
-          {t('tools.ytdl.format')}
-        </label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {FORMATS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFormat(f)}
-              onMouseEnter={() => setHoveredFormat(f)}
-              onMouseLeave={() => setHoveredFormat(null)}
-              style={{
-                padding: '8px 18px',
-                minHeight: 44,
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 600,
-                border: format === f ? '2px solid #ef4444' : `1px solid ${C.border}`,
-                background:
-                  format === f
-                    ? 'rgba(239,68,68,.12)'
-                    : hoveredFormat === f
-                      ? C.surface
-                      : C.card,
-                color: format === f ? '#ef4444' : C.text,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: 'inherit',
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Progress / Loading State for Download */}
-      {loading && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: C.sub }}>
-              {downloadProgress > 0
-                ? `${t('tools.ytdl.downloading')} ${downloadProgress}%`
-                : t('tools.ytdl.preparing')}
-            </span>
-            {downloadProgress > 0 && (
-              <span style={{ fontSize: 12, color: C.dim }}>
-                {formatBytes(downloadSpeed)}
-                {downloadEta > 0 ? ` \u2022 ${formatEta(downloadEta)}` : ''}
-              </span>
-            )}
-          </div>
-          <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
-            <div
-              style={{
-                width: downloadProgress > 0 ? `${downloadProgress}%` : '60%',
-                height: '100%',
-                borderRadius: 4,
-                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                transition: downloadProgress > 0 ? 'width 0.3s ease' : undefined,
-                animation: downloadProgress === 0 ? 'pulse 1s ease-in-out infinite' : undefined,
-              }}
+              disabled={false}
+              loading={false}
             />
           </div>
         </div>
       )}
 
-      {/* Download success message */}
-      {done && !loading && !streamError && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: 16,
-            borderRadius: 12,
-            border: '1px solid rgba(34,197,94,.3)',
-            background: 'rgba(34,197,94,.06)',
-            marginBottom: 20,
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, wordBreak: 'break-word' as const }}>
-              {t('tools.ytdl.downloadDone')}
-            </div>
-            <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-              {t('tools.ytdl.fileSaved')}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Download error message */}
-      {done && !loading && streamError && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: 16,
-            borderRadius: 12,
-            border: '1px solid rgba(239,68,68,.3)',
-            background: 'rgba(239,68,68,.06)',
-            marginBottom: 20,
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="15" y1="9" x2="9" y2="15" />
-            <line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4, wordBreak: 'break-word' as const }}>
-              {streamError}
-            </div>
-            {videoInfo && (
-              <a
-                href={videoInfo.watchUrl || `https://www.youtube.com/watch?v=${videoInfo.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  marginTop: 4,
-                  padding: '6px 14px',
-                  borderRadius: 8,
-                  background: '#ff0000',
-                  color: '#fff',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                }}
-              >
-                {t('tools.ytdl.openOnYouTube')}
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
-
-      {/* Download Button */}
-      <ActionButton
-        label={
-          fetchingInfo
-            ? t('tools.ytdl.loadingInfo')
-            : done
-              ? t('tools.ytdl.downloadAgain')
-              : t('tools.download')
-        }
-        gradient={['#ef4444', '#dc2626']}
-        onClick={handleDownload}
-        disabled={!url.trim() || !!urlError || fetchingInfo}
-        loading={loading}
-      />
-
-      {/* CSS Keyframes for skeleton pulse animation */}
+      {/* CSS Keyframes */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

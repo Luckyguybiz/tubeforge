@@ -23,7 +23,7 @@ const TOOL_LABELS: Record<string, string> = {
   'audio-extractor': 'Audio Extractor',
   'format-converter': 'Format Converter',
   'gif-maker': 'GIF Maker',
-  'youtube-downloader': 'YouTube Downloader',
+  'youtube-downloader': 'YouTube Video Analyzer',
   'shorts-maker': 'Shorts Maker',
   'voice-generator': 'Voice Generator',
 };

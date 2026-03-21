@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
   // Rate limit: 5 requests per minute per user
   const { success: rlOk, reset } = await rateLimit({
     identifier: `shorts-analytics:${session.user.id}`,
-    limit: 5,
+    limit: 30,
     window: 60,
   });
   if (!rlOk) {
