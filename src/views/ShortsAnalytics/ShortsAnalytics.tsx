@@ -630,7 +630,16 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
       const res = await fetch(`/api/tools/shorts-analytics?${params}`);
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        // For 403 (plan gate) — let the upgrade overlay handle it, don't show error
+        if (res.status === 403) {
+          setIsMock(true);
+          setData([]);
+          return;
+        }
+        // Try to parse error body for a meaningful message
+        let serverMsg = '';
+        try { const errJson = await res.json(); serverMsg = errJson?.error ?? ''; } catch { /* ignore */ }
+        throw new Error(serverMsg || `HTTP ${res.status}`);
       }
       const json = await res.json();
       setIsMock(!!json.mock);
@@ -647,11 +656,13 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('[ShortsAnalytics] fetch error:', err);
-      setError(t('shorts.promo.loadError'));
+      setError(err instanceof Error && err.message && err.message !== 'Failed to fetch'
+        ? err.message
+        : t('shorts.promo.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [platform, t]);
 
   // Fetch on mount and when period changes
   useEffect(() => {
@@ -710,7 +721,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   }, [data, filters.hideIndian, filters.gameFilter, isMock]);
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
-  const showUpgradeOverlay = !isPro && data.length > 0;
+  const showUpgradeOverlay = !isPro && !loading;
 
   // Niche stats: total views + estimated earnings
   const nicheStats = useMemo(() => {

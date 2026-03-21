@@ -87,7 +87,7 @@ export function AdminPage() {
   const [sortBy, setSortBy] = useState<SortKey>('createdAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'users' | 'referrals' | 'analytics'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'referrals' | 'analytics' | 'revenue' | 'health' | 'audit' | 'email'>('users');
 
   // Debounced search
   const searchTimer = useMemo(() => ({ id: null as ReturnType<typeof setTimeout> | null }), []);
@@ -109,13 +109,30 @@ export function AdminPage() {
   const stats = trpc.admin.getStats.useQuery(undefined, { enabled: isAdmin });
   const activity = trpc.admin.recentActivity.useQuery(undefined, { enabled: isAdmin });
   const users = trpc.admin.listUsers.useQuery(
-    { page, limit: 15, search: searchDebounced || undefined, planFilter, sortBy, sortDir },
+    { page, limit: 20, search: searchDebounced || undefined, planFilter, sortBy, sortDir },
     { enabled: isAdmin, placeholderData: (prev) => prev },
   );
 
   const updateUser = trpc.admin.updateUser.useMutation({
     onSuccess: () => {
       toast.success(t('admin.userUpdated'));
+      users.refetch();
+      stats.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateUserRole = trpc.admin.updateUserRole.useMutation({
+    onSuccess: () => {
+      toast.success('Role updated');
+      users.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteUser = trpc.admin.deleteUser.useMutation({
+    onSuccess: () => {
+      toast.success('User deleted');
       users.refetch();
       stats.refetch();
     },
@@ -136,6 +153,42 @@ export function AdminPage() {
   const revenueStats = trpc.admin.getRevenueStats.useQuery(undefined, { enabled: isAdmin && activeTab === 'analytics' });
   const planDistribution = trpc.admin.getPlanDistribution.useQuery(undefined, { enabled: isAdmin && activeTab === 'analytics' });
   const activeUsers = trpc.admin.getActiveUsers.useQuery(undefined, { enabled: isAdmin && activeTab === 'analytics' });
+  const funnelData = trpc.admin.getFunnel.useQuery(undefined, { enabled: isAdmin && activeTab === 'analytics' });
+
+  // Revenue dashboard data
+  const revenueOverview = trpc.admin.getRevenueOverview.useQuery(undefined, { enabled: isAdmin && activeTab === 'revenue' });
+
+  // User analytics data
+  const userAnalytics = trpc.admin.getUserAnalytics.useQuery(undefined, { enabled: isAdmin && activeTab === 'analytics' });
+
+  // System health data
+  const systemHealth = trpc.admin.getSystemHealth.useQuery(undefined, {
+    enabled: isAdmin && activeTab === 'health',
+    refetchInterval: activeTab === 'health' ? 15000 : false,
+  });
+
+  // Audit log data
+  const [auditPage, setAuditPage] = useState(1);
+  const auditLog = trpc.admin.getAuditLog.useQuery(
+    { page: auditPage, limit: 15 },
+    { enabled: isAdmin && activeTab === 'audit' },
+  );
+
+  // Bulk email mutation
+  const sendBulkEmail = trpc.admin.sendBulkEmail.useMutation({
+    onSuccess: (data) => toast.success(data.message),
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Admin actions
+  const suspendUser = trpc.admin.suspendUser.useMutation({
+    onSuccess: () => { toast.success('User suspended'); users.refetch(); stats.refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+  const grantTrial = trpc.admin.grantTrial.useMutation({
+    onSuccess: () => { toast.success('Trial granted'); users.refetch(); stats.refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
 
   /* ── Loading state ─────────────────────────────── */
 
@@ -340,7 +393,7 @@ export function AdminPage() {
 
       {/* ── Tab Switcher ───────────────────────────── */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }} role="tablist">
-        {([['users', 'Users'], ['referrals', 'Referrals'], ['analytics', 'Analytics']] as const).map(([key, label]) => {
+        {([['users', 'Users'], ['revenue', 'Revenue'], ['analytics', 'Analytics'], ['health', 'System'], ['audit', 'Audit Log'], ['email', 'Email'], ['referrals', 'Referrals']] as const).map(([key, label]) => {
           const active = activeTab === key;
           return (
             <button
@@ -517,10 +570,23 @@ export function AdminPage() {
                     user={user}
                     C={C}
                     tdBase={tdBase}
+                    currentUserId={profile.data?.id ?? ''}
                     expanded={expandedUserId === user.id}
                     onToggle={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
                     onUpdatePlan={(plan) => updateUser.mutate({ userId: user.id, plan })}
                     isPending={updateUser.isPending}
+                    onSuspend={() => suspendUser.mutate({ userId: user.id })}
+                    onGrantTrial={(plan) => grantTrial.mutate({ userId: user.id, plan })}
+                    isSuspending={suspendUser.isPending}
+                    isGranting={grantTrial.isPending}
+                    onUpdateRole={(role) => updateUserRole.mutate({ userId: user.id, role })}
+                    isUpdatingRole={updateUserRole.isPending}
+                    onDelete={() => {
+                      if (window.confirm(`Are you sure you want to delete user ${user.email || user.name || user.id}?`)) {
+                        deleteUser.mutate({ userId: user.id });
+                      }
+                    }}
+                    isDeleting={deleteUser.isPending}
                   />
                 ))
               )}
@@ -733,7 +799,29 @@ export function AdminPage() {
           activeUsers={activeUsers}
           totalUsers={stats.data?.totalUsers ?? 0}
           paidUsers={stats.data?.activeSubscriptions ?? 0}
+          userAnalytics={userAnalytics}
+          funnelData={funnelData}
         />
+      )}
+
+      {/* ── Revenue Dashboard (O1) ──────────────────── */}
+      {activeTab === 'revenue' && (
+        <RevenueDashboard C={C} revenueOverview={revenueOverview} />
+      )}
+
+      {/* ── System Health (O4) ───────────────────────── */}
+      {activeTab === 'health' && (
+        <SystemHealthPanel C={C} systemHealth={systemHealth} />
+      )}
+
+      {/* ── Audit Log (O5) ──────────────────────────── */}
+      {activeTab === 'audit' && (
+        <AuditLogPanel C={C} auditLog={auditLog} auditPage={auditPage} setAuditPage={setAuditPage} />
+      )}
+
+      {/* ── Bulk Email (O6) ─────────────────────────── */}
+      {activeTab === 'email' && (
+        <BulkEmailPanel C={C} sendBulkEmail={sendBulkEmail} />
       )}
 
       {/* ── Recent Activity ────────────────────────── */}
@@ -968,14 +1056,24 @@ interface UserRowProps {
   };
   C: Theme;
   tdBase: React.CSSProperties;
+  currentUserId: string;
   expanded: boolean;
   onToggle: () => void;
   onUpdatePlan: (plan: 'FREE' | 'PRO' | 'STUDIO') => void;
   isPending: boolean;
+  onSuspend: () => void;
+  onGrantTrial: (plan: 'PRO' | 'STUDIO') => void;
+  isSuspending: boolean;
+  isGranting: boolean;
+  onUpdateRole: (role: 'USER' | 'ADMIN') => void;
+  isUpdatingRole: boolean;
+  onDelete: () => void;
+  isDeleting: boolean;
 }
 
-function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending }: UserRowProps) {
+function UserRow({ user, C, tdBase, currentUserId, expanded, onToggle, onUpdatePlan, isPending, onSuspend, onGrantTrial, isSuspending, isGranting, onUpdateRole, isUpdatingRole, onDelete, isDeleting }: UserRowProps) {
   const t = useLocaleStore((s) => s.t);
+  const isSelf = user.id === currentUserId;
   return (
     <>
       <tr
@@ -1006,9 +1104,38 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
           <PlanBadge plan={user.plan} C={C} />
         </td>
 
-        {/* Role Badge */}
+        {/* Role */}
         <td style={tdBase}>
-          <RoleBadge role={user.role} C={C} />
+          {isSelf ? (
+            <RoleBadge role={user.role} C={C} />
+          ) : (
+            <select
+              value={user.role}
+              onChange={(e) => {
+                e.stopPropagation();
+                onUpdateRole(e.target.value as 'USER' | 'ADMIN');
+              }}
+              onClick={(e) => e.stopPropagation()}
+              disabled={isUpdatingRole}
+              aria-label={`Change role for ${user.name || user.email}`}
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                background: user.role === 'ADMIN' ? `${C.orange}18` : `${C.dim}18`,
+                color: user.role === 'ADMIN' ? C.orange : C.sub,
+                border: `1px solid ${user.role === 'ADMIN' ? C.orange + '40' : C.border}`,
+                cursor: isUpdatingRole ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                outline: 'none',
+                opacity: isUpdatingRole ? 0.6 : 1,
+              }}
+            >
+              <option value="USER">User</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          )}
         </td>
 
         {/* Projects Count */}
@@ -1025,19 +1152,49 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
           })}
         </td>
 
-        {/* Expand */}
+        {/* Actions */}
         <td style={{ ...tdBase, textAlign: 'center' }}>
-          <span style={{
-            display: 'inline-block',
-            color: C.dim,
-            fontSize: 16,
-            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform .2s ease',
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {/* Delete button — hidden for self */}
+            {!isSelf && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                disabled={isDeleting}
+                aria-label={`Delete user ${user.name || user.email}`}
+                title="Delete user"
+                style={{
+                  width: 26, height: 26,
+                  borderRadius: 6,
+                  border: `1px solid ${C.red}40`,
+                  background: `${C.red}10`,
+                  color: C.red,
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: isDeleting ? 0.5 : 1,
+                  transition: 'opacity .15s, background .15s',
+                  fontFamily: 'inherit',
+                  padding: 0,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+            {/* Expand chevron */}
+            <span style={{
+              display: 'inline-block',
+              color: C.dim,
+              fontSize: 16,
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform .2s ease',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </div>
         </td>
       </tr>
 
@@ -1082,6 +1239,52 @@ function UserRow({ user, C, tdBase, expanded, onToggle, onUpdatePlan, isPending 
                   <option value="PRO">Pro</option>
                   <option value="STUDIO">Studio</option>
                 </select>
+              </div>
+
+              {/* Admin actions */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {user.plan !== 'FREE' && (
+                  <button
+                    disabled={isSuspending}
+                    onClick={(e) => { e.stopPropagation(); onSuspend(); }}
+                    style={{
+                      padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.red}`,
+                      fontSize: 11, fontWeight: 700, cursor: isSuspending ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit', background: `${C.red}14`, color: C.red,
+                      opacity: isSuspending ? 0.5 : 1, transition: 'opacity .15s',
+                    }}
+                  >
+                    Suspend
+                  </button>
+                )}
+                {user.plan === 'FREE' && (
+                  <button
+                    disabled={isGranting}
+                    onClick={(e) => { e.stopPropagation(); onGrantTrial('PRO'); }}
+                    style={{
+                      padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.green}`,
+                      fontSize: 11, fontWeight: 700, cursor: isGranting ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit', background: `${C.green}14`, color: C.green,
+                      opacity: isGranting ? 0.5 : 1, transition: 'opacity .15s',
+                    }}
+                  >
+                    Grant PRO Trial
+                  </button>
+                )}
+                {!isSelf && (
+                  <button
+                    disabled={isDeleting}
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                    style={{
+                      padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.red}`,
+                      fontSize: 11, fontWeight: 700, cursor: isDeleting ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit', background: `${C.red}14`, color: C.red,
+                      opacity: isDeleting ? 0.5 : 1, transition: 'opacity .15s',
+                    }}
+                  >
+                    Delete User
+                  </button>
+                )}
               </div>
 
               {/* Meta info */}
@@ -1188,9 +1391,12 @@ function LoadingSkeleton({ C }: { C: Theme }) {
 /* ── Analytics Dashboard ─────────────────────────── */
 
 const PLAN_COLORS: Record<string, string> = {
-  FREE: '#3b82f6',
-  PRO: '#f43f5e',
+  FREE: '#6b7280',
+  Free: '#6b7280',
+  PRO: '#3b82f6',
+  Pro: '#3b82f6',
   STUDIO: '#8b5cf6',
+  Studio: '#8b5cf6',
 };
 
 interface AnalyticsDashboardProps {
@@ -1206,6 +1412,10 @@ interface AnalyticsDashboardProps {
   activeUsers: { data?: any; isLoading: boolean };
   totalUsers: number;
   paidUsers: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  userAnalytics?: { data?: any; isLoading: boolean };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  funnelData?: { data?: any[]; isLoading: boolean };
 }
 
 function AnalyticsDashboard({
@@ -1217,14 +1427,17 @@ function AnalyticsDashboard({
   activeUsers,
   totalUsers,
   paidUsers,
+  userAnalytics,
+  funnelData,
 }: AnalyticsDashboardProps) {
-  const totalRevenue = revenueStats.data?.reduce((sum, r) => sum + r.total, 0) ?? 0;
+  const totalRevenue = revenueStats.data?.reduce((sum, r) => sum + (r.revenue ?? r.total ?? 0), 0) ?? 0;
+  const ua = userAnalytics?.data;
 
   const summaryCards = [
     { label: 'Total Users', value: totalUsers.toLocaleString('en-US'), color: C.blue },
     { label: 'Paid Users', value: paidUsers.toLocaleString('en-US'), color: C.green },
     { label: 'Revenue (12mo)', value: `$${totalRevenue.toFixed(2)}`, color: C.accent },
-    { label: 'Active (7d)', value: activeUsers.data?.count?.toLocaleString('en-US') ?? '...', color: C.purple },
+    { label: 'Active (7d)', value: (Array.isArray(activeUsers.data) ? activeUsers.data.reduce((sum: number, d: { active?: number }) => sum + (d.active ?? 0), 0) : activeUsers.data?.count ?? 0).toLocaleString('en-US'), color: C.purple },
   ];
 
   const chartCardStyle: React.CSSProperties = {
@@ -1276,6 +1489,98 @@ function AnalyticsDashboard({
         ))}
       </div>
 
+      {/* ── User Analytics (O2) ──────────────────────── */}
+      {ua && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 14 }}>
+          {/* New users cards */}
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px',
+          }}>
+            <div style={{ fontSize: 11, color: C.sub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 12 }}>
+              New Users
+            </div>
+            <div style={{ display: 'flex', gap: 16 }}>
+              {[
+                { label: 'Today', value: ua.newToday, color: C.green },
+                { label: 'This Week', value: ua.newThisWeek, color: C.blue },
+                { label: 'This Month', value: ua.newThisMonth, color: C.purple },
+              ].map((item) => (
+                <div key={item.label} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: item.color }}>{item.value}</div>
+                  <div style={{ fontSize: 10, color: C.dim, marginTop: 2 }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Plan distribution */}
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px',
+          }}>
+            <div style={{ fontSize: 11, color: C.sub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 12 }}>
+              Plan Distribution
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {[
+                { label: 'Free', value: ua.planDistribution.free, color: '#6b7280' },
+                { label: 'Pro', value: ua.planDistribution.pro, color: C.accent },
+                { label: 'Studio', value: ua.planDistribution.studio, color: C.purple },
+              ].map((item) => (
+                <div key={item.label} style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
+                    <span style={{ color: item.color }}>{item.label}</span>
+                    <span style={{ color: C.text }}>{item.value}</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: `${item.color}18` }}>
+                    <div style={{
+                      height: 6, borderRadius: 3, background: item.color,
+                      width: `${totalUsers > 0 ? (item.value / totalUsers) * 100 : 0}%`,
+                      transition: 'width .3s ease',
+                    }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top users by AI usage */}
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px',
+            gridColumn: ua.topByAI.length > 0 ? '1 / -1' : undefined,
+          }}>
+            <div style={{ fontSize: 11, color: C.sub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 12 }}>
+              Top 5 Users by AI Usage
+            </div>
+            {ua.topByAI.length === 0 ? (
+              <div style={{ color: C.dim, fontSize: 13, padding: '16px 0', textAlign: 'center' }}>No AI usage data yet</div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>#</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>Name</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>Email</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>Plan</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>AI Uses</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ua.topByAI.map((u: { id: string; name: string | null; email: string | null; plan: string; aiUsage: number }, i: number) => (
+                    <tr key={u.id}>
+                      <td style={{ padding: '8px', fontSize: 12, color: C.dim, borderBottom: `1px solid ${C.border}` }}>{i + 1}</td>
+                      <td style={{ padding: '8px', fontSize: 13, fontWeight: 600, borderBottom: `1px solid ${C.border}` }}>{u.name || '---'}</td>
+                      <td style={{ padding: '8px', fontSize: 12, color: C.sub, borderBottom: `1px solid ${C.border}` }}>{u.email || '---'}</td>
+                      <td style={{ padding: '8px', borderBottom: `1px solid ${C.border}` }}><PlanBadge plan={u.plan} C={C} /></td>
+                      <td style={{ padding: '8px', fontSize: 13, fontWeight: 700, textAlign: 'right', color: C.accent, borderBottom: `1px solid ${C.border}` }}>{u.aiUsage.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Charts grid ────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 16 }}>
         {!recharts ? (
@@ -1313,6 +1618,69 @@ function AnalyticsDashboard({
           />
         )}
       </div>
+
+      {/* ── Conversion Funnel ──────────────────────── */}
+      {funnelData && (
+        <div style={{
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          padding: '20px 24px',
+          overflow: 'hidden',
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 16 }}>
+            Conversion Funnel
+          </div>
+          {funnelData.isLoading ? (
+            <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.dim, fontSize: 13 }}>
+              Loading funnel data...
+            </div>
+          ) : !funnelData.data?.length ? (
+            <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.dim, fontSize: 13 }}>
+              No data available
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {funnelData.data.map((step: { step: string; count: number }, i: number) => {
+                const maxCount = funnelData.data![0]?.count || 1;
+                const pct = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
+                const conversionFromPrev = i > 0 && funnelData.data![i - 1]!.count > 0
+                  ? ((step.count / funnelData.data![i - 1]!.count) * 100).toFixed(1)
+                  : null;
+                return (
+                  <div key={step.step}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600, color: C.text }}>{step.step}</span>
+                      <span style={{ color: C.sub }}>
+                        {step.count.toLocaleString('en-US')}
+                        {conversionFromPrev && (
+                          <span style={{ marginLeft: 8, color: C.dim, fontSize: 11 }}>
+                            ({conversionFromPrev}%)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div style={{
+                      height: 8,
+                      borderRadius: 4,
+                      background: `${C.border}`,
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${pct}%`,
+                        borderRadius: 4,
+                        background: i === 0 ? C.blue : i === 1 ? C.purple : i === 2 ? C.orange : C.green,
+                        transition: 'width 0.6s ease',
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1353,12 +1721,8 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
             <LineChart data={growthStats.data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}`} />
               <XAxis
-                dataKey="day"
+                dataKey="month"
                 tick={{ fill: C.dim, fontSize: 11 }}
-                tickFormatter={(v: string) => {
-                  const d = new Date(v);
-                  return `${d.getDate()}/${d.getMonth() + 1}`;
-                }}
                 stroke={C.border}
               />
               <YAxis tick={{ fill: C.dim, fontSize: 11 }} stroke={C.border} allowDecimals={false} />
@@ -1371,19 +1735,30 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
                   color: C.text,
                   boxShadow: '0 4px 16px rgba(0,0,0,.15)',
                 }}
-                labelFormatter={(v) => {
-                  const d = new Date(String(v));
-                  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                }}
               />
               <Line
                 type="monotone"
-                dataKey="count"
+                dataKey="users"
                 name="New Users"
                 stroke={C.accent}
                 strokeWidth={2.5}
                 dot={{ fill: C.accent, r: 3, strokeWidth: 0 }}
                 activeDot={{ r: 5, fill: C.accent, strokeWidth: 2, stroke: C.card }}
+              />
+              <Line
+                type="monotone"
+                dataKey="projects"
+                name="New Projects"
+                stroke={C.blue}
+                strokeWidth={2}
+                dot={{ fill: C.blue, r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: C.blue, strokeWidth: 2, stroke: C.card }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                formatter={(value: string) => (
+                  <span style={{ color: C.sub, fontSize: 12, fontWeight: 500 }}>{value}</span>
+                )}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -1406,8 +1781,8 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
             <PieChart>
               <Pie
                 data={planDistribution.data}
-                dataKey="count"
-                nameKey="plan"
+                dataKey="value"
+                nameKey="name"
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
@@ -1418,8 +1793,8 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
               >
                 {planDistribution.data.map((entry) => (
                   <Cell
-                    key={entry.plan}
-                    fill={PLAN_COLORS[entry.plan] ?? C.dim}
+                    key={entry.name}
+                    fill={entry.color ?? PLAN_COLORS[entry.name] ?? C.dim}
                     stroke="none"
                   />
                 ))}
@@ -1463,10 +1838,6 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
               <XAxis
                 dataKey="month"
                 tick={{ fill: C.dim, fontSize: 11 }}
-                tickFormatter={(v: string) => {
-                  const d = new Date(v + '-01');
-                  return d.toLocaleDateString('en-US', { month: 'short' });
-                }}
                 stroke={C.border}
               />
               <YAxis
@@ -1483,18 +1854,574 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
                   color: C.text,
                   boxShadow: '0 4px 16px rgba(0,0,0,.15)',
                 }}
-                formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
-                labelFormatter={(v) => {
-                  const d = new Date(String(v) + '-01');
-                  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                }}
+                formatter={(value, name) => [`$${Number(value).toFixed(2)}`, String(name)]}
               />
-              <Bar dataKey="total" name="Revenue" fill={C.green} radius={[6, 6, 0, 0]} maxBarSize={48} />
+              <Bar dataKey="revenue" name="Revenue" fill={C.green} radius={[6, 6, 0, 0]} maxBarSize={48} />
+              <Bar dataKey="payouts" name="Payouts" fill={C.orange} radius={[6, 6, 0, 0]} maxBarSize={48} />
             </BarChart>
           </ResponsiveContainer>
         )}
       </div>
     </>
+  );
+}
+
+/* ── Revenue Dashboard (O1) ─────────────────────── */
+
+interface RevenueDashboardProps {
+  C: Theme;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  revenueOverview: { data?: any; isLoading: boolean; isError: boolean };
+}
+
+function RevenueDashboard({ C, revenueOverview }: RevenueDashboardProps) {
+  const d = revenueOverview.data;
+
+  if (revenueOverview.isLoading) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 16, marginBottom: 32 }}>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '22px 24px' }}>
+            <Skeleton width="80px" height="12px" />
+            <div style={{ marginTop: 14 }}><Skeleton width="100px" height="32px" /></div>
+            <div style={{ marginTop: 8 }}><Skeleton width="120px" height="14px" /></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (revenueOverview.isError || !d) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 24px', textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ color: C.dim, fontSize: 14 }}>Failed to load revenue data</div>
+      </div>
+    );
+  }
+
+  const cards = [
+    {
+      label: 'MRR',
+      value: `$${d.mrr.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      sub: d.mrrChange !== 0 ? `${d.mrrChange > 0 ? '+' : ''}${d.mrrChange}% vs last month` : 'No change',
+      color: C.green,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Active Subscriptions',
+      value: d.activeSubscriptions.toString(),
+      sub: `${d.proCount} PRO + ${d.studioCount} Studio`,
+      color: C.blue,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Total Users',
+      value: d.totalUsers.toLocaleString('en-US'),
+      sub: `${d.activeSubscriptions > 0 ? ((d.activeSubscriptions / d.totalUsers) * 100).toFixed(1) : '0'}% paid`,
+      color: C.purple,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Churn Rate',
+      value: d.churnRate !== null ? `${d.churnRate}%` : '\u2014',
+      sub: d.churnRate !== null ? 'Monthly churn estimate' : 'Insufficient data',
+      color: C.orange,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 16 }}>
+        {cards.map((card) => (
+          <div
+            key={card.label}
+            style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+              padding: '22px 24px', position: 'relative', overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: 0, right: 0, width: 80, height: 80,
+              background: `radial-gradient(circle at 100% 0%, ${card.color}15, transparent 70%)`,
+              pointerEvents: 'none',
+            }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 12, color: C.sub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                {card.label}
+              </span>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, background: `${card.color}14`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color,
+              }}>
+                {card.icon}
+              </div>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1.1 }}>
+              {card.value}
+            </div>
+            <div style={{ fontSize: 12, color: C.dim, marginTop: 6, fontWeight: 500 }}>
+              {card.sub}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── System Health Panel (O4) ───────────────────── */
+
+interface SystemHealthPanelProps {
+  C: Theme;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  systemHealth: { data?: any; isLoading: boolean; isError: boolean };
+}
+
+function SystemHealthPanel({ C, systemHealth }: SystemHealthPanelProps) {
+  const d = systemHealth.data;
+
+  function formatUptime(seconds: number): string {
+    const days = Math.floor(seconds / 86400);
+    const hrs = Math.floor((seconds % 86400) / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return `${days}d ${hrs}h ${mins}m`;
+    if (hrs > 0) return `${hrs}h ${mins}m`;
+    return `${mins}m`;
+  }
+
+  if (systemHealth.isLoading) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: 16, marginBottom: 32 }}>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '22px 24px' }}>
+            <Skeleton width="100px" height="14px" />
+            <div style={{ marginTop: 12 }}><Skeleton width="140px" height="28px" /></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (systemHealth.isError || !d) {
+    return (
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 24px', textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ color: C.red, fontSize: 14, fontWeight: 600 }}>System health check failed</div>
+        <div style={{ color: C.dim, fontSize: 12, marginTop: 4 }}>Unable to reach health endpoint</div>
+      </div>
+    );
+  }
+
+  const statusColor = d.status === 'ok' ? C.green : C.orange;
+
+  const items = [
+    {
+      label: 'Status',
+      value: d.status.toUpperCase(),
+      color: statusColor,
+      detail: `DB latency: ${d.db.latencyMs}ms`,
+    },
+    {
+      label: 'Memory (Heap)',
+      value: `${d.memory.heapMB} MB`,
+      color: d.memory.heapMB > 512 ? C.orange : C.green,
+      detail: `RSS: ${d.memory.rssMB} MB`,
+    },
+    {
+      label: 'Uptime',
+      value: formatUptime(d.uptime),
+      color: C.blue,
+      detail: `Node ${d.nodeVersion}`,
+    },
+    {
+      label: 'Database',
+      value: d.db.ok ? 'Connected' : 'Disconnected',
+      color: d.db.ok ? C.green : C.red,
+      detail: `${d.counts.users} users, ${d.counts.projects} projects`,
+    },
+  ];
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 16 }}>
+        {items.map((item) => (
+          <div
+            key={item.label}
+            style={{
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+              padding: '22px 24px', position: 'relative', overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: 0, right: 0, width: 80, height: 80,
+              background: `radial-gradient(circle at 100% 0%, ${item.color}15, transparent 70%)`,
+              pointerEvents: 'none',
+            }} />
+            <div style={{ fontSize: 12, color: C.sub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 12 }}>
+              {item.label}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%', background: item.color,
+                display: 'inline-block', flexShrink: 0,
+              }} />
+              <span style={{ fontSize: 22, fontWeight: 700, color: C.text }}>{item.value}</span>
+            </div>
+            <div style={{ fontSize: 12, color: C.dim, fontWeight: 500 }}>{item.detail}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Rate limiter status placeholder */}
+      <div style={{
+        marginTop: 16, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14,
+        padding: '16px 22px', display: 'flex', alignItems: 'center', gap: 10,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span style={{ fontSize: 12, color: C.dim }}>
+          Rate limiter: active (60 req/min admin, 30 req/min users)
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: C.dim }}>
+          Auto-refreshes every 15s
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Audit Log Panel (O5) ───────────────────────── */
+
+interface AuditLogPanelProps {
+  C: Theme;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  auditLog: { data?: { logs: any[]; total: number; page: number; pages: number }; isLoading: boolean; isError: boolean };
+  auditPage: number;
+  setAuditPage: (page: number) => void;
+}
+
+function AuditLogPanel({ C, auditLog, auditPage, setAuditPage }: AuditLogPanelProps) {
+  const thStyle: React.CSSProperties = {
+    textAlign: 'left', padding: '10px 14px', fontSize: 10, fontWeight: 600,
+    color: C.sub, textTransform: 'uppercase', letterSpacing: '.05em',
+    borderBottom: `2px solid ${C.border}`,
+  };
+  const tdStyle: React.CSSProperties = {
+    padding: '10px 14px', fontSize: 12, borderBottom: `1px solid ${C.border}`,
+  };
+
+  return (
+    <div style={{
+      background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+      overflow: 'hidden', marginBottom: 32,
+    }}>
+      <div style={{
+        padding: '16px 20px', borderBottom: `1px solid ${C.border}`,
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Audit Log</h2>
+        {auditLog.data && (
+          <span style={{ fontSize: 12, color: C.dim, marginLeft: 4 }}>{auditLog.data.total} entries</span>
+        )}
+      </div>
+
+      {auditLog.isLoading ? (
+        <div style={{ padding: '20px' }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
+              <Skeleton width="120px" height="14px" />
+              <Skeleton width="80px" height="14px" />
+              <Skeleton width="100px" height="14px" />
+              <Skeleton width="80px" height="14px" />
+            </div>
+          ))}
+        </div>
+      ) : auditLog.isError ? (
+        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ color: C.dim, fontSize: 13 }}>
+            Audit log table not yet available. Run the database migration to enable audit logging.
+          </div>
+        </div>
+      ) : !auditLog.data?.logs.length ? (
+        <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+          <div style={{ color: C.dim, fontSize: 14 }}>No audit log entries yet</div>
+          <div style={{ color: C.dim, fontSize: 12, marginTop: 4 }}>Admin actions will appear here once performed</div>
+        </div>
+      ) : (
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Date</th>
+                  <th style={thStyle}>Action</th>
+                  <th style={thStyle}>User ID</th>
+                  <th style={thStyle}>Target</th>
+                  <th style={thStyle}>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLog.data.logs.map((log: { id: string; createdAt: string; action: string; userId: string | null; target: string | null; metadata: Record<string, unknown> | null }) => (
+                  <tr key={log.id}>
+                    <td style={{ ...tdStyle, color: C.dim, whiteSpace: 'nowrap' }}>
+                      {new Date(log.createdAt).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                      })}
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700,
+                        background: `${C.accent}14`, color: C.accent,
+                      }}>
+                        {log.action}
+                      </span>
+                    </td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: C.dim }}>
+                      {log.userId ? `${log.userId.slice(0, 10)}...` : '\u2014'}
+                    </td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: C.sub }}>
+                      {log.target ? (log.target.length > 16 ? `${log.target.slice(0, 14)}...` : log.target) : '\u2014'}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: 11, color: C.dim, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {log.metadata ? JSON.stringify(log.metadata).slice(0, 60) : '\u2014'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {auditLog.data.pages > 1 && (
+            <div style={{
+              padding: '12px 20px', borderTop: `1px solid ${C.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: 12, color: C.dim }}>
+                Page {auditLog.data.page} of {auditLog.data.pages}
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => setAuditPage(Math.max(1, auditPage - 1))}
+                  disabled={auditPage <= 1}
+                  style={{
+                    padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.border}`,
+                    fontSize: 12, fontWeight: 600, cursor: auditPage <= 1 ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit', background: 'transparent', color: auditPage <= 1 ? C.dim : C.text,
+                    opacity: auditPage <= 1 ? 0.5 : 1,
+                  }}
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setAuditPage(Math.min(auditLog.data!.pages, auditPage + 1))}
+                  disabled={auditPage >= auditLog.data.pages}
+                  style={{
+                    padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.border}`,
+                    fontSize: 12, fontWeight: 600, cursor: auditPage >= auditLog.data.pages ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit', background: 'transparent', color: auditPage >= auditLog.data.pages ? C.dim : C.text,
+                    opacity: auditPage >= auditLog.data.pages ? 0.5 : 1,
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ── Bulk Email Panel (O6) ──────────────────────── */
+
+interface BulkEmailPanelProps {
+  C: Theme;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sendBulkEmail: { mutate: (input: any) => void; isPending: boolean };
+}
+
+function BulkEmailPanel({ C, sendBulkEmail }: BulkEmailPanelProps) {
+  const [planFilter, setPlanFilter] = useState<'ALL' | 'FREE' | 'PRO' | 'STUDIO'>('ALL');
+  const [template, setTemplate] = useState<'welcome' | 'feature_update' | 'promo' | 'maintenance'>('feature_update');
+  const [subject, setSubject] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+
+  const TEMPLATE_LABELS: Record<string, string> = {
+    welcome: 'Welcome / Onboarding',
+    feature_update: 'Feature Update',
+    promo: 'Promotional Offer',
+    maintenance: 'Maintenance Notice',
+  };
+
+  const canSend = subject.trim().length > 0;
+
+  const inputStyle: React.CSSProperties = {
+    padding: '8px 14px', borderRadius: 8, border: `1px solid ${C.border}`,
+    background: C.surface, color: C.text, fontSize: 13, fontFamily: 'inherit',
+    outline: 'none', width: '100%', boxSizing: 'border-box',
+    transition: 'border-color .15s',
+  };
+
+  return (
+    <div style={{
+      background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+      overflow: 'hidden', marginBottom: 32,
+    }}>
+      <div style={{
+        padding: '16px 20px', borderBottom: `1px solid ${C.border}`,
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+          <polyline points="22,6 12,13 2,6" />
+        </svg>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Bulk Email</h2>
+        <span style={{
+          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+          background: `${C.orange}14`, color: C.orange, marginLeft: 8,
+        }}>
+          STUB
+        </span>
+      </div>
+
+      <div style={{ padding: '24px 20px', maxWidth: 560 }}>
+        {/* Plan Filter */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
+            Recipients (by plan)
+          </label>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {(['ALL', 'FREE', 'PRO', 'STUDIO'] as const).map((f) => {
+              const active = planFilter === f;
+              return (
+                <button
+                  key={f}
+                  onClick={() => setPlanFilter(f)}
+                  style={{
+                    padding: '6px 14px', borderRadius: 6, border: `1px solid ${active ? C.accent : C.border}`,
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    background: active ? C.accentDim : 'transparent', color: active ? C.accent : C.sub,
+                    transition: 'all .15s',
+                  }}
+                >
+                  {f}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Template */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
+            Template
+          </label>
+          <select
+            value={template}
+            onChange={(e) => setTemplate(e.target.value as typeof template)}
+            style={{
+              ...inputStyle, cursor: 'pointer', maxWidth: 300,
+            }}
+          >
+            {Object.entries(TEMPLATE_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Subject */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
+            Subject Line
+          </label>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Enter email subject..."
+            maxLength={200}
+            style={inputStyle}
+            onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+          />
+          <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>{subject.length}/200</div>
+        </div>
+
+        {/* Preview */}
+        {showPreview && (
+          <div style={{
+            marginBottom: 20, padding: '16px', borderRadius: 10,
+            border: `1px dashed ${C.border}`, background: C.surface,
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, textTransform: 'uppercase', marginBottom: 8 }}>Preview</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+              Subject: {subject || '(empty)'}
+            </div>
+            <div style={{ fontSize: 12, color: C.sub }}>
+              Template: {TEMPLATE_LABELS[template]} | Recipients: {planFilter} plan users
+            </div>
+            <div style={{ fontSize: 11, color: C.dim, marginTop: 8, fontStyle: 'italic' }}>
+              Actual email delivery is not yet wired. This will validate and log the request.
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            style={{
+              padding: '8px 18px', borderRadius: 8, border: `1px solid ${C.border}`,
+              fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              background: 'transparent', color: C.sub, transition: 'all .15s',
+            }}
+          >
+            {showPreview ? 'Hide Preview' : 'Preview'}
+          </button>
+          <button
+            disabled={!canSend || sendBulkEmail.isPending}
+            onClick={() => {
+              if (!canSend) return;
+              sendBulkEmail.mutate({ planFilter, template, subject: subject.trim() });
+            }}
+            style={{
+              padding: '8px 22px', borderRadius: 8, border: 'none',
+              fontSize: 13, fontWeight: 700, cursor: !canSend || sendBulkEmail.isPending ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit', background: canSend ? C.accent : C.dim,
+              color: '#fff', opacity: !canSend || sendBulkEmail.isPending ? 0.5 : 1,
+              transition: 'opacity .15s',
+            }}
+          >
+            {sendBulkEmail.isPending ? 'Sending...' : 'Send Email'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

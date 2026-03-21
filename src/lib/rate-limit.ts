@@ -26,6 +26,8 @@
 interface RateLimitEntry {
   count: number;
   resetTime: number;
+  /** Last time this entry was accessed (used for LRU eviction) */
+  lastAccess: number;
 }
 
 interface RateLimitResult {
@@ -50,14 +52,19 @@ const store = new Map<string, RateLimitEntry>();
 
 /** Maximum number of entries in the rate-limit store */
 const MAX_ENTRIES = 10_000;
+/** Percentage of entries to evict when the store is full (LRU) */
+const EVICT_PERCENT = 0.2;
 /** Threshold for logging a warning */
 const WARN_THRESHOLD = 5_000;
 /** Flag indicating an emergency cleanup is already running */
 let cleanupInProgress = false;
 
 /**
- * Emergency cleanup when the store exceeds MAX_ENTRIES.
- * First removes expired entries, then the oldest 50 %.
+ * LRU eviction when the store exceeds MAX_ENTRIES.
+ * 1. Remove expired entries first (cheap).
+ * 2. If still over limit, evict the oldest 20 % by lastAccess (LRU).
+ *
+ * Called inline during rateLimit() — no background timer needed.
  */
 function emergencyCleanup(): void {
   if (cleanupInProgress) return;
@@ -72,10 +79,12 @@ function emergencyCleanup(): void {
       }
     }
 
-    // Step 2: if still >= MAX_ENTRIES, drop the oldest half
+    // Step 2: if still >= MAX_ENTRIES, evict the least-recently-accessed 20 %
     if (store.size >= MAX_ENTRIES) {
-      const entries = [...store.entries()].sort((a, b) => a[1].resetTime - b[1].resetTime);
-      const toDelete = Math.ceil(entries.length * 0.5);
+      const entries = [...store.entries()].sort(
+        (a, b) => a[1].lastAccess - b[1].lastAccess,
+      );
+      const toDelete = Math.ceil(entries.length * EVICT_PERCENT);
       for (let i = 0; i < toDelete; i++) {
         store.delete(entries[i][0]);
       }
@@ -123,11 +132,12 @@ export async function rateLimit({
       console.warn(`[rate-limit] Store size: ${store.size} entries (warning threshold: ${WARN_THRESHOLD})`);
     }
     const resetTime = now + windowMs;
-    store.set(identifier, { count: 1, resetTime });
+    store.set(identifier, { count: 1, resetTime, lastAccess: now });
     return { success: true, remaining: limit - 1, reset: resetTime };
   }
 
-  // Window still active — increment.
+  // Window still active — update LRU timestamp and increment.
+  entry.lastAccess = now;
   entry.count += 1;
 
   if (entry.count > limit) {

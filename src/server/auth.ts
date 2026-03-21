@@ -63,14 +63,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         stack: error?.stack?.split('\n').slice(0, 6),
         time: new Date().toISOString(),
       };
-      console.error('[auth][error]', error);
-      if (innerErr) console.error('[auth][cause]', innerErr);
+      authLog.error('Auth error', { name: error?.name, message: error?.message });
+      if (innerErr) authLog.error('Auth error cause', { message: innerErr?.message, name: innerErr?.name });
     },
     warn(code: string) {
-      console.warn('[auth][warn]', code);
+      authLog.warn('Auth warning', { code });
     },
     debug(message: string, metadata?: unknown) {
-      console.log('[auth][debug]', message, metadata);
+      authLog.debug(message, typeof metadata === 'object' && metadata !== null ? metadata as Record<string, unknown> : undefined);
     },
   },
   callbacks: {

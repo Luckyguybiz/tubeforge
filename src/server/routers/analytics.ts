@@ -6,9 +6,34 @@ import { RATE_LIMIT_ERROR } from '@/lib/constants';
 
 const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
 
+/** Allowlist of valid tool IDs — must match TOOL_LABELS in src/lib/toolUsageTracker.ts */
+const VALID_TOOL_IDS = new Set([
+  'mp3-converter',
+  'video-compressor',
+  'thumbnail-generator',
+  'ai-scriptwriter',
+  'subtitle-generator',
+  'video-trimmer',
+  'audio-extractor',
+  'format-converter',
+  'gif-maker',
+  'youtube-downloader',
+  'shorts-maker',
+  'voice-generator',
+]);
+
+/** Max age for analytics events — reject anything older than 1 hour */
+const MAX_EVENT_AGE_MS = 60 * 60 * 1000;
+
 /** Rate limit: 30 reads per minute per user */
 async function checkAnalyticsRate(userId: string) {
   const { success } = await rateLimit({ identifier: `analytics:${userId}`, limit: 30, window: 60 });
+  if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
+}
+
+/** Rate limit for sync/tracking writes: 100 events per minute per user */
+async function checkAnalyticsSyncRate(userId: string) {
+  const { success } = await rateLimit({ identifier: `analytics-sync:${userId}`, limit: 100, window: 60 });
   if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
 }
 
@@ -163,30 +188,68 @@ export const analyticsRouter = router({
       // For now, return the client-provided counters echoed back,
       // since there's no server-side usage tracking table yet.
       // In production this would merge with a server-side store.
+      // Filter to only valid tool IDs to prevent injection of arbitrary keys.
       const counters = input?.counters ?? {};
       return {
-        tools: Object.entries(counters).map(([tool, count]) => ({
-          tool,
-          count,
-        })),
+        tools: Object.entries(counters)
+          .filter(([tool]) => VALID_TOOL_IDS.has(tool))
+          .map(([tool, count]) => ({
+            tool,
+            count,
+          })),
       };
     }),
 
   /**
    * Sync tool usage from client to server.
    * Accepts a batch of tool usage deltas and stores them.
+   *
+   * Server-side validation:
+   *   - Tool names must be in the VALID_TOOL_IDS allowlist
+   *   - Timestamp (if provided) must be within the last hour
+   *   - Rate limited to 100 events per user per minute
    */
   syncToolUsage: protectedProcedure
     .input(
       z.object({
         counters: z.record(z.string(), z.number().int().min(0)),
+        /** ISO timestamp of when the batch was collected on the client */
+        timestamp: z.string().datetime().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await checkAnalyticsRate(ctx.session.user.id);
+      // Dedicated sync rate limit: 100 events/min per user
+      await checkAnalyticsSyncRate(ctx.session.user.id);
+
+      // Validate timestamp freshness — reject stale or manipulated events
+      if (input.timestamp) {
+        const eventTime = new Date(input.timestamp).getTime();
+        const now = Date.now();
+        if (isNaN(eventTime) || now - eventTime > MAX_EVENT_AGE_MS || eventTime > now + 60_000) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Event timestamp is stale or invalid. Must be within the last hour.',
+          });
+        }
+      }
+
+      // Filter to only valid/known tool IDs — silently drop unknown tools
+      const validCounters: Record<string, number> = {};
+      const invalidTools: string[] = [];
+      for (const [toolId, count] of Object.entries(input.counters)) {
+        if (VALID_TOOL_IDS.has(toolId)) {
+          validCounters[toolId] = count;
+        } else {
+          invalidTools.push(toolId);
+        }
+      }
+
       // In a full implementation, these counters would be stored in a
       // ToolUsage table keyed by (userId, toolId, month). For now we
       // acknowledge receipt successfully.
-      return { synced: Object.keys(input.counters).length };
+      return {
+        synced: Object.keys(validCounters).length,
+        rejected: invalidTools.length,
+      };
     }),
 });

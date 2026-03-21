@@ -2,12 +2,10 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
-import { API_ENDPOINTS, RATE_LIMIT_ERROR } from '@/lib/constants';
+import { API_ENDPOINTS, RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
 import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
-
-const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
 
 /** Fetch wrapper with AbortController timeout */
 async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 30000): Promise<Response> {
@@ -47,9 +45,9 @@ async function checkAndIncrementAIUsage(userId: string, db: PrismaClient) {
       user.aiUsage = 0;
     }
 
-    const limit = AI_LIMITS[user.plan];
+    const limit = getPlanLimits(user.plan).aiGenerations;
     if (user.aiUsage >= limit) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: `Лимит ИИ исчерпан (${limit}/мес). Обновите тарифный план.` });
+      throw new TRPCError({ code: 'FORBIDDEN', message: `AI limit exceeded (${limit}/mo). Please upgrade your plan.` });
     }
 
     // Increment within the same transaction
@@ -107,10 +105,10 @@ export const aiRouter = router({
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         const err = await res.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'DALL-E API error' });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ DALL-E API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
       return { images: data.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [] };
     }),
 
@@ -174,10 +172,10 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
       if (!visionRes.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
         const err = await visionRes.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка GPT-4o Vision API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'GPT-4o Vision API error' });
       }
 
-      const visionData = await visionRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ GPT-4o Vision API' }); });
+      const visionData = await visionRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse GPT-4o Vision API response' }); });
       const description = visionData.choices?.[0]?.message?.content ?? '';
 
       // Step 2: DALL-E 3 generates based on description + user prompt
@@ -217,10 +215,10 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
         // Vision succeeded (1 credit consumed), refund only the DALL-E credit
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         const err = await dalleRes.json().catch(() => ({}));
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'Ошибка DALL-E API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'DALL-E API error' });
       }
 
-      const dalleData = await dalleRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ DALL-E API' }); });
+      const dalleData = await dalleRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
       return {
         description,
         images: dalleData.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [],
@@ -266,10 +264,10 @@ Return ONLY valid JSON, no markdown.`,
 
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Claude API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Claude API error' });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Claude API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Claude API response' }); });
       const text = data.content?.[0]?.text ?? '';
       try {
         return JSON.parse(text);
@@ -283,7 +281,7 @@ Return ONLY valid JSON, no markdown.`,
             // fall through to error fallback
           }
         }
-        return { title: 'Ошибка генерации', description: 'Не удалось сгенерировать метаданные. Попробуйте ещё раз.', tags: [] };
+        return { title: 'Generation error', description: 'Failed to generate metadata. Please try again.', tags: [] };
       }
     }),
 
@@ -326,10 +324,307 @@ Return ONLY valid JSON, no markdown.`,
 
       if (!res.ok) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Runway API' });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Runway API error' });
       }
 
-      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Runway API' }); });
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Runway API response' }); });
       return { taskId: data.id, status: 'processing' };
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z1: AI Script Generator — uses OpenAI GPT to generate scenes
+     ═══════════════════════════════════════════════════════════════ */
+  generateScript: protectedProcedure
+    .input(z.object({
+      topic: z.string().min(1).max(500),
+      tone: z.enum(['professional', 'casual', 'fun']).default('professional'),
+      duration: z.enum(['30s', '1min', '3min']).default('1min'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured. Contact the administrator.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-script', 10);
+      // Costs 2 AI credits
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const durationMap: Record<string, { scenes: number; totalSec: number }> = {
+        '30s': { scenes: 3, totalSec: 30 },
+        '1min': { scenes: 5, totalSec: 60 },
+        '3min': { scenes: 10, totalSec: 180 },
+      };
+      const cfg = durationMap[input.duration] ?? durationMap['1min'];
+
+      const toneMap: Record<string, string> = {
+        professional: 'профессиональный, деловой',
+        casual: 'разговорный, дружелюбный',
+        fun: 'весёлый, энергичный, с юмором',
+      };
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content: `Ты — сценарист YouTube-видео. Создавай сценарии на русском языке. Отвечай ТОЛЬКО в JSON формате.`,
+              },
+              {
+                role: 'user',
+                content: `Создай сценарий YouTube-видео на тему: "${input.topic}".
+
+Тон: ${toneMap[input.tone] ?? 'профессиональный'}.
+Общая длительность: ~${cfg.totalSec} секунд.
+Количество сцен: ${cfg.scenes}.
+
+Верни JSON:
+{
+  "scenes": [
+    { "text": "Текст/описание для сцены (промпт для генерации видео)", "duration": <число секунд> }
+  ]
+}
+
+Каждая сцена должна содержать:
+- text: описание визуальной сцены для AI-генерации видео (что показывать, какая атмосфера)
+- duration: длительность в секундах (сумма должна быть ~${cfg.totalSec})
+
+Сделай сцены визуально разнообразными и увлекательными.`,
+              },
+            ],
+          }),
+        }, 60000);
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error. Please try again later.' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse OpenAI API response' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '';
+
+      try {
+        const parsed = JSON.parse(text) as { scenes?: { text: string; duration: number }[] };
+        if (!parsed.scenes || !Array.isArray(parsed.scenes)) {
+          throw new Error('Invalid format');
+        }
+        return {
+          scenes: parsed.scenes.map((s: { text: string; duration: number }) => ({
+            text: String(s.text || ''),
+            duration: Math.max(3, Math.min(30, Number(s.duration) || 5)),
+          })),
+        };
+      } catch {
+        // Try extracting JSON from possible markdown wrapping
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { scenes?: { text: string; duration: number }[] };
+            if (parsed.scenes && Array.isArray(parsed.scenes)) {
+              return {
+                scenes: parsed.scenes.map((s: { text: string; duration: number }) => ({
+                  text: String(s.text || ''),
+                  duration: Math.max(3, Math.min(30, Number(s.duration) || 5)),
+                })),
+              };
+            }
+          } catch {
+            // fall through
+          }
+        }
+        await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse script. Please try again.' });
+      }
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z2: AI Auto-Captions — generates SRT-style captions from text
+     ═══════════════════════════════════════════════════════════════ */
+  generateCaptions: protectedProcedure
+    .input(z.object({
+      scenes: z.array(z.object({
+        text: z.string(),
+        duration: z.number(),
+      })).min(1).max(50),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured. This feature will be available soon.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-captions', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const sceneSummary = input.scenes.map((s, i) => `Сцена ${i + 1} (${s.duration}с): ${s.text}`).join('\n');
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            max_tokens: 3000,
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content: 'Ты генерируешь субтитры для видео в формате SRT. Отвечай ТОЛЬКО в JSON.',
+              },
+              {
+                role: 'user',
+                content: `Создай субтитры для видео на основе описаний сцен:
+
+${sceneSummary}
+
+Верни JSON:
+{
+  "srt": "полный текст SRT файла с таймкодами",
+  "captions": [
+    { "index": 1, "start": "00:00:00,000", "end": "00:00:03,000", "text": "Текст субтитра" }
+  ]
+}
+
+Разбей текст на короткие субтитры (макс 2 строки, ~10 слов). Таймкоды должны точно покрывать длительность каждой сцены.`,
+              },
+            ],
+          }),
+        }, 60000);
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse response' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '';
+
+      try {
+        const parsed = JSON.parse(text) as { srt?: string; captions?: { index: number; start: string; end: string; text: string }[] };
+        return {
+          srt: parsed.srt ?? '',
+          captions: parsed.captions ?? [],
+        };
+      } catch {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { srt?: string; captions?: { index: number; start: string; end: string; text: string }[] };
+            return { srt: parsed.srt ?? '', captions: parsed.captions ?? [] };
+          } catch {
+            // fall through
+          }
+        }
+        return { srt: '', captions: [] };
+      }
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z5: AI Image Generator — general-purpose DALL-E 3 image gen
+     ═══════════════════════════════════════════════════════════════ */
+  generateImage: protectedProcedure
+    .input(z.object({
+      prompt: z.string().min(1).max(1000),
+      style: z.enum(['realistic', 'anime', '3d', 'watercolor', 'oil', 'pixel', 'minimalist', 'cinematic']).default('realistic'),
+      size: z.enum(['1024x1024', '1792x1024', '1024x1792']).default('1024x1024'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRateLimit(ctx.session.user.id, 'ai-image', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const styleMap: Record<string, string> = {
+        realistic: 'photorealistic, professional photography, detailed',
+        anime: 'anime/manga art style, vibrant Japanese animation, detailed illustration',
+        '3d': '3D rendered, CGI quality, volumetric lighting',
+        watercolor: 'watercolor painting, soft strokes, artistic, hand-painted feel',
+        oil: 'oil painting on canvas, rich textures, classical art style',
+        pixel: 'pixel art, 16-bit retro game style, crisp pixels',
+        minimalist: 'clean minimalist design, simple shapes, modern, geometric',
+        cinematic: 'cinematic movie poster style, dramatic lighting, epic composition',
+      };
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_IMAGES, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'dall-e-3',
+            prompt: `${input.prompt}. Style: ${styleMap[input.style] ?? input.style}. High quality, detailed.`,
+            n: 1,
+            size: input.size,
+            quality: 'hd',
+          }),
+        });
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.error?.message ?? 'DALL-E API error' });
+      }
+
+      const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
+      const img = data.data?.[0] as { url?: string; revised_prompt?: string } | undefined;
+      return {
+        url: img?.url ?? '',
+        revisedPrompt: img?.revised_prompt ?? '',
+      };
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z4: AI Background Removal — placeholder
+     ═══════════════════════════════════════════════════════════════ */
+  removeBackground: protectedProcedure
+    .input(z.object({
+      imageUrl: z.string().min(1),
+    }))
+    .mutation(async () => {
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message: 'Background removal coming soon. Feature is under development.',
+      });
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z3: Check ElevenLabs API status (for Settings page)
+     ═══════════════════════════════════════════════════════════════ */
+  checkVoiceCloneStatus: protectedProcedure
+    .query(async () => {
+      const hasKey = !!(process.env.ELEVENLABS_API_KEY);
+      return { available: hasKey };
     }),
 });

@@ -16,6 +16,7 @@ const PAGE_LABEL_KEYS: Record<string, string> = {
   admin: 'nav.admin',
   team: 'nav.team',
   referral: 'nav.referral',
+  blog: 'nav.blog',
 };
 
 const NOTIF_ICONS: Record<Notification['type'], string> = {
@@ -292,6 +293,7 @@ export const TopBar = memo(function TopBar() {
             }}
           />
           <button
+            aria-label={t('sidebar.search') + ' — ' + 'close'}
             onClick={closeSearch}
             style={{
               ...btnBase,

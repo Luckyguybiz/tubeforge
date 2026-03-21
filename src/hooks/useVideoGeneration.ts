@@ -4,6 +4,27 @@ import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { toast } from '@/stores/useNotificationStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
+
+/**
+ * Retry predicate for transient failures during video generation polling.
+ * Retries on network errors (no status) and 5xx server errors.
+ * Does NOT retry on 4xx client errors (bad request, unauthorized, etc.).
+ */
+function shouldRetryStatusCheck(failureCount: number, error: unknown): boolean {
+  const MAX_RETRIES = 3;
+  if (failureCount >= MAX_RETRIES) return false;
+
+  // TRPCClientError exposes the HTTP status via data.httpStatus or shape
+  const err = error as { data?: { httpStatus?: number }; message?: string };
+  const httpStatus = err?.data?.httpStatus;
+
+  // If we have an HTTP status and it's a client error (4xx), don't retry
+  if (httpStatus && httpStatus >= 400 && httpStatus < 500) return false;
+
+  // Retry on 5xx, network errors (no httpStatus), or anything else transient
+  return true;
+}
 
 export function useVideoGeneration(sceneId: string | null) {
   const sceneStatus = useEditorStore((s) => {
@@ -16,6 +37,7 @@ export function useVideoGeneration(sceneId: string | null) {
   });
   const updScene = useEditorStore((s) => s.updScene);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const updateScene = trpc.scene.update.useMutation();
   const updateSceneRef = useRef(updateScene);
@@ -39,16 +61,21 @@ export function useVideoGeneration(sceneId: string | null) {
     },
     onError: (err) => {
       if (sceneId) updScene(sceneId, { status: 'error' });
+      setLastError(err.message);
       toast.error(err.message);
     },
   });
 
-  // Poll task status every 3 seconds while generating
+  // Poll task status every 3 seconds while generating.
+  // Retry up to 3 times with exponential backoff (1s, 2s, 4s) on transient
+  // failures (5xx / network errors). 4xx errors are not retried.
   const taskStatus = trpc.videoTask.checkStatus.useQuery(
     { taskId: activeTaskId! },
     {
       enabled: !!activeTaskId && sceneStatus === 'generating',
       refetchInterval: 3000,
+      retry: shouldRetryStatusCheck,
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 4000),
     },
   );
 
@@ -61,19 +88,22 @@ export function useVideoGeneration(sceneId: string | null) {
       setActiveTaskId(null);
       // Persist videoUrl and clear taskId in DB
       updateSceneRef.current.mutate({ id: sceneId, videoUrl: output, status: 'READY', taskId: null });
-      toast.success('Видео сгенерировано!');
+      toast.success(useLocaleStore.getState().t('videoGen.success'));
     }
 
     if (taskStatus.data.status === 'FAILED') {
+      const errMsg = taskStatus.data.error || useLocaleStore.getState().t('videoGen.error');
       updScene(sceneId, { status: 'error', taskId: null });
       setActiveTaskId(null);
+      setLastError(errMsg);
       updateSceneRef.current.mutate({ id: sceneId, status: 'ERROR', taskId: null });
-      toast.error(taskStatus.data.error || 'Ошибка генерации видео');
+      toast.error(errMsg);
     }
   }, [taskStatus.data, sceneId, updScene]);
 
   const start = (prompt: string, model: string, duration: number) => {
     if (!sceneId) return;
+    setLastError(null);
     updScene(sceneId, { status: 'generating' });
     generateVideo.mutate({
       prompt,
@@ -87,5 +117,6 @@ export function useVideoGeneration(sceneId: string | null) {
     isGenerating: generateVideo.isPending || sceneStatus === 'generating',
     progress: taskStatus.data?.progress,
     taskStatus: taskStatus.data?.status,
+    lastError,
   };
 }

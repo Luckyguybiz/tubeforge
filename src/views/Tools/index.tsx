@@ -102,4 +102,8 @@ export const AVAILABLE_TOOL_IDS = new Set([
   'mp3-converter',
   'content-planner',
   'ai-video-generator',
+  'subtitle-editor',
+  'background-remover',
+  'voiceover-generator',
+  'image-generator',
 ]);

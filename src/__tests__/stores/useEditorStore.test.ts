@@ -5,7 +5,7 @@ describe('useEditorStore', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'test', duration: 8, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'test', duration: 8, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       selId: 's1',
       chars: [],
@@ -32,7 +32,7 @@ describe('useEditorStore', () => {
     useEditorStore.getState().dupScene('s1');
     const scenes = useEditorStore.getState().scenes;
     expect(scenes.length).toBe(2);
-    expect(scenes[1].label).toContain('копия');
+    expect(scenes[1].label).toContain('copy');
   });
 
   it('should split a scene', () => {
@@ -105,7 +105,7 @@ describe('useEditorStore – addSceneFromPrompt', () => {
   it('appends scene when scenes already exist', () => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'existing', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'existing', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
     });
     useEditorStore.getState().addSceneFromPrompt('new prompt');
@@ -128,7 +128,7 @@ describe('useEditorStore – dupScene', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'original prompt', duration: 8, status: 'ready', ck: 'blue', chars: ['c1'], model: 'pro', sf: 'fade', ef: 'zoom', enh: true, snd: false },
+        { id: 's1', label: 'Scene 1', prompt: 'original prompt', duration: 8, status: 'ready', ck: 'blue', chars: ['c1'], model: 'pro', sf: 'fade', ef: 'zoom', enh: true, snd: false },
       ],
       selId: 's1',
       chars: [],
@@ -156,10 +156,10 @@ describe('useEditorStore – dupScene', () => {
     expect(dup.snd).toBe(false);
   });
 
-  it('sets the label to original + " (копия)"', () => {
+  it('sets the label to original + " (copy)"', () => {
     useEditorStore.getState().dupScene('s1');
     const dup = useEditorStore.getState().scenes[1];
-    expect(dup.label).toBe('Сцена 1 (копия)');
+    expect(dup.label).toBe('Scene 1 (copy)');
   });
 
   it('sets status to "editing"', () => {
@@ -171,8 +171,8 @@ describe('useEditorStore – dupScene', () => {
   it('inserts the duplicate right after the original', () => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
-        { id: 's2', label: 'Сцена 2', prompt: 'p2', duration: 5, status: 'ready', ck: 'green', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's2', label: 'Scene 2', prompt: 'p2', duration: 5, status: 'ready', ck: 'green', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
     });
     useEditorStore.getState().dupScene('s1');
@@ -195,7 +195,7 @@ describe('useEditorStore – splitScene', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'test prompt', duration: 8, status: 'ready', ck: 'blue', chars: ['c1'], model: 'pro', sf: 'fade', ef: 'zoom', enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'test prompt', duration: 8, status: 'ready', ck: 'blue', chars: ['c1'], model: 'pro', sf: 'fade', ef: 'zoom', enh: true, snd: true },
       ],
       selId: 's1',
       chars: [],
@@ -228,8 +228,8 @@ describe('useEditorStore – splitScene', () => {
   it('labels parts with " — A" and " — B" suffixes', () => {
     useEditorStore.getState().splitScene('s1');
     const scenes = useEditorStore.getState().scenes;
-    expect(scenes[0].label).toBe('Сцена 1 — A');
-    expect(scenes[1].label).toBe('Сцена 1 — B');
+    expect(scenes[0].label).toBe('Scene 1 — A');
+    expect(scenes[1].label).toBe('Scene 1 — B');
   });
 
   it('part A keeps the original prompt; part B gets empty prompt', () => {
@@ -282,9 +282,9 @@ describe('useEditorStore – reorderScenes', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
-        { id: 's2', label: 'Сцена 2', prompt: 'p2', duration: 5, status: 'ready', ck: 'green', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
-        { id: 's3', label: 'Сцена 3', prompt: 'p3', duration: 5, status: 'ready', ck: 'purple', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's2', label: 'Scene 2', prompt: 'p2', duration: 5, status: 'ready', ck: 'green', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's3', label: 'Scene 3', prompt: 'p3', duration: 5, status: 'ready', ck: 'purple', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       selId: 's1',
       chars: [],
@@ -322,7 +322,7 @@ describe('useEditorStore – togChar', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       chars: [
         { id: 'c1', name: 'Алиса', role: 'main', avatar: '👩', ck: 'red', desc: '' },
@@ -361,7 +361,7 @@ describe('useEditorStore – saveCh / delCh', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       chars: [],
       selId: 's1',
@@ -428,8 +428,8 @@ describe('useEditorStore – saveCh / delCh', () => {
   it('delCh removes character references from all scenes', () => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: ['c1', 'c2'], model: 'standard', sf: null, ef: null, enh: true, snd: true },
-        { id: 's2', label: 'Сцена 2', prompt: 'p2', duration: 5, status: 'ready', ck: 'green', chars: ['c1'], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'p1', duration: 5, status: 'ready', ck: 'blue', chars: ['c1', 'c2'], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's2', label: 'Scene 2', prompt: 'p2', duration: 5, status: 'ready', ck: 'green', chars: ['c1'], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       chars: [
         { id: 'c1', name: 'Алиса', role: 'main', avatar: '👩', ck: 'red', desc: '' },
@@ -488,8 +488,8 @@ describe('useEditorStore – loadProject', () => {
     useEditorStore.getState().loadProject({
       id: 'proj1',
       scenes: [
-        { id: 's1', prompt: 'hello', label: 'Сцена 1', duration: 5, status: 'ready', model: 'standard', videoUrl: null },
-        { id: 's2', prompt: 'world', label: 'Сцена 2', duration: 10, status: 'editing', model: 'pro', videoUrl: null },
+        { id: 's1', prompt: 'hello', label: 'Scene 1', duration: 5, status: 'ready', model: 'standard', videoUrl: null },
+        { id: 's2', prompt: 'world', label: 'Scene 2', duration: 10, status: 'editing', model: 'pro', videoUrl: null },
       ],
     });
     const state = useEditorStore.getState();
@@ -557,7 +557,7 @@ describe('useEditorStore – loadProject', () => {
         { id: 's1', prompt: 'test', duration: 5, status: 'ready', model: 'standard', videoUrl: null },
       ],
     });
-    expect(useEditorStore.getState().scenes[0].label).toBe('Сцена 1');
+    expect(useEditorStore.getState().scenes[0].label).toBe('Scene 1');
   });
 
   it('loads metadata fields (ck, sf, ef, enh, snd, chars) from scene metadata', () => {
@@ -608,8 +608,8 @@ describe('useEditorStore – edge cases', () => {
   beforeEach(() => {
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'test', duration: 1, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
-        { id: 's2', label: 'Сцена 2', prompt: 'test2', duration: 5, status: 'ready', ck: 'green', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'test', duration: 1, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's2', label: 'Scene 2', prompt: 'test2', duration: 5, status: 'ready', ck: 'green', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       selId: 's1',
       chars: [],
@@ -639,8 +639,8 @@ describe('useEditorStore – edge cases', () => {
     useEditorStore.getState().updScene('nonexistent', { label: 'X' });
     const after = useEditorStore.getState().scenes;
     expect(after.length).toBe(before.length);
-    expect(after[0].label).toBe('Сцена 1');
-    expect(after[1].label).toBe('Сцена 2');
+    expect(after[0].label).toBe('Scene 1');
+    expect(after[1].label).toBe('Scene 2');
   });
 
   it('delScene with non-existent ID does not change scenes', () => {
@@ -661,7 +661,7 @@ describe('useEditorStore – timers', () => {
     vi.useFakeTimers();
     useEditorStore.setState({
       scenes: [
-        { id: 's1', label: 'Сцена 1', prompt: 'test', duration: 8, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
+        { id: 's1', label: 'Scene 1', prompt: 'test', duration: 8, status: 'ready', ck: 'blue', chars: [], model: 'standard', sf: null, ef: null, enh: true, snd: true },
       ],
       selId: 's1',
       chars: [],
@@ -711,7 +711,7 @@ describe('useEditorStore – timers', () => {
     // Load a new project — should cancel the timer
     useEditorStore.getState().loadProject({
       id: 'p2',
-      scenes: [{ id: 's2', prompt: 'fresh', label: 'Сцена 1', duration: 5, status: 'ready', model: 'standard', videoUrl: null }],
+      scenes: [{ id: 's2', prompt: 'fresh', label: 'Scene 1', duration: 5, status: 'ready', model: 'standard', videoUrl: null }],
     });
 
     // Advance past the original 30s timeout

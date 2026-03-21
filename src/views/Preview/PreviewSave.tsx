@@ -10,9 +10,39 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 type PrivacyStatus = 'public' | 'unlisted' | 'private';
 type PublishState = 'idle' | 'publishing' | 'published' | 'error';
+
+/* ── Platform presets for multi-platform export ─────── */
+interface PlatformPreset {
+  id: string;
+  label: string;
+  aspect: string;
+  maxDuration: number | null; // seconds, null = unlimited
+  format: string;
+}
+
+const PLATFORM_PRESETS: PlatformPreset[] = [
+  { id: 'youtube',         label: 'YouTube',          aspect: '16:9', maxDuration: null,  format: 'MP4' },
+  { id: 'youtube-shorts',  label: 'YouTube Shorts',   aspect: '9:16', maxDuration: 60,    format: 'MP4' },
+  { id: 'instagram-reels', label: 'Instagram Reels',  aspect: '9:16', maxDuration: 90,    format: 'MP4' },
+  { id: 'tiktok',          label: 'TikTok',           aspect: '9:16', maxDuration: 60,    format: 'MP4' },
+  { id: 'instagram-post',  label: 'Instagram Post',   aspect: '1:1',  maxDuration: 60,    format: 'MP4' },
+];
+
+/** Save a publish entry to localStorage history */
+function savePublishHistory(entry: { platform: string; title: string; url: string; publishedAt: string; scheduled?: boolean }) {
+  try {
+    const key = 'tf-publish-history';
+    const raw = localStorage.getItem(key);
+    const list: typeof entry[] = raw ? JSON.parse(raw) : [];
+    list.unshift(entry);
+    // Keep last 50 entries
+    localStorage.setItem(key, JSON.stringify(list.slice(0, 50)));
+  } catch { /* localStorage unavailable */ }
+}
 
 const PRIVACY_OPTIONS: { value: PrivacyStatus; labelKey: string; descKey: string; icon: string }[] = [
   { value: 'public', labelKey: 'preview.privacy.public', descKey: 'preview.privacy.publicDesc', icon: '🌍' },
@@ -62,6 +92,17 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingAll, setIsPlayingAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [selectedPreset, setSelectedPreset] = useState<string>('youtube');
+  const [exportResolution, setExportResolution] = useState<'720p' | '1080p' | '4k'>('720p');
+  const [exportAspect, setExportAspect] = useState<'16:9' | '9:16' | '1:1'>('16:9');
+  const planInfo = usePlanLimits();
+
+  // Z2: SRT captions — state kept for potential future "view in modal" feature
+  const [, setSrtContent] = useState<string | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -95,9 +136,26 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       setPublishState('published');
       setPublishProgress(100);
       if (data.uploadUrl) setYoutubeUrl(data.uploadUrl);
-      toast.success(useLocaleStore.getState().t('preview.videoUploaded'));
+      const tFn = useLocaleStore.getState().t;
+      toast.success(data.scheduled ? tFn('preview.videoScheduled') : tFn('preview.videoUploaded'));
       if (projectId) saveProject.mutate({ id: projectId, status: 'PUBLISHED' });
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      // Save to publishing history
+      savePublishHistory({
+        platform: 'YouTube',
+        title: p?.title ?? 'Untitled',
+        url: data.uploadUrl ?? '',
+        publishedAt: new Date().toISOString(),
+        scheduled: data.scheduled,
+      });
+      // First video celebration
+      try {
+        const celebKey = 'tf-first-video-celebrated';
+        if (typeof window !== 'undefined' && !localStorage.getItem(celebKey)) {
+          localStorage.setItem(celebKey, '1');
+          setShowCelebration(true);
+        }
+      } catch { /* localStorage unavailable */ }
     },
     onError: (err) => {
       setPublishState('error');
@@ -120,6 +178,29 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
   }, []);
+
+  // Z2: AI Captions mutation for SRT download
+  const generateCaptions = trpc.ai.generateCaptions.useMutation({
+    onSuccess: (data) => {
+      if (data.srt) {
+        setSrtContent(data.srt);
+        // Auto-download
+        const blob = new Blob([data.srt], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${p?.title || 'video'}-subtitles.srt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('SRT файл скачан!');
+      } else {
+        toast.error('Не удалось сгенерировать субтитры');
+      }
+    },
+    onError: (err: { message: string }) => toast.error(err.message),
+  });
 
   /* ── Derived data (memoized) ─────────────────────── */
   /* All hooks must be called unconditionally (React Rules of Hooks).
@@ -224,6 +305,12 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       });
     }, 500);
 
+    // Build publishAt ISO string if scheduling is enabled
+    let publishAt: string | undefined;
+    if (scheduleEnabled && scheduleDate && scheduleTime) {
+      publishAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
+    }
+
     uploadVideo.mutate({
       title: p.title,
       description: p.description ?? '',
@@ -231,8 +318,9 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
       videoUrl,
       thumbnailUrl: p.thumbnailUrl ?? undefined,
       privacyStatus: privacy,
+      publishAt,
     });
-  }, [p, allReady, videoUrl, selectedChannel, tags, privacy, t, uploadVideo]);
+  }, [p, allReady, videoUrl, selectedChannel, tags, privacy, t, uploadVideo, scheduleEnabled, scheduleDate, scheduleTime]);
 
   const handleDownload = useCallback(() => {
     if (!videoUrl || !p) {
@@ -305,6 +393,93 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   /* ── RENDER ───────────────────────────────────────── */
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: isMobile ? '0 12px' : 0, boxSizing: 'border-box' as const }}>
+
+      {/* ── First Video Celebration Overlay ─────────── */}
+      {showCelebration && (
+        <>
+          <style>{`
+            @keyframes tf-confetti-fall {
+              0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+              100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+            @keyframes tf-celebrate-in {
+              0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+              100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div
+            onClick={() => setShowCelebration(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9998,
+              background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(6px)',
+            }}
+          />
+          {/* Confetti particles (CSS only) */}
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div key={i} style={{
+              position: 'fixed',
+              zIndex: 9999,
+              top: 0,
+              left: `${4 + (i * 4) % 92}%`,
+              width: 8 + (i % 3) * 4,
+              height: 8 + (i % 3) * 4,
+              borderRadius: i % 3 === 0 ? '50%' : i % 3 === 1 ? 2 : 0,
+              background: ['#ef4444', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'][i % 6],
+              animation: `tf-confetti-fall ${2 + (i % 4) * 0.5}s ease-in ${(i % 8) * 0.15}s forwards`,
+              pointerEvents: 'none',
+            }} />
+          ))}
+          {/* Celebration card */}
+          <div style={{
+            position: 'fixed', zIndex: 10000,
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 20, padding: '36px 28px',
+            textAlign: 'center', maxWidth: 380, width: 'calc(100% - 32px)',
+            boxShadow: '0 24px 60px rgba(0,0,0,.3)',
+            animation: 'tf-celebrate-in .4s cubic-bezier(.4,0,.2,1) forwards',
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>&#127916;</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8, letterSpacing: '-.02em' }}>
+              {t('celebration.title')}
+            </h2>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20 }}>
+              <button
+                onClick={() => { setShowCelebration(false); handleDownload(); }}
+                style={{
+                  padding: '11px 24px', borderRadius: 10,
+                  border: `1px solid ${C.border}`, background: 'transparent',
+                  color: C.text, fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all .15s',
+                }}
+              >
+                {t('celebration.download')}
+              </button>
+              <button
+                onClick={() => { setShowCelebration(false); router.push('/editor'); }}
+                style={{
+                  padding: '11px 24px', borderRadius: 10,
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+                  color: '#fff', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all .15s',
+                  boxShadow: `0 4px 16px ${C.accent}33`,
+                }}
+              >
+                {t('celebration.createMore')}
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: C.dim, marginTop: 16, lineHeight: 1.5 }}>
+              {t('celebration.proNote')}
+            </p>
+          </div>
+        </>
+      )}
+
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 16 : 24, flexWrap: 'wrap', gap: isMobile ? 10 : 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -349,6 +524,202 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             <span style={{ fontSize: 15 }}>&#8681;</span>
             {t('preview.downloadVideo')}
           </button>
+          {/* Z2: Download SRT captions */}
+          <button
+            onClick={() => {
+              const scenesData = scenes.filter((s: { prompt?: string | null; duration: number }) => (s.prompt ?? '').trim()).map((s: { prompt?: string | null; duration: number }) => ({
+                text: s.prompt || '',
+                duration: s.duration,
+              }));
+              if (scenesData.length === 0) {
+                toast.info('Нет текста сцен для генерации субтитров');
+                return;
+              }
+              generateCaptions.mutate({ scenes: scenesData });
+            }}
+            disabled={generateCaptions.isPending || scenes.length === 0}
+            title="Сгенерировать и скачать субтитры (.SRT)"
+            style={{
+              padding: '9px 18px', minHeight: 44, borderRadius: 10, border: `1px solid ${C.border}`,
+              background: 'transparent', color: scenes.length > 0 && !generateCaptions.isPending ? C.text : C.dim,
+              fontSize: 13, fontWeight: 600,
+              cursor: scenes.length > 0 && !generateCaptions.isPending ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              opacity: scenes.length > 0 ? 1 : 0.5, transition: 'all .15s',
+            }}
+            onMouseEnter={e => { if (scenes.length > 0) e.currentTarget.style.borderColor = C.green; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}
+          >
+            {generateCaptions.isPending ? (
+              <>
+                <span style={{ width: 12, height: 12, borderRadius: '50%', border: `2px solid ${C.dim}44`, borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
+                Генерация...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="M7 15h4m-4-3h10"/>
+                </svg>
+                Скачать .SRT
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Watermark indicator ─────────────────────── */}
+      {planInfo.plan === 'FREE' ? (
+        <div style={{
+          padding: '10px 14px',
+          borderRadius: 10,
+          background: `${C.orange}08`,
+          border: `1px solid ${C.orange}20`,
+          fontSize: 12,
+          color: C.sub,
+          marginBottom: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span style={{ fontSize: 14 }}>&#9888;</span>
+          <div>
+            <div style={{ fontWeight: 600, color: C.orange, marginBottom: 2 }}>
+              {t('preview.watermarkFree')}
+            </div>
+            <div style={{ fontSize: 11, color: C.dim }}>
+              {t('preview.watermarkFreeHint')}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          padding: '8px 14px',
+          borderRadius: 10,
+          background: `${C.green}08`,
+          border: `1px solid ${C.green}20`,
+          fontSize: 12,
+          color: C.green,
+          marginBottom: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          fontWeight: 600,
+        }}>
+          <span style={{ fontSize: 14 }}>&#10003;</span>
+          {t('preview.watermarkNone')}
+        </div>
+      )}
+
+      {/* ── Export options ───────────────────────────── */}
+      <div style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: 12,
+        padding: '14px 16px',
+        marginBottom: 16,
+        display: 'flex',
+        gap: 16,
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+      }}>
+        {/* Resolution selector */}
+        <div style={{ flex: 1, minWidth: 140 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            {t('preview.exportResolution')}
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {([
+              { value: '720p' as const, label: '720p', plan: 'FREE' },
+              { value: '1080p' as const, label: '1080p', plan: 'PRO' },
+              { value: '4k' as const, label: '4K', plan: 'STUDIO' },
+            ]).map((opt) => {
+              const planOrder = { FREE: 0, PRO: 1, STUDIO: 2 };
+              const userPlanLevel = planOrder[planInfo.plan] ?? 0;
+              const optPlanLevel = planOrder[opt.plan as keyof typeof planOrder] ?? 0;
+              const available = userPlanLevel >= optPlanLevel;
+              const isActive = exportResolution === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    if (available) {
+                      setExportResolution(opt.value);
+                    } else {
+                      toast.warning(t('preview.upgradePlanForResolution'));
+                    }
+                  }}
+                  style={{
+                    flex: 1, padding: '6px 4px', borderRadius: 6,
+                    border: `1px solid ${isActive ? C.accent : C.border}`,
+                    background: isActive ? `${C.accent}12` : 'transparent',
+                    color: available ? (isActive ? C.accent : C.sub) : C.dim,
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', opacity: available ? 1 : 0.5,
+                    transition: 'all .15s', position: 'relative',
+                  }}
+                >
+                  {opt.label}
+                  {!available && (
+                    <span style={{ display: 'block', fontSize: 8, color: C.orange, marginTop: 1 }}>
+                      {opt.plan}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Aspect ratio selector */}
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            {t('preview.exportAspect')}
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {([
+              { value: '16:9' as const, label: '16:9', desc: 'YouTube' },
+              { value: '9:16' as const, label: '9:16', desc: 'Shorts' },
+              { value: '1:1' as const, label: '1:1', desc: 'Instagram' },
+            ]).map((opt) => {
+              const isActive = exportAspect === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setExportAspect(opt.value)}
+                  style={{
+                    flex: 1, padding: '6px 4px', borderRadius: 6,
+                    border: `1px solid ${isActive ? C.accent : C.border}`,
+                    background: isActive ? `${C.accent}12` : 'transparent',
+                    color: isActive ? C.accent : C.sub,
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all .15s',
+                  }}
+                >
+                  {opt.label}
+                  <span style={{ display: 'block', fontSize: 8, color: C.dim, marginTop: 1 }}>
+                    {opt.desc}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Format indicator */}
+        <div style={{ minWidth: 70 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            {t('preview.exportFormat')}
+          </div>
+          <div style={{
+            padding: '6px 10px', borderRadius: 6,
+            border: `1px solid ${C.accent}30`,
+            background: `${C.accent}08`,
+            color: C.accent, fontSize: 11, fontWeight: 700,
+            textAlign: 'center',
+          }}>
+            MP4
+          </div>
         </div>
       </div>
 
@@ -441,6 +812,18 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   >
                     {t('preview.openEditor')}
                   </button>
+                </div>
+              )}
+
+              {/* Scene indicator badge */}
+              {scenes.length > 1 && hasVideo && (
+                <div style={{
+                  position: 'absolute', bottom: 10, left: 10,
+                  background: 'rgba(0,0,0,.85)', borderRadius: 6,
+                  padding: '3px 8px', fontSize: 12, fontWeight: 700,
+                  color: '#fff', zIndex: 3, letterSpacing: '0.03em',
+                }}>
+                  {t('preview.sceneTitle')} {activeSceneIdx + 1} / {scenes.length}
                 </div>
               )}
 
@@ -770,6 +1153,54 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             ))}
           </div>
 
+          {/* ── Platform Presets ────────────────────── */}
+          <div style={cardPadded}>
+            <div style={sectionTitle}>{t('preview.platformPresets')}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {PLATFORM_PRESETS.map((preset) => {
+                const isActive = selectedPreset === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => setSelectedPreset(preset.id)}
+                    style={{
+                      padding: '8px 14px', borderRadius: 10,
+                      border: `2px solid ${isActive ? C.accent : C.border}`,
+                      background: isActive ? `${C.accent}08` : C.surface,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                      transition: 'all .15s', minWidth: 0,
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 600, color: isActive ? C.accent : C.text, whiteSpace: 'nowrap' }}>
+                      {preset.label}
+                    </span>
+                    <span style={{ fontSize: 10, color: C.dim }}>
+                      {preset.aspect} {preset.format}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {(() => {
+              const active = PLATFORM_PRESETS.find((p) => p.id === selectedPreset);
+              if (!active) return null;
+              return (
+                <div style={{
+                  marginTop: 10, padding: '8px 12px', borderRadius: 8,
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  fontSize: 11, color: C.sub, lineHeight: 1.6,
+                }}>
+                  <span style={{ fontWeight: 600, color: C.text }}>{active.label}:</span>{' '}
+                  {t('preview.presetAspect')} {active.aspect}, {active.format}
+                  {active.maxDuration
+                    ? ` — ${t('preview.presetMaxDuration')} ${active.maxDuration}${t('preview.presetSeconds')}`
+                    : ` — ${t('preview.presetNoDurationLimit')}`}
+                </div>
+              );
+            })()}
+          </div>
+
           {/* ── Publish to YouTube ─────────────────── */}
           {publishState === 'published' ? (
             /* ── Published success state ────────────── */
@@ -788,10 +1219,12 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   &#10003;
                 </div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                  {t('preview.published')}
+                  {scheduleEnabled ? t('preview.scheduledSuccess') : t('preview.published')}
                 </div>
                 <div style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>
-                  {t('preview.videoSentToYoutube')}
+                  {scheduleEnabled && scheduleDate
+                    ? `${t('preview.scheduledFor')} ${scheduleDate} ${scheduleTime}`
+                    : t('preview.videoSentToYoutube')}
                 </div>
                 {youtubeUrl && (
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -971,32 +1404,72 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               {/* Schedule option */}
               <div style={{ marginBottom: 18 }}>
                 <button
-                  disabled={true}
+                  onClick={() => {
+                    setScheduleEnabled(!scheduleEnabled);
+                    if (!scheduleEnabled) {
+                      // Default to tomorrow at 12:00
+                      const tomorrow = new Date(Date.now() + 86400000);
+                      setScheduleDate(tomorrow.toISOString().split('T')[0] ?? '');
+                      setScheduleTime('12:00');
+                    }
+                  }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, width: '100%',
                     padding: '8px 0', background: 'none', border: 'none',
-                    cursor: 'not-allowed', fontFamily: 'inherit', opacity: 0.5,
+                    cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
                   <div style={{
                     width: 18, height: 18, borderRadius: 4,
-                    border: `2px solid ${C.border}`,
-                    background: 'transparent',
+                    border: `2px solid ${scheduleEnabled ? C.accent : C.border}`,
+                    background: scheduleEnabled ? C.accent : 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s', flexShrink: 0,
-                  }} />
-                  <span style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{t('preview.schedulePublish')}</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, color: C.orange,
-                    background: `${C.orange}15`, padding: '2px 8px',
-                    borderRadius: 4, letterSpacing: 0.3, marginLeft: 4,
                   }}>
-                    {t('preview.soon')}
-                  </span>
+                    {scheduleEnabled && (
+                      <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, lineHeight: 1 }}>&#10003;</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{t('preview.schedulePublish')}</span>
                 </button>
-                <div style={{ fontSize: 11, color: C.dim, paddingLeft: 26, marginTop: 4 }}>
-                  {t('preview.scheduleHint')}
-                </div>
+
+                {scheduleEnabled && (
+                  <div style={{
+                    paddingLeft: 26, marginTop: 8,
+                    display: 'flex', gap: 8, flexWrap: 'wrap',
+                  }}>
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      style={{
+                        flex: '1 1 130px', padding: '8px 10px', borderRadius: 8,
+                        border: `1px solid ${C.border}`, background: C.surface,
+                        color: C.text, fontSize: 12, fontFamily: 'inherit',
+                      }}
+                    />
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      style={{
+                        flex: '1 1 100px', padding: '8px 10px', borderRadius: 8,
+                        border: `1px solid ${C.border}`, background: C.surface,
+                        color: C.text, fontSize: 12, fontFamily: 'inherit',
+                      }}
+                    />
+                    <div style={{ width: '100%', fontSize: 11, color: C.dim, marginTop: 2 }}>
+                      {t('preview.scheduleHint')}
+                    </div>
+                  </div>
+                )}
+
+                {!scheduleEnabled && (
+                  <div style={{ fontSize: 11, color: C.dim, paddingLeft: 26, marginTop: 4 }}>
+                    {t('preview.scheduleHint')}
+                  </div>
+                )}
               </div>
 
               {/* Upload progress bar */}
@@ -1075,6 +1548,8 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   </span>
                 ) : publishState === 'error' ? (
                   t('preview.retryPublish')
+                ) : scheduleEnabled ? (
+                  t('preview.scheduleBtn')
                 ) : (
                   t('preview.publishBtn')
                 )}

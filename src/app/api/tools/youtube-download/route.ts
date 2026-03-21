@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
+import { createLogger } from '@/lib/logger';
+
+const ytLog = createLogger('youtube-download');
 
 export const dynamic = 'force-dynamic';
 
@@ -428,7 +431,7 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (err) {
-    console.error('[youtube-download] Innertube error:', err instanceof Error ? err.message : err);
+    ytLog.error('Innertube error', { error: err instanceof Error ? err.message : String(err) });
     // Fall through to next strategy
   }
 

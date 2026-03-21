@@ -20,6 +20,9 @@ const sceneMetadataSchema = z.object({
   enh: z.boolean().optional(),
   snd: z.boolean().optional(),
   chars: z.array(z.string()).optional(),
+  transition: z.enum(['none', 'fade', 'slide', 'zoom']).optional(),
+  voiceoverUrl: z.string().nullish(),
+  voiceoverStatus: z.enum(['idle', 'generating', 'done', 'error']).optional(),
 }).transform((v) => v as unknown as Prisma.InputJsonValue);
 
 export const sceneRouter = router({
@@ -50,7 +53,7 @@ export const sceneRouter = router({
             select: { plan: true },
           }),
         ]);
-        if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'Проект не найден' });
+        if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'Project not found' });
 
         const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
         const maxScenes = SCENE_LIMITS[user?.plan ?? 'FREE'] ?? 10;
@@ -116,7 +119,7 @@ export const sceneRouter = router({
           where: { id: input.id, project: { userId: ctx.session.user.id } },
           select: { id: true },
         });
-        if (!scene) throw new TRPCError({ code: 'NOT_FOUND', message: 'Сцена не найдена' });
+        if (!scene) throw new TRPCError({ code: 'NOT_FOUND', message: 'Scene not found' });
         await tx.scene.delete({ where: { id: input.id } });
       });
       return { success: true };
@@ -147,10 +150,10 @@ export const sceneRouter = router({
         }),
       ]);
       if (matchingCount !== input.sceneIds.length) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Некорректные ID сцен' });
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid scene IDs' });
       }
       if (totalCount !== input.sceneIds.length) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Необходимо указать все сцены проекта' });
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'All project scenes must be included' });
       }
 
       // Single raw SQL batch update using CASE statement instead of N individual updates

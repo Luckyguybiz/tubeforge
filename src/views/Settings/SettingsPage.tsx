@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { signOut, useSession } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { usePushNotifications } from '@/components/PushNotificationManager';
 import QRCode from 'qrcode';
 import type { Theme } from '@/lib/types';
 
@@ -67,9 +68,22 @@ export function SettingsPage() {
   const [deleteInput, setDeleteInput] = useState('');
   const [cookieConsent, setCookieConsent] = useState<string | null>(null);
 
+  /** Derive a simple 'accepted'/'declined' status from the new JSON-based consent */
+  const deriveCookieStatus = (): string | null => {
+    const raw = localStorage.getItem('tf-cookie-consent');
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed === 'object' && parsed !== null && 'analytics' in parsed) {
+        return parsed.analytics ? 'accepted' : 'declined';
+      }
+    } catch { /* legacy string format */ }
+    return raw; // 'accepted' or 'declined' (legacy)
+  };
+
   useEffect(() => {
-    setCookieConsent(localStorage.getItem('tf-cookie-consent'));
-    const handler = () => setCookieConsent(localStorage.getItem('tf-cookie-consent'));
+    setCookieConsent(deriveCookieStatus());
+    const handler = () => setCookieConsent(deriveCookieStatus());
     window.addEventListener('tf-consent-changed', handler);
     return () => window.removeEventListener('tf-consent-changed', handler);
   }, []);
@@ -227,11 +241,13 @@ export function SettingsPage() {
   const hasSub = !!subscription.data?.subscription;
   const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.FREE;
 
-  const authProvider = session.data?.user?.image?.includes('google')
-    ? 'Google'
-    : session.data?.user?.image?.includes('github')
-      ? 'GitHub'
-      : 'OAuth';
+  const authProvider = (() => {
+    const img = session.data?.user?.image ?? '';
+    if (img.includes('lh3.googleusercontent.com') || img.includes('googleusercontent.com')) return 'Google';
+    if (img.includes('avatars.githubusercontent.com') || img.includes('github')) return 'GitHub';
+    if (img) return 'OAuth';
+    return 'Email';
+  })();
 
   const userImage = profile.data?.image ?? session.data?.user?.image ?? null;
   const userName = profile.data?.name ?? session.data?.user?.name ?? '';
@@ -261,33 +277,59 @@ export function SettingsPage() {
           <>
             {/* Avatar + Name + Email */}
             <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap' }}>
-              {/* Avatar */}
-              <div style={{
-                width: 72,
-                height: 72,
-                borderRadius: 20,
-                overflow: 'hidden',
-                flexShrink: 0,
-                background: C.surface,
-                border: `2px solid ${C.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                {userImage ? (
-                  <img
-                    src={userImage}
-                    alt={userName}
-                    width={72}
-                    height={72}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <span style={{ fontSize: 28, color: C.dim }}>
-                    {userName?.charAt(0)?.toUpperCase() || '?'}
-                  </span>
-                )}
+              {/* Avatar with upload overlay */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <div style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 20,
+                  overflow: 'hidden',
+                  background: C.surface,
+                  border: `2px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                }}>
+                  {userImage ? (
+                    <img
+                      src={userImage}
+                      alt={userName}
+                      width={72}
+                      height={72}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <span style={{ fontSize: 28, color: C.dim }}>
+                      {userName?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  title="Coming soon"
+                  disabled
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: C.dim,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'not-allowed',
+                    padding: '2px 0',
+                    fontFamily: 'inherit',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  {t('common.comingSoon') || 'Coming soon'}
+                </button>
               </div>
 
               {/* Name + Email fields */}
@@ -358,7 +400,7 @@ export function SettingsPage() {
                 alignItems: 'center',
                 gap: 12,
               }}>
-                {/* Google icon */}
+                {/* Provider icon — dynamic based on detected auth provider */}
                 <div style={{
                   width: 36,
                   height: 36,
@@ -370,15 +412,40 @@ export function SettingsPage() {
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
+                  {authProvider === 'Google' ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                  ) : authProvider === 'GitHub' ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isDark ? '#fff' : '#24292f'}>
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                  ) : (
+                    /* Generic key icon for OAuth / Email */
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                    </svg>
+                  )}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Google</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{authProvider}</span>
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: '2px 7px',
+                      borderRadius: 4,
+                      background: C.bg,
+                      color: C.dim,
+                      letterSpacing: 0.3,
+                      textTransform: 'uppercase' as const,
+                    }}>
+                      Provider
+                    </span>
+                  </div>
                   <div style={{ fontSize: 12, color: C.sub }}>{userEmail}</div>
                 </div>
                 <div style={{
@@ -1463,6 +1530,11 @@ export function SettingsPage() {
       </div>
 
       {/* ====================================================== */}
+      {/* SECTION 6b: Push Notifications                         */}
+      {/* ====================================================== */}
+      <PushNotificationSection C={C} sectionStyle={sectionStyle} sectionHeaderStyle={sectionHeaderStyle} sectionDescStyle={sectionDescStyle} t={t} />
+
+      {/* ====================================================== */}
       {/* SECTION 7: Privacy & Cookies                           */}
       {/* ====================================================== */}
       <div style={sectionStyle}>
@@ -1502,8 +1574,9 @@ export function SettingsPage() {
           </div>
           <button
             onClick={() => {
-              const next = cookieConsent === 'accepted' ? 'declined' : 'accepted';
-              localStorage.setItem('tf-cookie-consent', next);
+              const isAccepted = cookieConsent === 'accepted';
+              const prefs = { necessary: true, analytics: !isAccepted, marketing: !isAccepted };
+              localStorage.setItem('tf-cookie-consent', JSON.stringify(prefs));
               window.dispatchEvent(new Event('tf-consent-changed'));
             }}
             style={{
@@ -1634,13 +1707,427 @@ export function SettingsPage() {
       </div>
 
       {/* ====================================================== */}
-      {/* SECTION 9: Account (Danger Zone)                       */}
+      {/* SECTION: API Keys (Studio only)                        */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <ApiKeysSection C={C} sectionStyle={sectionStyle} sectionHeaderStyle={sectionHeaderStyle} sectionDescStyle={sectionDescStyle} btnBase={btnBase} inputStyle={inputStyle} />
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: SSO Placeholder (Studio only)                 */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
+              {'\u{1F512}'} {t('settings.sso.title') !== 'settings.sso.title' ? t('settings.sso.title') : '\u0415\u0434\u0438\u043D\u044B\u0439 \u0432\u0445\u043E\u0434 (SSO)'}
+            </h2>
+            <span style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 50,
+              background: `${C.purple}18`,
+              color: C.purple,
+              letterSpacing: '.03em',
+            }}>
+              COMING SOON
+            </span>
+          </div>
+          <p style={sectionDescStyle}>
+            {'\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 SSO \u0434\u043B\u044F \u0432\u0430\u0448\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B'}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            marginBottom: 20,
+          }}>
+            {['Google Workspace', 'Okta', 'Azure AD'].map((provider) => (
+              <div key={provider} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '14px 16px',
+                background: C.surface,
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                opacity: 0.6,
+              }}>
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  background: C.bg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{provider}</div>
+                  <div style={{ fontSize: 12, color: C.dim }}>{'\u041D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D\u043E'}</div>
+                </div>
+                <button
+                  disabled
+                  style={{
+                    ...btnBase,
+                    padding: '6px 14px',
+                    fontSize: 12,
+                    background: 'transparent',
+                    color: C.dim,
+                    border: `1px solid ${C.border}`,
+                    cursor: 'not-allowed',
+                    opacity: 0.5,
+                  }}
+                >
+                  {'\u041D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C'}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            padding: '14px 18px',
+            background: `${C.purple}08`,
+            borderRadius: 12,
+            border: `1px solid ${C.purple}20`,
+            fontSize: 13,
+            color: C.sub,
+            lineHeight: 1.6,
+          }}>
+            {'\u0414\u043B\u044F \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 SSO \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+            <a href="mailto:enterprise@tubeforge.co" style={{ color: C.purple, fontWeight: 600 }}>
+              enterprise@tubeforge.co
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: White-Label (Studio only)                     */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>White-Label</h2>
+            <span style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 50,
+              background: `${C.purple}18`,
+              color: C.purple,
+              letterSpacing: '.03em',
+            }}>
+              COMING SOON
+            </span>
+          </div>
+          <p style={sectionDescStyle}>
+            {'\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0432\u0438\u0434\u0435\u043E \u043F\u043E\u0434 \u0432\u0430\u0448 \u0431\u0440\u0435\u043D\u0434'}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            marginBottom: 20,
+          }}>
+            {[
+              { icon: '\u{1F3AC}', text: '\u0423\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0440\u0435\u043D\u0434\u0438\u043D\u0433 TubeForge \u0438\u0437 \u0432\u0430\u0448\u0438\u0445 \u0432\u0438\u0434\u0435\u043E' },
+              { icon: '\u{1F310}', text: '\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0441\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u043C\u0435\u043D \u0434\u043B\u044F \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u0438' },
+              { icon: '\u{1F3A8}', text: '\u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0441\u0432\u043E\u0439 \u043B\u043E\u0433\u043E\u0442\u0438\u043F \u0438 \u0446\u0432\u0435\u0442\u043E\u0432\u0443\u044E \u0441\u0445\u0435\u043C\u0443' },
+            ].map((item) => (
+              <div key={item.text} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                background: C.surface,
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                opacity: 0.65,
+              }}>
+                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                <span style={{ fontSize: 13, color: C.text }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            padding: '14px 18px',
+            background: `${C.purple}08`,
+            borderRadius: 12,
+            border: `1px solid ${C.purple}20`,
+            fontSize: 13,
+            color: C.sub,
+            lineHeight: 1.6,
+          }}>
+            {'\u0414\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u0430\u0446\u0438\u0438 White-Label \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+            <a href="mailto:enterprise@tubeforge.co" style={{ color: C.purple, fontWeight: 600 }}>
+              enterprise@tubeforge.co
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: Enterprise Admin Console                      */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Enterprise</h2>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 700,
+            padding: '3px 10px',
+            borderRadius: 50,
+            background: `${C.blue}18`,
+            color: C.blue,
+            letterSpacing: '.03em',
+          }}>
+            ENTERPRISE
+          </span>
+        </div>
+        <p style={sectionDescStyle}>
+          {'\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043A\u043E\u043C\u0430\u043D\u0434\u043E\u0439, \u043E\u0442\u0447\u0451\u0442\u043D\u043E\u0441\u0442\u044C, \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u044C'}
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))',
+          gap: 10,
+          marginBottom: 20,
+        }}>
+          {[
+            { icon: '\u{1F465}', title: 'Team Management', desc: '\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0430\u043C\u0438 \u0438 \u0440\u043E\u043B\u044F\u043C\u0438' },
+            { icon: '\u{1F4CA}', title: 'Usage Reports', desc: '\u041E\u0442\u0447\u0451\u0442\u044B \u043E\u0431 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438' },
+            { icon: '\u{1F6E1}\uFE0F', title: 'IP Whitelist', desc: '\u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043F\u043E IP' },
+            { icon: '\u{23F1}\uFE0F', title: 'Session Timeout', desc: '\u0410\u0432\u0442\u043E-\u0432\u044B\u0445\u043E\u0434 \u0438\u0437 \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0441\u0435\u0441\u0441\u0438\u0439' },
+          ].map((feature) => (
+            <div key={feature.title} style={{
+              padding: '16px',
+              background: C.surface,
+              borderRadius: 12,
+              border: `1px solid ${C.border}`,
+              opacity: 0.6,
+            }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{feature.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{feature.title}</div>
+              <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.4 }}>{feature.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          padding: '14px 18px',
+          background: `${C.blue}08`,
+          borderRadius: 12,
+          border: `1px solid ${C.blue}20`,
+          fontSize: 13,
+          color: C.sub,
+          lineHeight: 1.6,
+        }}>
+          {'\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0432 Enterprise \u043F\u043B\u0430\u043D\u0435 \u2014 \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+          <a href="mailto:enterprise@tubeforge.co" style={{ color: C.blue, fontWeight: 600 }}>
+            enterprise@tubeforge.co
+          </a>
+        </div>
+      </div>
+
+      {/* ====================================================== */}
+      {/* SECTION 9b: AI Voice (Z3 placeholder)                  */}
+      {/* ====================================================== */}
+      {plan === 'STUDIO' && (
+        <div style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>AI Голос</h2>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+              background: `${C.purple}15`, color: C.purple,
+            }}>
+              STUDIO
+            </span>
+          </div>
+          <p style={sectionDescStyle}>
+            Клонирование голоса и озвучка с помощью ИИ. Создайте уникальный голос для вашего канала.
+          </p>
+
+          <div style={{
+            padding: '20px 24px',
+            background: C.surface,
+            borderRadius: 12,
+            border: `1px solid ${C.border}`,
+            marginBottom: 16,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: C.purple + '12',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                  Клонирование голоса — скоро
+                </div>
+                <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
+                  Загрузите образец вашего голоса, и ИИ создаст озвучку для всех ваших видео.
+                </div>
+              </div>
+            </div>
+
+            <VoiceCloneStatusBadge C={C} />
+          </div>
+
+          <div style={{
+            padding: '14px 18px',
+            background: C.bg,
+            borderRadius: 10,
+            border: `1px dashed ${C.border}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: C.dim }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              Мы работаем над интеграцией с ElevenLabs. Функция будет доступна в ближайшем обновлении.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* SECTION: Integrations (Zapier, Make.com)               */}
+      {/* ====================================================== */}
+      <div style={sectionStyle}>
+        <h2 style={sectionHeaderStyle}>{t('settings.integrations')}</h2>
+        <p style={sectionDescStyle}>{t('settings.integrationsDesc')}</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Zapier */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '16px 18px', borderRadius: 12,
+            background: C.surface, border: `1px solid ${C.border}`,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10,
+              background: '#ff4a00', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                <path d="M15.54 8.46l-2.83 2.83L15.54 14.12l1.41-1.41-1.41-1.42 1.41-1.41-1.41-1.42zM8.46 15.54l2.83-2.83L8.46 9.88 7.05 11.29l1.41 1.42-1.41 1.41 1.41 1.42zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+              </svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>Zapier</div>
+              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{t('settings.zapierDesc')}</div>
+            </div>
+            <a
+              href="https://zapier.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '8px 16px', borderRadius: 8,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, fontSize: 12, fontWeight: 600,
+                textDecoration: 'none', flexShrink: 0,
+                transition: 'all .15s',
+              }}
+            >
+              zapier.com
+            </a>
+          </div>
+
+          {/* Make.com */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '16px 18px', borderRadius: 12,
+            background: C.surface, border: `1px solid ${C.border}`,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10,
+              background: '#6d28d9', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>Make.com</div>
+              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{t('settings.makeDesc')}</div>
+            </div>
+            <a
+              href="https://make.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: '8px 16px', borderRadius: 8,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, fontSize: 12, fontWeight: 600,
+                textDecoration: 'none', flexShrink: 0,
+                transition: 'all .15s',
+              }}
+            >
+              make.com
+            </a>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: 14, padding: '12px 16px', borderRadius: 10,
+          background: `${C.blue}08`, border: `1px solid ${C.blue}15`,
+          fontSize: 12, color: C.sub, lineHeight: 1.6,
+        }}>
+          {t('settings.integrationsNote')}
+        </div>
+      </div>
+
+      {/* ====================================================== */}
+      {/* SECTION: Your Year in TubeForge (Wrapped)              */}
+      {/* ====================================================== */}
+      <WrappedSection
+        C={C}
+        isDark={isDark}
+        sectionStyle={sectionStyle}
+        sectionHeaderStyle={sectionHeaderStyle}
+        sectionDescStyle={sectionDescStyle}
+      />
+
+      {/* ====================================================== */}
+      {/* SECTION 10: Account (Danger Zone)                      */}
       {/* ====================================================== */}
       <div style={{
         ...sectionStyle,
-        borderColor: `${C.accent}30`,
+        borderColor: '#dc262630',
+        borderWidth: 2,
       }}>
-        <h2 style={{ ...sectionHeaderStyle, color: C.accent }}>{t('settings.account')}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <h2 style={{ ...sectionHeaderStyle, color: '#dc2626', marginBottom: 0 }}>
+            {t('settings.account')}
+          </h2>
+        </div>
         <p style={sectionDescStyle}>{t('settings.accountDesc')}</p>
 
         {/* Logout row */}
@@ -1934,6 +2421,88 @@ function SubscriptionSkeleton() {
   );
 }
 
+/** Push notification settings section */
+function PushNotificationSection({
+  C,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+  t,
+}: {
+  C: Theme;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+  t: (key: string) => string;
+}) {
+  const { isSupported, isEnabled, isDenied, enable, disable } = usePushNotifications();
+
+  if (!isSupported) return null;
+
+  return (
+    <div style={sectionStyle}>
+      <h2 style={sectionHeaderStyle}>{t('settings.pushNotifications')}</h2>
+      <p style={sectionDescStyle}>{t('settings.pushNotificationsDesc')}</p>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+            {t('settings.pushLabel')}
+          </span>
+        </div>
+
+        {isDenied ? (
+          <span style={{ fontSize: 12, color: C.dim, fontStyle: 'italic' }}>
+            {t('settings.pushDenied')}
+          </span>
+        ) : (
+          <button
+            onClick={() => (isEnabled ? disable() : enable())}
+            style={{
+              position: 'relative',
+              width: 44,
+              height: 24,
+              borderRadius: 12,
+              border: 'none',
+              cursor: 'pointer',
+              background: isEnabled ? '#6366f1' : C.border,
+              transition: 'background .2s',
+              padding: 0,
+              flexShrink: 0,
+            }}
+            aria-label={isEnabled ? t('settings.pushDisable') : t('settings.pushEnable')}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                top: 2,
+                left: isEnabled ? 22 : 2,
+                width: 20,
+                height: 20,
+                borderRadius: '50%',
+                background: '#fff',
+                transition: 'left .2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+              }}
+            />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Channels section skeleton */
 function ChannelsSkeleton() {
   return (
@@ -1948,5 +2517,443 @@ function ChannelsSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+/** Wrapped section — Your Year in TubeForge */
+function WrappedSection({
+  C,
+  isDark,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+}: {
+  C: Theme;
+  isDark: boolean;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+}) {
+  const profile = trpc.user.getProfile.useQuery();
+  const user = profile.data;
+
+  if (!user) return null;
+
+  // Only show if user has been active > 30 days
+  const createdAt = user.createdAt ? new Date(user.createdAt as string | number | Date) : null;
+  if (!createdAt) return null;
+
+  const daysSinceCreation = Math.floor(
+    (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  if (daysSinceCreation < 30) return null;
+
+  const projectCount = user._count?.projects ?? 0;
+  const aiUsage = (user as Record<string, unknown>).aiUsage as number ?? 0;
+
+  const statItems = [
+    {
+      icon: '\uD83C\uDFAC',
+      label: '\u041F\u0440\u043E\u0435\u043A\u0442\u043E\u0432 \u0441\u043E\u0437\u0434\u0430\u043D\u043E',
+      value: String(projectCount),
+      gradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
+    },
+    {
+      icon: '\u2728',
+      label: 'AI \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0439',
+      value: String(aiUsage),
+      gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    },
+    {
+      icon: '\uD83D\uDCC5',
+      label: '\u0414\u043D\u0435\u0439 \u0441 \u043D\u0430\u043C\u0438',
+      value: String(daysSinceCreation),
+      gradient: 'linear-gradient(135deg, #ec4899, #f472b6)',
+    },
+  ];
+
+  return (
+    <div style={sectionStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
+          {'\u0412\u0430\u0448 \u0433\u043E\u0434 \u0432 TubeForge'}
+        </h2>
+        <span style={{ fontSize: 16 }}>{'\uD83C\uDF89'}</span>
+      </div>
+      <p style={sectionDescStyle}>
+        {'\u0412\u0430\u0448\u0430 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B'}
+      </p>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 12,
+      }}>
+        {statItems.map((item) => (
+          <div
+            key={item.label}
+            style={{
+              background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.02)',
+              border: `1px solid ${C.border}`,
+              borderRadius: 14,
+              padding: '20px 16px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+            <div style={{
+              fontSize: 28,
+              fontWeight: 800,
+              letterSpacing: '-.03em',
+              background: item.gradient,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: 4,
+            }}>
+              {item.value}
+            </div>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: C.sub,
+              letterSpacing: '.01em',
+            }}>
+              {item.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** API Keys management section — only rendered for STUDIO plan users */
+function ApiKeysSection({
+  C,
+  sectionStyle,
+  sectionHeaderStyle,
+  sectionDescStyle,
+  btnBase,
+  inputStyle,
+}: {
+  C: Theme;
+  sectionStyle: React.CSSProperties;
+  sectionHeaderStyle: React.CSSProperties;
+  sectionDescStyle: React.CSSProperties;
+  btnBase: React.CSSProperties;
+  inputStyle: React.CSSProperties;
+}) {
+  const t = useLocaleStore((s) => s.t);
+  const [newKeyLabel, setNewKeyLabel] = useState('');
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const apiKeys = trpc.apikey.list.useQuery();
+  const apiUsage = trpc.apikey.usage.useQuery();
+
+  const generateKey = trpc.apikey.generate.useMutation({
+    onSuccess: (data) => {
+      setGeneratedKey(data.key);
+      setNewKeyLabel('');
+      apiKeys.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const revokeKey = trpc.apikey.revoke.useMutation({
+    onSuccess: () => {
+      toast.success('API key revoked');
+      apiKeys.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, []);
+
+  return (
+    <div style={sectionStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>API Keys</h2>
+        <a
+          href="/api-docs"
+          style={{
+            fontSize: 12,
+            color: C.blue,
+            textDecoration: 'none',
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: `${C.blue}10`,
+          }}
+        >
+          Docs
+        </a>
+      </div>
+      <p style={sectionDescStyle}>
+        Manage API keys for programmatic access. Keys are shown only once after generation.
+      </p>
+
+      {/* API Usage */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 16px',
+        background: C.surface,
+        borderRadius: 10,
+        border: `1px solid ${C.border}`,
+        marginBottom: 16,
+        fontSize: 13,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20V10" />
+          <path d="M18 20V4" />
+          <path d="M6 20v-4" />
+        </svg>
+        <span style={{ color: C.sub }}>API calls this month:</span>
+        <strong style={{ color: C.text }}>{apiUsage.data?.count ?? 0}</strong>
+      </div>
+
+      {/* Generated key alert */}
+      {generatedKey && (
+        <div style={{
+          padding: '16px 20px',
+          background: `${C.green}0a`,
+          border: `1px solid ${C.green}30`,
+          borderRadius: 12,
+          marginBottom: 16,
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.green, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Key generated! Copy it now — it will not be shown again.
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <code style={{
+              flex: 1,
+              padding: '10px 14px',
+              background: C.bg,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace",
+              color: C.text,
+              wordBreak: 'break-all',
+              lineHeight: 1.5,
+            }}>
+              {generatedKey}
+            </code>
+            <button
+              onClick={() => handleCopy(generatedKey)}
+              style={{
+                ...btnBase,
+                padding: '10px 16px',
+                background: copied ? C.green : C.surface,
+                color: copied ? '#fff' : C.text,
+                border: `1px solid ${copied ? C.green : C.border}`,
+                fontSize: 12,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+          <button
+            onClick={() => setGeneratedKey(null)}
+            style={{
+              marginTop: 10,
+              background: 'none',
+              border: 'none',
+              color: C.sub,
+              fontSize: 12,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              padding: 0,
+              textDecoration: 'underline',
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Generate new key */}
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 20,
+        flexWrap: 'wrap',
+      }}>
+        <input
+          type="text"
+          value={newKeyLabel}
+          onChange={(e) => setNewKeyLabel(e.target.value)}
+          placeholder="Key label (e.g. 'Production')"
+          maxLength={50}
+          style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+        />
+        <button
+          onClick={() => generateKey.mutate({ label: newKeyLabel || undefined })}
+          disabled={generateKey.isPending}
+          style={{
+            ...btnBase,
+            background: C.blue,
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            whiteSpace: 'nowrap',
+            opacity: generateKey.isPending ? 0.7 : 1,
+          }}
+        >
+          {generateKey.isPending ? (
+            <ApiKeySpinner size={14} color="#fff" />
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          )}
+          Generate Key
+        </button>
+      </div>
+
+      {/* Key list */}
+      {apiKeys.isLoading ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 16 }}>
+          <ApiKeySpinner size={16} color={C.sub} />
+          <span style={{ fontSize: 13, color: C.sub }}>{t('settings.loading')}</span>
+        </div>
+      ) : apiKeys.data && apiKeys.data.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {apiKeys.data.map((k) => (
+            <div
+              key={k.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                background: C.surface,
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: C.bg,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{k.label}</div>
+                <div style={{ fontSize: 12, color: C.dim, fontFamily: 'monospace' }}>
+                  tf_{'*'.repeat(8)}{k.last4}
+                  <span style={{ marginLeft: 10, fontFamily: 'inherit', color: C.sub }}>
+                    Created {new Date(k.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (window.confirm('Revoke this API key? This cannot be undone.')) {
+                    revokeKey.mutate({ id: k.id });
+                  }
+                }}
+                disabled={revokeKey.isPending}
+                style={{
+                  ...btnBase,
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  background: 'transparent',
+                  color: C.accent,
+                  border: `1px solid ${C.accent}40`,
+                }}
+              >
+                Revoke
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{
+          padding: '24px',
+          border: `1px dashed ${C.border}`,
+          borderRadius: 12,
+          textAlign: 'center',
+        }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: C.bg,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 12,
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+            </svg>
+          </div>
+          <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>
+            No API keys yet. Generate one to get started.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Z3: Voice clone status badge — checks ElevenLabs API key on server */
+function VoiceCloneStatusBadge({ C }: { C: Theme }) {
+  const status = trpc.ai.checkVoiceCloneStatus.useQuery(undefined, { retry: false });
+  if (status.isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.bg, borderRadius: 8 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', border: '2px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
+        <span style={{ fontSize: 12, color: C.dim }}>Проверка...</span>
+      </div>
+    );
+  }
+  if (status.data?.available) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: `${C.green}0a`, borderRadius: 8, border: `1px solid ${C.green}25` }}>
+        <span style={{ fontSize: 14, color: C.green }}>&#10003;</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.green }}>API подключён</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.bg, borderRadius: 8, border: `1px solid ${C.border}` }}>
+      <span style={{ fontSize: 14, color: C.dim }}>&#9679;</span>
+      <span style={{ fontSize: 12, color: C.sub }}>Для активации свяжитесь с поддержкой</span>
+    </div>
+  );
+}
+
+/** Small spinner for API keys section */
+function ApiKeySpinner({ size = 16, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="3" opacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke={color} strokeWidth="3" strokeLinecap="round" />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </svg>
   );
 }

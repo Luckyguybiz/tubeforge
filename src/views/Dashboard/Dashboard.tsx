@@ -13,6 +13,12 @@ import { pluralRu, timeAgo } from '@/lib/utils';
 import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { trackEvent } from '@/lib/analytics-events';
+import { TEMPLATES, TEMPLATE_CATEGORIES, CATEGORY_INFO, type ProjectTemplate, type TemplateCategory } from '@/lib/templates';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
+import { ActivityStreak } from '@/components/dashboard/ActivityStreak';
+import { UsageMilestones } from '@/components/dashboard/UsageMilestones';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -126,6 +132,15 @@ function IconEdit({ size = 14, color = 'currentColor' }: { size?: number; color?
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function IconShareLink({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
     </svg>
   );
 }
@@ -693,6 +708,8 @@ interface ProjectCardProps {
   renameValue: string;
   renameRef: React.RefObject<HTMLInputElement | null>;
   deleteIsPending: boolean;
+  selected: boolean;
+  selectMode: boolean;
   onNavigate: (id: string) => void;
   onDelete: (id: string) => void;
   onConfirmDelete: (id: string) => void;
@@ -702,6 +719,8 @@ interface ProjectCardProps {
   onCancelRename: () => void;
   onRenameChange: (val: string) => void;
   onDuplicate: (id: string) => void;
+  onToggleSelect: (id: string) => void;
+  onShare: (id: string) => void;
 }
 
 const ProjectCard = memo(function ProjectCard({
@@ -713,6 +732,8 @@ const ProjectCard = memo(function ProjectCard({
   renameValue,
   renameRef,
   deleteIsPending,
+  selected,
+  selectMode,
   onNavigate,
   onDelete,
   onConfirmDelete,
@@ -722,6 +743,8 @@ const ProjectCard = memo(function ProjectCard({
   onCancelRename,
   onRenameChange,
   onDuplicate,
+  onToggleSelect,
+  onShare,
 }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hovBtn, setHovBtn] = useState<string | null>(null);
@@ -750,9 +773,32 @@ const ProjectCard = memo(function ProjectCard({
         position: 'relative',
       }}
       onClick={() => {
+        if (selectMode) { onToggleSelect(p.id); return; }
         if (!isDeleting && !isRenaming) onNavigate(p.id);
       }}
     >
+      {/* Selection checkbox */}
+      {(selectMode || isHovered) && !isDeleting && !isRenaming && (
+        <div
+          onClick={(e) => { e.stopPropagation(); onToggleSelect(p.id); }}
+          style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 3,
+            width: 24, height: 24, borderRadius: 6,
+            background: selected ? C.accent : 'rgba(255,255,255,.9)',
+            border: `2px solid ${selected ? C.accent : 'rgba(0,0,0,.2)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'all .15s ease',
+            boxShadow: '0 1px 4px rgba(0,0,0,.15)',
+          }}
+        >
+          {selected && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </div>
+      )}
+
       {/* Thumbnail area */}
       <div style={{
         width: '100%',
@@ -975,6 +1021,26 @@ const ProjectCard = memo(function ProjectCard({
                 >
                   <IconPlus size={14} color={C.sub} />
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare(p.id);
+                  }}
+                  title={t('dashboard.share')}
+                  aria-label={`${t('dashboard.share')} ${p.title}`}
+                  onMouseEnter={() => setHovBtn(`share-${p.id}`)}
+                  onMouseLeave={() => setHovBtn(null)}
+                  style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    border: `1px solid ${hovBtn === `share-${p.id}` ? C.borderActive : C.border}`,
+                    background: hovBtn === `share-${p.id}` ? C.card : 'transparent',
+                    color: C.sub, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all .15s ease',
+                  }}
+                >
+                  <IconShareLink size={14} color={C.sub} />
+                </button>
                 <ExportButton projectId={p.id} projectTitle={p.title} />
                 <button
                   onClick={(e) => {
@@ -1161,6 +1227,600 @@ function ReferralWidget({
   );
 }
 
+/* ── Plan Usage Widget ──────────────────────────────────── */
+
+function DashboardUsageBar({
+  label,
+  used,
+  total,
+  C,
+  isDark,
+}: {
+  label: string;
+  used: number;
+  total: number;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  isDark: boolean;
+}) {
+  const isInfinite = !isFinite(total);
+  const pct = isInfinite ? 0 : total > 0 ? Math.min((used / total) * 100, 100) : 0;
+  const barColor = pct > 90 ? '#ef4444' : pct > 60 ? '#eab308' : '#22c55e';
+  const displayTotal = isInfinite ? '\u221E' : String(total);
+
+  return (
+    <div style={{ flex: 1, minWidth: 120 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        <span style={{ fontSize: 12, fontWeight: 500, color: C.sub }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{used}/{displayTotal}</span>
+      </div>
+      <div style={{
+        height: 6,
+        borderRadius: 3,
+        background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          borderRadius: 3,
+          width: isInfinite ? '0%' : `${pct}%`,
+          background: barColor,
+          transition: 'width .4s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function PlanUsageWidget({
+  C,
+  t,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const isDark = useThemeStore((s) => s.isDark);
+  const router = useRouter();
+  const { plan, projectCount, aiCount, limits, isLoading } = usePlanLimits();
+
+  if (isLoading) return null;
+
+  const planLabel = getPlanLabel(plan, t);
+  const planGradient =
+    plan === 'STUDIO'
+      ? 'linear-gradient(135deg, #8b5cf6, #6366f1)'
+      : plan === 'PRO'
+        ? 'linear-gradient(135deg, #6366f1, #818cf8)'
+        : isDark
+          ? 'rgba(255,255,255,.08)'
+          : 'rgba(0,0,0,.06)';
+  const planColor = plan === 'FREE' ? C.sub : '#fff';
+
+  return (
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: '20px 22px',
+      marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('dashboard.yourPlan')}</span>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: planColor,
+            padding: '3px 10px',
+            borderRadius: 50,
+            background: planGradient,
+            letterSpacing: '.02em',
+          }}>
+            {planLabel}
+          </span>
+        </div>
+        {plan === 'FREE' && (
+          <button
+            onClick={() => router.push('/billing')}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 10,
+              border: 'none',
+              background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .2s ease',
+              boxShadow: '0 2px 10px rgba(99,102,241,.25)',
+            }}
+          >
+            {t('dashboard.upgradeCta')}
+          </button>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+        <DashboardUsageBar
+          label={t('dashboard.usageProjects')}
+          used={projectCount}
+          total={limits.projects}
+          C={C}
+          isDark={isDark}
+        />
+        <DashboardUsageBar
+          label={t('dashboard.usageAi')}
+          used={aiCount}
+          total={limits.ai}
+          C={C}
+          isDark={isDark}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ── Project Templates (imported from src/lib/templates.ts) ── */
+
+/* ── Template Picker Modal ─────────────────────────────── */
+
+function TemplatePickerModal({
+  open,
+  onClose,
+  C,
+  t,
+}: {
+  open: boolean;
+  onClose: () => void;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const utils = trpc.useUtils();
+  const router = useRouter();
+  const locale = useLocaleStore((s) => s.locale);
+  const isRu = locale === 'ru' || locale === 'kk';
+  const [hov, setHov] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<TemplateCategory | null>(null);
+
+  const createProject = trpc.project.create.useMutation({
+    onSuccess: (project) => {
+      trackEvent('project_create', { source: 'template_modal' });
+      toast.success(t('dashboard.projectCreated'));
+      utils.project.list.invalidate();
+      utils.user.getProfile.invalidate();
+      onClose();
+      router.push(`/editor?projectId=${project.id}`);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const importProject = trpc.project.import.useMutation({
+    onSuccess: (result) => {
+      trackEvent('project_create', { source: 'template', template: result.id });
+      toast.success(t('dashboard.projectCreated'));
+      utils.project.list.invalidate();
+      utils.user.getProfile.invalidate();
+      onClose();
+      router.push(`/editor?projectId=${result.id}`);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const isCreating = createProject.isPending || importProject.isPending;
+
+  const handleSelectBlank = () => {
+    if (isCreating) return;
+    createProject.mutate({});
+  };
+
+  const handleSelectTemplate = (template: ProjectTemplate) => {
+    if (isCreating) return;
+    importProject.mutate({
+      formatVersion: 1,
+      project: {
+        title: isRu ? template.name : template.nameEn,
+        tags: [template.id, template.category],
+      },
+      scenes: template.scenes.map((s, i) => ({
+        label: s.label,
+        prompt: s.prompt,
+        duration: s.duration,
+        order: i,
+        model: 'standard' as const,
+      })),
+    });
+  };
+
+  const filteredTemplates = categoryFilter
+    ? TEMPLATES.filter((tpl) => tpl.category === categoryFilter)
+    : TEMPLATES;
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={() => { if (!isCreating) onClose(); }}
+        style={{
+          position: 'fixed', inset: 0,
+          background: C.overlay,
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          zIndex: 999,
+        }}
+      />
+
+      {/* Modal */}
+      <div style={{
+        position: 'fixed',
+        top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        width: '92%', maxWidth: 720,
+        maxHeight: '88dvh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 1000,
+        boxShadow: '0 24px 80px rgba(0,0,0,.3)',
+        fontFamily: 'var(--font-sans), sans-serif',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 22px 0',
+          flexShrink: 0,
+        }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
+            {t('dashboard.newProject')}
+          </h2>
+          <button
+            onClick={() => { if (!isCreating) onClose(); }}
+            disabled={isCreating}
+            style={{
+              background: 'none', border: 'none',
+              color: C.sub, cursor: isCreating ? 'not-allowed' : 'pointer',
+              padding: 4, display: 'flex', borderRadius: 6,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
+          <p style={{ fontSize: 13, color: C.sub, margin: '0 0 14px', lineHeight: 1.5 }}>
+            {t('dashboard.templatePickerDesc')}
+          </p>
+
+          {/* Blank project */}
+          <div
+            onClick={handleSelectBlank}
+            onMouseEnter={() => setHov('blank')}
+            onMouseLeave={() => setHov(null)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectBlank(); } }}
+            style={{
+              padding: '14px 16px',
+              borderRadius: 12,
+              border: `2px solid ${hov === 'blank' ? C.accent : C.border}`,
+              background: hov === 'blank' ? `${C.accent}08` : C.card,
+              cursor: isCreating ? 'wait' : 'pointer',
+              transition: 'all .15s ease',
+              marginBottom: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              opacity: isCreating ? 0.6 : 1,
+            }}
+          >
+            <div style={{
+              width: 42, height: 42, borderRadius: 11,
+              background: `${C.accent}12`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, fontSize: 20,
+            }}>
+              <IconPlus size={22} color={C.accent} />
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                {t('dashboard.blankProject')}
+              </div>
+              <div style={{ fontSize: 12, color: C.sub }}>
+                {t('dashboard.blankProjectDesc')}
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            margin: '14px 0',
+          }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <span style={{ fontSize: 11, color: C.dim, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              {t('dashboard.orTemplate')}
+            </span>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
+
+          {/* Category filter pills */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+            <button
+              onClick={() => setCategoryFilter(null)}
+              style={{
+                padding: '5px 14px',
+                borderRadius: 20,
+                border: `1px solid ${!categoryFilter ? C.accent : C.border}`,
+                background: !categoryFilter ? `${C.accent}14` : 'transparent',
+                color: !categoryFilter ? C.accent : C.sub,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all .15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {isRu ? 'Все' : 'All'}
+            </button>
+            {TEMPLATE_CATEGORIES.map((cat) => {
+              const info = CATEGORY_INFO[cat];
+              const isActive = categoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(isActive ? null : cat)}
+                  style={{
+                    padding: '5px 14px',
+                    borderRadius: 20,
+                    border: `1px solid ${isActive ? info.color : C.border}`,
+                    background: isActive ? `${info.color}14` : 'transparent',
+                    color: isActive ? info.color : C.sub,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all .15s ease',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isRu ? info.name : info.nameEn}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Scrollable template grid */}
+        <div style={{ overflowY: 'auto', padding: '0 22px 22px', flex: 1 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
+            gap: 10,
+          }}>
+            {filteredTemplates.map((tpl) => {
+              const catInfo = CATEGORY_INFO[tpl.category];
+              return (
+                <div
+                  key={tpl.id}
+                  onClick={() => handleSelectTemplate(tpl)}
+                  onMouseEnter={() => setHov(tpl.id)}
+                  onMouseLeave={() => setHov(null)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectTemplate(tpl); } }}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: 12,
+                    border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
+                    background: hov === tpl.id ? `${C.accent}06` : C.card,
+                    cursor: isCreating ? 'wait' : 'pointer',
+                    transition: 'all .15s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    opacity: isCreating ? 0.6 : 1,
+                  }}
+                >
+                  {/* Top row: icon + name + category badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: C.surface,
+                      border: `1px solid ${C.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, fontSize: 18,
+                    }}>
+                      {tpl.icon}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+                        {isRu ? tpl.name : tpl.nameEn}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div style={{
+                    fontSize: 12, color: C.sub, lineHeight: 1.5,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical' as const,
+                    overflow: 'hidden',
+                  }}>
+                    {isRu ? tpl.description : tpl.descriptionEn}
+                  </div>
+
+                  {/* Bottom row: category badge + scene count */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700,
+                      color: catInfo.color,
+                      background: `${catInfo.color}12`,
+                      padding: '2px 8px', borderRadius: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '.5px',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {isRu ? catInfo.name : catInfo.nameEn}
+                    </span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, color: C.dim,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {tpl.sceneCount} {isRu
+                        ? (tpl.sceneCount === 1 ? 'сцена' : tpl.sceneCount < 5 ? 'сцены' : 'сцен')
+                        : (tpl.sceneCount === 1 ? 'scene' : 'scenes')}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filteredTemplates.length === 0 && (
+            <div style={{
+              textAlign: 'center', padding: '24px 0',
+              color: C.dim, fontSize: 13,
+            }}>
+              {isRu ? 'Нет шаблонов в этой категории' : 'No templates in this category'}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── Publishing History Widget ──────────────────────────── */
+
+interface PublishHistoryEntry {
+  platform: string;
+  title: string;
+  url: string;
+  publishedAt: string;
+  scheduled?: boolean;
+}
+
+function PublishHistoryWidget({
+  C,
+  t,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const [entries, setEntries] = useState<PublishHistoryEntry[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('tf-publish-history');
+      if (raw) {
+        const parsed = JSON.parse(raw) as PublishHistoryEntry[];
+        setEntries(parsed.slice(0, 5));
+      }
+    } catch { /* localStorage unavailable */ }
+  }, []);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: '20px 22px',
+      marginBottom: 20,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('dashboard.recentlyPublished')}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {entries.map((entry, i) => {
+          const date = new Date(entry.publishedAt);
+          const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+          return (
+            <div
+              key={`${entry.publishedAt}-${i}`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 12px', borderRadius: 10,
+                background: C.surface, border: `1px solid ${C.border}`,
+                transition: 'border-color .15s',
+              }}
+            >
+              {/* Platform icon */}
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: entry.platform === 'YouTube' ? '#ff000015' : `${C.accent}10`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                {entry.platform === 'YouTube' ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff0000">
+                    <path d="M23.5 6.19a3 3 0 00-2.11-2.13C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.39.56A3 3 0 00.5 6.19 31 31 0 000 12a31 31 0 00.5 5.81 3 3 0 002.11 2.13c1.89.56 9.39.56 9.39.56s7.5 0 9.39-.56a3 3 0 002.11-2.13A31 31 0 0024 12a31 31 0 00-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" />
+                  </svg>
+                )}
+              </div>
+
+              {/* Title + date */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 600, color: C.text,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {entry.title}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.dim, marginTop: 2 }}>
+                  <span>{entry.platform}</span>
+                  <span>&#183;</span>
+                  <span>{dateStr}</span>
+                  {entry.scheduled && (
+                    <>
+                      <span>&#183;</span>
+                      <span style={{ color: C.orange }}>{t('dashboard.scheduled')}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Link button */}
+              {entry.url && (
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    padding: '5px 12px', borderRadius: 6,
+                    border: `1px solid ${C.border}`,
+                    background: 'transparent', color: C.sub,
+                    fontSize: 11, fontWeight: 600, textDecoration: 'none',
+                    transition: 'all .15s', flexShrink: 0,
+                  }}
+                >
+                  {t('dashboard.openLink')}
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Dashboard Component ──────────────────────────── */
 
 export function Dashboard() {
@@ -1190,6 +1850,8 @@ export function Dashboard() {
   const renameRef = useRef<HTMLInputElement>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   /* ── Auto-trigger checkout when arriving from pricing CTA ── */
   const initCheckout = trpc.billing.createCheckout.useMutation({
@@ -1252,6 +1914,7 @@ export function Dashboard() {
   /* ── tRPC mutations ───────────────────────────── */
   const createProject = trpc.project.create.useMutation({
     onSuccess: (project) => {
+      trackEvent('project_create', { source: 'dashboard' });
       toast.success(t('dashboard.projectCreated'));
       utils.project.list.invalidate();
       utils.user.getProfile.invalidate();
@@ -1344,6 +2007,69 @@ export function Dashboard() {
     duplicateProject.mutate({ id });
   }, [duplicateProject]);
 
+  const togglePublic = trpc.project.togglePublic.useMutation({
+    onSuccess: (data) => {
+      if (data.isPublic) {
+        const url = `${window.location.origin}/share/${data.id}`;
+        navigator.clipboard.writeText(url).catch(() => {});
+        toast.success(t('dashboard.shareEnabled'));
+      } else {
+        toast.success(t('dashboard.shareDisabled'));
+      }
+      utils.project.list.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleShare = useCallback((id: string) => {
+    togglePublic.mutate({ id });
+  }, [togglePublic]);
+
+  /* ── Bulk selection handlers ─────────────────── */
+  const selectMode = selectedIds.size > 0;
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    const allIds = (projects.data?.items ?? []).map((p) => p.id);
+    setSelectedIds((prev) => {
+      if (prev.size === allIds.length) return new Set();
+      return new Set(allIds);
+    });
+  }, [projects.data?.items]);
+
+  const handleCancelSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const ids = Array.from(selectedIds);
+      for (const id of ids) {
+        await deleteProject.mutateAsync({ id });
+      }
+      toast.success(t('dashboard.bulkDeleted'));
+      setSelectedIds(new Set());
+      utils.project.list.invalidate();
+      utils.user.getProfile.invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('dashboard.bulkDeleteError'));
+    } finally {
+      setBulkDeleting(false);
+    }
+  }, [selectedIds, deleteProject, t, utils]);
+
   /* ── Compute stats ────────────────────────────── */
   const user = profile.data;
   const plan = user?.plan ?? 'FREE';
@@ -1415,6 +2141,17 @@ export function Dashboard() {
       {/* ── Welcome Hero Section (Crayo-style) ───────── */}
       <WelcomeSection C={C} router={router} t={t} />
 
+      {/* ── Onboarding Checklist ─────────────────────── */}
+      <OnboardingChecklist />
+
+      {/* ── Activity Streak ──────────────────────────── */}
+      <div style={{ marginBottom: 20 }}>
+        <ActivityStreak />
+      </div>
+
+      {/* ── Usage Milestones (floating toast) ────────── */}
+      <UsageMilestones />
+
       {/* ── Header ──────────────────────────────────── */}
       <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div style={{ minWidth: 0 }}>
@@ -1433,7 +2170,7 @@ export function Dashboard() {
           <button
             className="tf-dash-create-btn"
             data-tour="new-project"
-            onClick={() => createProject.mutate({})}
+            onClick={() => setTemplateModalOpen(true)}
             disabled={createProject.isPending}
             onMouseEnter={() => setHoveredBtn('create-main')}
             onMouseLeave={() => setHoveredBtn(null)}
@@ -1547,8 +2284,14 @@ export function Dashboard() {
             })}
       </div>
 
+      {/* ── Plan Usage Widget ─────────────────────────── */}
+      <PlanUsageWidget C={C} t={t} />
+
       {/* ── Referral Widget ──────────────────────────── */}
       <ReferralWidget C={C} t={t} />
+
+      {/* ── Publishing History Widget ─────────────────── */}
+      <PublishHistoryWidget C={C} t={t} />
 
       {/* ── Projects section ────────────────────────── */}
       <div style={{
@@ -1740,7 +2483,7 @@ export function Dashboard() {
                     {t('dashboard.createFirstDesc')}
                   </p>
                   <button
-                    onClick={() => createProject.mutate({})}
+                    onClick={() => setTemplateModalOpen(true)}
                     disabled={createProject.isPending}
                     onMouseEnter={() => setHoveredBtn('create-empty')}
                     onMouseLeave={() => setHoveredBtn(null)}
@@ -1788,6 +2531,8 @@ export function Dashboard() {
                     renameValue={renameValue}
                     renameRef={renameRef}
                     deleteIsPending={deleteProject.isPending}
+                    selected={selectedIds.has(p.id)}
+                    selectMode={selectMode}
                     onNavigate={handleNavigate}
                     onDelete={handleSetDeleteId}
                     onConfirmDelete={handleConfirmDelete}
@@ -1797,6 +2542,8 @@ export function Dashboard() {
                     onCancelRename={handleCancelRename}
                     onRenameChange={handleRenameChange}
                     onDuplicate={handleDuplicate}
+                    onToggleSelect={handleToggleSelect}
+                    onShare={handleShare}
                   />
                 ))}
               </div>
@@ -1894,6 +2641,103 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Bulk selection floating toolbar ──────── */}
+      {selectMode && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 14,
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          boxShadow: '0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.1)',
+          zIndex: 1000,
+          fontFamily: 'inherit',
+        }}>
+          {/* Select all checkbox */}
+          <button
+            onClick={handleSelectAll}
+            style={{
+              width: 22, height: 22, borderRadius: 5,
+              background: selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : 'transparent',
+              border: `2px solid ${selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : C.dim}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all .15s ease', flexShrink: 0,
+            }}
+            title={t('dashboard.selectAll')}
+          >
+            {selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </button>
+
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, whiteSpace: 'nowrap' }}>
+            {t('dashboard.selected')}: {selectedIds.size}
+          </span>
+
+          <div style={{ width: 1, height: 24, background: C.border, flexShrink: 0 }} />
+
+          <button
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              border: 'none',
+              background: '#ef4444',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: bulkDeleting ? 'wait' : 'pointer',
+              fontFamily: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              opacity: bulkDeleting ? 0.6 : 1,
+              transition: 'opacity .15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <IconTrash size={14} color="#fff" />
+            {bulkDeleting ? '...' : t('dashboard.deleteProject')}
+          </button>
+
+          <button
+            onClick={handleCancelSelection}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              background: 'transparent',
+              color: C.sub,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('dashboard.cancel')}
+          </button>
+        </div>
+      )}
+
+      {/* ── Template Picker Modal ────────────────── */}
+      <TemplatePickerModal
+        open={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+        C={C}
+        t={t}
+      />
     </div>
   );
 }

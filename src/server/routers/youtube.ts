@@ -56,8 +56,18 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
         });
         return data.access_token as string;
       }
+
+      // FIX: Google returned HTTP 200 but the response body is missing access_token.
+      // This can happen if the refresh_token was revoked or the response was malformed.
+      // We must NOT silently fall through and use the old expired token — that would
+      // cause confusing 401s from YouTube API. Instead, throw immediately so the user
+      // knows to re-authenticate.
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Токен обновлён, но access_token отсутствует в ответе. Переподключите аккаунт Google.',
+      });
     }
-    // Token was expired and refresh failed — do not fall back to the old expired token
+    // Token was expired and refresh HTTP request failed — do not fall back to the old expired token
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не удалось обновить токен YouTube. Переподключите аккаунт Google.' });
   }
 
@@ -157,6 +167,9 @@ export const youtubeRouter = router({
       videoUrl: z.string().url(),
       thumbnailUrl: z.string().url().optional(),
       privacyStatus: z.enum(['public', 'private', 'unlisted']).default('private'),
+      /** ISO 8601 date for scheduled publishing. When set, privacyStatus
+       *  is forced to 'private' and YouTube auto-publishes at this time. */
+      publishAt: z.string().datetime().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { success } = await rateLimit({
@@ -168,8 +181,18 @@ export const youtubeRouter = router({
         throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
       }
 
+      // Scheduled videos must be private per YouTube API requirements
+      const effectivePrivacy = input.publishAt ? 'private' : input.privacyStatus;
+
       const token = await getYouTubeToken(ctx.session.user.id, ctx.db);
-      // Upload video metadata
+
+      // Build status payload — include publishAt when scheduling
+      const status: Record<string, string> = { privacyStatus: effectivePrivacy };
+      if (input.publishAt) {
+        status.publishAt = input.publishAt;
+      }
+
+      // Initiate resumable upload session with YouTube Data API v3
       const metadataRes = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_UPLOAD}?uploadType=resumable&part=snippet,status`,
         {
@@ -180,11 +203,18 @@ export const youtubeRouter = router({
           },
           body: JSON.stringify({
             snippet: { title: input.title, description: input.description, tags: input.tags },
-            status: { privacyStatus: input.privacyStatus },
+            status,
           }),
         }
       );
       if (!metadataRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось начать загрузку видео' });
-      return { uploadUrl: metadataRes.headers.get('location'), message: 'Загрузка начата' };
+
+      const uploadUrl = metadataRes.headers.get('location');
+      return {
+        uploadUrl,
+        scheduled: !!input.publishAt,
+        publishAt: input.publishAt ?? null,
+        message: input.publishAt ? 'Публикация запланирована' : 'Загрузка начата',
+      };
     }),
 });

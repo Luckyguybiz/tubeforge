@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 const COLLAPSE_PAGES = ['thumbnails'];
 
@@ -160,6 +161,41 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M12 14L15 10L18 12" stroke="#ff0050" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity=".5" />
     </svg>
   ),
+  media: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="media-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="3" width="16" height="14" rx="2.5" stroke={a ? 'url(#media-g)' : c} strokeWidth="1.5" opacity=".85" />
+      <circle cx="7" cy="9" r="2" fill={c} opacity=".5" />
+      <path d="M4 15L7 11L10 14L13 10L18 15" stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity=".6" />
+    </svg>
+  ),
+  brand: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="brand-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <circle cx="10" cy="10" r="7.5" stroke={a ? 'url(#brand-g)' : c} strokeWidth="1.5" opacity=".85" />
+      <circle cx="8" cy="8" r="2" fill={c} opacity=".6" />
+      <circle cx="12" cy="8" r="2" fill={c} opacity=".4" />
+      <circle cx="10" cy="12" r="2" fill={c} opacity=".5" />
+    </svg>
+  ),
+  blog: (c) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="2" width="14" height="16" rx="2.5" stroke={c} strokeWidth="1.5" opacity=".85" />
+      <path d="M6.5 6H13.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".7" />
+      <path d="M6.5 9.5H13.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".5" />
+      <path d="M6.5 13H10.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".35" />
+    </svg>
+  ),
   analytics: (c, a) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
@@ -214,6 +250,8 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'tools', label: t('nav.tools') },
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'preview', label: t('nav.preview') },
+        { id: 'media', label: t('nav.media') },
+        { id: 'brand', label: t('nav.brand') },
         { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
         { id: 'tiktok-analytics', label: t('nav.tiktokAnalytics') },
         { id: 'analytics', label: t('nav.analytics') },
@@ -229,6 +267,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
     {
       label: t('sidebar.system'),
       items: [
+        { id: 'blog', label: t('nav.blog') },
         { id: 'referral', label: t('nav.referral') },
         { id: 'settings', label: t('nav.settings') },
         { id: 'billing', label: t('nav.billing') },
@@ -255,6 +294,9 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   'shorts-analytics': ['green', 'cyan'],
   'tiktok-analytics': ['cyan', 'pink'],
   analytics: ['cyan', 'purple'],
+  blog: ['blue', 'purple'],
+  media: ['blue', 'purple'],
+  brand: ['pink', 'orange'],
 };
 
 /* ── Tooltip Component ─────────────────────────────────────────────── */
@@ -313,6 +355,144 @@ const Tooltip = memo(function Tooltip({
     </div>
   );
 });
+
+/* ── Usage Progress Widget ────────────────────────────────────────── */
+
+function UsageProgressBar({
+  label,
+  used,
+  total,
+  C,
+  isDark,
+}: {
+  label: string;
+  used: number;
+  total: number;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  isDark: boolean;
+}) {
+  const isInfinite = !isFinite(total);
+  const pct = isInfinite ? 0 : total > 0 ? Math.min((used / total) * 100, 100) : 0;
+  const barColor = pct > 90 ? '#ef4444' : pct > 60 ? '#eab308' : '#22c55e';
+  const displayTotal = isInfinite ? '\u221E' : String(total);
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, fontWeight: 500, color: C.sub }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>{used}/{displayTotal}</span>
+      </div>
+      <div style={{
+        height: 4,
+        borderRadius: 2,
+        background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          borderRadius: 2,
+          width: isInfinite ? '0%' : `${pct}%`,
+          background: barColor,
+          transition: 'width .4s ease, background .3s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function SidebarUsageWidget({
+  C,
+  isDark,
+  t,
+  navigate,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  isDark: boolean;
+  t: (key: string) => string;
+  navigate: (path: string) => void;
+}) {
+  const { plan, projectCount, aiCount, limits, isLoading } = usePlanLimits();
+
+  if (isLoading) return null;
+
+  const planLabel = ({ FREE: t('common.free'), PRO: t('common.pro'), STUDIO: t('common.studio') } as Record<string, string>)[plan] ?? plan;
+  const planBg =
+    plan === 'STUDIO'
+      ? `linear-gradient(135deg, ${C.purple}, ${C.blue})`
+      : plan === 'PRO'
+        ? `linear-gradient(135deg, ${C.accent}, ${C.pink})`
+        : isDark
+          ? 'rgba(255,255,255,.06)'
+          : 'rgba(0,0,0,.05)';
+  const planColor = plan === 'FREE' ? C.dim : '#fff';
+
+  return (
+    <div style={{
+      margin: '0 12px 8px',
+      padding: 14,
+      borderRadius: 14,
+      background: isDark ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.02)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'}`,
+      position: 'relative',
+      zIndex: 1,
+    }}>
+      {/* Plan badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        <span style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: planColor,
+          padding: '2px 8px',
+          borderRadius: 5,
+          background: planBg,
+          letterSpacing: '.02em',
+        }}>
+          {planLabel}
+        </span>
+      </div>
+
+      {/* Progress bars */}
+      <UsageProgressBar
+        label={t('sidebar.usageProjects')}
+        used={projectCount}
+        total={limits.projects}
+        C={C}
+        isDark={isDark}
+      />
+      <UsageProgressBar
+        label={t('sidebar.usageAi')}
+        used={aiCount}
+        total={limits.ai}
+        C={C}
+        isDark={isDark}
+      />
+
+      {/* Upgrade button for FREE users */}
+      {plan === 'FREE' && (
+        <button
+          onClick={() => navigate('billing')}
+          style={{
+            width: '100%',
+            padding: '7px 12px',
+            marginTop: 6,
+            borderRadius: 8,
+            border: 'none',
+            background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'all .2s ease',
+            letterSpacing: '-.01em',
+          }}
+        >
+          {t('sidebar.upgradePlan')}
+        </button>
+      )}
+    </div>
+  );
+}
 
 /* ── Sidebar Component ─────────────────────────────────────────────── */
 
@@ -876,84 +1056,9 @@ export const Sidebar = memo(function Sidebar() {
         ))}
       </div>
 
-      {/* ── Upgrade prompt for free users ─────────────────── */}
-      {plan === 'FREE' && !collapsed && (
-        <div
-          style={{
-            margin: '0 12px 10px',
-            padding: '14px',
-            borderRadius: 14,
-            background: isDark
-              ? 'linear-gradient(135deg, rgba(255,45,85,.06), rgba(139,92,246,.06))'
-              : 'linear-gradient(135deg, rgba(232,36,60,.04), rgba(124,58,237,.04))',
-            border: `1px solid ${isDark ? 'rgba(255,45,85,.12)' : 'rgba(232,36,60,.08)'}`,
-            position: 'relative',
-            overflow: 'hidden',
-            zIndex: 1,
-          }}
-        >
-          {/* Decorative sparkle */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              opacity: 0.3,
-            }}
-          >
-            {icons.sparkle(C.accent)}
-          </div>
-
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: C.text,
-              marginBottom: 4,
-              letterSpacing: '-.01em',
-            }}
-          >
-            {t('sidebar.upgrade')}
-          </div>
-          <div
-            style={{
-              fontSize: 11.5,
-              color: C.sub,
-              lineHeight: 1.5,
-              marginBottom: 10,
-            }}
-          >
-            {t('sidebar.upgradeDesc')}
-          </div>
-          <button
-            onClick={() => navigate('billing')}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = `0 6px 20px ${C.accent}44`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 2px 10px ${C.accent}33`;
-            }}
-            style={{
-              width: '100%',
-              padding: '8px 14px',
-              borderRadius: 10,
-              border: 'none',
-              background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-              boxShadow: `0 2px 10px ${C.accent}33`,
-              letterSpacing: '-.01em',
-            }}
-          >
-            {t('sidebar.upgradeCta')}
-          </button>
-        </div>
+      {/* ── Usage Progress Widget (expanded only) ─────────── */}
+      {!collapsed && (
+        <SidebarUsageWidget C={C} isDark={isDark} t={t} navigate={navigate} />
       )}
 
       {/* Collapsed upgrade hint */}

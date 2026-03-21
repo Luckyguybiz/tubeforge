@@ -7,6 +7,8 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
+import { trackEvent } from '@/lib/analytics-events';
+import { PLAN_LIMITS } from '@/lib/constants';
 
 /* ── Icons ─────────────────────────────────────────────────────────── */
 
@@ -65,8 +67,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       price: 0,
       priceLabel: '0\u20BD',
       features: [
-        t('billing.feat.projects3'),
-        t('billing.feat.ai5'),
+        `${PLAN_LIMITS.FREE.projects} ${t('billing.feat.projectsUnit')}`,
+        `${PLAN_LIMITS.FREE.aiGenerations} ${t('billing.feat.aiUnit')}`,
         t('billing.feat.export720'),
         t('billing.feat.basicThumbs'),
         t('billing.feat.watermark'),
@@ -81,8 +83,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       badge: t('billing.popular'),
       badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
       features: [
-        t('billing.feat.unlimitedProjects'),
-        t('billing.feat.ai50'),
+        `${PLAN_LIMITS.PRO.projects} ${t('billing.feat.projectsUnit')}`,
+        `${PLAN_LIMITS.PRO.aiGenerations} ${t('billing.feat.aiUnit')}`,
         t('billing.feat.export1080'),
         t('billing.feat.advancedThumbs'),
         t('billing.feat.seo'),
@@ -102,7 +104,7 @@ function getPlans(t: (key: string) => string): PlanDef[] {
         t('billing.feat.allPro'),
         t('billing.feat.unlimitedAi'),
         t('billing.feat.export4k'),
-        t('billing.feat.team5'),
+        `${t('billing.feat.teamUnit')} (${PLAN_LIMITS.STUDIO.teamMembers})`,
         t('billing.feat.api'),
         t('billing.feat.whiteLabel'),
         t('billing.feat.personalManager'),
@@ -167,6 +169,10 @@ export function BillingPage() {
     onError: (err) => toast.error(err.message),
   });
 
+  const invoicesQuery = trpc.billing.getInvoices.useQuery(undefined, {
+    enabled: userPlan !== 'FREE',
+  });
+
   const PLANS = useMemo(() => getPlans(t), [t]);
   const DEALS = useMemo(() => getDeals(), []);
 
@@ -178,6 +184,7 @@ export function BillingPage() {
   const [promoError, setPromoError] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   /* ── Calculations ──────────────────────────────── */
 
@@ -426,8 +433,16 @@ export function BillingPage() {
               </div>
             </div>
 
-            {/* ── Section 2: Plan Selection ──────── */}
-            <div style={{ marginBottom: 40 }}>
+            {/* ── Section: Render Priority Queue ──── */}
+            <div
+              style={{
+                padding: 20,
+                borderRadius: 16,
+                border: `1px solid ${cardBorder}`,
+                background: cardBg,
+                marginBottom: 32,
+              }}
+            >
               <h2
                 style={{
                   fontSize: 11,
@@ -435,11 +450,160 @@ export function BillingPage() {
                   color: C.dim,
                   textTransform: 'uppercase',
                   letterSpacing: '.12em',
-                  margin: '0 0 20px',
+                  margin: '0 0 16px',
                 }}
               >
-                {t('billing.choosePlan')}
+                {'\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433\u0430'}
               </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {([
+                  {
+                    plan: 'FREE' as PlanId,
+                    label: t('billing.planFree'),
+                    queue: '\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C',
+                    color: C.dim,
+                    bg: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)',
+                    borderColor: cardBorder,
+                  },
+                  {
+                    plan: 'PRO' as PlanId,
+                    label: 'Pro',
+                    queue: '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C',
+                    color: '#6366f1',
+                    bg: 'rgba(99, 102, 241, .06)',
+                    borderColor: 'rgba(99, 102, 241, .15)',
+                  },
+                  {
+                    plan: 'STUDIO' as PlanId,
+                    label: 'Studio',
+                    queue: '\u0412\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C \u2014 \u0431\u0435\u0437 \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u044F',
+                    color: '#8b5cf6',
+                    bg: 'rgba(139, 92, 246, .06)',
+                    borderColor: 'rgba(139, 92, 246, .15)',
+                  },
+                ] as const).map((item) => (
+                  <div
+                    key={item.plan}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '12px 16px',
+                      borderRadius: 10,
+                      border: `1px solid ${item.plan === userPlan ? item.borderColor : cardBorder}`,
+                      background: item.plan === userPlan ? item.bg : 'transparent',
+                      opacity: item.plan === userPlan ? 1 : 0.5,
+                      transition: 'all .2s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: item.color,
+                        flexShrink: 0,
+                      }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{item.label}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, color: item.plan === userPlan ? item.color : C.dim, fontWeight: 500 }}>
+                        {item.queue}
+                      </span>
+                      {item.plan === userPlan && (
+                        <span style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 50,
+                          background: `${item.color}18`,
+                          color: item.color,
+                        }}>
+                          {t('billing.currentPlanBtn')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Section 2: Plan Selection ──────── */}
+            <div style={{ marginBottom: 40 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+                <h2
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.dim,
+                    textTransform: 'uppercase',
+                    letterSpacing: '.12em',
+                    margin: 0,
+                  }}
+                >
+                  {t('billing.choosePlan')}
+                </h2>
+
+                {/* Monthly / Annual toggle */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px',
+                  borderRadius: 50,
+                  background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)',
+                  border: `1px solid ${cardBorder}`,
+                }}>
+                  <button
+                    onClick={() => setIsAnnual(false)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 50,
+                      border: 'none',
+                      background: !isAnnual ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'transparent',
+                      color: !isAnnual ? '#fff' : C.sub,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .2s ease',
+                    }}
+                  >
+                    {t('billing.monthlyLabel')}
+                  </button>
+                  <button
+                    onClick={() => setIsAnnual(true)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 50,
+                      border: 'none',
+                      background: isAnnual ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'transparent',
+                      color: isAnnual ? '#fff' : C.sub,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    {t('billing.annualLabel')}
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: isAnnual ? '#fff' : C.green,
+                      background: isAnnual ? 'rgba(255,255,255,.2)' : `${C.green}15`,
+                      padding: '1px 6px',
+                      borderRadius: 50,
+                    }}>
+                      -20%
+                    </span>
+                  </button>
+                </div>
+              </div>
 
               <div
                 className="tf-billing-plan-grid"
@@ -520,17 +684,40 @@ export function BillingPage() {
                       </div>
 
                       {/* Price */}
-                      <div
-                        style={{
-                          fontSize: 28,
-                          fontWeight: 800,
-                          color: C.text,
-                          letterSpacing: '-.03em',
-                          marginBottom: 20,
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        {plan.priceLabel}
+                      <div style={{ marginBottom: 20 }}>
+                        <div
+                          style={{
+                            fontSize: 28,
+                            fontWeight: 800,
+                            color: C.text,
+                            letterSpacing: '-.03em',
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          {isAnnual && plan.price > 0
+                            ? `${Math.round(plan.price * 0.8)}\u20BD`
+                            : plan.priceLabel}
+                          {plan.price > 0 && (
+                            <span style={{ fontSize: 13, fontWeight: 500, color: C.sub }}>
+                              {t('billing.perMonth')}
+                            </span>
+                          )}
+                        </div>
+                        {isAnnual && plan.price > 0 && (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6, marginTop: 4,
+                          }}>
+                            <span style={{ fontSize: 12, color: C.dim, textDecoration: 'line-through' }}>
+                              {plan.priceLabel}{t('billing.perMonth')}
+                            </span>
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, color: C.green,
+                              background: `${C.green}12`, padding: '1px 6px', borderRadius: 50,
+                            }}>
+                              {t('billing.annualSave').replace('{amount}', String(Math.round(plan.price * 0.2 * 12)))}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Features */}
@@ -611,6 +798,27 @@ export function BillingPage() {
                           <LightningIcon />
                           {plan.buttonLabel}
                         </button>
+                      )}
+
+                      {/* Guarantee badge for paid plans */}
+                      {plan.price > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 5,
+                          marginTop: 12,
+                          padding: '6px 0',
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" fill={C.green} opacity=".15" />
+                            <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" stroke={C.green} strokeWidth="1" opacity=".6" />
+                            <path d="M5.5 8L7 9.5L10.5 6" stroke={C.green} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span style={{ fontSize: 11, fontWeight: 500, color: C.green }}>
+                            {t('billing.guarantee')}
+                          </span>
+                        </div>
                       )}
                     </div>
                   );
@@ -768,6 +976,95 @@ export function BillingPage() {
                 })}
               </div>
             </div>
+
+            {/* ── Section 4: Billing History ──────── */}
+            {userPlan !== 'FREE' && (
+              <div style={{ marginTop: 40 }}>
+                <h2
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.dim,
+                    textTransform: 'uppercase',
+                    letterSpacing: '.12em',
+                    margin: '0 0 20px',
+                  }}
+                >
+                  {t('billing.history') || 'Billing History'}
+                </h2>
+
+                {invoicesQuery.isLoading ? (
+                  <p style={{ fontSize: 13, color: C.sub }}>{t('common.loading')}</p>
+                ) : !invoicesQuery.data || invoicesQuery.data.length === 0 ? (
+                  <p style={{ fontSize: 13, color: C.sub }}>{t('billing.noInvoices') || 'No invoices yet.'}</p>
+                ) : (
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      border: `1px solid ${cardBorder}`,
+                      background: cardBg,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {invoicesQuery.data.map((inv, idx) => (
+                      <div
+                        key={inv.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          padding: '14px 20px',
+                          borderBottom: idx < invoicesQuery.data.length - 1 ? `1px solid ${cardBorder}` : 'none',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          <span style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap' }}>
+                            {new Date(inv.date * 1000).toLocaleDateString('ru-RU')}
+                          </span>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 50,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              background: inv.status === 'paid'
+                                ? isDark ? 'rgba(34,197,94,.12)' : 'rgba(34,197,94,.1)'
+                                : isDark ? 'rgba(234,179,8,.12)' : 'rgba(234,179,8,.1)',
+                              color: inv.status === 'paid' ? C.green : C.orange,
+                            }}
+                          >
+                            {inv.status === 'paid' ? (t('billing.paid') || 'Paid') : inv.status}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                            {((inv.amount ?? 0) / 100).toFixed(2)} {inv.currency?.toUpperCase()}
+                          </span>
+                          {inv.pdf && (
+                            <a
+                              href={inv.pdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: 12,
+                                color: C.accent,
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              PDF
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── RIGHT COLUMN — Order Summary ────── */}
@@ -1024,6 +1321,7 @@ export function BillingPage() {
                 onMouseLeave={() => setHoveredBtn(null)}
                 onClick={() => {
                   if (selectedPlan !== 'FREE') {
+                    trackEvent('upgrade_click', { plan: selectedPlan });
                     createCheckout.mutate({ plan: selectedPlan });
                   }
                 }}

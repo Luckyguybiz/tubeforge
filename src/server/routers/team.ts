@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
-import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { RATE_LIMIT_ERROR, PLAN_LIMITS } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
 
 /** Mutation rate limit: 10 team actions per minute per user */
@@ -112,8 +112,9 @@ export const teamRouter = router({
         if (!team) throw new TRPCError({ code: 'NOT_FOUND', message: 'Команда не найдена' });
 
         // Check member limit
-        if (team._count.members >= 10) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Максимум 10 участников в команде' });
+        const maxMembers = PLAN_LIMITS.STUDIO.teamMembers;
+        if (team._count.members >= maxMembers) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: `Максимум ${maxMembers} участников в команде` });
         }
 
         // Check if already a member
@@ -205,5 +206,70 @@ export const teamRouter = router({
         data: { teamId: team.id },
         select: { id: true, teamId: true },
       });
+    }),
+
+  unshareProject: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await checkTeamRate(ctx.session.user.id);
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.projectId, userId: ctx.session.user.id },
+        select: { id: true, teamId: true },
+      });
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
+      if (!project.teamId) return { id: project.id, teamId: null };
+
+      return ctx.db.project.update({
+        where: { id: input.projectId, userId: ctx.session.user.id },
+        data: { teamId: null },
+        select: { id: true, teamId: true },
+      });
+    }),
+
+  /** Get project collaborators — returns team members who have access to this project */
+  getProjectCollaborators: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id: input.projectId,
+          OR: [
+            { userId: ctx.session.user.id },
+            { team: { members: { some: { userId: ctx.session.user.id } } } },
+          ],
+        },
+        select: {
+          id: true,
+          userId: true,
+          teamId: true,
+          user: { select: { id: true, name: true, email: true, image: true } },
+          team: {
+            select: {
+              members: {
+                select: {
+                  role: true,
+                  user: { select: { id: true, name: true, email: true, image: true } },
+                },
+                orderBy: { role: 'asc' },
+              },
+            },
+          },
+        },
+      });
+      if (!project) return { owner: null, members: [] };
+
+      const owner = {
+        ...project.user,
+        role: 'OWNER' as const,
+      };
+
+      const members = (project.team?.members ?? [])
+        .filter((m) => m.user.id !== project.userId)
+        .map((m) => ({
+          ...m.user,
+          role: m.role,
+        }));
+
+      return { owner, members };
     }),
 });

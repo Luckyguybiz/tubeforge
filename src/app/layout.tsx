@@ -3,6 +3,7 @@ import { Instrument_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { Analytics } from '@/components/Analytics';
+import { WebVitals } from '@/components/WebVitals';
 
 const instrumentSans = Instrument_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin', 'cyrillic'], variable: '--font-mono', display: 'swap' });
@@ -34,6 +35,7 @@ export const metadata: Metadata = {
     description: 'Создавайте профессиональный YouTube-контент с ИИ.',
     images: ['/api/og'],
   },
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <Analytics />
+        <WebVitals />
         <Providers>{children}</Providers>
       </body>
     </html>

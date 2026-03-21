@@ -6,8 +6,6 @@
  * and support Russian (default) and English locales.
  */
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission';
-
 interface TemplateResult {
   subject: string;
   html: string;
@@ -346,14 +344,428 @@ function referralCommissionTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Drip campaign templates
+// ---------------------------------------------------------------------------
+
+function dayThreeTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+  const projectCount = Number(data.projectCount || 0);
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: `You created ${projectCount} project${projectCount !== 1 ? 's' : ''} — here's what else you can do`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          You've already created <strong>${projectCount}</strong> project${projectCount !== 1 ? 's' : ''}! Here's what else you can do with TubeForge:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Generate AI thumbnails for your videos</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Use AI to optimize your video metadata for SEO</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">3</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Publish directly to YouTube from TubeForge</span>
+          </td></tr>
+        </table>
+        ${ctaButton('Explore Tools', `${APP_URL}/tools`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `Привет, ${name}!` : 'Привет!';
+  return {
+    subject: `Вы создали ${projectCount} проект${projectCount === 1 ? '' : projectCount < 5 ? 'а' : 'ов'} — вот что ещё можно сделать`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Вы уже создали <strong>${projectCount}</strong> проект${projectCount === 1 ? '' : projectCount < 5 ? 'а' : 'ов'}! Вот что ещё можно сделать в TubeForge:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Генерируйте AI-обложки для видео</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Используйте ИИ для оптимизации метаданных и SEO</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">3</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Публикуйте видео на YouTube прямо из TubeForge</span>
+        </td></tr>
+      </table>
+      ${ctaButton('Открыть инструменты', `${APP_URL}/tools`)}
+    `, locale),
+  };
+}
+
+function daySevenTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+  const projectCount = Number(data.projectCount || 0);
+  const aiUsed = Number(data.aiUsed || 0);
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Your free plan usage — ready to scale up?',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          It's been a week! Here's your usage so far:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+          <tr style="background:#fafafa;">
+            <td style="padding:12px 16px;font-weight:600;color:#555;width:50%;">Projects created</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;">${projectCount} / 3</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">AI generations used</td>
+            <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;border-top:1px solid #eee;">${aiUsed} / 5</td>
+          </tr>
+        </table>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+          Upgrade to <strong>Pro</strong> for 25 projects, 100 AI generations per month, 1080p export, and no watermark.
+        </p>
+        ${ctaButton('Upgrade to Pro', `${APP_URL}/billing`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `Привет, ${name}!` : 'Привет!';
+  return {
+    subject: 'Ваш бесплатный план — готовы масштабироваться?',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Прошла неделя! Вот ваша статистика:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+        <tr style="background:#fafafa;">
+          <td style="padding:12px 16px;font-weight:600;color:#555;width:50%;">Создано проектов</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;">${projectCount} / 3</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;font-weight:600;color:#555;border-top:1px solid #eee;">AI генераций использовано</td>
+          <td class="text-primary" style="padding:12px 16px;color:#333;font-weight:700;border-top:1px solid #eee;">${aiUsed} / 5</td>
+        </tr>
+      </table>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+        Обновитесь до <strong>Pro</strong>: 25 проектов, 100 AI генераций в месяц, экспорт в 1080p и без водяного знака.
+      </p>
+      ${ctaButton('Обновить до Pro', `${APP_URL}/billing`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Team & notification templates
+// ---------------------------------------------------------------------------
+
+function teamInviteTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const inviterName = String(data.inviterName || '');
+  const teamName = String(data.teamName || '');
+  const acceptUrl = String(data.acceptUrl || `${APP_URL}/teams`);
+
+  if (locale === 'en') {
+    return {
+      subject: `${inviterName} invited you to team "${teamName}"`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Team Invitation</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          <strong>${inviterName}</strong> has invited you to join the team <strong>${teamName}</strong> on TubeForge.
+        </p>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Accept the invitation to start collaborating on projects together.
+        </p>
+        ${ctaButton('Accept Invitation', acceptUrl)}
+        <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">If you did not expect this invitation, you can safely ignore this email.</p>
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `${inviterName} пригласил вас в команду "${teamName}"`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Приглашение в команду</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        <strong>${inviterName}</strong> приглашает вас присоединиться к команде <strong>${teamName}</strong> на TubeForge.
+      </p>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Примите приглашение, чтобы начать совместную работу над проектами.
+      </p>
+      ${ctaButton('Принять приглашение', acceptUrl)}
+      <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">Если вы не ожидали это приглашение, просто проигнорируйте это письмо.</p>
+    `, locale),
+  };
+}
+
+function planChangeConfirmationTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const userName = String(data.userName || '');
+  const oldPlan = String(data.oldPlan || 'FREE');
+  const newPlan = String(data.newPlan || 'PRO');
+
+  if (locale === 'en') {
+    const greeting = userName ? `Hi ${userName}!` : 'Hi there!';
+    return {
+      subject: `Your plan was changed from ${oldPlan} to ${newPlan}`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          Your TubeForge plan has been updated.
+        </p>
+        <p style="text-align:center;margin:20px 0;">
+          <span style="display:inline-block;padding:8px 16px;background:#eee;border-radius:6px;color:#888;font-weight:600;">${oldPlan}</span>
+          <span style="display:inline-block;padding:0 12px;color:#6c5ce7;font-size:20px;font-weight:700;">&rarr;</span>
+          <span style="display:inline-block;padding:8px 16px;background:#6c5ce7;border-radius:6px;color:#fff;font-weight:600;">${newPlan}</span>
+        </p>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          If you did not make this change, please contact support immediately.
+        </p>
+        ${ctaButton('View Account Settings', `${APP_URL}/settings/billing`)}
+      `, locale),
+    };
+  }
+
+  const greeting = userName ? `Привет, ${userName}!` : 'Привет!';
+  return {
+    subject: `Ваш план изменён с ${oldPlan} на ${newPlan}`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Ваш план TubeForge был обновлён.
+      </p>
+      <p style="text-align:center;margin:20px 0;">
+        <span style="display:inline-block;padding:8px 16px;background:#eee;border-radius:6px;color:#888;font-weight:600;">${oldPlan}</span>
+        <span style="display:inline-block;padding:0 12px;color:#6c5ce7;font-size:20px;font-weight:700;">&rarr;</span>
+        <span style="display:inline-block;padding:8px 16px;background:#6c5ce7;border-radius:6px;color:#fff;font-weight:600;">${newPlan}</span>
+      </p>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Если вы не вносили это изменение, пожалуйста, свяжитесь с поддержкой.
+      </p>
+      ${ctaButton('Настройки аккаунта', `${APP_URL}/settings/billing`)}
+    `, locale),
+  };
+}
+
+function commentMentionTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const authorName = String(data.authorName || '');
+  const projectName = String(data.projectName || '');
+  const commentText = String(data.commentText || '');
+
+  // Truncate comment text to 200 chars for the email preview
+  const truncatedComment = commentText.length > 200
+    ? commentText.slice(0, 200) + '...'
+    : commentText;
+
+  if (locale === 'en') {
+    return {
+      subject: `${authorName} mentioned you in "${projectName}"`,
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">You were mentioned in a comment</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          <strong>${authorName}</strong> mentioned you in a comment on the project <strong>${projectName}</strong>.
+        </p>
+        <div style="margin:20px 0;padding:16px 20px;background:#f8f8fc;border-left:4px solid #6c5ce7;border-radius:0 8px 8px 0;">
+          <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0;font-style:italic;">&ldquo;${truncatedComment}&rdquo;</p>
+        </div>
+        ${ctaButton('View Comment', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  return {
+    subject: `${authorName} упомянул вас в "${projectName}"`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Вас упомянули в комментарии</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        <strong>${authorName}</strong> упомянул вас в комментарии к проекту <strong>${projectName}</strong>.
+      </p>
+      <div style="margin:20px 0;padding:16px 20px;background:#f8f8fc;border-left:4px solid #6c5ce7;border-radius:0 8px 8px 0;">
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0;font-style:italic;">&laquo;${truncatedComment}&raquo;</p>
+      </div>
+      ${ctaButton('Посмотреть комментарий', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Re-engagement templates
+// ---------------------------------------------------------------------------
+
+function reengagementDay3Template(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Your project is waiting for you',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          We noticed you haven't been back in a few days. Your project is still here, ready for you to continue.
+        </p>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Pick up right where you left off &mdash; your AI-generated scenes, edits, and settings are all saved.
+        </p>
+        ${ctaButton('Continue Your Project', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u0412\u0430\u0448 \u043F\u0440\u043E\u0435\u043A\u0442 \u0436\u0434\u0451\u0442 \u0432\u0430\u0441',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041C\u044B \u0437\u0430\u043C\u0435\u0442\u0438\u043B\u0438, \u0447\u0442\u043E \u0432\u044B \u043D\u0435 \u0437\u0430\u0445\u043E\u0434\u0438\u043B\u0438 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0434\u043D\u0435\u0439. \u0412\u0430\u0448 \u043F\u0440\u043E\u0435\u043A\u0442 \u0432\u0441\u0451 \u0435\u0449\u0451 \u0437\u0434\u0435\u0441\u044C, \u0433\u043E\u0442\u043E\u0432 \u043A \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u044E.
+      </p>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u0435 \u0441 \u0442\u043E\u0433\u043E \u043C\u0435\u0441\u0442\u0430, \u0433\u0434\u0435 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0438\u0441\u044C &mdash; \u0432\u0441\u0435 \u0441\u0446\u0435\u043D\u044B, \u043F\u0440\u0430\u0432\u043A\u0438 \u0438 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B.
+      </p>
+      ${ctaButton('\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+function reengagementDay7Template(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'We added new features — check them out',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          While you were away, we've been busy improving TubeForge:
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u2728</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Improved AI generation quality</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\uD83C\uDFA8</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">New templates and styles</span>
+          </td></tr>
+          <tr><td style="padding:12px 0;">
+            <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u26A1</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Faster export and rendering</span>
+          </td></tr>
+        </table>
+        ${ctaButton('Explore Updates', `${APP_URL}/dashboard`)}
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u041C\u044B \u0434\u043E\u0431\u0430\u0432\u0438\u043B\u0438 \u043D\u043E\u0432\u044B\u0435 \u0444\u0438\u0447\u0438',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041F\u043E\u043A\u0430 \u0432\u0430\u0441 \u043D\u0435 \u0431\u044B\u043B\u043E, \u043C\u044B \u0443\u043B\u0443\u0447\u0448\u0438\u043B\u0438 TubeForge:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u2728</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u0423\u043B\u0443\u0447\u0448\u0435\u043D\u043D\u043E\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E AI \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\uD83C\uDFA8</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u041D\u043E\u0432\u044B\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0438 \u0441\u0442\u0438\u043B\u0438</span>
+        </td></tr>
+        <tr><td style="padding:12px 0;">
+          <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u26A1</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">\u0411\u044B\u0441\u0442\u0440\u0435\u0435 \u044D\u043A\u0441\u043F\u043E\u0440\u0442 \u0438 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433</span>
+        </td></tr>
+      </table>
+      ${ctaButton('\u041F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F', `${APP_URL}/dashboard`)}
+    `, locale),
+  };
+}
+
+function reengagementDay14Template(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'ru');
+  const name = String(data.name || '');
+
+  if (locale === 'en') {
+    const greeting = name ? `Hi ${name}!` : 'Hi there!';
+    return {
+      subject: 'Special 20% discount on Pro — just for you',
+      html: layout(`
+        <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+        <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+          We miss you! As a special offer, here's an exclusive <strong>20% discount</strong> on TubeForge Pro.
+        </p>
+        <div style="text-align:center;margin:24px 0;padding:20px;background:#6c5ce710;border-radius:12px;border:1px solid #6c5ce720;">
+          <span style="font-size:32px;font-weight:800;color:#6c5ce7;letter-spacing:-.02em;">20% OFF</span>
+          <p style="color:#555;font-size:14px;margin:8px 0 0;">Use code <strong style="color:#6c5ce7;">COMEBACK20</strong> at checkout</p>
+        </div>
+        <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Unlock unlimited projects, 1080p export, no watermark, and AI-powered tools.
+        </p>
+        ${ctaButton('Claim Your Discount', `${APP_URL}/billing?promo=COMEBACK20`)}
+        <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">Offer valid for 48 hours</p>
+      `, locale),
+    };
+  }
+
+  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  return {
+    subject: '\u0421\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u0430\u044F \u0441\u043A\u0438\u0434\u043A\u0430 20% \u043D\u0430 Pro \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u0434\u043B\u044F \u0432\u0430\u0441',
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
+        \u041C\u044B \u0441\u043A\u0443\u0447\u0430\u0435\u043C! \u0421\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u0434\u043B\u044F \u0432\u0430\u0441 &mdash; \u044D\u043A\u0441\u043A\u043B\u044E\u0437\u0438\u0432\u043D\u0430\u044F <strong>\u0441\u043A\u0438\u0434\u043A\u0430 20%</strong> \u043D\u0430 TubeForge Pro.
+      </p>
+      <div style="text-align:center;margin:24px 0;padding:20px;background:#6c5ce710;border-radius:12px;border:1px solid #6c5ce720;">
+        <span style="font-size:32px;font-weight:800;color:#6c5ce7;letter-spacing:-.02em;">20% \u0421\u041A\u0418\u0414\u041A\u0410</span>
+        <p style="color:#555;font-size:14px;margin:8px 0 0;">\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u043A\u043E\u0434 <strong style="color:#6c5ce7;">COMEBACK20</strong> \u043F\u0440\u0438 \u043E\u043F\u043B\u0430\u0442\u0435</p>
+      </div>
+      <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+        \u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u0443\u0439\u0442\u0435 \u0431\u0435\u0437\u043B\u0438\u043C\u0438\u0442\u043D\u044B\u0435 \u043F\u0440\u043E\u0435\u043A\u0442\u044B, \u044D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 1080p, \u0431\u0435\u0437 \u0432\u043E\u0434\u044F\u043D\u043E\u0433\u043E \u0437\u043D\u0430\u043A\u0430 \u0438 AI-\u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B.
+      </p>
+      ${ctaButton('\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u0441\u043A\u0438\u0434\u043A\u0443', `${APP_URL}/billing?promo=COMEBACK20`)}
+      <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E 48 \u0447\u0430\u0441\u043E\u0432</p>
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
   'payment-receipt': paymentReceiptTemplate,
   'plan-change': planChangeTemplate,
   'referral-commission': referralCommissionTemplate,
+  'day-three': dayThreeTemplate,
+  'day-seven': daySevenTemplate,
+  'reengagement-day3': reengagementDay3Template,
+  'reengagement-day7': reengagementDay7Template,
+  'reengagement-day14': reengagementDay14Template,
+  'team-invite': teamInviteTemplate,
+  'plan-change-confirmation': planChangeConfirmationTemplate,
+  'comment-mention': commentMentionTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {
@@ -362,4 +774,60 @@ export function getTemplate(template: EmailTemplate, data: TemplateData): Templa
     throw new Error(`[email] Unknown template: ${template}`);
   }
   return fn(data);
+}
+
+/**
+ * Convenience function for day-3 drip email.
+ */
+export function getDayThreeEmail(userName: string, projectCount: number, locale = 'ru'): TemplateResult {
+  return getTemplate('day-three', { name: userName, projectCount, locale });
+}
+
+/**
+ * Convenience function for day-7 drip email.
+ */
+export function getDaySevenEmail(userName: string, usage: { projectCount: number; aiUsed: number }, locale = 'ru'): TemplateResult {
+  return getTemplate('day-seven', { name: userName, projectCount: usage.projectCount, aiUsed: usage.aiUsed, locale });
+}
+
+/**
+ * Re-engagement email: Day 3 — "Ваш проект ждёт вас"
+ */
+export function getReengagementDay3(userName: string, locale = 'ru'): TemplateResult {
+  return getTemplate('reengagement-day3', { name: userName, locale });
+}
+
+/**
+ * Re-engagement email: Day 7 — "Мы добавили новые фичи"
+ */
+export function getReengagementDay7(userName: string, locale = 'ru'): TemplateResult {
+  return getTemplate('reengagement-day7', { name: userName, locale });
+}
+
+/**
+ * Re-engagement email: Day 14 — "Специальная скидка 20% на Pro"
+ */
+export function getReengagementDay14(userName: string, locale = 'ru'): TemplateResult {
+  return getTemplate('reengagement-day14', { name: userName, locale });
+}
+
+/**
+ * Team invite email — "{inviterName} invited you to team {teamName}"
+ */
+export function getTeamInviteEmail(inviterName: string, teamName: string, acceptUrl: string, locale = 'ru'): TemplateResult {
+  return getTemplate('team-invite', { inviterName, teamName, acceptUrl, locale });
+}
+
+/**
+ * Plan change confirmation — "Your plan was changed from {oldPlan} to {newPlan}"
+ */
+export function getPlanChangeEmail(userName: string, oldPlan: string, newPlan: string, locale = 'ru'): TemplateResult {
+  return getTemplate('plan-change-confirmation', { userName, oldPlan, newPlan, locale });
+}
+
+/**
+ * Comment mention email — "You were mentioned in a comment on {projectName}"
+ */
+export function getCommentMentionEmail(authorName: string, projectName: string, commentText: string, locale = 'ru'): TemplateResult {
+  return getTemplate('comment-mention', { authorName, projectName, commentText, locale });
 }

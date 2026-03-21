@@ -48,6 +48,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'recharts',
       'zod',
+      '@stripe/stripe-js',
+      'zustand',
     ],
   },
 

@@ -3,6 +3,9 @@ import { auth } from '@/server/auth';
 import { uploadFile } from '@/lib/storage';
 import { rateLimit } from '@/lib/rate-limit';
 import { MAX_UPLOAD_SIZE } from '@/lib/constants';
+import { createLogger } from '@/lib/logger';
+
+const uploadLog = createLogger('upload');
 
 /** Allowed image MIME types — rejects SVG (XSS risk) and exotic formats */
 const ALLOWED_TYPES = new Set([
@@ -74,7 +77,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('Upload failed:', err instanceof Error ? err.message : err);
+    uploadLog.error('Upload failed', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Upload failed. Please try again.' }, { status: 500 });
   }
 }

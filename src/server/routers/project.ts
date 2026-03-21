@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure, publicProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
@@ -650,5 +650,162 @@ export const projectRouter = router({
       });
 
       return result;
+    }),
+
+  /** Toggle isPublic flag on a project (owner only) */
+  togglePublic: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await checkMutationRate(ctx.session.user.id);
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: { id: true, isPublic: true },
+      });
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
+      return ctx.db.project.update({
+        where: { id: input.id },
+        data: { isPublic: !project.isPublic },
+        select: { id: true, isPublic: true },
+      });
+    }),
+
+  /** Get a public project by ID (no auth required) */
+  getPublic: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.id, isPublic: true },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          tags: true,
+          thumbnailUrl: true,
+          status: true,
+          likesCount: true,
+          createdAt: true,
+          updatedAt: true,
+          user: { select: { id: true, name: true, image: true } },
+          scenes: {
+            select: {
+              id: true,
+              label: true,
+              order: true,
+              duration: true,
+              status: true,
+              videoUrl: true,
+            },
+            orderBy: { order: 'asc' },
+            take: 20,
+          },
+        },
+      });
+      if (!project) return null;
+      return project;
+    }),
+
+  /** Like a public project (increment counter, rate-limited) */
+  likeProject: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Rate limit: max 5 likes per minute per project to prevent spam
+      const { success } = await rateLimit({
+        identifier: `like:${input.id}`,
+        limit: 5,
+        window: 60,
+      });
+      if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
+
+      const project = await ctx.db.project.findFirst({
+        where: { id: input.id, isPublic: true },
+        select: { id: true },
+      });
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
+      return ctx.db.project.update({
+        where: { id: input.id },
+        data: { likesCount: { increment: 1 } },
+        select: { id: true, likesCount: true },
+      });
+    }),
+
+  /** List public projects for the gallery (no auth required) */
+  listPublic: publicProcedure
+    .input(z.object({
+      sortBy: z.enum(['createdAt', 'likesCount']).default('createdAt'),
+      cursor: z.string().nullish(),
+      limit: z.number().min(1).max(50).default(20),
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      const { sortBy = 'createdAt', cursor, limit = 20 } = input ?? {};
+      const orderBy = sortBy === 'likesCount'
+        ? [{ likesCount: 'desc' as const }, { createdAt: 'desc' as const }]
+        : [{ createdAt: 'desc' as const }];
+
+      const items = await ctx.db.project.findMany({
+        where: { isPublic: true },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          status: true,
+          likesCount: true,
+          createdAt: true,
+          user: { select: { id: true, name: true, image: true } },
+          _count: { select: { scenes: true } },
+        },
+        orderBy,
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+
+      const hasMore = items.length > limit;
+      const results = hasMore ? items.slice(0, limit) : items;
+      return {
+        items: results,
+        nextCursor: hasMore ? results[results.length - 1]?.id : null,
+      };
+    }),
+
+  /** List public projects by a specific user (no auth required) */
+  listByUser: publicProcedure
+    .input(z.object({
+      userId: z.string(),
+      cursor: z.string().nullish(),
+      limit: z.number().min(1).max(50).default(20),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { userId, cursor, limit = 20 } = input;
+
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, image: true, createdAt: true },
+      });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      const items = await ctx.db.project.findMany({
+        where: { userId, isPublic: true },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          status: true,
+          likesCount: true,
+          createdAt: true,
+          _count: { select: { scenes: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+
+      const hasMore = items.length > limit;
+      const results = hasMore ? items.slice(0, limit) : items;
+      return {
+        user,
+        items: results,
+        nextCursor: hasMore ? results[results.length - 1]?.id : null,
+      };
     }),
 });

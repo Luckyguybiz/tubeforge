@@ -61,6 +61,7 @@ function log(level: LogLevel, module: string, message: string, data?: Record<str
   switch (level) {
     case 'error':
       console.error(output);
+      recordError(module, message);
       break;
     case 'warn':
       console.warn(output);
@@ -77,4 +78,64 @@ export function createLogger(module: string) {
     warn: (msg: string, data?: Record<string, unknown>) => log('warn', module, msg, data),
     error: (msg: string, data?: Record<string, unknown>) => log('error', module, msg, data),
   };
+}
+
+/** Default logger for ad-hoc usage without a dedicated module name */
+export const logger = createLogger('app');
+
+/* ── Error aggregation ────────────────────────────────────────── */
+
+interface ErrorBucket {
+  count: number;
+  firstSeen: number;
+  lastSeen: number;
+}
+
+/** In-memory error counts keyed by "module:message_prefix" per hour window. */
+const errorBuckets = new Map<string, ErrorBucket>();
+let currentHourKey = '';
+
+function getHourKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}`;
+}
+
+function rotateIfNeeded(): void {
+  const hk = getHourKey();
+  if (hk !== currentHourKey) {
+    errorBuckets.clear();
+    currentHourKey = hk;
+  }
+}
+
+/**
+ * Record an error for aggregation. Called automatically by loggers created
+ * via createLogger when level === 'error', but can also be called manually.
+ */
+export function recordError(module: string, message: string): void {
+  rotateIfNeeded();
+  // Use first 80 chars of message as the bucket key to group similar errors
+  const prefix = message.slice(0, 80);
+  const key = `${module}:${prefix}`;
+  const now = Date.now();
+  const existing = errorBuckets.get(key);
+  if (existing) {
+    existing.count++;
+    existing.lastSeen = now;
+  } else {
+    errorBuckets.set(key, { count: 1, firstSeen: now, lastSeen: now });
+  }
+}
+
+/**
+ * Get current-hour error stats for admin dashboard / monitoring.
+ */
+export function getErrorStats(): { hour: string; errors: { key: string; count: number; firstSeen: number; lastSeen: number }[] } {
+  rotateIfNeeded();
+  const errors: { key: string; count: number; firstSeen: number; lastSeen: number }[] = [];
+  for (const [key, bucket] of errorBuckets) {
+    errors.push({ key, ...bucket });
+  }
+  errors.sort((a, b) => b.count - a.count);
+  return { hour: currentHourKey, errors };
 }

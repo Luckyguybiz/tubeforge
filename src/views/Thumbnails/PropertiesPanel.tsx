@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -8,6 +8,7 @@ import { STICKY_NOTE_PRESETS } from '@/lib/constants';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import type { CanvasElement, Theme } from '@/lib/types';
 import { COLOR_PRESETS } from '@/lib/element-presets';
+import { FONT_LIBRARY, FONT_CATEGORIES, loadGoogleFont, preloadPopularFonts } from '@/lib/fonts';
 
 const FONT_SIZE_PRESETS = [16, 24, 32, 48, 64, 80, 96, 120];
 
@@ -133,9 +134,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
       {sel && sel.type === 'text' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div><div style={labelStyle}>{t('thumbs.props.textLabel')}</div><input value={sel.text ?? ''} onChange={(e) => updEl(sel.id, { text: e.target.value })} style={inputStyle} /></div>
-          <div><div style={labelStyle}>{t('thumbs.props.font')}</div><select value={sel.font} onChange={(e) => updEl(sel.id, { font: e.target.value })} style={inputStyle}>
-            <option value="Instrument Sans">Instrument Sans</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Impact">Impact</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option>
-          </select></div>
+          <FontPicker C={C} value={sel.font ?? 'Inter'} onChange={(f) => updEl(sel.id, { font: f })} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* C6: Size with presets */}
           <div>
             <div style={labelStyle}>{t('thumbs.props.size')}</div>
@@ -301,6 +300,121 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
 }
 
 // ===== Sub-components =====
+
+// Font picker with Google Fonts grouped by category
+const CATEGORY_LABELS: Record<string, string> = {
+  'sans-serif': 'Sans Serif',
+  'serif': 'Serif',
+  'display': 'Display',
+  'handwriting': 'Handwriting',
+  'monospace': 'Monospace',
+};
+
+function FontPicker({ C, value, onChange, inputStyle, labelStyle }: { C: Theme; value: string; onChange: (f: string) => void; inputStyle: React.CSSProperties; labelStyle: React.CSSProperties }) {
+  const t = useLocaleStore((s) => s.t);
+  const [open, setOpen] = useState(false);
+
+  // Preload popular fonts on first mount
+  useEffect(() => { preloadPopularFonts(); }, []);
+
+  const handleSelect = useCallback((family: string) => {
+    const entry = FONT_LIBRARY.find((f) => f.family === family);
+    if (entry) loadGoogleFont(family, entry.weights);
+    onChange(family);
+    setOpen(false);
+  }, [onChange]);
+
+  // Load selected font on mount if it's a Google Font
+  useEffect(() => {
+    const entry = FONT_LIBRARY.find((f) => f.family === value);
+    if (entry) loadGoogleFont(value, entry.weights);
+  }, [value]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={labelStyle}>{t('thumbs.props.font')}</div>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          ...inputStyle,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          fontFamily: value,
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.5 }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            maxHeight: 260,
+            overflowY: 'auto',
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+            boxShadow: '0 8px 24px rgba(0,0,0,.35)',
+            marginTop: 2,
+            padding: 4,
+          }}
+        >
+          {FONT_CATEGORIES.map((cat) => {
+            const fonts = FONT_LIBRARY.filter((f) => f.category === cat);
+            if (fonts.length === 0) return null;
+            return (
+              <div key={cat}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.5, padding: '6px 6px 2px', userSelect: 'none' }}>
+                  {CATEGORY_LABELS[cat] ?? cat}
+                </div>
+                {fonts.map((f) => (
+                  <button
+                    key={f.family}
+                    onClick={() => handleSelect(f.family)}
+                    onMouseEnter={() => loadGoogleFont(f.family, f.weights)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '5px 8px',
+                      border: 'none',
+                      borderRadius: 5,
+                      background: value === f.family ? C.accentDim : 'transparent',
+                      color: value === f.family ? C.accent : C.text,
+                      fontFamily: f.family,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'background .1s',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.family}</span>
+                    {f.popular && (
+                      <span style={{ fontSize: 8, color: C.accent, background: C.accent + '18', padding: '1px 4px', borderRadius: 3, fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}>
+                        HOT
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // C1: Position inputs
 const PositionInputs = memo(function PositionInputs({ C, x, y, onChange, inputStyle, labelStyle }: { C: Theme; x: number; y: number; onChange: (p: Partial<CanvasElement>) => void; inputStyle: React.CSSProperties; labelStyle: React.CSSProperties }) {

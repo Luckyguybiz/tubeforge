@@ -179,6 +179,41 @@ export const Z_INDEX = {
   ONBOARDING_SPOTLIGHT: 10001,
 } as const;
 
+/* ── Plan limits (single source of truth) ────────── */
+
+export const PLAN_LIMITS = {
+  FREE: {
+    projects: 3,
+    aiGenerations: 5,      // per month
+    scenes: 10,            // per project
+    teamMembers: 0,        // no team on FREE
+    storageMB: 500,        // 500 MB
+    storageBytes: 500 * 1024 * 1024,
+  },
+  PRO: {
+    projects: 25,
+    aiGenerations: 100,    // per month
+    scenes: 50,            // per project
+    teamMembers: 0,        // no team on PRO
+    storageMB: 5120,       // 5 GB
+    storageBytes: 5 * 1024 * 1024 * 1024,
+  },
+  STUDIO: {
+    projects: Infinity,
+    aiGenerations: Infinity,
+    scenes: 200,           // per project
+    teamMembers: 5,        // 5 team members
+    storageMB: 51200,      // 50 GB
+    storageBytes: 50 * 1024 * 1024 * 1024,
+  },
+} as const;
+
+export type PlanName = keyof typeof PLAN_LIMITS;
+
+export function getPlanLimits(plan: string) {
+  return PLAN_LIMITS[plan as PlanName] ?? PLAN_LIMITS.FREE;
+}
+
 /* ── API endpoint base URLs ─────────────────────────── */
 
 export const API_ENDPOINTS = {
