@@ -1251,7 +1251,7 @@ export function SettingsPage() {
             <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>
               {t('settings.vpn.qrTitle')}
             </h3>
-            <img src={qrDataUrl} alt="QR" style={{ width: 280, height: 280 }} />
+            <img src={qrDataUrl} alt="QR" decoding="async" width={280} height={280} style={{ width: 280, height: 280 }} />
             <p style={{ marginTop: 12, color: C.sub, fontSize: 13, maxWidth: 280, lineHeight: 1.5 }}>
               {t('settings.vpn.instructions')}
             </p>

@@ -149,7 +149,7 @@ export default function SharePage() {
               style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: C.text }}
             >
               {project.user.image ? (
-                <img src={project.user.image} alt={`${project.user.name ?? 'User'} avatar`} style={{ width: 28, height: 28, borderRadius: '50%' }} />
+                <img src={project.user.image} alt={`${project.user.name ?? 'User'} avatar`} loading="lazy" decoding="async" width={28} height={28} style={{ width: 28, height: 28, borderRadius: '50%' }} />
               ) : (
                 <div style={{
                   width: 28, height: 28, borderRadius: '50%',

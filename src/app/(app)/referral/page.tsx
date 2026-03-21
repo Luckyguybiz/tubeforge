@@ -779,7 +779,7 @@ function ReferralContent() {
                     padding: 8,
                   }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={qrDataUrl} alt="Referral QR Code" style={{ width: '100%', height: '100%', borderRadius: 8 }} />
+                    <img src={qrDataUrl} alt="Referral QR Code" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 8 }} />
                   </div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>

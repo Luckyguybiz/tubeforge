@@ -279,7 +279,7 @@ export function ProjectsPanel() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
               {assets.data.items.map((asset) => (
                 <div key={asset.id} style={{ borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}`, aspectRatio: '1', cursor: 'pointer', position: 'relative' }}>
-                  <Image src={asset.url} alt={asset.filename} fill style={{ objectFit: 'cover' }} loading="lazy" unoptimized />
+                  <Image src={asset.url} alt={asset.filename} fill sizes="80px" style={{ objectFit: 'cover' }} loading="lazy" unoptimized />
                 </div>
               ))}
             </div>

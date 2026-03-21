@@ -212,7 +212,7 @@ export default function GalleryPage() {
                       {/* Author */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         {project.user.image ? (
-                          <img src={project.user.image} alt={`${project.user.name ?? 'User'} avatar`} style={{ width: 20, height: 20, borderRadius: '50%' }} />
+                          <img src={project.user.image} alt={`${project.user.name ?? 'User'} avatar`} loading="lazy" decoding="async" width={20} height={20} style={{ width: 20, height: 20, borderRadius: '50%' }} />
                         ) : (
                           <div style={{
                             width: 20, height: 20, borderRadius: '50%',
