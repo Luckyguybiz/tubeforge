@@ -62,6 +62,7 @@ model User {
   designFolders  DesignFolder[]
   ownedTeams     Team[]       @relation("teamOwner")
   teamMembers    TeamMember[]
+  teamActivity   TeamActivityLog[] @relation("teamActivityActor")
   aiUsage        Int          @default(0)
   aiResetAt      DateTime     @default(now())
   onboardingDone   Boolean      @default(false)
@@ -175,14 +176,15 @@ enum TeamRole {
 }
 
 model Team {
-  id        String       @id @default(cuid())
-  name      String
-  ownerId   String
-  owner     User         @relation("teamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members   TeamMember[]
-  projects  Project[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id           String            @id @default(cuid())
+  name         String
+  ownerId      String
+  owner        User              @relation("teamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members      TeamMember[]
+  projects     Project[]
+  activityLogs TeamActivityLog[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
   @@index([ownerId])
 }
@@ -190,6 +192,7 @@ model Team {
 model TeamMember {
   id       String   @id @default(cuid())
   role     TeamRole @default(EDITOR)
+  pending  Boolean  @default(false)
   teamId   String
   team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId   String
@@ -198,6 +201,21 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@index([userId])
+}
+
+model TeamActivityLog {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User     @relation("teamActivityActor", fields: [actorId], references: [id], onDelete: Cascade)
+  action    String   // "member_invited", "member_removed", "role_changed", "project_shared", "project_unshared", "team_created"
+  targetId  String?  // userId or projectId depending on action
+  meta      String?  // JSON string with extra details (e.g. role, email)
+  createdAt DateTime @default(now())
+
+  @@index([teamId, createdAt])
+  @@index([actorId])
 }
 
 model Asset {
