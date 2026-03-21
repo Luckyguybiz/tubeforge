@@ -38,6 +38,7 @@ export function VideoTranslator() {
   const [targetLang, setTargetLang] = useState('en');
   const [numSpeakers, setNumSpeakers] = useState(1);
   const [dropBg, setDropBg] = useState(true);
+  const [addSubtitles, setAddSubtitles] = useState(false);
   const [status, setStatus] = useState<DubStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [dubbingId, setDubbingId] = useState<string | null>(null);
@@ -305,17 +306,17 @@ export function VideoTranslator() {
                   }}>{'\u0410\u0432\u0442\u043E'}</button>
                 </div>
               </div>
-              {/* Drop background */}
+              {/* Add subtitles */}
               <div>
-                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{String.fromCharCode(0x423, 0x431, 0x440, 0x430, 0x442, 0x44C, 0x20, 0x0444, 0x043E, 0x043D)}</div>
-                <button onClick={() => setDropBg(!dropBg)} style={{
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{'\u0421\u0443\u0431\u0442\u0438\u0442\u0440\u044B'}</div>
+                <button onClick={() => setAddSubtitles(!addSubtitles)} style={{
                   padding: '8px 16px', borderRadius: 8,
-                  border: `1px solid ${dropBg ? accent : (C?.border ?? '#eee')}`,
-                  background: dropBg ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
-                  color: dropBg ? accent : (C?.sub ?? '#888'),
+                  border: `1px solid ${addSubtitles ? accent : (C?.border ?? '#eee')}`,
+                  background: addSubtitles ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
+                  color: addSubtitles ? accent : (C?.sub ?? '#888'),
                   fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                }}>{dropBg ? String.fromCharCode(0x2705) + ' ' + String.fromCharCode(0x0414, 0x0430) : String.fromCharCode(0x274C) + ' ' + String.fromCharCode(0x041D, 0x0435, 0x0442)}</button>
-                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{String.fromCharCode(0x041B, 0x0443, 0x0447, 0x0448, 0x0435, 0x20, 0x0434, 0x043B, 0x044F, 0x20, 0x0440, 0x0435, 0x0447, 0x0438, 0x20, 0x0431, 0x0435, 0x0437, 0x20, 0x043C, 0x0443, 0x0437, 0x044B, 0x043A, 0x0438)}</div>
+                }}>{addSubtitles ? '\u2705 \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C' : '\u274C \u0411\u0435\u0437 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432'}</button>
+                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{'\u041D\u0430\u043B\u043E\u0436\u0438\u0442\u044C \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0435 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u044B \u043D\u0430 \u0432\u0438\u0434\u0435\u043E'}</div>
               </div>
             </div>
           </div>
