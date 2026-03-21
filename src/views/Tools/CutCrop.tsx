@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ToolPageShell } from './ToolPageShell';
+import { FFmpegClient, readFileAsUint8Array } from '@/lib/ffmpeg';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
@@ -219,7 +220,10 @@ export function CutCrop() {
     });
   }, [selectedSegmentId]);
 
-  /* ---- export via MediaRecorder ---- */
+  const ffmpegRef = useRef<FFmpegClient | null>(null);
+  const [exportProgress, setExportProgress] = useState(0);
+
+  /* ---- export via FFmpeg WASM ---- */
   const handleExport = useCallback(async () => {
     if (!file || !videoRef.current || segments.length === 0) return;
     const v = videoRef.current;
@@ -227,96 +231,81 @@ export function CutCrop() {
     setIsPlaying(false);
     cancelAnimationFrame(animRef.current);
     setExporting(true);
+    setExportProgress(0);
     setToast(t('tools.cutcrop.exportStarted'));
 
     try {
       const seg = segments.find((s) => s.id === selectedSegmentId) ?? segments[0];
-      const segDuration = seg.endTime - seg.startTime;
+      const startSec = seg.startTime.toFixed(3);
+      const endSec = seg.endTime.toFixed(3);
 
-      // Use canvas + MediaRecorder to record the trimmed segment
-      const canvas = document.createElement('canvas');
-      canvas.width = v.videoWidth || 1280;
-      canvas.height = v.videoHeight || 720;
-      const ctx = canvas.getContext('2d')!;
+      // Load FFmpeg if not already loaded
+      if (!ffmpegRef.current) {
+        setToast('Loading FFmpeg...');
+        const ffmpeg = new FFmpegClient();
+        ffmpeg.on('progress', (p) => {
+          setExportProgress(Math.round(p.progress * 100));
+        });
+        await ffmpeg.load();
+        ffmpegRef.current = ffmpeg;
+      }
 
-      const stream = canvas.captureStream(30);
+      const ffmpeg = ffmpegRef.current;
 
-      // Note: Audio is not captured in browser exports — canvas captureStream only records video.
-      // For audio export, FFmpeg WASM would be needed.
+      // Read file into FFmpeg virtual filesystem
+      const inputData = await readFileAsUint8Array(file);
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+      const inputName = `input.${ext}`;
+      const outputName = `output.${ext}`;
 
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-        ? 'video/webm;codecs=vp9,opus'
-        : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
-          ? 'video/webm;codecs=vp8,opus'
-          : 'video/webm';
+      await ffmpeg.writeFile(inputName, inputData);
 
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2_500_000 });
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      // Cut with stream copy (fast, no re-encoding)
+      const result = await ffmpeg.exec([
+        '-i', inputName,
+        '-ss', startSec,
+        '-to', endSec,
+        '-c', 'copy',
+        '-avoid_negative_ts', 'make_zero',
+        outputName,
+      ]);
 
-      const done = new Promise<Blob>((res) => {
-        recorder.onstop = () => res(new Blob(chunks, { type: mimeType }));
-      });
+      if (result.ret !== 0) {
+        // Fallback: try with re-encoding if stream copy failed
+        await ffmpeg.exec([
+          '-i', inputName,
+          '-ss', startSec,
+          '-to', endSec,
+          '-y',
+          outputName,
+        ]);
+      }
 
-      // Seek to segment start, then play and draw frames
-      v.currentTime = seg.startTime;
-      await new Promise<void>((resolve, reject) => {
-        const onSeeked = () => { v.removeEventListener('seeked', onSeeked); resolve(); };
-        const onError = () => { v.removeEventListener('seeked', onSeeked); v.removeEventListener('error', onError); reject(new Error('Seek failed')); };
-        v.addEventListener('seeked', onSeeked);
-        v.addEventListener('error', onError);
-      });
-      recorder.start();
-      v.play();
+      const outputData = await ffmpeg.readFile(outputName);
 
-      let rafId = 0;
-      const drawFrame = () => {
-        if (v.currentTime >= seg.endTime || v.paused) {
-          v.pause();
-          recorder.stop();
-          return;
-        }
-        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-        rafId = requestAnimationFrame(drawFrame);
-      };
-      rafId = requestAnimationFrame(drawFrame);
-
-      // Safety timeout: stop after expected duration + 2 seconds
-      const safetyTimeout = setTimeout(() => {
-        if (recorder.state === 'recording') {
-          cancelAnimationFrame(rafId);
-          v.pause();
-          recorder.stop();
-        }
-      }, (segDuration + 2) * 1000);
-
-      const blob = await done;
-      clearTimeout(safetyTimeout);
+      // Clean up FFmpeg files
+      try { await ffmpeg.deleteFile(inputName); } catch {}
+      try { await ffmpeg.deleteFile(outputName); } catch {}
 
       // Download
+      const blob = new Blob([outputData.buffer as ArrayBuffer], { type: file.type || 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const baseName = file.name.replace(/\.[^/.]+$/, '');
       a.href = url;
-      a.download = `${baseName}_cut_${fmt(seg.startTime)}-${fmt(seg.endTime)}.webm`;
+      a.download = `${baseName}_cut_${fmt(seg.startTime)}-${fmt(seg.endTime)}.${ext}`;
       a.click();
       URL.revokeObjectURL(url);
 
       setToast(t('tools.cutcrop.exportDone'));
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') console.error('Export error:', err);
-      // Fallback: download the original file
-      const url = URL.createObjectURL(file);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
-      a.click();
-      URL.revokeObjectURL(url);
-      setToast(t('tools.cutcrop.exportDoneOriginal'));
+      if (process.env.NODE_ENV === 'development') console.error('FFmpeg export error:', err);
+      setError(t('tools.cutcrop.exportError') || 'Export failed. Please try a smaller file or different format.');
     } finally {
       setExporting(false);
+      setExportProgress(0);
     }
-  }, [file, segments, selectedSegmentId]);
+  }, [file, segments, selectedSegmentId, t]);
 
   /* ---- timeline helpers ---- */
   const timelineBaseWidth = typeof window !== 'undefined' ? Math.min(700, window.innerWidth - 32) : 700;
@@ -763,7 +752,7 @@ export function CutCrop() {
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
             </svg>
           )}
-          {exporting ? t('tools.cutcrop.exporting') : t('tools.cutcrop.export')}
+          {exporting ? (exportProgress > 0 ? `${t('tools.cutcrop.exporting')} ${exportProgress}%` : t('tools.cutcrop.exporting')) : t('tools.cutcrop.export')}
         </button>
       </div>
 

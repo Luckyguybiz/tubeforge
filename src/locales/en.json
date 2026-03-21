@@ -1739,10 +1739,8 @@
   "errors.BRAND_STUDIO_ONLY": "Brand Kit is available on Studio plan only.",
   "errors.STOCK_UNAVAILABLE": "Stock photos service is temporarily unavailable.",
   "errors.RATE_LIMITED": "Too many requests. Please wait a moment.",
-
   "videoGen.success": "Video generated!",
   "videoGen.error": "Video generation error",
-
   "tools.subedit.title": "Subtitle Editor",
   "tools.subedit.subtitle": "Edit, create and convert SRT & VTT subtitle files",
   "tools.subedit.dropLabel": "Drag and drop a subtitle file here",
@@ -1765,7 +1763,6 @@
   "tools.subedit.statEntries": "entries",
   "tools.subedit.statDuration": "duration",
   "tools.subedit.statAvgWords": "avg words/entry",
-
   "imggen.title": "AI Image Generator",
   "imggen.subtitle": "Create images with DALL-E 3 in seconds",
   "imggen.prompt": "Image description",
@@ -1821,5 +1818,19 @@
   "dashboard.activity.projectExported": "Exported project",
   "dashboard.activity.projectImported": "Imported project",
   "dashboard.emptyTemplateSuggestions": "Or start from a template",
-  "dashboard.exploreTemplates": "Browse all templates"
+  "dashboard.exploreTemplates": "Browse all templates",
+  "tools.subtitleRemover.howItWorks": "How it works",
+  "tools.subtitleRemover.step1": "Draw rectangles over subtitle/watermark areas",
+  "tools.subtitleRemover.step2": "Choose a removal method (blur, pixelate, or color fill)",
+  "tools.subtitleRemover.step3": "Preview the effect in real-time",
+  "tools.subtitleRemover.step4": "Click \"Export Video\" to process and download",
+  "tools.faceSwap.before": "Before",
+  "tools.faceSwap.after": "After",
+  "tools.autoClip.sensitivity": "Sensitivity",
+  "tools.autoClip.fewerClips": "Fewer clips",
+  "tools.autoClip.moreClips": "More clips",
+  "tools.autoClip.minClipDuration": "Min Clip Duration",
+  "tools.fakeTexts.speedFast": "Fast (0.3s)",
+  "tools.fakeTexts.speedSlow": "Slow (3.0s)",
+  "billing.pro": "Pro"
 }

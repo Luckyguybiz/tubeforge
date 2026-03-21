@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const GRADIENT: [string, string] = ['#ef4444', '#f97316'];
 
@@ -210,6 +211,7 @@ function applyRemoval(
 
 export function SubtitleRemover() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   // File and video state
   const [file, setFile] = useState<File | null>(null);
@@ -1009,13 +1011,13 @@ export function SubtitleRemover() {
                 background: `${GRADIENT[0]}08`, border: `1px solid ${GRADIENT[0]}20`,
               }}>
                 <p style={{ fontSize: 12, fontWeight: 600, color: GRADIENT[0], margin: '0 0 6px' }}>
-                  How it works
+                  {t('tools.subtitleRemover.howItWorks')}
                 </p>
                 <ol style={{ fontSize: 11, color: C.sub, margin: 0, paddingLeft: 16, lineHeight: 1.7 }}>
-                  <li>Draw rectangles over subtitle/watermark areas</li>
-                  <li>Choose a removal method (blur, pixelate, or color fill)</li>
-                  <li>Preview the effect in real-time</li>
-                  <li>Click &quot;Export Video&quot; to process and download</li>
+                  <li>{t('tools.subtitleRemover.step1')}</li>
+                  <li>{t('tools.subtitleRemover.step2')}</li>
+                  <li>{t('tools.subtitleRemover.step3')}</li>
+                  <li>{t('tools.subtitleRemover.step4')}</li>
                 </ol>
               </div>
 

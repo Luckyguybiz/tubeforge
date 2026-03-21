@@ -305,12 +305,12 @@ function getTools(t: (key: string) => string): ToolDef[] {
   {
     id: 'ai-video-generator',
     name: 'AI Video Generator',
-    subtitle: 'Runway · Kling · Pika · Veo',
+    subtitle: 'Каталог сервисов · Runway · Kling · Pika · Veo',
     description: 'Choose from top AI video providers — Runway ML, Kling AI, Pika, Luma, Google Veo 2 and more.',
     category: 'ai',
     route: '/tools/ai-video-generator',
     available: true,
-    badge: 'NEW',
+    badge: 'Каталог',
     gradient: ['#8b5cf6', '#ec4899'],
   },
 
@@ -325,12 +325,12 @@ function getTools(t: (key: string) => string): ToolDef[] {
     gradient: ['#8b5cf6', '#a78bfa'],
   },
   {
-    id: 'translate',
+    id: 'video-translator',
     name: t('toolshub.tool.translate.name'),
     subtitle: t('toolshub.tool.translate.subtitle'),
     description: t('toolshub.tool.translate.description'),
     category: 'audio',
-    available: false,
+    available: true,
     gradient: ['#06b6d4', '#0ea5e9'],
   },
   {

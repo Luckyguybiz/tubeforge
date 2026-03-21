@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { Theme } from '@/lib/types';
 
 const GRADIENT: [string, string] = ['#6366f1', '#ec4899'];
@@ -258,6 +259,7 @@ function EnergyWaveform({
 
 export function AutoClip() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   // File + video state
   const [file, setFile] = useState<File | null>(null);
@@ -523,7 +525,7 @@ export function AutoClip() {
                 alignItems: 'center',
               }}
             >
-              <span>Sensitivity</span>
+              <span>{t('tools.autoClip.sensitivity')}</span>
               <span
                 style={{
                   fontSize: 12,
@@ -564,8 +566,8 @@ export function AutoClip() {
                 marginTop: 4,
               }}
             >
-              <span>Fewer clips</span>
-              <span>More clips</span>
+              <span>{t('tools.autoClip.fewerClips')}</span>
+              <span>{t('tools.autoClip.moreClips')}</span>
             </div>
           </div>
 
@@ -582,7 +584,7 @@ export function AutoClip() {
                 alignItems: 'center',
               }}
             >
-              <span>Min Clip Duration</span>
+              <span>{t('tools.autoClip.minClipDuration')}</span>
               <span
                 style={{
                   fontSize: 12,

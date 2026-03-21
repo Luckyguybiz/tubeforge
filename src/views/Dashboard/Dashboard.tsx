@@ -546,7 +546,7 @@ function WelcomeSection({
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
                   lineHeight: '16px',
-                }}>Pro</span>
+                }}>{t('billing.pro')}</span>
               </div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>
                 {t('dashboard.autoClipDesc')}

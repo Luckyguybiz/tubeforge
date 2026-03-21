@@ -53,53 +53,112 @@ export function BackgroundRemover() {
     if (f) handleFile(f);
   }, [handleFile]);
 
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
+
   const handleRemoveBackground = useCallback(async () => {
     if (!file || !preview) return;
     setProcessing(true);
     setError(null);
 
-    // Simulate processing delay for beta experience
-    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      // Load image onto canvas
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = preview;
+      });
 
-    setProcessing(false);
-    setProcessed(true);
-    setViewMode('result');
-  }, [file, preview]);
-
-  const handleDownload = useCallback(() => {
-    if (!preview || !file) return;
-    // Download original image as PNG
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
+      const canvas = canvasRef.current ?? document.createElement('canvas');
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) throw new Error('Canvas not supported');
+
       ctx.drawImage(img, 0, 0);
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name.replace(/\.[^/.]+$/, '') + '_no_bg.png';
-        a.click();
-        URL.revokeObjectURL(url);
-      }, 'image/png');
-    };
-    img.src = preview;
-  }, [preview, file]);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      // Sample corners to detect background color (top-left, top-right, bottom-left, bottom-right)
+      const samplePoints = [
+        [0, 0], [canvas.width - 1, 0],
+        [0, canvas.height - 1], [canvas.width - 1, canvas.height - 1],
+        [Math.floor(canvas.width * 0.1), 0], [Math.floor(canvas.width * 0.9), 0],
+        [0, Math.floor(canvas.height * 0.1)], [0, Math.floor(canvas.height * 0.9)],
+      ];
+
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      for (const [sx, sy] of samplePoints) {
+        const idx = (sy * canvas.width + sx) * 4;
+        rSum += data[idx];
+        gSum += data[idx + 1];
+        bSum += data[idx + 2];
+        count++;
+      }
+      const bgR = Math.round(rSum / count);
+      const bgG = Math.round(gSum / count);
+      const bgB = Math.round(bSum / count);
+
+      // Determine tolerance based on background brightness
+      const brightness = (bgR + bgG + bgB) / 3;
+      const tolerance = brightness > 200 ? 45 : brightness > 128 ? 35 : 30;
+
+      // Remove pixels similar to detected background color
+      for (let i = 0; i < data.length; i += 4) {
+        const dr = Math.abs(data[i] - bgR);
+        const dg = Math.abs(data[i + 1] - bgG);
+        const db = Math.abs(data[i + 2] - bgB);
+        const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+
+        if (dist < tolerance) {
+          data[i + 3] = 0; // fully transparent
+        } else if (dist < tolerance * 1.5) {
+          // Soft edge: partial transparency for smoother result
+          const alpha = Math.round(((dist - tolerance) / (tolerance * 0.5)) * 255);
+          data[i + 3] = Math.min(data[i + 3], alpha);
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      // Convert to blob URL for preview and download
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((b) => resolve(b!), 'image/png');
+      });
+      const url = URL.createObjectURL(blob);
+      if (resultUrl) URL.revokeObjectURL(resultUrl);
+      setResultUrl(url);
+      setProcessed(true);
+      setViewMode('result');
+    } catch (err) {
+      setError(t('tools.bgRemover.processingError') || 'Processing failed. Please try another image.');
+    } finally {
+      setProcessing(false);
+    }
+  }, [file, preview, resultUrl, t]);
+
+  const handleDownload = useCallback(() => {
+    if (!file) return;
+    const downloadSrc = resultUrl || preview;
+    if (!downloadSrc) return;
+    const a = document.createElement('a');
+    a.href = downloadSrc;
+    a.download = file.name.replace(/\.[^/.]+$/, '') + '_no_bg.png';
+    a.click();
+  }, [preview, file, resultUrl]);
 
   const handleReset = useCallback(() => {
     if (preview) URL.revokeObjectURL(preview);
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
     setFile(null);
     setPreview(null);
+    setResultUrl(null);
     setProcessed(false);
     setProcessing(false);
     setError(null);
     setViewMode('original');
-  }, [preview]);
+  }, [preview, resultUrl]);
 
   return (
     <ToolPageShell
@@ -213,13 +272,12 @@ export function BackgroundRemover() {
               backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
             } : { background: C.surface }),
           }}>
-            {preview && (
+            {(viewMode === 'result' && resultUrl ? resultUrl : preview) && (
               <img
-                src={preview}
+                src={viewMode === 'result' && resultUrl ? resultUrl : preview!}
                 alt="Preview"
                 style={{
                   display: 'block', maxWidth: '100%', maxHeight: 500, margin: '0 auto',
-                  ...(processed && viewMode === 'result' ? { opacity: 0.92 } : {}),
                 }}
               />
             )}
@@ -247,7 +305,8 @@ export function BackgroundRemover() {
               background: `rgba(139,92,246,.06)`, border: `1px solid rgba(139,92,246,.2)`,
               fontSize: 13, color: C.sub, lineHeight: 1.6,
             }}>
-              {t('tools.bgRemover.betaNotice')}
+              <span style={{ fontWeight: 700 }}>BETA:</span>{' '}
+              {t('tools.bgRemover.betaNotice') || 'Background removal runs locally in your browser using color detection. Works best with solid-color backgrounds (white, green screen, etc). For complex backgrounds, try remove.bg for better results.'}
             </div>
           )}
 

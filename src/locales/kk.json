@@ -1741,7 +1741,6 @@
   "errors.RATE_LIMITED": "Тым көп сұрау. Сәл күтіңіз.",
   "videoGen.success": "Бейне жасалды!",
   "videoGen.error": "Бейне генерациясы қатесі",
-
   "tools.subedit.title": "Субтитр редакторы",
   "tools.subedit.subtitle": "SRT және VTT субтитр файлдарын өңдеу, жасау және түрлендіру",
   "tools.subedit.dropLabel": "Субтитр файлын осында сүйреңіз",
@@ -1764,7 +1763,6 @@
   "tools.subedit.statEntries": "жазба",
   "tools.subedit.statDuration": "ұзақтық",
   "tools.subedit.statAvgWords": "орт. сөз/жазба",
-
   "imggen.title": "AI Сурет генераторы",
   "imggen.subtitle": "DALL-E 3 көмегімен секундтарда суреттер жасаңыз",
   "imggen.prompt": "Сурет сипаттамасы",
@@ -1820,5 +1818,19 @@
   "dashboard.activity.projectExported": "Жоба экспортталды",
   "dashboard.activity.projectImported": "Жоба импортталды",
   "dashboard.emptyTemplateSuggestions": "Немесе үлгіден бастаңыз",
-  "dashboard.exploreTemplates": "Барлық үлгілер"
+  "dashboard.exploreTemplates": "Барлық үлгілер",
+  "tools.subtitleRemover.howItWorks": "Қалай жұмыс істейді",
+  "tools.subtitleRemover.step1": "Субтитр/су белгісі аймақтарының үстіне тіктөртбұрыштар сызыңыз",
+  "tools.subtitleRemover.step2": "Жою әдісін таңдаңыз (бұлдырату, пикселдеу немесе түспен толтыру)",
+  "tools.subtitleRemover.step3": "Нақты уақытта эффектіні алдын ала қараңыз",
+  "tools.subtitleRemover.step4": "Өңдеу және жүктеу үшін \"Бейнені экспорттау\" түймесін басыңыз",
+  "tools.faceSwap.before": "Дейін",
+  "tools.faceSwap.after": "Кейін",
+  "tools.autoClip.sensitivity": "Сезімталдық",
+  "tools.autoClip.fewerClips": "Аз клиптер",
+  "tools.autoClip.moreClips": "Көп клиптер",
+  "tools.autoClip.minClipDuration": "Клиптің мин. ұзақтығы",
+  "tools.fakeTexts.speedFast": "Жылдам (0.3с)",
+  "tools.fakeTexts.speedSlow": "Баяу (3.0с)",
+  "billing.pro": "Pro"
 }

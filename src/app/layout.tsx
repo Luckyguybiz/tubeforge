@@ -23,7 +23,8 @@ export const metadata: Metadata = {
     title: 'TubeForge — AI Studio for YouTube Creators',
     description: 'Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing, analytics, and free tools.',
     type: 'website',
-    locale: 'en_US',
+    url: 'https://tubeforge.co',
+    locale: 'ru_RU',
     images: [
       {
         url: '/api/og',
@@ -72,9 +73,8 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

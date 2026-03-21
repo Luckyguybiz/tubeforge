@@ -36,6 +36,21 @@ export function VoiceoverGenerator() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredVoice, setHoveredVoice] = useState<string | null>(null);
+  const [ttsMode, setTtsMode] = useState<'browser' | 'ai'>('browser');
+  const [aiVoice, setAiVoice] = useState('alloy');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [downloadHover, setDownloadHover] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const AI_VOICES = [
+    { id: 'alloy', label: 'Alloy' },
+    { id: 'echo', label: 'Echo' },
+    { id: 'fable', label: 'Fable' },
+    { id: 'onyx', label: 'Onyx' },
+    { id: 'nova', label: 'Nova' },
+    { id: 'shimmer', label: 'Shimmer' },
+  ];
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -116,7 +131,61 @@ export function VoiceoverGenerator() {
     speechSynthesis.cancel();
     setIsPlaying(false);
     setIsSpeaking(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   }, []);
+
+  const handleAiGenerate = useCallback(async () => {
+    if (!text.trim()) {
+      setError(t('tools.voiceover.emptyText'));
+      return;
+    }
+    setError(null);
+    setAiLoading(true);
+    setIsSpeaking(true);
+
+    try {
+      const res = await fetch('/api/tools/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice: aiVoice, model: 'tts-1' }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(data.error || 'TTS generation failed');
+      }
+
+      const blob = await res.blob();
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+
+      // Auto-play the generated audio
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onplay = () => { setIsPlaying(true); setIsSpeaking(true); };
+      audio.onended = () => { setIsPlaying(false); setIsSpeaking(false); };
+      audio.onerror = () => { setIsPlaying(false); setIsSpeaking(false); };
+      audio.play();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'AI voice generation failed';
+      setError(msg);
+      setIsSpeaking(false);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [text, aiVoice, audioUrl, t]);
+
+  const handleDownloadAudio = useCallback(() => {
+    if (!audioUrl) return;
+    const a = document.createElement('a');
+    a.href = audioUrl;
+    a.download = 'voiceover.mp3';
+    a.click();
+  }, [audioUrl]);
 
   return (
     <ToolPageShell
@@ -124,6 +193,26 @@ export function VoiceoverGenerator() {
       subtitle={t('tools.voiceover.subtitle')}
       gradient={['#3b82f6', '#6366f1']}
     >
+      {/* ── TTS Mode Toggle ── */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {(['browser', 'ai'] as const).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setTtsMode(mode)}
+            style={{
+              flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+              border: ttsMode === mode ? '2px solid #3b82f6' : `1px solid ${C.border}`,
+              background: ttsMode === mode ? 'rgba(59,130,246,.1)' : C.card,
+              color: ttsMode === mode ? '#3b82f6' : C.text,
+              cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+              textAlign: 'center',
+            }}
+          >
+            {mode === 'browser' ? (t('tools.voiceover.browserMode') || 'Browser TTS (Free)') : (t('tools.voiceover.aiMode') || 'AI Voice (Pro)')}
+          </button>
+        ))}
+      </div>
+
       {/* ── Text area ── */}
       <div style={{ marginBottom: 20 }}>
         <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
@@ -158,33 +247,58 @@ export function VoiceoverGenerator() {
       </div>
 
       {/* ── Voice selector ── */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
-          {t('tools.voiceover.voiceLabel')}
-        </label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {VOICE_PRESETS.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setSelectedVoice(v.id)}
-              onMouseEnter={() => setHoveredVoice(v.id)}
-              onMouseLeave={() => setHoveredVoice(null)}
-              style={{
-                padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                border: selectedVoice === v.id ? '2px solid #3b82f6' : `1px solid ${C.border}`,
-                background: selectedVoice === v.id ? 'rgba(59,130,246,.1)' : hoveredVoice === v.id ? C.surface : C.card,
-                color: selectedVoice === v.id ? '#3b82f6' : C.text,
-                cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
-              }}
-            >
-              {t(v.labelKey)}
-            </button>
-          ))}
+      {ttsMode === 'browser' ? (
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
+            {t('tools.voiceover.voiceLabel')}
+          </label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {VOICE_PRESETS.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setSelectedVoice(v.id)}
+                onMouseEnter={() => setHoveredVoice(v.id)}
+                onMouseLeave={() => setHoveredVoice(null)}
+                style={{
+                  padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  border: selectedVoice === v.id ? '2px solid #3b82f6' : `1px solid ${C.border}`,
+                  background: selectedVoice === v.id ? 'rgba(59,130,246,.1)' : hoveredVoice === v.id ? C.surface : C.card,
+                  color: selectedVoice === v.id ? '#3b82f6' : C.text,
+                  cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                }}
+              >
+                {t(v.labelKey)}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 8 }}>
+            AI Voice
+          </label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {AI_VOICES.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setAiVoice(v.id)}
+                style={{
+                  padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  border: aiVoice === v.id ? '2px solid #6366f1' : `1px solid ${C.border}`,
+                  background: aiVoice === v.id ? 'rgba(99,102,241,.1)' : C.card,
+                  color: aiVoice === v.id ? '#6366f1' : C.text,
+                  cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+                }}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* ── Speed slider ── */}
-      <div style={{ marginBottom: 20 }}>
+      {/* ── Speed slider (browser mode only) ── */}
+      {ttsMode === 'browser' && <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.sub }}>
             {t('tools.voiceover.speed')}
@@ -204,10 +318,10 @@ export function VoiceoverGenerator() {
           <span>0.5x</span>
           <span>2.0x</span>
         </div>
-      </div>
+      </div>}
 
       {/* ── Pitch slider ── */}
-      <div style={{ marginBottom: 24 }}>
+      {ttsMode === 'browser' && <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.sub }}>
             {t('tools.voiceover.pitch')}
@@ -227,7 +341,7 @@ export function VoiceoverGenerator() {
           <span>0.5</span>
           <span>1.5</span>
         </div>
-      </div>
+      </div>}
 
       {/* ── Audio visualization ── */}
       <div style={{
@@ -252,13 +366,17 @@ export function VoiceoverGenerator() {
         ))}
       </div>
 
-      {/* ── Browser TTS notice ── */}
+      {/* ── TTS notice ── */}
       <div style={{
         padding: '12px 16px', borderRadius: 12, marginBottom: 20,
-        background: `rgba(59,130,246,.06)`, border: `1px solid rgba(59,130,246,.2)`,
+        background: ttsMode === 'ai' ? `rgba(99,102,241,.06)` : `rgba(59,130,246,.06)`,
+        border: `1px solid ${ttsMode === 'ai' ? 'rgba(99,102,241,.2)' : 'rgba(59,130,246,.2)'}`,
         fontSize: 13, color: C.sub, lineHeight: 1.6,
       }}>
-        {t('tools.voiceover.browserTtsNotice')}
+        {ttsMode === 'ai'
+          ? (t('tools.voiceover.aiTtsNotice') || 'AI Voice uses OpenAI text-to-speech for high-quality, natural-sounding voiceovers. Generates downloadable MP3 files. Requires Pro subscription.')
+          : t('tools.voiceover.browserTtsNotice')
+        }
       </div>
 
       {/* ── Error ── */}
@@ -282,6 +400,14 @@ export function VoiceoverGenerator() {
             gradient={['#ef4444', '#dc2626']}
             onClick={handleStop}
           />
+        ) : ttsMode === 'ai' ? (
+          <ActionButton
+            label={aiLoading ? (t('tools.voiceover.generating') || 'Generating...') : (t('tools.voiceover.generateAi') || 'Generate AI Voice')}
+            gradient={['#6366f1', '#8b5cf6']}
+            onClick={handleAiGenerate}
+            disabled={!text.trim() || aiLoading}
+            loading={aiLoading}
+          />
         ) : (
           <ActionButton
             label={t('tools.voiceover.generate')}
@@ -289,6 +415,26 @@ export function VoiceoverGenerator() {
             onClick={handleGenerate}
             disabled={!text.trim()}
           />
+        )}
+        {audioUrl && ttsMode === 'ai' && (
+          <button
+            onClick={handleDownloadAudio}
+            onMouseEnter={() => setDownloadHover(true)}
+            onMouseLeave={() => setDownloadHover(false)}
+            style={{
+              padding: '12px 24px', borderRadius: 12,
+              border: `1px solid ${C.border}`,
+              background: downloadHover ? C.surface : C.card,
+              color: C.text, fontSize: 15, fontWeight: 700,
+              cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 8, minHeight: 44,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {t('tools.voiceover.downloadMp3') || 'Download MP3'}
+          </button>
         )}
       </div>
     </ToolPageShell>

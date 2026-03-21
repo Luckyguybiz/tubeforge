@@ -1300,7 +1300,7 @@
   "editor.frame.startFrame": "Cuadro inicial",
   "editor.frame.endFrame": "Cuadro final",
   "editor.mobileTitle": "Use una computadora para editar",
-  "editor.mobileDesc": "El editor de video solo est\u00e1 disponible en escritorio. Abra TubeForge en una PC o port\u00e1til para la experiencia completa de edici\u00f3n.",
+  "editor.mobileDesc": "El editor de video solo está disponible en escritorio. Abra TubeForge en una PC o portátil para la experiencia completa de edición.",
   "editor.backToDashboard": "Volver al panel",
   "legal.backToHome": "Volver al inicio",
   "legal.copyright": "Todos los derechos reservados.",
@@ -1741,7 +1741,6 @@
   "errors.RATE_LIMITED": "Demasiadas solicitudes. Espera un momento.",
   "videoGen.success": "Video generado!",
   "videoGen.error": "Error en la generacion de video",
-
   "tools.subedit.title": "Editor de Subtitulos",
   "tools.subedit.subtitle": "Edita, crea y convierte archivos de subtitulos SRT y VTT",
   "tools.subedit.dropLabel": "Arrastra y suelta un archivo de subtitulos aqui",
@@ -1764,7 +1763,6 @@
   "tools.subedit.statEntries": "entradas",
   "tools.subedit.statDuration": "duracion",
   "tools.subedit.statAvgWords": "promedio palabras/entrada",
-
   "imggen.title": "Generador de imagenes IA",
   "imggen.subtitle": "Crea imagenes con DALL-E 3 en segundos",
   "imggen.prompt": "Descripcion de la imagen",
@@ -1820,5 +1818,19 @@
   "dashboard.activity.projectExported": "Proyecto exportado",
   "dashboard.activity.projectImported": "Proyecto importado",
   "dashboard.emptyTemplateSuggestions": "O empieza desde una plantilla",
-  "dashboard.exploreTemplates": "Ver todas las plantillas"
+  "dashboard.exploreTemplates": "Ver todas las plantillas",
+  "tools.subtitleRemover.howItWorks": "Cómo funciona",
+  "tools.subtitleRemover.step1": "Dibuja rectángulos sobre las áreas de subtítulos/marcas de agua",
+  "tools.subtitleRemover.step2": "Elige un método de eliminación (desenfoque, pixelado o relleno de color)",
+  "tools.subtitleRemover.step3": "Previsualiza el efecto en tiempo real",
+  "tools.subtitleRemover.step4": "Haz clic en \"Exportar Video\" para procesar y descargar",
+  "tools.faceSwap.before": "Antes",
+  "tools.faceSwap.after": "Después",
+  "tools.autoClip.sensitivity": "Sensibilidad",
+  "tools.autoClip.fewerClips": "Menos clips",
+  "tools.autoClip.moreClips": "Más clips",
+  "tools.autoClip.minClipDuration": "Duración mín. del clip",
+  "tools.fakeTexts.speedFast": "Rápido (0.3s)",
+  "tools.fakeTexts.speedSlow": "Lento (3.0s)",
+  "billing.pro": "Pro"
 }

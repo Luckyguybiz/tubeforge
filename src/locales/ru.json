@@ -1739,10 +1739,8 @@
   "errors.BRAND_STUDIO_ONLY": "Бренд-кит доступен только на тарифе Studio.",
   "errors.STOCK_UNAVAILABLE": "Сервис стоковых фото временно недоступен.",
   "errors.RATE_LIMITED": "Слишком много запросов. Подождите немного.",
-
   "videoGen.success": "Видео сгенерировано!",
   "videoGen.error": "Ошибка генерации видео",
-
   "tools.subedit.title": "Редактор субтитров",
   "tools.subedit.subtitle": "Редактирование, создание и конвертация файлов субтитров SRT и VTT",
   "tools.subedit.dropLabel": "Перетащите файл субтитров сюда",
@@ -1765,7 +1763,6 @@
   "tools.subedit.statEntries": "записей",
   "tools.subedit.statDuration": "длительность",
   "tools.subedit.statAvgWords": "ср. слов/запись",
-
   "imggen.title": "AI Генератор изображений",
   "imggen.subtitle": "Создавайте изображения с помощью DALL-E 3 за секунды",
   "imggen.prompt": "Описание изображения",
@@ -1821,5 +1818,19 @@
   "dashboard.activity.projectExported": "Экспортирован проект",
   "dashboard.activity.projectImported": "Импортирован проект",
   "dashboard.emptyTemplateSuggestions": "Или начните с шаблона",
-  "dashboard.exploreTemplates": "Все шаблоны"
+  "dashboard.exploreTemplates": "Все шаблоны",
+  "tools.subtitleRemover.howItWorks": "Как это работает",
+  "tools.subtitleRemover.step1": "Нарисуйте прямоугольники поверх областей субтитров/водяных знаков",
+  "tools.subtitleRemover.step2": "Выберите метод удаления (размытие, пикселизация или заливка цветом)",
+  "tools.subtitleRemover.step3": "Предварительный просмотр эффекта в реальном времени",
+  "tools.subtitleRemover.step4": "Нажмите «Экспорт видео» для обработки и скачивания",
+  "tools.faceSwap.before": "До",
+  "tools.faceSwap.after": "После",
+  "tools.autoClip.sensitivity": "Чувствительность",
+  "tools.autoClip.fewerClips": "Меньше клипов",
+  "tools.autoClip.moreClips": "Больше клипов",
+  "tools.autoClip.minClipDuration": "Мин. длительность клипа",
+  "tools.fakeTexts.speedFast": "Быстро (0.3с)",
+  "tools.fakeTexts.speedSlow": "Медленно (3.0с)",
+  "billing.pro": "Pro"
 }

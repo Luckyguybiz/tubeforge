@@ -1238,6 +1238,7 @@ function UserRow({ user, C, tdBase, currentUserId, expanded, onToggle, onUpdateP
                 opacity: isUpdatingRole ? 0.6 : 1,
               }}
             >
+              {/* i18n: These are enum values matching backend role names, not user-facing labels */}
               <option value="USER">User</option>
               <option value="ADMIN">Admin</option>
             </select>
@@ -1341,6 +1342,7 @@ function UserRow({ user, C, tdBase, currentUserId, expanded, onToggle, onUpdateP
                     opacity: isPending ? 0.6 : 1,
                   }}
                 >
+                  {/* i18n: These are enum values matching backend plan names, not user-facing labels */}
                   <option value="FREE">Free</option>
                   <option value="PRO">Pro</option>
                   <option value="STUDIO">Studio</option>

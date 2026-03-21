@@ -56,7 +56,7 @@ describe('src/middleware — consolidated middleware', () => {
   it('should export a catch-all matcher excluding _next/static, _next/image, and favicon.ico', () => {
     expect(Array.isArray(config.matcher)).toBe(true);
     expect(config.matcher).toHaveLength(1);
-    expect(config.matcher[0]).toBe('/((?!_next/static|_next/image|favicon.ico).*)');
+    expect(config.matcher[0]).toBe('/((?!_next/static|_next/image|favicon.ico|api/tools/video-translate).*)');
   });
 
   // Replicate the runtime public-path logic for testability

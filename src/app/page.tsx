@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description:
       "Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing, analytics.",
     type: "website",
-    locale: "en_US",
+    locale: "ru_RU",
     images: [{ url: "/api/og", width: 1200, height: 630, alt: "TubeForge — AI Studio for YouTube Creators" }],
   },
   alternates: { canonical: "https://tubeforge.co" },
@@ -313,21 +313,7 @@ const FAQ_ITEMS = [
 
 /* ── JSON-LD Structured Data ──────────────────────────────── */
 
-const PAGE_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "TubeForge",
-  applicationCategory: "MultimediaApplication",
-  operatingSystem: "Web",
-  url: "https://tubeforge.co",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-  description:
-    "AI-powered video creation platform for YouTube creators",
-};
+/* SoftwareApplication JSON-LD is defined in layout.tsx — single source of truth */
 
 const FAQ_JSON_LD = {
   "@context": "https://schema.org",
@@ -348,10 +334,6 @@ export default function LandingPage() {
   return (
     <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh", fontFamily: "var(--font-sans), system-ui, -apple-system, sans-serif" }}>
       {/* JSON-LD structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSON_LD) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
@@ -1880,6 +1862,9 @@ export default function LandingPage() {
           .sticky-mobile-cta {
             display: block !important;
           }
+          .landing-footer {
+            padding-bottom: 80px !important;
+          }
         }
 
         @media (max-width: 768px) {
@@ -1889,9 +1874,11 @@ export default function LandingPage() {
         }
         @media (max-width: 480px) {
           .footer-grid { grid-template-columns: 1fr !important; }
+          .footer-grid a { min-height: 44px !important; display: flex !important; align-items: center !important; }
         }
         @media (min-width: 769px) {
           .mobile-menu-dropdown { display: none !important; }
+          .mobile-menu-dropdown[data-open='true'] { display: block !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 9999 !important; background: rgba(10,10,10,0.98) !important; overflow-y: auto !important; }
         }
 
         /* Focus styles */

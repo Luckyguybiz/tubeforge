@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ─── types ──────────────────────────────────────────────────────── */
 
@@ -634,6 +635,7 @@ function SliderControl({
 
 export function FaceSwap() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const ACCENT = '#f97316';
   const GRADIENT: [string, string] = ['#f97316', '#ef4444'];
 
@@ -1094,11 +1096,11 @@ export function FaceSwap() {
             <div style={{
               position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700,
               color: C.dim, background: C.card, padding: '2px 8px', borderRadius: 6, zIndex: 1,
-            }}>Before</div>
+            }}>{t('tools.faceSwap.before')}</div>
             <div style={{
               position: 'absolute', top: 12, right: 12, fontSize: 11, fontWeight: 700,
               color: ACCENT, background: C.card, padding: '2px 8px', borderRadius: 6, zIndex: 1,
-            }}>After</div>
+            }}>{t('tools.faceSwap.after')}</div>
           </div>
         </div>
       )}

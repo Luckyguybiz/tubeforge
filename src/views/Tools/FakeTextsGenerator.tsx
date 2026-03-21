@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ─── constants ─── */
 const GRADIENT: [string, string] = ['#8b5cf6', '#6366f1'];
@@ -555,6 +556,7 @@ function drawTypingIndicator(
 
 export function FakeTextsGenerator() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const [platform, setPlatform] = useState<PlatformStyleId>('imessage');
   const [contactName, setContactName] = useState('Alex');
@@ -1281,8 +1283,8 @@ export function FakeTextsGenerator() {
               display: 'flex', justifyContent: 'space-between',
               fontSize: 10, color: C.dim, marginTop: 4,
             }}>
-              <span>Fast (0.3s)</span>
-              <span>Slow (3.0s)</span>
+              <span>{t('tools.fakeTexts.speedFast')}</span>
+              <span>{t('tools.fakeTexts.speedSlow')}</span>
             </div>
           </div>
 
