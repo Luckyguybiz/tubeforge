@@ -33,6 +33,7 @@ const tools: Record<string, () => Promise<{ [key: string]: React.ComponentType }
   'face-swap': () => import('./FaceSwap'),
   'ai-video-generator': () => import('./AiVideoGenerator'),
   'content-planner': () => import('./ContentPlanner'),
+  'video-translator': () => import('./VideoTranslator'),
 };
 
 const COMPONENT_NAMES: Record<string, string> = {
@@ -59,6 +60,7 @@ const COMPONENT_NAMES: Record<string, string> = {
   'face-swap': 'FaceSwap',
   'ai-video-generator': 'AiVideoGenerator',
   'content-planner': 'ContentPlanner',
+  'video-translator': 'VideoTranslator',
 };
 
 /**
@@ -106,4 +108,5 @@ export const AVAILABLE_TOOL_IDS = new Set([
   'background-remover',
   'voiceover-generator',
   'image-generator',
+  'video-translator',
 ]);
