@@ -4,6 +4,8 @@ import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import { createLogger } from '@/lib/logger';
 
+import { db } from '@/server/db';
+
 const ytLog = createLogger('youtube-analyzer');
 
 export const dynamic = 'force-dynamic';
@@ -1370,6 +1372,35 @@ export async function POST(req: NextRequest) {
       likes,
       comments,
     });
+
+    // ── Step 12b: Save tool usage to AuditLog ─────────────────────────
+    if (session?.user?.id) {
+      try {
+        await db.auditLog.create({
+          data: {
+            userId: session.user.id,
+            action: 'TOOL_USAGE',
+            target: 'youtube-analyzer',
+            metadata: {
+              tool: 'youtube-analyzer',
+              videoId,
+              title,
+              channel,
+              overallScore,
+              isShorts: isShort,
+              views: views ?? null,
+              likes: likes ?? null,
+              engagementRate,
+              hookScore,
+              titleScore,
+              url,
+            },
+          },
+        });
+      } catch {
+        // Non-blocking
+      }
+    }
 
     // ── Step 13: Build response ──────────────────────────────────────
     return NextResponse.json({

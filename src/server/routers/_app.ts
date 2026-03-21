@@ -19,6 +19,7 @@ import { mediaRouter } from './media';
 import { stockRouter } from './stock';
 import { brandRouter } from './brand';
 import { commentRouter } from './comment';
+import { toolHistoryRouter } from './toolHistory';
 
 export const appRouter = router({
   user: userRouter,
@@ -41,6 +42,7 @@ export const appRouter = router({
   stock: stockRouter,
   brand: brandRouter,
   comment: commentRouter,
+  toolHistory: toolHistoryRouter,
 });
 
 export type AppRouter = typeof appRouter;

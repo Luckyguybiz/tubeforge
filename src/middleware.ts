@@ -206,6 +206,9 @@ export default function middleware(req: NextRequest) {
     '/api/stripe/webhook',
     '/api/webhooks',
     '/api/health',
+    '/api/og',
+    '/api/newsletter',
+    '/api/cron',
     '/privacy',
     '/terms',
     '/about',
@@ -221,6 +224,9 @@ export default function middleware(req: NextRequest) {
     '/compare',
     '/share',
     '/api-docs',
+    '/oferta',
+    '/vpn',
+    '/profile',
   ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),

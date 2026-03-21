@@ -2007,6 +2007,130 @@ function PublishHistoryWidget({
   );
 }
 
+
+/* -- Tool History Section ---------------------------------------- */
+
+function ToolHistorySection({ C, t }: { C: any; t: (key: string) => string }) {
+  const history = trpc.toolHistory.list.useQuery({ limit: 10 });
+  const translations = trpc.toolHistory.translations.useQuery({ limit: 5 });
+
+  const toolLabels: Record<string, string> = {
+    'video-translate': '\u041f\u0435\u0440\u0435\u0432\u043e\u0434 \u0432\u0438\u0434\u0435\u043e',
+    'youtube-analyzer': '\u0410\u043d\u0430\u043b\u0438\u0437 YouTube',
+    'tts': '\u041e\u0437\u0432\u0443\u0447\u043a\u0430',
+    'video-compress': '\u0421\u0436\u0430\u0442\u0438\u0435 \u0432\u0438\u0434\u0435\u043e',
+  };
+
+  const toolIcons: Record<string, string> = {
+    'video-translate': '\ud83c\udf10',
+    'youtube-analyzer': '\ud83d\udcca',
+    'tts': '\ud83d\udd0a',
+    'video-compress': '\ud83d\udce6',
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+  };
+
+  const hasData = (history.data && history.data.length > 0) || (translations.data && translations.data.length > 0);
+
+  if (history.isLoading || !hasData) return null;
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: C.text }}>
+        {'\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432'}
+      </h3>
+
+      {translations.data && translations.data.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 8 }}>
+            {'\u041c\u043e\u0438 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u044b'}
+          </div>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+            {translations.data.map((asset: any) => {
+              const langMatch = asset.filename?.match(/Translation_([a-z]{2,3})_/);
+              const lang = langMatch?.[1] ?? '?';
+              return (
+                <a
+                  key={asset.id}
+                  href={asset.url}
+                  download
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
+                    padding: '12px 16px', minWidth: 120, textDecoration: 'none',
+                    transition: 'box-shadow .15s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 4px 12px ${C.accent}22`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
+                >
+                  <span style={{ fontSize: 24, marginBottom: 4 }}>{'\ud83c\udfac'}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{lang.toUpperCase()}</span>
+                  <span style={{ fontSize: 11, color: C.sub }}>{formatSize(asset.size)}</span>
+                  <span style={{ fontSize: 11, color: C.sub }}>
+                    {new Date(asset.createdAt).toLocaleDateString('ru-RU')}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {history.data && history.data.length > 0 && (
+        <div style={{
+          background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+          overflow: 'hidden',
+        }}>
+          {history.data.map((entry: any, i: number) => {
+            const meta = (entry.metadata ?? {}) as Record<string, any>;
+            const tool = meta.tool ?? entry.target ?? 'unknown';
+            const label = toolLabels[tool] ?? tool;
+            const icon = toolIcons[tool] ?? '\ud83d\udd27';
+            return (
+              <div
+                key={entry.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 16px',
+                  borderBottom: i < (history.data?.length ?? 0) - 1 ? `1px solid ${C.border}` : 'none',
+                }}
+              >
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
+                  <div style={{ fontSize: 11, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {tool === 'youtube-analyzer' && meta.title
+                      ? meta.title
+                      : tool === 'video-translate' && meta.targetLang
+                      ? `\u2192 ${meta.targetLang?.toUpperCase()}${meta.fileSize ? ` (${formatSize(meta.fileSize)})` : ''}`
+                      : entry.target ?? ''}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: C.sub, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                  {new Date(entry.createdAt).toLocaleDateString('ru-RU')}
+                </div>
+                {tool === 'youtube-analyzer' && meta.overallScore != null && (
+                  <div style={{
+                    fontSize: 12, fontWeight: 700,
+                    color: meta.overallScore >= 70 ? '#22c55e' : meta.overallScore >= 40 ? '#f59e0b' : '#ef4444',
+                    flexShrink: 0,
+                  }}>
+                    {meta.overallScore}/100
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Dashboard Component ──────────────────────────── */
 
 export function Dashboard() {
@@ -2364,6 +2488,9 @@ export function Dashboard() {
 
       {/* ── Usage Milestones (floating toast) ────────── */}
       <UsageMilestones />
+
+      {/* ── Tool History ────────────────────────────── */}
+      <ToolHistorySection C={C} t={t} />
 
       {/* ── Header ──────────────────────────────────── */}
       <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
