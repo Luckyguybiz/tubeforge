@@ -330,6 +330,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     subtitle: t('toolshub.tool.translate.subtitle'),
     description: t('toolshub.tool.translate.description'),
     category: 'audio',
+    route: '/tools/video-translator',
     available: true,
     gradient: ['#06b6d4', '#0ea5e9'],
   },

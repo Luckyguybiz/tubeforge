@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure, publicProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
-import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
 import type { Prisma } from '@prisma/client';
 
@@ -12,7 +12,6 @@ async function checkMutationRate(userId: string) {
   if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
 }
 
-const PLAN_LIMITS: Record<string, number> = { FREE: 3, PRO: 25, STUDIO: Infinity };
 const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
 
 /** Current export format version */
@@ -366,7 +365,7 @@ export const projectRouter = router({
           where: { id: ctx.session.user.id },
           select: { plan: true, _count: { select: { projects: true } } },
         });
-        const planLimit = PLAN_LIMITS[user?.plan ?? 'FREE'];
+        const planLimit = getPlanLimits(user?.plan ?? 'FREE').projects;
         if ((user?._count.projects ?? 0) >= planLimit) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Достигнут лимит проектов. Обновите тарифный план.' });
         }
@@ -510,7 +509,7 @@ export const projectRouter = router({
           select: { plan: true, _count: { select: { projects: true } } },
         });
 
-        const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
+        const projectLimit = getPlanLimits(user?.plan ?? 'FREE').projects ?? 3;
         if ((user?._count.projects ?? 0) >= projectLimit) {
           throw new TRPCError({
             code: 'FORBIDDEN',
@@ -579,7 +578,7 @@ export const projectRouter = router({
           where: { id: userId },
           select: { plan: true, _count: { select: { projects: true } } },
         });
-        const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
+        const projectLimit = getPlanLimits(user?.plan ?? 'FREE').projects ?? 3;
         if ((user?._count.projects ?? 0) >= projectLimit) {
           throw new TRPCError({
             code: 'FORBIDDEN',

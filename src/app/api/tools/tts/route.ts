@@ -1,34 +1,103 @@
 import { auth } from '@/server/auth';
+import { db } from '@/server/db';
+import { rateLimit } from '@/lib/rate-limit';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const ttsSchema = z.object({
+  text: z.string().min(1).max(5000),
+  voice: z
+    .enum(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'])
+    .default('alloy'),
+  model: z.enum(['tts-1', 'tts-1-hd']).default('tts-1'),
+});
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const { text, voice, model } = await req.json();
+  // Rate limit: 10 requests per minute per user
+  const rl = await rateLimit({
+    identifier: `tts:${session.user.id}`,
+    limit: 10,
+    window: 60,
+  });
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((rl.reset - Date.now()) / 1000)),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(rl.reset),
+        },
+      },
+    );
+  }
 
-    if (!text || typeof text !== 'string' || text.length > 5000) {
-      return NextResponse.json({ error: 'Invalid text input' }, { status: 400 });
+  // Plan check: FREE users limited to 3 TTS requests per day
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { plan: true },
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  if (user.plan === 'FREE') {
+    const dailyRl = await rateLimit({
+      identifier: `tts-daily:${session.user.id}`,
+      limit: 3,
+      window: 86400,
+    });
+    if (!dailyRl.success) {
+      return NextResponse.json(
+        {
+          error:
+            'Free plan limit reached (3 per day). Upgrade to PRO or STUDIO for unlimited TTS.',
+        },
+        { status: 429 },
+      );
     }
+  }
+
+  try {
+    const body = await req.json();
+    const parsed = ttsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid input',
+          details: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const { text, voice, model } = parsed.data;
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'TTS service not configured' }, { status: 503 });
+      return NextResponse.json(
+        { error: 'TTS service not configured' },
+        { status: 503 },
+      );
     }
 
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model || 'tts-1',
+        model,
         input: text,
-        voice: voice || 'alloy',
+        voice,
         response_format: 'mp3',
       }),
     });
@@ -51,6 +120,9 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error('TTS route error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
   }
 }

@@ -463,7 +463,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           <div
             onClick={() => setShowCelebration(false)}
             style={{
-              position: 'fixed', inset: 0, zIndex: 9998,
+              position: 'fixed', inset: 0, zIndex: 10001,
               background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(6px)',
             }}
           />
@@ -471,7 +471,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           {Array.from({ length: 24 }).map((_, i) => (
             <div key={i} style={{
               position: 'fixed',
-              zIndex: 9999,
+              zIndex: 10002,
               top: 0,
               left: `${4 + (i * 4) % 92}%`,
               width: 8 + (i % 3) * 4,
@@ -484,7 +484,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           ))}
           {/* Celebration card */}
           <div role="dialog" aria-modal="true" aria-label={t('celebration.title')} style={{
-            position: 'fixed', zIndex: 10000,
+            position: 'fixed', zIndex: 10003,
             top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
             background: C.card,

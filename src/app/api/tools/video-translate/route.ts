@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import { createLogger } from '@/lib/logger';
+import { db } from '@/server/db';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 
 const log = createLogger('video-translate');
 
@@ -196,6 +199,53 @@ export async function GET(req: NextRequest) {
 
     const audioBuffer = await audioRes.arrayBuffer();
     const contentTypeHeader = audioRes.headers.get('content-type') ?? 'video/mp4';
+
+    // ── Save translation result to user cabinet ──────────────────
+    if (session?.user?.id) {
+      try {
+        const userId = session.user.id;
+        const ts = Date.now();
+        const relDir = `uploads/translations/${userId}`;
+        const absDir = join(process.cwd(), 'public', relDir);
+        await mkdir(absDir, { recursive: true });
+        const filename = `dubbed_${targetLang}_${ts}.mp4`;
+        const relPath = `/${relDir}/${filename}`;
+        await writeFile(join(absDir, filename), Buffer.from(audioBuffer));
+
+        await db.asset.create({
+          data: {
+            url: relPath,
+            filename: `Translation_${targetLang}_${new Date().toISOString().slice(0, 10)}.mp4`,
+            type: 'video',
+            size: audioBuffer.byteLength,
+            userId,
+          },
+        });
+
+        await db.auditLog.create({
+          data: {
+            userId,
+            action: 'TOOL_USAGE',
+            target: 'video-translate',
+            metadata: {
+              tool: 'video-translate',
+              dubbingId,
+              targetLang,
+              sourceLang: statusData.source_language ?? null,
+              fileSize: audioBuffer.byteLength,
+              savedPath: relPath,
+            },
+          },
+        });
+
+        log.info('Translation saved to cabinet', { userId, path: relPath });
+      } catch (saveErr) {
+        log.error('Failed to save translation to cabinet', {
+          error: saveErr instanceof Error ? saveErr.message : String(saveErr),
+        });
+        // Non-blocking: still return the file to the user
+      }
+    }
 
     return new NextResponse(audioBuffer, {
       status: 200,

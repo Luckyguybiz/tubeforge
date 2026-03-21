@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import { rateLimit } from '@/lib/rate-limit';
 import { createHash } from 'crypto';
 
@@ -231,42 +232,42 @@ export const referralRouter = router({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Referral program not activated' });
     }
 
-    const [invited, paid, claimedLogs] = await Promise.all([
-      ctx.db.user.count({
-        where: { referredBy: user.referralCode },
-      }),
-      ctx.db.user.count({
-        where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
-      }),
-      ctx.db.auditLog.findMany({
-        where: { userId, action: 'referral_reward_claimed' },
-        select: { target: true },
-      }),
-    ]);
+    const result = await ctx.db.$transaction(async (tx) => {
+      // Read inside Serializable transaction to prevent TOCTOU race
+      const [invited, paid, claimedLogs] = await Promise.all([
+        tx.user.count({
+          where: { referredBy: user.referralCode },
+        }),
+        tx.user.count({
+          where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
+        }),
+        tx.auditLog.findMany({
+          where: { userId, action: 'referral_reward_claimed' },
+          select: { target: true },
+        }),
+      ]);
 
-    const claimedMilestones = new Set(claimedLogs.map((l) => l.target));
+      const claimedMilestones = new Set(claimedLogs.map((l) => l.target));
 
-    // Find unclaimed, earned milestones
-    let totalCreditsToApply = 0;
-    const newClaims: { milestone: string; reward: string; credits: number }[] = [];
+      // Find unclaimed, earned milestones
+      let totalCreditsToApply = 0;
+      const newClaims: { milestone: string; reward: string; credits: number }[] = [];
 
-    for (const m of REWARD_MILESTONES) {
-      if (claimedMilestones.has(m.milestone)) continue;
-      const count = m.type === 'signups' ? invited : paid;
-      if (count < m.threshold) continue;
+      for (const m of REWARD_MILESTONES) {
+        if (claimedMilestones.has(m.milestone)) continue;
+        const count = m.type === 'signups' ? invited : paid;
+        if (count < m.threshold) continue;
 
-      newClaims.push({ milestone: m.milestone, reward: m.reward, credits: m.credits });
-      if (m.credits > 0) {
-        totalCreditsToApply += m.credits;
+        newClaims.push({ milestone: m.milestone, reward: m.reward, credits: m.credits });
+        if (m.credits > 0) {
+          totalCreditsToApply += m.credits;
+        }
       }
-    }
 
-    if (newClaims.length === 0) {
-      return { claimed: 0, creditsApplied: 0, message: 'No new rewards to claim' };
-    }
+      if (newClaims.length === 0) {
+        return { claimed: 0, creditsApplied: 0, message: 'No new rewards to claim' };
+      }
 
-    // Apply all rewards in a single transaction
-    await ctx.db.$transaction(async (tx) => {
       // 1. Apply credit bonuses by decrementing aiUsage (giving free generations)
       if (totalCreditsToApply > 0) {
         await tx.user.update({
@@ -286,12 +287,14 @@ export const referralRouter = router({
           },
         });
       }
-    });
 
-    return {
-      claimed: newClaims.length,
-      creditsApplied: totalCreditsToApply,
-      rewards: newClaims.map((c) => c.reward),
-    };
+      return {
+        claimed: newClaims.length,
+        creditsApplied: totalCreditsToApply,
+        rewards: newClaims.map((c) => c.reward),
+      };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    return result;
   }),
 });

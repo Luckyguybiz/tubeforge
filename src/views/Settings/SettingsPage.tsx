@@ -9,6 +9,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { usePushNotifications } from '@/components/PushNotificationManager';
 import QRCode from 'qrcode';
+import { getPlanLimits } from '@/lib/constants';
 import type { Theme } from '@/lib/types';
 
 /* ── Plan feature lists ──────────────────────────── */
@@ -47,11 +48,7 @@ function getPlanLabel(plan: string, t: (key: string) => string): string {
   return map[plan] ?? plan;
 }
 
-const PLAN_LIMITS: Record<string, { projects: number; ai: number }> = {
-  FREE: { projects: 3, ai: 5 },
-  PRO: { projects: 25, ai: 100 },
-  STUDIO: { projects: Infinity, ai: Infinity },
-};
+// PLAN_LIMITS imported from '@/lib/constants' via getPlanLimits()
 
 export function SettingsPage() {
   const C = useThemeStore((s) => s.theme);
@@ -239,7 +236,7 @@ export function SettingsPage() {
 
   const plan = subscription.data?.plan ?? profile.data?.plan ?? 'FREE';
   const hasSub = !!subscription.data?.subscription;
-  const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.FREE;
+  const limits = getPlanLimits(plan);
 
   const authProvider = (() => {
     const img = session.data?.user?.image ?? '';
@@ -560,7 +557,7 @@ export function SettingsPage() {
                     C={C}
                     label={t('settings.aiGenerations')}
                     used={profile.data?.aiUsage ?? 0}
-                    limit={limits.ai}
+                    limit={limits.aiGenerations}
                   />
                 </div>
               </div>

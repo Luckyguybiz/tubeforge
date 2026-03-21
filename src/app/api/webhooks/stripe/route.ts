@@ -255,6 +255,11 @@ export async function POST(req: NextRequest) {
                 // Never block webhook due to email
               }
             }
+
+            // Revoke VPN if downgrading to a plan without VPN (FREE or PRO)
+            if (updatedPlan !== 'STUDIO') {
+              await revokeVpnForCustomer(sub.customer as string);
+            }
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
@@ -545,7 +550,7 @@ export async function POST(req: NextRequest) {
             // Never block webhook due to email
           }
 
-          if (attemptCount >= 3) {
+          if (attemptCount >= 4) {
             // Final retry exhausted — downgrade to FREE
             try {
               await db.$transaction([
@@ -559,6 +564,7 @@ export async function POST(req: NextRequest) {
                 attempts: attemptCount,
                 customerId: failedCustomerId,
               });
+              await revokeVpnForCustomer(failedCustomerId);
             } catch (err) {
               const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
               if (isPrismaUnique) {
