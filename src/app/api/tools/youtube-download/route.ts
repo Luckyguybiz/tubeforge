@@ -339,57 +339,59 @@ function generateTips(
   contentType?: string,
 ): string[] {
   const tips: string[] = [];
+  const titleLen = title.length;
+  const emojiCount = countEmojis(title);
 
+  // Video-specific hook analysis
   if (hookScore >= 7) {
-    tips.push('Хороший хук в заголовке — зрители кликают. Сохраняйте этот стиль.');
+    tips.push(`Заголовок "${title.slice(0, 40)}.." имеет сильный хук (score ${hookScore}/10) — такие заголовки привлекают клики.`);
   } else if (hookScore >= 5) {
-    tips.push('Заголовок средний. Попробуйте добавить число или вопрос для повышения CTR.');
+    tips.push(`Хук заголовка средний (${hookScore}/10). Для "${title.slice(0, 30)}.." попробуйте начать с числа или вопроса.`);
   } else {
-    tips.push('Слабый заголовок. Используйте числа, вопросы и сильные слова для привлечения внимания.');
+    tips.push(`Хук заголовка слабый (${hookScore}/10). "${title.slice(0, 30)}.." не цепляет — добавьте интригу или конкретику.`);
   }
 
-  if (title.length > 70) {
-    tips.push('Заголовок слишком длинный — YouTube обрежет его в поиске. Оптимально: 40-70 символов.');
-  } else if (title.length < 30) {
-    tips.push('Заголовок слишком короткий. Добавьте ключевые слова для лучшего ранжирования в поиске.');
+  // Video-specific length
+  if (titleLen > 70) {
+    tips.push(`Заголовок ${titleLen} символов — YouTube обрежет после 70. Сократите до ${titleLen - 70} символов.`);
+  } else if (titleLen < 30) {
+    tips.push(`Заголовок всего ${titleLen} символов — слишком коротко. Добавьте ключевые слова для SEO.`);
   }
 
+  // Video-specific engagement
   if (engagementRate > 5) {
-    tips.push('Отличный engagement rate! Аудитория активно взаимодействует с контентом.');
+    tips.push(`Engagement rate ${engagementRate.toFixed(1)}% — выше среднего (3-5%). Аудитория активно реагирует на контент.`);
   } else if (engagementRate > 2) {
-    tips.push('Добавьте CTA в описание и в видео для увеличения вовлечённости.');
+    tips.push(`Engagement rate ${engagementRate.toFixed(1)}% — в пределах нормы. Добавьте CTA в первые 30 секунд для роста.`);
   } else if (engagementRate > 0) {
-    tips.push('Низкий engagement. Задавайте вопросы зрителям и призывайте к комментариям.');
+    tips.push(`Engagement rate всего ${engagementRate.toFixed(1)}% — ниже среднего. Закрепите призыв к действию в комментариях.`);
   }
 
+  // Video-specific duration
   if (durationISO) {
     const totalSec = parseDurationToSeconds(durationISO);
     const totalMin = totalSec / 60;
-
-    const optimalRanges: Record<string, string> = {
-      tutorial: '8-15',
-      review: '8-12',
-      news: '5-10',
-      vlog: '10-20',
-      entertainment: '8-15',
-      podcast: '30-60',
-      gaming: '15-30',
-      music: '3-5',
-      livestream: '60+',
+    const cat = contentType ?? 'entertainment';
+    const optimalRanges: Record<string, [number, number]> = {
+      tutorial: [8, 15], review: [8, 12], news: [5, 10], vlog: [10, 20],
+      entertainment: [8, 15], podcast: [30, 60], gaming: [15, 30], music: [3, 5],
     };
-
-    const optimal = optimalRanges[contentType ?? 'entertainment'] ?? '8-15';
-    tips.push(`Оптимальная длина для категории "${contentType ?? 'entertainment'}": ${optimal} минут. Ваше видео: ${Math.round(totalMin)} мин.`);
-
+    const range = optimalRanges[cat] ?? [8, 15];
+    if (totalMin < range[0] && totalMin >= 1) {
+      tips.push(`Видео ${Math.round(totalMin)} мин — короче оптимального для "${cat}" (${range[0]}-${range[1]} мин). Дольше = больше рекламы.`);
+    } else if (totalMin > range[1]) {
+      tips.push(`Видео ${Math.round(totalMin)} мин — длиннее оптимального для "${cat}" (${range[0]}-${range[1]} мин). Удержание может упасть.`);
+    }
     if (totalMin < 1) {
-      tips.push('Очень короткое видео. Рассмотрите формат YouTube Shorts для максимального охвата.');
+      tips.push(`Длительность ${totalSec} сек — это Shorts-формат. Алгоритм Shorts отличается от обычного.`);
     }
   }
 
-  if (countEmojis(title) === 0) {
-    tips.push('Добавьте 1-2 эмодзи в заголовок — это повышает CTR на 5-10% по данным исследований.');
-  } else if (countEmojis(title) > 3) {
-    tips.push('Слишком много эмодзи в заголовке. Оставьте 1-2 для профессионального вида.');
+  // Video-specific emoji
+  if (emojiCount === 0) {
+    tips.push(`В заголовке нет эмодзи. 1-2 эмодзи повышают CTR на 5-10% в категории "${contentType ?? 'entertainment'}".`);
+  } else if (emojiCount > 3) {
+    tips.push(`В заголовке ${emojiCount} эмодзи — перебор. Оставьте 1-2 для профессионального вида.`);
   }
 
   return tips.slice(0, 6);
@@ -407,35 +409,33 @@ function detectViralFactors(
   tags?: string[],
 ): string[] {
   const factors: string[] = [];
+  const fmtViews = views ? (views >= 1_000_000 ? (views / 1_000_000).toFixed(1) + 'M' : views >= 1_000 ? (views / 1_000).toFixed(0) + 'K' : String(views)) : null;
 
+  if (views && views > 1_000_000) {
+    factors.push(`${fmtViews} просмотров — видео попало в рекомендации YouTube`);
+  } else if (views && views > 100_000) {
+    factors.push(`${fmtViews} просмотров — хороший органический охват`);
+  }
   if (hasNumbers(title)) {
-    factors.push('Цепляющий заголовок с числом — повышает CTR');
+    factors.push(`Число в заголовке "${title.match(/\d+/)?.[0] ?? ''}" повышает кликабельность`);
   }
   if (hasQuestion(title)) {
-    factors.push('Вопрос в заголовке вызывает любопытство');
-  }
-  if (countPowerWords(title) >= 2) {
-    factors.push('Использование сильных слов в заголовке');
+    factors.push('Вопрос в заголовке создаёт интригу и повышает CTR');
   }
   if (engagementRate > 5) {
-    factors.push('Высокий engagement rate — алгоритм продвигает такой контент');
-  }
-  if (views && views > 1_000_000) {
-    factors.push('Миллионные просмотры — видео попало в рекомендации');
-  } else if (views && views > 100_000) {
-    factors.push('Хорошие просмотры — видео нашло свою аудиторию');
+    factors.push(`Engagement rate ${engagementRate.toFixed(1)}% — выше среднего, алгоритм продвигает`);
   }
   if (countEmojis(title) >= 1 && countEmojis(title) <= 2) {
-    factors.push('Умеренное использование эмодзи привлекает внимание');
+    factors.push(`${countEmojis(title)} эмодзи в заголовке — оптимальное количество для привлечения внимания`);
   }
   if (tags && tags.length >= 5) {
-    factors.push('Хорошая оптимизация тегов для поиска');
+    factors.push(`${tags.length} тегов — хорошая оптимизация для YouTube поиска`);
   }
   if (hookScore >= 8) {
-    factors.push('Очень сильный хук — зрители не могут не кликнуть');
+    factors.push(`Хук ${hookScore}/10 — заголовок сильно цепляет`);
   }
   if (titleScore >= 8) {
-    factors.push('SEO-оптимизированный заголовок для YouTube поиска');
+    factors.push(`Title score ${titleScore}/10 — SEO-оптимизирован для поиска`);
   }
 
   return factors.slice(0, 5);

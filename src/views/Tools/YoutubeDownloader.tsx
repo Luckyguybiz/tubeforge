@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 /* ── Helpers ──────────────────────────────────────────────────── */
 
 function fmt(n: unknown): string {
-  if (n == null) return '—';
+  if (n == null) return '\u2014';
   const num = Number(n);
   if (Number.isNaN(num)) return String(n);
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
@@ -14,16 +15,66 @@ function fmt(n: unknown): string {
   return String(num);
 }
 
-function scoreColor(v: number): string {
-  if (v >= 7) return '#22c55e';
-  if (v >= 4) return '#eab308';
+function gaugeColor(v: number): string {
+  if (v >= 8) return '#22c55e';
+  if (v >= 5) return '#f59e0b';
   return '#ef4444';
 }
 
-function pct(v: unknown, max = 10): string {
-  const n = Number(v);
-  if (Number.isNaN(n) || n <= 0) return '0%';
-  return Math.min((n / max) * 100, 100) + '%';
+function safeStr(v: unknown): string {
+  if (v == null) return '';
+  if (typeof v === 'object') {
+    // Handle known object shapes from API
+    const obj = v as Record<string, unknown>;
+    if ('chars' in obj) return String(obj.chars);
+    if ('level' in obj && 'reason' in obj) return `${String(obj.level)} \u2014 ${String(obj.reason)}`;
+    if ('level' in obj) return String(obj.level);
+    return JSON.stringify(v);
+  }
+  return String(v);
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+/* ── Circular Gauge (SVG) ─────────────────────────────────────── */
+
+function CircleGauge({ value, label, max = 10 }: { value: number; label: string; max?: number }) {
+  const C = useThemeStore((s) => s.theme);
+  const r = 40;
+  const stroke = 6;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(value / max, 1);
+  const dashOffset = circ * (1 - pct);
+  const color = gaugeColor(value);
+  const trackColor = C?.border ?? 'rgba(0,0,0,0.08)';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{ position: 'relative', width: 96, height: 96 }}>
+        <svg width={96} height={96} viewBox="0 0 96 96">
+          <circle cx={48} cy={48} r={r} fill="none" stroke={trackColor} strokeWidth={stroke} />
+          <circle
+            cx={48} cy={48} r={r} fill="none"
+            stroke={color} strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 48 48)"
+            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          />
+        </svg>
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexDirection: 'column',
+        }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</span>
+          <span style={{ fontSize: 10, color: C?.dim ?? '#999', marginTop: 2 }}>/{max}</span>
+        </div>
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 600, color: C?.sub ?? '#888', letterSpacing: '0.01em' }}>{label}</span>
+    </div>
+  );
 }
 
 /* ── Component ────────────────────────────────────────────────── */
@@ -31,37 +82,45 @@ function pct(v: unknown, max = 10): string {
 export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const router = useRouter();
 
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   const [data, setData] = useState<Record<string, any> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const cardStyle: React.CSSProperties = {
-    background: C?.surface ?? '#1a1a1a',
-    border: `1px solid ${C?.border ?? '#333'}`,
-    borderRadius: 14,
-    padding: 20,
-    marginBottom: 16,
-  };
-  const headerStyle: React.CSSProperties = {
-    fontSize: 16,
-    fontWeight: 700,
+  const accent = '#7c5cfc';
+
+  /* ── Shared styles ──────────────────────────────────────────── */
+
+  const card: React.CSSProperties = {
+    background: C?.surface ?? '#fff',
+    border: `1px solid ${C?.border ?? '#eee'}`,
+    borderRadius: 16,
+    padding: 24,
     marginBottom: 12,
-    color: C?.text ?? '#fff',
   };
-  const textStyle: React.CSSProperties = { color: C?.sub ?? '#aaa', fontSize: 14, lineHeight: 1.6 };
-  const gaugeBg = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const pillStyle: React.CSSProperties = {
+  const sectionTitle: React.CSSProperties = {
+    fontSize: 15,
+    fontWeight: 700,
+    color: C?.text ?? '#111',
+    marginBottom: 16,
+    letterSpacing: '-0.01em',
+  };
+  const sub: React.CSSProperties = {
+    color: C?.sub ?? '#888',
+    fontSize: 13,
+    lineHeight: 1.6,
+  };
+  const pill: React.CSSProperties = {
     display: 'inline-block',
-    padding: '3px 10px',
+    padding: '4px 12px',
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 600,
-    background: isDark ? 'rgba(255,0,0,0.15)' : 'rgba(255,0,0,0.08)',
-    color: '#ff0000',
+    background: isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.08)',
+    color: accent,
     marginRight: 6,
     marginBottom: 6,
   };
@@ -86,13 +145,13 @@ export function YoutubeDownloader() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as Record<string, any>)?.error ?? `Ошибка ${res.status}`);
+        throw new Error((body as Record<string, any>)?.error ?? `\u041E\u0448\u0438\u0431\u043A\u0430 ${res.status}`);
       }
       const json: Record<string, any> = await res.json();
       setData(json);
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError') return;
-      setError((err as Error)?.message ?? 'Неизвестная ошибка');
+      setError((err as Error)?.message ?? '\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430');
     } finally {
       setLoading(false);
     }
@@ -105,53 +164,62 @@ export function YoutubeDownloader() {
     } catch { /* clipboard blocked */ }
   }, []);
 
-  /* ── Derived safe accessors ────────────────────────────────── */
+  const clearUrl = useCallback(() => setUrl(''), []);
+
+  /* ── Derived ────────────────────────────────────────────────── */
 
   const stats = (data?.stats ?? {}) as Record<string, any>;
   const analysis = (data?.analysis ?? {}) as Record<string, any>;
-  const shorts = (data?.shortsAnalysis ?? null) as Record<string, any> | null;
   const seo = (data?.seo ?? null) as Record<string, any> | null;
-  const thumb = (data?.thumbnailAnalysis ?? null) as Record<string, any> | null;
   const engagement = (data?.engagement ?? null) as Record<string, any> | null;
   const strategy = (data?.strategy ?? null) as Record<string, any> | null;
   const competition = (data?.competition ?? null) as Record<string, any> | null;
+  const shorts = (data?.shortsAnalysis ?? null) as Record<string, any> | null;
+  const thumb = (data?.thumbnailAnalysis ?? null) as Record<string, any> | null;
   const structure = (analysis?.structure ?? []) as Record<string, any>[];
   const viralFactors = (analysis?.viralFactors ?? []) as string[];
   const tips = (analysis?.tips ?? []) as string[];
 
-  /* ── Bar helper ────────────────────────────────────────────── */
-
-  function Bar({ label, value, max = 10 }: { label: string; value: unknown; max?: number }) {
-    const n = Number(value);
-    const safe = Number.isNaN(n) ? 0 : n;
-    return (
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ ...textStyle, fontSize: 13 }}>{label}</span>
-          <span style={{ ...textStyle, fontSize: 13, fontWeight: 600 }}>{safe}/{max}</span>
-        </div>
-        <div style={{ height: 8, borderRadius: 4, background: gaugeBg }}>
-          <div style={{ width: pct(safe, max), height: '100%', borderRadius: 4, background: scoreColor(safe), transition: 'width .4s' }} />
-        </div>
-      </div>
-    );
-  }
-
   /* ── Render ─────────────────────────────────────────────────── */
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }}>
-      {/* Title */}
-      <h2 style={{ fontSize: 26, fontWeight: 800, color: C?.text ?? '#fff', marginBottom: 4 }}>
-        YouTube Анализатор
-      </h2>
-      <p style={{ ...textStyle, marginBottom: 20 }}>
-        Вставьте ссылку на видео для полного анализа контента, SEO и вовлечённости
-      </p>
+    <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 16px 48px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingTop: 8 }}>
+        <button
+          onClick={() => router.push('/tools')}
+          style={{
+            width: 36, height: 36, borderRadius: 10,
+            border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: C?.text ?? '#111', fontSize: 16,
+            flexShrink: 0,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: `linear-gradient(135deg, ${accent}, #a78bfa)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div>
+          <h1 style={{ fontSize: 18, fontWeight: 800, color: C?.text ?? '#111', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
+            {'\u0410\u043D\u0430\u043B\u0438\u0437 \u0432\u0438\u0434\u0435\u043E YouTube'}
+          </h1>
+          <p style={{ fontSize: 12, color: C?.dim ?? '#999', margin: 0, marginTop: 2 }}>
+            {'\u0420\u0430\u0437\u0431\u043E\u0440 \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u044B, \u0445\u0443\u043A\u0430 \u0438 \u0444\u0430\u043A\u0442\u043E\u0440\u043E\u0432 \u0443\u0441\u043F\u0435\u0445\u0430'}
+          </p>
+        </div>
+      </div>
 
-      {/* Input */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <div style={{ flex: 1, position: 'relative' }}>
+      {/* URL Input */}
+      <div style={{ ...card, padding: 0, marginBottom: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C?.dim ?? '#aaa'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
           <input
             type="text"
             value={url}
@@ -159,221 +227,210 @@ export function YoutubeDownloader() {
             onKeyDown={(e) => { if (e.key === 'Enter') analyze(); }}
             placeholder="https://www.youtube.com/watch?v=..."
             style={{
-              width: '100%',
-              padding: '12px 48px 12px 14px',
-              borderRadius: 10,
-              border: `1px solid ${C?.border ?? '#333'}`,
-              background: C?.surface ?? '#1a1a1a',
-              color: C?.text ?? '#fff',
-              fontSize: 15,
-              outline: 'none',
-              boxSizing: 'border-box',
+              flex: 1, border: 'none', outline: 'none',
+              background: 'transparent', color: C?.text ?? '#111',
+              fontSize: 14, fontFamily: 'inherit',
             }}
           />
+          {url && (
+            <button onClick={clearUrl} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C?.dim ?? '#aaa', fontSize: 16, padding: 4, lineHeight: 1 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            </button>
+          )}
           <button
             onClick={handlePaste}
-            title="Вставить"
             style={{
-              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', cursor: 'pointer', color: C?.sub ?? '#aaa', fontSize: 18,
+              padding: '6px 14px', borderRadius: 8,
+              border: `1px solid ${C?.border ?? '#eee'}`,
+              background: C?.bg ?? '#fafafa',
+              color: C?.text ?? '#111', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
             }}
           >
-            📋
+            {'\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C'}
           </button>
         </div>
-        <button
-          onClick={analyze}
-          disabled={loading || !url.trim()}
-          style={{
-            padding: '12px 28px',
-            borderRadius: 10,
-            border: 'none',
-            background: loading ? '#666' : 'linear-gradient(135deg, #ff0000, #cc0000)',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: 15,
-            cursor: loading ? 'wait' : 'pointer',
-            opacity: !url.trim() ? 0.5 : 1,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {loading ? 'Загрузка...' : 'Анализировать'}
-        </button>
       </div>
+
+      {/* Analyze Button */}
+      <button
+        onClick={analyze}
+        disabled={loading || !url.trim()}
+        style={{
+          width: '100%', marginTop: 12, marginBottom: 24, padding: '14px 0',
+          borderRadius: 14, border: 'none',
+          background: loading ? (isDark ? '#444' : '#ccc') : `linear-gradient(135deg, ${accent}, #a78bfa)`,
+          color: '#fff', fontWeight: 700, fontSize: 15, fontFamily: 'inherit',
+          cursor: loading ? 'wait' : 'pointer',
+          opacity: !url.trim() ? 0.5 : 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          transition: 'opacity 0.2s',
+        }}
+      >
+        {loading ? (
+          <>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeDasharray="56" strokeDashoffset="14"/></svg>
+            {'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0435\u043C...'}
+          </>
+        ) : (
+          <>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            {'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u0442\u044C'}
+          </>
+        )}
+      </button>
+
+      {/* Spin keyframes */}
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
 
       {/* Error */}
       {error && (
-        <div style={{ ...cardStyle, borderColor: '#ef4444', color: '#ef4444', fontSize: 14 }}>
-          ⚠️ {error}
+        <div style={{ ...card, borderColor: '#fca5a5', background: isDark ? 'rgba(239,68,68,0.08)' : '#fef2f2', color: '#dc2626', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {error}
         </div>
       )}
 
-      {/* Loading indicator */}
+      {/* Loading skeleton */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: 40, ...textStyle }}>
-          Анализируем видео...
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', padding: 48 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6', animation: 'shimmer 1.8s linear infinite' }} />
+          <div style={{ width: 200, height: 12, borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }} />
         </div>
       )}
 
       {/* ── Results ───────────────────────────────────────────── */}
       {data && !loading && (
-        <div>
-          {/* Overall score */}
-          {data?.overallScore != null && (
-            <div style={{ ...cardStyle, textAlign: 'center' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C?.sub ?? '#aaa', marginBottom: 4 }}>Общий балл</div>
-              <div style={{
-                fontSize: 56, fontWeight: 900, lineHeight: 1,
-                color: scoreColor(Number(data.overallScore) / 10),
-              }}>
-                {String(data.overallScore ?? '—')}
-              </div>
-              <div style={{ fontSize: 13, color: C?.sub ?? '#aaa' }}>/100</div>
-            </div>
-          )}
-
-          {/* YouTube embed */}
-          {data?.videoId && (
-            <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
-              <div style={{
-                position: 'relative', width: '100%',
-                paddingBottom: data?.isShorts ? '177.78%' : '56.25%',
-              }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${String(data.videoId)}`}
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Video info */}
+        <>
+          {/* Video Info Card */}
           {data?.title && (
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                {data?.thumbnail && (
-                  <img
-                    src={String(data.thumbnail)}
-                    alt=""
-                    style={{ width: 160, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                )}
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <h3 style={{ fontSize: 17, fontWeight: 700, color: C?.text ?? '#fff', marginBottom: 6, lineHeight: 1.3 }}>
-                    {String(data?.title ?? '')}
-                  </h3>
-                  <p style={{ ...textStyle, marginBottom: 4 }}>{String(data?.channel ?? '')}</p>
-                  <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', ...textStyle, fontSize: 13 }}>
-                    {stats?.views != null && <span>👁 {fmt(stats.views)}</span>}
-                    {stats?.likes != null && <span>👍 {fmt(stats.likes)}</span>}
-                    {stats?.comments != null && <span>💬 {fmt(stats.comments)}</span>}
-                    {data?.duration && <span>⏱ {String(data.duration)}</span>}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                    {data?.categoryName && <span style={pillStyle}>{String(data.categoryName)}</span>}
-                    {data?.isShorts && <span style={{ ...pillStyle, background: isDark ? 'rgba(168,85,247,0.2)' : 'rgba(168,85,247,0.1)', color: '#a855f7' }}>Shorts</span>}
-                  </div>
+            <div style={{ ...card, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              {data?.thumbnail && (
+                <img
+                  src={String(data.thumbnail)}
+                  alt=""
+                  style={{ width: 120, height: 90, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: C?.text ?? '#111', lineHeight: 1.4, margin: 0, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                  {String(data.title)}
+                </h3>
+                <div style={{ ...sub, fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                  <span>{String(data?.channel ?? '')}</span>
+                  <span style={{ color: C?.dim ?? '#bbb' }}>{'\u00B7'}</span>
+                  <span>{fmt(stats.views)} views</span>
+                  {data?.publishedAt && (
+                    <>
+                      <span style={{ color: C?.dim ?? '#bbb' }}>{'\u00B7'}</span>
+                      <span>{String(data.publishedAt).slice(0, 10)}</span>
+                    </>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  {data?.duration && <span style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(data.duration)}</span>}
+                  {data?.categoryName && <span style={pill}>{String(data.categoryName)}</span>}
+                  {data?.isShorts && <span style={{ ...pill, background: isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.08)', color: '#a855f7' }}>Shorts</span>}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Scores */}
+          {/* Circular Gauges */}
           {(analysis?.hookScore != null || analysis?.titleScore != null) && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Оценки контента</h4>
-              {analysis?.hookScore != null && <Bar label="Хук (вступление)" value={analysis.hookScore} />}
-              {analysis?.titleScore != null && <Bar label="Заголовок" value={analysis.titleScore} />}
+            <div style={{ ...card, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, padding: '28px 16px' }}>
+              {analysis?.hookScore != null && <CircleGauge value={Number(analysis.hookScore)} label={'\u0425\u0443\u043A'} />}
+              {analysis?.titleScore != null && <CircleGauge value={Number(analysis.titleScore)} label={'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'} />}
               {analysis?.estimatedCTR != null && (
-                <div style={{ ...textStyle, fontSize: 13, marginTop: 4 }}>
-                  Ожидаемый CTR: <b style={{ color: C?.text ?? '#fff' }}>{String(analysis.estimatedCTR)}</b>
-                </div>
+                <CircleGauge
+                  value={analysis.estimatedCTR === 'high' ? 8 : analysis.estimatedCTR === 'medium' ? 5 : 3}
+                  label="CTR"
+                />
               )}
               {analysis?.engagementRate != null && (
-                <div style={{ ...textStyle, fontSize: 13, marginTop: 2 }}>
-                  Вовлечённость: <b style={{ color: C?.text ?? '#fff' }}>{String(analysis.engagementRate)}%</b>
-                </div>
+                <CircleGauge
+                  value={Math.min(Math.round(Number(analysis.engagementRate)), 10)}
+                  label={'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'}
+                />
               )}
             </div>
           )}
 
-          {/* Shorts analysis */}
-          {shorts && data?.isShorts && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Shorts Анализ</h4>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                {shorts?.hookQuality != null && (
-                  <span style={pillStyle}>Хук: {String(shorts.hookQuality)}</span>
-                )}
-                {shorts?.loopPotential != null && (
-                  <span style={pillStyle}>Зацикливание: {String(shorts.loopPotential)}/10</span>
-                )}
-                {shorts?.shareability != null && (
-                  <span style={pillStyle}>Виральность: {String(shorts.shareability)}/10</span>
-                )}
-                {shorts?.verticalOptimized != null && (
-                  <span style={pillStyle}>{shorts.verticalOptimized ? '✅' : '❌'} Вертикальный формат</span>
-                )}
-              </div>
-              {shorts?.optimalLength != null && (
-                <p style={{ ...textStyle, fontSize: 13 }}>Оптимальная длина: {String(shorts.optimalLength)}</p>
-              )}
-              {shorts?.trendAlignment != null && (
-                <p style={{ ...textStyle, fontSize: 13 }}>Тренды: {String(shorts.trendAlignment)}</p>
-              )}
-              {(((shorts?.tips ?? []) as string[]).length > 0) && (
-                <div style={{ marginTop: 10 }}>
-                  {((shorts?.tips ?? []) as string[]).map((t, i) => (
-                    <p key={i} style={{ ...textStyle, fontSize: 13, marginBottom: 4 }}>💡 {String(t)}</p>
-                  ))}
+          {/* Why it works (Viral Factors) */}
+          {viralFactors.length > 0 && (
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u041F\u043E\u0447\u0435\u043C\u0443 \u044D\u0442\u043E \u0432\u0438\u0434\u0435\u043E \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442'}</h4>
+              {viralFactors.map((f, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e" style={{ marginTop: 2, flexShrink: 0 }}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span style={{ ...sub }}>{String(f)}</span>
                 </div>
-              )}
+              ))}
+            </div>
+          )}
+
+          {/* Tips */}
+          {tips.length > 0 && (
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u0421\u043E\u0432\u0435\u0442\u044B \u043F\u043E \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044E'}</h4>
+              {tips.map((t, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
+                  <span style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                  </span>
+                  <span style={{ ...sub }}>{String(t)}</span>
+                </div>
+              ))}
             </div>
           )}
 
           {/* SEO */}
           {seo && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>SEO анализ</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px', ...textStyle, fontSize: 13 }}>
+            <div style={card}>
+              <h4 style={sectionTitle}>SEO</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
                 {seo?.titleLength != null && (
-                  <div>Длина заголовка: <b style={{ color: C?.text ?? '#fff' }}>{typeof seo.titleLength === "object" && seo.titleLength !== null ? String((seo.titleLength as any).chars) : String(seo.titleLength)}</b> {typeof seo.titleLength === 'object' && (seo.titleLength as any).optimal ? `(${String((seo.titleLength as any).optimal)}, ${String((seo.titleLength as any).status)})` : (seo?.optimalTitleRange ? `(${String(seo.optimalTitleRange)})` : '')}</div>
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{safeStr(seo.titleLength)} {'\u0441\u0438\u043C\u0432.'}</div>
+                  </div>
                 )}
                 {seo?.descriptionLength != null && (
-                  <div>Длина описания: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.descriptionLength)}</b></div>
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seo.descriptionLength)} {'\u0441\u0438\u043C\u0432.'}</div>
+                  </div>
                 )}
                 {seo?.tagsCount != null && (
-                  <div>Тегов: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.tagsCount)}</b></div>
-                )}
-                {seo?.languageDetected != null && (
-                  <div>Язык: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.languageDetected)}</b></div>
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0422\u0435\u0433\u043E\u0432'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seo.tagsCount)}</div>
+                  </div>
                 )}
                 {seo?.readabilityScore != null && (
-                  <div>Читаемость: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.readabilityScore)}/10</b></div>
-                )}
-                {seo?.searchOptimization != null && (
-                  <div>Поисковая оптимизация: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.searchOptimization)}</b></div>
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0427\u0438\u0442\u0430\u0435\u043C\u043E\u0441\u0442\u044C'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seo.readabilityScore)}/10</div>
+                  </div>
                 )}
               </div>
               {((seo?.titleKeywords ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C?.text ?? '#fff', marginBottom: 6 }}>Ключевые слова</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {((seo?.titleKeywords ?? []) as string[]).map((k, i) => (
-                      <span key={i} style={pillStyle}>{String(k)}</span>
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8 }}>{'\u041A\u043B\u044E\u0447\u0435\u0432\u044B\u0435 \u0441\u043B\u043E\u0432\u0430'}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {((seo.titleKeywords) as string[]).map((k, i) => (
+                      <span key={i} style={pill}>{String(k)}</span>
                     ))}
                   </div>
                 </div>
               )}
               {((seo?.tags ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C?.text ?? '#fff', marginBottom: 6 }}>Теги</div>
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8 }}>{'\u0422\u0435\u0433\u0438'}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {((seo?.tags ?? []) as string[]).map((t, i) => (
-                      <span key={i} style={{ ...pillStyle, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: C?.sub ?? '#aaa' }}>{String(t)}</span>
+                    {((seo.tags) as string[]).map((t, i) => (
+                      <span key={i} style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.04)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(t)}</span>
                     ))}
                   </div>
                 </div>
@@ -383,32 +440,79 @@ export function YoutubeDownloader() {
 
           {/* Engagement */}
           {engagement && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Вовлечённость</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px', ...textStyle, fontSize: 13 }}>
-                {engagement?.likeRate != null && <div>Like rate: <b style={{ color: C?.text ?? '#fff' }}>{String(engagement.likeRate)}%</b></div>}
-                {engagement?.commentRate != null && <div>Comment rate: <b style={{ color: C?.text ?? '#fff' }}>{String(engagement.commentRate)}%</b></div>}
-                {engagement?.viralCoefficient != null && <div>Виральность: <b style={{ color: C?.text ?? '#fff' }}>{String(engagement.viralCoefficient)}</b></div>}
-                {engagement?.audienceRetentionEstimate != null && <div>Удержание: <b style={{ color: C?.text ?? '#fff' }}>{String(engagement.audienceRetentionEstimate)}</b></div>}
-                {engagement?.benchmarkComparison != null && <div>Сравнение с нишей: <b style={{ color: C?.text ?? '#fff' }}>{String(engagement.benchmarkComparison)}</b></div>}
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
+                {engagement?.likeRate != null && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>Like rate</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.likeRate)}%</div>
+                  </div>
+                )}
+                {engagement?.commentRate != null && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>Comment rate</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.commentRate)}%</div>
+                  </div>
+                )}
+                {engagement?.viralCoefficient != null && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0412\u0438\u0440\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.viralCoefficient)}</div>
+                  </div>
+                )}
+                {engagement?.audienceRetentionEstimate != null && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0423\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.audienceRetentionEstimate)}</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* Strategy */}
           {strategy && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Стратегия</h4>
-              <div style={{ ...textStyle, fontSize: 13 }}>
-                {strategy?.bestPostingTime != null && <p style={{ marginBottom: 4 }}>Лучшее время публикации: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.bestPostingTime)}</b></p>}
-                {strategy?.recommendedFrequency != null && <p style={{ marginBottom: 4 }}>Рекомендуемая частота: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.recommendedFrequency)}</b></p>}
-                {strategy?.monetizationPotential != null && <p style={{ marginBottom: 4 }}>Потенциал монетизации: <b style={{ color: C?.text ?? '#fff' }}>{typeof strategy.monetizationPotential === "object" && strategy.monetizationPotential !== null ? String((strategy.monetizationPotential as any).level) + " — " + String((strategy.monetizationPotential as any).reason) : String(strategy.monetizationPotential)}</b></p>}
-                {strategy?.audienceAge != null && <p style={{ marginBottom: 4 }}>Целевой возраст: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.audienceAge)}</b></p>}
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044F'}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                {strategy?.bestPostingTime != null && (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </span>
+                    <span style={{ ...sub }}>{String(strategy.bestPostingTime)}</span>
+                  </div>
+                )}
+                {strategy?.recommendedFrequency != null && (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </span>
+                    <span style={{ ...sub }}>{String(strategy.recommendedFrequency)}</span>
+                  </div>
+                )}
+                {strategy?.monetizationPotential != null && (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </span>
+                    <span style={{ ...sub }}>{safeStr(strategy.monetizationPotential)}</span>
+                  </div>
+                )}
+                {strategy?.audienceAge != null && (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </span>
+                    <span style={{ ...sub }}>{String(strategy.audienceAge)}</span>
+                  </div>
+                )}
               </div>
               {((strategy?.crossPlatformPotential ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {((strategy?.crossPlatformPotential ?? []) as string[]).map((p, i) => (
-                    <span key={i} style={pillStyle}>{String(p)}</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+                  {((strategy.crossPlatformPotential) as string[]).map((p, i) => (
+                    <span key={i} style={pill}>{String(p)}</span>
                   ))}
                 </div>
               )}
@@ -417,72 +521,96 @@ export function YoutubeDownloader() {
 
           {/* Competition */}
           {competition && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Конкуренция</h4>
-              <div style={{ ...textStyle, fontSize: 13 }}>
-                {competition?.nichePopularity != null && <p style={{ marginBottom: 4 }}>Популярность ниши: <b style={{ color: C?.text ?? '#fff' }}>{String(competition.nichePopularity)}</b></p>}
-                {competition?.contentSaturation != null && <p style={{ marginBottom: 4 }}>Насыщенность контента: <b style={{ color: C?.text ?? '#fff' }}>{String(competition.contentSaturation)}</b></p>}
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u041A\u043E\u043D\u043A\u0443\u0440\u0435\u043D\u0446\u0438\u044F'}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', marginBottom: 12 }}>
+                {competition?.nichePopularity != null && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u041F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0441\u0442\u044C \u043D\u0438\u0448\u0438'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(competition.nichePopularity)}</div>
+                  </div>
+                )}
+                {competition?.contentSaturation != null && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u041D\u0430\u0441\u044B\u0449\u0435\u043D\u043D\u043E\u0441\u0442\u044C'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(competition.contentSaturation)}</div>
+                  </div>
+                )}
               </div>
               {((competition?.differentiationTips ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 8 }}>
-                  {((competition?.differentiationTips ?? []) as string[]).map((t, i) => (
-                    <p key={i} style={{ ...textStyle, fontSize: 13, marginBottom: 4 }}>💡 {String(t)}</p>
+                <>
+                  {((competition.differentiationTips) as string[]).map((t, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 6 }}>
+                      <span style={{ color: '#f59e0b', flexShrink: 0, marginTop: 2 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                      </span>
+                      <span style={{ ...sub, fontSize: 12 }}>{String(t)}</span>
+                    </div>
                   ))}
-                </div>
+                </>
               )}
             </div>
           )}
 
           {/* Structure */}
           {structure.length > 0 && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Структура видео</h4>
-              {(structure ?? []).map((seg, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 18 }}>{String(seg?.icon ?? '🎬')}</span>
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0430 \u0432\u0438\u0434\u0435\u043E'}</h4>
+              {structure.map((seg, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+                  borderBottom: i < structure.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none',
+                }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>{String(seg?.icon ?? '\uD83C\uDFAC')}</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C?.text ?? '#fff' }}>{String(seg?.label ?? '')}</div>
-                    <div style={{ ...textStyle, fontSize: 12 }}>{String(seg?.start ?? '')} — {String(seg?.end ?? '')}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seg?.label ?? '')}</div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa' }}>{String(seg?.start ?? '')} \u2014 {String(seg?.end ?? '')}</div>
                   </div>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: String(seg?.color ?? '#666') }} />
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: String(seg?.color ?? accent), flexShrink: 0 }} />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Viral factors */}
-          {viralFactors.length > 0 && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Факторы виральности</h4>
-              {(viralFactors ?? []).map((f, i) => (
-                <p key={i} style={{ ...textStyle, fontSize: 13, marginBottom: 4 }}>✅ {String(f)}</p>
-              ))}
+          {/* Shorts */}
+          {shorts && data?.isShorts && (
+            <div style={card}>
+              <h4 style={sectionTitle}>Shorts</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                {shorts?.hookQuality != null && <span style={pill}>{'\u0425\u0443\u043A: '}{String(shorts.hookQuality)}</span>}
+                {shorts?.loopPotential != null && <span style={pill}>{'\u0417\u0430\u0446\u0438\u043A\u043B.: '}{String(shorts.loopPotential)}/10</span>}
+                {shorts?.shareability != null && <span style={pill}>{'\u0412\u0438\u0440\u0430\u043B\u044C\u043D.: '}{String(shorts.shareability)}/10</span>}
+              </div>
+              {(((shorts?.tips ?? []) as string[]).length > 0) && (
+                <>
+                  {((shorts.tips) as string[]).map((t, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
+                      <span style={{ color: '#f59e0b', flexShrink: 0 }}>{'\uD83D\uDCA1'}</span>
+                      <span style={{ ...sub, fontSize: 12 }}>{String(t)}</span>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
 
-          {/* Tips */}
-          {tips.length > 0 && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Рекомендации</h4>
-              {(tips ?? []).map((t, i) => (
-                <p key={i} style={{ ...textStyle, fontSize: 13, marginBottom: 6 }}>💡 {String(t)}</p>
-              ))}
-            </div>
-          )}
-
-          {/* Thumbnail analysis */}
+          {/* Thumbnail */}
           {thumb && (
-            <div style={cardStyle}>
-              <h4 style={headerStyle}>Превью</h4>
-              <div style={{ ...textStyle, fontSize: 13 }}>
-                {thumb?.hasCustomThumbnail != null && <p style={{ marginBottom: 4 }}>{thumb.hasCustomThumbnail ? '✅' : '❌'} Пользовательская превью</p>}
-                {thumb?.resolution != null && <p style={{ marginBottom: 4 }}>Разрешение: {String(thumb.resolution)}</p>}
-                {thumb?.aspectRatio != null && <p style={{ marginBottom: 4 }}>Соотношение сторон: {String(thumb.aspectRatio)}</p>}
+            <div style={card}>
+              <h4 style={sectionTitle}>{'\u041F\u0440\u0435\u0432\u044C\u044E'}</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px' }}>
+                {thumb?.hasCustomThumbnail != null && (
+                  <div style={{ ...sub, fontSize: 13 }}>{thumb.hasCustomThumbnail ? '\u2705' : '\u274C'} {'\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0430\u044F'}</div>
+                )}
+                {thumb?.resolution != null && <div style={{ ...sub, fontSize: 13 }}>{String(thumb.resolution)}</div>}
               </div>
               {((thumb?.tips ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 8 }}>
-                  {((thumb?.tips ?? []) as string[]).map((t, i) => (
-                    <p key={i} style={{ ...textStyle, fontSize: 13, marginBottom: 4 }}>💡 {String(t)}</p>
+                <div style={{ marginTop: 10 }}>
+                  {((thumb.tips) as string[]).map((t, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
+                      <span style={{ color: '#f59e0b', flexShrink: 0 }}>{'\uD83D\uDCA1'}</span>
+                      <span style={{ ...sub, fontSize: 12 }}>{String(t)}</span>
+                    </div>
                   ))}
                 </div>
               )}
@@ -491,27 +619,27 @@ export function YoutubeDownloader() {
 
           {/* Open on YouTube */}
           {data?.videoId && (
-            <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 24 }}>
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
               <a
                 href={`https://www.youtube.com/watch?v=${String(data.videoId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  display: 'inline-block',
-                  padding: '10px 24px',
-                  borderRadius: 10,
-                  background: 'linear-gradient(135deg, #ff0000, #cc0000)',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: 14,
-                  textDecoration: 'none',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '10px 24px', borderRadius: 10,
+                  border: `1px solid ${C?.border ?? '#eee'}`,
+                  background: C?.surface ?? '#fff',
+                  color: C?.text ?? '#111',
+                  fontWeight: 600, fontSize: 13, textDecoration: 'none',
+                  fontFamily: 'inherit',
                 }}
               >
-                Открыть на YouTube ↗
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                {'\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043D\u0430 YouTube'}
               </a>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
