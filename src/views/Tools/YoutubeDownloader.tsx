@@ -491,7 +491,7 @@ export function YoutubeDownloader() {
               <h4 style={sectionTitle}>{String.fromCharCode(0x41A, 0x43E, 0x43C, 0x43C, 0x435, 0x43D, 0x442, 0x430, 0x440, 0x438, 0x438, 0x20, 0x430, 0x432, 0x442, 0x43E, 0x440, 0x430)}</h4>
               {authorComments.map((c, i) => (
                 <div key={i} style={{ padding: '10px 0', borderBottom: i < authorComments.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none' }}>
-                  <div dangerouslySetInnerHTML={{ __html: c.text }} style={{ ...sub, fontSize: 13 }} />
+                  <div style={{ ...sub, fontSize: 13 }}>{c.text.replace(/<[^>]*>/g, '')}</div>
                   <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 4, display: 'flex', gap: 12 }}>
                     <span>{String(c.publishedAt).slice(0, 10)}</span>
                     {c.likeCount > 0 && <span>{String.fromCharCode(0x1F44D)} {c.likeCount}</span>}
@@ -508,7 +508,7 @@ export function YoutubeDownloader() {
               {topComments.map((c, i) => (
                 <div key={i} style={{ padding: '10px 0', borderBottom: i < topComments.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: C?.text ?? '#111', marginBottom: 4 }}>{c.author}</div>
-                  <div dangerouslySetInnerHTML={{ __html: c.text }} style={{ ...sub, fontSize: 13 }} />
+                  <div style={{ ...sub, fontSize: 13 }}>{c.text.replace(/<[^>]*>/g, '')}</div>
                   <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 4, display: 'flex', gap: 12 }}>
                     <span>{String(c.publishedAt).slice(0, 10)}</span>
                     {c.likeCount > 0 && <span>{String.fromCharCode(0x1F44D)} {c.likeCount}</span>}
