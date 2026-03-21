@@ -1236,6 +1236,14 @@ export async function POST(req: NextRequest) {
     let categoryId: string | undefined;
     let description: string | undefined;
     let dataApiAvailable = false;
+    let channelId: string | undefined;
+    let subscriberCount: number | undefined;
+    let channelVideoCount: number | undefined;
+    let channelCreatedAt: string | undefined;
+    let authorComments: { text: string; likeCount: number; publishedAt: string }[] = [];
+    let topComments: { author: string; text: string; likeCount: number; publishedAt: string }[] = [];
+    let defaultAudioLanguage: string | undefined;
+    let licensedContent: boolean | undefined;
 
     const youtubeApiKey = process.env.YOUTUBE_API_KEY;
     if (youtubeApiKey) {
@@ -1262,6 +1270,56 @@ export async function POST(req: NextRequest) {
             views = item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : undefined;
             likes = item.statistics?.likeCount ? parseInt(item.statistics.likeCount, 10) : undefined;
             comments = item.statistics?.commentCount ? parseInt(item.statistics.commentCount, 10) : undefined;
+            channelId = (item.snippet as any)?.channelId;
+            defaultAudioLanguage = (item.snippet as any)?.defaultAudioLanguage;
+            licensedContent = (item.contentDetails as any)?.licensedContent;
+
+            // Fetch channel info
+            if (channelId && youtubeApiKey) {
+              try {
+                const chRes = await fetch(
+                  `https://www.googleapis.com/youtube/v3/channels?id=${channelId}&key=${youtubeApiKey}&part=snippet,statistics`,
+                  { headers: { 'User-Agent': 'TubeForge/1.0' }, signal: AbortSignal.timeout(5000) },
+                );
+                if (chRes.ok) {
+                  const chJson = await chRes.json();
+                  const ch = (chJson as any).items?.[0];
+                  if (ch) {
+                    subscriberCount = ch.statistics?.subscriberCount ? parseInt(ch.statistics.subscriberCount, 10) : undefined;
+                    channelVideoCount = ch.statistics?.videoCount ? parseInt(ch.statistics.videoCount, 10) : undefined;
+                    channelCreatedAt = ch.snippet?.publishedAt;
+                  }
+                }
+              } catch { /* channel fetch failed */ }
+            }
+
+            // Fetch top comments + author comments
+            try {
+              const cmRes = await fetch(
+                `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&key=${youtubeApiKey}&part=snippet&maxResults=20&order=relevance`,
+                { headers: { 'User-Agent': 'TubeForge/1.0' }, signal: AbortSignal.timeout(5000) },
+              );
+              if (cmRes.ok) {
+                const cmJson = await cmRes.json();
+                const threads = (cmJson as any).items ?? [];
+                for (const thread of threads) {
+                  const snip = thread?.snippet?.topLevelComment?.snippet;
+                  if (!snip) continue;
+                  const entry = {
+                    author: snip.authorDisplayName ?? '',
+                    text: (snip.textDisplay ?? '').slice(0, 300),
+                    likeCount: snip.likeCount ?? 0,
+                    publishedAt: snip.publishedAt ?? '',
+                  };
+                  if (snip.authorChannelId?.value === channelId) {
+                    authorComments.push({ text: entry.text, likeCount: entry.likeCount, publishedAt: entry.publishedAt });
+                  }
+                  topComments.push(entry);
+                }
+                topComments = topComments.slice(0, 10);
+                authorComments = authorComments.slice(0, 5);
+              }
+            } catch { /* comments fetch failed */ }
           }
         } else {
           ytLog.warn('YouTube Data API returned error', { status: dataRes.status });
@@ -1391,6 +1449,19 @@ export async function POST(req: NextRequest) {
 
       // NEW: Overall score (1-100)
       overallScore,
+
+      // Channel info
+      channelId: channelId ?? null,
+      channelStats: channelId ? {
+        subscribers: subscriberCount ?? null,
+        totalVideos: channelVideoCount ?? null,
+        createdAt: channelCreatedAt ?? null,
+      } : null,
+      authorComments: authorComments.length > 0 ? authorComments : null,
+      topComments: topComments.length > 0 ? topComments : null,
+      description: description ? description.slice(0, 2000) : null,
+      defaultAudioLanguage: defaultAudioLanguage ?? null,
+      licensedContent: licensedContent ?? null,
 
       // Meta
       dataApiAvailable,

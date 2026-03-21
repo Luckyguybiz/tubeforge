@@ -165,6 +165,10 @@ export function YoutubeDownloader() {
   const thumb = (data?.thumbnailAnalysis ?? null) as Record<string, any> | null;
   const structure = (analysis?.structure ?? []) as Record<string, any>[];
   const viralFactors = (analysis?.viralFactors ?? []) as string[];
+  const channelStats = data?.channelStats as Record<string, any> | null;
+  const authorComments = (data?.authorComments ?? []) as { text: string; likeCount: number; publishedAt: string }[];
+  const topComments = (data?.topComments ?? []) as { author: string; text: string; likeCount: number; publishedAt: string }[];
+  const videoDescription = data?.description as string | null;
 
   /* ── Render ─────────────────────────────────────────────────── */
 
@@ -456,6 +460,61 @@ export function YoutubeDownloader() {
                 {thumb?.resolution != null && <StatCell label={'\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0435'} value={String(thumb.resolution)} />}
                 {thumb?.aspectRatio != null && <StatCell label={'\u0421\u043E\u043E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u0435'} value={String(thumb.aspectRatio)} />}
               </div>
+            </div>
+          )}
+
+          {/* Channel Info */}
+          {channelStats && (
+            <div style={card}>
+              <h4 style={sectionTitle}>{String.fromCharCode(0x41A, 0x430, 0x43D, 0x430, 0x43B)}</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                <StatCell label={String.fromCharCode(0x41F, 0x43E, 0x434, 0x43F, 0x438, 0x441, 0x447, 0x438, 0x43A, 0x438)} value={fmt(channelStats.subscribers)} />
+                <StatCell label={String.fromCharCode(0x412, 0x438, 0x434, 0x435, 0x43E, 0x20, 0x43D, 0x430, 0x20, 0x43A, 0x430, 0x43D, 0x430, 0x43B, 0x435)} value={fmt(channelStats.totalVideos)} />
+                {channelStats.createdAt && <StatCell label={String.fromCharCode(0x41A, 0x430, 0x43D, 0x430, 0x43B, 0x20, 0x441, 0x43E, 0x437, 0x434, 0x430, 0x43D)} value={String(channelStats.createdAt).slice(0, 10)} />}
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          {videoDescription && (
+            <div style={card}>
+              <h4 style={sectionTitle}>{String.fromCharCode(0x41E, 0x43F, 0x438, 0x441, 0x430, 0x43D, 0x438, 0x435)}</h4>
+              <pre style={{ ...sub, fontSize: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, maxHeight: 200, overflow: 'auto', fontFamily: 'inherit' }}>
+                {videoDescription}
+              </pre>
+            </div>
+          )}
+
+          {/* Author Comments */}
+          {authorComments.length > 0 && (
+            <div style={card}>
+              <h4 style={sectionTitle}>{String.fromCharCode(0x41A, 0x43E, 0x43C, 0x43C, 0x435, 0x43D, 0x442, 0x430, 0x440, 0x438, 0x438, 0x20, 0x430, 0x432, 0x442, 0x43E, 0x440, 0x430)}</h4>
+              {authorComments.map((c, i) => (
+                <div key={i} style={{ padding: '10px 0', borderBottom: i < authorComments.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none' }}>
+                  <div dangerouslySetInnerHTML={{ __html: c.text }} style={{ ...sub, fontSize: 13 }} />
+                  <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 4, display: 'flex', gap: 12 }}>
+                    <span>{String(c.publishedAt).slice(0, 10)}</span>
+                    {c.likeCount > 0 && <span>{String.fromCharCode(0x1F44D)} {c.likeCount}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Top Comments */}
+          {topComments.length > 0 && (
+            <div style={card}>
+              <h4 style={sectionTitle}>{String.fromCharCode(0x422, 0x43E, 0x43F, 0x20, 0x43A, 0x43E, 0x43C, 0x43C, 0x435, 0x43D, 0x442, 0x430, 0x440, 0x438, 0x438)}</h4>
+              {topComments.map((c, i) => (
+                <div key={i} style={{ padding: '10px 0', borderBottom: i < topComments.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C?.text ?? '#111', marginBottom: 4 }}>{c.author}</div>
+                  <div dangerouslySetInnerHTML={{ __html: c.text }} style={{ ...sub, fontSize: 13 }} />
+                  <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 4, display: 'flex', gap: 12 }}>
+                    <span>{String(c.publishedAt).slice(0, 10)}</span>
+                    {c.likeCount > 0 && <span>{String.fromCharCode(0x1F44D)} {c.likeCount}</span>}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
