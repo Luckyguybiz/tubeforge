@@ -274,15 +274,16 @@ export const adminRouter = router({
   }),
 
   getPlanDistribution: adminProcedure.query(async ({ ctx }) => {
-    const [free, pro, studio] = await Promise.all([
-      ctx.db.user.count({ where: { plan: 'FREE' } }),
-      ctx.db.user.count({ where: { plan: 'PRO' } }),
-      ctx.db.user.count({ where: { plan: 'STUDIO' } }),
-    ]);
+    // Single groupBy query instead of 3 separate count queries
+    const groups = await ctx.db.user.groupBy({
+      by: ['plan'],
+      _count: { _all: true },
+    });
+    const countMap = new Map(groups.map(g => [g.plan, g._count._all]));
     return [
-      { name: 'Free', value: free, color: '#6b7280' },
-      { name: 'Pro', value: pro, color: '#3b82f6' },
-      { name: 'Studio', value: studio, color: '#8b5cf6' },
+      { name: 'Free', value: countMap.get('FREE') ?? 0, color: '#6b7280' },
+      { name: 'Pro', value: countMap.get('PRO') ?? 0, color: '#3b82f6' },
+      { name: 'Studio', value: countMap.get('STUDIO') ?? 0, color: '#8b5cf6' },
     ];
   }),
 
@@ -393,17 +394,17 @@ export const adminRouter = router({
       newToday,
       newThisWeek,
       newThisMonth,
-      freeCount,
-      proCount,
-      studioCount,
+      planGroups,
       topByAI,
     ] = await Promise.all([
       ctx.db.user.count({ where: { createdAt: { gte: todayStart } } }),
       ctx.db.user.count({ where: { createdAt: { gte: weekAgo } } }),
       ctx.db.user.count({ where: { createdAt: { gte: monthAgo } } }),
-      ctx.db.user.count({ where: { plan: 'FREE' } }),
-      ctx.db.user.count({ where: { plan: 'PRO' } }),
-      ctx.db.user.count({ where: { plan: 'STUDIO' } }),
+      // Single groupBy instead of 3 separate count queries
+      ctx.db.user.groupBy({
+        by: ['plan'],
+        _count: { _all: true },
+      }),
       ctx.db.user.findMany({
         where: { aiUsage: { gt: 0 } },
         select: { id: true, name: true, email: true, plan: true, aiUsage: true },
@@ -412,11 +413,16 @@ export const adminRouter = router({
       }),
     ]);
 
+    const planCountMap = new Map(planGroups.map(g => [g.plan, g._count._all]));
     return {
       newToday,
       newThisWeek,
       newThisMonth,
-      planDistribution: { free: freeCount, pro: proCount, studio: studioCount },
+      planDistribution: {
+        free: planCountMap.get('FREE') ?? 0,
+        pro: planCountMap.get('PRO') ?? 0,
+        studio: planCountMap.get('STUDIO') ?? 0,
+      },
       topByAI,
     };
   }),
@@ -540,6 +546,14 @@ export const adminRouter = router({
       try {
         const [logs, total] = await Promise.all([
           (ctx.db as Record<string, unknown> & typeof ctx.db).auditLog?.findMany?.({
+            select: {
+              id: true,
+              userId: true,
+              action: true,
+              target: true,
+              metadata: true,
+              createdAt: true,
+            },
             orderBy: { createdAt: 'desc' },
             skip: (page - 1) * limit,
             take: limit,
@@ -633,6 +647,7 @@ export const adminRouter = router({
           _count: { select: { projects: true } },
         },
         orderBy: { createdAt: 'desc' },
+        take: 10000, // Safety cap to prevent unbounded queries
       });
 
       return users.map(u => ({
