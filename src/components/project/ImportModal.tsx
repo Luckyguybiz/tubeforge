@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -190,6 +190,16 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
     });
   }, [importData, importMutation]);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && step !== 'importing') { handleReset(); onClose(); }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open, step, handleReset, onClose]);
+
   if (!open) return null;
 
   return (
@@ -208,7 +218,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
       />
 
       {/* Modal */}
-      <div style={{
+      <div role="dialog" aria-modal="true" aria-label={t('dashboard.importProject')} style={{
         position: 'fixed',
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',

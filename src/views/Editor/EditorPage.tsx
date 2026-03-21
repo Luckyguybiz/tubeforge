@@ -1405,6 +1405,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         <OnlineUsers />
 
         {/* Auto-save / Save status indicator */}
+        <span role="status" aria-live="polite" style={{ display: 'contents' }}>
         {saveStatus === 'saving' ? (
           <span style={{ fontSize: 9, color: C.dim, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', border: '1.5px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
@@ -1417,6 +1418,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         ) : autoSaveDirty ? (
           <span style={{ fontSize: 9, color: C.orange, fontWeight: 500 }}>{t('editor.autoSave.unsaved')}</span>
         ) : null}
+        </span>
 
         {/* Undo / Redo */}
         <div style={{ display: 'flex', gap: 2 }}>
@@ -1480,6 +1482,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         <button
           onClick={() => setShowScriptModal(true)}
           title="Сгенерировать скрипт с помощью ИИ"
+          aria-label={t('editor.toolbar.generateScript')}
           style={{
             padding: '6px 12px',
             borderRadius: 16,
@@ -1511,6 +1514,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           <button
             onClick={() => setShowShortsModal(true)}
             title="Создать Shorts из проекта"
+            aria-label={t('editor.toolbar.createShorts')}
             style={{
               padding: '6px 12px',
               borderRadius: 16,
@@ -1625,6 +1629,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             <button
               onClick={() => addScene()}
               title={t('editor.addScene')}
+              aria-label={t('editor.addScene')}
               style={{
                 width: 22,
                 height: 22,
@@ -2584,6 +2589,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           {/* Add scene "+" block at end of timeline */}
           <div
             onClick={() => addScene()}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addScene(); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={t('editor.addScene')}
             style={{
               flex: '0 0 36px',
               height: 36,
@@ -2623,6 +2632,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       {/* ═══ Z1: Script Generator Modal ═══ */}
       {showScriptModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('editor.toolbar.generateScript')}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowScriptModal(false); }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2647,6 +2660,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </h3>
               <button
                 onClick={() => setShowScriptModal(false)}
+                aria-label={t('common.close')}
                 style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
               >
                 &#10005;
@@ -2835,6 +2849,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       {/* ═══ Z5: Create Shorts Modal ═══ */}
       {showShortsModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('editor.toolbar.createShorts')}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowShortsModal(false); }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',

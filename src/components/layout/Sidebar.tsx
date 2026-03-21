@@ -1075,6 +1075,7 @@ export const Sidebar = memo(function Sidebar() {
               onClick={() => navigate('billing')}
               onMouseEnter={() => handleMouseEnter('_upgrade')}
               onMouseLeave={handleMouseLeave}
+              aria-label={t('sidebar.upgradePlan')}
               style={{
                 width: 34,
                 height: 34,
@@ -1307,6 +1308,7 @@ export const Sidebar = memo(function Sidebar() {
               onClick={() => signOut({ callbackUrl: '/' })}
               onMouseEnter={() => handleMouseEnter('_logout')}
               onMouseLeave={handleMouseLeave}
+              aria-label={t('sidebar.logoutLabel')}
               style={{
                 width: 28,
                 height: 28,

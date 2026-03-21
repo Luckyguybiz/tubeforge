@@ -513,6 +513,8 @@
   "editor.toolbar.undo": "Deshacer",
   "editor.toolbar.redo": "Rehacer",
   "editor.toolbar.save": "Guardar",
+  "editor.toolbar.generateScript": "Generar guion con IA",
+  "editor.toolbar.createShorts": "Crear Shorts del proyecto",
   "editor.actionUndone": "Acción deshecha",
   "editor.actionRedone": "Acción rehecha",
   "editor.undoHint": "Ctrl+Z para deshacer",

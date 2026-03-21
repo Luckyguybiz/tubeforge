@@ -120,6 +120,7 @@ export function CookieConsent() {
     >
       <div
         role="dialog"
+        aria-modal="true"
         aria-label="Cookie consent"
         style={{
           background: C.surface,
