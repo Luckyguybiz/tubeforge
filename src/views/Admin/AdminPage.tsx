@@ -1391,9 +1391,12 @@ function LoadingSkeleton({ C }: { C: Theme }) {
 /* ── Analytics Dashboard ─────────────────────────── */
 
 const PLAN_COLORS: Record<string, string> = {
-  FREE: '#3b82f6',
-  PRO: '#f43f5e',
+  FREE: '#6b7280',
+  Free: '#6b7280',
+  PRO: '#3b82f6',
+  Pro: '#3b82f6',
   STUDIO: '#8b5cf6',
+  Studio: '#8b5cf6',
 };
 
 interface AnalyticsDashboardProps {
@@ -1427,14 +1430,14 @@ function AnalyticsDashboard({
   userAnalytics,
   funnelData,
 }: AnalyticsDashboardProps) {
-  const totalRevenue = revenueStats.data?.reduce((sum, r) => sum + r.total, 0) ?? 0;
+  const totalRevenue = revenueStats.data?.reduce((sum, r) => sum + (r.revenue ?? r.total ?? 0), 0) ?? 0;
   const ua = userAnalytics?.data;
 
   const summaryCards = [
     { label: 'Total Users', value: totalUsers.toLocaleString('en-US'), color: C.blue },
     { label: 'Paid Users', value: paidUsers.toLocaleString('en-US'), color: C.green },
     { label: 'Revenue (12mo)', value: `$${totalRevenue.toFixed(2)}`, color: C.accent },
-    { label: 'Active (7d)', value: activeUsers.data?.count?.toLocaleString('en-US') ?? '...', color: C.purple },
+    { label: 'Active (7d)', value: (Array.isArray(activeUsers.data) ? activeUsers.data.reduce((sum: number, d: { active?: number }) => sum + (d.active ?? 0), 0) : activeUsers.data?.count ?? 0).toLocaleString('en-US'), color: C.purple },
   ];
 
   const chartCardStyle: React.CSSProperties = {
@@ -1718,12 +1721,8 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
             <LineChart data={growthStats.data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={`${C.border}`} />
               <XAxis
-                dataKey="day"
+                dataKey="month"
                 tick={{ fill: C.dim, fontSize: 11 }}
-                tickFormatter={(v: string) => {
-                  const d = new Date(v);
-                  return `${d.getDate()}/${d.getMonth() + 1}`;
-                }}
                 stroke={C.border}
               />
               <YAxis tick={{ fill: C.dim, fontSize: 11 }} stroke={C.border} allowDecimals={false} />
@@ -1736,19 +1735,30 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
                   color: C.text,
                   boxShadow: '0 4px 16px rgba(0,0,0,.15)',
                 }}
-                labelFormatter={(v) => {
-                  const d = new Date(String(v));
-                  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                }}
               />
               <Line
                 type="monotone"
-                dataKey="count"
+                dataKey="users"
                 name="New Users"
                 stroke={C.accent}
                 strokeWidth={2.5}
                 dot={{ fill: C.accent, r: 3, strokeWidth: 0 }}
                 activeDot={{ r: 5, fill: C.accent, strokeWidth: 2, stroke: C.card }}
+              />
+              <Line
+                type="monotone"
+                dataKey="projects"
+                name="New Projects"
+                stroke={C.blue}
+                strokeWidth={2}
+                dot={{ fill: C.blue, r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: C.blue, strokeWidth: 2, stroke: C.card }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                formatter={(value: string) => (
+                  <span style={{ color: C.sub, fontSize: 12, fontWeight: 500 }}>{value}</span>
+                )}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -1771,8 +1781,8 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
             <PieChart>
               <Pie
                 data={planDistribution.data}
-                dataKey="count"
-                nameKey="plan"
+                dataKey="value"
+                nameKey="name"
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
@@ -1783,8 +1793,8 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
               >
                 {planDistribution.data.map((entry) => (
                   <Cell
-                    key={entry.plan}
-                    fill={PLAN_COLORS[entry.plan] ?? C.dim}
+                    key={entry.name}
+                    fill={entry.color ?? PLAN_COLORS[entry.name] ?? C.dim}
                     stroke="none"
                   />
                 ))}
@@ -1828,10 +1838,6 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
               <XAxis
                 dataKey="month"
                 tick={{ fill: C.dim, fontSize: 11 }}
-                tickFormatter={(v: string) => {
-                  const d = new Date(v + '-01');
-                  return d.toLocaleDateString('en-US', { month: 'short' });
-                }}
                 stroke={C.border}
               />
               <YAxis
@@ -1848,13 +1854,10 @@ function AdminCharts({ recharts: rc, C, chartCardStyle, chartTitleStyle, growthS
                   color: C.text,
                   boxShadow: '0 4px 16px rgba(0,0,0,.15)',
                 }}
-                formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
-                labelFormatter={(v) => {
-                  const d = new Date(String(v) + '-01');
-                  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                }}
+                formatter={(value, name) => [`$${Number(value).toFixed(2)}`, String(name)]}
               />
-              <Bar dataKey="total" name="Revenue" fill={C.green} radius={[6, 6, 0, 0]} maxBarSize={48} />
+              <Bar dataKey="revenue" name="Revenue" fill={C.green} radius={[6, 6, 0, 0]} maxBarSize={48} />
+              <Bar dataKey="payouts" name="Payouts" fill={C.orange} radius={[6, 6, 0, 0]} maxBarSize={48} />
             </BarChart>
           </ResponsiveContainer>
         )}

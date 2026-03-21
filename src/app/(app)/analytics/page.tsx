@@ -131,6 +131,7 @@ export default function AnalyticsPage() {
   }
 
   const isLoading = overview.isLoading || activity.isLoading;
+  const isError = overview.isError || activity.isError;
   const data = overview.data;
 
   return (
@@ -169,6 +170,48 @@ export default function AnalyticsPage() {
             Your content creation statistics and activity overview
           </p>
         </div>
+
+        {/* Error state */}
+        {isError && !isLoading && (
+          <div
+            style={{
+              padding: '32px 24px',
+              borderRadius: 16,
+              background: isDark
+                ? 'rgba(255,60,60,.06)'
+                : 'rgba(255,60,60,.04)',
+              border: '1px solid rgba(255,60,60,.15)',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div style={{ fontSize: 14, color: isDark ? '#ff8080' : '#cc3333', fontWeight: 500 }}>
+              Failed to load analytics data
+            </div>
+            <div style={{ fontSize: 12.5, color: C.dim }}>
+              {overview.error?.message || activity.error?.message || 'An unexpected error occurred'}
+            </div>
+            <button
+              onClick={() => { overview.refetch(); activity.refetch(); }}
+              style={{
+                marginTop: 4,
+                padding: '8px 20px',
+                borderRadius: 8,
+                border: `1px solid ${C.border}`,
+                background: C.surface,
+                color: C.text,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Loading skeleton */}
         {isLoading && (

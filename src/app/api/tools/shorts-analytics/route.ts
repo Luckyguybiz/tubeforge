@@ -105,23 +105,22 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
 
-  // Server-side plan/promo enforcement
+  // Server-side plan/promo enforcement — FREE users get limited data (10 items, 7d period only)
   const promoCode = sp.get('promoCode');
-  const allowed = await hasAnalyticsAccess(session.user.id, session.user.plan, promoCode);
-  if (!allowed) {
-    return NextResponse.json(
-      { error: 'Upgrade to PRO or STUDIO to access analytics, or enter a valid promo code.' },
-      { status: 403 },
-    );
-  }
+  const hasPro = await hasAnalyticsAccess(session.user.id, session.user.plan, promoCode);
 
-  const period = sp.get('period') ?? '7d';
+  const FREE_LIMIT = 10;
+  const FREE_PERIOD = '7d';
+
+  const period = hasPro ? (sp.get('period') ?? '7d') : FREE_PERIOD;
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';
   const game = sp.get('game') ?? '';
   const platformParam = sp.get('platform') ?? 'youtube';
   const limitParam = sp.get('limit');
-  const limit = limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50;
+  const limit = hasPro
+    ? (limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50)
+    : FREE_LIMIT;
 
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {

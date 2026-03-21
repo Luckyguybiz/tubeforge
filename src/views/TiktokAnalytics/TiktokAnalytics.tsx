@@ -619,7 +619,16 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
 
       const res = await fetch(`/api/tools/tiktok-analytics?${params}`);
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        // For 403 (plan gate) — let the upgrade overlay handle it, don't show error
+        if (res.status === 403) {
+          setIsMock(true);
+          setData([]);
+          return;
+        }
+        // Try to parse error body for a meaningful message
+        let serverMsg = '';
+        try { const errJson = await res.json(); serverMsg = errJson?.error ?? ''; } catch { /* ignore */ }
+        throw new Error(serverMsg || `HTTP ${res.status}`);
       }
       const json = await res.json();
       setIsMock(!!json.mock);
@@ -636,7 +645,9 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('[TiktokAnalytics] fetch error:', err);
-      setError(t('shorts.promo.loadError'));
+      setError(err instanceof Error && err.message && err.message !== 'Failed to fetch'
+        ? err.message
+        : t('shorts.promo.loadError'));
     } finally {
       setLoading(false);
     }
@@ -706,7 +717,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
   }, [data, filters.hideIndian, filters.hashtag, filters.trendingSounds, isMock]);
 
   const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
-  const showUpgradeOverlay = !isPro && data.length > 0;
+  const showUpgradeOverlay = !isPro && !loading;
 
   // Niche stats: total views, total likes, estimated earnings, engagement rate
   const nicheStats = useMemo(() => {
