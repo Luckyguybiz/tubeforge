@@ -296,17 +296,33 @@ export function VideoTranslator() {
             </svg>
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 8 }}>
-            {status === 'uploading' ? '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...' : (statusText || '\u041F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0432\u0438\u0434\u0435\u043E...')}
+            {status === 'uploading'
+              ? '\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u0432\u0438\u0434\u0435\u043E \u043D\u0430 \u0441\u0435\u0440\u0432\u0435\u0440...'
+              : (statusText || '\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430...')}
           </div>
           <div style={{ fontSize: 13, color: C?.sub ?? '#888', marginBottom: 20 }}>
-            {expectedDuration > 0 ? `\u041E\u0436\u0438\u0434\u0430\u0435\u043C\u043E\u0435 \u0432\u0440\u0435\u043C\u044F: ~${Math.ceil(expectedDuration / 60)} \u043C\u0438\u043D.` : '\u041A\u043B\u043E\u043D\u0438\u0440\u0443\u0435\u043C \u0433\u043E\u043B\u043E\u0441, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0438 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0435\u043C'}
+            {status === 'uploading'
+              ? '\u042D\u0442\u043E \u043C\u043E\u0436\u0435\u0442 \u0437\u0430\u043D\u044F\u0442\u044C \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043D\u0443\u0442 \u0434\u043B\u044F \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0444\u0430\u0439\u043B\u043E\u0432'
+              : (expectedDuration > 0
+                ? `\u041E\u0436\u0438\u0434\u0430\u0435\u043C\u043E\u0435 \u0432\u0440\u0435\u043C\u044F: ~${Math.ceil(expectedDuration / 60)} \u043C\u0438\u043D.`
+                : '\u041A\u043B\u043E\u043D\u0438\u0440\u0443\u0435\u043C \u0433\u043E\u043B\u043E\u0441, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0438 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0435\u043C')}
           </div>
-          {/* Progress bar */}
-          <div style={{ height: 6, borderRadius: 3, background: C?.border ?? '#eee', overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
-            <div style={{ height: '100%', borderRadius: 3, background: `linear-gradient(90deg, ${accent}, #a78bfa)`, width: `${progress}%`, transition: 'width 0.5s ease' }} />
-          </div>
-          <div style={{ fontSize: 12, color: C?.dim ?? '#aaa', marginTop: 8 }}>{progress}%</div>
-          <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+          {/* Progress bar — only show during processing, not upload */}
+          {status === 'processing' && (
+            <>
+              <div style={{ height: 6, borderRadius: 3, background: C?.border ?? '#eee', overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
+                <div style={{ height: '100%', borderRadius: 3, background: `linear-gradient(90deg, ${accent}, #a78bfa)`, width: `${progress}%`, transition: 'width 0.5s ease' }} />
+              </div>
+              <div style={{ fontSize: 12, color: C?.dim ?? '#aaa', marginTop: 8 }}>{progress}%</div>
+            </>
+          )}
+          {/* Indeterminate animation during upload */}
+          {status === 'uploading' && (
+            <div style={{ height: 6, borderRadius: 3, background: C?.border ?? '#eee', overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
+              <div style={{ height: '100%', borderRadius: 3, background: `linear-gradient(90deg, ${accent}, #a78bfa)`, width: '30%', animation: 'uploadPulse 1.5s ease-in-out infinite' }} />
+            </div>
+          )}
+          <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes uploadPulse{0%{transform:translateX(-100%)}50%{transform:translateX(250%)}100%{transform:translateX(-100%)}}`}</style>
         </div>
       )}
 
