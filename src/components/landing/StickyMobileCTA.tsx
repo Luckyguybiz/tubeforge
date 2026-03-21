@@ -62,7 +62,7 @@ export function StickyMobileCTA() {
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
           <path d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z" fill="currentColor" />
         </svg>
-        Начать бесплатно
+        Start Free
         <svg
           width="14"
           height="14"

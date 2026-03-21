@@ -121,7 +121,7 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
 
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/login" style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, padding: '8px 16px', transition: 'color 0.2s' }}>
-            Войти
+            Log In
           </Link>
           <Link
             href="/register"
@@ -129,14 +129,14 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
             onMouseEnter={primaryHoverIn}
             onMouseLeave={primaryHoverOut}
           >
-            {lightningIcon} Начать бесплатно
+            {lightningIcon} Start Free
           </Link>
         </div>
 
         <button
           className="mobile-menu-btn"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Открыть меню"
+          aria-label="Open menu"
           style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GRAY_700} strokeWidth="2" strokeLinecap="round">
@@ -164,9 +164,9 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
             </a>
           ))}
           <div style={{ borderTop: `1px solid ${GRAY_100}`, paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link href="/login" style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>Войти</Link>
+            <Link href="/login" style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>Log In</Link>
             <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 16, padding: '12px 24px', justifyContent: 'center' }}>
-              {lightningIcon} Начать бесплатно
+              {lightningIcon} Start Free
             </Link>
           </div>
         </div>

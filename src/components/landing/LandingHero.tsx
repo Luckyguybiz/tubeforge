@@ -109,7 +109,7 @@ export function LandingHero() {
           }}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z" fill="#818cf8" /></svg>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#a5b4fc', letterSpacing: '0.02em' }}>ИИ-платформа нового поколения</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#a5b4fc', letterSpacing: '0.02em' }}>Next-gen AI platform for creators</span>
         </div>
 
         {/* Headline */}
@@ -126,7 +126,7 @@ export function LandingHero() {
             transition: 'all 1s cubic-bezier(.4,0,.2,1) 0.15s',
           }}
         >
-          Создавайте.{' '}
+          Create.{' '}
           <span
             style={{
               background: 'linear-gradient(135deg, #818cf8, #6366f1, #a78bfa, #c084fc)',
@@ -137,10 +137,10 @@ export function LandingHero() {
               animation: 'tf-gradient-shift 6s ease infinite',
             }}
           >
-            Продвигайте.
+            Promote.
           </span>
           <br />
-          Зарабатывайте.
+          Monetize.
         </h1>
 
         {/* Subtitle */}
@@ -157,7 +157,7 @@ export function LandingHero() {
             transition: 'all 0.8s cubic-bezier(.4,0,.2,1)',
           }}
         >
-          Видеоредактор, ИИ-генерация контента, VPN, SEO-оптимизация и аналитика — всё для YouTube-креатора в одной платформе.
+          Video editor, AI content generation, VPN, SEO optimization, and analytics — everything a YouTube creator needs in one platform.
         </p>
 
         {/* CTAs */}
@@ -193,7 +193,7 @@ export function LandingHero() {
               boxShadow: '0 4px 24px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
-            Начать бесплатно
+            Start Free
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
           </Link>
           <a
@@ -217,7 +217,7 @@ export function LandingHero() {
               transition: 'all 0.3s cubic-bezier(.4,0,.2,1)',
             }}
           >
-            Узнать больше
+            Learn More
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
           </a>
         </div>
@@ -235,7 +235,7 @@ export function LandingHero() {
             transition: 'opacity 1s ease 0.3s',
           }}
         >
-          {['Бесплатный старт', 'Не нужна карта', 'Отмена в любой момент'].map((label, i) => (
+          {['Free to start', 'No credit card required', 'Cancel anytime'].map((label, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
