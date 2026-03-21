@@ -2,8 +2,24 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'About — TubeForge',
-  description: 'Learn more about TubeForge, the AI-powered platform for YouTube creators.',
+  title: 'About',
+  description: 'Learn about TubeForge, the AI-powered platform for YouTube creators. Our mission, team, and vision.',
+  openGraph: {
+    title: 'About — TubeForge',
+    description: 'Learn about TubeForge, the AI-powered platform helping YouTube creators produce professional content.',
+    type: 'website',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'About TubeForge' }],
+  },
+  alternates: {
+    canonical: 'https://tubeforge.co/about',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About — TubeForge',
+    description: 'Learn about TubeForge, the AI-powered platform for YouTube creators.',
+    images: ['/api/og'],
+  },
 };
 
 export default function AboutPage() {

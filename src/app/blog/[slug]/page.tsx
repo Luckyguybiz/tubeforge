@@ -19,16 +19,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) return {};
 
   return {
-    title: `${post.title} — Блог TubeForge`,
+    title: `${post.title} — TubeForge Blog`,
     description: post.excerpt,
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      locale: 'ru_RU',
+      locale: 'en_US',
       publishedTime: post.publishedAt,
       authors: [post.author],
       tags: post.tags,
+      images: [{ url: '/api/og', width: 1200, height: 630, alt: post.title }],
     },
     alternates: {
       canonical: `https://tubeforge.co/blog/${post.slug}`,
@@ -37,6 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: ['/api/og'],
     },
     keywords: post.tags,
   };

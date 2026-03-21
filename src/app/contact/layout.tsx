@@ -1,18 +1,25 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Контакты — TubeForge',
+  title: 'Contact Us',
   description:
-    'Свяжитесь с командой TubeForge. Техническая поддержка, вопросы по оплате, партнёрство.',
+    'Get in touch with the TubeForge team. Technical support, billing questions, and partnership inquiries.',
   openGraph: {
-    title: 'Контакты — TubeForge',
+    title: 'Contact Us — TubeForge',
     description:
-      'Свяжитесь с командой TubeForge. Поддержка 24/7 для Pro и Studio подписчиков.',
+      'Get in touch with the TubeForge team. Priority support for Pro and Studio subscribers.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Contact TubeForge' }],
   },
   alternates: {
     canonical: 'https://tubeforge.co/contact',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Contact Us — TubeForge',
+    description: 'Get in touch with the TubeForge team for support and inquiries.',
+    images: ['/api/og'],
   },
 };
 

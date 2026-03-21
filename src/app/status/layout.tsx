@@ -1,18 +1,25 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Статус системы — TubeForge',
+  title: 'System Status',
   description:
-    'Текущий статус всех сервисов TubeForge: приложение, база данных, AI-генерация, платежи, VPN.',
+    'Current status of all TubeForge services: application, database, AI generation, payments, and VPN.',
   openGraph: {
-    title: 'Статус системы — TubeForge',
+    title: 'System Status — TubeForge',
     description:
-      'Мониторинг работоспособности TubeForge в реальном времени. Uptime 99.9%.',
+      'Real-time TubeForge service health monitoring. 99.9% uptime.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'TubeForge System Status' }],
   },
   alternates: {
     canonical: 'https://tubeforge.co/status',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'System Status — TubeForge',
+    description: 'Real-time TubeForge service health monitoring.',
+    images: ['/api/og'],
   },
 };
 

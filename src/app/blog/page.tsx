@@ -3,34 +3,35 @@ import type { Metadata } from 'next';
 import { BLOG_POSTS } from '@/lib/blog-posts';
 
 export const metadata: Metadata = {
-  title: 'Блог TubeForge — советы по YouTube и видеомаркетингу',
+  title: 'Blog — YouTube Tips & Video Marketing',
   description:
-    'Полезные статьи для YouTube-блогеров: гайды по созданию каналов, советы для Shorts, AI-инструменты, монетизация и сравнение сервисов.',
+    'Guides and tips for YouTube creators: channel growth strategies, Shorts optimization, AI tools, monetization, and platform comparisons.',
   openGraph: {
-    title: 'Блог TubeForge — советы по YouTube и видеомаркетингу',
+    title: 'TubeForge Blog — YouTube Tips & Video Marketing',
     description:
-      'Статьи и гайды для YouTube-креаторов: создание канала, вирусные Shorts, AI-инструменты, монетизация, обзоры.',
+      'Articles and guides for YouTube creators: channel growth, viral Shorts, AI tools, monetization, and reviews.',
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'TubeForge Blog' }],
   },
   alternates: {
     canonical: 'https://tubeforge.co/blog',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Блог TubeForge — советы по YouTube и видеомаркетингу',
-    description:
-      'Гайды, советы и инструменты для YouTube-креаторов.',
+    title: 'TubeForge Blog — YouTube Tips & Video Marketing',
+    description: 'Guides, tips, and tools for YouTube creators.',
+    images: ['/api/og'],
   },
   keywords: [
-    'youtube блог',
-    'гайды для ютуберов',
-    'youtube shorts советы',
-    'ai для видео',
-    'монетизация youtube',
-    'tubeforge блог',
-    'создание youtube канала',
-    'видеомаркетинг',
+    'YouTube blog',
+    'YouTube tips',
+    'YouTube Shorts tips',
+    'AI video tools',
+    'YouTube monetization',
+    'TubeForge blog',
+    'YouTube channel growth',
+    'video marketing',
   ],
 };
 
