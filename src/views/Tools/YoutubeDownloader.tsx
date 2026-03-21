@@ -340,7 +340,7 @@ export function YoutubeDownloader() {
               <h4 style={headerStyle}>SEO анализ</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px', ...textStyle, fontSize: 13 }}>
                 {seo?.titleLength != null && (
-                  <div>Длина заголовка: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.titleLength)}</b> {seo?.optimalTitleRange ? `(${String(seo.optimalTitleRange)})` : ''}</div>
+                  <div>Длина заголовка: <b style={{ color: C?.text ?? '#fff' }}>{typeof seo.titleLength === "object" && seo.titleLength !== null ? String((seo.titleLength as any).chars) : String(seo.titleLength)}</b> {typeof seo.titleLength === 'object' && (seo.titleLength as any).optimal ? `(${String((seo.titleLength as any).optimal)}, ${String((seo.titleLength as any).status)})` : (seo?.optimalTitleRange ? `(${String(seo.optimalTitleRange)})` : '')}</div>
                 )}
                 {seo?.descriptionLength != null && (
                   <div>Длина описания: <b style={{ color: C?.text ?? '#fff' }}>{String(seo.descriptionLength)}</b></div>
@@ -402,7 +402,7 @@ export function YoutubeDownloader() {
               <div style={{ ...textStyle, fontSize: 13 }}>
                 {strategy?.bestPostingTime != null && <p style={{ marginBottom: 4 }}>Лучшее время публикации: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.bestPostingTime)}</b></p>}
                 {strategy?.recommendedFrequency != null && <p style={{ marginBottom: 4 }}>Рекомендуемая частота: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.recommendedFrequency)}</b></p>}
-                {strategy?.monetizationPotential != null && <p style={{ marginBottom: 4 }}>Потенциал монетизации: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.monetizationPotential)}</b></p>}
+                {strategy?.monetizationPotential != null && <p style={{ marginBottom: 4 }}>Потенциал монетизации: <b style={{ color: C?.text ?? '#fff' }}>{typeof strategy.monetizationPotential === "object" && strategy.monetizationPotential !== null ? String((strategy.monetizationPotential as any).level) + " — " + String((strategy.monetizationPotential as any).reason) : String(strategy.monetizationPotential)}</b></p>}
                 {strategy?.audienceAge != null && <p style={{ marginBottom: 4 }}>Целевой возраст: <b style={{ color: C?.text ?? '#fff' }}>{String(strategy.audienceAge)}</b></p>}
               </div>
               {((strategy?.crossPlatformPotential ?? []) as string[]).length > 0 && (
