@@ -24,7 +24,6 @@ function gaugeColor(v: number): string {
 function safeStr(v: unknown): string {
   if (v == null) return '';
   if (typeof v === 'object') {
-    // Handle known object shapes from API
     const obj = v as Record<string, unknown>;
     if ('chars' in obj) return String(obj.chars);
     if ('level' in obj && 'reason' in obj) return `${String(obj.level)} \u2014 ${String(obj.reason)}`;
@@ -49,7 +48,7 @@ function CircleGauge({ value, label, max = 10 }: { value: number; label: string;
   const trackColor = C?.border ?? 'rgba(0,0,0,0.08)';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: '1 1 0' }}>
       <div style={{ position: 'relative', width: 96, height: 96 }}>
         <svg width={96} height={96} viewBox="0 0 96 96">
           <circle cx={48} cy={48} r={r} fill="none" stroke={trackColor} strokeWidth={stroke} />
@@ -72,7 +71,19 @@ function CircleGauge({ value, label, max = 10 }: { value: number; label: string;
           <span style={{ fontSize: 10, color: C?.dim ?? '#999', marginTop: 2 }}>/{max}</span>
         </div>
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: C?.sub ?? '#888', letterSpacing: '0.01em' }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color: C?.sub ?? '#888', letterSpacing: '0.01em', textAlign: 'center' }}>{label}</span>
+    </div>
+  );
+}
+
+/* ── Stat Cell ────────────────────────────────────────────────── */
+
+function StatCell({ label, value }: { label: string; value: string }) {
+  const C = useThemeStore((s) => s.theme);
+  return (
+    <div style={{ flex: '1 1 0', minWidth: 100 }}>
+      <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 4, fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: C?.text ?? '#111', letterSpacing: '-0.01em' }}>{value}</div>
     </div>
   );
 }
@@ -92,8 +103,6 @@ export function YoutubeDownloader() {
 
   const accent = '#7c5cfc';
 
-  /* ── Shared styles ──────────────────────────────────────────── */
-
   const card: React.CSSProperties = {
     background: C?.surface ?? '#fff',
     border: `1px solid ${C?.border ?? '#eee'}`,
@@ -102,27 +111,15 @@ export function YoutubeDownloader() {
     marginBottom: 12,
   };
   const sectionTitle: React.CSSProperties = {
-    fontSize: 15,
-    fontWeight: 700,
-    color: C?.text ?? '#111',
-    marginBottom: 16,
-    letterSpacing: '-0.01em',
+    fontSize: 14, fontWeight: 700, color: C?.text ?? '#111',
+    marginBottom: 16, letterSpacing: '-0.01em',
   };
-  const sub: React.CSSProperties = {
-    color: C?.sub ?? '#888',
-    fontSize: 13,
-    lineHeight: 1.6,
-  };
+  const sub: React.CSSProperties = { color: C?.sub ?? '#888', fontSize: 13, lineHeight: 1.6 };
   const pill: React.CSSProperties = {
-    display: 'inline-block',
-    padding: '4px 12px',
-    borderRadius: 20,
-    fontSize: 12,
-    fontWeight: 600,
+    display: 'inline-block', padding: '4px 12px', borderRadius: 20,
+    fontSize: 12, fontWeight: 600,
     background: isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.08)',
-    color: accent,
-    marginRight: 6,
-    marginBottom: 6,
+    color: accent, marginRight: 6, marginBottom: 6,
   };
 
   /* ── Fetch ─────────────────────────────────────────────────── */
@@ -130,9 +127,7 @@ export function YoutubeDownloader() {
   const analyze = useCallback(async () => {
     const trimmed = (url ?? '').trim();
     if (!trimmed) return;
-    setError(null);
-    setData(null);
-    setLoading(true);
+    setError(null); setData(null); setLoading(true);
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -147,24 +142,16 @@ export function YoutubeDownloader() {
         const body = await res.json().catch(() => ({}));
         throw new Error((body as Record<string, any>)?.error ?? `\u041E\u0448\u0438\u0431\u043A\u0430 ${res.status}`);
       }
-      const json: Record<string, any> = await res.json();
-      setData(json);
+      setData(await res.json());
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError') return;
       setError((err as Error)?.message ?? '\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [url]);
 
   const handlePaste = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) setUrl(text);
-    } catch { /* clipboard blocked */ }
+    try { const t = await navigator.clipboard.readText(); if (t) setUrl(t); } catch {}
   }, []);
-
-  const clearUrl = useCallback(() => setUrl(''), []);
 
   /* ── Derived ────────────────────────────────────────────────── */
 
@@ -178,12 +165,11 @@ export function YoutubeDownloader() {
   const thumb = (data?.thumbnailAnalysis ?? null) as Record<string, any> | null;
   const structure = (analysis?.structure ?? []) as Record<string, any>[];
   const viralFactors = (analysis?.viralFactors ?? []) as string[];
-  const tips = (analysis?.tips ?? []) as string[];
 
   /* ── Render ─────────────────────────────────────────────────── */
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 16px 48px' }}>
+    <div style={{ width: '100%', padding: '0 0 48px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingTop: 8 }}>
         <button
@@ -192,8 +178,7 @@ export function YoutubeDownloader() {
             width: 36, height: 36, borderRadius: 10,
             border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: C?.text ?? '#111', fontSize: 16,
-            flexShrink: 0,
+            cursor: 'pointer', color: C?.text ?? '#111', flexShrink: 0,
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
@@ -201,10 +186,9 @@ export function YoutubeDownloader() {
         <div style={{
           width: 36, height: 36, borderRadius: 10,
           background: `linear-gradient(135deg, ${accent}, #a78bfa)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </div>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 800, color: C?.text ?? '#111', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
@@ -217,12 +201,11 @@ export function YoutubeDownloader() {
       </div>
 
       {/* URL Input */}
-      <div style={{ ...card, padding: 0, marginBottom: 0 }}>
+      <div style={{ ...card, padding: 0, marginBottom: 0, maxWidth: 720 }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 10 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C?.dim ?? '#aaa'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
           <input
-            type="text"
-            value={url}
+            type="text" value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') analyze(); }}
             placeholder="https://www.youtube.com/watch?v=..."
@@ -233,54 +216,37 @@ export function YoutubeDownloader() {
             }}
           />
           {url && (
-            <button onClick={clearUrl} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C?.dim ?? '#aaa', fontSize: 16, padding: 4, lineHeight: 1 }}>
+            <button onClick={() => setUrl('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C?.dim ?? '#aaa', padding: 4, lineHeight: 1 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
             </button>
           )}
-          <button
-            onClick={handlePaste}
-            style={{
-              padding: '6px 14px', borderRadius: 8,
-              border: `1px solid ${C?.border ?? '#eee'}`,
-              background: C?.bg ?? '#fafafa',
-              color: C?.text ?? '#111', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-            }}
-          >
-            {'\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C'}
-          </button>
+          <button onClick={handlePaste} style={{
+            padding: '6px 14px', borderRadius: 8,
+            border: `1px solid ${C?.border ?? '#eee'}`, background: C?.bg ?? '#fafafa',
+            color: C?.text ?? '#111', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+          }}>{'\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C'}</button>
         </div>
       </div>
 
       {/* Analyze Button */}
       <button
-        onClick={analyze}
-        disabled={loading || !url.trim()}
+        onClick={analyze} disabled={loading || !url.trim()}
         style={{
-          width: '100%', marginTop: 12, marginBottom: 24, padding: '14px 0',
+          maxWidth: 720, width: '100%', marginTop: 12, marginBottom: 28, padding: '14px 0',
           borderRadius: 14, border: 'none',
           background: loading ? (isDark ? '#444' : '#ccc') : `linear-gradient(135deg, ${accent}, #a78bfa)`,
           color: '#fff', fontWeight: 700, fontSize: 15, fontFamily: 'inherit',
-          cursor: loading ? 'wait' : 'pointer',
-          opacity: !url.trim() ? 0.5 : 1,
+          cursor: loading ? 'wait' : 'pointer', opacity: !url.trim() ? 0.5 : 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          transition: 'opacity 0.2s',
         }}
       >
         {loading ? (
-          <>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeDasharray="56" strokeDashoffset="14"/></svg>
-            {'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0435\u043C...'}
-          </>
+          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeDasharray="56" strokeDashoffset="14"/></svg>{'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0435\u043C...'}</>
         ) : (
-          <>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            {'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u0442\u044C'}
-          </>
+          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>{'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u0442\u044C'}</>
         )}
       </button>
-
-      {/* Spin keyframes */}
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
 
       {/* Error */}
@@ -291,347 +257,219 @@ export function YoutubeDownloader() {
         </div>
       )}
 
-      {/* Loading skeleton */}
-      {loading && (
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', padding: 48 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6', animation: 'shimmer 1.8s linear infinite' }} />
-          <div style={{ width: 200, height: 12, borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }} />
-        </div>
-      )}
-
       {/* ── Results ───────────────────────────────────────────── */}
       {data && !loading && (
         <>
-          {/* Video Info Card */}
-          {data?.title && (
-            <div style={{ ...card, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-              {data?.thumbnail && (
-                <img
-                  src={String(data.thumbnail)}
-                  alt=""
-                  style={{ width: 120, height: 90, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: C?.text ?? '#111', lineHeight: 1.4, margin: 0, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                  {String(data.title)}
-                </h3>
-                <div style={{ ...sub, fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                  <span>{String(data?.channel ?? '')}</span>
-                  <span style={{ color: C?.dim ?? '#bbb' }}>{'\u00B7'}</span>
-                  <span>{fmt(stats.views)} views</span>
-                  {data?.publishedAt && (
-                    <>
-                      <span style={{ color: C?.dim ?? '#bbb' }}>{'\u00B7'}</span>
-                      <span>{String(data.publishedAt).slice(0, 10)}</span>
-                    </>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                  {data?.duration && <span style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(data.duration)}</span>}
-                  {data?.categoryName && <span style={pill}>{String(data.categoryName)}</span>}
-                  {data?.isShorts && <span style={{ ...pill, background: isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.08)', color: '#a855f7' }}>Shorts</span>}
+          {/* Video Info + Gauges Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            {/* Video Card */}
+            {data?.title && (
+              <div style={{ ...card, marginBottom: 0, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                {data?.thumbnail && (
+                  <img src={String(data.thumbnail)} alt=""
+                    style={{ width: 120, height: 90, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: C?.text ?? '#111', lineHeight: 1.4, margin: 0, marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {String(data.title)}
+                  </h3>
+                  <div style={{ ...sub, fontSize: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                    <span>{String(data?.channel ?? '')}</span>
+                    <span style={{ color: C?.dim ?? '#bbb' }}>{'\u00B7'}</span>
+                    <span>{fmt(stats.views)} views</span>
+                    {data?.publishedAt && <><span style={{ color: C?.dim ?? '#bbb' }}>{'\u00B7'}</span><span>{String(data.publishedAt).slice(0, 10)}</span></>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                    {data?.duration && <span style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(data.duration)}</span>}
+                    {data?.categoryName && <span style={pill}>{String(data.categoryName)}</span>}
+                    {data?.isShorts && <span style={{ ...pill, background: isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.08)', color: '#a855f7' }}>Shorts</span>}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Circular Gauges */}
-          {(analysis?.hookScore != null || analysis?.titleScore != null) && (
-            <div style={{ ...card, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, padding: '28px 16px' }}>
-              {analysis?.hookScore != null && <CircleGauge value={Number(analysis.hookScore)} label={'\u0425\u0443\u043A'} />}
-              {analysis?.titleScore != null && <CircleGauge value={Number(analysis.titleScore)} label={'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'} />}
-              {analysis?.estimatedCTR != null && (
-                <CircleGauge
-                  value={analysis.estimatedCTR === 'high' ? 8 : analysis.estimatedCTR === 'medium' ? 5 : 3}
-                  label="CTR"
-                />
-              )}
-              {analysis?.engagementRate != null && (
-                <CircleGauge
-                  value={Math.min(Math.round(Number(analysis.engagementRate)), 10)}
-                  label={'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Why it works (Viral Factors) */}
-          {viralFactors.length > 0 && (
-            <div style={card}>
-              <h4 style={sectionTitle}>{'\u041F\u043E\u0447\u0435\u043C\u0443 \u044D\u0442\u043E \u0432\u0438\u0434\u0435\u043E \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442'}</h4>
-              {viralFactors.map((f, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e" style={{ marginTop: 2, flexShrink: 0 }}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                  <span style={{ ...sub }}>{String(f)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tips */}
-          {tips.length > 0 && (
-            <div style={card}>
-              <h4 style={sectionTitle}>{'\u0421\u043E\u0432\u0435\u0442\u044B \u043F\u043E \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044E'}</h4>
-              {tips.map((t, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
-                  <span style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                  </span>
-                  <span style={{ ...sub }}>{String(t)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* SEO */}
-          {seo && (
-            <div style={card}>
-              <h4 style={sectionTitle}>SEO</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
-                {seo?.titleLength != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{safeStr(seo.titleLength)} {'\u0441\u0438\u043C\u0432.'}</div>
-                  </div>
+            {/* Gauges Card */}
+            {(analysis?.hookScore != null || analysis?.titleScore != null) && (
+              <div style={{ ...card, marginBottom: 0, display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: 12, padding: '24px 12px' }}>
+                {analysis?.hookScore != null && <CircleGauge value={Number(analysis.hookScore)} label={'\u0425\u0443\u043A'} />}
+                {analysis?.titleScore != null && <CircleGauge value={Number(analysis.titleScore)} label={'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'} />}
+                {analysis?.estimatedCTR != null && (
+                  <CircleGauge value={analysis.estimatedCTR === 'high' ? 8 : analysis.estimatedCTR === 'medium' ? 5 : 3} label="CTR" />
                 )}
-                {seo?.descriptionLength != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seo.descriptionLength)} {'\u0441\u0438\u043C\u0432.'}</div>
-                  </div>
-                )}
-                {seo?.tagsCount != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0422\u0435\u0433\u043E\u0432'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seo.tagsCount)}</div>
-                  </div>
-                )}
-                {seo?.readabilityScore != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0427\u0438\u0442\u0430\u0435\u043C\u043E\u0441\u0442\u044C'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seo.readabilityScore)}/10</div>
-                  </div>
+                {analysis?.engagementRate != null && (
+                  <CircleGauge value={Math.min(Math.round(Number(analysis.engagementRate)), 10)} label={'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'} />
                 )}
               </div>
-              {((seo?.titleKeywords ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8 }}>{'\u041A\u043B\u044E\u0447\u0435\u0432\u044B\u0435 \u0441\u043B\u043E\u0432\u0430'}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {((seo.titleKeywords) as string[]).map((k, i) => (
-                      <span key={i} style={pill}>{String(k)}</span>
+            )}
+          </div>
+
+          {/* Three-column stats grid */}
+          <div style={{ display: 'grid', gap: 12, marginBottom: 12, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {/* Engagement */}
+            {engagement && (
+              <div style={card}>
+                <h4 style={sectionTitle}>{'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'}</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {engagement?.likeRate != null && <StatCell label="Like rate" value={`${String(engagement.likeRate)}%`} />}
+                  {engagement?.commentRate != null && <StatCell label="Comment rate" value={`${String(engagement.commentRate)}%`} />}
+                  {engagement?.viralCoefficient != null && <StatCell label={'\u0412\u0438\u0440\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'} value={String(engagement.viralCoefficient)} />}
+                  {engagement?.audienceRetentionEstimate != null && <StatCell label={'\u0423\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435'} value={String(engagement.audienceRetentionEstimate)} />}
+                  {engagement?.benchmarkComparison != null && <StatCell label={'\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435'} value={String(engagement.benchmarkComparison)} />}
+                </div>
+              </div>
+            )}
+
+            {/* SEO */}
+            {seo && (
+              <div style={card}>
+                <h4 style={sectionTitle}>SEO</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {seo?.titleLength != null && <StatCell label={'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'} value={`${safeStr(seo.titleLength)} \u0441\u0438\u043C\u0432.`} />}
+                  {seo?.descriptionLength != null && <StatCell label={'\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435'} value={`${String(seo.descriptionLength)} \u0441\u0438\u043C\u0432.`} />}
+                  {seo?.tagsCount != null && <StatCell label={'\u0422\u0435\u0433\u043E\u0432'} value={String(seo.tagsCount)} />}
+                  {seo?.readabilityScore != null && <StatCell label={'\u0427\u0438\u0442\u0430\u0435\u043C\u043E\u0441\u0442\u044C'} value={`${String(seo.readabilityScore)}/10`} />}
+                  {seo?.languageDetected != null && <StatCell label={'\u042F\u0437\u044B\u043A'} value={String(seo.languageDetected)} />}
+                  {seo?.searchOptimization != null && <StatCell label={'\u041F\u043E\u0438\u0441\u043A\u043E\u0432\u0430\u044F \u043E\u043F\u0442.'} value={String(seo.searchOptimization)} />}
+                </div>
+              </div>
+            )}
+
+            {/* Strategy */}
+            {strategy && (
+              <div style={card}>
+                <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044F'}</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {strategy?.bestPostingTime != null && <StatCell label={'\u041B\u0443\u0447\u0448\u0435\u0435 \u0432\u0440\u0435\u043C\u044F'} value={String(strategy.bestPostingTime)} />}
+                  {strategy?.recommendedFrequency != null && <StatCell label={'\u0427\u0430\u0441\u0442\u043E\u0442\u0430'} value={String(strategy.recommendedFrequency)} />}
+                  {strategy?.monetizationPotential != null && <StatCell label={'\u041C\u043E\u043D\u0435\u0442\u0438\u0437\u0430\u0446\u0438\u044F'} value={safeStr(strategy.monetizationPotential)} />}
+                  {strategy?.audienceAge != null && <StatCell label={'\u0410\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F'} value={String(strategy.audienceAge)} />}
+                </div>
+                {((strategy?.crossPlatformPotential ?? []) as string[]).length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 12 }}>
+                    {((strategy.crossPlatformPotential) as string[]).map((p, i) => (
+                      <span key={i} style={pill}>{String(p)}</span>
                     ))}
                   </div>
-                </div>
-              )}
-              {((seo?.tags ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8 }}>{'\u0422\u0435\u0433\u0438'}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {((seo.tags) as string[]).map((t, i) => (
-                      <span key={i} style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.04)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(t)}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Engagement */}
-          {engagement && (
-            <div style={card}>
-              <h4 style={sectionTitle}>{'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
-                {engagement?.likeRate != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>Like rate</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.likeRate)}%</div>
-                  </div>
-                )}
-                {engagement?.commentRate != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>Comment rate</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.commentRate)}%</div>
-                  </div>
-                )}
-                {engagement?.viralCoefficient != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0412\u0438\u0440\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.viralCoefficient)}</div>
-                  </div>
-                )}
-                {engagement?.audienceRetentionEstimate != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u0423\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(engagement.audienceRetentionEstimate)}</div>
-                  </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Strategy */}
-          {strategy && (
-            <div style={card}>
-              <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044F'}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-                {strategy?.bestPostingTime != null && (
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                    </span>
-                    <span style={{ ...sub }}>{String(strategy.bestPostingTime)}</span>
-                  </div>
-                )}
-                {strategy?.recommendedFrequency != null && (
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    </span>
-                    <span style={{ ...sub }}>{String(strategy.recommendedFrequency)}</span>
-                  </div>
-                )}
-                {strategy?.monetizationPotential != null && (
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                    </span>
-                    <span style={{ ...sub }}>{safeStr(strategy.monetizationPotential)}</span>
-                  </div>
-                )}
-                {strategy?.audienceAge != null && (
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </span>
-                    <span style={{ ...sub }}>{String(strategy.audienceAge)}</span>
-                  </div>
-                )}
-              </div>
-              {((strategy?.crossPlatformPotential ?? []) as string[]).length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-                  {((strategy.crossPlatformPotential) as string[]).map((p, i) => (
-                    <span key={i} style={pill}>{String(p)}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Competition */}
-          {competition && (
-            <div style={card}>
-              <h4 style={sectionTitle}>{'\u041A\u043E\u043D\u043A\u0443\u0440\u0435\u043D\u0446\u0438\u044F'}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', marginBottom: 12 }}>
-                {competition?.nichePopularity != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u041F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0441\u0442\u044C \u043D\u0438\u0448\u0438'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(competition.nichePopularity)}</div>
-                  </div>
-                )}
-                {competition?.contentSaturation != null && (
-                  <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 2 }}>{'\u041D\u0430\u0441\u044B\u0449\u0435\u043D\u043D\u043E\u0441\u0442\u044C'}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C?.text ?? '#111' }}>{String(competition.contentSaturation)}</div>
-                  </div>
-                )}
-              </div>
-              {((competition?.differentiationTips ?? []) as string[]).length > 0 && (
-                <>
-                  {((competition.differentiationTips) as string[]).map((t, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 6 }}>
-                      <span style={{ color: '#f59e0b', flexShrink: 0, marginTop: 2 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                      </span>
-                      <span style={{ ...sub, fontSize: 12 }}>{String(t)}</span>
+          {/* Two-column row: Keywords + Competition */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            {/* Keywords / Tags */}
+            {seo && (((seo?.titleKeywords ?? []) as string[]).length > 0 || ((seo?.tags ?? []) as string[]).length > 0) && (
+              <div style={card}>
+                <h4 style={sectionTitle}>{'\u041A\u043B\u044E\u0447\u0435\u0432\u044B\u0435 \u0441\u043B\u043E\u0432\u0430 \u0438 \u0442\u0435\u0433\u0438'}</h4>
+                {((seo?.titleKeywords ?? []) as string[]).length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8, fontWeight: 500 }}>{'\u0418\u0437 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0430'}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {((seo.titleKeywords) as string[]).map((k, i) => <span key={i} style={pill}>{String(k)}</span>)}
                     </div>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Structure */}
-          {structure.length > 0 && (
-            <div style={card}>
-              <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0430 \u0432\u0438\u0434\u0435\u043E'}</h4>
-              {structure.map((seg, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
-                  borderBottom: i < structure.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none',
-                }}>
-                  <span style={{ fontSize: 20, flexShrink: 0 }}>{String(seg?.icon ?? '\uD83C\uDFAC')}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seg?.label ?? '')}</div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa' }}>{String(seg?.start ?? '')} \u2014 {String(seg?.end ?? '')}</div>
                   </div>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: String(seg?.color ?? accent), flexShrink: 0 }} />
-                </div>
-              ))}
-            </div>
-          )}
+                )}
+                {((seo?.tags ?? []) as string[]).length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8, fontWeight: 500 }}>{'\u0422\u0435\u0433\u0438 \u0432\u0438\u0434\u0435\u043E'}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {((seo.tags) as string[]).map((t, i) => (
+                        <span key={i} style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.04)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(t)}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Shorts */}
+            {/* Competition */}
+            {competition && (
+              <div style={card}>
+                <h4 style={sectionTitle}>{'\u041A\u043E\u043D\u043A\u0443\u0440\u0435\u043D\u0446\u0438\u044F'}</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {competition?.nichePopularity != null && <StatCell label={'\u041F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0441\u0442\u044C \u043D\u0438\u0448\u0438'} value={String(competition.nichePopularity)} />}
+                  {competition?.contentSaturation != null && <StatCell label={'\u041D\u0430\u0441\u044B\u0449\u0435\u043D\u043D\u043E\u0441\u0442\u044C'} value={String(competition.contentSaturation)} />}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Viral Factors + Structure Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            {/* Viral Factors */}
+            {viralFactors.length > 0 && (
+              <div style={card}>
+                <h4 style={sectionTitle}>{'\u0424\u0430\u043A\u0442\u043E\u0440\u044B \u0443\u0441\u043F\u0435\u0445\u0430'}</h4>
+                {viralFactors.map((f, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e" style={{ marginTop: 2, flexShrink: 0 }}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span style={{ ...sub, fontSize: 13 }}>{String(f)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Structure */}
+            {structure.length > 0 && (
+              <div style={card}>
+                <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0430 \u0432\u0438\u0434\u0435\u043E'}</h4>
+                {structure.map((seg, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0',
+                    borderBottom: i < structure.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none',
+                  }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{String(seg?.icon ?? '\uD83C\uDFAC')}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C?.text ?? '#111' }}>{String(seg?.label ?? '')}</div>
+                      <div style={{ fontSize: 11, color: C?.dim ?? '#aaa' }}>{String(seg?.start ?? '')} \u2014 {String(seg?.end ?? '')}</div>
+                    </div>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: String(seg?.color ?? accent), flexShrink: 0 }} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Shorts section */}
           {shorts && data?.isShorts && (
             <div style={card}>
               <h4 style={sectionTitle}>Shorts</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-                {shorts?.hookQuality != null && <span style={pill}>{'\u0425\u0443\u043A: '}{String(shorts.hookQuality)}</span>}
-                {shorts?.loopPotential != null && <span style={pill}>{'\u0417\u0430\u0446\u0438\u043A\u043B.: '}{String(shorts.loopPotential)}/10</span>}
-                {shorts?.shareability != null && <span style={pill}>{'\u0412\u0438\u0440\u0430\u043B\u044C\u043D.: '}{String(shorts.shareability)}/10</span>}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                {shorts?.hookQuality != null && <StatCell label={'\u0425\u0443\u043A'} value={String(shorts.hookQuality)} />}
+                {shorts?.loopPotential != null && <StatCell label={'\u0417\u0430\u0446\u0438\u043A\u043B\u0438\u0432\u0430\u043D\u0438\u0435'} value={`${String(shorts.loopPotential)}/10`} />}
+                {shorts?.shareability != null && <StatCell label={'\u0412\u0438\u0440\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'} value={`${String(shorts.shareability)}/10`} />}
+                {shorts?.verticalOptimized != null && <StatCell label={'\u0412\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C\u043D\u044B\u0439'} value={shorts.verticalOptimized ? '\u2705 \u0414\u0430' : '\u274C \u041D\u0435\u0442'} />}
+                {shorts?.optimalLength != null && <StatCell label={'\u041E\u043F\u0442\u0438\u043C. \u0434\u043B\u0438\u043D\u0430'} value={String(shorts.optimalLength)} />}
+                {shorts?.trendAlignment != null && <StatCell label={'\u0422\u0440\u0435\u043D\u0434\u044B'} value={String(shorts.trendAlignment)} />}
               </div>
-              {(((shorts?.tips ?? []) as string[]).length > 0) && (
-                <>
-                  {((shorts.tips) as string[]).map((t, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
-                      <span style={{ color: '#f59e0b', flexShrink: 0 }}>{'\uD83D\uDCA1'}</span>
-                      <span style={{ ...sub, fontSize: 12 }}>{String(t)}</span>
-                    </div>
-                  ))}
-                </>
-              )}
             </div>
           )}
 
           {/* Thumbnail */}
-          {thumb && (
+          {thumb && !data?.isShorts && (
             <div style={card}>
               <h4 style={sectionTitle}>{'\u041F\u0440\u0435\u0432\u044C\u044E'}</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 20px' }}>
-                {thumb?.hasCustomThumbnail != null && (
-                  <div style={{ ...sub, fontSize: 13 }}>{thumb.hasCustomThumbnail ? '\u2705' : '\u274C'} {'\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0430\u044F'}</div>
-                )}
-                {thumb?.resolution != null && <div style={{ ...sub, fontSize: 13 }}>{String(thumb.resolution)}</div>}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                {thumb?.hasCustomThumbnail != null && <StatCell label={'\u041A\u0430\u0441\u0442\u043E\u043C\u043D\u0430\u044F'} value={thumb.hasCustomThumbnail ? '\u2705 \u0414\u0430' : '\u274C \u041D\u0435\u0442'} />}
+                {thumb?.resolution != null && <StatCell label={'\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0435'} value={String(thumb.resolution)} />}
+                {thumb?.aspectRatio != null && <StatCell label={'\u0421\u043E\u043E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u0435'} value={String(thumb.aspectRatio)} />}
               </div>
-              {((thumb?.tips ?? []) as string[]).length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  {((thumb.tips) as string[]).map((t, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
-                      <span style={{ color: '#f59e0b', flexShrink: 0 }}>{'\uD83D\uDCA1'}</span>
-                      <span style={{ ...sub, fontSize: 12 }}>{String(t)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
           {/* Open on YouTube */}
           {data?.videoId && (
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
+            <div style={{ marginTop: 8 }}>
               <a
                 href={`https://www.youtube.com/watch?v=${String(data.videoId)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                target="_blank" rel="noopener noreferrer"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '10px 24px', borderRadius: 10,
-                  border: `1px solid ${C?.border ?? '#eee'}`,
-                  background: C?.surface ?? '#fff',
-                  color: C?.text ?? '#111',
-                  fontWeight: 600, fontSize: 13, textDecoration: 'none',
-                  fontFamily: 'inherit',
+                  padding: '10px 20px', borderRadius: 10,
+                  border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
+                  color: C?.text ?? '#111', fontWeight: 600, fontSize: 13, textDecoration: 'none', fontFamily: 'inherit',
                 }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -639,6 +477,16 @@ export function YoutubeDownloader() {
               </a>
             </div>
           )}
+
+          {/* Responsive */}
+          <style>{`
+            @media(max-width:900px){
+              .yt-grid-3{grid-template-columns:1fr 1fr!important}
+            }
+            @media(max-width:600px){
+              .yt-grid-3,.yt-grid-2{grid-template-columns:1fr!important}
+            }
+          `}</style>
         </>
       )}
     </div>
