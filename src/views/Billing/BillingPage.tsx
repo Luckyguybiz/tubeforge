@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -65,7 +65,7 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       id: 'FREE',
       name: t('billing.planFree'),
       price: 0,
-      priceLabel: '0\u20BD',
+      priceLabel: '$0',
       features: [
         `${PLAN_LIMITS.FREE.projects} ${t('billing.feat.projectsUnit')}`,
         `${PLAN_LIMITS.FREE.aiGenerations} ${t('billing.feat.aiUnit')}`,
@@ -78,8 +78,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
     {
       id: 'PRO',
       name: 'Pro',
-      price: 990,
-      priceLabel: '990\u20BD',
+      price: 12,
+      priceLabel: '$12',
       badge: t('billing.popular'),
       badgeGradient: 'linear-gradient(135deg, #6366f1, #818cf8)',
       features: [
@@ -98,8 +98,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
     {
       id: 'STUDIO',
       name: 'Studio',
-      price: 2490,
-      priceLabel: '2490\u20BD',
+      price: 30,
+      priceLabel: '$30',
       features: [
         t('billing.feat.allPro'),
         t('billing.feat.unlimitedAi'),
@@ -127,16 +127,16 @@ function getDeals(): DealDef[] {
         '30 voiceovers',
         '30 exports',
       ],
-      price: 890,
-      originalPrice: 1990,
+      price: 9,
+      originalPrice: 20,
       highlight: true,
     },
     {
       id: 'consultation',
       title: '1:1 Expert Consultation',
       description: 'Personal video consultation on YouTube strategy.',
-      price: 4900,
-      originalPrice: 9900,
+      price: 49,
+      originalPrice: 99,
     },
   ];
 }
@@ -148,9 +148,21 @@ export function BillingPage() {
   const isDark = useThemeStore((s) => s.isDark);
   const t = useLocaleStore((s) => s.t);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
 
   const userPlan: PlanId = (session?.user?.plan as PlanId) ?? 'FREE';
+
+  /* ── Handle success URL param from Stripe redirect ─── */
+  useEffect(() => {
+    const success = searchParams.get('success');
+    if (success === 'true') {
+      toast.success(t('billing.successTitle') || 'Welcome to your new plan!');
+      trackEvent('upgrade_success', { plan: userPlan });
+      // Clean up URL params
+      router.replace('/billing', { scroll: false });
+    }
+  }, [searchParams, t, userPlan, router]);
 
   const createCheckout = trpc.billing.createCheckout.useMutation({
     onSuccess: (data) => {
@@ -171,6 +183,28 @@ export function BillingPage() {
 
   const invoicesQuery = trpc.billing.getInvoices.useQuery(undefined, {
     enabled: userPlan !== 'FREE',
+  });
+
+  const subscriptionQuery = trpc.billing.getSubscription.useQuery();
+  const subscription = subscriptionQuery.data?.subscription ?? null;
+  const isCancelledAtPeriodEnd = subscription?.cancelAtPeriodEnd ?? false;
+
+  const cancelSubscription = trpc.billing.cancelSubscription.useMutation({
+    onSuccess: () => {
+      toast.success(t('billing.cancelSuccess') || 'Subscription cancelled.');
+      subscriptionQuery.refetch();
+      router.refresh();
+    },
+    onError: (err: { message: string }) => toast.error(err.message),
+  });
+
+  const reactivateSubscription = trpc.billing.reactivateSubscription.useMutation({
+    onSuccess: () => {
+      toast.success(t('billing.reactivateSuccess') || 'Subscription reactivated!');
+      subscriptionQuery.refetch();
+      router.refresh();
+    },
+    onError: (err: { message: string }) => toast.error(err.message),
   });
 
   const PLANS = useMemo(() => getPlans(t), [t]);
@@ -431,6 +465,80 @@ export function BillingPage() {
                   {t('billing.manageSubscription')}
                 </button>
               </div>
+
+              {/* Cancel / Reactivate subscription notice */}
+              {userPlan !== 'FREE' && subscription && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${cardBorder}` }}>
+                  {isCancelledAtPeriodEnd ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                      <div>
+                        <p style={{ fontSize: 13, color: C.orange, margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+                          {t('billing.cancelledNotice')}
+                        </p>
+                        {subscription.currentPeriodEnd && (
+                          <p style={{ fontSize: 12, color: C.sub, margin: '4px 0 0', lineHeight: 1.5 }}>
+                            {t('billing.expiresOn')}: {new Date(subscription.currentPeriodEnd * 1000).toLocaleDateString('en-US')}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onMouseEnter={() => setHoveredBtn('reactivate')}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        onClick={() => reactivateSubscription.mutate()}
+                        disabled={reactivateSubscription.isPending}
+                        style={{
+                          padding: '10px 22px',
+                          minHeight: 44,
+                          borderRadius: 50,
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                          color: '#fff',
+                          fontSize: 13,
+                          fontWeight: 700,
+                          cursor: reactivateSubscription.isPending ? 'wait' : 'pointer',
+                          fontFamily: 'inherit',
+                          transition: 'all .2s ease',
+                          whiteSpace: 'nowrap',
+                          opacity: reactivateSubscription.isPending ? 0.6 : 1,
+                          transform: hoveredBtn === 'reactivate' ? 'translateY(-1px)' : 'translateY(0)',
+                          boxShadow: hoveredBtn === 'reactivate' ? '0 6px 20px rgba(99, 102, 241, .35)' : '0 2px 10px rgba(99, 102, 241, .2)',
+                        }}
+                      >
+                        {t('billing.reactivateSubscription')}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onMouseEnter={() => setHoveredBtn('cancel')}
+                      onMouseLeave={() => setHoveredBtn(null)}
+                      onClick={() => {
+                        if (window.confirm(t('billing.cancelConfirm') || 'Are you sure you want to cancel?')) {
+                          cancelSubscription.mutate();
+                        }
+                      }}
+                      disabled={cancelSubscription.isPending}
+                      style={{
+                        padding: '8px 18px',
+                        borderRadius: 50,
+                        border: `1.5px solid ${isDark ? 'rgba(239, 68, 68, .3)' : 'rgba(239, 68, 68, .25)'}`,
+                        background: hoveredBtn === 'cancel'
+                          ? isDark ? 'rgba(239, 68, 68, .1)' : 'rgba(239, 68, 68, .06)'
+                          : 'transparent',
+                        color: '#ef4444',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: cancelSubscription.isPending ? 'wait' : 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all .2s ease',
+                        whiteSpace: 'nowrap',
+                        opacity: cancelSubscription.isPending ? 0.6 : 1,
+                      }}
+                    >
+                      {t('billing.cancelSubscription')}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── Section: Render Priority Queue ──── */}
@@ -453,14 +561,14 @@ export function BillingPage() {
                   margin: '0 0 16px',
                 }}
               >
-                {'\u041E\u0447\u0435\u0440\u0435\u0434\u044C \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433\u0430'}
+                {t('billing.renderQueue')}
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {([
                   {
                     plan: 'FREE' as PlanId,
                     label: t('billing.planFree'),
-                    queue: '\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C',
+                    queue: t('billing.standardQueue'),
                     color: C.dim,
                     bg: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.03)',
                     borderColor: cardBorder,
@@ -468,7 +576,7 @@ export function BillingPage() {
                   {
                     plan: 'PRO' as PlanId,
                     label: 'Pro',
-                    queue: '\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C',
+                    queue: t('billing.priorityQueue'),
                     color: '#6366f1',
                     bg: 'rgba(99, 102, 241, .06)',
                     borderColor: 'rgba(99, 102, 241, .15)',
@@ -476,7 +584,7 @@ export function BillingPage() {
                   {
                     plan: 'STUDIO' as PlanId,
                     label: 'Studio',
-                    queue: '\u0412\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u0430\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C \u2014 \u0431\u0435\u0437 \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u044F',
+                    queue: t('billing.dedicatedQueue'),
                     color: '#8b5cf6',
                     bg: 'rgba(139, 92, 246, .06)',
                     borderColor: 'rgba(139, 92, 246, .15)',
@@ -695,7 +803,7 @@ export function BillingPage() {
                           }}
                         >
                           {isAnnual && plan.price > 0
-                            ? `${Math.round(plan.price * 0.8)}\u20BD`
+                            ? `$${Math.round(plan.price * 0.8)}`
                             : plan.priceLabel}
                           {plan.price > 0 && (
                             <span style={{ fontSize: 13, fontWeight: 500, color: C.sub }}>
@@ -714,7 +822,7 @@ export function BillingPage() {
                               fontSize: 10, fontWeight: 700, color: C.green,
                               background: `${C.green}12`, padding: '1px 6px', borderRadius: 50,
                             }}>
-                              {t('billing.annualSave').replace('{amount}', String(Math.round(plan.price * 0.2 * 12)))}
+                              {t('billing.annualSave').replace('{amount}', `$${Math.round(plan.price * 0.2 * 12)}`)}
                             </span>
                           </div>
                         )}
@@ -945,7 +1053,7 @@ export function BillingPage() {
                           {/* Price */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
-                              {t('billing.getFor')} {deal.price.toLocaleString()}{'\u20BD'}
+                              {t('billing.getFor')} ${deal.price.toLocaleString()}
                             </span>
                             <span
                               style={{
@@ -954,7 +1062,7 @@ export function BillingPage() {
                                 textDecoration: 'line-through',
                               }}
                             >
-                              {deal.originalPrice.toLocaleString()}{'\u20BD'}
+                              ${deal.originalPrice.toLocaleString()}
                             </span>
                             <span
                               style={{
@@ -1009,7 +1117,7 @@ export function BillingPage() {
                   >
                     <span style={{ fontSize: 16 }}>{'\u26A0\uFE0F'}</span>
                     <span style={{ fontSize: 13, color: C.sub, flex: 1 }}>
-                      {t('billing.invoiceLoadError') || '\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u0438\u0441\u0442\u043E\u0440\u0438\u0438'}
+                      {t('billing.invoiceLoadError') || 'Failed to load billing history'}
                     </span>
                     <button
                       onClick={() => invoicesQuery.refetch()}
@@ -1054,7 +1162,7 @@ export function BillingPage() {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                           <span style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap' }}>
-                            {new Date(inv.date * 1000).toLocaleDateString('ru-RU')}
+                            {new Date(inv.date * 1000).toLocaleDateString('en-US')}
                           </span>
                           <span
                             style={{
@@ -1276,7 +1384,7 @@ export function BillingPage() {
                 >
                   <span style={{ color: C.sub }}>{t('billing.plan')} {selectedPlanDef.name}</span>
                   <span style={{ fontWeight: 700, color: C.text }}>
-                    {planPrice.toLocaleString()}{'\u20BD'}
+                    ${planPrice.toLocaleString()}
                   </span>
                 </div>
 
@@ -1293,7 +1401,7 @@ export function BillingPage() {
                   >
                     <span style={{ color: C.sub }}>{t('billing.deals')}</span>
                     <span style={{ fontWeight: 700, color: C.text }}>
-                      {dealsTotal.toLocaleString()}{'\u20BD'}
+                      ${dealsTotal.toLocaleString()}
                     </span>
                   </div>
                 )}
@@ -1343,7 +1451,7 @@ export function BillingPage() {
                       letterSpacing: '-.02em',
                     }}
                   >
-                    {totalDue.toLocaleString()}{'\u20BD'}
+                    ${totalDue.toLocaleString()}
                   </span>
                 </div>
               </div>
