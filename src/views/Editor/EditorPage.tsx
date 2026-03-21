@@ -383,9 +383,11 @@ const SceneThumb = memo(function SceneThumb({
       <div
         style={{
           height: 32,
-          background: sc.status === 'ready'
-            ? `linear-gradient(135deg, ${col}20, ${col}08)`
-            : `linear-gradient(135deg, ${col}12, transparent)`,
+          background: (sc.sf || sc.videoUrl)
+            ? `url(${sc.sf || sc.videoUrl}) center/cover no-repeat`
+            : sc.status === 'ready'
+              ? `linear-gradient(135deg, ${col}20, ${col}08)`
+              : `linear-gradient(135deg, ${col}12, transparent)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1135,8 +1137,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
      ═══════════════════════════════════════════════════════════════ */
   if (!projectId) {
     return (
-      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-        <ProjectPicker target="/editor" title={t('editor.title')} />
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', maxWidth: 480, padding: '0 16px' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: C.accent + '10', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 28, color: C.accent, lineHeight: 1 }}>&#9998;</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 6 }}>{t('editor.title')}</div>
+            <div style={{ fontSize: 13, color: C.sub }}>{t('editor.emptyHint') || 'Create a new project or select an existing one to get started.'}</div>
+          </div>
+          <ProjectPicker target="/editor" title={t('editor.title')} />
+        </div>
       </div>
     );
   }
@@ -2562,6 +2573,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 }}
                 title={`${sc.label} — ${fmtDur(sc.duration)}`}
               >
+                {/* Drop indicator line for timeline */}
+                {sc.id === dragOv && (
+                  <div style={{ position: 'absolute', left: -2, top: 4, bottom: 4, width: 3, borderRadius: 2, background: col, zIndex: 5 }} />
+                )}
                 {/* Color bar at bottom */}
                 <div
                   style={{

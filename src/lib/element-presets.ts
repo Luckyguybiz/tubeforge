@@ -52,6 +52,6 @@ export const ICON_PRESETS: ElementPreset[] = [
 ];
 
 export const COLOR_PRESETS = [
-  '#ff2d55', '#3a7bfd', '#2dd4a0', '#8b5cf6', '#f59e0b',
-  '#06b6d4', '#ec4899', '#ffffff', '#000000', '#6b7280',
+  '#ff0000', '#ff2d55', '#3a7bfd', '#ffff00', '#2dd4a0', '#8b5cf6',
+  '#f59e0b', '#06b6d4', '#ec4899', '#ffffff', '#000000', '#6b7280',
 ];

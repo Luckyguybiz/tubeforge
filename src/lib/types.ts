@@ -100,6 +100,7 @@ export interface CanvasElement {
   size?: number;
   bold?: boolean;
   italic?: boolean;
+  textAlign?: 'left' | 'center' | 'right';
   color?: string;
   shadow?: string;
   opacity?: number;

@@ -99,6 +99,8 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   const [selectedPreset, setSelectedPreset] = useState<string>('youtube');
   const [exportResolution, setExportResolution] = useState<'720p' | '1080p' | '4k'>('720p');
   const [exportAspect, setExportAspect] = useState<'16:9' | '9:16' | '1:1'>('16:9');
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const planInfo = usePlanLimits();
 
   // Z2: SRT captions — state kept for potential future "view in modal" feature
@@ -322,18 +324,69 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
     });
   }, [p, allReady, videoUrl, selectedChannel, tags, privacy, t, uploadVideo, scheduleEnabled, scheduleDate, scheduleTime]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     if (!videoUrl || !p) {
       toast.error(t('preview.noVideoDownload'));
       return;
     }
-    const a = document.createElement('a');
-    a.href = videoUrl;
-    a.download = `${p.title || 'video'}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, [videoUrl, p, t]);
+    const safeTitle = (p.title || 'video').replace(/[^a-zA-Z0-9\u0400-\u04FF _-]/g, '').trim().replace(/\s+/g, '_');
+    const filename = `${safeTitle}_${exportResolution}.mp4`;
+    try {
+      setDownloadProgress(0);
+      const resp = await fetch(videoUrl);
+      const contentLength = resp.headers.get('content-length');
+      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      if (!resp.body) {
+        // Fallback: direct link download
+        const a = document.createElement('a');
+        a.href = videoUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setDownloadProgress(null);
+        return;
+      }
+      const reader = resp.body.getReader();
+      const chunks: BlobPart[] = [];
+      let received = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        if (total > 0) {
+          setDownloadProgress(Math.min(99, Math.round((received / total) * 100)));
+        } else {
+          setDownloadProgress(Math.min(90, Math.round(received / 1024 / 10)));
+        }
+      }
+      setDownloadProgress(100);
+      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      setTimeout(() => setDownloadProgress(null), 1500);
+    } catch {
+      toast.error(t('preview.downloadFailed'));
+      setDownloadProgress(null);
+    }
+  }, [videoUrl, p, t, exportResolution]);
+
+  const handleCopyPreviewLink = useCallback(() => {
+    if (!projectId) return;
+    const url = `${window.location.origin}/preview?projectId=${projectId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      toast.success(t('preview.previewLinkCopied'));
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  }, [projectId, t]);
 
   /* ── Card style helper ────────────────────────────── */
   const cardStyle = useMemo<React.CSSProperties>(() => ({
@@ -565,8 +618,53 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               </>
             )}
           </button>
+          {/* Copy preview link */}
+          <button
+            onClick={handleCopyPreviewLink}
+            title={t('preview.copyPreviewLinkTitle')}
+            style={{
+              padding: '9px 18px', minHeight: 44, borderRadius: 10, border: `1px solid ${linkCopied ? C.green : C.border}`,
+              background: linkCopied ? `${C.green}08` : 'transparent',
+              color: linkCopied ? C.green : C.text,
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'all .15s',
+            }}
+            onMouseEnter={e => { if (!linkCopied) e.currentTarget.style.borderColor = C.accent; }}
+            onMouseLeave={e => { if (!linkCopied) e.currentTarget.style.borderColor = C.border; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            {linkCopied ? t('preview.linkCopied') : t('preview.copyPreviewLink')}
+          </button>
         </div>
       </div>
+
+      {/* ── Download progress ────────────────────────── */}
+      {downloadProgress !== null && (
+        <div style={{
+          marginBottom: 12, padding: '10px 14px', borderRadius: 10,
+          background: C.card, border: `1px solid ${C.border}`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 12, color: C.sub, fontWeight: 500 }}>
+              {downloadProgress >= 100 ? t('preview.downloadComplete') : t('preview.downloading')}
+            </span>
+            <span style={{ fontSize: 12, color: C.accent, fontWeight: 700 }}>{Math.round(downloadProgress)}%</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: C.surface, overflow: 'hidden' }}>
+            <div style={{
+              width: `${downloadProgress}%`, height: '100%', borderRadius: 3,
+              background: downloadProgress >= 100
+                ? C.green
+                : `linear-gradient(90deg, ${C.accent}, ${C.blue})`,
+              transition: 'width .3s ease',
+            }} />
+          </div>
+        </div>
+      )}
 
       {/* ── Watermark indicator ─────────────────────── */}
       {planInfo.plan === 'FREE' ? (
@@ -826,6 +924,17 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   {t('preview.sceneTitle')} {activeSceneIdx + 1} / {scenes.length}
                 </div>
               )}
+
+              {/* Resolution badge */}
+              <div style={{
+                position: 'absolute', top: 10, right: 10,
+                background: 'rgba(0,0,0,.85)', borderRadius: 6,
+                padding: '3px 8px', fontSize: 11, fontWeight: 700,
+                color: C.accent, zIndex: 3, letterSpacing: '0.03em',
+                border: `1px solid ${C.accent}40`,
+              }}>
+                {exportResolution === '4k' ? '4K' : exportResolution.toUpperCase()} &middot; {exportAspect}
+              </div>
 
               {/* Duration badge */}
               {totalDuration > 0 && (
