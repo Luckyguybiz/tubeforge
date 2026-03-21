@@ -6,6 +6,7 @@ import { createLogger } from '@/lib/logger';
 const log = createLogger('video-translate');
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 min timeout for large uploads
 
 const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
 
