@@ -148,4 +148,39 @@ export const referralRouter = router({
 
     return { invited, paid, earnings: user?.referralEarnings ?? 0 };
   }),
+
+  /** Get rewards earned from referrals */
+  getRewards: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { referralCode: true, referralEarnings: true },
+    });
+    if (!user?.referralCode) return { rewards: [], totalBonusCredits: 0 };
+
+    const invited = await ctx.db.user.count({
+      where: { referredBy: user.referralCode },
+    });
+    const paid = await ctx.db.user.count({
+      where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
+    });
+
+    // Calculate reward milestones
+    const rewards: { milestone: string; reward: string; earned: boolean }[] = [
+      { milestone: '1_signup', reward: 'bonus_50_credits', earned: invited >= 1 },
+      { milestone: '3_signups', reward: 'bonus_200_credits', earned: invited >= 3 },
+      { milestone: '1_paid', reward: 'extended_trial_7d', earned: paid >= 1 },
+      { milestone: '5_signups', reward: 'bonus_500_credits', earned: invited >= 5 },
+      { milestone: '5_paid', reward: 'bonus_1000_credits', earned: paid >= 5 },
+      { milestone: '10_paid', reward: 'pro_month_free', earned: paid >= 10 },
+    ];
+
+    // Total bonus AI credits earned
+    let totalBonusCredits = 0;
+    if (invited >= 1) totalBonusCredits += 50;
+    if (invited >= 3) totalBonusCredits += 200;
+    if (invited >= 5) totalBonusCredits += 500;
+    if (paid >= 5) totalBonusCredits += 1000;
+
+    return { rewards, totalBonusCredits };
+  }),
 });

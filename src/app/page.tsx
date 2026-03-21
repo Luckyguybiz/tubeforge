@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -8,6 +8,7 @@ import {
   FaqAccordion,
   ClientCookieConsent,
   StickyMobileCTA,
+  ReferralCapture,
 } from "@/components/landing";
 
 /* ── SEO Metadata ─────────────────────────────────────────── */
@@ -38,33 +39,33 @@ export const metadata: Metadata = {
 const FEATURES = [
   {
     icon: "download",
-    title: "Скачивание видео",
-    desc: "YouTube, TikTok, Instagram — скачивайте в любом качестве до 4K. Конвертируйте в MP3 и сжимайте видео.",
+    title: "Video Downloader",
+    desc: "YouTube, TikTok, Instagram — download in any quality up to 4K. Convert to MP3 and compress videos.",
   },
   {
     icon: "ai",
-    title: "ИИ-генерация",
-    desc: "10+ ИИ-провайдеров: генерация текстов, идей, скриптов и визуального контента для вашего канала.",
+    title: "AI Generation",
+    desc: "10+ AI providers: generate scripts, ideas, descriptions, and visual content for your channel.",
   },
   {
     icon: "shield",
-    title: "VPN для YouTube",
-    desc: "WireGuard VPN — молниеносный и безопасный доступ к YouTube из России без ограничений.",
+    title: "VPN for YouTube",
+    desc: "WireGuard VPN — lightning-fast and secure access to YouTube without restrictions.",
   },
   {
     icon: "image",
-    title: "Дизайн обложек",
-    desc: "Профессиональный редактор в стиле Canva с ИИ-генерацией и A/B тестированием превью.",
+    title: "Thumbnail Designer",
+    desc: "Professional Canva-style editor with AI generation and A/B testing for thumbnails.",
   },
   {
     icon: "chart",
-    title: "SEO и аналитика",
-    desc: "Оптимизация заголовков, описаний, тегов. YouTube, Shorts и TikTok аналитика в реальном времени.",
+    title: "SEO & Analytics",
+    desc: "Optimize titles, descriptions, and tags. YouTube, Shorts, and TikTok analytics in real time.",
   },
   {
     icon: "users",
-    title: "Команда и рефералы",
-    desc: "Совместная работа до 10 человек. Реферальная программа: 20% от оплат приглашённых.",
+    title: "Teams & Referrals",
+    desc: "Collaborate with up to 10 team members. Referral program: earn 20% from invited users.",
   },
 ];
 
@@ -102,28 +103,28 @@ const FEATURE_ICONS: Record<string, React.JSX.Element> = {
 };
 
 const TOOLS = [
-  { title: "YouTube Downloader", desc: "Скачивание видео с YouTube в любом качестве" },
-  { title: "MP3 Конвертер", desc: "Извлечение аудио из любого видео" },
-  { title: "Компрессор видео", desc: "Сжатие без потери качества" },
-  { title: "ИИ-редактор текстов", desc: "Генерация описаний и скриптов" },
-  { title: "Генератор обложек", desc: "ИИ-дизайн превью для видео" },
-  { title: "SEO-анализатор", desc: "Оптимизация метаданных канала" },
-  { title: "YouTube аналитика", desc: "Статистика и рост канала" },
-  { title: "Shorts аналитика", desc: "Метрики коротких видео" },
+  { title: "YouTube Downloader", desc: "Download YouTube videos in any quality" },
+  { title: "MP3 Converter", desc: "Extract audio from any video" },
+  { title: "Video Compressor", desc: "Compress without losing quality" },
+  { title: "AI Text Editor", desc: "Generate descriptions and scripts" },
+  { title: "Thumbnail Generator", desc: "AI-powered thumbnail design" },
+  { title: "SEO Analyzer", desc: "Optimize your channel metadata" },
+  { title: "YouTube Analytics", desc: "Channel stats and growth tracking" },
+  { title: "Shorts Analytics", desc: "Short-form video metrics" },
 ];
 
 const STATS = [
-  { value: "2026", label: "запущено" },
-  { value: "Next-Gen", label: "ИИ-технологии" },
+  { value: "10K+", label: "creators" },
+  { value: "Next-Gen", label: "AI technology" },
   { value: "99.9%", label: "uptime" },
-  { value: "EU", label: "защита данных" },
+  { value: "EU", label: "data protection" },
 ];
 
 const HOW_IT_WORKS = [
   {
     step: "1",
-    title: "\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0438\u0434\u0435\u044E",
-    desc: "\u0420\u0430\u0441\u0441\u043A\u0430\u0436\u0438\u0442\u0435 \u0418\u0418, \u043A\u0430\u043A\u043E\u0435 \u0432\u0438\u0434\u0435\u043E \u0432\u044B \u0445\u043E\u0442\u0438\u0442\u0435 \u0441\u043E\u0437\u0434\u0430\u0442\u044C \u2014 \u0442\u0435\u043C\u0430, \u0441\u0442\u0438\u043B\u044C, \u0446\u0435\u043B\u0435\u0432\u0430\u044F \u0430\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F. \u0418\u0418 \u043F\u043E\u043D\u0438\u043C\u0430\u0435\u0442 \u043A\u043E\u043D\u0442\u0435\u043A\u0441\u0442.",
+    title: "Describe Your Idea",
+    desc: "Tell the AI what video you want to create — topic, style, and target audience. The AI understands context.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -132,8 +133,8 @@ const HOW_IT_WORKS = [
   },
   {
     step: "2",
-    title: "AI \u0441\u043E\u0437\u0434\u0430\u0451\u0442 \u043A\u043E\u043D\u0442\u0435\u043D\u0442",
-    desc: "\u041F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0430 \u0433\u0435\u043D\u0435\u0440\u0438\u0440\u0443\u0435\u0442 \u0441\u043A\u0440\u0438\u043F\u0442, \u043E\u0431\u043B\u043E\u0436\u043A\u0443, \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0438 \u0442\u0435\u0433\u0438 \u2014 \u0432\u0441\u0451 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u043F\u043E\u0434 YouTube.",
+    title: "AI Creates Content",
+    desc: "The platform generates scripts, thumbnails, descriptions, and tags — all optimized for YouTube.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
@@ -142,8 +143,8 @@ const HOW_IT_WORKS = [
   },
   {
     step: "3",
-    title: "\u041F\u0443\u0431\u043B\u0438\u043A\u0443\u0439\u0442\u0435 \u043D\u0430 YouTube",
-    desc: "\u0413\u043E\u0442\u043E\u0432\u044B\u0439 \u043A\u043E\u043D\u0442\u0435\u043D\u0442 \u2014 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0439\u0442\u0435 \u043D\u0430 \u043A\u0430\u043D\u0430\u043B \u0438 \u043D\u0430\u0431\u043B\u044E\u0434\u0430\u0439\u0442\u0435 \u0437\u0430 \u0440\u043E\u0441\u0442\u043E\u043C \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432 \u0432 \u0440\u0435\u0430\u043B\u044C\u043D\u043E\u043C \u0432\u0440\u0435\u043C\u0435\u043D\u0438.",
+    title: "Publish to YouTube",
+    desc: "Your content is ready — upload to your channel and watch your views grow in real time.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
@@ -154,29 +155,29 @@ const HOW_IT_WORKS = [
 
 const TESTIMONIALS = [
   {
-    name: "\u0410\u043B\u0435\u043A\u0441\u0435\u0439 \u041C.",
-    role: "YouTuber, 150K \u043F\u043E\u0434\u043F\u0438\u0441\u0447\u0438\u043A\u043E\u0432",
-    text: "TubeForge \u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E \u0437\u0430\u043C\u0435\u043D\u0438\u043B \u043C\u043D\u0435 5 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0445 \u0441\u0435\u0440\u0432\u0438\u0441\u043E\u0432. \u041E\u0431\u043B\u043E\u0436\u043A\u0438, SEO, \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430 \u2014 \u0432\u0441\u0451 \u0432 \u043E\u0434\u043D\u043E\u043C \u043C\u0435\u0441\u0442\u0435. \u042D\u043A\u043E\u043D\u043E\u043C\u043B\u044E \u043C\u0438\u043D\u0438\u043C\u0443\u043C 3 \u0447\u0430\u0441\u0430 \u0432 \u043D\u0435\u0434\u0435\u043B\u044E.",
+    name: "Alex M.",
+    role: "YouTuber, 150K subscribers",
+    text: "TubeForge completely replaced 5 separate tools for me. Thumbnails, SEO, analytics \u2014 all in one place. I save at least 3 hours every week.",
   },
   {
-    name: "\u041C\u0430\u0440\u0438\u043D\u0430 \u041A.",
-    role: "\u041C\u0430\u0440\u043A\u0435\u0442\u043E\u043B\u043E\u0433",
-    text: "\u0418\u0418-\u0433\u0435\u043D\u0435\u0440\u0430\u0442\u043E\u0440 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0439 \u043F\u0440\u043E\u0441\u0442\u043E \u0432\u043E\u043B\u0448\u0435\u0431\u043D\u044B\u0439 \u2014 \u043A\u0430\u0436\u0434\u043E\u0435 \u0432\u0438\u0434\u0435\u043E \u0441 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u043C\u0438 \u0442\u0435\u0433\u0430\u043C\u0438 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432. \u0420\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u044E \u0432\u0441\u0435\u043C \u043C\u0430\u0440\u043A\u0435\u0442\u043E\u043B\u043E\u0433\u0430\u043C!",
+    name: "Sarah K.",
+    role: "Content Marketer",
+    text: "The AI description generator is magical \u2014 every video with optimized tags gets more views. I recommend it to all marketers!",
   },
   {
-    name: "\u0414\u043C\u0438\u0442\u0440\u0438\u0439 \u0420.",
-    role: "\u0411\u043B\u043E\u0433\u0435\u0440",
-    text: "VPN \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0431\u0435\u0437\u0443\u043F\u0440\u0435\u0447\u043D\u043E, \u0430 \u043A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430 \u043D\u0430 Studio-\u0442\u0430\u0440\u0438\u0444\u0435 \u2014 \u0438\u043C\u0435\u043D\u043D\u043E \u0442\u043E, \u0447\u0442\u043E \u043D\u0443\u0436\u043D\u043E \u043C\u043E\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u0435. \u041B\u0443\u0447\u0448\u0430\u044F \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u0430 \u0434\u043B\u044F \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u043E\u0432!",
+    name: "David R.",
+    role: "Full-time Creator",
+    text: "The VPN works flawlessly, and team collaboration on the Studio plan is exactly what my team needed. Best platform for creators!",
   },
 ];
 
 const COMPARISON_FEATURES = [
-  "\u0418\u0418 \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0432\u0438\u0434\u0435\u043E",
-  "YouTube \u0438\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F",
-  "\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D",
-  "\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441",
-  "\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430",
-  "\u0428\u0430\u0431\u043B\u043E\u043D\u044B",
+  "AI Video Generation",
+  "YouTube Integration",
+  "Free Plan",
+  "Built-in VPN",
+  "Team Collaboration",
+  "Templates",
 ] as const;
 
 type ComparisonEntry = { name: string; values: boolean[] };
@@ -185,13 +186,13 @@ const COMPARISON_DATA: ComparisonEntry[] = [
   { name: "TubeForge", values: [true, true, true, true, true, true] },
   { name: "Canva", values: [false, false, true, false, true, true] },
   { name: "CapCut", values: [true, false, true, false, false, true] },
-  { name: "InVideo", values: [true, false, false, false, true, true] },
+  { name: "InVideo", values: [true, false, false, false, false, true] },
 ];
 
 const TARGET_AUDIENCE = [
   {
-    title: "YouTube \u0441\u043E\u0437\u0434\u0430\u0442\u0435\u043B\u0438",
-    desc: "\u041F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B \u0434\u043B\u044F \u0440\u043E\u0441\u0442\u0430 \u043A\u0430\u043D\u0430\u043B\u0430 \u0438 \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u0438 \u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430 \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u0418\u0418.",
+    title: "YouTube Creators",
+    desc: "Professional tools for channel growth and AI-powered content optimization.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
@@ -199,8 +200,8 @@ const TARGET_AUDIENCE = [
     ),
   },
   {
-    title: "\u041C\u0430\u0440\u043A\u0435\u0442\u043E\u043B\u043E\u0433\u0438",
-    desc: "\u0411\u044B\u0441\u0442\u0440\u043E\u0435 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E\u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430 \u0434\u043B\u044F \u0440\u0435\u043A\u043B\u0430\u043C\u043D\u044B\u0445 \u043A\u0430\u043C\u043F\u0430\u043D\u0438\u0439 \u0438 \u0441\u043E\u0446\u0441\u0435\u0442\u0435\u0439.",
+    title: "Marketers",
+    desc: "Quickly create video content for ad campaigns and social media.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -208,8 +209,8 @@ const TARGET_AUDIENCE = [
     ),
   },
   {
-    title: "\u0410\u0433\u0435\u043D\u0442\u0441\u0442\u0432\u0430",
-    desc: "\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430, API-\u0434\u043E\u0441\u0442\u0443\u043F \u0438 \u043C\u0443\u043B\u044C\u0442\u0438-\u043A\u0430\u043D\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C \u0434\u043B\u044F \u043C\u0430\u0441\u0448\u0442\u0430\u0431\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u0440\u043E\u0434\u0430\u043A\u0448\u043D\u0430.",
+    title: "Agencies",
+    desc: "Team collaboration, API access, and multi-channel management for scaling production.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -217,8 +218,8 @@ const TARGET_AUDIENCE = [
     ),
   },
   {
-    title: "\u041F\u0440\u0435\u043F\u043E\u0434\u0430\u0432\u0430\u0442\u0435\u043B\u0438",
-    desc: "\u0421\u043E\u0437\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u043E\u0431\u0443\u0447\u0430\u044E\u0449\u0438\u0435 \u0432\u0438\u0434\u0435\u043E \u0438 \u043E\u043D\u043B\u0430\u0439\u043D-\u043A\u0443\u0440\u0441\u044B \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u0418\u0418 \u0431\u0435\u0437 \u0441\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u044B\u0445 \u043D\u0430\u0432\u044B\u043A\u043E\u0432.",
+    title: "Educators",
+    desc: "Create educational videos and online courses with AI \u2014 no special skills required.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
@@ -230,49 +231,49 @@ const TARGET_AUDIENCE = [
 const PLANS = [
   {
     name: "Free",
-    price: "0₽",
+    price: "$0",
     period: "",
-    desc: "Для знакомства с платформой",
+    desc: "Get started with the platform",
     features: [
-      "3 скачивания в день",
-      "Базовый ИИ-редактор",
-      "Генерация обложек",
-      "SEO-оптимизация",
-      "1 ГБ хранилища",
+      "3 downloads per day",
+      "Basic AI editor",
+      "Thumbnail generation",
+      "SEO optimization",
+      "1 GB storage",
     ],
     popular: false,
     href: "/register",
   },
   {
     name: "Pro",
-    price: "990₽",
-    period: "/мес",
-    desc: "Для активных креаторов",
+    price: "$12",
+    period: "/mo",
+    desc: "For active creators",
     features: [
-      "Безлимит скачиваний",
-      "Все ИИ-инструменты",
-      "VPN для YouTube",
-      "Безлимит обложек",
-      "A/B тесты обложек",
-      "50 ГБ хранилища",
-      "Приоритетная поддержка",
+      "Unlimited downloads",
+      "All AI tools",
+      "VPN for YouTube",
+      "Unlimited thumbnails",
+      "A/B thumbnail testing",
+      "50 GB storage",
+      "Priority support",
     ],
     popular: true,
     href: "/billing?plan=PRO",
   },
   {
     name: "Studio",
-    price: "2490₽",
-    period: "/мес",
-    desc: "Для команд и агентств",
+    price: "$30",
+    period: "/mo",
+    desc: "For teams and agencies",
     features: [
-      "Все Pro-функции",
-      "Команда до 10 человек",
-      "API-доступ",
-      "500 ГБ хранилища",
-      "Брендированные шаблоны",
-      "Выделенная поддержка",
-      "Мульти-канальность",
+      "All Pro features",
+      "Team up to 10 members",
+      "API access",
+      "500 GB storage",
+      "Branded templates",
+      "Dedicated support",
+      "Multi-channel management",
     ],
     popular: false,
     href: "/billing?plan=STUDIO",
@@ -281,32 +282,32 @@ const PLANS = [
 
 const FAQ_ITEMS = [
   {
-    q: "Что такое TubeForge?",
-    a: "TubeForge — это ИИ-платформа для YouTube-креаторов, объединяющая скачивание видео, ИИ-инструменты, VPN, редактор обложек, SEO-оптимизацию и реферальную программу в одном месте.",
+    q: "What is TubeForge?",
+    a: "TubeForge is an AI-powered platform for YouTube creators that combines video downloading, AI tools, VPN, thumbnail editor, SEO optimization, and a referral program \u2014 all in one place.",
   },
   {
-    q: "Нужно ли платить?",
-    a: "Нет, есть бесплатный тариф: 3 скачивания в день, базовый ИИ-редактор, генерация обложек и SEO-оптимизация. Кредитная карта не требуется. Тариф Pro открывает безлимит и расширенные функции.",
+    q: "Do I need to pay?",
+    a: "No, there is a free plan with 3 downloads per day, a basic AI editor, thumbnail generation, and SEO optimization. No credit card required. The Pro plan unlocks unlimited access and advanced features.",
   },
   {
-    q: "Какие форматы видео поддерживаются?",
-    a: "Скачивание и экспорт в формате MP4 с поддержкой нескольких разрешений — от 360p до 4K. Также доступна конвертация в MP3 для извлечения аудио.",
+    q: "What video formats are supported?",
+    a: "Download and export in MP4 with multiple resolutions \u2014 from 360p to 4K. MP3 conversion is also available for audio extraction.",
   },
   {
-    q: "Как работает ИИ-генерация?",
-    a: "TubeForge интегрирован с 10+ ИИ-провайдерами (OpenAI, Anthropic, Google и др.). ИИ анализирует ваш контент и генерирует оптимизированные заголовки, описания, скрипты и визуальный контент.",
+    q: "How does AI generation work?",
+    a: "TubeForge integrates with 10+ AI providers (OpenAI, Anthropic, Google, and more). The AI analyzes your content and generates optimized titles, descriptions, scripts, and visual content.",
   },
   {
-    q: "Могу ли я отменить подписку?",
-    a: "Да, отмена в любое время из настроек аккаунта — без вопросов и скрытых условий. Доступ к оплаченным функциям сохраняется до конца оплаченного периода.",
+    q: "Can I cancel my subscription?",
+    a: "Yes, cancel anytime from your account settings \u2014 no questions asked, no hidden conditions. Access to paid features remains until the end of your billing period.",
   },
   {
-    q: "Безопасны ли мои данные?",
-    a: "Да. Серверы расположены в ЕС, все данные шифруются при передаче и хранении. Мы соблюдаем требования GDPR и не передаём персональные данные третьим лицам.",
+    q: "Is my data safe?",
+    a: "Yes. Our servers are located in the EU, and all data is encrypted in transit and at rest. We comply with GDPR and never share personal data with third parties.",
   },
   {
-    q: "Есть ли API?",
-    a: "Да, API-доступ доступен на тарифе Studio. Вы можете интегрировать инструменты TubeForge в свои приложения и автоматизировать рабочие процессы.",
+    q: "Is there an API?",
+    a: "Yes, API access is available on the Studio plan. You can integrate TubeForge tools into your applications and automate workflows.",
   },
 ];
 
@@ -322,7 +323,7 @@ const PAGE_JSON_LD = {
   offers: {
     "@type": "Offer",
     price: "0",
-    priceCurrency: "RUB",
+    priceCurrency: "USD",
   },
   description:
     "AI-powered video creation platform for YouTube creators",
@@ -355,6 +356,7 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
       />
+      <Suspense fallback={null}><ReferralCapture /></Suspense>
       <ScrollRevealProvider />
       <LandingNav />
       <LandingHero />
@@ -430,7 +432,7 @@ export default function LandingPage() {
               marginBottom: 16,
             }}
           >
-            Как это работает
+            How It Works
           </p>
           <h2
             style={{
@@ -442,7 +444,7 @@ export default function LandingPage() {
               color: "#ffffff",
             }}
           >
-            Три простых шага
+            Three Simple Steps
           </h2>
           <p
             style={{
@@ -453,7 +455,7 @@ export default function LandingPage() {
               lineHeight: 1.6,
             }}
           >
-            От идеи до публикации за считанные минуты
+            From idea to publication in minutes
           </p>
         </div>
         <div
@@ -555,7 +557,7 @@ export default function LandingPage() {
               marginBottom: 16,
             }}
           >
-            Возможности
+            Features
           </p>
           <h2
             style={{
@@ -567,7 +569,7 @@ export default function LandingPage() {
               color: "#ffffff",
             }}
           >
-            Всё для роста вашего канала
+            Everything to Grow Your Channel
           </h2>
           <p
             style={{
@@ -578,7 +580,7 @@ export default function LandingPage() {
               lineHeight: 1.6,
             }}
           >
-            Шесть ключевых направлений — одна платформа
+            Six key areas — one platform
           </p>
         </div>
         <div
@@ -681,7 +683,7 @@ export default function LandingPage() {
                 marginBottom: 16,
               }}
             >
-              Инструменты
+              Tools
             </p>
             <h2
               style={{
@@ -692,7 +694,7 @@ export default function LandingPage() {
                 margin: "0 0 16px",
               }}
             >
-              Бесплатные инструменты
+              Free Tools
             </h2>
             <p
               style={{
@@ -703,7 +705,7 @@ export default function LandingPage() {
                 lineHeight: 1.6,
               }}
             >
-              Используйте прямо сейчас — без регистрации
+              Use them right now — no sign-up required
             </p>
           </div>
           <div
@@ -770,7 +772,7 @@ export default function LandingPage() {
               marginBottom: 16,
             }}
           >
-            Сравнение
+            Comparison
           </p>
           <h2
             style={{
@@ -782,7 +784,7 @@ export default function LandingPage() {
               color: "#ffffff",
             }}
           >
-            TubeForge vs альтернативы
+            TubeForge vs Alternatives
           </h2>
           <p
             style={{
@@ -793,7 +795,7 @@ export default function LandingPage() {
               lineHeight: 1.6,
             }}
           >
-            Почему креаторы выбирают TubeForge
+            Why creators choose TubeForge
           </p>
         </div>
         <div
@@ -824,7 +826,7 @@ export default function LandingPage() {
                     borderBottom: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
-                  Функция
+                  Feature
                 </th>
                 {COMPARISON_DATA.map((col, ci) => (
                   <th
@@ -937,7 +939,7 @@ export default function LandingPage() {
                 marginBottom: 16,
               }}
             >
-              Аудитория
+              Audience
             </p>
             <h2
               style={{
@@ -949,7 +951,7 @@ export default function LandingPage() {
                 color: "#ffffff",
               }}
             >
-              Для кого TubeForge?
+              Who Is TubeForge For?
             </h2>
             <p
               style={{
@@ -960,7 +962,7 @@ export default function LandingPage() {
                 lineHeight: 1.6,
               }}
             >
-              Инструменты для каждого, кто создаёт видеоконтент
+              Tools for everyone who creates video content
             </p>
           </div>
           <div
@@ -1041,7 +1043,7 @@ export default function LandingPage() {
                 marginBottom: 16,
               }}
             >
-              Тарифы
+              Pricing
             </p>
             <h2
               style={{
@@ -1052,7 +1054,7 @@ export default function LandingPage() {
                 margin: "0 0 16px",
               }}
             >
-              Простые и прозрачные цены
+              Simple, Transparent Pricing
             </h2>
             <p
               style={{
@@ -1063,7 +1065,7 @@ export default function LandingPage() {
                 lineHeight: 1.6,
               }}
             >
-              Начните бесплатно, масштабируйтесь когда готовы
+              Start free, scale when you're ready
             </p>
           </div>
           <div
@@ -1122,7 +1124,7 @@ export default function LandingPage() {
                       letterSpacing: "0.05em",
                     }}
                   >
-                    Популярный
+                    Popular
                   </span>
                 )}
                 <div
@@ -1250,7 +1252,7 @@ export default function LandingPage() {
                       />
                     </svg>
                   )}
-                  Выбрать
+                  Choose Plan
                   {plan.popular && <span aria-hidden="true">{"\u2192"}</span>}
                 </Link>
               </div>
@@ -1311,7 +1313,7 @@ export default function LandingPage() {
                   marginBottom: 4,
                 }}
               >
-                14 дней гарантия возврата
+                14-Day Money-Back Guarantee
               </div>
               <div
                 style={{
@@ -1320,7 +1322,7 @@ export default function LandingPage() {
                   lineHeight: 1.5,
                 }}
               >
-                Не понравится — вернём деньги без вопросов
+                Not satisfied? Full refund, no questions asked
               </div>
             </div>
           </div>
@@ -1348,7 +1350,7 @@ export default function LandingPage() {
                 marginBottom: 16,
               }}
             >
-              Отзывы
+              Testimonials
             </p>
             <h2
               style={{
@@ -1359,7 +1361,7 @@ export default function LandingPage() {
                 margin: 0,
               }}
             >
-              Что говорят создатели контента
+              What Creators Are Saying
             </h2>
           </div>
           <div
@@ -1459,7 +1461,7 @@ export default function LandingPage() {
                 margin: "0 0 16px",
               }}
             >
-              Частые вопросы
+              Frequently Asked Questions
             </h2>
             <p
               style={{
@@ -1470,7 +1472,7 @@ export default function LandingPage() {
                 lineHeight: 1.6,
               }}
             >
-              Всё, что нужно знать о TubeForge
+              Everything you need to know about TubeForge
             </p>
           </div>
           <div className="tf-reveal">
@@ -1524,7 +1526,7 @@ export default function LandingPage() {
               lineHeight: 1.1,
             }}
           >
-            Готовы начать?
+            Ready to Get Started?
           </h2>
           <p
             style={{
@@ -1534,8 +1536,8 @@ export default function LandingPage() {
               lineHeight: 1.6,
             }}
           >
-            Присоединяйтесь к TubeForge и получите все инструменты для роста
-            вашего канала
+            Join TubeForge and get all the tools you need to grow your
+            channel
           </p>
           <Link
             href="/register"
@@ -1558,7 +1560,7 @@ export default function LandingPage() {
                 "0 4px 24px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
             }}
           >
-            Создать аккаунт бесплатно
+            Start Free
             <svg
               width="16"
               height="16"
@@ -1634,8 +1636,8 @@ export default function LandingPage() {
                   maxWidth: 260,
                 }}
               >
-                Платформа для YouTube-блогеров. Все инструменты для создания и
-                продвижения контента.
+                AI-powered platform for YouTube creators. All the tools you need
+                to create and promote content.
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <a
@@ -1676,27 +1678,27 @@ export default function LandingPage() {
             {/* Columns */}
             {[
               {
-                title: "Продукт",
+                title: "Product",
                 links: [
-                  { label: "Возможности", href: "#features" },
-                  { label: "Тарифы", href: "#pricing" },
-                  { label: "Инструменты", href: "#tools" },
+                  { label: "Features", href: "#features" },
+                  { label: "Pricing", href: "#pricing" },
+                  { label: "Tools", href: "#tools" },
                   { label: "VPN", href: "/vpn" },
                 ],
               },
               {
-                title: "Юридическое",
+                title: "Legal",
                 links: [
-                  { label: "Условия использования", href: "/terms" },
-                  { label: "Конфиденциальность", href: "/privacy" },
+                  { label: "Terms of Service", href: "/terms" },
+                  { label: "Privacy Policy", href: "/privacy" },
                   {
-                    label: "Возврат средств",
+                    label: "Refund Policy",
                     href: "mailto:support@tubeforge.co",
                   },
                 ],
               },
               {
-                title: "Соцсети",
+                title: "Social",
                 links: [
                   { label: "YouTube", href: "https://youtube.com/@tubeforge" },
                   { label: "Telegram", href: "https://t.me/tubeforge" },
@@ -1761,7 +1763,7 @@ export default function LandingPage() {
             }}
           >
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
-              {"\u00A9"} 2026 TubeForge. Все права защищены.
+              {"\u00A9"} 2026 TubeForge. All rights reserved.
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
               <a
@@ -1773,7 +1775,7 @@ export default function LandingPage() {
                   transition: "color 0.2s",
                 }}
               >
-                Условия использования
+                Terms of Service
               </a>
               <a
                 href="/privacy"
@@ -1784,7 +1786,7 @@ export default function LandingPage() {
                   transition: "color 0.2s",
                 }}
               >
-                Конфиденциальность
+                Privacy Policy
               </a>
             </div>
           </div>

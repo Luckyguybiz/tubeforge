@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { useSession } from 'next-auth/react';
 
@@ -10,16 +11,16 @@ import { useSession } from 'next-auth/react';
 
 interface ChecklistStep {
   id: string;
-  label: string;
+  labelKey: string;
   href?: string;
 }
 
 const STEPS: ChecklistStep[] = [
-  { id: 'account', label: '\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0430\u043A\u043A\u0430\u0443\u043D\u0442' },
-  { id: 'project', label: '\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043F\u0435\u0440\u0432\u044B\u0439 \u043F\u0440\u043E\u0435\u043A\u0442', href: '/editor' },
-  { id: 'ai', label: '\u0421\u0433\u0435\u043D\u0435\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0441\u0446\u0435\u043D\u0443 \u0441 \u0418\u0418', href: '/editor' },
-  { id: 'export', label: '\u042D\u043A\u0441\u043F\u043E\u0440\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0432\u0438\u0434\u0435\u043E', href: '/editor' },
-  { id: 'profile', label: '\u041D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C \u043F\u0440\u043E\u0444\u0438\u043B\u044C', href: '/settings' },
+  { id: 'account', labelKey: 'checklist.account' },
+  { id: 'project', labelKey: 'checklist.project', href: '/editor' },
+  { id: 'ai', labelKey: 'checklist.ai', href: '/editor' },
+  { id: 'export', labelKey: 'checklist.export', href: '/editor' },
+  { id: 'profile', labelKey: 'checklist.profile', href: '/settings' },
 ];
 
 const LS_KEY = 'tf-onboarding-checklist-hidden';
@@ -29,6 +30,7 @@ const LS_KEY = 'tf-onboarding-checklist-hidden';
 export function OnboardingChecklist() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -78,6 +80,10 @@ export function OnboardingChecklist() {
 
   const pct = Math.round((completedCount / totalCount) * 100);
 
+  const completedLabel = t('checklist.completedOf')
+    .replace('{completed}', String(completedCount))
+    .replace('{total}', String(totalCount));
+
   return (
     <div style={{
       background: C.card,
@@ -110,10 +116,10 @@ export function OnboardingChecklist() {
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>
-              {'\u041D\u0430\u0447\u0430\u043B\u043E \u0440\u0430\u0431\u043E\u0442\u044B'}
+              {t('checklist.title')}
             </div>
             <div style={{ fontSize: 12, color: C.sub }}>
-              {completedCount} {'\u0438\u0437'} {totalCount} {'\u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u043E'}
+              {completedLabel}
             </div>
           </div>
         </div>
@@ -134,7 +140,7 @@ export function OnboardingChecklist() {
             transition: 'all .15s',
           }}
         >
-          {'\u0421\u043A\u0440\u044B\u0442\u044C'}
+          {t('checklist.hide')}
         </button>
       </div>
 
@@ -207,7 +213,7 @@ export function OnboardingChecklist() {
                 opacity: done ? 0.6 : 1,
                 flex: 1,
               }}>
-                {step.label}
+                {t(step.labelKey)}
               </span>
 
               {/* Arrow for incomplete items with href */}

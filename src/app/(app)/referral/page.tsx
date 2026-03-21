@@ -84,6 +84,33 @@ function TrophyIcon({ color }: { color: string }) {
   );
 }
 
+function DownloadIcon({ color }: { color: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2V10.5" stroke={color} strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M5 8L8 11L11 8" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 13H13" stroke={color} strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StarIcon({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1.5L9.8 5.8L14.5 6.2L11 9.3L12 14L8 11.5L4 14L5 9.3L1.5 6.2L6.2 5.8L8 1.5Z" stroke={color} strokeWidth="1.2" strokeLinejoin="round" fill={color} fillOpacity="0.15" />
+    </svg>
+  );
+}
+
+function LockIcon({ color }: { color: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <rect x="3" y="7" width="10" height="7" rx="1.5" stroke={color} strokeWidth="1.3" />
+      <path d="M5.5 7V5C5.5 3.62 6.62 2.5 8 2.5C9.38 2.5 10.5 3.62 10.5 5V7" stroke={color} strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* ── Main Component ────────────────────────────────────────────────── */
 
 function ReferralContent() {
@@ -92,11 +119,15 @@ function ReferralContent() {
   const t = useLocaleStore((s) => s.t);
 
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [activating, setActivating] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const myReferral = trpc.referral.getMyReferral.useQuery();
   const stats = trpc.referral.getStats.useQuery(undefined, {
+    enabled: !!myReferral.data?.code,
+  });
+  const rewards = trpc.referral.getRewards.useQuery(undefined, {
     enabled: !!myReferral.data?.code,
   });
   const activateMutation = trpc.referral.activate.useMutation({
@@ -184,6 +215,51 @@ function ReferralContent() {
     const body = encodeURIComponent(`${t('referral.shareEmailBody')}\n\n${referralLink}`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   }, [referralLink, t]);
+
+  const handleCopyCode = useCallback(async () => {
+    if (!referralCode) return;
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      setCodeCopied(true);
+      toast.success(t('referral.codeCopied'));
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = referralCode;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCodeCopied(true);
+      toast.success(t('referral.codeCopied'));
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
+  }, [referralCode, t]);
+
+  const handleDownloadQR = useCallback(async () => {
+    if (!referralLink) return;
+    try {
+      const canvas = document.createElement('canvas');
+      await QRCode.toCanvas(canvas, referralLink, {
+        width: 512,
+        margin: 3,
+        color: {
+          dark: '#1e1b4b',
+          light: '#ffffff',
+        },
+      });
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tubeforge-referral-${referralCode}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success(t('referral.qrDownloaded'));
+    } catch {
+      toast.error('Failed to download QR code');
+    }
+  }, [referralLink, referralCode, t]);
 
   /* ── Save ref code from URL to localStorage on landing page ──── */
   useEffect(() => {
@@ -658,19 +734,48 @@ function ReferralContent() {
                   </button>
                 </div>
 
-                {/* Referral code badge */}
+                {/* Referral code badge with copy */}
                 <div style={{
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.08)',
+                  gap: 10,
                 }}>
-                  <span style={{ fontSize: 11, color: C.sub, fontWeight: 500 }}>{t('referral.yourCode')}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#6366f1', letterSpacing: '.05em', fontFamily: 'monospace' }}>
-                    {referralCode}
-                  </span>
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 14px',
+                    borderRadius: 10,
+                    background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.08)',
+                  }}>
+                    <span style={{ fontSize: 11, color: C.sub, fontWeight: 500 }}>{t('referral.yourCode')}</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: '#6366f1', letterSpacing: '.05em', fontFamily: 'monospace' }}>
+                      {referralCode}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleCopyCode}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 14px',
+                      borderRadius: 10,
+                      border: `1.5px solid ${codeCopied ? 'rgba(22,163,74,.3)' : (isDark ? 'rgba(99,102,241,.25)' : 'rgba(99,102,241,.15)')}`,
+                      background: codeCopied
+                        ? (isDark ? 'rgba(22,163,74,.12)' : 'rgba(22,163,74,.06)')
+                        : (isDark ? 'rgba(99,102,241,.08)' : 'rgba(99,102,241,.04)'),
+                      color: codeCopied ? '#16a34a' : '#6366f1',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .25s ease',
+                    }}
+                  >
+                    {codeCopied ? <CheckCircleIcon color="#16a34a" /> : <CopyIcon color="#6366f1" />}
+                    {codeCopied ? t('referral.copied') : t('referral.copyCode')}
+                  </button>
                 </div>
               </div>
 
@@ -781,13 +886,42 @@ function ReferralContent() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={qrDataUrl} alt="Referral QR Code" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 8 }} />
                   </div>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>
                       {t('referral.qrTitle')}
                     </div>
-                    <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5, marginBottom: 12 }}>
                       {t('referral.qrDesc')}
                     </div>
+                    <button
+                      onClick={handleDownloadQR}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '8px 16px',
+                        borderRadius: 8,
+                        border: `1px solid ${C.border}`,
+                        background: C.surface,
+                        color: C.text,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all .2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = C.cardHover;
+                        e.currentTarget.style.borderColor = C.borderActive;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = C.surface;
+                        e.currentTarget.style.borderColor = C.border;
+                      }}
+                    >
+                      <DownloadIcon color={C.text} />
+                      {t('referral.downloadQR')}
+                    </button>
                   </div>
                 </div>
               )}
@@ -830,6 +964,64 @@ function ReferralContent() {
                   </div>
                 </div>
               </div>
+
+              {/* ── Rewards ─────────────────────────────────────── */}
+              {rewards.data?.rewards && rewards.data.rewards.length > 0 && (
+                <div style={{ marginBottom: 28 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                      {t('referral.rewardsTitle')}
+                    </div>
+                    {rewards.data.totalBonusCredits > 0 && (
+                      <div style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: '#6366f1',
+                        background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.06)',
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                      }}>
+                        +{rewards.data.totalBonusCredits} {t('referral.rewardCreditsLabel')}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {rewards.data.rewards.map((r) => {
+                      const milestoneLabel = t(`referral.milestone.${r.milestone}`);
+                      const rewardLabel = t(`referral.reward.${r.reward}`);
+                      return (
+                        <div key={r.milestone} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          borderRadius: 10,
+                          border: `1px solid ${r.earned ? (isDark ? 'rgba(16,185,129,.25)' : 'rgba(16,185,129,.15)') : C.border}`,
+                          background: r.earned
+                            ? (isDark ? 'rgba(16,185,129,.06)' : 'rgba(16,185,129,.03)')
+                            : C.surface,
+                          opacity: r.earned ? 1 : 0.65,
+                          transition: 'all .2s ease',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            {r.earned
+                              ? <CheckCircleIcon color="#10b981" />
+                              : <LockIcon color={C.dim} />
+                            }
+                            <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{milestoneLabel}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <StarIcon color={r.earned ? '#f59e0b' : C.dim} />
+                            <span style={{ fontSize: 12, fontWeight: 600, color: r.earned ? '#f59e0b' : C.sub }}>
+                              {rewardLabel}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* ── How It Works (4 steps) ───────────────────────── */}
               <div style={{ marginBottom: 28 }}>
