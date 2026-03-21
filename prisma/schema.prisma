@@ -86,6 +86,7 @@ model Channel {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
 }
@@ -131,6 +132,8 @@ model Scene {
   taskId    String?
   projectId String
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   @@index([projectId])
   @@index([projectId, order])
@@ -208,6 +211,7 @@ model Asset {
   folderId  String?
   folder    DesignFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([userId])
   @@index([userId, folderId])
@@ -225,6 +229,7 @@ model DesignFolder {
   userId    String
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@index([userId])
   @@index([userId, parentId])
@@ -232,10 +237,14 @@ model DesignFolder {
 }
 
 /// Tracks already-processed Stripe webhook events for idempotency.
+/// Rows older than 90 days can be safely purged via scheduled cleanup:
+///   DELETE FROM "ProcessedEvent" WHERE "createdAt" < NOW() - INTERVAL '90 days';
 model ProcessedEvent {
   id            String   @id @default(cuid())
   stripeEventId String   @unique
   createdAt     DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model Payout {
@@ -247,6 +256,7 @@ model Payout {
   note          String?
   stripeEventId String?  @unique // Dedup key for Stripe webhook retries
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([userId])
   @@index([userId, createdAt])
@@ -273,6 +283,8 @@ model AuditLog {
   action    String
   target    String?
   metadata  Json?
+  ipAddress String?
+  userAgent String?
   createdAt DateTime @default(now())
 
   @@index([userId])
