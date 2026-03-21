@@ -9,6 +9,7 @@ import {
   ClientCookieConsent,
   StickyMobileCTA,
   ReferralCapture,
+  NewsletterForm,
 } from "@/components/landing";
 
 /* ── SEO Metadata ─────────────────────────────────────────── */
@@ -780,15 +781,32 @@ export default function LandingPage() {
             Why creators choose TubeForge
           </p>
         </div>
-        <div
-          className="tf-reveal"
-          style={{
-            overflowX: "auto",
-            borderRadius: 20,
-            border: "1px solid rgba(255,255,255,0.06)",
-            background: "rgba(255,255,255,0.02)",
-          }}
-        >
+        <div className="tf-reveal" style={{ position: "relative" }}>
+          {/* Right edge scroll gradient indicator (mobile) */}
+          <div
+            className="table-scroll-hint"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 48,
+              background: "linear-gradient(to right, transparent, rgba(10,10,10,0.8))",
+              zIndex: 2,
+              pointerEvents: "none",
+              borderRadius: "0 20px 20px 0",
+              display: "none",
+            }}
+          />
+          <div
+            style={{
+              overflowX: "auto",
+              borderRadius: 20,
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.02)",
+            }}
+          >
           <table
             style={{
               width: "100%",
@@ -897,6 +915,21 @@ export default function LandingPage() {
               ))}
             </tbody>
           </table>
+          </div>
+          {/* Swipe hint for mobile */}
+          <p
+            className="table-swipe-text"
+            style={{
+              display: "none",
+              textAlign: "center",
+              fontSize: 12,
+              color: "rgba(255,255,255,0.3)",
+              marginTop: 12,
+              marginBottom: 0,
+            }}
+          >
+            Swipe to see more {"→"}
+          </p>
         </div>
       </section>
 
@@ -1560,8 +1593,77 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ===== NEWSLETTER SIGNUP ===== */}
+      <section
+        className="tf-reveal"
+        style={{
+          padding: '80px 24px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Subtle top border */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            maxWidth: 600,
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)',
+          }}
+        />
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            maxWidth: 560,
+            margin: '0 auto',
+            textAlign: 'center',
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 'clamp(24px, 4vw, 36px)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: '#ffffff',
+              margin: '0 0 12px',
+              lineHeight: 1.2,
+            }}
+          >
+            Будь в курсе обновлений
+          </h2>
+          <p
+            style={{
+              fontSize: 16,
+              color: 'rgba(255,255,255,0.4)',
+              margin: '0 0 32px',
+              lineHeight: 1.6,
+            }}
+          >
+            Получай советы по продвижению YouTube канала и новости TubeForge
+          </p>
+          <NewsletterForm />
+          <p
+            style={{
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.2)',
+              marginTop: 16,
+            }}
+          >
+            Никакого спама. Отписаться можно в любой момент.
+          </p>
+        </div>
+      </section>
+      
       {/* ===== FOOTER ===== */}
+
       <footer
+        className="landing-footer"
         style={{
           borderTop: "1px solid rgba(255,255,255,0.06)",
           padding: "64px 24px 40px",
@@ -1627,7 +1729,7 @@ export default function LandingPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="YouTube"
-                  style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s" }}
+                  style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s", padding: 10, minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
@@ -1638,7 +1740,7 @@ export default function LandingPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Telegram"
-                  style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s" }}
+                  style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s", padding: 10, minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
@@ -1649,7 +1751,7 @@ export default function LandingPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Twitter"
-                  style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s" }}
+                  style={{ color: "rgba(255,255,255,0.3)", transition: "color 0.2s", padding: 10, minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -1723,6 +1825,9 @@ export default function LandingPage() {
                           color: "rgba(255,255,255,0.3)",
                           fontSize: 14,
                           transition: "color 0.2s",
+                          minHeight: 44,
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
                         {link.label}
@@ -1755,6 +1860,9 @@ export default function LandingPage() {
                   color: "rgba(255,255,255,0.25)",
                   fontSize: 13,
                   transition: "color 0.2s",
+                  minHeight: 44,
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
               >
                 Terms of Service
@@ -1766,6 +1874,9 @@ export default function LandingPage() {
                   color: "rgba(255,255,255,0.25)",
                   fontSize: 13,
                   transition: "color 0.2s",
+                  minHeight: 44,
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
               >
                 Privacy Policy
@@ -1871,6 +1982,9 @@ export default function LandingPage() {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: block !important; }
           .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .landing-footer { padding-bottom: 80px !important; }
+          .table-scroll-hint { display: block !important; }
+          .table-swipe-text { display: block !important; }
         }
         @media (max-width: 480px) {
           .footer-grid { grid-template-columns: 1fr !important; }

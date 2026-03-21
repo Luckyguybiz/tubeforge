@@ -1832,5 +1832,12 @@
   "tools.autoClip.minClipDuration": "Мин. длительность клипа",
   "tools.fakeTexts.speedFast": "Быстро (0.3с)",
   "tools.fakeTexts.speedSlow": "Медленно (3.0с)",
-  "billing.pro": "Pro"
+  "billing.pro": "Pro",
+  "referral.claimRewards": "Получить {{credits}} кредитов",
+  "referral.claimingRewards": "Получение...",
+  "referral.claimSuccess": "Получено {{credits}} бонусных AI-кредитов!",
+  "referral.claimSuccessNoCredits": "Награды успешно получены!",
+  "referral.noRewardsToClaim": "Нет новых наград для получения",
+  "referral.claimError": "Не удалось получить награды. Попробуйте снова.",
+  "referral.claimed": "Получено"
 }

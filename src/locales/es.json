@@ -1832,5 +1832,12 @@
   "tools.autoClip.minClipDuration": "Duración mín. del clip",
   "tools.fakeTexts.speedFast": "Rápido (0.3s)",
   "tools.fakeTexts.speedSlow": "Lento (3.0s)",
-  "billing.pro": "Pro"
+  "billing.pro": "Pro",
+  "referral.claimRewards": "Reclamar {{credits}} creditos",
+  "referral.claimingRewards": "Reclamando...",
+  "referral.claimSuccess": "{{credits}} creditos AI de bonificacion reclamados!",
+  "referral.claimSuccessNoCredits": "Recompensas reclamadas con exito!",
+  "referral.noRewardsToClaim": "No hay nuevas recompensas para reclamar",
+  "referral.claimError": "Error al reclamar recompensas. Intentalo de nuevo.",
+  "referral.claimed": "Reclamado"
 }

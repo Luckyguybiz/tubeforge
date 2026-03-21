@@ -141,6 +141,23 @@ function ReferralContent() {
     },
   });
 
+
+  const claimRewardsMutation = trpc.referral.claimRewards.useMutation({
+    onSuccess: (data) => {
+      rewards.refetch();
+      stats.refetch();
+      if (data.creditsApplied > 0) {
+        toast.success(t('referral.claimSuccess').replace('{{credits}}', String(data.creditsApplied)));
+      } else if (data.claimed > 0) {
+        toast.success(t('referral.claimSuccessNoCredits'));
+      } else {
+        toast.info(t('referral.noRewardsToClaim'));
+      }
+    },
+    onError: () => {
+      toast.error(t('referral.claimError'));
+    },
+  });
   const referralCode = myReferral.data?.code ?? null;
   const referralLink = referralCode ? `https://tubeforge.co?ref=${referralCode}` : '';
   const invited = stats.data?.invited ?? 0;
@@ -972,23 +989,50 @@ function ReferralContent() {
                     <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em' }}>
                       {t('referral.rewardsTitle')}
                     </div>
-                    {rewards.data.totalBonusCredits > 0 && (
-                      <div style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: '#6366f1',
-                        background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.06)',
-                        padding: '4px 10px',
-                        borderRadius: 6,
-                      }}>
-                        +{rewards.data.totalBonusCredits} {t('referral.rewardCreditsLabel')}
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {rewards.data.totalBonusCredits > 0 && (
+                        <div style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: '#6366f1',
+                          background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.06)',
+                          padding: '4px 10px',
+                          borderRadius: 6,
+                        }}>
+                          +{rewards.data.totalBonusCredits} {t('referral.rewardCreditsLabel')}
+                        </div>
+                      )}
+                      {(rewards.data.unclaimedCredits ?? 0) > 0 && (
+                        <button
+                          onClick={() => claimRewardsMutation.mutate()}
+                          disabled={claimRewardsMutation.isPending}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: '#fff',
+                            background: claimRewardsMutation.isPending
+                              ? (isDark ? '#374151' : '#9ca3af')
+                              : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            padding: '5px 14px',
+                            borderRadius: 6,
+                            border: 'none',
+                            cursor: claimRewardsMutation.isPending ? 'not-allowed' : 'pointer',
+                            transition: 'all .2s ease',
+                          }}
+                        >
+                          {claimRewardsMutation.isPending
+                            ? t('referral.claimingRewards')
+                            : t('referral.claimRewards').replace('{{credits}}', String(rewards.data.unclaimedCredits ?? 0))
+                          }
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {rewards.data.rewards.map((r) => {
                       const milestoneLabel = t(`referral.milestone.${r.milestone}`);
                       const rewardLabel = t(`referral.reward.${r.reward}`);
+                      const isClaimed = 'claimed' in r && r.claimed;
                       return (
                         <div key={r.milestone} style={{
                           display: 'flex',
@@ -996,19 +1040,26 @@ function ReferralContent() {
                           justifyContent: 'space-between',
                           padding: '10px 14px',
                           borderRadius: 10,
-                          border: `1px solid ${r.earned ? (isDark ? 'rgba(16,185,129,.25)' : 'rgba(16,185,129,.15)') : C.border}`,
+                          border: `1px solid ${r.earned ? (isClaimed ? (isDark ? 'rgba(99,102,241,.25)' : 'rgba(99,102,241,.15)') : (isDark ? 'rgba(16,185,129,.25)' : 'rgba(16,185,129,.15)')) : C.border}`,
                           background: r.earned
-                            ? (isDark ? 'rgba(16,185,129,.06)' : 'rgba(16,185,129,.03)')
+                            ? (isClaimed
+                                ? (isDark ? 'rgba(99,102,241,.06)' : 'rgba(99,102,241,.03)')
+                                : (isDark ? 'rgba(16,185,129,.06)' : 'rgba(16,185,129,.03)'))
                             : C.surface,
                           opacity: r.earned ? 1 : 0.65,
                           transition: 'all .2s ease',
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             {r.earned
-                              ? <CheckCircleIcon color="#10b981" />
+                              ? <CheckCircleIcon color={isClaimed ? '#6366f1' : '#10b981'} />
                               : <LockIcon color={C.dim} />
                             }
                             <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{milestoneLabel}</span>
+                            {isClaimed && (
+                              <span style={{ fontSize: 10, fontWeight: 600, color: '#6366f1', background: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.06)', padding: '2px 6px', borderRadius: 4 }}>
+                                {t('referral.claimed')}
+                              </span>
+                            )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <StarIcon color={r.earned ? '#f59e0b' : C.dim} />

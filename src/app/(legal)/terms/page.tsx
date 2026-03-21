@@ -131,9 +131,55 @@ export default function TermsPage() {
         </p>
       </div>
 
-      {/* 5. Интеллектуальная собственность */}
+
+      {/* 5. Сторонние сервисы и API */}
       <div style={sectionStyle}>
-        <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>5. Интеллектуальная собственность</h2>
+        <h2 id="storonnie-servisy" style={headingStyle}>5. Сторонние сервисы и API</h2>
+
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>YouTube API:</p>
+        <p style={paraStyle}>
+          TubeForge использует YouTube API Services для предоставления функциональности,
+          связанной с анализом и управлением YouTube-контентом. Используя эти функции,
+          вы также соглашаетесь с{' '}
+          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            Условиями использования YouTube
+          </a>{' '}
+          и{' '}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            Политикой конфиденциальности Google
+          </a>.
+          Подробнее о YouTube API Services:{' '}
+          <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            YouTube API Services Terms of Service
+          </a>.
+        </p>
+        <p style={paraStyle}>
+          Вы можете отозвать доступ TubeForge к вашим данным YouTube в любое время через{' '}
+          <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            настройки безопасности Google
+          </a>.
+        </p>
+
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Перевод и озвучивание видео (ElevenLabs):</p>
+        <p style={paraStyle}>
+          Функции перевода и озвучивания видео реализованы с использованием сторонних
+          ИИ-сервисов, включая ElevenLabs. При использовании этих функций аудиоданные
+          вашего видео передаются в ElevenLabs для обработки. TubeForge не несёт
+          ответственности за качество, точность перевода или озвучивания, выполненного
+          сторонними сервисами.
+        </p>
+
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Генерация ИИ-контента (OpenAI):</p>
+        <p style={paraStyle}>
+          Генерация обложек, текстов и рекомендаций осуществляется с использованием
+          API OpenAI. Контент, созданный с помощью ИИ, может содержать неточности
+          и требует проверки пользователем перед публикацией.
+        </p>
+      </div>
+
+      {/* 6. Интеллектуальная собственность */}
+      <div style={sectionStyle}>
+        <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>6. Интеллектуальная собственность</h2>
 
         <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Ваш контент:</p>
         <p style={paraStyle}>
@@ -160,7 +206,7 @@ export default function TermsPage() {
 
       {/* 6. Ограничение ответственности */}
       <div style={sectionStyle}>
-        <h2 id="ogranichenie-otvetstvennosti" style={headingStyle}>6. Ограничение ответственности</h2>
+        <h2 id="ogranichenie-otvetstvennosti" style={headingStyle}>7. Ограничение ответственности</h2>
         <p style={paraStyle}>
           Сервис предоставляется «как есть» (as is) без каких-либо гарантий, явных или
           подразумеваемых. TubeForge не гарантирует:
@@ -181,7 +227,7 @@ export default function TermsPage() {
 
       {/* 7. Изменение условий */}
       <div style={sectionStyle}>
-        <h2 id="izmenenie-usloviy" style={headingStyle}>7. Изменение условий</h2>
+        <h2 id="izmenenie-usloviy" style={headingStyle}>8. Изменение условий</h2>
         <p style={paraStyle}>
           TubeForge оставляет за собой право изменять настоящие Условия. О существенных изменениях
           мы уведомим вас <strong style={{ color: C.text }}>не менее чем за 30 дней</strong> до вступления
@@ -201,7 +247,7 @@ export default function TermsPage() {
 
       {/* 8. Прекращение действия */}
       <div style={sectionStyle}>
-        <h2 id="prekrashchenie" style={headingStyle}>8. Прекращение действия</h2>
+        <h2 id="prekrashchenie" style={headingStyle}>9. Прекращение действия</h2>
         <p style={paraStyle}>
           TubeForge может приостановить или прекратить доступ к вашему аккаунту в случаях:
         </p>
@@ -220,7 +266,7 @@ export default function TermsPage() {
 
       {/* 9. Применимое право */}
       <div style={sectionStyle}>
-        <h2 id="primenimoe-pravo" style={headingStyle}>9. Применимое право</h2>
+        <h2 id="primenimoe-pravo" style={headingStyle}>10. Применимое право</h2>
         <p style={paraStyle}>
           Настоящие Условия регулируются и толкуются в соответствии с действующим законодательством
           Европейского Союза, включая Общий регламент по защите данных (GDPR).
@@ -234,7 +280,7 @@ export default function TermsPage() {
 
       {/* 10. Контакты */}
       <div style={sectionStyle}>
-        <h2 id="kontakty" style={headingStyle}>10. Контакты</h2>
+        <h2 id="kontakty" style={headingStyle}>11. Контакты</h2>
         <p style={paraStyle}>
           По всем вопросам, связанным с настоящими Условиями использования, обращайтесь:
         </p>

@@ -1832,5 +1832,12 @@
   "tools.autoClip.minClipDuration": "Клиптің мин. ұзақтығы",
   "tools.fakeTexts.speedFast": "Жылдам (0.3с)",
   "tools.fakeTexts.speedSlow": "Баяу (3.0с)",
-  "billing.pro": "Pro"
+  "billing.pro": "Pro",
+  "referral.claimRewards": "{{credits}} кредит алу",
+  "referral.claimingRewards": "Алынуда...",
+  "referral.claimSuccess": "{{credits}} бонустық AI-кредит алынды!",
+  "referral.claimSuccessNoCredits": "Сыйлықтар сәтті алынды!",
+  "referral.noRewardsToClaim": "Алынатын жаңа сыйлық жоқ",
+  "referral.claimError": "Сыйлықтарды алу сәтсіз болды. Қайталап көріңіз.",
+  "referral.claimed": "Алынды"
 }

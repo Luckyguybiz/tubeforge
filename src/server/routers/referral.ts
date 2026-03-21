@@ -34,6 +34,16 @@ export function getReferralShareUrls(code: string) {
   };
 }
 
+/** Reward milestone definitions */
+const REWARD_MILESTONES = [
+  { milestone: '1_signup', reward: 'bonus_50_credits', credits: 50, type: 'signups' as const, threshold: 1 },
+  { milestone: '3_signups', reward: 'bonus_200_credits', credits: 200, type: 'signups' as const, threshold: 3 },
+  { milestone: '1_paid', reward: 'extended_trial_7d', credits: 0, type: 'paid' as const, threshold: 1 },
+  { milestone: '5_signups', reward: 'bonus_500_credits', credits: 500, type: 'signups' as const, threshold: 5 },
+  { milestone: '5_paid', reward: 'bonus_1000_credits', credits: 1000, type: 'paid' as const, threshold: 5 },
+  { milestone: '10_paid', reward: 'pro_month_free', credits: 0, type: 'paid' as const, threshold: 10 },
+] as const;
+
 export const referralRouter = router({
   /** Get current user's referral code and earnings */
   getMyReferral: protectedProcedure.query(async ({ ctx }) => {
@@ -149,38 +159,139 @@ export const referralRouter = router({
     return { invited, paid, earnings: user?.referralEarnings ?? 0 };
   }),
 
-  /** Get rewards earned from referrals */
+  /** Get rewards earned from referrals (with claimed status) */
   getRewards: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
     const user = await ctx.db.user.findUnique({
-      where: { id: ctx.session.user.id },
+      where: { id: userId },
       select: { referralCode: true, referralEarnings: true },
     });
-    if (!user?.referralCode) return { rewards: [], totalBonusCredits: 0 };
+    if (!user?.referralCode) return { rewards: [], totalBonusCredits: 0, unclaimedCredits: 0 };
 
-    const invited = await ctx.db.user.count({
-      where: { referredBy: user.referralCode },
-    });
-    const paid = await ctx.db.user.count({
-      where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
-    });
+    const [invited, paid, claimedLogs] = await Promise.all([
+      ctx.db.user.count({
+        where: { referredBy: user.referralCode },
+      }),
+      ctx.db.user.count({
+        where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
+      }),
+      ctx.db.auditLog.findMany({
+        where: { userId, action: 'referral_reward_claimed' },
+        select: { target: true },
+      }),
+    ]);
+
+    const claimedMilestones = new Set(claimedLogs.map((l) => l.target));
 
     // Calculate reward milestones
-    const rewards: { milestone: string; reward: string; earned: boolean }[] = [
-      { milestone: '1_signup', reward: 'bonus_50_credits', earned: invited >= 1 },
-      { milestone: '3_signups', reward: 'bonus_200_credits', earned: invited >= 3 },
-      { milestone: '1_paid', reward: 'extended_trial_7d', earned: paid >= 1 },
-      { milestone: '5_signups', reward: 'bonus_500_credits', earned: invited >= 5 },
-      { milestone: '5_paid', reward: 'bonus_1000_credits', earned: paid >= 5 },
-      { milestone: '10_paid', reward: 'pro_month_free', earned: paid >= 10 },
-    ];
+    const rewards = REWARD_MILESTONES.map((m) => {
+      const count = m.type === 'signups' ? invited : paid;
+      return {
+        milestone: m.milestone,
+        reward: m.reward,
+        earned: count >= m.threshold,
+        claimed: claimedMilestones.has(m.milestone),
+        credits: m.credits,
+      };
+    });
 
-    // Total bonus AI credits earned
+    // Total bonus AI credits earned (across all earned milestones)
     let totalBonusCredits = 0;
-    if (invited >= 1) totalBonusCredits += 50;
-    if (invited >= 3) totalBonusCredits += 200;
-    if (invited >= 5) totalBonusCredits += 500;
-    if (paid >= 5) totalBonusCredits += 1000;
+    let unclaimedCredits = 0;
+    for (const r of rewards) {
+      if (r.earned && r.credits > 0) {
+        totalBonusCredits += r.credits;
+        if (!r.claimed) {
+          unclaimedCredits += r.credits;
+        }
+      }
+    }
 
-    return { rewards, totalBonusCredits };
+    return { rewards, totalBonusCredits, unclaimedCredits };
+  }),
+
+  /** Claim all unclaimed referral rewards — applies bonus credits and logs claimed milestones */
+  claimRewards: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const { success } = await rateLimit({
+      identifier: `referral-claim:${userId}`,
+      limit: 5,
+      window: 60,
+    });
+    if (!success) {
+      throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
+    }
+
+    const user = await ctx.db.user.findUnique({
+      where: { id: userId },
+      select: { referralCode: true },
+    });
+    if (!user?.referralCode) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Referral program not activated' });
+    }
+
+    const [invited, paid, claimedLogs] = await Promise.all([
+      ctx.db.user.count({
+        where: { referredBy: user.referralCode },
+      }),
+      ctx.db.user.count({
+        where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
+      }),
+      ctx.db.auditLog.findMany({
+        where: { userId, action: 'referral_reward_claimed' },
+        select: { target: true },
+      }),
+    ]);
+
+    const claimedMilestones = new Set(claimedLogs.map((l) => l.target));
+
+    // Find unclaimed, earned milestones
+    let totalCreditsToApply = 0;
+    const newClaims: { milestone: string; reward: string; credits: number }[] = [];
+
+    for (const m of REWARD_MILESTONES) {
+      if (claimedMilestones.has(m.milestone)) continue;
+      const count = m.type === 'signups' ? invited : paid;
+      if (count < m.threshold) continue;
+
+      newClaims.push({ milestone: m.milestone, reward: m.reward, credits: m.credits });
+      if (m.credits > 0) {
+        totalCreditsToApply += m.credits;
+      }
+    }
+
+    if (newClaims.length === 0) {
+      return { claimed: 0, creditsApplied: 0, message: 'No new rewards to claim' };
+    }
+
+    // Apply all rewards in a single transaction
+    await ctx.db.$transaction(async (tx) => {
+      // 1. Apply credit bonuses by decrementing aiUsage (giving free generations)
+      if (totalCreditsToApply > 0) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { aiUsage: { decrement: totalCreditsToApply } },
+        });
+      }
+
+      // 2. Log each claimed milestone in AuditLog for idempotency
+      for (const claim of newClaims) {
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: 'referral_reward_claimed',
+            target: claim.milestone,
+            metadata: { reward: claim.reward, credits: claim.credits },
+          },
+        });
+      }
+    });
+
+    return {
+      claimed: newClaims.length,
+      creditsApplied: totalCreditsToApply,
+      rewards: newClaims.map((c) => c.reward),
+    };
   }),
 });
