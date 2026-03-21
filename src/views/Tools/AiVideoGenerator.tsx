@@ -107,7 +107,7 @@ const PROVIDERS: Provider[] = [
   },
 ];
 
-export default function AiVideoGenerator() {
+export function AiVideoGenerator() {
   const C = useThemeStore((s) => s.theme);
   const { locale } = useLocaleStore();
   const t = useLocaleStore((s) => s.t);
