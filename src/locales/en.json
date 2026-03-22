@@ -1820,5 +1820,6 @@
   "dashboard.exploreTemplates": "Browse all templates",
   "nav.videoTranslator": "Video Translator",
   "dashboard.videoTranslatorDesc": "Translate videos to any language with your voice cloned",
-  "dashboard.aiThumbnailDesc": "Generate, recreate and analyze thumbnails with AI"
+  "dashboard.aiThumbnailDesc": "Generate, recreate and analyze thumbnails with AI",
+  "tools.aiThumbnail.title": "AI Thumbnail Editor"
 }

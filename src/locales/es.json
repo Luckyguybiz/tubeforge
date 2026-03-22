@@ -1820,5 +1820,6 @@
   "dashboard.exploreTemplates": "Ver todas las plantillas",
   "nav.videoTranslator": "Traductor de video",
   "dashboard.videoTranslatorDesc": "Traduce videos a cualquier idioma con tu voz clonada",
-  "dashboard.aiThumbnailDesc": "Genera, recrea y analiza miniaturas con IA"
+  "dashboard.aiThumbnailDesc": "Genera, recrea y analiza miniaturas con IA",
+  "tools.aiThumbnail.title": "Editor de miniaturas IA"
 }

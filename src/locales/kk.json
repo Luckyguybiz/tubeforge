@@ -1820,5 +1820,6 @@
   "dashboard.exploreTemplates": "Барлық үлгілер",
   "nav.videoTranslator": "Бейне аудармашы",
   "dashboard.videoTranslatorDesc": "Бейнелерді кез келген тілге аударыңыз",
-  "dashboard.aiThumbnailDesc": "AI көмегімен нобайларды жасаңыз"
+  "dashboard.aiThumbnailDesc": "AI көмегімен нобайларды жасаңыз",
+  "tools.aiThumbnail.title": "AI Нобай редакторы"
 }

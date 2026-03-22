@@ -1820,5 +1820,6 @@
   "dashboard.exploreTemplates": "Все шаблоны",
   "nav.videoTranslator": "Перевод видео",
   "dashboard.videoTranslatorDesc": "Переводите видео на любой язык с клонированием вашего голоса",
-  "dashboard.aiThumbnailDesc": "Генерируйте, пересоздавайте и анализируйте обложки с помощью AI"
+  "dashboard.aiThumbnailDesc": "Генерируйте, пересоздавайте и анализируйте обложки с помощью AI",
+  "tools.aiThumbnail.title": "AI Редактор обложек"
 }
