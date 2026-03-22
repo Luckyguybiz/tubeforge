@@ -5,14 +5,14 @@ import { LandingNav } from "@/components/landing";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Tools — AI Title, Description, Tag & Thumbnail Tools",
+  title: "Free YouTube Tools — Title Generator, SEO, Analytics | TubeForge",
   description:
-    "Free AI-powered YouTube tools: title generator, description generator, tag generator, and thumbnail checker. No signup required. Optimize your YouTube channel today.",
+    "9 free AI-powered YouTube tools: title generator, description generator, tag generator, script writer, channel name generator, character counter, video ideas, thumbnail checker, and Shorts guide. No signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Tools — AI-Powered | TubeForge",
+    title: "Free YouTube Tools — Title Generator, SEO, Analytics | TubeForge",
     description:
-      "Boost your YouTube channel with free AI tools. Generate titles, descriptions, tags, and analyze thumbnails — no login required.",
+      "9 free AI-powered YouTube tools. Generate titles, descriptions, tags, scripts, channel names, video ideas, and more — no login required.",
     type: "website",
     locale: "en_US",
     url: "https://tubeforge.co/free-tools",
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Tools — AI-Powered | TubeForge",
-    description: "Free AI tools for YouTube creators. Generate titles, descriptions, tags, and check thumbnails.",
+    title: "Free YouTube Tools — Title Generator, SEO, Analytics | TubeForge",
+    description: "9 free AI tools for YouTube creators. Generate titles, descriptions, tags, scripts, channel names, video ideas, and more.",
     images: ["/api/og"],
   },
 };
@@ -78,6 +78,62 @@ const TOOLS = [
       </svg>
     ),
   },
+  {
+    title: "Channel Name Generator",
+    description: "Get 20 creative, brandable YouTube channel name ideas for any niche using AI.",
+    href: "/free-tools/channel-name-generator",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+  },
+  {
+    title: "YouTube Script Generator",
+    description: "Generate complete video scripts with hook, intro, body, CTA, and outro for any topic and format.",
+    href: "/free-tools/script-generator",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+      </svg>
+    ),
+  },
+  {
+    title: "YouTube Character Counter",
+    description: "Real-time character counter for titles (100), descriptions (5000), and tags (500) with color indicators.",
+    href: "/free-tools/character-counter",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 7 4 4 20 4 20 7" />
+        <line x1="9" y1="20" x2="15" y2="20" />
+        <line x1="12" y1="4" x2="12" y2="20" />
+      </svg>
+    ),
+  },
+  {
+    title: "Video Ideas Generator",
+    description: "Get 50+ video ideas categorized by trending, evergreen, Shorts, and series concepts.",
+    href: "/free-tools/video-ideas",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="9" y1="18" x2="15" y2="18" />
+        <line x1="10" y1="22" x2="14" y2="22" />
+        <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+      </svg>
+    ),
+  },
+  {
+    title: "Shorts Dimensions Guide",
+    description: "Complete 2026 guide to YouTube Shorts size, resolution, aspect ratio, and length with interactive preview.",
+    href: "/free-tools/shorts-dimensions",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
+        <line x1="11" y1="18" x2="13" y2="18" />
+      </svg>
+    ),
+  },
 ];
 
 /* -- JSON-LD ------------------------------------------------------ */
@@ -86,7 +142,7 @@ const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Free YouTube Tools",
-  description: "Free AI-powered tools for YouTube creators — title generator, description generator, tag generator, and thumbnail checker.",
+  description: "9 free AI-powered tools for YouTube creators — title generator, description generator, tag generator, thumbnail checker, channel name generator, script writer, character counter, video ideas, and Shorts dimensions guide.",
   url: "https://tubeforge.co/free-tools",
   isPartOf: {
     "@type": "WebSite",
@@ -147,7 +203,7 @@ export default function FreeToolsPage() {
               fontWeight: 400,
             }}
           >
-            AI-powered tools to help you create better titles, descriptions, tags, and thumbnails. No signup required.
+            9 AI-powered tools to help you create better titles, descriptions, tags, scripts, channel names, and more. No signup required.
           </p>
         </div>
       </section>
@@ -159,7 +215,7 @@ export default function FreeToolsPage() {
             maxWidth: 980,
             margin: "0 auto",
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
+            gridTemplateColumns: "repeat(3, 1fr)",
             gap: 20,
           }}
           className="free-tools-grid"
@@ -304,6 +360,11 @@ export default function FreeToolsPage() {
       </footer>
 
       <style>{`
+        @media (max-width: 900px) {
+          .free-tools-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
         @media (max-width: 640px) {
           .free-tools-grid {
             grid-template-columns: 1fr !important;

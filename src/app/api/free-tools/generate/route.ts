@@ -8,7 +8,7 @@ import { API_ENDPOINTS } from '@/lib/constants';
 export const dynamic = 'force-dynamic';
 
 const RequestSchema = z.object({
-  type: z.enum(['title', 'description', 'tags']),
+  type: z.enum(['title', 'description', 'tags', 'channel-name', 'script', 'video-ideas']),
   input: z.string().min(2).max(500),
   keywords: z.string().max(500).optional(),
 });
@@ -34,6 +34,34 @@ Return ONLY a JSON object with a "description" string containing the full format
 - Related topic tags
 - Trending variation tags
 Return ONLY a JSON object with a "tags" array of 25 strings. No explanation or extra text.`,
+
+  'channel-name': `You are a YouTube branding expert. Generate exactly 20 creative, memorable, and brandable YouTube channel name ideas for the given niche and style preference. Each name should be:
+- Short (1-3 words)
+- Easy to spell and pronounce
+- Unique and searchable
+- Relevant to the niche
+Mix different naming patterns: descriptive, abstract, personal-style, compound words, and playful variations.
+Return ONLY a JSON object with a "names" array of 20 strings. No explanation or extra text.`,
+
+  script: `You are a professional YouTube scriptwriter. Generate a complete, ready-to-read YouTube video script for the given topic, format, and duration. Structure the script with clear sections:
+
+1. **HOOK** (first 5-10 seconds) — A bold opening that grabs attention
+2. **INTRO** (15-30 seconds) — Introduce the topic and what the viewer will learn
+3. **BODY** — The main content, broken into 3-5 clearly labeled sections with transitions
+4. **CTA** (10-15 seconds) — Ask viewers to like, subscribe, and comment
+5. **OUTRO** (10-15 seconds) — Recap key takeaways and tease the next video
+
+Use conversational, spoken language (not formal writing). Include [B-ROLL] and [CUT TO] markers where visual changes should happen.
+Return ONLY a JSON object with a "script" string containing the full formatted script. Use newlines for formatting.`,
+
+  'video-ideas': `You are a YouTube content strategist. Generate video ideas for the given niche, categorized into 4 groups. Provide:
+- "trending": 15 timely video ideas based on current trends and events in this niche
+- "evergreen": 15 video ideas that will get views year-round regardless of timing
+- "shorts": 10 quick video ideas perfect for YouTube Shorts (under 60 seconds)
+- "series": 10 series concepts (multi-part video ideas that keep viewers coming back)
+
+Each idea should be a complete, specific video title — not just a vague topic.
+Return ONLY a JSON object with "trending" (array of 15 strings), "evergreen" (array of 15 strings), "shorts" (array of 10 strings), and "series" (array of 10 strings). No explanation or extra text.`,
 };
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -115,6 +143,7 @@ export async function POST(req: NextRequest) {
 
   /* --- Build the user message --- */
   let userMessage: string;
+  let maxTokens = 2000;
   switch (type) {
     case 'title':
       userMessage = `Generate 10 YouTube title variations for: "${input}"`;
@@ -124,6 +153,19 @@ export async function POST(req: NextRequest) {
       break;
     case 'tags':
       userMessage = `Generate 25 YouTube tags for: "${input}"`;
+      break;
+    case 'channel-name':
+      userMessage = `Generate 20 YouTube channel name ideas for the niche: "${input}"\nStyle preference: ${keywords || 'professional'}`;
+      break;
+    case 'script': {
+      const [scriptFormat, scriptDuration] = (keywords || 'tutorial,10min').split(',');
+      userMessage = `Write a complete YouTube video script.\nTopic: "${input}"\nFormat: ${scriptFormat}\nTarget duration: ${scriptDuration}`;
+      maxTokens = 4000;
+      break;
+    }
+    case 'video-ideas':
+      userMessage = `Generate 50 YouTube video ideas for the niche: "${input}"`;
+      maxTokens = 4000;
       break;
   }
 
@@ -140,7 +182,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        max_tokens: 2000,
+        max_tokens: maxTokens,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: SYSTEM_PROMPTS[type] },

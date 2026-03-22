@@ -53,6 +53,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/free-tools/description-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/free-tools/tag-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/free-tools/thumbnail-checker', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/channel-name-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/script-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/character-counter', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/video-ideas', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/shorts-dimensions', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   const staticEntries: MetadataRoute.Sitemap = staticPages.map((page) => ({
