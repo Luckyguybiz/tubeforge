@@ -4,139 +4,360 @@ import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import { createLogger } from '@/lib/logger';
 import { db } from '@/server/db';
-import { writeFile, mkdir, stat } from 'fs/promises';
+import { writeFile, mkdir, readFile, unlink, stat } from 'fs/promises';
 import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 import { Readable } from 'stream';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { randomUUID } from 'crypto';
+import OpenAI from 'openai';
 
+const execAsync = promisify(exec);
 const log = createLogger('video-translate');
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 min timeout for large uploads
+export const maxDuration = 300;
 
 const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
-
-/** Maximum upload file size: 500 MB */
+const TEMP_DIR = '/tmp/tubeforge-translate';
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
+const JOB_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
-/** Minimum video duration warning threshold (seconds) */
-const MIN_DURATION_WARNING_SEC = 10;
-
-/** MIME types considered valid video/audio uploads */
 const VALID_MIME_PREFIXES = ['video/', 'audio/'];
 
 const SUPPORTED_LANGUAGES: Record<string, string> = {
-  en: 'English', ru: 'Русский', es: 'Español', fr: 'Français',
-  de: 'Deutsch', it: 'Italiano', pt: 'Português', ja: '日本語',
-  ko: '한국어', zh: '中文', ar: 'العربية', hi: 'हिन्दी',
-  tr: 'Türkçe', pl: 'Polski', nl: 'Nederlands', sv: 'Svenska',
-  cs: 'Čeština', ro: 'Română', el: 'Ελληνικά', hu: 'Magyar',
-  uk: 'Українська', id: 'Bahasa Indonesia', vi: 'Tiếng Việt',
-  th: 'ไทย', ms: 'Bahasa Melayu', fil: 'Filipino', da: 'Dansk',
-  fi: 'Suomi', no: 'Norsk', bg: 'Български', hr: 'Hrvatski',
-  sk: 'Slovenčina', ta: 'தமிழ்',
+  en: 'English', ru: 'Russian', es: 'Spanish', fr: 'French',
+  de: 'German', it: 'Italian', pt: 'Portuguese', ja: 'Japanese',
+  ko: 'Korean', zh: 'Chinese', ar: 'Arabic', hi: 'Hindi',
+  tr: 'Turkish', pl: 'Polish', nl: 'Dutch', sv: 'Swedish',
+  cs: 'Czech', ro: 'Romanian', el: 'Greek', hu: 'Hungarian',
+  uk: 'Ukrainian', id: 'Indonesian', vi: 'Vietnamese',
+  th: 'Thai', ms: 'Malay', fil: 'Filipino', da: 'Danish',
+  fi: 'Finnish', no: 'Norwegian', bg: 'Bulgarian', hr: 'Croatian',
+  sk: 'Slovak', ta: 'Tamil',
 };
 
-/**
- * Background-save the dubbed file from ElevenLabs to local disk + create Asset record.
- * This runs async (fire-and-forget) so it doesn't block the response.
- */
-async function backgroundSaveTranslation(
-  dubbingId: string,
+/* ── Job State ───────────────────────────────────────────────── */
+
+type JobStatus = 'extracting' | 'transcribing' | 'translating' | 'cloning' | 'generating_tts' | 'merging' | 'done' | 'error';
+
+interface JobState {
+  status: JobStatus;
+  progress: number;
+  outputPath?: string;
+  error?: string;
+  userId: string;
+  targetLang: string;
+  sourceLang: string;
+  createdAt: number;
+}
+
+const jobs = new Map<string, JobState>();
+
+// Cleanup stale jobs every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, job] of jobs.entries()) {
+    if (now - job.createdAt > JOB_TIMEOUT_MS * 2) {
+      jobs.delete(id);
+    }
+  }
+}, 5 * 60 * 1000);
+
+/* ── Pipeline (runs in background) ───────────────────────────── */
+
+async function runTranslationPipeline(
+  jobId: string,
+  inputPath: string,
+  sourceLang: string,
   targetLang: string,
   userId: string,
-  apiKey: string,
-  sourceLang: string | null,
-): Promise<void> {
+) {
+  const job = jobs.get(jobId);
+  if (!job) return;
+
+  const jobDir = join(TEMP_DIR, jobId);
+  const audioPath = join(jobDir, 'audio.wav');
+  const ttsPath = join(jobDir, 'translated_audio.mp3');
+  const outputPath = join(jobDir, 'output.mp4');
+  let clonedVoiceId: string | null = null;
+
+  const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY!;
+  const OPENAI_KEY = process.env.OPENAI_API_KEY!;
+
   try {
-    const relDir = `uploads/translations/${userId}`;
-    const absDir = join(process.cwd(), 'public', relDir);
-    const filename = `${dubbingId}_${targetLang}.mp4`;
-    const absPath = join(absDir, filename);
+    // ── Stage 1: Extract audio with FFmpeg ──────────────────────
+    log.info('Stage 1: Extracting audio', { jobId });
+    job.status = 'extracting';
+    job.progress = 5;
 
-    // Skip if already saved
-    if (existsSync(absPath)) {
-      log.info('Translation already saved on disk', { dubbingId, targetLang });
-      return;
+    await execAsync(
+      `ffmpeg -y -i "${inputPath}" -vn -acodec pcm_s16le -ar 16000 -ac 1 "${audioPath}"`,
+      { timeout: 120000 },
+    );
+
+    const audioStat = await stat(audioPath);
+    log.info('Audio extracted', { jobId, audioSize: audioStat.size });
+    job.progress = 15;
+
+    // ── Stage 2: Transcribe with OpenAI Whisper ─────────────────
+    log.info('Stage 2: Transcribing with Whisper', { jobId, sourceLang });
+    job.status = 'transcribing';
+    job.progress = 20;
+
+    const openai = new OpenAI({ apiKey: OPENAI_KEY });
+
+    // Whisper API needs a File-like object; use the node fs approach
+    const audioFile = await readFile(audioPath);
+    const audioBlob = new File([audioFile], 'audio.wav', { type: 'audio/wav' });
+
+    const transcriptionParams: Record<string, unknown> = {
+      file: audioBlob,
+      model: 'whisper-1',
+      response_format: 'verbose_json',
+      timestamp_granularities: ['segment'],
+    };
+    // Only set language if not auto-detect
+    if (sourceLang && sourceLang !== 'auto') {
+      transcriptionParams.language = sourceLang;
     }
 
-    await mkdir(absDir, { recursive: true });
+    const transcription = await openai.audio.transcriptions.create(transcriptionParams as any);
 
-    const downloadUrl = `${ELEVENLABS_API}/dubbing/${dubbingId}/audio/${targetLang}`;
-    const res = await fetch(downloadUrl, {
-      headers: { 'xi-api-key': apiKey },
+    const segments = (transcription as unknown as { segments?: Array<{ text: string; start: number; end: number }> }).segments ?? [];
+    const fullText = segments.map((s) => s.text).join(' ').trim() || (transcription as unknown as { text?: string }).text || '';
+
+    log.info('Transcription complete', { jobId, segments: segments.length, textLength: fullText.length });
+    job.progress = 40;
+
+    if (!fullText) {
+      throw new Error('No speech detected in the audio. Please ensure the video contains clear speech.');
+    }
+
+    // ── Stage 3: Translate with GPT-4o ──────────────────────────
+    log.info('Stage 3: Translating with GPT-4o', { jobId, targetLang });
+    job.status = 'translating';
+    job.progress = 45;
+
+    const srcLangName = SUPPORTED_LANGUAGES[sourceLang] ?? sourceLang;
+    const tgtLangName = SUPPORTED_LANGUAGES[targetLang] ?? targetLang;
+
+    const translation = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a professional video narrator translator. Translate the following video narration transcript from ${srcLangName} to ${tgtLangName}. Maintain the same tone, style, and natural pacing suitable for voice-over narration. The translation should sound natural when spoken aloud. Return ONLY the translated text as a single continuous passage. Do not include any notes, explanations, or original text.`,
+        },
+        {
+          role: 'user',
+          content: fullText,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 4096,
     });
 
-    if (!res.ok || !res.body) {
-      log.error('Background save: download failed', { dubbingId, status: res.status });
-      return;
+    const translatedText = translation.choices[0]?.message?.content?.trim() ?? '';
+    log.info('Translation complete', { jobId, translatedLength: translatedText.length });
+    job.progress = 60;
+
+    if (!translatedText) {
+      throw new Error('Translation produced empty result.');
     }
 
-    // Stream to disk using chunks
-    const chunks: Uint8Array[] = [];
-    const reader = res.body.getReader();
-    let totalSize = 0;
+    // ── Stage 4: Clone voice from audio ─────────────────────────
+    log.info('Stage 4: Cloning voice', { jobId });
+    job.status = 'cloning';
+    job.progress = 65;
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      totalSize += value.byteLength;
+    const cloneFormData = new FormData();
+    cloneFormData.append('name', `tubeforge_${jobId.slice(0, 8)}`);
+    cloneFormData.append('description', `Temporary clone for translation job ${jobId}`);
+    cloneFormData.append(
+      'files',
+      new Blob([audioFile], { type: 'audio/wav' }),
+      'voice_sample.wav',
+    );
+
+    const cloneRes = await fetch(`${ELEVENLABS_API}/voices/add`, {
+      method: 'POST',
+      headers: { 'xi-api-key': ELEVENLABS_KEY },
+      body: cloneFormData,
+    });
+
+    if (!cloneRes.ok) {
+      const errBody = await cloneRes.text();
+      log.error('Voice clone failed', { jobId, status: cloneRes.status, body: errBody.slice(0, 300) });
+      throw new Error(`Voice cloning failed (${cloneRes.status}): ${errBody.slice(0, 200)}`);
     }
 
-    const buffer = Buffer.concat(chunks);
-    await writeFile(absPath, buffer);
+    const cloneData = await cloneRes.json();
+    clonedVoiceId = cloneData.voice_id;
+    log.info('Voice cloned', { jobId, voiceId: clonedVoiceId });
+    job.progress = 72;
 
-    const relPath = `/${relDir}/${filename}`;
+    // ── Stage 5: Generate TTS with cloned voice ─────────────────
+    log.info('Stage 5: Generating TTS', { jobId });
+    job.status = 'generating_tts';
+    job.progress = 75;
 
-    // Check if asset already exists for this dubbing
-    const existing = await db.asset.findFirst({
-      where: {
-        userId,
-        url: relPath,
+    const ttsRes = await fetch(`${ELEVENLABS_API}/text-to-speech/${clonedVoiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': ELEVENLABS_KEY,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        text: translatedText,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.75,
+          similarity_boost: 0.85,
+          style: 0.5,
+          use_speaker_boost: true,
+        },
+      }),
     });
 
-    if (!existing) {
-      await db.asset.create({
-        data: {
-          url: relPath,
-          filename: `Translation_${targetLang}_${new Date().toISOString().slice(0, 10)}.mp4`,
-          type: 'video',
-          size: totalSize,
-          userId,
-        },
+    if (!ttsRes.ok) {
+      const errBody = await ttsRes.text();
+      log.error('TTS generation failed', { jobId, status: ttsRes.status, body: errBody.slice(0, 300) });
+      throw new Error(`TTS generation failed (${ttsRes.status}): ${errBody.slice(0, 200)}`);
+    }
+
+    const ttsAudio = Buffer.from(await ttsRes.arrayBuffer());
+    await writeFile(ttsPath, ttsAudio);
+    log.info('TTS audio generated', { jobId, ttsSize: ttsAudio.length });
+    job.progress = 85;
+
+    // ── Stage 6: Merge video + translated audio with FFmpeg ─────
+    log.info('Stage 6: Merging video with translated audio', { jobId });
+    job.status = 'merging';
+    job.progress = 88;
+
+    await execAsync(
+      `ffmpeg -y -i "${inputPath}" -i "${ttsPath}" -c:v copy -map 0:v:0 -map 1:a:0 -shortest "${outputPath}"`,
+      { timeout: 120000 },
+    );
+
+    const outputStat = await stat(outputPath);
+    log.info('Video merged', { jobId, outputSize: outputStat.size });
+
+    // ── Done ────────────────────────────────────────────────────
+    job.status = 'done';
+    job.progress = 100;
+    job.outputPath = outputPath;
+
+    // Save asset to DB
+    try {
+      const relDir = `uploads/translations/${userId}`;
+      const absDir = join(process.cwd(), 'public', relDir);
+      await mkdir(absDir, { recursive: true });
+      const filename = `${jobId}_${targetLang}.mp4`;
+      const absPath = join(absDir, filename);
+
+      const outputBuf = await readFile(outputPath);
+      await writeFile(absPath, outputBuf);
+
+      const relPath = `/${relDir}/${filename}`;
+
+      const existing = await db.asset.findFirst({
+        where: { userId, url: relPath },
       });
 
-      await db.auditLog.create({
-        data: {
-          userId,
-          action: 'TOOL_USAGE',
-          target: 'video-translate',
-          metadata: {
-            tool: 'video-translate',
-            dubbingId,
-            targetLang,
-            sourceLang,
-            fileSize: totalSize,
-            savedPath: relPath,
+      if (!existing) {
+        await db.asset.create({
+          data: {
+            url: relPath,
+            filename: `Translation_${targetLang}_${new Date().toISOString().slice(0, 10)}.mp4`,
+            type: 'video',
+            size: outputStat.size,
+            userId,
           },
-        },
-      });
+        });
 
-      log.info('Translation saved to cabinet (background)', { userId, path: relPath, size: totalSize });
+        await db.auditLog.create({
+          data: {
+            userId,
+            action: 'TOOL_USAGE',
+            target: 'video-translate',
+            metadata: {
+              tool: 'video-translate',
+              jobId,
+              targetLang,
+              sourceLang,
+              fileSize: outputStat.size,
+              savedPath: relPath,
+              pipeline: 'whisper-gpt4o-elevenlabs-tts',
+            },
+          },
+        });
+      }
+
+      log.info('Translation saved to cabinet', { userId, path: relPath });
+    } catch (saveErr) {
+      log.error('Failed to save asset to DB', {
+        error: saveErr instanceof Error ? saveErr.message : String(saveErr),
+      });
+      // Non-blocking: job is still "done"
     }
   } catch (err) {
-    log.error('Background save failed', {
-      dubbingId,
+    log.error('Pipeline error', {
+      jobId,
+      stage: job.status,
       error: err instanceof Error ? err.message : String(err),
     });
-    // Non-blocking – don't rethrow
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { component: 'video-translate', jobId, stage: job.status },
+    });
+    job.status = 'error';
+    job.error = err instanceof Error ? err.message : String(err);
+  } finally {
+    // Cleanup: delete cloned voice to free up voice slots
+    if (clonedVoiceId) {
+      try {
+        await fetch(`${ELEVENLABS_API}/voices/${clonedVoiceId}`, {
+          method: 'DELETE',
+          headers: { 'xi-api-key': ELEVENLABS_KEY },
+        });
+        log.info('Cloned voice deleted', { jobId, voiceId: clonedVoiceId });
+      } catch (delErr) {
+        log.error('Failed to delete cloned voice', {
+          voiceId: clonedVoiceId,
+          error: delErr instanceof Error ? delErr.message : String(delErr),
+        });
+      }
+    }
+
+    // Cleanup temp files (keep output if done, for download)
+    try {
+      if (existsSync(join(TEMP_DIR, jobId, 'audio.wav'))) {
+        await unlink(join(TEMP_DIR, jobId, 'audio.wav'));
+      }
+      if (existsSync(join(TEMP_DIR, jobId, 'translated_audio.mp3'))) {
+        await unlink(join(TEMP_DIR, jobId, 'translated_audio.mp3'));
+      }
+    } catch {
+      // ignore cleanup errors
+    }
+
+    // Schedule output cleanup after 30 minutes
+    setTimeout(async () => {
+      try {
+        const dir = join(TEMP_DIR, jobId);
+        await execAsync(`rm -rf "${dir}"`);
+        jobs.delete(jobId);
+        log.info('Job cleaned up', { jobId });
+      } catch {
+        // ignore
+      }
+    }, 30 * 60 * 1000);
   }
 }
 
-/* ── POST: Start dubbing ──────────────────────────────────────── */
+/* ── POST: Start translation job ────────────────────────────── */
 
 export async function POST(req: NextRequest) {
   try {
@@ -145,14 +366,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const rl = await rateLimit({ identifier: session.user.id ?? "anon", limit: 5, window: 60 });
+    const rl = await rateLimit({ identifier: session.user.id ?? 'anon', limit: 5, window: 60 });
     if (!rl.success) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'ElevenLabs API not configured' }, { status: 503 });
+    }
+    if (!openaiKey) {
+      return NextResponse.json({ error: 'OpenAI API not configured' }, { status: 503 });
     }
 
     const contentType = req.headers.get('content-type') ?? '';
@@ -160,22 +385,16 @@ export async function POST(req: NextRequest) {
     let sourceUrl: string | undefined;
     let sourceLang = 'auto';
     let targetLang = 'en';
-    let file: Blob | undefined;
+    let file: File | undefined;
     let fileName: string | undefined;
     let fileType: string | undefined;
     let fileSize = 0;
-    let watermark = false;
-    let dropBgAudio = true;
-    let numSpeakers = 1;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
       sourceUrl = formData.get('source_url') as string | undefined;
       sourceLang = (formData.get('source_lang') as string) || 'auto';
       targetLang = (formData.get('target_lang') as string) || 'en';
-      watermark = formData.get('watermark') === 'true';
-      dropBgAudio = formData.get('drop_background_audio') !== 'false'; // default true
-      numSpeakers = parseInt(formData.get('num_speakers') as string || '1', 10) || 1;
       const uploadedFile = formData.get('file') as File | null;
       if (uploadedFile && uploadedFile.size > 0) {
         file = uploadedFile;
@@ -188,9 +407,6 @@ export async function POST(req: NextRequest) {
       sourceUrl = body.source_url;
       sourceLang = body.source_lang || 'auto';
       targetLang = body.target_lang || 'en';
-      watermark = body.watermark ?? false;
-      dropBgAudio = body.drop_background_audio ?? true;
-      numSpeakers = body.num_speakers ?? 1;
     }
 
     if (!sourceUrl && !file) {
@@ -201,17 +417,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Unsupported target language: ${targetLang}` }, { status: 400 });
     }
 
-    /* ── File validation ────────────────────────────────────────── */
+    // File validation
     if (file) {
-      // Check MIME type
       if (fileType && !VALID_MIME_PREFIXES.some((p) => fileType!.startsWith(p))) {
         return NextResponse.json(
           { error: `Invalid file type: ${fileType}. Please upload a video or audio file.` },
           { status: 400 },
         );
       }
-
-      // Check file size (500 MB max)
       if (fileSize > MAX_FILE_SIZE) {
         return NextResponse.json(
           { error: `File too large (${(fileSize / 1024 / 1024).toFixed(0)} MB). Maximum is 500 MB.` },
@@ -220,78 +433,78 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* ── Build multipart form for ElevenLabs ────────────────────── */
-    const elForm = new FormData();
-    elForm.append('target_lang', targetLang);
-    elForm.append('source_lang', sourceLang);
-    elForm.append('num_speakers', String(numSpeakers));
-    elForm.append('watermark', String(watermark));
+    // Create job
+    const jobId = randomUUID();
+    const jobDir = join(TEMP_DIR, jobId);
+    await mkdir(jobDir, { recursive: true });
 
-    // --- Voice cloning quality parameters ---
-    // Always use highest resolution for best voice cloning fidelity
-    elForm.append('highest_resolution', 'true');
-    // Drop background audio for cleaner voice extraction & better cloning
-    elForm.append('drop_background_audio', String(dropBgAudio));
-    // Explicitly ensure voice cloning is ENABLED (not using library voices)
-    elForm.append('disable_voice_cloning', 'false');
-    // Disable profanity filter for accurate, unaltered translations
-    elForm.append('use_profanity_filter', 'false');
+    const ext = fileName?.split('.').pop() ?? 'mp4';
+    const inputPath = join(jobDir, `input.${ext}`);
 
     if (file) {
-      elForm.append('file', file, fileName ?? 'video.mp4');
+      const buf = Buffer.from(await file.arrayBuffer());
+      await writeFile(inputPath, buf);
+      log.info('File saved', { jobId, size: buf.length, name: fileName });
     } else if (sourceUrl) {
-      elForm.append('source_url', sourceUrl);
+      // Download the video from URL using yt-dlp or direct fetch
+      log.info('Downloading from URL', { jobId, url: sourceUrl.slice(0, 80) });
+      try {
+        // Try yt-dlp first for YouTube/TikTok/etc
+        await execAsync(
+          `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4 -o "${inputPath}" "${sourceUrl}"`,
+          { timeout: 180000 },
+        );
+      } catch {
+        // Fallback: direct HTTP download
+        const dlRes = await fetch(sourceUrl);
+        if (!dlRes.ok || !dlRes.body) {
+          return NextResponse.json({ error: `Failed to download video from URL (${dlRes.status})` }, { status: 400 });
+        }
+        const dlBuf = Buffer.from(await dlRes.arrayBuffer());
+        await writeFile(inputPath, dlBuf);
+      }
     }
 
-    log.info('Starting dubbing', {
+    // Register job
+    jobs.set(jobId, {
+      status: 'extracting',
+      progress: 0,
+      userId: session.user.id!,
       targetLang,
       sourceLang,
-      numSpeakers,
-      dropBgAudio,
+      createdAt: Date.now(),
+    });
+
+    log.info('Translation job started', {
+      jobId,
+      sourceLang,
+      targetLang,
       hasFile: !!file,
       fileSize: fileSize || undefined,
       sourceUrl: sourceUrl?.slice(0, 60),
-      highestResolution: true,
-      disableVoiceCloning: false,
-      useProfanityFilter: false,
     });
 
-    const dubRes = await fetch(`${ELEVENLABS_API}/dubbing`, {
-      method: 'POST',
-      headers: { 'xi-api-key': apiKey },
-      body: elForm,
+    // Run pipeline in background (don't await)
+    runTranslationPipeline(jobId, inputPath, sourceLang, targetLang, session.user.id!).catch((err) => {
+      log.error('Pipeline uncaught error', { jobId, error: String(err) });
     });
-
-    if (!dubRes.ok) {
-      const errBody = await dubRes.text();
-      log.error('ElevenLabs dubbing failed', { status: dubRes.status, body: errBody.slice(0, 500) });
-      return NextResponse.json(
-        { error: `Dubbing failed: ${dubRes.status}` },
-        { status: dubRes.status >= 500 ? 502 : dubRes.status },
-      );
-    }
-
-    const dubData = await dubRes.json();
-    const dubbingId = dubData.dubbing_id;
-    const expectedDuration = dubData.expected_duration_sec;
-
-    log.info('Dubbing started', { dubbingId, expectedDuration });
 
     return NextResponse.json({
-      dubbing_id: dubbingId,
-      expected_duration_sec: expectedDuration,
+      job_id: jobId,
       target_lang: targetLang,
       source_lang: sourceLang,
-      status: 'processing',
+      status: 'extracting',
     });
   } catch (err) {
     log.error('Video translate error', { error: err instanceof Error ? err.message : String(err) });
-    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), { tags: { component: 'video-translate' } });
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { component: 'video-translate' },
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-/* ── GET: Check status / download ─────────────────────────────── */
+/* ── GET: Check status / download ────────────────────────────── */
 
 export async function GET(req: NextRequest) {
   try {
@@ -300,128 +513,81 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'ElevenLabs API not configured' }, { status: 503 });
-    }
-
     const { searchParams } = new URL(req.url);
-    const dubbingId = searchParams.get('dubbing_id');
-    const targetLang = searchParams.get('target_lang');
+    const jobId = searchParams.get('job_id');
     const download = searchParams.get('download') === 'true';
 
-    if (!dubbingId) {
-      return NextResponse.json({ error: 'dubbing_id required' }, { status: 400 });
+    if (!jobId) {
+      return NextResponse.json({ error: 'job_id required' }, { status: 400 });
     }
 
-    // Check status
-    const statusRes = await fetch(`${ELEVENLABS_API}/dubbing/${dubbingId}`, {
-      headers: { 'xi-api-key': apiKey },
-    });
-
-    if (!statusRes.ok) {
-      return NextResponse.json({ error: `Status check failed: ${statusRes.status}` }, { status: 502 });
+    const job = jobs.get(jobId);
+    if (!job) {
+      return NextResponse.json({ error: 'Job not found or expired' }, { status: 404 });
     }
 
-    const statusData = await statusRes.json();
-
-    // When dubbing is complete, proactively save in the background
-    if (statusData.status === 'dubbed' && targetLang && session.user.id) {
-      // Fire-and-forget: save the file to disk + create Asset record
-      backgroundSaveTranslation(
-        dubbingId,
-        targetLang,
-        session.user.id,
-        apiKey,
-        statusData.source_language ?? null,
-      ).catch(() => {
-        // Already logged inside the function
-      });
+    // Security: only the job owner can check status
+    if (job.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    if (!download || statusData.status !== 'dubbed') {
+    // Check timeout
+    if (Date.now() - job.createdAt > JOB_TIMEOUT_MS && job.status !== 'done') {
+      job.status = 'error';
+      job.error = 'Job timed out (10 minute limit)';
+    }
+
+    if (!download || job.status !== 'done') {
       return NextResponse.json({
-        dubbing_id: dubbingId,
-        status: statusData.status,
-        error: statusData.error ?? null,
-        source_language: statusData.source_language ?? null,
-        target_languages: statusData.target_languages ?? [],
-        created_at: statusData.created_at ?? null,
-        media_metadata: statusData.media_metadata ?? null,
+        job_id: jobId,
+        status: job.status,
+        progress: job.progress,
+        error: job.error ?? null,
+        target_lang: job.targetLang,
+        source_lang: job.sourceLang,
       });
     }
 
-    // ── Download dubbed file ──────────────────────────────────────
-    if (!targetLang) {
-      return NextResponse.json({ error: 'target_lang required for download' }, { status: 400 });
-    }
-
-    // Try to serve from local disk first (if background save already completed)
-    if (session.user.id) {
+    // ── Download ──────────────────────────────────────────────────
+    if (!job.outputPath || !existsSync(job.outputPath)) {
+      // Try serving from public directory
       const relDir = `uploads/translations/${session.user.id}`;
       const absDir = join(process.cwd(), 'public', relDir);
-      const filename = `${dubbingId}_${targetLang}.mp4`;
+      const filename = `${jobId}_${job.targetLang}.mp4`;
       const absPath = join(absDir, filename);
 
       if (existsSync(absPath)) {
-        try {
-          const fileStat = await stat(absPath);
-          const nodeStream = createReadStream(absPath);
-          const webStream = Readable.toWeb(nodeStream) as ReadableStream;
+        const fileStat = await stat(absPath);
+        const nodeStream = createReadStream(absPath);
+        const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
-          const headers = new Headers();
-          headers.set('Content-Type', 'video/mp4');
-          headers.set('Content-Disposition', `attachment; filename="translation_${targetLang}_${dubbingId}.mp4"`);
-          headers.set('Content-Length', String(fileStat.size));
+        const headers = new Headers();
+        headers.set('Content-Type', 'video/mp4');
+        headers.set('Content-Disposition', `attachment; filename="translation_${job.targetLang}_${jobId.slice(0, 8)}.mp4"`);
+        headers.set('Content-Length', String(fileStat.size));
 
-          log.info('Serving translation from local disk', { dubbingId, targetLang, size: fileStat.size });
-          return new Response(webStream, { headers });
-        } catch (fsErr) {
-          log.error('Failed to read local file, falling back to ElevenLabs stream', {
-            error: fsErr instanceof Error ? fsErr.message : String(fsErr),
-          });
-          // Fall through to stream from ElevenLabs
-        }
+        return new Response(webStream, { headers });
       }
+
+      return NextResponse.json({ error: 'Output file not found' }, { status: 404 });
     }
 
-    // Stream directly from ElevenLabs (no buffering in memory)
-    const downloadUrl = `${ELEVENLABS_API}/dubbing/${dubbingId}/audio/${targetLang}`;
-    const dubbedRes = await fetch(downloadUrl, {
-      headers: { 'xi-api-key': apiKey },
-    });
-
-    if (!dubbedRes.ok || !dubbedRes.body) {
-      return NextResponse.json(
-        { error: `Download failed: ${dubbedRes.status}` },
-        { status: 502 },
-      );
-    }
+    const fileStat = await stat(job.outputPath);
+    const nodeStream = createReadStream(job.outputPath);
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
     const headers = new Headers();
     headers.set('Content-Type', 'video/mp4');
-    headers.set('Content-Disposition', `attachment; filename="translation_${targetLang}_${dubbingId}.mp4"`);
-    if (dubbedRes.headers.get('content-length')) {
-      headers.set('Content-Length', dubbedRes.headers.get('content-length')!);
-    }
+    headers.set('Content-Disposition', `attachment; filename="translation_${job.targetLang}_${jobId.slice(0, 8)}.mp4"`);
+    headers.set('Content-Length', String(fileStat.size));
 
-    log.info('Streaming translation from ElevenLabs', { dubbingId, targetLang });
-
-    // Also trigger background save for future downloads / history
-    if (session.user.id) {
-      backgroundSaveTranslation(
-        dubbingId,
-        targetLang,
-        session.user.id,
-        apiKey,
-        statusData.source_language ?? null,
-      ).catch(() => {});
-    }
-
-    return new Response(dubbedRes.body, { headers });
+    log.info('Serving translated video', { jobId, size: fileStat.size });
+    return new Response(webStream, { headers });
   } catch (err) {
     log.error('Status/download error', { error: err instanceof Error ? err.message : String(err) });
-    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), { tags: { component: 'video-translate' } });
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { component: 'video-translate' },
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

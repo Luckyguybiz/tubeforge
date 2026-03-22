@@ -30,7 +30,18 @@ const LANGUAGES: { code: string; name: string; flag: string }[] = [
 /** Max file size: 500 MB */
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
-type DubStatus = 'idle' | 'uploading' | 'processing' | 'dubbed' | 'error';
+type TranslateStatus = 'idle' | 'uploading' | 'processing' | 'done' | 'error';
+
+/** Pipeline stage status messages */
+const STAGE_LABELS: Record<string, string> = {
+  extracting: 'Extracting audio from video...',
+  transcribing: 'Transcribing speech with Whisper...',
+  translating: 'Translating text with GPT-4o...',
+  cloning: 'Cloning your voice...',
+  generating_tts: 'Generating translated speech...',
+  merging: 'Merging translated audio with video...',
+  done: 'Done!',
+};
 
 export function VideoTranslator() {
   const C = useThemeStore((s) => s.theme);
@@ -42,15 +53,11 @@ export function VideoTranslator() {
   const [file, setFile] = useState<File | null>(null);
   const [sourceLang, setSourceLang] = useState('en');
   const [targetLang, setTargetLang] = useState('ru');
-  const [numSpeakers, setNumSpeakers] = useState(1);
-  const [dropBg, setDropBg] = useState(true);
-  const [addSubtitles, setAddSubtitles] = useState(false);
-  const [status, setStatus] = useState<DubStatus>('idle');
+  const [status, setStatus] = useState<TranslateStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [dubbingId, setDubbingId] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('');
-  const [expectedDuration, setExpectedDuration] = useState(0);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -63,26 +70,23 @@ export function VideoTranslator() {
     borderRadius: 16, padding: 24, marginBottom: 12,
   };
 
-  /* ── Estimated processing time based on file size ─────────── */
+  /* -- Estimated processing time based on file size -- */
   const estimatedTime = useMemo(() => {
     if (!file) return null;
-    // Rough estimate: ~2 min per 10 MB with highest_resolution
     const sizeMB = file.size / (1024 * 1024);
-    const minutes = Math.max(2, Math.ceil(sizeMB / 5));
+    const minutes = Math.max(2, Math.ceil(sizeMB / 10));
     return minutes;
   }, [file]);
 
-  /* ── File validation on select ────────────────────────────── */
+  /* -- File validation on select -- */
   const handleFileSelect = useCallback((f: File) => {
     setFileWarning(null);
 
-    // Validate MIME type
     if (!f.type.startsWith('video/') && !f.type.startsWith('audio/')) {
       setFileWarning(t('videoTranslator.invalidFileType') || 'Invalid file type. Please upload a video or audio file.');
       return;
     }
 
-    // Validate file size
     if (f.size > MAX_FILE_SIZE) {
       setFileWarning(
         (t('videoTranslator.fileTooLarge') || 'File too large') +
@@ -92,7 +96,6 @@ export function VideoTranslator() {
       return;
     }
 
-    // Warn if file is very small (likely short video = worse voice cloning)
     if (f.size < 1 * 1024 * 1024) {
       setFileWarning(
         t('videoTranslator.shortVideoWarning') ||
@@ -104,53 +107,39 @@ export function VideoTranslator() {
     setSourceUrl('');
   }, [t]);
 
-  /* ── Cleanup polling on unmount ────────────────────────────── */
+  /* -- Cleanup polling on unmount -- */
   useEffect(() => {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
 
-  /* ── Poll status ───────────────────────────────────────────── */
-  const startPolling = useCallback((dubId: string, tLang: string) => {
+  /* -- Poll status -- */
+  const startPolling = useCallback((jId: string) => {
     if (pollRef.current) clearInterval(pollRef.current);
-    let elapsed = 0;
+
     pollRef.current = setInterval(async () => {
-      elapsed += 5;
       try {
-        const res = await fetch(`/api/tools/video-translate?dubbing_id=${dubId}&target_lang=${tLang}`);
+        const res = await fetch(`/api/tools/video-translate?job_id=${jId}`);
         if (!res.ok) return;
         const data = await res.json();
-        if (data.status === 'dubbed') {
-          setStatus('dubbed');
+
+        if (data.status === 'done') {
+          setStatus('done');
           setProgress(100);
+          setStatusText(STAGE_LABELS.done);
           if (pollRef.current) clearInterval(pollRef.current);
-        } else if (data.status === 'failed' || data.error) {
+        } else if (data.status === 'error') {
           setStatus('error');
-          setError(data.error ?? useLocaleStore.getState().t('videoTranslator.processingError'));
+          setError(data.error ?? 'Processing error');
           if (pollRef.current) clearInterval(pollRef.current);
         } else {
-          // Show real status from ElevenLabs
-          const statusMap: Record<string, string> = {
-            preparing: useLocaleStore.getState().t('videoTranslator.preparing'),
-            transcribing: useLocaleStore.getState().t('videoTranslator.transcribing'),
-            translating: useLocaleStore.getState().t('videoTranslator.translating'),
-            generating: useLocaleStore.getState().t('videoTranslator.generating'),
-            rendering: useLocaleStore.getState().t('videoTranslator.rendering'),
-          };
-          const phaseProgress: Record<string, number> = {
-            preparing: 15,
-            transcribing: 35,
-            translating: 55,
-            generating: 75,
-            rendering: 90,
-          };
-          setStatusText(statusMap[data.status] ?? data.status);
-          setProgress(phaseProgress[data.status] ?? Math.min(elapsed * 2, 90));
+          setStatusText(STAGE_LABELS[data.status] ?? data.status);
+          setProgress(data.progress ?? 0);
         }
       } catch { /* network error, retry */ }
-    }, 5000);
-  }, [expectedDuration]);
+    }, 3000);
+  }, []);
 
-  /* ── Submit ────────────────────────────────────────────────── */
+  /* -- Submit -- */
   const handleSubmit = useCallback(async () => {
     if (!sourceUrl.trim() && !file) return;
     setError(null); setStatus('uploading'); setProgress(0);
@@ -164,9 +153,6 @@ export function VideoTranslator() {
       }
       formData.append('source_lang', sourceLang);
       formData.append('target_lang', targetLang);
-      formData.append('watermark', 'false');
-      formData.append('num_speakers', String(numSpeakers));
-      formData.append('drop_background_audio', String(dropBg));
 
       const res = await fetch('/api/tools/video-translate', {
         method: 'POST',
@@ -175,38 +161,38 @@ export function VideoTranslator() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as any)?.error ?? `${useLocaleStore.getState().t('videoTranslator.processingError')} ${res.status}`);
+        throw new Error((body as any)?.error ?? `Processing error ${res.status}`);
       }
 
       const data = await res.json();
-      setDubbingId(data.dubbing_id);
-      setExpectedDuration(data.expected_duration_sec ?? 60);
+      setJobId(data.job_id);
       setStatus('processing');
       setProgress(5);
-      startPolling(data.dubbing_id, targetLang);
+      setStatusText(STAGE_LABELS.extracting);
+      startPolling(data.job_id);
     } catch (err: unknown) {
       setStatus('error');
-      setError((err as Error)?.message ?? useLocaleStore.getState().t('videoTranslator.unknownError'));
+      setError((err as Error)?.message ?? 'Unknown error');
     }
-  }, [sourceUrl, file, sourceLang, targetLang, numSpeakers, dropBg, startPolling]);
+  }, [sourceUrl, file, sourceLang, targetLang, startPolling]);
 
-  /* ── Download ──────────────────────────────────────────────── */
+  /* -- Download -- */
   const handleDownload = useCallback(() => {
-    if (!dubbingId) return;
-    window.open(`/api/tools/video-translate?dubbing_id=${dubbingId}&target_lang=${targetLang}&download=true`, '_blank');
-  }, [dubbingId, targetLang]);
+    if (!jobId) return;
+    window.open(`/api/tools/video-translate?job_id=${jobId}&download=true`, '_blank');
+  }, [jobId]);
 
-  /* ── Reset ─────────────────────────────────────────────────── */
+  /* -- Reset -- */
   const handleReset = useCallback(() => {
-    setStatus('idle'); setError(null); setDubbingId(null);
+    setStatus('idle'); setError(null); setJobId(null);
     setProgress(0); setFile(null); setSourceUrl('');
-    setFileWarning(null);
+    setFileWarning(null); setStatusText('');
     if (pollRef.current) clearInterval(pollRef.current);
   }, []);
 
   const isReady = (sourceUrl.trim() || file) && targetLang && sourceLang !== '';
 
-  /* ── Render ─────────────────────────────────────────────────── */
+  /* -- Render -- */
   return (
     <div style={{ width: '100%', padding: '0 0 48px' }}>
       {/* Header */}
@@ -295,7 +281,6 @@ export function VideoTranslator() {
                 )}
               </button>
               <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 8 }}>MP4, MOV, MP3, WAV {`\u2022 ${t('videoTranslator.upTo500mb')}`}</div>
-              {/* File validation warning */}
               {fileWarning && (
                 <div style={{
                   marginTop: 8, padding: '8px 10px', borderRadius: 8,
@@ -306,7 +291,6 @@ export function VideoTranslator() {
                   {fileWarning}
                 </div>
               )}
-              {/* Estimated processing time */}
               {file && estimatedTime && !fileWarning?.includes('Invalid') && !fileWarning?.includes('too large') && (
                 <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -347,11 +331,11 @@ export function VideoTranslator() {
                   border: '1px solid rgba(234,179,8,0.25)',
                   fontSize: 10, color: '#b45309', lineHeight: 1.4,
                 }}>
-                  {t('videoTranslator.autoDetectWarning') || 'Auto-detect produces lower quality voice cloning. Please select the actual source language for best results.'}
+                  {t('videoTranslator.autoDetectWarning') || 'Auto-detect produces lower quality. Please select the actual source language for best results.'}
                 </div>
               )}
               <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 6 }}>
-                {t('videoTranslator.sourceLangHint') || 'Specifying the correct source language significantly improves voice cloning accuracy'}
+                {t('videoTranslator.sourceLangHint') || 'Specifying the correct source language significantly improves transcription and voice cloning accuracy'}
               </div>
             </div>
 
@@ -389,75 +373,7 @@ export function VideoTranslator() {
             </div>
           </div>
 
-          {/* Settings */}
-          <div style={{ ...card, marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 16 }}>{t('videoTranslator.settings')}</div>
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-              {/* Num speakers */}
-              <div>
-                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{t('videoTranslator.speakersInVideo')}</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[1, 2, 3].map((n) => (
-                    <button key={n} onClick={() => setNumSpeakers(n)} style={{
-                      width: 40, height: 36, borderRadius: 8,
-                      border: numSpeakers === n ? `2px solid ${accent}` : `1px solid ${C?.border ?? '#eee'}`,
-                      background: numSpeakers === n ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
-                      color: numSpeakers === n ? accent : (C?.text ?? '#111'),
-                      fontSize: 14, fontWeight: numSpeakers === n ? 700 : 500,
-                      cursor: 'pointer', fontFamily: 'inherit',
-                    }}>{n}</button>
-                  ))}
-                  <button onClick={() => setNumSpeakers(0)} style={{
-                    padding: '0 12px', height: 36, borderRadius: 8,
-                    border: numSpeakers === 0 ? `2px solid ${accent}` : `1px solid ${C?.border ?? '#eee'}`,
-                    background: numSpeakers === 0 ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
-                    color: numSpeakers === 0 ? accent : (C?.text ?? '#111'),
-                    fontSize: 12, fontWeight: numSpeakers === 0 ? 700 : 500,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                  }}>{t('videoTranslator.auto')}</button>
-                </div>
-                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>
-                  {t('videoTranslator.speakersHint') || 'Set to 1 for single-speaker videos (best voice cloning)'}
-                </div>
-              </div>
-
-              {/* Drop background audio */}
-              <div>
-                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>
-                  {t('videoTranslator.backgroundAudio') || 'Background audio'}
-                </div>
-                <button onClick={() => setDropBg(!dropBg)} style={{
-                  padding: '8px 16px', borderRadius: 8,
-                  border: `1px solid ${dropBg ? '#22c55e' : (C?.border ?? '#eee')}`,
-                  background: dropBg ? (isDark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.06)') : 'transparent',
-                  color: dropBg ? '#16a34a' : (C?.sub ?? '#888'),
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                }}>
-                  {dropBg
-                    ? (t('videoTranslator.bgDropped') || 'Removed (cleaner voice)')
-                    : (t('videoTranslator.bgKept') || 'Keep background audio')}
-                </button>
-                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>
-                  {t('videoTranslator.bgHint') || 'Removing background audio improves voice cloning quality'}
-                </div>
-              </div>
-
-              {/* Add subtitles */}
-              <div>
-                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{t('videoTranslator.subtitles')}</div>
-                <button onClick={() => setAddSubtitles(!addSubtitles)} style={{
-                  padding: '8px 16px', borderRadius: 8,
-                  border: `1px solid ${addSubtitles ? accent : (C?.border ?? '#eee')}`,
-                  background: addSubtitles ? (isDark ? 'rgba(124,92,252,0.12)' : 'rgba(124,92,252,0.06)') : 'transparent',
-                  color: addSubtitles ? accent : (C?.sub ?? '#888'),
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                }}>{addSubtitles ? '\u2705 \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C' : '\u274C \u0411\u0435\u0437 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432'}</button>
-                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{t('videoTranslator.overlaySubtitles')}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quality Settings Info */}
+          {/* Pipeline Info */}
           <div style={{
             ...card, marginBottom: 16, padding: 16,
             background: isDark ? 'rgba(34,197,94,0.04)' : 'rgba(34,197,94,0.02)',
@@ -465,12 +381,13 @@ export function VideoTranslator() {
           }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              {t('videoTranslator.activeOptimizations') || 'Active Voice Cloning Optimizations'}
+              {t('videoTranslator.activeOptimizations') || 'Translation Pipeline'}
             </div>
             <div style={{ fontSize: 11, color: C?.sub ?? '#888', lineHeight: 1.6 }}>
-              {`\u2022 ${t('videoTranslator.optHighRes') || 'Highest resolution mode enabled (best voice fidelity)'}`}<br/>
-              {`\u2022 ${t('videoTranslator.optVoiceClone') || 'Voice cloning enabled (using original speaker voice, not library)'}`}<br/>
-              {`\u2022 ${t('videoTranslator.optNoProfanity') || 'Profanity filter disabled (accurate, unaltered translation)'}`}
+              {'\u2022 Whisper AI transcription (accurate speech recognition)'}<br/>
+              {'\u2022 GPT-4o translation (natural, context-aware translations)'}<br/>
+              {'\u2022 ElevenLabs voice cloning (preserves your original voice)'}<br/>
+              {'\u2022 Multilingual v2 model (best quality for 29+ languages)'}
             </div>
           </div>
 
@@ -498,17 +415,15 @@ export function VideoTranslator() {
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 8 }}>
             {status === 'uploading'
-              ? t('videoTranslator.uploadingToServer')
-              : (statusText || t('videoTranslator.defaultProcessing'))}
+              ? (t('videoTranslator.uploadingToServer') || 'Uploading to server...')
+              : (statusText || 'Processing...')}
           </div>
           <div style={{ fontSize: 13, color: C?.sub ?? '#888', marginBottom: 20 }}>
             {status === 'uploading'
-              ? t('videoTranslator.mayTakeMinutes')
-              : (expectedDuration > 0
-                ? `${t('videoTranslator.expectedTime')}: ~${Math.ceil(expectedDuration / 60)} ${t('videoTranslator.min')}`
-                : t('videoTranslator.cloningVoice'))}
+              ? (t('videoTranslator.mayTakeMinutes') || 'This may take a moment...')
+              : 'Pipeline: Extract \u2192 Transcribe \u2192 Translate \u2192 Clone Voice \u2192 TTS \u2192 Merge'}
           </div>
-          {/* Progress bar — only show during processing, not upload */}
+          {/* Progress bar */}
           {status === 'processing' && (
             <>
               <div style={{ height: 6, borderRadius: 3, background: C?.border ?? '#eee', overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
@@ -517,7 +432,6 @@ export function VideoTranslator() {
               <div style={{ fontSize: 12, color: C?.dim ?? '#aaa', marginTop: 8 }}>{progress}%</div>
             </>
           )}
-          {/* Indeterminate animation during upload */}
           {status === 'uploading' && (
             <div style={{ height: 6, borderRadius: 3, background: C?.border ?? '#eee', overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
               <div style={{ height: '100%', borderRadius: 3, background: `linear-gradient(90deg, ${accent}, #a78bfa)`, width: '30%', animation: 'uploadPulse 1.5s ease-in-out infinite' }} />
@@ -529,7 +443,7 @@ export function VideoTranslator() {
       )}
 
       {/* Done */}
-      {status === 'dubbed' && (
+      {status === 'done' && (
         <div style={{ ...card, textAlign: 'center', padding: 48 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>{'\u2705'}</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: C?.text ?? '#111', marginBottom: 8 }}>
