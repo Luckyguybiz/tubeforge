@@ -254,7 +254,7 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
         style={{
           flex: 1,
           height: 6,
-          background: "#e5e5ea",
+          background: "rgba(255,255,255,0.08)",
           borderRadius: 3,
           overflow: "hidden",
         }}
@@ -347,11 +347,11 @@ export function ThumbnailCheckerTool() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          background: "#ffffff",
+          background: "#0a0a0a",
           borderRadius: 18,
           padding: imageUrl ? "16px" : "48px 28px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          border: "2px dashed #d2d2d7",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+          border: "2px dashed rgba(255,255,255,0.08)",
           textAlign: "center",
           cursor: "pointer",
           transition: "all 0.3s ease",
@@ -377,7 +377,7 @@ export function ThumbnailCheckerTool() {
                 objectFit: "contain",
               }}
             />
-            <p style={{ fontSize: 13, color: "#86868b", marginTop: 12, marginBottom: 0 }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 12, marginBottom: 0 }}>
               Click or drag to replace the image
             </p>
           </div>
@@ -388,7 +388,7 @@ export function ThumbnailCheckerTool() {
               height="48"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#86868b"
+              stroke="rgba(255,255,255,0.3)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -401,14 +401,14 @@ export function ThumbnailCheckerTool() {
             <p
               style={{
                 fontSize: 17,
-                color: "#1d1d1f",
+                color: "#ffffff",
                 fontWeight: 500,
                 margin: "0 0 8px",
               }}
             >
               Drop your thumbnail here or click to upload
             </p>
-            <p style={{ fontSize: 14, color: "#86868b", margin: 0 }}>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>
               JPG, PNG, or GIF. Recommended: 1280x720px (16:9)
             </p>
           </div>
@@ -421,11 +421,11 @@ export function ThumbnailCheckerTool() {
           style={{
             marginTop: 24,
             padding: "20px",
-            background: "#f5f5f7",
+            background: "#111111",
             borderRadius: 12,
             textAlign: "center",
             fontSize: 15,
-            color: "#86868b",
+            color: "rgba(255,255,255,0.5)",
           }}
         >
           Analyzing your thumbnail...
@@ -438,11 +438,11 @@ export function ThumbnailCheckerTool() {
           {/* Overall score */}
           <div
             style={{
-              background: "#ffffff",
+              background: "#0a0a0a",
               borderRadius: 18,
               padding: "28px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-              border: "1px solid #e5e5ea",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+              border: "1px solid rgba(255,255,255,0.06)",
               textAlign: "center",
               marginBottom: 16,
             }}
@@ -451,7 +451,7 @@ export function ThumbnailCheckerTool() {
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: "#86868b",
+                color: "rgba(255,255,255,0.5)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
                 marginBottom: 8,
@@ -475,7 +475,7 @@ export function ThumbnailCheckerTool() {
             >
               {analysis.overall}
             </div>
-            <div style={{ fontSize: 15, color: "#86868b", marginTop: 4 }}>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
               {analysis.overall >= 80
                 ? "Great thumbnail! Ready for publishing."
                 : analysis.overall >= 60
@@ -496,11 +496,11 @@ export function ThumbnailCheckerTool() {
               <div
                 key={cat.key}
                 style={{
-                  background: "#ffffff",
+                  background: "#0a0a0a",
                   borderRadius: 14,
                   padding: "20px",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-                  border: "1px solid #e5e5ea",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
                 <div
@@ -511,7 +511,7 @@ export function ThumbnailCheckerTool() {
                     marginBottom: 8,
                   }}
                 >
-                  <span style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#ffffff" }}>
                     {cat.categoryLabel}
                   </span>
                   <span
@@ -536,7 +536,7 @@ export function ThumbnailCheckerTool() {
                 <p
                   style={{
                     fontSize: 14,
-                    color: "#86868b",
+                    color: "rgba(255,255,255,0.5)",
                     lineHeight: 1.5,
                     margin: "10px 0 0",
                   }}

@@ -38,15 +38,15 @@ export default function HelpPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#ffffff',
-        color: '#1d1d1f',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
       {/* Minimal nav */}
       <header
         style={{
-          borderBottom: '1px solid #e5e5ea',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
           padding: '16px 24px',
           display: 'flex',
           alignItems: 'center',
@@ -73,7 +73,7 @@ export default function HelpPage() {
           >
             TF
           </div>
-          <span style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f' }}>TubeForge</span>
+          <span style={{ fontSize: 17, fontWeight: 600, color: '#ffffff' }}>TubeForge</span>
         </Link>
         <Link
           href="/"
@@ -96,14 +96,14 @@ export default function HelpPage() {
             fontWeight: 600,
             margin: 0,
             letterSpacing: '-0.02em',
-            color: '#1d1d1f',
+            color: '#ffffff',
           }}
         >
           Help Center
         </h1>
         <p
           style={{
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.5)',
             fontSize: 17,
             marginTop: 12,
             maxWidth: 480,
@@ -123,7 +123,7 @@ export default function HelpPage() {
             height="18"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#86868b"
+            stroke="rgba(255,255,255,0.3)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -140,10 +140,10 @@ export default function HelpPage() {
             style={{
               width: '100%',
               padding: '16px 20px 16px 50px',
-              background: '#f5f5f7',
+              background: '#111111',
               border: '1px solid transparent',
               borderRadius: 24,
-              color: '#1d1d1f',
+              color: '#ffffff',
               fontSize: 16,
               outline: 'none',
               boxSizing: 'border-box',
@@ -170,7 +170,7 @@ export default function HelpPage() {
               fontSize: 17,
               fontWeight: 600,
               margin: '0 0 16px',
-              color: '#1d1d1f',
+              color: '#ffffff',
             }}
           >
             Popular Articles
@@ -194,12 +194,12 @@ export default function HelpPage() {
                   className="popular-card"
                   style={{
                     padding: '18px 18px',
-                    background: '#f5f5f7',
+                    background: '#111111',
                     border: 'none',
                     borderRadius: 16,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    color: '#1d1d1f',
+                    color: '#ffffff',
                     transition: 'background .2s, transform .2s',
                     display: 'flex',
                     flexDirection: 'column',
@@ -208,7 +208,7 @@ export default function HelpPage() {
                 >
                   <span style={{ fontSize: 20 }}>{catInfo.icon}</span>
                   <span style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.35 }}>{article.title}</span>
-                  <span style={{ fontSize: 12, color: '#86868b' }}>{catInfo.label}</span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{catInfo.label}</span>
                 </button>
               );
             })}
@@ -238,8 +238,8 @@ export default function HelpPage() {
                 padding: '8px 20px',
                 borderRadius: 20,
                 border: 'none',
-                background: active ? '#6366f1' : '#f5f5f7',
-                color: active ? '#ffffff' : '#3d3d42',
+                background: active ? '#6366f1' : 'rgba(255,255,255,0.04)',
+                color: active ? '#ffffff' : 'rgba(255,255,255,0.7)',
                 fontSize: 14,
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -260,15 +260,15 @@ export default function HelpPage() {
       <div id="help-articles" style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 80px' }}>
         {/* Result count when filtering */}
         {(search.trim() || activeCategory !== 'all') && filtered.length > 0 && (
-          <p style={{ fontSize: 13, color: '#86868b', marginBottom: 16 }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
             {filtered.length === 1
               ? '1 article found'
               : `${filtered.length} articles found`}
           </p>
         )}
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '56px 0', color: '#86868b' }}>
-            <p style={{ fontSize: 20, fontWeight: 600, color: '#1d1d1f' }}>Nothing found</p>
+          <div style={{ textAlign: 'center', padding: '56px 0', color: 'rgba(255,255,255,0.5)' }}>
+            <p style={{ fontSize: 20, fontWeight: 600, color: '#ffffff' }}>Nothing found</p>
             <p style={{ fontSize: 15, marginTop: 8 }}>Try changing your query or category</p>
           </div>
         ) : (
@@ -280,8 +280,8 @@ export default function HelpPage() {
                 <div
                   key={article.id}
                   style={{
-                    background: expanded ? '#f5f5f7' : '#ffffff',
-                    border: `1px solid ${expanded ? '#d1d1d6' : '#e5e5ea'}`,
+                    background: expanded ? '#1a1a1a' : '#111111',
+                    border: `1px solid ${expanded ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'}`,
                     borderRadius: 12,
                     overflow: 'hidden',
                     transition: 'all .2s',
@@ -299,7 +299,7 @@ export default function HelpPage() {
                       alignItems: 'center',
                       gap: 14,
                       textAlign: 'left',
-                      color: '#1d1d1f',
+                      color: '#ffffff',
                     }}
                   >
                     <span
@@ -309,7 +309,7 @@ export default function HelpPage() {
                         width: 36,
                         height: 36,
                         borderRadius: 10,
-                        background: '#f5f5f7',
+                        background: '#111111',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -319,7 +319,7 @@ export default function HelpPage() {
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 600 }}>{article.title}</div>
-                      <div style={{ fontSize: 13, color: '#86868b', marginTop: 2 }}>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
                         {catInfo.label}
                       </div>
                     </div>
@@ -328,7 +328,7 @@ export default function HelpPage() {
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#86868b"
+                      stroke="rgba(255,255,255,0.3)"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -349,9 +349,9 @@ export default function HelpPage() {
                         paddingLeft: 70,
                         fontSize: 15,
                         lineHeight: 1.7,
-                        color: '#3d3d42',
+                        color: 'rgba(255,255,255,0.7)',
                         whiteSpace: 'pre-line',
-                        borderTop: '1px solid #e5e5ea',
+                        borderTop: '1px solid rgba(255,255,255,0.06)',
                         paddingTop: 16,
                       }}
                     >
@@ -370,14 +370,14 @@ export default function HelpPage() {
             marginTop: 56,
             textAlign: 'center',
             padding: '40px 28px',
-            background: '#f5f5f7',
+            background: '#111111',
             borderRadius: 16,
           }}
         >
-          <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: '#1d1d1f' }}>
+          <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: '#ffffff' }}>
             Didn&apos;t find an answer?
           </p>
-          <p style={{ color: '#86868b', fontSize: 15, marginTop: 8 }}>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, marginTop: 8 }}>
             Get in touch with our support team
           </p>
           <Link
@@ -403,7 +403,7 @@ export default function HelpPage() {
       {/* Hover styles */}
       <style>{`
         .popular-card:hover {
-          background: #ebebed !important;
+          background: rgba(255,255,255,0.08) !important;
           transform: translateY(-1px);
         }
       `}</style>

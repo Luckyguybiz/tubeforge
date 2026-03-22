@@ -27,8 +27,8 @@ export default function AboutPage() {
     <main
       style={{
         minHeight: '100dvh',
-        background: '#fff',
-        color: '#18181b',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "'Instrument Sans', sans-serif",
       }}
     >
@@ -39,7 +39,7 @@ export default function AboutPage() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            color: '#71717a',
+            color: 'rgba(255,255,255,0.4)',
             textDecoration: 'none',
             fontSize: 14,
             fontWeight: 500,
@@ -52,8 +52,8 @@ export default function AboutPage() {
 
         <article
           style={{
-            background: '#fafafa',
-            border: '1px solid #e4e4e7',
+            background: '#1a1a1a',
+            border: '1px solid rgba(255,255,255,0.06)',
             borderRadius: 20,
             padding: '48px 40px',
           }}
@@ -68,7 +68,7 @@ export default function AboutPage() {
           >
             About TubeForge
           </h1>
-          <p style={{ fontSize: 14, color: '#a1a1aa', marginBottom: 32 }}>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 32 }}>
             Our mission and story
           </p>
 
@@ -76,12 +76,12 @@ export default function AboutPage() {
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
               Our Mission
             </h2>
-            <p style={{ fontSize: 14, lineHeight: 1.8, color: '#71717a', marginBottom: 12 }}>
+            <p style={{ fontSize: 14, lineHeight: 1.8, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
               TubeForge is an AI-powered platform designed for YouTube creators.
               We help you generate, optimize, and publish video content faster
               than ever before.
             </p>
-            <p style={{ fontSize: 14, lineHeight: 1.8, color: '#71717a' }}>
+            <p style={{ fontSize: 14, lineHeight: 1.8, color: 'rgba(255,255,255,0.4)' }}>
               Our tools leverage state-of-the-art artificial intelligence to
               assist with video generation, AI voiceovers, thumbnail creation,
               and SEO optimization — so you can focus on what matters most:
@@ -93,7 +93,7 @@ export default function AboutPage() {
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
               Contact Us
             </h2>
-            <p style={{ fontSize: 14, lineHeight: 1.8, color: '#71717a' }}>
+            <p style={{ fontSize: 14, lineHeight: 1.8, color: 'rgba(255,255,255,0.4)' }}>
               Have questions or feedback? Reach out to us at{' '}
               <a
                 href="mailto:support@tubeforge.co"
@@ -111,7 +111,7 @@ export default function AboutPage() {
             textAlign: 'center',
             marginTop: 32,
             fontSize: 13,
-            color: '#a1a1aa',
+            color: 'rgba(255,255,255,0.5)',
           }}
         >
           {'\u00A9'} {new Date().getFullYear()} TubeForge. All rights reserved.

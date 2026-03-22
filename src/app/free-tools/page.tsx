@@ -35,7 +35,7 @@ const TOOLS = [
     description: "Generate 10 click-worthy, SEO-optimized title variations for any video topic using AI.",
     href: "/free-tools/title-generator",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
       </svg>
@@ -46,7 +46,7 @@ const TOOLS = [
     description: "Create SEO-optimized video descriptions with timestamps, hashtags, and links sections.",
     href: "/free-tools/description-generator",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
@@ -60,7 +60,7 @@ const TOOLS = [
     description: "Get 25 relevant, SEO-friendly tags mixing broad and long-tail keywords for maximum reach.",
     href: "/free-tools/tag-generator",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
         <line x1="7" y1="7" x2="7.01" y2="7" />
       </svg>
@@ -71,7 +71,7 @@ const TOOLS = [
     description: "Upload a thumbnail and get instant analysis of text readability, contrast, and composition.",
     href: "/free-tools/thumbnail-checker",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
         <circle cx="8.5" cy="8.5" r="1.5" />
         <polyline points="21 15 16 10 5 21" />
@@ -83,7 +83,7 @@ const TOOLS = [
     description: "Get 20 creative, brandable YouTube channel name ideas for any niche using AI.",
     href: "/free-tools/channel-name-generator",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
@@ -94,7 +94,7 @@ const TOOLS = [
     description: "Generate complete video scripts with hook, intro, body, CTA, and outro for any topic and format.",
     href: "/free-tools/script-generator",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
       </svg>
     ),
@@ -104,7 +104,7 @@ const TOOLS = [
     description: "Real-time character counter for titles (100), descriptions (5000), and tags (500) with color indicators.",
     href: "/free-tools/character-counter",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="4 7 4 4 20 4 20 7" />
         <line x1="9" y1="20" x2="15" y2="20" />
         <line x1="12" y1="4" x2="12" y2="20" />
@@ -116,7 +116,7 @@ const TOOLS = [
     description: "Get 50+ video ideas categorized by trending, evergreen, Shorts, and series concepts.",
     href: "/free-tools/video-ideas",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="9" y1="18" x2="15" y2="18" />
         <line x1="10" y1="22" x2="14" y2="22" />
         <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
@@ -128,7 +128,7 @@ const TOOLS = [
     description: "Complete 2026 guide to YouTube Shorts size, resolution, aspect ratio, and length with interactive preview.",
     href: "/free-tools/shorts-dimensions",
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
         <line x1="11" y1="18" x2="13" y2="18" />
       </svg>
@@ -155,7 +155,7 @@ const JSON_LD = {
 
 export default function FreeToolsPage() {
   return (
-    <div style={{ background: "#ffffff", color: "#1d1d1f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -170,8 +170,8 @@ export default function FreeToolsPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "rgba(0,113,227,0.08)",
-              color: "#0071e3",
+              background: "rgba(99,102,241,0.1)",
+              color: "#6366f1",
               fontSize: 13,
               fontWeight: 600,
               padding: "6px 14px",
@@ -188,7 +188,7 @@ export default function FreeToolsPage() {
               letterSpacing: "-0.025em",
               lineHeight: 1.08,
               margin: "0 0 16px",
-              color: "#1d1d1f",
+              color: "#ffffff",
             }}
           >
             Free YouTube Tools.
@@ -196,7 +196,7 @@ export default function FreeToolsPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               maxWidth: 520,
               margin: "0 auto",
               lineHeight: 1.5,
@@ -225,14 +225,14 @@ export default function FreeToolsPage() {
               key={tool.href}
               href={tool.href}
               style={{
-                background: "#ffffff",
+                background: "#0a0a0a",
                 borderRadius: 18,
                 padding: "36px 28px",
                 textDecoration: "none",
                 color: "inherit",
                 transition: "all 0.3s ease",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                border: "1px solid #e5e5ea",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+                border: "1px solid rgba(255,255,255,0.06)",
                 display: "flex",
                 flexDirection: "column",
                 gap: 16,
@@ -243,7 +243,7 @@ export default function FreeToolsPage() {
                   width: 48,
                   height: 48,
                   borderRadius: "50%",
-                  background: "rgba(0,113,227,0.08)",
+                  background: "rgba(99,102,241,0.1)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -256,7 +256,7 @@ export default function FreeToolsPage() {
                   style={{
                     fontSize: 21,
                     fontWeight: 600,
-                    color: "#1d1d1f",
+                    color: "#ffffff",
                     margin: "0 0 8px",
                   }}
                 >
@@ -265,7 +265,7 @@ export default function FreeToolsPage() {
                 <p
                   style={{
                     fontSize: 15,
-                    color: "#86868b",
+                    color: "rgba(255,255,255,0.5)",
                     lineHeight: 1.6,
                     margin: 0,
                   }}
@@ -278,7 +278,7 @@ export default function FreeToolsPage() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 4,
-                  color: "#0071e3",
+                  color: "#6366f1",
                   fontSize: 15,
                   fontWeight: 500,
                   marginTop: "auto",
@@ -299,7 +299,7 @@ export default function FreeToolsPage() {
         style={{
           padding: "80px 24px 100px",
           textAlign: "center",
-          background: "#f5f5f7",
+          background: "#111111",
         }}
       >
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
@@ -308,7 +308,7 @@ export default function FreeToolsPage() {
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
@@ -318,7 +318,7 @@ export default function FreeToolsPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               margin: "0 0 32px",
               lineHeight: 1.5,
             }}
@@ -331,7 +331,7 @@ export default function FreeToolsPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0071e3",
+              background: "#6366f1",
               color: "#fff",
               fontSize: 17,
               fontWeight: 400,
@@ -353,8 +353,8 @@ export default function FreeToolsPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#f5f5f7", borderTop: "1px solid #e5e5ea", padding: "24px", textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "#86868b" }}>
+      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "24px", textAlign: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
           {"\u00A9"} 2026 TubeForge. All rights reserved.
         </span>
       </footer>

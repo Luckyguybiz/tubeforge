@@ -159,11 +159,11 @@ export function ThumbnailSizeTool() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          background: "#ffffff",
+          background: "#0a0a0a",
           borderRadius: 18,
           padding: imageInfo ? "16px" : "48px 28px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          border: "2px dashed #d2d2d7",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+          border: "2px dashed rgba(255,255,255,0.08)",
           textAlign: "center",
           cursor: "pointer",
           transition: "all 0.3s ease",
@@ -189,7 +189,7 @@ export function ThumbnailSizeTool() {
                 objectFit: "contain",
               }}
             />
-            <p style={{ fontSize: 13, color: "#86868b", marginTop: 12, marginBottom: 0 }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 12, marginBottom: 0 }}>
               Click or drag to replace
             </p>
           </div>
@@ -200,7 +200,7 @@ export function ThumbnailSizeTool() {
               height="48"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#86868b"
+              stroke="rgba(255,255,255,0.3)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -213,14 +213,14 @@ export function ThumbnailSizeTool() {
             <p
               style={{
                 fontSize: 17,
-                color: "#1d1d1f",
+                color: "#ffffff",
                 fontWeight: 500,
                 margin: "0 0 8px",
               }}
             >
               Drop your thumbnail here or click to upload
             </p>
-            <p style={{ fontSize: 14, color: "#86868b", margin: 0 }}>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>
               JPG, PNG, GIF, or BMP
             </p>
           </div>
@@ -248,16 +248,16 @@ export function ThumbnailSizeTool() {
               <div
                 key={item.label}
                 style={{
-                  background: "#f5f5f7",
+                  background: "#111111",
                   borderRadius: 12,
                   padding: "12px 20px",
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: 12, color: "#86868b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   {item.label}
                 </div>
-                <div style={{ fontSize: 19, fontWeight: 600, color: "#1d1d1f", marginTop: 4 }}>
+                <div style={{ fontSize: 19, fontWeight: 600, color: "#ffffff", marginTop: 4 }}>
                   {item.value}
                 </div>
               </div>
@@ -270,11 +270,11 @@ export function ThumbnailSizeTool() {
               <div
                 key={i}
                 style={{
-                  background: "#ffffff",
+                  background: "#0a0a0a",
                   borderRadius: 14,
                   padding: "16px 20px",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-                  border: "1px solid #e5e5ea",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
                 <div
@@ -285,12 +285,12 @@ export function ThumbnailSizeTool() {
                     marginBottom: 6,
                   }}
                 >
-                  <span style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#ffffff" }}>
                     {check.label}
                   </span>
                   <StatusBadge status={check.status} />
                 </div>
-                <p style={{ fontSize: 14, color: "#86868b", lineHeight: 1.5, margin: 0 }}>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, margin: 0 }}>
                   {check.detail}
                 </p>
               </div>
@@ -299,13 +299,13 @@ export function ThumbnailSizeTool() {
 
           {/* YouTube preview */}
           <div style={{ marginTop: 24 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", marginBottom: 16 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", marginBottom: 16 }}>
               Preview in YouTube layouts
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Search result preview */}
               <div>
-                <div style={{ fontSize: 13, color: "#86868b", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Search result (246px)
                 </div>
                 <div
@@ -313,9 +313,9 @@ export function ThumbnailSizeTool() {
                     display: "flex",
                     gap: 12,
                     padding: 16,
-                    background: "#fafafa",
+                    background: "#1a1a1a",
                     borderRadius: 12,
-                    border: "1px solid #e5e5ea",
+                    border: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -332,10 +332,10 @@ export function ThumbnailSizeTool() {
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", lineHeight: 1.4 }}>
                       Your Video Title Here
                     </div>
-                    <div style={{ fontSize: 12, color: "#86868b", marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
                       Channel Name &middot; 10K views &middot; 2 days ago
                     </div>
                   </div>
@@ -344,16 +344,16 @@ export function ThumbnailSizeTool() {
 
               {/* Mobile feed preview */}
               <div>
-                <div style={{ fontSize: 13, color: "#86868b", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Mobile feed (full width)
                 </div>
                 <div
                   style={{
                     maxWidth: 360,
                     padding: 12,
-                    background: "#fafafa",
+                    background: "#1a1a1a",
                     borderRadius: 12,
-                    border: "1px solid #e5e5ea",
+                    border: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -374,15 +374,15 @@ export function ThumbnailSizeTool() {
                         width: 36,
                         height: 36,
                         borderRadius: "50%",
-                        background: "#d2d2d7",
+                        background: "rgba(255,255,255,0.08)",
                         flexShrink: 0,
                       }}
                     />
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", lineHeight: 1.3 }}>
                         Your Video Title Here
                       </div>
-                      <div style={{ fontSize: 12, color: "#86868b", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
                         Channel Name &middot; 10K views &middot; 2 days ago
                       </div>
                     </div>
@@ -392,7 +392,7 @@ export function ThumbnailSizeTool() {
 
               {/* Suggested sidebar preview */}
               <div>
-                <div style={{ fontSize: 13, color: "#86868b", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Suggested sidebar (168px)
                 </div>
                 <div
@@ -400,9 +400,9 @@ export function ThumbnailSizeTool() {
                     display: "flex",
                     gap: 10,
                     padding: 12,
-                    background: "#fafafa",
+                    background: "#1a1a1a",
                     borderRadius: 12,
-                    border: "1px solid #e5e5ea",
+                    border: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -419,13 +419,13 @@ export function ThumbnailSizeTool() {
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1d1d1f", lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", lineHeight: 1.3 }}>
                       Your Video Title Here
                     </div>
-                    <div style={{ fontSize: 11, color: "#86868b", marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
                       Channel Name
                     </div>
-                    <div style={{ fontSize: 11, color: "#86868b" }}>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
                       10K views &middot; 2 days ago
                     </div>
                   </div>

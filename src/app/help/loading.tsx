@@ -3,11 +3,11 @@ import { Skeleton } from '@/components/ui/Skeleton';
 /** Help center loading skeleton — Apple editorial style */
 export default function HelpLoading() {
   return (
-    <div style={{ minHeight: '100vh', background: '#ffffff', color: '#1d1d1f' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#ffffff' }}>
       {/* Header skeleton */}
       <div
         style={{
-          borderBottom: '1px solid #e5e5ea',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
           padding: '16px 24px',
           display: 'flex',
           alignItems: 'center',
@@ -65,8 +65,8 @@ export default function HelpLoading() {
           <div
             key={i}
             style={{
-              background: '#ffffff',
-              border: '1px solid #e5e5ea',
+              background: '#1a1a1a',
+              border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 12,
               padding: '18px 20px',
               display: 'flex',

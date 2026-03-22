@@ -153,20 +153,22 @@ html { overflow-x: hidden; }
 
 /* ── Dashboard responsive overrides ──────────────────── */
 
-/* Stat cards: 4 cols on desktop, 2 cols on tablets, 2 cols on mobile */
 @media (max-width: 640px) {
-  .tf-dash-stat-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
-  }
-  .tf-stat-card {
-    padding: 12px !important;
-  }
-  .tf-dash-stat-value {
-    font-size: 17px !important;
-  }
   .tf-dash-heading {
     font-size: 22px !important;
+  }
+  .tf-dash-header-actions {
+    flex-direction: column;
+  }
+  .tf-dash-header-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .tf-dash-stat-grid {
+    gap: 6px !important;
+  }
+  .tf-stat-card {
+    padding: 6px 10px !important;
   }
   .tf-dash-toolbar {
     padding: 14px 16px 12px !important;
@@ -188,18 +190,8 @@ html { overflow-x: hidden; }
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
-  .tf-dash-create-btn {
-    width: 100%;
-    justify-content: center;
-  }
   .tf-dash-search-input {
     max-width: none !important;
     width: 100% !important;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 900px) {
-  .tf-dash-stat-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
   }
 }

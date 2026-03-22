@@ -12,7 +12,7 @@ const SUBJECTS = [
 ] as const;
 
 const RESPONSE_TIMES = [
-  { plan: 'FREE', time: '48 hours', color: '#86868b' },
+  { plan: 'FREE', time: '48 hours', color: 'rgba(255,255,255,0.5)' },
   { plan: 'PRO', time: '24 hours', color: '#007aff' },
   { plan: 'STUDIO', time: '4 hours', color: '#af52de' },
 ];
@@ -83,10 +83,10 @@ export default function ContactPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '14px 16px',
-    background: '#f5f5f7',
+    background: '#111111',
     border: '1px solid transparent',
     borderRadius: 12,
-    color: '#1d1d1f',
+    color: '#ffffff',
     fontSize: 15,
     outline: 'none',
     boxSizing: 'border-box',
@@ -99,7 +99,7 @@ export default function ContactPage() {
     display: 'block',
     fontSize: 13,
     fontWeight: 600,
-    color: '#86868b',
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 8,
   };
 
@@ -107,15 +107,15 @@ export default function ContactPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#ffffff',
-        color: '#1d1d1f',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
       {/* Header */}
       <header
         style={{
-          borderBottom: '1px solid #e5e5ea',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
           padding: '16px 24px',
           display: 'flex',
           alignItems: 'center',
@@ -142,7 +142,7 @@ export default function ContactPage() {
           >
             TF
           </div>
-          <span style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f' }}>TubeForge</span>
+          <span style={{ fontSize: 17, fontWeight: 600, color: '#ffffff' }}>TubeForge</span>
         </Link>
         <Link
           href="/"
@@ -165,14 +165,14 @@ export default function ContactPage() {
               fontWeight: 600,
               margin: 0,
               letterSpacing: '-0.02em',
-              color: '#1d1d1f',
+              color: '#ffffff',
             }}
           >
             Contact Us
           </h1>
           <p
             style={{
-              color: '#86868b',
+              color: 'rgba(255,255,255,0.5)',
               fontSize: 17,
               textAlign: 'center',
               marginTop: 12,
@@ -210,7 +210,7 @@ export default function ContactPage() {
                   width: 64,
                   height: 64,
                   borderRadius: '50%',
-                  background: '#f0fdf4',
+                  background: 'rgba(34,197,94,0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -220,20 +220,20 @@ export default function ContactPage() {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0, color: '#1d1d1f' }}>
+              <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0, color: '#ffffff' }}>
                 Message Sent
               </h2>
-              <p style={{ fontSize: 16, color: '#86868b', margin: 0, lineHeight: 1.6, maxWidth: 400 }}>
+              <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6, maxWidth: 400 }}>
                 Thank you for reaching out. We&apos;ll respond within 24 hours.
-                Check your inbox at <strong style={{ color: '#1d1d1f' }}>{submittedEmail}</strong> for our reply.
+                Check your inbox at <strong style={{ color: '#ffffff' }}>{submittedEmail}</strong> for our reply.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
                 style={{
                   marginTop: 8,
                   padding: '12px 28px',
-                  background: '#f5f5f7',
-                  color: '#1d1d1f',
+                  background: '#111111',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: 12,
                   fontSize: 15,
@@ -374,17 +374,17 @@ export default function ContactPage() {
             {/* Email */}
             <div
               style={{
-                background: '#f5f5f7',
+                background: '#111111',
                 borderRadius: 16,
                 padding: '28px 24px',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#1d1d1f' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#ffffff' }}>
                 Contact Info
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <div style={{ fontSize: 12, color: '#86868b', marginBottom: 4, fontWeight: 500 }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 500 }}>
                     Email
                   </div>
                   <a
@@ -395,7 +395,7 @@ export default function ContactPage() {
                   </a>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: '#86868b', marginBottom: 4, fontWeight: 500 }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 500 }}>
                     Telegram
                   </div>
                   <a
@@ -413,18 +413,18 @@ export default function ContactPage() {
             {/* Office hours */}
             <div
               style={{
-                background: '#f5f5f7',
+                background: '#111111',
                 borderRadius: 16,
                 padding: '28px 24px',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 10, color: '#1d1d1f' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 10, color: '#ffffff' }}>
                 Office Hours
               </div>
-              <p style={{ fontSize: 15, color: '#3d3d42', margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.6 }}>
                 Mon — Fri, 9:00 AM — 6:00 PM UTC
               </p>
-              <p style={{ fontSize: 13, color: '#86868b', margin: '10px 0 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '10px 0 0', lineHeight: 1.5 }}>
                 On weekends and holidays, we process requests with a delay. For urgent matters, reach out via Telegram.
               </p>
             </div>
@@ -432,12 +432,12 @@ export default function ContactPage() {
             {/* Response times */}
             <div
               style={{
-                background: '#f5f5f7',
+                background: '#111111',
                 borderRadius: 16,
                 padding: '28px 24px',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18, color: '#1d1d1f' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18, color: '#ffffff' }}>
                 Response Time
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -457,12 +457,12 @@ export default function ContactPage() {
                         color: rt.color,
                         padding: '4px 12px',
                         borderRadius: 8,
-                        background: rt.color === '#86868b' ? '#e5e5ea' : `${rt.color}12`,
+                        background: rt.color === 'rgba(255,255,255,0.5)' ? 'rgba(255,255,255,0.08)' : `${rt.color}12`,
                       }}
                     >
                       {rt.plan}
                     </span>
-                    <span style={{ fontSize: 14, color: '#3d3d42', fontWeight: 500 }}>
+                    <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
                       up to {rt.time}
                     </span>
                   </div>
@@ -473,16 +473,16 @@ export default function ContactPage() {
             {/* Help center link */}
             <div
               style={{
-                background: '#f5f5f7',
+                background: '#111111',
                 borderRadius: 16,
                 padding: '28px 24px',
                 textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: '#1d1d1f' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: '#ffffff' }}>
                 Quick Answers
               </div>
-              <p style={{ fontSize: 14, color: '#86868b', marginBottom: 16 }}>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
                 The answer might already be in the help center
               </p>
               <Link
@@ -490,10 +490,10 @@ export default function ContactPage() {
                 style={{
                   display: 'inline-block',
                   padding: '12px 24px',
-                  background: '#ffffff',
-                  border: '1px solid #e5e5ea',
+                  background: '#0a0a0a',
+                  border: '1px solid rgba(255,255,255,0.06)',
                   borderRadius: 12,
-                  color: '#1d1d1f',
+                  color: '#ffffff',
                   fontSize: 14,
                   fontWeight: 600,
                   textDecoration: 'none',

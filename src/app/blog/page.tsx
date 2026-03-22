@@ -84,8 +84,8 @@ export default function BlogIndexPage() {
     <main
       style={{
         minHeight: '100dvh',
-        background: '#ffffff',
-        color: '#1d1d1f',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
@@ -122,7 +122,7 @@ export default function BlogIndexPage() {
               fontSize: 40,
               fontWeight: 600,
               letterSpacing: '-0.02em',
-              color: '#1d1d1f',
+              color: '#ffffff',
               margin: '0 0 12px',
               lineHeight: 1.15,
             }}
@@ -132,7 +132,7 @@ export default function BlogIndexPage() {
           <p
             style={{
               fontSize: 17,
-              color: '#86868b',
+              color: 'rgba(255,255,255,0.5)',
               margin: 0,
               fontWeight: 400,
               lineHeight: 1.5,
@@ -161,7 +161,7 @@ export default function BlogIndexPage() {
                   fontSize: 13,
                   fontWeight: 500,
                   color: color,
-                  background: '#f5f5f7',
+                  background: 'rgba(255,255,255,0.04)',
                   padding: '8px 20px',
                   borderRadius: 20,
                   letterSpacing: '0.01em',
@@ -197,8 +197,8 @@ export default function BlogIndexPage() {
                 <article
                   className="blog-card"
                   style={{
-                    background: '#ffffff',
-                    border: '1px solid #e5e5ea',
+                    background: '#1a1a1a',
+                    border: '1px solid rgba(255,255,255,0.06)',
                     borderRadius: 16,
                     padding: '32px 28px',
                     display: 'flex',
@@ -228,7 +228,7 @@ export default function BlogIndexPage() {
                     style={{
                       fontSize: 21,
                       fontWeight: 600,
-                      color: '#1d1d1f',
+                      color: '#ffffff',
                       letterSpacing: '-0.01em',
                       lineHeight: 1.35,
                       margin: 0,
@@ -241,7 +241,7 @@ export default function BlogIndexPage() {
                   <p
                     style={{
                       fontSize: 15,
-                      color: '#86868b',
+                      color: 'rgba(255,255,255,0.5)',
                       lineHeight: 1.6,
                       margin: 0,
                       flex: 1,
@@ -265,7 +265,7 @@ export default function BlogIndexPage() {
                         alignItems: 'center',
                         gap: 16,
                         fontSize: 13,
-                        color: '#86868b',
+                        color: 'rgba(255,255,255,0.5)',
                       }}
                     >
                       <span>{formatDate(post.publishedAt)}</span>
@@ -300,7 +300,7 @@ export default function BlogIndexPage() {
             textAlign: 'center',
             marginTop: 64,
             fontSize: 13,
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.5)',
           }}
         >
           &copy; {new Date().getFullYear()} TubeForge. All rights reserved.
@@ -310,8 +310,8 @@ export default function BlogIndexPage() {
       {/* Hover styles */}
       <style>{`
         .blog-card:hover {
-          box-shadow: 0 4px 24px rgba(0,0,0,.06);
-          border-color: #d1d1d6 !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,.3);
+          border-color: rgba(255,255,255,0.12) !important;
           transform: translateY(-2px);
         }
         .blog-card:hover .blog-card-arrow {

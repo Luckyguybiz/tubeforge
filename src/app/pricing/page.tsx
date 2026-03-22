@@ -169,8 +169,8 @@ export default function PricingPage() {
   return (
     <div
       style={{
-        background: "#ffffff",
-        color: "#1d1d1f",
+        background: "#0a0a0a",
+        color: "#ffffff",
         minHeight: "100vh",
         fontFamily:
           "var(--font-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif",
@@ -197,7 +197,7 @@ export default function PricingPage() {
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
               margin: "0 0 16px",
-              color: "#1d1d1f",
+              color: "#ffffff",
             }}
           >
             Simple, transparent pricing.
@@ -205,7 +205,7 @@ export default function PricingPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               maxWidth: 480,
               margin: "0 auto",
               lineHeight: 1.5,
@@ -234,13 +234,13 @@ export default function PricingPage() {
               key={i}
               className="tf-pricing-card"
               style={{
-                background: "#ffffff",
+                background: "#0a0a0a",
                 borderRadius: 18,
                 padding: "36px 28px",
-                border: plan.popular ? "2px solid #0071e3" : "1px solid #e5e5ea",
+                border: plan.popular ? "2px solid #6366f1" : "1px solid rgba(255,255,255,0.06)",
                 position: "relative",
                 transition: "all 0.3s ease",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -251,7 +251,7 @@ export default function PricingPage() {
                     position: "absolute",
                     top: 16,
                     right: 16,
-                    background: "#0071e3",
+                    background: "#6366f1",
                     color: "#fff",
                     fontSize: 11,
                     fontWeight: 600,
@@ -267,7 +267,7 @@ export default function PricingPage() {
                 style={{
                   fontSize: 19,
                   fontWeight: 600,
-                  color: "#1d1d1f",
+                  color: "#ffffff",
                   marginBottom: 4,
                 }}
               >
@@ -276,7 +276,7 @@ export default function PricingPage() {
               <div
                 style={{
                   fontSize: 14,
-                  color: "#86868b",
+                  color: "rgba(255,255,255,0.5)",
                   marginBottom: 24,
                 }}
               >
@@ -294,7 +294,7 @@ export default function PricingPage() {
                   style={{
                     fontSize: 40,
                     fontWeight: 600,
-                    color: "#1d1d1f",
+                    color: "#ffffff",
                     letterSpacing: "-0.02em",
                     lineHeight: 1,
                   }}
@@ -305,7 +305,7 @@ export default function PricingPage() {
                   <span
                     style={{
                       fontSize: 17,
-                      color: "#86868b",
+                      color: "rgba(255,255,255,0.5)",
                       fontWeight: 400,
                     }}
                   >
@@ -332,7 +332,7 @@ export default function PricingPage() {
                       alignItems: "flex-start",
                       gap: 8,
                       fontSize: 14,
-                      color: "#1d1d1f",
+                      color: "#ffffff",
                     }}
                   >
                     <svg
@@ -340,7 +340,7 @@ export default function PricingPage() {
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#0071e3"
+                      stroke="#6366f1"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -369,14 +369,14 @@ export default function PricingPage() {
                   minHeight: 48,
                   ...(plan.popular
                     ? {
-                        background: "#0071e3",
+                        background: "#6366f1",
                         color: "#fff",
                         border: "none",
                       }
                     : {
                         background: "transparent",
-                        color: "#0071e3",
-                        border: "1px solid #0071e3",
+                        color: "#6366f1",
+                        border: "1px solid #6366f1",
                       }),
                 }}
               >
@@ -396,12 +396,12 @@ export default function PricingPage() {
             marginTop: 48,
             padding: "20px 28px",
             borderRadius: 12,
-            background: "#ffffff",
-            border: "1px solid #e5e5ea",
+            background: "#0a0a0a",
+            border: "1px solid rgba(255,255,255,0.06)",
             maxWidth: 420,
             marginLeft: "auto",
             marginRight: "auto",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
           }}
         >
           <svg
@@ -409,7 +409,7 @@ export default function PricingPage() {
             height="24"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#0071e3"
+            stroke="#6366f1"
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -423,7 +423,7 @@ export default function PricingPage() {
               style={{
                 fontSize: 15,
                 fontWeight: 600,
-                color: "#1d1d1f",
+                color: "#ffffff",
                 marginBottom: 2,
               }}
             >
@@ -432,7 +432,7 @@ export default function PricingPage() {
             <div
               style={{
                 fontSize: 13,
-                color: "#86868b",
+                color: "rgba(255,255,255,0.5)",
                 lineHeight: 1.4,
               }}
             >
@@ -443,7 +443,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing FAQ */}
-      <section style={{ padding: "80px 24px", background: "#f5f5f7" }}>
+      <section style={{ padding: "80px 24px", background: "#111111" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <h2
@@ -453,7 +453,7 @@ export default function PricingPage() {
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
                 margin: "0 0 12px",
-                color: "#1d1d1f",
+                color: "#ffffff",
               }}
             >
               Pricing FAQ
@@ -461,7 +461,7 @@ export default function PricingPage() {
             <p
               style={{
                 fontSize: 19,
-                color: "#86868b",
+                color: "rgba(255,255,255,0.5)",
                 maxWidth: 420,
                 margin: "0 auto",
                 lineHeight: 1.5,
@@ -480,7 +480,7 @@ export default function PricingPage() {
         style={{
           padding: "80px 24px 100px",
           textAlign: "center",
-          background: "#ffffff",
+          background: "#0a0a0a",
         }}
       >
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
@@ -489,7 +489,7 @@ export default function PricingPage() {
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
@@ -499,7 +499,7 @@ export default function PricingPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               margin: "0 0 36px",
               lineHeight: 1.5,
             }}
@@ -513,7 +513,7 @@ export default function PricingPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0071e3",
+              background: "#6366f1",
               color: "#fff",
               fontSize: 17,
               fontWeight: 400,
@@ -544,14 +544,14 @@ export default function PricingPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#f5f5f7", padding: "32px 24px" }}>
+      <footer style={{ background: "#111111", padding: "32px 24px" }}>
         <div
           style={{
             maxWidth: 980,
             margin: "0 auto",
             textAlign: "center",
             fontSize: 13,
-            color: "#86868b",
+            color: "rgba(255,255,255,0.5)",
           }}
         >
           {"\u00A9"} 2026 TubeForge. All rights reserved.
@@ -561,14 +561,14 @@ export default function PricingPage() {
       <style>{`
         .tf-pricing-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.08) !important;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.4) !important;
         }
         .tf-cta-primary:hover {
-          background: #0077ED !important;
+          background: #818cf8 !important;
           transform: scale(1.02);
         }
         .tf-cta-secondary:hover {
-          color: #0077ED !important;
+          color: #818cf8 !important;
         }
         @media (max-width: 768px) {
           .pricing-grid {

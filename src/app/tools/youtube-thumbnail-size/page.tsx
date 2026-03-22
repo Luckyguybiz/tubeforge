@@ -147,7 +147,7 @@ const SPECS = [
 
 export default function YouTubeThumbnailSizePage() {
   return (
-    <div style={{ background: "#ffffff", color: "#1d1d1f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -175,7 +175,7 @@ export default function YouTubeThumbnailSizePage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              color: "#0071e3",
+              color: "#6366f1",
               fontSize: 13,
               fontWeight: 500,
               textDecoration: "none",
@@ -194,7 +194,7 @@ export default function YouTubeThumbnailSizePage() {
               letterSpacing: "-0.025em",
               lineHeight: 1.08,
               margin: "0 0 16px",
-              color: "#1d1d1f",
+              color: "#ffffff",
             }}
           >
             YouTube Thumbnail Size Guide.
@@ -202,7 +202,7 @@ export default function YouTubeThumbnailSizePage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               maxWidth: 540,
               margin: "0 auto",
               lineHeight: 1.5,
@@ -219,21 +219,21 @@ export default function YouTubeThumbnailSizePage() {
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div
             style={{
-              background: "#ffffff",
+              background: "#0a0a0a",
               borderRadius: 18,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-              border: "1px solid #e5e5ea",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+              border: "1px solid rgba(255,255,255,0.06)",
               overflow: "hidden",
             }}
           >
             <div
               style={{
                 padding: "20px 28px",
-                background: "#f5f5f7",
-                borderBottom: "1px solid #e5e5ea",
+                background: "#111111",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
               }}
             >
-              <h2 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", margin: 0 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: 0 }}>
                 YouTube Thumbnail Specifications
               </h2>
             </div>
@@ -248,8 +248,8 @@ export default function YouTubeThumbnailSizePage() {
                   borderBottom: i < SPECS.length - 1 ? "1px solid #f0f0f2" : "none",
                 }}
               >
-                <span style={{ fontSize: 15, color: "#86868b" }}>{spec.label}</span>
-                <span style={{ fontSize: 15, fontWeight: 600, color: "#1d1d1f" }}>{spec.value}</span>
+                <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)" }}>{spec.label}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, color: "#ffffff" }}>{spec.value}</span>
               </div>
             ))}
           </div>
@@ -264,7 +264,7 @@ export default function YouTubeThumbnailSizePage() {
               fontSize: "clamp(24px, 3.5vw, 32px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               marginBottom: 20,
               lineHeight: 1.2,
             }}
@@ -293,14 +293,14 @@ export default function YouTubeThumbnailSizePage() {
               fontSize: "clamp(24px, 3.5vw, 32px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               marginBottom: 12,
               lineHeight: 1.2,
             }}
           >
             Check your thumbnail
           </h2>
-          <p style={{ fontSize: 17, color: "#86868b", marginBottom: 24, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.5)", marginBottom: 24, lineHeight: 1.5 }}>
             Upload an image to check dimensions, file size, and aspect ratio. Preview how it looks in different YouTube layouts. 100% client-side.
           </p>
           <ThumbnailSizeTool />
@@ -310,7 +310,7 @@ export default function YouTubeThumbnailSizePage() {
       {/* Related Tools */}
       <section style={{ padding: "0 24px 80px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", marginBottom: 16 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", marginBottom: 16 }}>
             Related tools
           </h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -325,13 +325,13 @@ export default function YouTubeThumbnailSizePage() {
                 href={t.href}
                 style={{
                   padding: "8px 16px",
-                  background: "#f5f5f7",
-                  color: "#1d1d1f",
+                  background: "#111111",
+                  color: "#ffffff",
                   fontSize: 14,
                   fontWeight: 500,
                   borderRadius: 980,
                   textDecoration: "none",
-                  border: "1px solid #e5e5ea",
+                  border: "1px solid rgba(255,255,255,0.06)",
                   transition: "all 0.2s ease",
                 }}
               >
@@ -343,7 +343,7 @@ export default function YouTubeThumbnailSizePage() {
       </section>
 
       {/* FAQ */}
-      <section style={{ padding: "80px 24px", background: "#f5f5f7" }}>
+      <section style={{ padding: "80px 24px", background: "#111111" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
@@ -352,7 +352,7 @@ export default function YouTubeThumbnailSizePage() {
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
               margin: "0 0 12px",
-              color: "#1d1d1f",
+              color: "#ffffff",
               textAlign: "center",
             }}
           >
@@ -361,7 +361,7 @@ export default function YouTubeThumbnailSizePage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               textAlign: "center",
               margin: "0 auto 48px",
               maxWidth: 420,
@@ -375,21 +375,21 @@ export default function YouTubeThumbnailSizePage() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#ffffff" }}>
+      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#0a0a0a" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
           >
             Want more? Sign up for TubeForge.
           </h2>
-          <p style={{ fontSize: 19, color: "#86868b", margin: "0 0 32px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", margin: "0 0 32px", lineHeight: 1.5 }}>
             AI thumbnail designer with A/B testing, generation, and analysis. Free plan available.
           </p>
           <Link
@@ -398,7 +398,7 @@ export default function YouTubeThumbnailSizePage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0071e3",
+              background: "#6366f1",
               color: "#fff",
               fontSize: 17,
               fontWeight: 400,
@@ -419,8 +419,8 @@ export default function YouTubeThumbnailSizePage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#f5f5f7", borderTop: "1px solid #e5e5ea", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "#86868b" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
       </footer>
     </div>
   );

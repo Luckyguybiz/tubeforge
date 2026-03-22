@@ -642,17 +642,17 @@ const ToolCard = memo(function ToolCard({
         display: 'flex',
         flexDirection: 'column',
         padding: 0,
-        borderRadius: 16,
-        border: 'none',
-        background: '#ffffff',
+        borderRadius: 14,
+        border: '1px solid rgba(255,255,255,0.06)',
+        background: '#1a1a1a',
         cursor: tool.available ? 'pointer' : 'default',
         transition: 'all .25s ease',
         transform: hovered && tool.available ? 'translateY(-2px)' : 'none',
         boxShadow: hovered && tool.available
-          ? '0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)'
-          : '0 1px 4px rgba(0,0,0,0.06)',
+          ? '0 8px 30px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)'
+          : 'none',
         overflow: 'hidden',
-        opacity: tool.available ? 1 : 0.65,
+        opacity: tool.available ? 1 : 0.55,
       }}
     >
       {/* Badge */}
@@ -663,8 +663,20 @@ const ToolCard = memo(function ToolCard({
           right: 12,
           padding: '3px 10px',
           borderRadius: 20,
-          background: tool.badge === 'NEW' ? '#007aff15' : '#22c55e15',
-          color: tool.badge === 'NEW' ? '#007aff' : '#22c55e',
+          background: tool.badge === 'NEW'
+            ? `${tool.gradient[0]}25`
+            : tool.badge === 'Beta'
+              ? 'rgba(255,255,255,0.08)'
+              : tool.badge === 'Free'
+                ? '#22c55e25'
+                : `${tool.gradient[0]}25`,
+          color: tool.badge === 'NEW'
+            ? tool.gradient[0]
+            : tool.badge === 'Beta'
+              ? 'rgba(255,255,255,0.5)'
+              : tool.badge === 'Free'
+                ? '#22c55e'
+                : tool.gradient[0],
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: '.02em',
@@ -685,33 +697,33 @@ const ToolCard = memo(function ToolCard({
           gap: 4,
           padding: '3px 10px',
           borderRadius: 20,
-          background: '#f5f5f7',
+          background: 'rgba(255,255,255,0.06)',
           border: 'none',
-          color: '#86868b',
+          color: 'rgba(255,255,255,0.35)',
           fontSize: 10,
           fontWeight: 600,
           zIndex: 2,
         }}>
-          <LockIcon size={10} color="#86868b" />
+          <LockIcon size={10} color="rgba(255,255,255,0.35)" />
           {t('toolshub.comingSoonLabel')}
         </div>
       )}
 
-      {/* Icon + gradient background area */}
+      {/* Icon + content area */}
       <div style={{
         padding: '20px 16px 14px',
         display: 'flex',
         alignItems: 'flex-start',
         gap: 12,
       }}>
-        {/* Icon container — subtle tinted circle */}
+        {/* Icon container — 48x48 accent-tinted circle */}
         <div style={{
-          width: 40,
-          height: 40,
-          borderRadius: 12,
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
           background: tool.available
-            ? `${tool.gradient[0]}12`
-            : '#f5f5f7',
+            ? `${tool.gradient[0]}20`
+            : 'rgba(255,255,255,0.06)',
           border: 'none',
           display: 'flex',
           alignItems: 'center',
@@ -720,7 +732,7 @@ const ToolCard = memo(function ToolCard({
           transition: 'all .2s',
           transform: hovered && tool.available ? 'scale(1.05)' : 'none',
         }}>
-          {iconFn ? iconFn(tool.available ? tool.gradient[0] : '#86868b') : null}
+          {iconFn ? iconFn(tool.available ? tool.gradient[0] : 'rgba(255,255,255,0.35)') : null}
         </div>
 
         {/* Name + subtitle */}
@@ -728,7 +740,7 @@ const ToolCard = memo(function ToolCard({
           <div style={{
             fontSize: 15,
             fontWeight: 600,
-            color: tool.available ? '#1d1d1f' : '#86868b',
+            color: tool.available ? '#ffffff' : 'rgba(255,255,255,0.35)',
             marginBottom: 2,
             display: 'flex',
             alignItems: 'center',
@@ -739,7 +751,7 @@ const ToolCard = memo(function ToolCard({
           </div>
           <div style={{
             fontSize: 11,
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.4)',
             fontWeight: 500,
           }}>
             {tool.subtitle}
@@ -752,7 +764,7 @@ const ToolCard = memo(function ToolCard({
             width: 28,
             height: 28,
             borderRadius: 8,
-            background: hovered ? tool.gradient[0] + '15' : 'transparent',
+            background: hovered ? tool.gradient[0] + '20' : 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -760,18 +772,22 @@ const ToolCard = memo(function ToolCard({
             flexShrink: 0,
             marginTop: 2,
           }}>
-            <ArrowIcon size={14} color={hovered ? tool.gradient[0] : C.dim} />
+            <ArrowIcon size={14} color={hovered ? tool.gradient[0] : 'rgba(255,255,255,0.3)'} />
           </div>
         )}
       </div>
 
-      {/* Description */}
+      {/* Description — 2 lines max */}
       <div style={{
         padding: '0 16px 16px',
-        fontSize: 12.5,
+        fontSize: 13,
         lineHeight: 1.5,
-        color: '#86868b',
+        color: 'rgba(255,255,255,0.5)',
         wordBreak: 'break-word',
+        overflow: 'hidden',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
       }}>
         {tool.description}
       </div>
@@ -780,7 +796,7 @@ const ToolCard = memo(function ToolCard({
       {tool.available && (
         <div style={{
           padding: '10px 16px',
-          borderTop: '1px solid #f5f5f7',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -794,7 +810,7 @@ const ToolCard = memo(function ToolCard({
             color: '#22c55e',
             padding: '2px 8px',
             borderRadius: 20,
-            background: '#22c55e12',
+            background: '#22c55e18',
           }}>
             <SparkleIcon size={10} color="#22c55e" />
             {t('toolshub.availableLabel')}
@@ -816,7 +832,7 @@ const ToolCard = memo(function ToolCard({
             style={{
               fontSize: 11,
               fontWeight: 600,
-              color: hovered ? tool.gradient[0] : '#86868b',
+              color: hovered ? tool.gradient[0] : 'rgba(255,255,255,0.35)',
               cursor: 'pointer',
               transition: 'color .2s',
             }}
@@ -830,7 +846,7 @@ const ToolCard = memo(function ToolCard({
       {!tool.available && (
         <div style={{
           padding: '10px 16px',
-          borderTop: '1px solid #f5f5f7',
+          borderTop: '1px solid rgba(255,255,255,0.04)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -838,10 +854,10 @@ const ToolCard = memo(function ToolCard({
           <span style={{
             fontSize: 11,
             fontWeight: 600,
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.3)',
             padding: '2px 8px',
             borderRadius: 20,
-            background: '#f5f5f7',
+            background: 'rgba(255,255,255,0.04)',
           }}>
             {t('toolshub.comingSoonSoon')}
           </span>
@@ -878,12 +894,12 @@ const CategoryTab = memo(function CategoryTab({
       style={{
         padding: '8px 18px',
         minHeight: 36,
-        borderRadius: 50,
-        border: 'none',
+        borderRadius: 20,
+        border: active ? 'none' : '1px solid rgba(255,255,255,0.08)',
         background: active
-          ? `${C.accent}18`
-          : hovered ? '#f5f5f7' : '#f5f5f7',
-        color: active ? C.accent : '#1d1d1f',
+          ? `${C.accent}`
+          : hovered ? 'rgba(255,255,255,0.06)' : 'transparent',
+        color: active ? '#fff' : 'rgba(255,255,255,0.6)',
         fontSize: 13,
         fontWeight: active ? 700 : 500,
         cursor: 'pointer',
@@ -958,12 +974,12 @@ export function ToolsHub() {
       {/* ── Hero Section ──────────────────────────────────── */}
       <div className="tf-tools-hero" style={{
         textAlign: 'center',
-        padding: '32px 0 24px',
+        padding: '32px 0 16px',
       }}>
         <h1 className="tf-tools-hero-title" style={{
           fontSize: 28,
           fontWeight: 700,
-          color: '#1d1d1f',
+          color: '#ffffff',
           margin: 0,
           lineHeight: 1.2,
           letterSpacing: '-0.02em',
@@ -972,72 +988,31 @@ export function ToolsHub() {
         </h1>
         <p style={{
           fontSize: 16,
-          color: '#86868b',
+          color: 'rgba(255,255,255,0.5)',
           margin: '12px 0 0',
           lineHeight: 1.5,
         }}>
           {t('toolshub.subtitle')}
         </p>
-
-        {/* Stats */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 24,
-          margin: '20px 0 0',
-          flexWrap: 'wrap',
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}>
-            <div style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#22c55e',
-            }} />
-            <span style={{ fontSize: 13, color: '#86868b', fontWeight: 500 }}>
-              {availableCount} {t('toolshub.available')}
-            </span>
-          </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}>
-            <div style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#d2d2d7',
-            }} />
-            <span style={{ fontSize: 13, color: '#86868b', fontWeight: 500 }}>
-              {comingSoonCount} {t('toolshub.comingSoon')}
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* ── Search Bar ──────────────────────────────────── */}
+      {/* ── Search Bar — centered pill ──────────────────── */}
       <div style={{
         maxWidth: 560,
         width: '100%',
-        margin: '0 auto 24px',
+        margin: '0 auto 12px',
         position: 'relative',
       }}>
         <div style={{
           position: 'absolute',
-          left: 16,
+          left: 18,
           top: '50%',
           transform: 'translateY(-50%)',
           display: 'flex',
           alignItems: 'center',
           pointerEvents: 'none',
         }}>
-          <SearchIcon size={18} color={C.dim} />
+          <SearchIcon size={18} color="rgba(255,255,255,0.35)" />
         </div>
         <input
           ref={searchRef}
@@ -1047,12 +1022,12 @@ export function ToolsHub() {
           placeholder={t('toolshub.searchPlaceholder')}
           style={{
             width: '100%',
-            height: 44,
-            padding: '0 16px 0 44px',
+            height: 48,
+            padding: '0 16px 0 48px',
             borderRadius: 22,
             border: 'none',
-            background: '#f5f5f7',
-            color: '#1d1d1f',
+            background: 'rgba(255,255,255,0.04)',
+            color: '#ffffff',
             fontSize: 14,
             fontFamily: 'inherit',
             outline: 'none',
@@ -1071,14 +1046,14 @@ export function ToolsHub() {
             onClick={() => { setSearch(''); searchRef.current?.focus(); }}
             style={{
               position: 'absolute',
-              right: 12,
+              right: 14,
               top: '50%',
               transform: 'translateY(-50%)',
               width: 24,
               height: 24,
               borderRadius: 12,
               border: 'none',
-              background: '#d2d2d7',
+              background: 'rgba(255,255,255,0.15)',
               color: '#ffffff',
               cursor: 'pointer',
               display: 'flex',
@@ -1093,7 +1068,18 @@ export function ToolsHub() {
         )}
       </div>
 
-      {/* ── Category Tabs ──────────────────────────────────── */}
+      {/* ── Counters ──────────────────────────────────────── */}
+      <div style={{
+        textAlign: 'center',
+        marginBottom: 20,
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.4)',
+        fontWeight: 500,
+      }}>
+        {availableCount} {t('toolshub.available')} &bull; {comingSoonCount} {t('toolshub.comingSoon')}
+      </div>
+
+      {/* ── Category Tabs — horizontal pills ────────────── */}
       <div className="tf-tools-cats" style={{
         display: 'flex',
         alignItems: 'center',
@@ -1134,7 +1120,7 @@ export function ToolsHub() {
       ) : (
         <div className="tf-tools-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
+          gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 16,
           paddingBottom: 60,
         }}>

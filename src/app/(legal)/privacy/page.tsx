@@ -6,19 +6,19 @@ export default function PrivacyPage() {
     fontSize: 20,
     fontWeight: 600,
     marginBottom: 14,
-    color: '#1d1d1f',
+    color: '#ffffff',
     letterSpacing: '-0.01em',
   };
   const paraStyle: React.CSSProperties = {
     fontSize: 17,
     lineHeight: 1.7,
-    color: '#3d3d42',
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 14,
   };
   const listStyle: React.CSSProperties = {
     fontSize: 17,
     lineHeight: 1.9,
-    color: '#3d3d42',
+    color: 'rgba(255,255,255,0.7)',
     paddingLeft: 28,
     margin: '10px 0 14px',
   };
@@ -32,26 +32,26 @@ export default function PrivacyPage() {
           fontWeight: 600,
           letterSpacing: '-0.02em',
           marginBottom: 8,
-          color: '#1d1d1f',
+          color: '#ffffff',
           lineHeight: 1.15,
         }}
       >
         Privacy Policy
       </h1>
-      <p style={{ fontSize: 14, color: '#86868b', marginBottom: 24 }}>
+      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>
         Effective date: March 20, 2026
       </p>
 
       {/* Table of contents */}
       <nav
         style={{
-          background: '#f5f5f7',
+          background: '#1a1a1a',
           borderRadius: 12,
           padding: '20px 24px',
           marginBottom: 48,
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#86868b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Table of Contents
         </div>
         <ol
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
           TubeForge collects the following categories of personal data:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Account data (via Google OAuth):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Account data (via Google OAuth):</p>
         <ul style={listStyle}>
           <li>Full name</li>
           <li>Email address</li>
@@ -124,21 +124,21 @@ export default function PrivacyPage() {
           <li>Google account identifier</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Project and content data:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Project and content data:</p>
         <ul style={listStyle}>
           <li>Created projects, thumbnails, metadata texts</li>
           <li>AI generation settings and parameters</li>
           <li>YouTube channel statistics (when connected)</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Payment data (via Stripe):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Payment data (via Stripe):</p>
         <ul style={listStyle}>
           <li>Subscription and plan information</li>
           <li>Payment history and Stripe customer ID</li>
           <li>Card numbers are stored exclusively on Stripe servers and do not pass through our systems</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Usage data (analytics):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Usage data (analytics):</p>
         <ul style={listStyle}>
           <li>IP address, browser type, device information</li>
           <li>Platform actions, feature usage frequency</li>
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
             Google Privacy Policy
           </a>.
         </p>
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>YouTube data we collect and process:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>YouTube data we collect and process:</p>
         <ul style={listStyle}>
           <li>Channel name and profile information</li>
           <li>Subscriber count</li>
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
           We use collected data for the following purposes:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Service delivery:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Service delivery:</p>
         <ul style={listStyle}>
           <li>Authentication and account management</li>
           <li>AI content generation (thumbnails, texts, SEO recommendations)</li>
@@ -191,14 +191,14 @@ export default function PrivacyPage() {
           <li>YouTube channel analytics and statistics visualization</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Product improvement:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Product improvement:</p>
         <ul style={listStyle}>
           <li>Usage analysis to improve UX and functionality</li>
           <li>Diagnosis and resolution of technical issues</li>
           <li>Development of new features based on usage patterns</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Communication:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Communication:</p>
         <ul style={listStyle}>
           <li>Service notifications and updates</li>
           <li>Transactional emails (payment confirmation, subscription changes)</li>
@@ -215,7 +215,7 @@ export default function PrivacyPage() {
         </p>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>Stripe</strong> &mdash; payment processing. Payment data (card numbers)
+            <strong style={{ color: '#ffffff' }}>Stripe</strong> &mdash; payment processing. Payment data (card numbers)
             is processed exclusively by Stripe (PCI-DSS Level 1) and is not stored on our servers.
             See{' '}
             <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
@@ -223,24 +223,24 @@ export default function PrivacyPage() {
             </a>.
           </li>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>Google</strong> &mdash; OAuth 2.0 authentication, access
+            <strong style={{ color: '#ffffff' }}>Google</strong> &mdash; OAuth 2.0 authentication, access
             to YouTube channel analytics. Data usage is governed by the{' '}
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
               Google Privacy Policy
             </a>.
           </li>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>OpenAI</strong> &mdash; AI content generation (thumbnails, texts, recommendations).
+            <strong style={{ color: '#ffffff' }}>OpenAI</strong> &mdash; AI content generation (thumbnails, texts, recommendations).
             Your content may be processed through OpenAI&apos;s API. We do not send personal data to OpenAI,
             only project content for generation.
           </li>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>Resend</strong> &mdash; sending transactional emails
+            <strong style={{ color: '#ffffff' }}>Resend</strong> &mdash; sending transactional emails
             (notifications, payment confirmations, access recovery). Only email address
             and message content are shared.
           </li>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>PostHog</strong> &mdash; product analytics (only with your explicit
+            <strong style={{ color: '#ffffff' }}>PostHog</strong> &mdash; product analytics (only with your explicit
             consent via the cookie consent banner). See{' '}
             <a href="https://posthog.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
               PostHog Privacy Policy
@@ -275,14 +275,14 @@ export default function PrivacyPage() {
           TubeForge uses the following types of cookies:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Essential (always active):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Essential (always active):</p>
         <ul style={listStyle}>
           <li>Authentication and session management (Auth.js)</li>
           <li>CSRF protection</li>
           <li>Cookie consent storage</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Analytics (consent required):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Analytics (consent required):</p>
         <ul style={listStyle}>
           <li>PostHog &mdash; session and device identifier</li>
           <li>Google Analytics &mdash; user identifier</li>
@@ -294,44 +294,44 @@ export default function PrivacyPage() {
             borderCollapse: 'collapse',
             fontSize: 14,
             lineHeight: 1.7,
-            color: '#3d3d42',
+            color: 'rgba(255,255,255,0.7)',
             marginBottom: 20,
           }}
         >
           <thead>
-            <tr style={{ borderBottom: '1px solid #e5e5ea', textAlign: 'left' }}>
-              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Cookie</th>
-              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Type</th>
-              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Duration</th>
-              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Purpose</th>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', textAlign: 'left' }}>
+              <th style={{ padding: '8px 10px', color: '#ffffff', fontWeight: 600 }}>Cookie</th>
+              <th style={{ padding: '8px 10px', color: '#ffffff', fontWeight: 600 }}>Type</th>
+              <th style={{ padding: '8px 10px', color: '#ffffff', fontWeight: 600 }}>Duration</th>
+              <th style={{ padding: '8px 10px', color: '#ffffff', fontWeight: 600 }}>Purpose</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <td style={{ padding: '8px 10px' }}>next-auth.session-token</td>
               <td style={{ padding: '8px 10px' }}>Essential</td>
               <td style={{ padding: '8px 10px' }}>up to 30 days</td>
               <td style={{ padding: '8px 10px' }}>User authentication</td>
             </tr>
-            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <td style={{ padding: '8px 10px' }}>next-auth.csrf-token</td>
               <td style={{ padding: '8px 10px' }}>Essential</td>
               <td style={{ padding: '8px 10px' }}>Session</td>
               <td style={{ padding: '8px 10px' }}>CSRF protection</td>
             </tr>
-            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <td style={{ padding: '8px 10px' }}>tf-cookie-consent</td>
               <td style={{ padding: '8px 10px' }}>Essential</td>
               <td style={{ padding: '8px 10px' }}>Permanent</td>
               <td style={{ padding: '8px 10px' }}>Cookie consent choice storage</td>
             </tr>
-            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <td style={{ padding: '8px 10px' }}>ph_*</td>
               <td style={{ padding: '8px 10px' }}>Analytics</td>
               <td style={{ padding: '8px 10px' }}>1 year</td>
               <td style={{ padding: '8px 10px' }}>PostHog: usage analytics</td>
             </tr>
-            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <td style={{ padding: '8px 10px' }}>_ga, _ga_*</td>
               <td style={{ padding: '8px 10px' }}>Analytics</td>
               <td style={{ padding: '8px 10px' }}>2 years</td>
@@ -341,7 +341,7 @@ export default function PrivacyPage() {
         </table>
 
         <p style={paraStyle}>
-          Analytics cookies are set <strong style={{ color: '#1d1d1f' }}>only after your
+          Analytics cookies are set <strong style={{ color: '#ffffff' }}>only after your
           explicit consent</strong> via the cookie consent banner. You can change your choice at any time
           by clearing your browser localStorage or clicking &ldquo;Settings&rdquo; in the cookie banner.
         </p>
@@ -355,13 +355,13 @@ export default function PrivacyPage() {
           legislation, you have the following rights:
         </p>
         <ul style={listStyle}>
-          <li><strong style={{ color: '#1d1d1f' }}>Right of access</strong> &mdash; obtain a copy of your personal data that we process</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to rectification</strong> &mdash; request correction of inaccurate or incomplete data</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to erasure</strong> &mdash; request deletion of your personal data (right to be forgotten)</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to restriction</strong> &mdash; restrict processing of your data in certain cases</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to portability</strong> &mdash; receive your data in a machine-readable format (JSON/CSV)</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to object</strong> &mdash; object to processing for marketing purposes</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to withdraw consent</strong> &mdash; withdraw previously given consent at any time</li>
+          <li><strong style={{ color: '#ffffff' }}>Right of access</strong> &mdash; obtain a copy of your personal data that we process</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to rectification</strong> &mdash; request correction of inaccurate or incomplete data</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to erasure</strong> &mdash; request deletion of your personal data (right to be forgotten)</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to restriction</strong> &mdash; restrict processing of your data in certain cases</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to portability</strong> &mdash; receive your data in a machine-readable format (JSON/CSV)</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to object</strong> &mdash; object to processing for marketing purposes</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to withdraw consent</strong> &mdash; withdraw previously given consent at any time</li>
         </ul>
         <p style={paraStyle}>
           To exercise any of these rights, contact us at{' '}
@@ -382,7 +382,7 @@ export default function PrivacyPage() {
           Privacy Act (CCPA) and the California Privacy Rights Act (CPRA):
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Categories of personal information we collect:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Categories of personal information we collect:</p>
         <ul style={listStyle}>
           <li>Identifiers (name, email address, account ID)</li>
           <li>Commercial information (subscription plan, payment history)</li>
@@ -390,16 +390,16 @@ export default function PrivacyPage() {
           <li>Professional information (YouTube channel data when connected)</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Your rights:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Your rights:</p>
         <ul style={listStyle}>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to Know</strong> &mdash; request what personal information we have collected about you</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to Delete</strong> &mdash; request deletion of your personal information</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to Opt-Out</strong> &mdash; opt out of the sale or sharing of your personal information</li>
-          <li><strong style={{ color: '#1d1d1f' }}>Right to Non-Discrimination</strong> &mdash; exercise your rights without receiving discriminatory treatment</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to Know</strong> &mdash; request what personal information we have collected about you</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to Delete</strong> &mdash; request deletion of your personal information</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to Opt-Out</strong> &mdash; opt out of the sale or sharing of your personal information</li>
+          <li><strong style={{ color: '#ffffff' }}>Right to Non-Discrimination</strong> &mdash; exercise your rights without receiving discriminatory treatment</li>
         </ul>
 
         <p style={paraStyle}>
-          <strong style={{ color: '#1d1d1f' }}>We do not sell your personal information.</strong> We do not share your
+          <strong style={{ color: '#ffffff' }}>We do not sell your personal information.</strong> We do not share your
           personal information for cross-context behavioral advertising.
         </p>
         <p style={paraStyle}>

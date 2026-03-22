@@ -47,19 +47,19 @@ const FIELDS: CounterField[] = [
 ];
 
 function getColor(current: number, optimalMin: number, optimalMax: number, max: number): string {
-  if (current === 0) return "#86868b";
+  if (current === 0) return "rgba(255,255,255,0.3)";
   if (current > max) return "#ff3b30";
   if (current > optimalMax) return "#ff9500";
   if (current >= optimalMin) return "#34c759";
-  return "#86868b";
+  return "rgba(255,255,255,0.3)";
 }
 
 function getBarColor(current: number, optimalMin: number, optimalMax: number, max: number): string {
-  if (current === 0) return "#e5e5ea";
+  if (current === 0) return "rgba(255,255,255,0.08)";
   if (current > max) return "#ff3b30";
   if (current > optimalMax) return "#ff9500";
   if (current >= optimalMin) return "#34c759";
-  return "#0071e3";
+  return "#6366f1";
 }
 
 function getStatusLabel(current: number, optimalMin: number, optimalMax: number, max: number): string {
@@ -95,11 +95,11 @@ export function CharacterCounterTool() {
           <div
             key={field.id}
             style={{
-              background: "#ffffff",
+              background: "#0a0a0a",
               borderRadius: 18,
               padding: "28px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-              border: "1px solid #e5e5ea",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+              border: "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <div
@@ -116,7 +116,7 @@ export function CharacterCounterTool() {
                   display: "block",
                   fontSize: 14,
                   fontWeight: 600,
-                  color: "#1d1d1f",
+                  color: "#ffffff",
                 }}
               >
                 {field.label}
@@ -146,11 +146,11 @@ export function CharacterCounterTool() {
                   width: "100%",
                   padding: "14px 16px",
                   fontSize: 17,
-                  border: `1px solid ${current > field.maxChars ? "#ff3b30" : "#d2d2d7"}`,
+                  border: `1px solid ${current > field.maxChars ? "#ff3b30" : "rgba(255,255,255,0.08)"}`,
                   borderRadius: 12,
                   outline: "none",
-                  background: "#fafafa",
-                  color: "#1d1d1f",
+                  background: "#1a1a1a",
+                  color: "#ffffff",
                   fontFamily: "inherit",
                   transition: "border-color 0.2s ease",
                   boxSizing: "border-box",
@@ -169,11 +169,11 @@ export function CharacterCounterTool() {
                   width: "100%",
                   padding: "14px 16px",
                   fontSize: 17,
-                  border: `1px solid ${current > field.maxChars ? "#ff3b30" : "#d2d2d7"}`,
+                  border: `1px solid ${current > field.maxChars ? "#ff3b30" : "rgba(255,255,255,0.08)"}`,
                   borderRadius: 12,
                   outline: "none",
-                  background: "#fafafa",
-                  color: "#1d1d1f",
+                  background: "#1a1a1a",
+                  color: "#ffffff",
                   fontFamily: "inherit",
                   transition: "border-color 0.2s ease",
                   boxSizing: "border-box",
@@ -187,7 +187,7 @@ export function CharacterCounterTool() {
                 marginTop: 12,
                 height: 4,
                 borderRadius: 2,
-                background: "#e5e5ea",
+                background: "rgba(255,255,255,0.08)",
                 overflow: "hidden",
               }}
             >
@@ -211,14 +211,14 @@ export function CharacterCounterTool() {
                 marginTop: 8,
               }}
             >
-              <span style={{ fontSize: 13, color: "#86868b" }}>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
                 {current} / {field.maxChars} characters
               </span>
               <span
                 style={{
                   fontSize: 13,
                   fontWeight: 500,
-                  color: remaining < 0 ? "#ff3b30" : "#86868b",
+                  color: remaining < 0 ? "#ff3b30" : "rgba(255,255,255,0.3)",
                 }}
               >
                 {remaining >= 0 ? `${remaining} remaining` : `${Math.abs(remaining)} over limit`}
@@ -233,7 +233,7 @@ export function CharacterCounterTool() {
                 background: "rgba(0,113,227,0.04)",
                 borderRadius: 10,
                 fontSize: 13,
-                color: "#86868b",
+                color: "rgba(255,255,255,0.5)",
                 lineHeight: 1.5,
               }}
             >
@@ -255,7 +255,7 @@ export function CharacterCounterTool() {
         }}
       >
         {[
-          { color: "#0071e3", label: "Short" },
+          { color: "#6366f1", label: "Short" },
           { color: "#34c759", label: "Optimal" },
           { color: "#ff9500", label: "Long" },
           { color: "#ff3b30", label: "Over limit" },
@@ -269,7 +269,7 @@ export function CharacterCounterTool() {
                 background: item.color,
               }}
             />
-            <span style={{ fontSize: 13, color: "#86868b" }}>{item.label}</span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{item.label}</span>
           </div>
         ))}
       </div>

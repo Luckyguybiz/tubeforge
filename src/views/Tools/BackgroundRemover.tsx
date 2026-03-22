@@ -176,12 +176,12 @@ export function BackgroundRemover() {
           <label style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             padding: '48px 24px', borderRadius: 16,
-            border: `2px dashed ${dragOver ? '#8b5cf6' : '#d2d2d7'}`,
-            background: dragOver ? 'rgba(139,92,246,.06)' : '#f5f5f7',
+            border: `2px dashed ${dragOver ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`,
+            background: dragOver ? 'rgba(139,92,246,.1)' : 'rgba(255,255,255,0.03)',
             cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
           }}
-          onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = '#86868b'; e.currentTarget.style.background = '#ffffff'; } }}
-          onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = '#d2d2d7'; e.currentTarget.style.background = '#f5f5f7'; } }}
+          onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; } }}
+          onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; } }}
           >
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
@@ -210,7 +210,7 @@ export function BackgroundRemover() {
           {/* ── File info bar ── */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16,
-            border: 'none', background: '#f5f5f7', marginBottom: 20, flexWrap: 'wrap',
+            border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)', marginBottom: 20, flexWrap: 'wrap',
           }}>
             <div style={{
               width: 40, height: 40, borderRadius: 12,
@@ -231,8 +231,8 @@ export function BackgroundRemover() {
               onMouseLeave={() => setRemoveHover(false)}
               style={{
                 padding: '6px 14px', borderRadius: 20, border: 'none',
-                background: removeHover ? '#e8e8ed' : '#ffffff',
-                color: '#1d1d1f', fontSize: 12, cursor: 'pointer',
+                background: removeHover ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+                color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
                 flexShrink: 0, height: 36,
               }}
@@ -252,8 +252,8 @@ export function BackgroundRemover() {
                     padding: '8px 20px', borderRadius: 20, fontSize: 13,
                     fontWeight: viewMode === mode ? 700 : 500,
                     height: 36, border: 'none',
-                    background: viewMode === mode ? 'rgba(139,92,246,.15)' : '#f5f5f7',
-                    color: viewMode === mode ? '#8b5cf6' : '#1d1d1f',
+                    background: viewMode === mode ? 'rgba(139,92,246,.2)' : 'rgba(255,255,255,0.04)',
+                    color: viewMode === mode ? '#8b5cf6' : 'rgba(255,255,255,0.7)',
                     cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
@@ -303,8 +303,8 @@ export function BackgroundRemover() {
           {processed && (
             <div style={{
               padding: '14px 18px', borderRadius: 16, marginBottom: 20,
-              background: '#f5f5f7', border: 'none',
-              fontSize: 13, color: '#86868b', lineHeight: 1.6,
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+              fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6,
             }}>
               <span style={{ fontWeight: 700 }}>BETA:</span>{' '}
               {t('tools.bgRemover.betaNotice') || 'Background removal runs locally in your browser using color detection. Works best with solid-color backgrounds (white, green screen, etc). For complex backgrounds, try remove.bg for better results.'}
@@ -340,8 +340,8 @@ export function BackgroundRemover() {
                 style={{
                   padding: '12px 32px', borderRadius: 22,
                   border: 'none',
-                  background: downloadHover ? '#e8e8ed' : '#f5f5f7',
-                  color: '#1d1d1f', fontSize: 15, fontWeight: 600,
+                  background: downloadHover ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
+                  color: '#ffffff', fontSize: 15, fontWeight: 600,
                   cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', gap: 8, height: 44,
                 }}
