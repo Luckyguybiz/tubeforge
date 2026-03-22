@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-// useRouter removed — analytics available for all plans
 import { trpc } from '@/lib/trpc';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { StatCard } from '@/components/analytics/StatCard';
@@ -61,11 +60,9 @@ const ClockIcon = (c: string) => (
 export default function AnalyticsPage() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
-  const { data: session, status } = useSession();
-  // Available for all plans
-  const plan = session?.user?.plan ?? 'FREE';
+  const { status } = useSession();
 
-  // Fetch server data
+  // Fetch server data — available to all authenticated users
   const overview = trpc.analytics.getOverview.useQuery(undefined, {
     enabled: status === 'authenticated',
     staleTime: 60_000,

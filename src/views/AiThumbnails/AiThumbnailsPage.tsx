@@ -49,7 +49,7 @@ type TabId = 'scratch' | 'swap';
 type StyleId = 'realistic' | 'anime' | 'cinematic' | '3d' | 'minimalist' | 'popart';
 type FormatId = '16:9' | '9:16';
 
-interface StyleOption { id: StyleId; labelKey: string }
+interface StyleOption { id: StyleId; labelKey: string; icon: string }
 interface GeneratedImage {
   id: string;
   url: string;
@@ -60,12 +60,12 @@ interface GeneratedImage {
 }
 
 const STYLES: StyleOption[] = [
-  { id: 'realistic', labelKey: 'aithumbs.style.realistic' },
-  { id: 'anime', labelKey: 'aithumbs.style.anime' },
-  { id: 'cinematic', labelKey: 'aithumbs.style.cinematic' },
-  { id: '3d', labelKey: 'aithumbs.style.3d' },
-  { id: 'minimalist', labelKey: 'aithumbs.style.minimalist' },
-  { id: 'popart', labelKey: 'aithumbs.style.popart' },
+  { id: 'realistic', labelKey: 'aithumbs.style.realistic', icon: '\uD83D\uDCF7' },
+  { id: 'anime', labelKey: 'aithumbs.style.anime', icon: '\uD83C\uDFAD' },
+  { id: 'cinematic', labelKey: 'aithumbs.style.cinematic', icon: '\uD83C\uDFAC' },
+  { id: '3d', labelKey: 'aithumbs.style.3d', icon: '\uD83E\uDDE9' },
+  { id: 'minimalist', labelKey: 'aithumbs.style.minimalist', icon: '\u25FB' },
+  { id: 'popart', labelKey: 'aithumbs.style.popart', icon: '\uD83C\uDFA8' },
 ];
 
 const COUNT_OPTIONS = [1, 2, 3] as const;
@@ -171,6 +171,37 @@ export function AiThumbnailsPage() {
     },
     onError: (err) => {
       toast.error(err.message);
+    },
+  });
+
+  const suggestIdeas = trpc.aiThumbnails.suggestIdeas.useMutation({
+    onSuccess: (data) => {
+      if (data.ideas.length > 0) {
+        const randomIdea = data.ideas[Math.floor(Math.random() * data.ideas.length)];
+        setPrompt(randomIdea);
+        toast.success(t('aithumbs.toast.ideaGenerated'));
+      } else {
+        // Fallback to hardcoded ideas
+        const ideas = [
+          t('aithumbs.idea.1'),
+          t('aithumbs.idea.2'),
+          t('aithumbs.idea.3'),
+          t('aithumbs.idea.4'),
+          t('aithumbs.idea.5'),
+        ];
+        setPrompt(ideas[Math.floor(Math.random() * ideas.length)]);
+      }
+    },
+    onError: () => {
+      // Fallback to hardcoded ideas on error
+      const ideas = [
+        t('aithumbs.idea.1'),
+        t('aithumbs.idea.2'),
+        t('aithumbs.idea.3'),
+        t('aithumbs.idea.4'),
+        t('aithumbs.idea.5'),
+      ];
+      setPrompt(ideas[Math.floor(Math.random() * ideas.length)]);
     },
   });
 
@@ -313,16 +344,9 @@ export function AiThumbnailsPage() {
 
   /* ── AI suggestions ─────────────────────────────── */
   const handleSuggestIdea = useCallback(() => {
-    const ideas = [
-      t('aithumbs.idea.1'),
-      t('aithumbs.idea.2'),
-      t('aithumbs.idea.3'),
-      t('aithumbs.idea.4'),
-      t('aithumbs.idea.5'),
-    ];
-    const randomIdea = ideas[Math.floor(Math.random() * ideas.length)];
-    setPrompt(randomIdea);
-  }, [t]);
+    if (suggestIdeas.isPending) return;
+    suggestIdeas.mutate({ topic: prompt.trim() || undefined });
+  }, [suggestIdeas, prompt]);
 
   /* ── Helpers ─────────────────────────────────────── */
 
@@ -337,6 +361,9 @@ export function AiThumbnailsPage() {
   const styleChip = useMemo(
     () =>
       (active: boolean): React.CSSProperties => ({
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
         padding: '7px 14px',
         borderRadius: 8,
         border: `1px solid ${active ? D.accent : D.border}`,
@@ -685,13 +712,18 @@ export function AiThumbnailsPage() {
             {/* Need an idea? button */}
             <button
               onClick={handleSuggestIdea}
+              disabled={suggestIdeas.isPending}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = D.accent;
-                e.currentTarget.style.color = D.accent;
+                if (!suggestIdeas.isPending) {
+                  e.currentTarget.style.borderColor = D.accent;
+                  e.currentTarget.style.color = D.accent;
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = D.border;
-                e.currentTarget.style.color = D.sub;
+                if (!suggestIdeas.isPending) {
+                  e.currentTarget.style.borderColor = D.border;
+                  e.currentTarget.style.color = D.sub;
+                }
               }}
               style={{
                 display: 'flex',
@@ -700,21 +732,28 @@ export function AiThumbnailsPage() {
                 padding: '0 14px',
                 height: 38,
                 borderRadius: 10,
-                border: `1px solid ${D.border}`,
-                background: 'transparent',
-                color: D.sub,
+                border: `1px solid ${suggestIdeas.isPending ? D.accent + '40' : D.border}`,
+                background: suggestIdeas.isPending ? D.accentDim : 'transparent',
+                color: suggestIdeas.isPending ? D.accent : D.sub,
                 fontSize: 12,
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
                 fontFamily: 'inherit',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-              </svg>
-              {t('aithumbs.suggestIdea')}
+              {suggestIdeas.isPending ? (
+                <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'spin 1s linear infinite' }}>
+                  <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
+                  <path d="M7 2a5 5 0 013.54 1.46" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                </svg>
+              )}
+              {suggestIdeas.isPending ? t('aithumbs.suggestingIdea') : t('aithumbs.suggestIdea')}
             </button>
           </div>
 
@@ -835,7 +874,7 @@ export function AiThumbnailsPage() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {STYLES.map((s) => (
                 <button key={s.id} onClick={() => setStyle(s.id)} style={styleChip(style === s.id)}>
-                  {t(s.labelKey)}
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {t(s.labelKey)}
                 </button>
               ))}
             </div>
@@ -1101,7 +1140,7 @@ export function AiThumbnailsPage() {
             }}
           >
             {isLoading ? (
-              /* Loading state */
+              /* Loading state — sparkle animation */
               <div
                 style={{
                   flex: 1,
@@ -1109,26 +1148,69 @@ export function AiThumbnailsPage() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 16,
+                  gap: 24,
+                  position: 'relative',
                 }}
               >
+                {/* Animated sparkle icon */}
                 <div
                   style={{
-                    width: '70%',
-                    maxWidth: 480,
-                    aspectRatio: format === '16:9' ? '16/9' : '9/16',
-                    borderRadius: 12,
-                    background: `linear-gradient(110deg, ${D.bgCard} 8%, ${D.border} 18%, ${D.bgCard} 33%)`,
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer 1.5s linear infinite',
+                    width: 80,
+                    height: 80,
+                    borderRadius: 20,
+                    background: `linear-gradient(135deg, ${D.accent}20, ${D.accent}05)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    animation: 'pulse-glow 2s ease-in-out infinite',
                   }}
-                />
-                <span style={{ fontSize: 14, fontWeight: 600, color: D.text }}>
+                >
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"
+                      fill={D.accent}
+                      opacity="0.8"
+                    />
+                  </svg>
+                </div>
+
+                {/* Progress text */}
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>
                   {t('aithumbs.loading.title')}
-                </span>
-                <span style={{ fontSize: 13, color: D.sub }}>
+                </div>
+
+                {/* Progress bar */}
+                <div
+                  style={{
+                    width: 200,
+                    height: 4,
+                    borderRadius: 2,
+                    background: 'rgba(255,255,255,0.06)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      borderRadius: 2,
+                      background: `linear-gradient(90deg, ${D.accent}, ${D.accent}80)`,
+                      animation: 'progress-indeterminate 2s ease-in-out infinite',
+                    }}
+                  />
+                </div>
+
+                {/* Tip text */}
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: 'rgba(255,255,255,0.3)',
+                    maxWidth: 300,
+                    textAlign: 'center',
+                    lineHeight: 1.5,
+                  }}
+                >
                   {t('aithumbs.loading.subtitle')}
-                </span>
+                </div>
               </div>
             ) : results.length > 0 ? (
               /* Generated results */
@@ -1143,7 +1225,7 @@ export function AiThumbnailsPage() {
                 }}
               >
                 {results.map((img) => (
-                  <div key={img.id}>
+                  <div key={img.id} className="thumbnail-reveal">
                     {/* Image */}
                     <div
                       style={{
@@ -1153,6 +1235,7 @@ export function AiThumbnailsPage() {
                         overflow: 'hidden',
                         borderRadius: 12,
                         background: D.bgDeep,
+                        boxShadow: `0 0 20px ${D.accent}15, 0 4px 16px rgba(0,0,0,0.3)`,
                       }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1437,6 +1520,22 @@ export function AiThumbnailsPage() {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.6; }
+        }
+        @keyframes pulse-glow {
+          0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 20px rgba(200,255,0,0.1); }
+          50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 40px rgba(200,255,0,0.2); }
+        }
+        @keyframes progress-indeterminate {
+          0% { width: 0%; margin-left: 0%; }
+          50% { width: 60%; margin-left: 20%; }
+          100% { width: 0%; margin-left: 100%; }
+        }
+        .thumbnail-reveal {
+          animation: thumbnail-fade-in 0.5s ease-out both;
+        }
+        @keyframes thumbnail-fade-in {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>

@@ -1928,6 +1928,8 @@
   "aithumbs.upload.preview": "Жүктелген анықтама",
   "aithumbs.voice.title": "Дауыспен енгізу",
   "aithumbs.suggestIdea": "Идея керек пе?",
+  "aithumbs.suggestingIdea": "Ойланамын...",
+  "aithumbs.toast.ideaGenerated": "AI идея жасалды!",
   "aithumbs.section.style": "Стиль",
   "aithumbs.style.realistic": "Шынайы",
   "aithumbs.style.anime": "Аниме",

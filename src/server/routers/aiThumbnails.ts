@@ -152,12 +152,12 @@ async function decrementAIUsage(
 
 /** Style description map for DALL-E prompt augmentation. */
 const STYLE_MAP: Record<string, string> = {
-  realistic: 'photorealistic, professional photography, detailed',
-  anime: 'anime/manga art style, vibrant Japanese animation, detailed illustration',
-  cinematic: 'cinematic movie poster style, dramatic lighting, epic composition',
-  minimalist: 'clean minimalist design, simple shapes, modern, geometric',
-  '3d': '3D rendered, CGI quality, volumetric lighting',
-  popart: 'pop art style, bold colors, high contrast, Roy Lichtenstein influence',
+  realistic: 'photorealistic, cinematic lighting, high detail, professional photography',
+  anime: 'anime art style, vibrant colors, manga-inspired, clean lines',
+  cinematic: 'cinematic movie poster style, dramatic lighting, film grain, epic composition',
+  minimalist: 'minimalist design, clean composition, bold typography space, simple shapes',
+  '3d': '3D rendered, Pixar-style, volumetric lighting, smooth surfaces',
+  popart: 'pop art style, bold colors, halftone dots, comic book aesthetic',
 };
 
 /**
@@ -270,13 +270,13 @@ export const aiThumbnailsRouter = router({
       const aspectDesc = input.format === '16:9' ? '16:9 landscape' : '9:16 vertical/portrait';
 
       const fullPrompt =
-        `YouTube thumbnail: ${input.prompt}. Style: ${styleDesc}. ${aspectDesc} aspect ratio, eye-catching, professional quality, high detail.${contextParts}`.slice(
+        `Create a YouTube video thumbnail image. ${input.prompt}. Style: ${styleDesc}. ${aspectDesc} aspect ratio.${contextParts} Requirements: Bold, eye-catching composition optimized for small display sizes. High contrast, vibrant colors, clear focal point. Leave space for overlay text (do not add any text or letters to the image). Professional YouTube thumbnail quality. The image should make viewers want to click.`.slice(
           0,
           4000,
         );
 
       // Generate images (DALL-E 3 only supports n=1, so loop)
-      const results: Array<{ url: string; id: string }> = [];
+      const results: Array<{ url: string; id: string; revisedPrompt?: string }> = [];
       let failedCount = 0;
 
       for (let i = 0; i < actualCount; i++) {
@@ -314,6 +314,7 @@ export const aiThumbnailsRouter = router({
           data?: Array<{ url: string; revised_prompt?: string }>;
         } | null;
         const imageUrl = data?.data?.[0]?.url;
+        const revisedPrompt = data?.data?.[0]?.revised_prompt;
         if (!imageUrl) {
           failedCount++;
           continue;
@@ -333,7 +334,7 @@ export const aiThumbnailsRouter = router({
           select: { id: true, imageUrl: true },
         });
 
-        results.push({ url: gen.imageUrl, id: gen.id });
+        results.push({ url: gen.imageUrl, id: gen.id, revisedPrompt });
       }
 
       // Refund credits for failed generations

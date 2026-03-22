@@ -1928,6 +1928,8 @@
   "aithumbs.upload.preview": "Referencia subida",
   "aithumbs.voice.title": "Entrada de voz",
   "aithumbs.suggestIdea": "Necesitas una idea?",
+  "aithumbs.suggestingIdea": "Pensando...",
+  "aithumbs.toast.ideaGenerated": "Idea generada por AI!",
   "aithumbs.section.style": "Estilo",
   "aithumbs.style.realistic": "Realista",
   "aithumbs.style.anime": "Anime",

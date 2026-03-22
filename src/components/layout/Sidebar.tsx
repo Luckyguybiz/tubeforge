@@ -265,6 +265,8 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'metadata', label: t('nav.seoOptimizer') },
         { id: 'analytics', label: t('nav.analytics') },
+        { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
+        { id: 'tiktok-analytics', label: t('nav.tiktokAnalytics') },
       ],
     },
     {
