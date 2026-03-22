@@ -13,7 +13,7 @@ import { pluralRu, timeAgo } from '@/lib/utils';
 import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
-import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { usePlanLimits, getUpgradePrompt } from '@/hooks/usePlanLimits';
 import { trackEvent } from '@/lib/analytics-events';
 import { TEMPLATES, TEMPLATE_CATEGORIES, CATEGORY_INFO, type ProjectTemplate, type TemplateCategory } from '@/lib/templates';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
@@ -2410,6 +2410,7 @@ export function Dashboard() {
   /* ── Compute stats ────────────────────────────── */
   const user = profile.data;
   const plan = user?.plan ?? 'FREE';
+  const upgradePrompt = getUpgradePrompt(plan, user?.aiUsage ?? 0, user?._count?.projects ?? 0);
   const stats = useMemo(() => {
     const total = totalProjects.data?.total ?? user?._count?.projects ?? 0;
     // Count statuses from the unfiltered first-page query hint — for accurate stats
@@ -2480,6 +2481,44 @@ export function Dashboard() {
 
       {/* ── Onboarding Checklist ─────────────────────── */}
       <OnboardingChecklist />
+
+      {/* ── Contextual Upgrade Banner ────────────────── */}
+      {upgradePrompt && (
+        <div
+          style={{
+            marginBottom: 20,
+            padding: '14px 20px',
+            background: `linear-gradient(135deg, ${C.accent}18, ${C.purple}12)`,
+            border: `1px solid ${C.accent}30`,
+            borderRadius: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ color: C.text, fontSize: 14, fontWeight: 500 }}>
+            {upgradePrompt.message}
+          </span>
+          <button
+            onClick={() => router.push('/pricing')}
+            style={{
+              background: C.accent,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              padding: '8px 18px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('billing.upgrade') || 'Upgrade'}
+          </button>
+        </div>
+      )}
 
       {/* ── Activity Streak ──────────────────────────── */}
       <div style={{ marginBottom: 20 }}>

@@ -10,6 +10,9 @@ import {
   StickyMobileCTA,
   ReferralCapture,
   NewsletterForm,
+  DashboardMockup,
+  AnalyzerMockup,
+  PricingSection,
 } from "@/components/landing";
 
 /* ── SEO Metadata ─────────────────────────────────────────── */
@@ -344,6 +347,11 @@ export default function LandingPage() {
       <LandingNav />
       <LandingHero />
 
+      {/* ===== DASHBOARD MOCKUP ===== */}
+      <div style={{ padding: "0 24px 40px", maxWidth: 1000, margin: "0 auto" }}>
+        <DashboardMockup />
+      </div>
+
       {/* ===== STATS BAR ===== */}
       <section
         className="tf-reveal"
@@ -641,6 +649,11 @@ export default function LandingPage() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* YouTube Analyzer Mockup */}
+        <div className="tf-reveal" style={{ marginTop: 48 }}>
+          <AnalyzerMockup />
         </div>
       </section>
 
@@ -1045,304 +1058,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section id="pricing" style={{ padding: "120px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 72 }}>
-            <p
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#818cf8",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                marginBottom: 16,
-              }}
-            >
-              Pricing
-            </p>
-            <h2
-              style={{
-                fontSize: "clamp(32px, 5vw, 52px)",
-                fontWeight: 800,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.1,
-                margin: "0 0 16px",
-              }}
-            >
-              Simple, Transparent Pricing
-            </h2>
-            <p
-              style={{
-                fontSize: 18,
-                color: "rgba(255,255,255,0.45)",
-                maxWidth: 480,
-                margin: "0 auto",
-                lineHeight: 1.6,
-              }}
-            >
-              Start free, scale when you're ready
-            </p>
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: 16,
-              maxWidth: 1060,
-              margin: "0 auto",
-            }}
-          >
-            {PLANS.map((plan, i) => (
-              <div
-                key={i}
-                className="tf-reveal tf-pricing-card"
-                style={{
-                  background: plan.popular
-                    ? "rgba(99,102,241,0.06)"
-                    : "rgba(255,255,255,0.02)",
-                  borderRadius: 24,
-                  padding: "40px 36px",
-                  border: plan.popular
-                    ? "1px solid rgba(99,102,241,0.3)"
-                    : "1px solid rgba(255,255,255,0.06)",
-                  position: "relative",
-                  transition: "all 0.4s cubic-bezier(.4,0,.2,1)",
-                  overflow: "hidden",
-                }}
-              >
-                {plan.popular && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 2,
-                      background:
-                        "linear-gradient(90deg, #6366f1, #a78bfa, #6366f1)",
-                    }}
-                  />
-                )}
-                {plan.popular && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 16,
-                      right: 16,
-                      background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-                      color: "#fff",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      padding: "4px 12px",
-                      borderRadius: 50,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Popular
-                  </span>
-                )}
-                <div
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "#ffffff",
-                    marginBottom: 4,
-                  }}
-                >
-                  {plan.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.4)",
-                    marginBottom: 24,
-                  }}
-                >
-                  {plan.desc}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 4,
-                    marginBottom: 32,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 48,
-                      fontWeight: 800,
-                      color: "#ffffff",
-                      letterSpacing: "-0.03em",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span
-                      style={{
-                        fontSize: 16,
-                        color: "rgba(255,255,255,0.35)",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: "0 0 36px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 14,
-                  }}
-                >
-                  {plan.features.map((feat, fi) => (
-                    <li
-                      key={fi}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 10,
-                        fontSize: 14,
-                        color: "rgba(255,255,255,0.7)",
-                      }}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke={plan.popular ? "#818cf8" : "#4ade80"}
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ flexShrink: 0, marginTop: 2 }}
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.href}
-                  className={plan.popular ? "tf-cta-primary" : "tf-cta-secondary"}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    width: "100%",
-                    padding: "14px 28px",
-                    borderRadius: 14,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    transition: "all 0.3s cubic-bezier(.4,0,.2,1)",
-                    ...(plan.popular
-                      ? {
-                          background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-                          color: "#fff",
-                          border: "none",
-                          boxShadow: "0 4px 24px rgba(99,102,241,0.35)",
-                        }
-                      : {
-                          background: "rgba(255,255,255,0.04)",
-                          color: "rgba(255,255,255,0.7)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                        }),
-                  }}
-                >
-                  {plan.popular && (
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M8.5 1L3 9H7.5L7 15L13 7H8.5L8.5 1Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  )}
-                  Choose Plan
-                  {plan.popular && <span aria-hidden="true">{"\u2192"}</span>}
-                </Link>
-              </div>
-            ))}
-          </div>
-
-          {/* Guarantee Badge (Y6) */}
-          <div
-            className="tf-reveal"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 16,
-              marginTop: 48,
-              padding: "24px 32px",
-              borderRadius: 16,
-              background: "rgba(99,102,241,0.04)",
-              border: "1px solid rgba(99,102,241,0.12)",
-              maxWidth: 480,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            <div
-              style={{
-                flexShrink: 0,
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                background: "rgba(99,102,241,0.1)",
-                border: "1px solid rgba(99,102,241,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#818cf8"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <polyline points="9 12 11 14 15 10" />
-              </svg>
-            </div>
-            <div>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "#ffffff",
-                  marginBottom: 4,
-                }}
-              >
-                14-Day Money-Back Guarantee
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.4)",
-                  lineHeight: 1.5,
-                }}
-              >
-                Not satisfied? Full refund, no questions asked
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* ===== TESTIMONIALS (Y2) ===== */}
       <section

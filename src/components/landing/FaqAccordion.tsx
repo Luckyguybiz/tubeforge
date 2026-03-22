@@ -30,6 +30,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
             }}
           >
             <button
+              aria-expanded={isOpen}
               onClick={() => setOpenFaq(prev => prev === i ? null : i)}
               style={{
                 width: '100%',

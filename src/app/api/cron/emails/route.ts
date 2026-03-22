@@ -28,12 +28,18 @@ interface SequenceStep {
   template: EmailTemplate;
   /** If set, only send to users on this plan */
   planFilter?: 'FREE';
+  /** If true, only send to users who have NOT logged in recently */
+  requireInactive?: boolean;
 }
 
 const SEQUENCE: SequenceStep[] = [
   { day: 3,  template: 'feature_discovery' },
   { day: 7,  template: 'social_proof' },
   { day: 14, template: 'upgrade_nudge', planFilter: 'FREE' },
+  // Re-engagement for inactive users (no login in X days)
+  { day: 3,  template: 'reengagement-day3', requireInactive: true },
+  { day: 7,  template: 'reengagement-day7', requireInactive: true },
+  { day: 14, template: 'reengagement-day14', requireInactive: true },
 ];
 
 export async function POST(request: Request) {
@@ -90,6 +96,14 @@ export async function POST(request: Request) {
       // Send to users who haven't received this email yet
       for (const user of users) {
         if (!user.email || sentSet.has(user.id)) continue;
+
+        // Skip active users for re-engagement emails
+        if (step.requireInactive) {
+          const hasRecentSession = await db.session.findFirst({
+            where: { userId: user.id, expires: { gt: new Date() } },
+          });
+          if (hasRecentSession) continue;
+        }
 
         await sendEmail({
           to: user.email,

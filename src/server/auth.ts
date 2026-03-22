@@ -167,6 +167,37 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // Never block auth flow due to email
           }
         }
+
+        // Create a demo project for first-time users (non-blocking)
+        if (isFirstSignIn && user.id) {
+          try {
+            await db.project.create({
+              data: {
+                userId: user.id,
+                title: '[Demo] My First Video',
+                description: 'This is a demo project to help you explore TubeForge. Feel free to edit or delete it!',
+                status: 'DRAFT',
+                tags: ['demo', 'tutorial'],
+                scenes: {
+                  create: [
+                    {
+                      prompt: 'Welcome to TubeForge! This is your first scene. Try editing it or generating a new one with AI.',
+                      duration: 5,
+                      order: 0,
+                    },
+                    {
+                      prompt: 'Add more scenes to build your video. Use AI to generate content automatically.',
+                      duration: 5,
+                      order: 1,
+                    },
+                  ],
+                },
+              },
+            });
+          } catch {
+            // Non-blocking — don't prevent signup
+          }
+        }
       }
     },
   },

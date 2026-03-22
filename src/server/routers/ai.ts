@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
@@ -99,6 +100,7 @@ export const aiRouter = router({
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -166,6 +168,7 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -208,6 +211,7 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
       } catch (e) {
         // Vision succeeded (1 credit consumed), refund only the DALL-E credit
         await decrementAIUsage(ctx.session.user.id, ctx.db);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -259,6 +263,7 @@ Return ONLY valid JSON, no markdown.`,
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -319,6 +324,7 @@ Return ONLY valid JSON, no markdown.`,
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -406,6 +412,7 @@ Return ONLY valid JSON, no markdown.`,
         }, 60000);
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error. Please try again later.' });
       }
 
@@ -512,6 +519,7 @@ ${sceneSummary}
         }, 60000);
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -588,6 +596,7 @@ ${sceneSummary}
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 

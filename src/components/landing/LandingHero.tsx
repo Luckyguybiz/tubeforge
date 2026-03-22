@@ -9,9 +9,9 @@ export function LandingHero() {
   const [ctaVisible, setCtaVisible] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setVisible(true), 150);
-    const t2 = setTimeout(() => setTextVisible(true), 500);
-    const t3 = setTimeout(() => setCtaVisible(true), 900);
+    const t1 = setTimeout(() => setVisible(true), 0);
+    const t2 = setTimeout(() => setTextVisible(true), 0);
+    const t3 = setTimeout(() => setCtaVisible(true), 0);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -126,7 +126,9 @@ export function LandingHero() {
             transition: 'all 1s cubic-bezier(.4,0,.2,1) 0.15s',
           }}
         >
-          Create.{' '}
+          Grow Your YouTube{' '}
+          <br />
+          Channel{' '}
           <span
             style={{
               background: 'linear-gradient(135deg, #818cf8, #6366f1, #a78bfa, #c084fc)',
@@ -137,10 +139,8 @@ export function LandingHero() {
               animation: 'tf-gradient-shift 6s ease infinite',
             }}
           >
-            Promote.
+            3x Faster
           </span>
-          <br />
-          Monetize.
         </h1>
 
         {/* Subtitle */}
@@ -157,7 +157,7 @@ export function LandingHero() {
             transition: 'all 0.8s cubic-bezier(.4,0,.2,1)',
           }}
         >
-          Video editor, AI content generation, VPN, SEO optimization, and analytics — everything a YouTube creator needs in one platform.
+          AI-powered thumbnails, SEO optimization, and analytics that help creators get more views, subscribers, and revenue — all in one platform.
         </p>
 
         {/* CTAs */}

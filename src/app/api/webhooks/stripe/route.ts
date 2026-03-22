@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/server/db';
@@ -592,6 +593,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     log.error('Unhandled webhook error', { error: err instanceof Error ? err.message : String(err) });
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), { tags: { component: 'stripe-webhook' } });
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }

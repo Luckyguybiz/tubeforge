@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import * as Sentry from '@sentry/nextjs';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -56,6 +58,10 @@ export function ErrorFallback({
   const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const [showDetails, setShowDetails] = useState(false);
+
+  useEffect(() => {
+    Sentry.captureException(error, { tags: { component: 'error-boundary' } });
+  }, [error]);
 
   return (
     <div

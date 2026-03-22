@@ -6,3 +6,6 @@ export { ClientCookieConsent } from './ClientCookieConsent';
 export { StickyMobileCTA } from './StickyMobileCTA';
 export { ReferralCapture } from './ReferralCapture';
 export { NewsletterForm } from './NewsletterForm';
+export { DashboardMockup } from './DashboardMockup';
+export { AnalyzerMockup } from './AnalyzerMockup';
+export { PricingSection } from './PricingSection';

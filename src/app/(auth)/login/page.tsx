@@ -53,7 +53,7 @@ function LoginContent() {
         <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>{t('auth.login.title')}</h1>
         <p style={{ color: C.sub, fontSize: 14, marginBottom: 28 }}>{t('auth.login.subtitle')}</p>
         {error && (
-          <div style={{ background: '#ef444414', border: '1px solid #ef444433', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#ef4444', fontSize: 13, textAlign: 'left' }}>
+          <div role="alert" style={{ background: '#ef444414', border: '1px solid #ef444433', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#ef4444', fontSize: 13, textAlign: 'left' }}>
             {error === 'OAuthAccountNotLinked'
               ? 'Этот email уже используется с другим способом входа.'
               : error === 'OAuthSignin'

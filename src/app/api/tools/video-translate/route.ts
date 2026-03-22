@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
@@ -133,6 +134,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     log.error('Video translate error', { error: err instanceof Error ? err.message : String(err) });
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), { tags: { component: 'video-translate' } });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -257,6 +259,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     log.error('Status/download error', { error: err instanceof Error ? err.message : String(err) });
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), { tags: { component: 'video-translate' } });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

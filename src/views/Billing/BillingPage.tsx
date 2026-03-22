@@ -755,6 +755,9 @@ export function BillingPage() {
                             : 'none',
                         cursor: isCurrentPlan ? 'default' : 'pointer',
                       }}
+                      role={isCurrentPlan ? undefined : "button"}
+                      tabIndex={isCurrentPlan ? undefined : 0}
+                      onKeyDown={(e: React.KeyboardEvent) => { if (!isCurrentPlan && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setSelectedPlan(plan.id); } }}
                       onClick={() => {
                         if (!isCurrentPlan) setSelectedPlan(plan.id);
                       }}
@@ -959,6 +962,9 @@ export function BillingPage() {
                       key={deal.id}
                       onMouseEnter={() => setHoveredCard(`deal-${deal.id}`)}
                       onMouseLeave={() => setHoveredCard(null)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleDeal(idx); } }}
                       onClick={() => toggleDeal(idx)}
                       style={{
                         padding: 24,

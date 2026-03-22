@@ -29,3 +29,21 @@ export function usePlanLimits() {
     limits,
   };
 }
+
+
+export function getPlanLimits(plan: string) {
+  return LIMITS[plan] ?? LIMITS.FREE;
+}
+
+export function getUpgradePrompt(plan: string, aiUsage: number, projectCount: number) {
+  const limits = getPlanLimits(plan);
+  if (plan !== 'FREE') return null;
+
+  if (aiUsage >= limits.ai - 1) {
+    return { type: 'ai' as const, message: 'You have 1 AI generation left. Upgrade for unlimited.' };
+  }
+  if (projectCount >= limits.projects - 1) {
+    return { type: 'projects' as const, message: 'You can create 1 more project. Upgrade for unlimited.' };
+  }
+  return null;
+}
