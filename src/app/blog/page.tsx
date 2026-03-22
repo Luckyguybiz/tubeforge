@@ -58,6 +58,25 @@ function formatDate(iso: string): string {
 
 const allCategories = Array.from(new Set(BLOG_POSTS.map((p) => p.category)));
 
+/* -- JSON-LD -------------------------------------------------------------- */
+
+const COLLECTION_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'TubeForge Blog',
+  url: 'https://tubeforge.co/blog',
+  description: 'Tips, guides and news about YouTube content creation',
+};
+
+const BREADCRUMB_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tubeforge.co' },
+    { '@type': 'ListItem', position: 2, name: 'Blog' },
+  ],
+};
+
 /* -- Page ------------------------------------------------------------------- */
 
 export default function BlogIndexPage() {
@@ -70,6 +89,14 @@ export default function BlogIndexPage() {
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(COLLECTION_JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_JSON_LD) }}
+      />
       <div style={{ maxWidth: 980, margin: '0 auto', padding: '48px 24px 96px' }}>
         {/* Back to home */}
         <Link

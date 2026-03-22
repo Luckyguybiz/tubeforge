@@ -1032,7 +1032,7 @@ export default function LandingPage() {
                         key={li}
                         href={link.href}
                         target={isExternal ? "_blank" : undefined}
-                        rel={isExternal ? "noopener noreferrer" : undefined}
+                        rel={isExternal ? "nofollow noopener noreferrer" : undefined}
                         style={{
                           textDecoration: "none",
                           color: "#86868b",
@@ -1062,7 +1062,37 @@ export default function LandingPage() {
             <span style={{ fontSize: 12, color: "#86868b" }}>
               {"\u00A9"} 2026 TubeForge. All rights reserved.
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              {/* Social links */}
+              <a
+                href="https://youtube.com/@tubeforge"
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                aria-label="YouTube"
+                style={{ color: "#86868b", transition: "color 0.3s ease" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
+              </a>
+              <a
+                href="https://t.me/tubeforge"
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                aria-label="Telegram"
+                style={{ color: "#86868b", transition: "color 0.3s ease" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 0C5.37 0 0 5.37 0 12s5.37 12 11.99 12S24 18.63 24 12 18.61 0 11.99 0zm5.9 8.17l-1.93 9.12c-.15.67-.54.83-1.1.52l-3.02-2.23-1.46 1.4c-.16.16-.3.3-.61.3l.22-3.07 5.56-5.02c.24-.22-.05-.34-.38-.13L8.6 13.85l-2.97-.93c-.65-.2-.66-.65.13-.96l11.6-4.47c.54-.2 1.01.13.83.96l-.3-.28z"/></svg>
+              </a>
+              <a
+                href="https://twitter.com/tubeforge"
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                aria-label="Twitter"
+                style={{ color: "#86868b", transition: "color 0.3s ease" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
+              <span style={{ width: 1, height: 12, background: "#d2d2d7" }} />
+              {/* Legal links */}
               <a
                 href="/terms"
                 style={{

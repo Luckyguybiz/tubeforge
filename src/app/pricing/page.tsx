@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "TubeForge Pricing — Free, Pro & Studio Plans",
   description:
     "Choose the right TubeForge plan for your YouTube channel. Free plan with core features, Pro for active creators, Studio for teams. 14-day money-back guarantee.",
+  robots: { index: true, follow: true },
   openGraph: {
     title: "TubeForge Pricing — Free, Pro & Studio Plans",
     description:

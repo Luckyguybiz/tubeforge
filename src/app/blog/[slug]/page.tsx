@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${post.title} — TubeForge Blog`,
     description: post.excerpt,
+    authors: [{ name: 'TubeForge Team' }],
     openGraph: {
       title: post.title,
       description: post.excerpt,
