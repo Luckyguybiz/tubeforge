@@ -221,6 +221,10 @@ export default function middleware(req: NextRequest) {
     '/security',
     '/free-tools',
     '/tools',
+    '/changelog',
+    '/status',
+    '/gallery',
+    '/api-docs',
   ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
