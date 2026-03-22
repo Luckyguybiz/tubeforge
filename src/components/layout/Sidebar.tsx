@@ -788,6 +788,7 @@ export const Sidebar = memo(function Sidebar() {
       aria-label="Main navigation"
       style={{
         width: W,
+        height: '100%',
         borderRight: isDark ? `1px solid rgba(255,255,255,.06)` : `1px solid #e5e5ea`,
         background: isDark
           ? `linear-gradient(180deg, rgba(14,14,22,.98) 0%, rgba(8,8,14,.99) 100%)`
