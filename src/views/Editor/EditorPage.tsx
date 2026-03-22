@@ -80,11 +80,6 @@ const STYLE_CATEGORIES: StyleCategory[] = [
   { id: 'story', label: 'Story Animation' },
 ];
 
-const EXAMPLE_PROMPTS = [
-  'A woman walking through a neon-lit city at night, cinematic',
-  'A cat playing piano in a cozy room, soft lighting',
-  'Drone flying through mountains at golden hour, epic scenery',
-];
 
 /* ═══════════════════════════════════════════════════════════════════
    FRAME UPLOAD SLOT
@@ -1244,7 +1239,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             style={{
               flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column',
-              overflow: 'hidden', padding: 20,
+              overflowY: 'auto', overflowX: 'hidden', padding: 20,
             }}
           >
             {/* ── Header: Tab switcher / Preview pill + actions ── */}
@@ -1512,51 +1507,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     </div>
                   </div>
 
-                  {/* Video tutorial placeholder */}
-                  <div style={{
-                    marginTop: 20, padding: 16, borderRadius: 12,
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    textAlign: 'center',
-                  }}>
-                    <span style={{ fontSize: 13, color: C.dim }}>
-                      Video tutorial coming soon
-                    </span>
-                  </div>
-
-                  {/* Example prompt chips */}
-                  <div style={{ marginTop: 20 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-                      Try an example
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {EXAMPLE_PROMPTS.map((ep, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            if (sel) updScene(sel.id, { prompt: ep, status: 'editing' });
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                          style={{
-                            width: '100%', padding: '10px 14px',
-                            borderRadius: 10,
-                            border: `1px solid ${C.border}`,
-                            background: 'transparent',
-                            color: C.sub,
-                            fontSize: 13,
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                            outline: 'none',
-                            transition: 'all 0.15s ease',
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {ep}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ) : rightPanelTab === 'history' ? (
                 /* ── History tab ─────────────────────────────── */
