@@ -226,7 +226,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'ai-thumbnails', label: t('nav.aiThumbnails') },
         { id: 'dashboard', label: t('nav.dashboard') },
         { id: 'editor', label: t('nav.editor') },
-        { id: 'preview', label: t('nav.preview') },
+        { id: 'preview', label: t('nav.publish') },
       ],
     },
     {
@@ -234,7 +234,6 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
       items: [
         { id: 'tools', label: t('nav.tools') },
         { id: 'thumbnails', label: t('nav.thumbnails') },
-        { id: 'metadata', label: t('nav.seoOptimizer') },
         { id: 'analytics', label: t('nav.analytics') },
       ],
     },

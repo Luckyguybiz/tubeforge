@@ -7,7 +7,6 @@ import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { fmtTime, fmtDur, pluralRu } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
@@ -224,7 +223,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
   /* ── Checklist (memoized) ──────────────────────────── */
   const checklist = useMemo(() => [
     { label: t('preview.checklist.videoReady'), done: scenes.length > 0 && scenes.every(s => s.status === 'READY'), href: `/editor?projectId=${projectId}`, hint: t('preview.checklist.goEditor') },
-    { label: t('preview.checklist.metadataFilled'), done: (p?.title?.length ?? 0) > 0 && (p?.description?.length ?? 0) > 0, href: `/metadata?projectId=${projectId}`, hint: t('preview.checklist.goMetadata') },
+    { label: t('preview.checklist.metadataFilled'), done: (p?.title?.length ?? 0) > 0 && (p?.description?.length ?? 0) > 0, href: `/preview?projectId=${projectId}&tab=seo`, hint: t('preview.checklist.goMetadata') },
     { label: t('preview.checklist.thumbnailCreated'), done: !!(p?.thumbnailUrl || p?.thumbnailData), href: `/thumbnails?projectId=${projectId}`, hint: t('preview.checklist.goThumbnails') },
     { label: t('preview.checklist.channelConnected'), done: (channels.data?.length ?? 0) > 0, href: '/dashboard', hint: t('preview.checklist.connectYoutube') },
   ], [scenes, p?.title, p?.description, p?.thumbnailUrl, p?.thumbnailData, projectId, channels.data?.length, t]);
@@ -412,7 +411,18 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
   /* ── Early returns (after all hooks) ─────────────── */
   if (!projectId) {
-    return <ProjectPicker target="/preview" title={t('preview.title')} />;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('preview.title')}</div>
+        <div style={{ fontSize: 13, color: C.sub }}>{t('preview.noProject') || 'Open a project from My Works to preview it.'}</div>
+        <button
+          onClick={() => router.push('/dashboard')}
+          style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          {t('preview.openMyWorks') || 'Open My Works'}
+        </button>
+      </div>
+    );
   }
 
   if (project.isLoading) return <PreviewSkeleton />;
@@ -1065,7 +1075,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={sectionTitle}>{t('preview.metadata')}</div>
               <button
-                onClick={() => router.push(`/metadata?projectId=${projectId}`)}
+                onClick={() => router.push(`/preview?projectId=${projectId}&tab=seo`)}
                 style={{
                   padding: '5px 14px', borderRadius: 8, border: `1px solid ${C.border}`,
                   background: 'transparent', color: C.sub, fontSize: 11, fontWeight: 600,

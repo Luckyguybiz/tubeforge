@@ -6,7 +6,6 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useEditorStore, MUSIC_TRACKS } from '@/stores/useEditorStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-// ProjectPicker removed — auto-create project (Higgsfield-style)
 import { OnlineUsers } from '@/components/ui/OnlineUsers';
 import { SceneLockIndicator } from '@/components/ui/SceneLockIndicator';
 import { MODELS } from '@/lib/constants';
@@ -1151,34 +1150,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         >
           {t('editor.backToDashboard')}
         </button>
-      </div>
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     NO PROJECT — Auto-create and redirect (Higgsfield-style)
-     ═══════════════════════════════════════════════════════════════ */
-  const createProject = trpc.project.create.useMutation({
-    onSuccess: (data) => {
-      router.replace(`/editor?projectId=${data.id}`);
-    },
-  });
-
-  useEffect(() => {
-    if (!projectId && !createProject.isPending) {
-      createProject.mutate({ title: 'Untitled' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
-
-  if (!projectId) {
-    return (
-      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 10, border: `2px solid ${C.accent}`, borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-          <div style={{ fontSize: 14, color: C.sub }}>Setting up your workspace...</div>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
       </div>
     );
   }

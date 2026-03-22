@@ -54,7 +54,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     subtitle: t('toolshub.tool.metadata.subtitle'),
     description: t('toolshub.tool.metadata.description'),
     category: 'optimization',
-    route: '/metadata',
+    route: '/preview?tab=seo',
     available: true,
     gradient: ['#14b8a6', '#06b6d4'],
   },

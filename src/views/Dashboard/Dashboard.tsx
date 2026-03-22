@@ -1318,7 +1318,7 @@ export function Dashboard() {
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" /></svg> },
             { href: '/editor', title: 'Video Editor', gradientFrom: '#3b82f6', gradientTo: '#06b6d4', badge: null, badgeColor: '',
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21" /></svg> },
-            { href: '/metadata', title: 'SEO Optimizer', gradientFrom: '#10b981', gradientTo: '#34d399', badge: null, badgeColor: '',
+            { href: '/preview?tab=seo', title: 'SEO Optimizer', gradientFrom: '#10b981', gradientTo: '#34d399', badge: null, badgeColor: '',
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> },
             { href: '/thumbnails', title: 'Thumbnail Editor', gradientFrom: '#f59e0b', gradientTo: '#f97316', badge: null, badgeColor: '',
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
