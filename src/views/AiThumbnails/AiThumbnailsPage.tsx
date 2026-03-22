@@ -1338,12 +1338,12 @@ export function AiThumbnailsPage() {
                 </p>
 
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                  display: 'flex',
                   gap: 16,
                 }}>
                   {/* Step 1 — Describe */}
                   <div style={{
+                    flex: 1, minWidth: 0,
                     background: C.surface, border: `1px solid ${C.border}`,
                     borderRadius: 14, overflow: 'hidden',
                   }}>
@@ -1368,6 +1368,7 @@ export function AiThumbnailsPage() {
 
                   {/* Step 2 — Choose Style */}
                   <div style={{
+                    flex: 1, minWidth: 0,
                     background: C.surface, border: `1px solid ${C.border}`,
                     borderRadius: 14, overflow: 'hidden',
                   }}>
@@ -1391,6 +1392,7 @@ export function AiThumbnailsPage() {
 
                   {/* Step 3 — Get Thumbnail */}
                   <div style={{
+                    flex: 1, minWidth: 0,
                     background: C.surface, border: `1px solid ${C.border}`,
                     borderRadius: 14, overflow: 'hidden',
                   }}>
