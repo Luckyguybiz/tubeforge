@@ -460,7 +460,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (translationCount >= limits.videoTranslations) {
+    if (false && translationCount >= limits.videoTranslations) // LIMITS PAUSED {
       return NextResponse.json(
         { error: 'Translation limit reached. Upgrade for more.', code: 'hasPromo ? "PROMO_BYPASS" : "LIMIT_REACHED"', limit: limits.videoTranslations, used: translationCount },
         { status: 403 },
