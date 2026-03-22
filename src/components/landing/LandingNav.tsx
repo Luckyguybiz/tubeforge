@@ -15,10 +15,9 @@ export function LandingNav() {
 
   const navLinks = [
     { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '/pricing' },
-    { label: 'Free Tools', href: '/free-tools' },
+    { label: 'Tools', href: '#tools' },
+    { label: 'Pricing', href: '#pricing' },
     { label: 'Blog', href: '/blog' },
-    { label: 'FAQ', href: '#faq' },
   ];
 
   return (
@@ -39,7 +38,7 @@ export function LandingNav() {
     >
       <div
         style={{
-          maxWidth: 980,
+          maxWidth: 1100,
           margin: '0 auto',
           padding: '0 24px',
           height: 48,
@@ -118,6 +117,7 @@ export function LandingNav() {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
+              gap: 4,
               background: '#6366f1',
               color: '#fff',
               fontSize: 12,
@@ -131,6 +131,7 @@ export function LandingNav() {
             }}
           >
             Start Free
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
           </Link>
         </div>
 
@@ -189,6 +190,7 @@ export function LandingNav() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: 6,
                 background: '#6366f1',
                 color: '#fff',
                 fontSize: 17,
@@ -201,6 +203,7 @@ export function LandingNav() {
               }}
             >
               Start Free
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </Link>
           </div>
         </div>
