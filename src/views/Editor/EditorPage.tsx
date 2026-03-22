@@ -717,16 +717,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     LOADING STATE
+     LOADING STATE (only when projectId is set)
      ═══════════════════════════════════════════════════════════════ */
-  if (sync.isLoading) {
+  if (projectId && sync.isLoading) {
     return <EditorSkeleton C={C} />;
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     ERROR STATE
+     ERROR STATE (only when projectId is set)
      ═══════════════════════════════════════════════════════════════ */
-  if (sync.isError) {
+  if (projectId && sync.isError) {
     return (
       <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>
@@ -1084,30 +1084,27 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 )}
               </div>
 
-              {/* Duration + Aspect + Resolution pills */}
+              {/* Duration slider + Aspect + Resolution pills */}
               <div style={{ display: 'flex', gap: 6 }}>
-                {/* Duration pills */}
-                <div style={{ display: 'flex', gap: 3, flex: 1 }}>
-                  {[3, 5, 10, 15].map((dur) => (
-                    <button
-                      key={dur}
-                      onClick={() => {
-                        setDurationInput(String(dur));
-                        if (sel) updScene(sel.id, { duration: dur });
-                      }}
-                      style={{
-                        flex: 1, height: 30, borderRadius: 6,
-                        border: `1px solid ${sel?.duration === dur ? ACCENT_LIME + '55' : C.border}`,
-                        background: sel?.duration === dur ? ACCENT_LIME + '12' : C.surface,
-                        color: sel?.duration === dur ? ACCENT_LIME : C.dim,
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        transition: 'all .15s', padding: 0,
-                      }}
-                    >
-                      {dur}s
-                    </button>
-                  ))}
+                {/* Duration slider */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 10, color: C.dim, fontWeight: 600, whiteSpace: 'nowrap' }}>⏱ {durationInput}s</span>
+                  <input
+                    type="range"
+                    min={3}
+                    max={30}
+                    step={1}
+                    value={Number(durationInput) || 5}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDurationInput(val);
+                      if (sel) updScene(sel.id, { duration: Number(val) });
+                    }}
+                    style={{
+                      flex: 1, height: 4, appearance: 'none', background: C.border,
+                      borderRadius: 2, cursor: 'pointer', accentColor: C.accent,
+                    }}
+                  />
                 </div>
               </div>
 
