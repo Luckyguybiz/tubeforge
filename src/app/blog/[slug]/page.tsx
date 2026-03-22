@@ -85,6 +85,17 @@ export default async function BlogPostPage({ params }: PageProps) {
     })
     .slice(0, 3);
 
+  // JSON-LD BreadcrumbList schema
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tubeforge.co' },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tubeforge.co/blog' },
+      { '@type': 'ListItem', position: 3, name: post.title },
+    ],
+  };
+
   // JSON-LD Article schema
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -124,6 +135,10 @@ export default async function BlogPostPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px 80px' }}>

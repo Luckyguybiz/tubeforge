@@ -199,6 +199,16 @@ export default async function ComparePage({
     },
   };
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tubeforge.co' },
+      { '@type': 'ListItem', position: 2, name: 'Compare', item: 'https://tubeforge.co/compare' },
+      { '@type': 'ListItem', position: 3, name: `TubeForge vs ${data.name}` },
+    ],
+  };
+
   return (
     <main
       style={{
@@ -211,6 +221,10 @@ export default async function ComparePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '40px 24px 80px' }}>
@@ -240,31 +254,29 @@ export default async function ComparePage({
           padding: '48px 40px',
           marginBottom: 32,
         }}>
-          <div style={{
+          <h1 style={{
             display: 'flex',
             alignItems: 'center',
             gap: 16,
             marginBottom: 16,
             flexWrap: 'wrap',
+            fontSize: 28,
+            fontWeight: 800,
+            letterSpacing: '-.02em',
+            margin: '0 0 16px',
           }}>
             <span style={{
-              fontSize: 28,
-              fontWeight: 800,
               color: accentColor,
-              letterSpacing: '-.02em',
             }}>
               TubeForge
             </span>
             <span style={{ fontSize: 20, color: '#a1a1aa', fontWeight: 600 }}>vs</span>
             <span style={{
-              fontSize: 28,
-              fontWeight: 800,
               color: '#18181b',
-              letterSpacing: '-.02em',
             }}>
               {data.name}
             </span>
-          </div>
+          </h1>
           <p style={{ fontSize: 16, color: '#71717a', lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
             {data.description}
           </p>

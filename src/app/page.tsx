@@ -1589,7 +1589,7 @@ export default function LandingPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1.5fr repeat(3, 1fr)",
+              gridTemplateColumns: "1.5fr repeat(4, 1fr)",
               gap: 40,
               marginBottom: 48,
             }}
@@ -1687,6 +1687,25 @@ export default function LandingPage() {
                 ],
               },
               {
+                title: "Resources",
+                links: [
+                  { label: "Blog", href: "/blog" },
+                  { label: "About", href: "/about" },
+                  { label: "Help", href: "/help" },
+                  { label: "Contact", href: "/contact" },
+                ],
+              },
+              {
+                title: "Compare",
+                links: [
+                  { label: "TubeForge vs InVideo", href: "/compare/tubeforge-vs-invideo" },
+                  { label: "TubeForge vs CapCut", href: "/compare/tubeforge-vs-capcut" },
+                  { label: "TubeForge vs Pictory", href: "/compare/tubeforge-vs-pictory" },
+                  { label: "TubeForge vs Synthesia", href: "/compare/tubeforge-vs-synthesia" },
+                  { label: "TubeForge vs Fliki", href: "/compare/tubeforge-vs-fliki" },
+                ],
+              },
+              {
                 title: "Legal",
                 links: [
                   { label: "Terms of Service", href: "/terms" },
@@ -1698,14 +1717,6 @@ export default function LandingPage() {
                     label: "Refund Policy",
                     href: "mailto:support@tubeforge.co",
                   },
-                ],
-              },
-              {
-                title: "Social",
-                links: [
-                  { label: "YouTube", href: "https://youtube.com/@tubeforge" },
-                  { label: "Telegram", href: "https://t.me/tubeforge" },
-                  { label: "Twitter / X", href: "https://twitter.com/tubeforge" },
                 ],
               },
             ].map((col, ci) => (

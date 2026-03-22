@@ -10,10 +10,10 @@ import { useLocaleStore, type Locale } from '@/stores/useLocaleStore';
 const T: Record<string, Record<Locale, string>> = {
   back: { ru: 'На главную', en: 'Back to Home', kk: 'Басты бетке', es: 'Volver al inicio' },
   heroTitle: {
-    ru: 'Доступ к YouTube из России',
-    en: 'YouTube Access from Russia',
-    kk: 'Ресейден YouTube-ге қол жеткізу',
-    es: 'Acceso a YouTube desde Rusia',
+    ru: 'VPN для YouTube — быстрый и безопасный доступ',
+    en: 'VPN for YouTube — Fast & Secure Access',
+    kk: 'YouTube үшін VPN — жылдам және қауіпсіз қол жеткізу',
+    es: 'VPN para YouTube — Acceso rápido y seguro',
   },
   heroSubtitle: {
     ru: 'Персональный VPN от TubeForge — быстрый, безопасный, без ограничений',
