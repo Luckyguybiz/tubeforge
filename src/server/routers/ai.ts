@@ -627,4 +627,63 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
       const hasKey = !!(process.env.ELEVENLABS_API_KEY);
       return { available: hasKey };
     }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Z6: ElevenLabs Text-to-Speech
+     ═══════════════════════════════════════════════════════════════ */
+  generateTTS: protectedProcedure
+    .input(z.object({
+      text: z.string().min(1).max(5000),
+      voiceId: z.string().default('21m00Tcm4TlvDq8ikWAM'), // Rachel
+      speed: z.number().min(0.5).max(2).default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const apiKey = process.env.ELEVENLABS_API_KEY;
+      if (!apiKey) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'ElevenLabs API key not configured' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-tts', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(
+          `https://api.elevenlabs.io/v1/text-to-speech/${input.voiceId}`,
+          {
+            method: 'POST',
+            headers: {
+              'xi-api-key': apiKey,
+              'Content-Type': 'application/json',
+              Accept: 'audio/mpeg',
+            },
+            body: JSON.stringify({
+              text: input.text,
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.75,
+                speed: input.speed,
+              },
+            }),
+          },
+          60000,
+        );
+      } catch (e) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'ElevenLabs service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: (err as { detail?: { message?: string } }).detail?.message ?? 'TTS generation failed',
+        });
+      }
+
+      const audioBuffer = Buffer.from(await res.arrayBuffer());
+      return { audioBase64: audioBuffer.toString('base64'), format: 'mp3' as const };
+    }),
 });
