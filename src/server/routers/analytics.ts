@@ -6,7 +6,8 @@ import { RATE_LIMIT_ERROR } from '@/lib/constants';
 
 const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
 
-/** Allowlist of valid tool IDs — must match TOOL_LABELS in src/lib/toolUsageTracker.ts */
+/** Allowlist of valid tool IDs — must match TOOL_LABELS in src/lib/toolUsageTracker.ts
+ *  Note: 'youtube-downloader' ID kept for backward compat — label is now "YouTube Analyzer" */
 const VALID_TOOL_IDS = new Set([
   'mp3-converter',
   'video-compressor',

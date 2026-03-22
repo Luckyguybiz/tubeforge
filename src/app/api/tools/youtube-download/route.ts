@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { createLogger } from '@/lib/logger';
-
-const ytLog = createLogger('youtube-download');
 
 export const dynamic = 'force-dynamic';
 
@@ -35,226 +32,6 @@ interface OEmbedResponse {
   thumbnail_height: number;
 }
 
-/* ─── Innertube types ─────────────────────────────────────────────── */
-
-interface InnertubeFormat {
-  itag?: number;
-  url?: string;
-  mimeType?: string;
-  bitrate?: number;
-  width?: number;
-  height?: number;
-  contentLength?: string;
-  qualityLabel?: string;
-  audioQuality?: string;
-  audioSampleRate?: string;
-  quality?: string;
-  signatureCipher?: string;
-}
-
-interface InnertubeResponse {
-  playabilityStatus?: {
-    status?: string;
-    reason?: string;
-  };
-  streamingData?: {
-    formats?: InnertubeFormat[];
-    adaptiveFormats?: InnertubeFormat[];
-    expiresInSeconds?: string;
-  };
-  videoDetails?: {
-    videoId?: string;
-    title?: string;
-    lengthSeconds?: string;
-    channelId?: string;
-    shortDescription?: string;
-    author?: string;
-  };
-}
-
-/* ─── Innertube client configs to try (in order of reliability) ──── */
-
-const INNERTUBE_CLIENTS = [
-  {
-    name: 'ANDROID_VR',
-    body: {
-      context: {
-        client: {
-          clientName: 'ANDROID_VR',
-          clientVersion: '1.56.21',
-          deviceMake: 'Oculus',
-          deviceModel: 'Quest 3',
-          osName: 'Android',
-          osVersion: '12.0',
-          androidSdkVersion: 32,
-        },
-      },
-      contentCheckOk: true,
-      racyCheckOk: true,
-    },
-    userAgent:
-      'com.google.android.apps.youtube.vr.oculus/1.56.21 (Linux; U; Android 12; eureka-user Build/SQ3A.220605.009.A1; Cronet/132.0.6834.14)',
-  },
-  {
-    name: 'ANDROID_TESTSUITE',
-    body: {
-      context: {
-        client: {
-          clientName: 'ANDROID_TESTSUITE',
-          clientVersion: '1.9',
-          androidSdkVersion: 31,
-          osName: 'Android',
-          osVersion: '12',
-        },
-      },
-      contentCheckOk: true,
-      racyCheckOk: true,
-    },
-    userAgent:
-      'com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip',
-  },
-];
-
-/**
- * Fetch stream URLs via YouTube's Innertube player API.
- * Tries multiple client configurations for best success rate.
- */
-async function fetchInnertubeStreams(
-  videoId: string,
-): Promise<{ formats: InnertubeFormat[]; adaptiveFormats: InnertubeFormat[] } | null> {
-  for (const client of INNERTUBE_CLIENTS) {
-    try {
-      const payload = {
-        ...client.body,
-        videoId,
-      };
-
-      const res = await fetch(
-        'https://www.youtube.com/youtubei/v1/player?prettyPrint=false',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': client.userAgent,
-          },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(10_000),
-        },
-      );
-
-      if (!res.ok) continue;
-
-      const data = (await res.json()) as InnertubeResponse;
-
-      if (data.playabilityStatus?.status !== 'OK') continue;
-
-      const formats = data.streamingData?.formats ?? [];
-      const adaptiveFormats = data.streamingData?.adaptiveFormats ?? [];
-
-      if (formats.length === 0 && adaptiveFormats.length === 0) continue;
-
-      return { formats, adaptiveFormats };
-    } catch {
-      continue;
-    }
-  }
-  return null;
-}
-
-/**
- * Find the best matching format for requested quality.
- */
-function findBestFormat(
-  formats: InnertubeFormat[],
-  adaptiveFormats: InnertubeFormat[],
-  quality: string,
-  audioOnly: boolean,
-): { url: string; mimeType: string; contentLength?: string } | null {
-  // Audio-only: find best audio stream
-  if (audioOnly) {
-    const audioFormats = adaptiveFormats
-      .filter(
-        (f) =>
-          f.url &&
-          f.mimeType?.startsWith('audio/') &&
-          !f.signatureCipher,
-      )
-      .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0));
-
-    if (audioFormats.length > 0) {
-      return {
-        url: audioFormats[0].url!,
-        mimeType: audioFormats[0].mimeType ?? 'audio/mp4',
-        contentLength: audioFormats[0].contentLength,
-      };
-    }
-    return null;
-  }
-
-  // Video: try to find matching quality in adaptive formats first (higher quality)
-  const qualityMap: Record<string, number> = {
-    '1080p': 1080,
-    '720p': 720,
-    '480p': 480,
-    '360p': 360,
-  };
-
-  const targetHeight = qualityMap[quality] ?? 720;
-
-  // First try adaptive formats (video-only, but higher quality available)
-  // For adaptive, we'd need to merge audio+video which is complex.
-  // So prefer combined formats (video+audio) first.
-
-  // Combined formats (video + audio together — simpler, no merge needed)
-  const combinedFormats = formats
-    .filter((f) => f.url && !f.signatureCipher)
-    .sort((a, b) => (b.height ?? 0) - (a.height ?? 0));
-
-  if (combinedFormats.length > 0) {
-    // Find closest quality match
-    let best = combinedFormats[0];
-    for (const f of combinedFormats) {
-      if ((f.height ?? 0) <= targetHeight) {
-        best = f;
-        break;
-      }
-    }
-    return {
-      url: best.url!,
-      mimeType: best.mimeType ?? 'video/mp4',
-      contentLength: best.contentLength,
-    };
-  }
-
-  // Fallback: use adaptive video (no audio, but at least something)
-  const videoFormats = adaptiveFormats
-    .filter(
-      (f) =>
-        f.url &&
-        f.mimeType?.startsWith('video/') &&
-        f.mimeType?.includes('mp4') &&
-        !f.signatureCipher,
-    )
-    .sort((a, b) => (b.height ?? 0) - (a.height ?? 0));
-
-  if (videoFormats.length > 0) {
-    let best = videoFormats[0];
-    for (const f of videoFormats) {
-      if ((f.height ?? 0) <= targetHeight) {
-        best = f;
-        break;
-      }
-    }
-    return {
-      url: best.url!,
-      mimeType: best.mimeType ?? 'video/mp4',
-      contentLength: best.contentLength,
-    };
-  }
-
-  return null;
-}
-
 /* ══════════════════════════════════════════════════════════════════════
  * GET /api/tools/youtube-download?url=<youtube_url>
  *
@@ -268,7 +45,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { success: rlOk, reset } = await rateLimit({
-    identifier: `yt-dl-info:${session.user.id}`,
+    identifier: `yt-analyze-info:${session.user.id}`,
     limit: 10,
     window: 60,
   });
@@ -329,13 +106,6 @@ export async function GET(req: NextRequest) {
       thumbnailHq: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
       thumbnailMq: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
       watchUrl: canonicalUrl,
-      formats: [
-        { quality: '1080p', ext: 'mp4', label: 'Full HD' },
-        { quality: '720p', ext: 'mp4', label: 'HD' },
-        { quality: '480p', ext: 'mp4', label: 'SD' },
-        { quality: '360p', ext: 'mp4', label: 'Low' },
-        { quality: 'Audio', ext: 'mp3', label: 'Audio Only' },
-      ],
     });
   } catch (err) {
     const message =
@@ -350,24 +120,72 @@ export async function GET(req: NextRequest) {
 /* ══════════════════════════════════════════════════════════════════════
  * POST /api/tools/youtube-download
  *
- * Multi-strategy YouTube download:
- *   1. YouTube Innertube API (ANDROID_VR client) — no external deps
- *   2. Self-hosted yt-dlp VPS (if YT_DLP_API_URL is set)
- *   3. Cobalt API (if COBALT_API_URL is set)
- *   4. Fallback error with watch URL
+ * Video Analyzer — returns SEO scores, engagement metrics, and
+ * optimization suggestions for a YouTube video.
  *
- * Body: { videoId: string, quality?: string, format?: string, audioOnly?: boolean }
+ * Body: { videoId: string }
  * ══════════════════════════════════════════════════════════════════════ */
 
-const YT_API_BASE = process.env.YT_DLP_API_URL;
-const COBALT_API_URL = process.env.COBALT_API_URL;
-
-const youtubeDownloadSchema = z.object({
+const analyzeSchema = z.object({
   videoId: z.string().regex(/^[a-zA-Z0-9_-]{11}$/, 'Invalid videoId'),
-  quality: z.enum(['1080p', '720p', '480p', '360p', 'Audio']).optional(),
-  format: z.string().max(10).optional(),
-  audioOnly: z.boolean().optional(),
 });
+
+/** Compute a simple score (0-100) based on heuristics */
+function computeScores(title: string, channel: string) {
+  // Title length score: ideal 40-70 chars
+  const titleLen = title.length;
+  let titleScore = 50;
+  if (titleLen >= 40 && titleLen <= 70) titleScore = 90;
+  else if (titleLen >= 30 && titleLen <= 80) titleScore = 75;
+  else if (titleLen >= 20 && titleLen <= 100) titleScore = 60;
+  else if (titleLen < 10) titleScore = 20;
+
+  // Keyword density — presence of power words
+  const powerWords = ['how', 'why', 'best', 'top', 'ultimate', 'guide', 'tutorial', 'review', 'tips', 'secrets', 'free', 'new', 'easy'];
+  const titleLower = title.toLowerCase();
+  const powerWordCount = powerWords.filter((w) => titleLower.includes(w)).length;
+  const keywordScore = Math.min(95, 40 + powerWordCount * 15);
+
+  // Engagement prediction — presence of emotional hooks
+  const emotionalWords = ['amazing', 'shocking', 'unbelievable', 'must', 'watch', 'never', 'first', 'last', 'only', '!', '?'];
+  const emotionalCount = emotionalWords.filter((w) => titleLower.includes(w)).length;
+  const engagementScore = Math.min(95, 35 + emotionalCount * 12 + (title.includes('?') ? 10 : 0) + (title.includes('!') ? 5 : 0));
+
+  // Overall SEO score
+  const seoScore = Math.round((titleScore * 0.4 + keywordScore * 0.35 + engagementScore * 0.25));
+
+  // channel is used indirectly — included in the return for API consumers
+  void channel;
+
+  return {
+    overall: seoScore,
+    titleOptimization: titleScore,
+    keywordUsage: keywordScore,
+    engagementPotential: engagementScore,
+    titleLength: titleLen,
+    suggestions: generateSuggestions(title, titleLen, powerWordCount, emotionalCount),
+  };
+}
+
+function generateSuggestions(title: string, titleLen: number, powerWordCount: number, emotionalCount: number): string[] {
+  const suggestions: string[] = [];
+
+  if (titleLen < 30) suggestions.push('Title is too short. Aim for 40-70 characters for better CTR.');
+  if (titleLen > 80) suggestions.push('Title is too long. Keep it under 70 characters so it doesn\'t get truncated.');
+  if (powerWordCount === 0) suggestions.push('Add power words (e.g., "Ultimate", "Best", "Guide") to improve discoverability.');
+  if (emotionalCount === 0) suggestions.push('Consider adding emotional hooks or questions to boost engagement.');
+  if (!title.includes('|') && !title.includes('-') && !title.includes(':')) {
+    suggestions.push('Use separators (|, -, :) to structure your title for better readability.');
+  }
+  if (title === title.toUpperCase() && title.length > 5) {
+    suggestions.push('Avoid ALL CAPS titles — they can look spammy and reduce click-through rate.');
+  }
+  if (suggestions.length === 0) {
+    suggestions.push('Title looks well-optimized! Consider A/B testing with variations.');
+  }
+
+  return suggestions;
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -376,8 +194,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { success: rlOk, reset } = await rateLimit({
-    identifier: `yt-dl-download:${session.user.id}`,
-    limit: 5,
+    identifier: `yt-analyze:${session.user.id}`,
+    limit: 10,
     window: 60,
   });
   if (!rlOk) {
@@ -394,7 +212,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const parsed = youtubeDownloadSchema.safeParse(rawBody);
+  const parsed = analyzeSchema.safeParse(rawBody);
   if (!parsed.success) {
     return NextResponse.json(
       { error: 'Invalid request body', details: parsed.error.flatten().fieldErrors },
@@ -402,117 +220,43 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { videoId, quality, format, audioOnly } = parsed.data;
+  const { videoId } = parsed.data;
 
-  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-  // ── Strategy 1: YouTube Innertube API (ANDROID_VR) ────────────────
   try {
-    const streams = await fetchInnertubeStreams(videoId);
+    // Fetch video metadata via oEmbed
+    const canonicalUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
 
-    if (streams) {
-      const bestFormat = findBestFormat(
-        streams.formats,
-        streams.adaptiveFormats,
-        quality ?? '720p',
-        audioOnly ?? false,
+    const oembedRes = await fetch(oembedUrl, {
+      headers: { 'User-Agent': 'TubeForge/1.0' },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!oembedRes.ok) {
+      return NextResponse.json(
+        { error: 'Could not fetch video data. The video may be private or unavailable.' },
+        { status: 404 },
       );
-
-      if (bestFormat) {
-        const ext = audioOnly ? 'mp3' : (format?.toLowerCase() ?? 'mp4');
-        return NextResponse.json({
-          downloadUrl: bestFormat.url,
-          filename: `${videoId}.${ext}`,
-          contentLength: bestFormat.contentLength,
-          mimeType: bestFormat.mimeType,
-          status: 'redirect',
-          source: 'innertube',
-        });
-      }
     }
+
+    const data = (await oembedRes.json()) as OEmbedResponse;
+    const scores = computeScores(data.title, data.author_name);
+
+    return NextResponse.json({
+      videoId,
+      title: data.title,
+      channel: data.author_name,
+      channelUrl: data.author_url,
+      thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+      watchUrl: canonicalUrl,
+      analysis: scores,
+    });
   } catch (err) {
-    ytLog.error('Innertube error', { error: err instanceof Error ? err.message : String(err) });
-    // Fall through to next strategy
+    const message =
+      err instanceof Error && err.name === 'TimeoutError'
+        ? 'Analysis timed out. YouTube may be slow — please try again.'
+        : 'Failed to analyze video. Please try again later.';
+
+    return NextResponse.json({ error: message }, { status: 502 });
   }
-
-  // ── Strategy 2: Self-hosted yt-dlp VPS ────────────────────────────
-  if (YT_API_BASE) {
-    try {
-      const downloadUrl = `${YT_API_BASE}/download?url=${encodeURIComponent(youtubeUrl)}&quality=${encodeURIComponent(quality ?? '720p')}&format=${encodeURIComponent(format ?? 'mp4')}&audioOnly=${audioOnly ? 'true' : 'false'}`;
-
-      // Verify the VPS is reachable before returning the URL
-      const healthCheck = await fetch(`${YT_API_BASE}/health`, {
-        signal: AbortSignal.timeout(3_000),
-      }).catch(() => null);
-
-      if (healthCheck?.ok) {
-        return NextResponse.json({
-          downloadUrl,
-          filename: `${videoId}.${audioOnly ? 'mp3' : format ?? 'mp4'}`,
-          status: 'redirect',
-          source: 'vps',
-        });
-      }
-    } catch {
-      // Fall through to cobalt API
-    }
-  }
-
-  // ── Strategy 3: Cobalt API ────────────────────────────────────────
-  if (COBALT_API_URL) {
-    try {
-      const qualityMap: Record<string, string> = {
-        '1080p': '1080',
-        '720p': '720',
-        '480p': '480',
-        '360p': '360',
-        audio: '128',
-      };
-
-      const cobaltBody: Record<string, unknown> = {
-        url: youtubeUrl,
-        videoQuality: qualityMap[quality ?? '720p'] ?? '720',
-        filenameStyle: 'pretty',
-      };
-
-      if (audioOnly) {
-        cobaltBody.isAudioOnly = true;
-        cobaltBody.audioFormat = 'mp3';
-      }
-
-      const cobaltRes = await fetch(COBALT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(cobaltBody),
-        signal: AbortSignal.timeout(15_000),
-      });
-
-      if (cobaltRes.ok) {
-        const cobaltData = (await cobaltRes.json()) as { status?: string; url?: string };
-        if (cobaltData.url) {
-          return NextResponse.json({
-            downloadUrl: cobaltData.url,
-            filename: `${videoId}.${audioOnly ? 'mp3' : format ?? 'mp4'}`,
-            status: cobaltData.status ?? 'redirect',
-            source: 'cobalt',
-          });
-        }
-      }
-    } catch {
-      // Fall through to error
-    }
-  }
-
-  // ── Strategy 4: Fallback error ────────────────────────────────────
-  return NextResponse.json(
-    {
-      error:
-        'This video requires YouTube sign-in to download. Please try a different video or use a browser extension.',
-      watchUrl: youtubeUrl,
-    },
-    { status: 503 },
-  );
 }
