@@ -84,7 +84,14 @@ export const BLOG_POSTS: BlogPost[] = [
 </ul>
 
 <h3>Conclusion</h3>
-<p>Building a successful YouTube channel in 2026 is a marathon, not a sprint. Choose the right niche, optimize content from day one, and use modern AI tools to speed up the process. TubeForge will help you at every step — from creating thumbnails to analyzing performance.</p>`,
+<p>Building a successful YouTube channel in 2026 is a marathon, not a sprint. Choose the right niche, optimize content from day one, and use modern AI tools to speed up the process. TubeForge will help you at every step — from creating thumbnails to analyzing performance.</p>
+
+<h3>Further Reading</h3>
+<ul>
+<li><a href="https://creatoracademy.youtube.com/" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Creator Academy</a> — official courses on growing your channel</li>
+<li><a href="https://developers.google.com/search" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">Google Search Central</a> — SEO best practices from Google</li>
+<li><a href="https://support.google.com/youtube" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Help Center</a> — official documentation and guidelines</li>
+</ul>`,
   },
   {
     slug: '10-tips-for-viral-youtube-shorts',
@@ -149,7 +156,13 @@ export const BLOG_POSTS: BlogPost[] = [
 <p>Publish at least 4-5 Shorts per week and analyze the results. Which hooks work best? Which topics get more views? What percentage of viewers watch to the end? Data is your best advisor.</p>
 
 <h3>Bonus Tip</h3>
-<p>Cross-post your best Shorts to TikTok and Instagram Reels. One piece of content — three platforms — triple the reach. TubeForge lets you optimize videos for each platform automatically.</p>`,
+<p>Cross-post your best Shorts to TikTok and Instagram Reels. One piece of content — three platforms — triple the reach. TubeForge lets you optimize videos for each platform automatically.</p>
+
+<h3>Further Reading</h3>
+<ul>
+<li><a href="https://creatoracademy.youtube.com/" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Creator Academy</a> — learn the latest Shorts strategies</li>
+<li><a href="https://support.google.com/youtube/answer/10059070" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Shorts Official Guide</a> — requirements and best practices</li>
+</ul>`,
   },
   {
     slug: 'ai-in-video-creation-tubeforge-2026',
@@ -220,7 +233,13 @@ export const BLOG_POSTS: BlogPost[] = [
 <p>AI is a powerful tool, but your channel's success still depends on your uniqueness and consistency.</p>
 
 <h3>Try TubeForge</h3>
-<p>All AI tools are available on the <a href="/dashboard" style="color: #3a7bfd">TubeForge platform</a>. The free plan includes basic features; Pro includes unlimited AI generation and priority support.</p>`,
+<p>All AI tools are available on the <a href="/dashboard" style="color: #3a7bfd">TubeForge platform</a>. The free plan includes basic features; Pro includes unlimited AI generation and priority support.</p>
+
+<h3>Further Reading</h3>
+<ul>
+<li><a href="https://creatoracademy.youtube.com/" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Creator Academy</a> — learn to leverage AI tools for content creation</li>
+<li><a href="https://developers.google.com/search/docs/appearance/structured-data" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">Google Structured Data Guide</a> — optimize your video content for search</li>
+</ul>`,
   },
   {
     slug: 'youtube-monetization-step-by-step-plan',
@@ -301,7 +320,13 @@ export const BLOG_POSTS: BlogPost[] = [
 </ul>
 
 <h3>Start Today</h3>
-<p>YouTube monetization is a process that begins with your first video. Use <a href="/dashboard" style="color: #3a7bfd">TubeForge</a> to create professional content from day one, and the path to monetization will be significantly shorter.</p>`,
+<p>YouTube monetization is a process that begins with your first video. Use <a href="/dashboard" style="color: #3a7bfd">TubeForge</a> to create professional content from day one, and the path to monetization will be significantly shorter.</p>
+
+<h3>Further Reading</h3>
+<ul>
+<li><a href="https://support.google.com/youtube/answer/72857" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Partner Program Requirements</a> — official eligibility criteria</li>
+<li><a href="https://creatoracademy.youtube.com/" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Creator Academy</a> — free courses on channel monetization</li>
+</ul>`,
   },
   {
     slug: 'tubeforge-vs-competitors-comparison-2026',
@@ -377,7 +402,13 @@ export const BLOG_POSTS: BlogPost[] = [
 </ul>
 
 <h3>Try It Yourself</h3>
-<p>The best way to choose a tool is to test it. <a href="/dashboard" style="color: #3a7bfd">Create a free TubeForge account</a> and experience all the platform's capabilities firsthand.</p>`,
+<p>The best way to choose a tool is to test it. <a href="/dashboard" style="color: #3a7bfd">Create a free TubeForge account</a> and experience all the platform's capabilities firsthand.</p>
+
+<h3>Further Reading</h3>
+<ul>
+<li><a href="https://developers.google.com/search" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">Google Search Central</a> — understand how video SEO works</li>
+<li><a href="https://support.google.com/youtube" target="_blank" rel="noopener noreferrer" style="color: #3a7bfd">YouTube Help Center</a> — official platform documentation</li>
+</ul>`,
   },
 ];
 

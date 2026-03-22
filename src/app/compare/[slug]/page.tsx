@@ -255,22 +255,21 @@ export default async function ComparePage({
           marginBottom: 32,
         }}>
           <h1 style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
             marginBottom: 16,
-            flexWrap: 'wrap',
             fontSize: 28,
             fontWeight: 800,
             letterSpacing: '-.02em',
             margin: '0 0 16px',
+            lineHeight: 1.3,
           }}>
             <span style={{
               color: accentColor,
             }}>
               TubeForge
             </span>
+            {' '}
             <span style={{ fontSize: 20, color: '#a1a1aa', fontWeight: 600 }}>vs</span>
+            {' '}
             <span style={{
               color: '#18181b',
             }}>

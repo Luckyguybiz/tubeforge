@@ -53,37 +53,6 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'TubeForge',
-  description: 'AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer, analytics, and free tools.',
-  applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Web',
-  url: 'https://tubeforge.co',
-  offers: {
-    '@type': 'AggregateOffer',
-    lowPrice: '0',
-    highPrice: '30',
-    priceCurrency: 'USD',
-    offerCount: '3',
-  },
-};
-
-const organizationJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'TubeForge',
-  url: 'https://tubeforge.co',
-  logo: 'https://tubeforge.co/icon-512.png',
-  sameAs: [
-    'https://youtube.com/@tubeforge',
-    'https://t.me/tubeforge',
-    'https://twitter.com/tubeforge',
-  ],
-  description: 'AI-powered video creation platform for YouTube creators',
-};
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -91,14 +60,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-        />
         {/* Prevent flash of wrong theme: read persisted mode before paint */}
         <script
           dangerouslySetInnerHTML={{
