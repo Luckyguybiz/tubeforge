@@ -313,17 +313,36 @@ export function SettingsPage() {
                     </span>
                   )}
                 </div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  id="avatar-upload"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB'); return; }
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    try {
+                      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                      if (!res.ok) throw new Error('Upload failed');
+                      const data = await res.json();
+                      updateProfile.mutate({ image: data.url });
+                      toast.success('Avatar updated');
+                    } catch { toast.error('Failed to upload'); }
+                  }}
+                />
                 <button
                   type="button"
-                  title="Coming soon"
-                  disabled
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    color: C.dim,
+                    color: C.accent,
                     background: 'none',
                     border: 'none',
-                    cursor: 'not-allowed',
+                    cursor: 'pointer',
                     padding: '2px 0',
                     fontFamily: 'inherit',
                     display: 'flex',
@@ -335,7 +354,7 @@ export function SettingsPage() {
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                     <circle cx="12" cy="13" r="4"/>
                   </svg>
-                  {t('common.comingSoon') || 'Coming soon'}
+                  Change photo
                 </button>
               </div>
 

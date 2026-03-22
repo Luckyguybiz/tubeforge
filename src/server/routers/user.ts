@@ -105,15 +105,19 @@ export const userRouter = router({
   }),
 
   updateProfile: protectedProcedure
-    .input(z.object({ name: z.string().min(1).max(50).optional() }))
+    .input(z.object({
+      name: z.string().min(1).max(50).optional(),
+      image: z.string().url().max(500).optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       await checkUserRate(ctx.session.user.id);
-      const data = { ...input };
-      if (data.name) data.name = stripTags(data.name);
+      const data: Record<string, string> = {};
+      if (input.name) data.name = stripTags(input.name);
+      if (input.image) data.image = input.image;
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data,
-        select: { id: true, name: true },
+        select: { id: true, name: true, image: true },
       });
     }),
 
