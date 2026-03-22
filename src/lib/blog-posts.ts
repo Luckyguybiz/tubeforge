@@ -1,4 +1,5 @@
 import { NEW_BLOG_POSTS } from './blog-posts-new';
+import { SEO_BLOG_POSTS } from './blog-posts-seo';
 export interface BlogPost {
   slug: string;
   title: string;
@@ -413,7 +414,7 @@ const ORIGINAL_POSTS: BlogPost[] = [
   },
 ];
 
-export const BLOG_POSTS: BlogPost[] = [...ORIGINAL_POSTS, ...NEW_BLOG_POSTS];
+export const BLOG_POSTS: BlogPost[] = [...ORIGINAL_POSTS, ...NEW_BLOG_POSTS, ...SEO_BLOG_POSTS];
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((post) => post.slug === slug);

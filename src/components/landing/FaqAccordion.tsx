@@ -22,8 +22,8 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
           <div
             key={i}
             style={{
-              borderTop: i === 0 ? '1px solid #e5e5ea' : 'none',
-              borderBottom: '1px solid #e5e5ea',
+              borderTop: i === 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
               overflow: 'hidden',
             }}
           >
@@ -44,13 +44,13 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <span style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f' }}>{item.q}</span>
+              <span style={{ fontSize: 17, fontWeight: 600, color: '#ffffff' }}>{item.q}</span>
               <svg
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#86868b"
+                stroke="rgba(255,255,255,0.3)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -71,7 +71,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 padding: isOpen ? '0 0 20px' : '0 0 0',
               }}
             >
-              <p style={{ fontSize: 17, color: '#86868b', lineHeight: 1.6, margin: 0 }}>{item.a}</p>
+              <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: 0 }}>{item.a}</p>
             </div>
           </div>
         );

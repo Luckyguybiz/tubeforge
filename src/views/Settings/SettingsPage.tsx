@@ -165,28 +165,26 @@ export function SettingsPage() {
     if (val && val !== profile.data?.name) updateProfile.mutate({ name: val });
   }, [profile.data?.name, updateProfile]);
 
-  /* ── Apple design tokens ──────────────────────── */
-  const textPrimary = isDark ? C.text : '#1d1d1f';
-  const textSecondary = isDark ? C.sub : '#86868b';
-  const cardBg = isDark ? C.card : '#ffffff';
-  const cardBorder = isDark ? C.border : '#e5e5ea';
-  const cardShadow = isDark ? 'none' : '0 2px 12px rgba(0,0,0,0.06)';
-  const inputBg = isDark ? C.surface : '#f5f5f7';
-  const secondaryBtnBg = isDark ? C.surface : '#f5f5f7';
+  /* ── Dark design tokens ──────────────────────── */
+  const textPrimary = C.text;
+  const textSecondary = C.sub;
+  const cardBg = C.card;
+  const cardBorder = C.border;
+  const inputBg = 'rgba(255,255,255,0.04)';
+  const secondaryBtnBg = C.surface;
 
   /* ── Shared styles ──────────────────────────── */
 
   const sectionStyle: React.CSSProperties = {
     background: cardBg,
     border: `1px solid ${cardBorder}`,
-    borderRadius: 16,
-    boxShadow: cardShadow,
-    padding: '28px 24px',
+    borderRadius: 14,
+    padding: '24px',
     marginBottom: 32,
   };
 
   const sectionHeaderStyle: React.CSSProperties = {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 600,
     color: textPrimary,
     margin: 0,
@@ -215,8 +213,8 @@ export function SettingsPage() {
     padding: '12px 16px',
     minHeight: 44,
     borderRadius: 10,
-    border: `1px solid ${cardBorder}`,
-    background: inputBg,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
     color: textPrimary,
     fontSize: 14,
     fontFamily: 'inherit',
@@ -229,7 +227,7 @@ export function SettingsPage() {
     ...inputStyle,
     color: textSecondary,
     cursor: 'not-allowed',
-    background: isDark ? C.bg : '#f5f5f7',
+    background: C.bg,
     borderStyle: 'dashed',
     paddingRight: 36,
   };
@@ -429,7 +427,7 @@ export function SettingsPage() {
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
                   ) : authProvider === 'GitHub' ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isDark ? '#fff' : '#24292f'}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
                       <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                     </svg>
                   ) : (
@@ -1282,7 +1280,7 @@ export function SettingsPage() {
           gap: 0,
           padding: '3px',
           borderRadius: 10,
-          background: isDark ? 'rgba(255,255,255,.06)' : '#e5e5ea',
+          background: 'rgba(255,255,255,0.04)',
         }}>
           <button
             onClick={() => setThemeMode('dark')}
@@ -1292,14 +1290,14 @@ export function SettingsPage() {
               minHeight: 44,
               borderRadius: 8,
               border: 'none',
-              background: themeMode === 'dark' ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+              background: themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'transparent',
               color: themeMode === 'dark' ? textPrimary : textSecondary,
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .2s ease',
-              boxShadow: themeMode === 'dark' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              boxShadow: 'none',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
@@ -1319,14 +1317,14 @@ export function SettingsPage() {
               minHeight: 44,
               borderRadius: 8,
               border: 'none',
-              background: themeMode === 'light' ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+              background: themeMode === 'light' ? 'rgba(255,255,255,0.1)' : 'transparent',
               color: themeMode === 'light' ? textPrimary : textSecondary,
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .2s ease',
-              boxShadow: themeMode === 'light' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              boxShadow: 'none',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
@@ -1354,14 +1352,14 @@ export function SettingsPage() {
               minHeight: 44,
               borderRadius: 8,
               border: 'none',
-              background: themeMode === 'system' ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+              background: themeMode === 'system' ? 'rgba(255,255,255,0.1)' : 'transparent',
               color: themeMode === 'system' ? textPrimary : textSecondary,
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .2s ease',
-              boxShadow: themeMode === 'system' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              boxShadow: 'none',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
@@ -1393,7 +1391,7 @@ export function SettingsPage() {
           gap: 0,
           padding: '3px',
           borderRadius: 10,
-          background: isDark ? 'rgba(255,255,255,.06)' : '#e5e5ea',
+          background: 'rgba(255,255,255,0.04)',
           flexWrap: 'wrap',
         }}>
           {([
@@ -1414,14 +1412,14 @@ export function SettingsPage() {
                 minHeight: 44,
                 borderRadius: 8,
                 border: 'none',
-                background: language === code ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
-                color: language === code ? textPrimary : textSecondary,
+                background: language === code ? C.accent : 'transparent',
+                color: language === code ? '#ffffff' : textSecondary,
                 fontSize: 14,
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'all .2s ease',
-                boxShadow: language === code ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                boxShadow: 'none',
               }}
             >
               {label}
@@ -2050,7 +2048,8 @@ export function SettingsPage() {
       {/* ====================================================== */}
       <div style={{
         ...sectionStyle,
-        borderColor: isDark ? 'rgba(220, 38, 38, 0.25)' : 'rgba(220, 38, 38, 0.2)',
+        background: 'rgba(239,68,68,0.08)',
+        borderColor: 'rgba(220, 38, 38, 0.25)',
         borderWidth: 1,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -2411,7 +2410,7 @@ function PushNotificationSection({
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
-              background: isEnabled ? '#6366f1' : C.border,
+              background: isEnabled ? '#6366f1' : 'rgba(255,255,255,0.1)',
               transition: 'background .2s',
               padding: 0,
               flexShrink: 0,
@@ -2512,7 +2511,7 @@ function EmailNotificationSection({
                 borderRadius: 12,
                 border: 'none',
                 cursor: key === 'security' ? 'not-allowed' : 'pointer',
-                background: prefs[key] ? '#6366f1' : C.border,
+                background: prefs[key] ? '#6366f1' : 'rgba(255,255,255,0.1)',
                 transition: 'background .2s',
                 padding: 0,
                 flexShrink: 0,
@@ -2633,7 +2632,7 @@ function WrappedSection({
           <div
             key={item.label}
             style={{
-              background: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.02)',
+              background: 'rgba(255,255,255,0.04)',
               border: `1px solid ${C.border}`,
               borderRadius: 14,
               padding: '20px 16px',

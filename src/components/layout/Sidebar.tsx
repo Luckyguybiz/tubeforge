@@ -398,9 +398,9 @@ function UsageProgressBar({
         <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>{used}/{displayTotal}</span>
       </div>
       <div style={{
-        height: 4,
+        height: 3,
         borderRadius: 2,
-        background: isDark ? 'rgba(255,255,255,.06)' : '#e5e5ea',
+        background: 'rgba(255,255,255,0.06)',
         overflow: 'hidden',
       }}>
         <div style={{
@@ -433,21 +433,19 @@ function SidebarUsageWidget({
   const planLabel = ({ FREE: t('common.free'), PRO: t('common.pro'), STUDIO: t('common.studio') } as Record<string, string>)[plan] ?? plan;
   const planBg =
     plan === 'STUDIO'
-      ? `linear-gradient(135deg, ${C.purple}, ${C.blue})`
+      ? C.purple
       : plan === 'PRO'
-        ? `linear-gradient(135deg, ${C.accent}, ${C.pink})`
-        : isDark
-          ? 'rgba(255,255,255,.06)'
-          : 'rgba(0,0,0,.05)';
+        ? C.accent
+        : 'rgba(255,255,255,0.06)';
   const planColor = plan === 'FREE' ? C.dim : '#fff';
 
   return (
     <div style={{
       margin: '0 12px 8px',
       padding: 14,
-      borderRadius: 14,
-      background: isDark ? 'rgba(255,255,255,.02)' : '#f5f5f7',
-      border: `1px solid ${isDark ? 'rgba(255,255,255,.06)' : '#e5e5ea'}`,
+      borderRadius: 12,
+      background: 'rgba(255,255,255,0.02)',
+      border: `1px solid ${C.border}`,
       position: 'relative',
       zIndex: 1,
     }}>
@@ -492,13 +490,13 @@ function SidebarUsageWidget({
             marginTop: 6,
             borderRadius: 8,
             border: 'none',
-            background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+            background: C.accent,
             color: '#fff',
             fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',
             fontFamily: 'inherit',
-            transition: 'all .2s ease',
+            transition: 'opacity .15s ease',
             letterSpacing: '-.01em',
           }}
         >
@@ -587,12 +585,10 @@ export const Sidebar = memo(function Sidebar() {
   /* ── Plan badge color ───────────────────────────────── */
   const planBadgeBg =
     plan === 'STUDIO'
-      ? `linear-gradient(135deg, ${C.purple}, ${C.blue})`
+      ? C.purple
       : plan === 'PRO'
-        ? `linear-gradient(135deg, ${C.accent}, ${C.pink})`
-        : isDark
-          ? 'rgba(255,255,255,.06)'
-          : 'rgba(0,0,0,.05)';
+        ? C.accent
+        : 'rgba(255,255,255,0.06)';
   const planBadgeColor = plan === 'FREE' ? C.dim : '#fff';
 
   /* ── Nav button renderer ────────────────────────────── */
@@ -605,10 +601,10 @@ export const Sidebar = memo(function Sidebar() {
     // Gradient icon colors
     const gradientKeys = ICON_GRADIENTS[id] ?? ['sub', 'dim'];
     const iconColor = isActive
-      ? C[gradientKeys[0] as keyof typeof C]
+      ? C.accent
       : isHovered
-        ? isDark ? C.text : '#1d1d1f'
-        : isDark ? C.sub : '#86868b';
+        ? 'rgba(255,255,255,0.7)'
+        : 'rgba(255,255,255,0.4)';
     const iconAccent = isActive
       ? C[gradientKeys[1] as keyof typeof C]
       : undefined;
@@ -635,19 +631,15 @@ export const Sidebar = memo(function Sidebar() {
           borderRadius: 10,
           border: 'none',
           background: isActive
-            ? isDark
-              ? `linear-gradient(135deg, rgba(255,45,85,.10), rgba(139,92,246,.06))`
-              : '#f0f0ff'
+            ? C.accentDim
             : isHovered
-              ? isDark
-                ? 'rgba(255,255,255,.05)'
-                : '#f5f5f7'
+              ? 'rgba(255,255,255,0.04)'
               : 'transparent',
           color: isActive
-            ? isDark ? C.text : C.accent
+            ? C.accent
             : isHovered
-              ? isDark ? C.text : '#1d1d1f'
-              : isDark ? C.sub : '#86868b',
+              ? 'rgba(255,255,255,0.8)'
+              : C.sub,
           fontSize: 13.5,
           fontWeight: isActive ? 600 : 450,
           cursor: 'pointer',
@@ -655,9 +647,8 @@ export const Sidebar = memo(function Sidebar() {
           marginBottom: 1,
           fontFamily: 'inherit',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+          transition: 'all .15s ease',
           letterSpacing: isActive ? '-.01em' : '0',
-          transform: isHovered && !isActive ? 'translateX(2px)' : 'translateX(0)',
           overflow: 'visible',
         }}
       >
@@ -666,7 +657,7 @@ export const Sidebar = memo(function Sidebar() {
           <div
             style={{
               position: 'absolute',
-              left: collapsed ? '50%' : -1,
+              left: collapsed ? '50%' : 0,
               ...(collapsed
                 ? {
                     bottom: -1,
@@ -679,15 +670,11 @@ export const Sidebar = memo(function Sidebar() {
                     top: '50%',
                     transform: 'translateY(-50%)',
                     width: 3,
-                    height: 22,
-                    borderRadius: '0 4px 4px 0',
+                    height: 20,
+                    borderRadius: 2,
                   }),
-              background: isDark
-                ? `linear-gradient(${collapsed ? '90deg' : '180deg'}, ${C.accent}, ${C.pink})`
-                : C.accent,
-              transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-              borderRadius: isDark ? undefined : 4,
-              boxShadow: isDark ? `0 0 8px ${C.accent}44` : 'none',
+              background: C.accent,
+              transition: 'all .2s ease',
             }}
           />
         )}
@@ -702,13 +689,8 @@ export const Sidebar = memo(function Sidebar() {
             justifyContent: 'center',
             flexShrink: 0,
             borderRadius: 8,
-            background: isActive
-              ? isDark
-                ? 'rgba(255,255,255,.06)'
-                : 'transparent'
-              : 'transparent',
-            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-            transform: isActive ? 'scale(1.02)' : isHovered ? 'scale(1.05)' : 'scale(1)',
+            background: 'transparent',
+            transition: 'all .15s ease',
           }}
         >
           {icons[id]?.(iconColor, iconAccent) ?? null}
@@ -738,7 +720,6 @@ export const Sidebar = memo(function Sidebar() {
               height: 5,
               borderRadius: '50%',
               background: C.accent,
-              boxShadow: `0 0 6px ${C.accent}88`,
             }}
           />
         )}
@@ -759,11 +740,11 @@ export const Sidebar = memo(function Sidebar() {
       <div
         style={{
           padding: '16px 14px 6px',
-          fontSize: isDark ? 10.5 : 11,
+          fontSize: 10,
           fontWeight: 600,
-          color: isDark ? C.dim : '#aeaeb2',
+          color: C.dim,
           textTransform: 'uppercase',
-          letterSpacing: isDark ? '.1em' : '1.5px',
+          letterSpacing: '2px',
           userSelect: 'none',
         }}
       >
@@ -777,9 +758,7 @@ export const Sidebar = memo(function Sidebar() {
     <div
       style={{
         height: 1,
-        background: isDark
-          ? `linear-gradient(90deg, transparent, ${C.border}, transparent)`
-          : '#e5e5ea',
+        background: C.border,
         margin: '6px 10px',
       }}
     />
@@ -803,47 +782,18 @@ export const Sidebar = memo(function Sidebar() {
       aria-label="Main navigation"
       style={{
         width: W,
-        height: '100%',
-        borderRight: isDark ? `1px solid rgba(255,255,255,.06)` : `1px solid #e5e5ea`,
-        background: isDark
-          ? `linear-gradient(180deg, rgba(14,14,22,.98) 0%, rgba(8,8,14,.99) 100%)`
-          : '#ffffff',
+        borderRight: `1px solid ${C.border}`,
+        background: C.bg,
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
+        height: '100%',
         minHeight: 0,
         overflow: 'hidden',
         transition: 'width .3s cubic-bezier(.4,0,.2,1)',
         position: 'relative',
-        backdropFilter: isDark ? 'blur(20px)' : undefined,
       }}
     >
-      {/* ── Top gradient accent line (dark mode only) ──────── */}
-      {isDark && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 2,
-            background: `linear-gradient(90deg, ${C.accent}, ${C.pink}, ${C.purple}, ${C.blue})`,
-            opacity: 0.7,
-          }}
-        />
-      )}
-
-      {/* ── Subtle background noise/pattern (dark mode only) ── */}
-      {isDark && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'radial-gradient(ellipse at 20% 0%, rgba(255,45,85,.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(139,92,246,.03) 0%, transparent 50%)',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
 
       {/* ── Header / Brand ───────────────────────────────── */}
       <div
@@ -872,7 +822,7 @@ export const Sidebar = memo(function Sidebar() {
               width: 34,
               height: 34,
               borderRadius: 10,
-              background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+              background: C.accent,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -880,17 +830,8 @@ export const Sidebar = memo(function Sidebar() {
               fontWeight: 800,
               color: '#fff',
               flexShrink: 0,
-              boxShadow: `0 4px 12px ${C.accent}33, 0 0 0 1px rgba(255,255,255,.1) inset`,
               letterSpacing: '-.02em',
-              transition: 'transform .2s ease, box-shadow .2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = `0 6px 20px ${C.accent}44, 0 0 0 1px rgba(255,255,255,.15) inset`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = `0 4px 12px ${C.accent}33, 0 0 0 1px rgba(255,255,255,.1) inset`;
+              transition: 'opacity .2s ease',
             }}
           >
             TF
@@ -899,9 +840,9 @@ export const Sidebar = memo(function Sidebar() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <span
                 style={{
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: 17,
-                  letterSpacing: '-.04em',
+                  letterSpacing: '-.03em',
                   color: C.text,
                   lineHeight: 1.2,
                 }}
@@ -929,20 +870,18 @@ export const Sidebar = memo(function Sidebar() {
             title={t('sidebar.collapse')}
             aria-label={t('sidebar.collapseLabel')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.08)' : '#f5f5f7';
-              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.03)' : 'transparent';
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.background = 'transparent';
             }}
             style={{
               width: 28,
               height: 28,
               borderRadius: 8,
               border: 'none',
-              background: isDark ? 'rgba(255,255,255,.03)' : 'transparent',
-              color: isDark ? C.dim : '#86868b',
+              background: 'transparent',
+              color: C.dim,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -951,7 +890,7 @@ export const Sidebar = memo(function Sidebar() {
               flexShrink: 0,
             }}
           >
-            {icons.collapse(isDark ? C.dim : '#86868b')}
+            {icons.collapse(C.dim)}
           </button>
         )}
       </div>
@@ -964,20 +903,18 @@ export const Sidebar = memo(function Sidebar() {
             title={t('sidebar.expand')}
             aria-label={t('sidebar.expandLabel')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.08)' : '#f5f5f7';
-              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.03)' : 'transparent';
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.background = 'transparent';
             }}
             style={{
               width: 28,
               height: 28,
               borderRadius: 8,
               border: 'none',
-              background: isDark ? 'rgba(255,255,255,.03)' : 'transparent',
-              color: isDark ? C.dim : '#86868b',
+              background: 'transparent',
+              color: C.dim,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -985,7 +922,7 @@ export const Sidebar = memo(function Sidebar() {
               transition: 'all .2s ease',
             }}
           >
-            {icons.expand(isDark ? C.dim : '#86868b')}
+            {icons.expand(C.dim)}
           </button>
         </div>
       )}
@@ -1000,8 +937,8 @@ export const Sidebar = memo(function Sidebar() {
               gap: 8,
               padding: '8px 12px',
               borderRadius: 10,
-              background: isDark ? 'rgba(255,255,255,.03)' : '#f5f5f7',
-              border: `1px solid ${isDark ? 'rgba(255,255,255,.05)' : '#e5e5ea'}`,
+              background: 'rgba(255,255,255,0.03)',
+              border: `1px solid ${C.border}`,
               cursor: 'pointer',
               transition: 'all .2s ease',
             }}
@@ -1019,12 +956,12 @@ export const Sidebar = memo(function Sidebar() {
               }
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.06)' : '#ececee';
-              e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,.1)' : '#d1d1d6';
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+              e.currentTarget.style.borderColor = C.borderActive;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,.03)' : '#f5f5f7';
-              e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,.05)' : '#e5e5ea';
+              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              e.currentTarget.style.borderColor = C.border;
             }}
           >
             {icons.search(C.dim)}
@@ -1045,8 +982,8 @@ export const Sidebar = memo(function Sidebar() {
                 color: C.dim,
                 padding: '2px 6px',
                 borderRadius: 5,
-                background: isDark ? 'rgba(255,255,255,.05)' : '#ececee',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,.06)' : '#d1d1d6'}`,
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${C.border}`,
                 fontFamily: 'inherit',
                 lineHeight: 1.2,
               }}
@@ -1069,7 +1006,7 @@ export const Sidebar = memo(function Sidebar() {
           position: 'relative',
           zIndex: 1,
           scrollbarWidth: 'thin',
-          scrollbarColor: `${isDark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'} transparent`,
+          scrollbarColor: 'rgba(255,255,255,0.08) transparent',
         }}
       >
         {visibleGroups.map((group, gIndex) => (
@@ -1113,7 +1050,7 @@ export const Sidebar = memo(function Sidebar() {
                 height: 34,
                 borderRadius: 10,
                 border: 'none',
-                background: `linear-gradient(135deg, ${C.accent}22, ${C.pink}22)`,
+                background: C.accentDim,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -1131,9 +1068,7 @@ export const Sidebar = memo(function Sidebar() {
       <div
         style={{
           height: 1,
-          background: isDark
-            ? `linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent)`
-            : '#e5e5ea',
+          background: C.border,
           margin: collapsed ? '0 10px' : '0 14px',
         }}
       />
@@ -1159,42 +1094,24 @@ export const Sidebar = memo(function Sidebar() {
           }}
           onClick={() => collapsed && setUserMenuOpen(!userMenuOpen)}
         >
-          {/* Outer ring */}
+          {/* Avatar */}
           <div
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              padding: 2,
-              background:
-                plan === 'STUDIO'
-                  ? `linear-gradient(135deg, ${C.purple}, ${C.blue})`
-                  : plan === 'PRO'
-                    ? `linear-gradient(135deg, ${C.accent}, ${C.pink})`
-                    : `linear-gradient(135deg, ${isDark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.1)'}, ${isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)'})`,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: C.accent,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              fontWeight: 700,
+              color: '#fff',
+              letterSpacing: '-.01em',
               flexShrink: 0,
-              transition: 'all .2s ease',
             }}
           >
-            {/* Inner avatar */}
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: 10,
-                background: `linear-gradient(135deg, ${C.blue}, ${C.purple})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#fff',
-                letterSpacing: '-.01em',
-                boxShadow: isDark ? undefined : '0 2px 8px rgba(0,0,0,.1)',
-              }}
-            >
-              {initials}
-            </div>
+            {initials}
           </div>
 
           {/* Online status dot */}
@@ -1207,8 +1124,7 @@ export const Sidebar = memo(function Sidebar() {
               height: 10,
               borderRadius: '50%',
               background: C.green,
-              border: `2.5px solid ${isDark ? 'rgba(14,14,22,.98)' : C.surface}`,
-              boxShadow: `0 0 6px ${C.green}66`,
+              border: `2px solid ${C.bg}`,
             }}
           />
         </div>
@@ -1249,14 +1165,7 @@ export const Sidebar = memo(function Sidebar() {
                   background: planBadgeBg,
                   letterSpacing: '.02em',
                   lineHeight: 1.3,
-                  ...(plan !== 'FREE'
-                    ? {
-                        boxShadow:
-                          plan === 'STUDIO'
-                            ? `0 2px 6px ${C.purple}33`
-                            : `0 2px 6px ${C.accent}33`,
-                      }
-                    : {}),
+                  ...(plan !== 'FREE' ? {} : {}),
                 }}
               >
                 {planLabel}
@@ -1274,9 +1183,7 @@ export const Sidebar = memo(function Sidebar() {
               title={t('sidebar.settingsLabel')}
               aria-label={t('sidebar.settingsLabel')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = isDark
-                  ? 'rgba(255,255,255,.08)'
-                  : '#f5f5f7';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
                 e.currentTarget.style.transform = 'rotate(30deg)';
               }}
               onMouseLeave={(e) => {
@@ -1307,14 +1214,12 @@ export const Sidebar = memo(function Sidebar() {
               title={t('sidebar.logout')}
               aria-label={t('sidebar.logoutLabel')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = isDark
-                  ? 'rgba(255,45,85,.12)'
-                  : '#fff0f1';
-                e.currentTarget.style.color = C.accent;
+                e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
+                e.currentTarget.style.color = C.red;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = isDark ? C.dim : '#86868b';
+                e.currentTarget.style.color = C.dim;
               }}
               style={{
                 width: 28,
