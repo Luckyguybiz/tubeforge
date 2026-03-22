@@ -1418,47 +1418,6 @@ export function AiThumbnailsPage() {
                   ))}
                 </div>
 
-                {/* Video tutorial placeholder */}
-                <div style={{
-                  marginTop: 24, padding: 20, borderRadius: 14,
-                  background: C.surface, border: `1px solid ${C.border}`,
-                  textAlign: 'center',
-                }}>
-                  <span style={{ fontSize: 13, color: C.dim }}>📹 Video tutorial coming soon — watch how creators make viral thumbnails</span>
-                </div>
-
-                {/* Example prompt chips */}
-                <div style={{ marginTop: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-                    Try an example
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {EXAMPLE_PROMPTS.map((ep, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setPrompt(ep)}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                        style={{
-                          width: '100%', padding: '10px 14px',
-                          borderRadius: 10,
-                          border: `1px solid ${C.border}`,
-                          background: 'transparent',
-                          color: C.sub,
-                          fontSize: 13,
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                          outline: 'none',
-                          transition: 'all 0.15s ease',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {ep}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             ) : (
               /* ── History tab ─────────────────────────────── */
