@@ -165,6 +165,7 @@ export function VideoTranslator() {
 
       const res = await fetch('/api/tools/video-translate', {
         method: 'POST',
+        headers: promoCode ? { 'x-promo-code': promoCode } : {},
         body: formData,
       });
 
@@ -431,6 +432,32 @@ export function VideoTranslator() {
               {'\u2022 Multilingual v2 model (best quality for 29+ languages)'}
             </div>
           </div>
+
+          {/* Promo code */}
+          <details style={{ marginBottom: 16, cursor: 'pointer' }}>
+            <summary style={{ fontSize: 12, color: C?.dim ?? '#aaa' }}>
+              {t('videoTranslator.havePromo') || 'Есть промокод?'}
+            </summary>
+            <div style={{ marginTop: 8 }}>
+              <input
+                type='text'
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder={t('videoTranslator.enterPromo') || 'Введите промокод'}
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 10,
+                  border: '1px solid ' + (C?.border ?? '#eee'), background: C?.bg ?? '#fafafa',
+                  color: C?.text ?? '#111', fontSize: 13, fontFamily: 'inherit',
+                  boxSizing: 'border-box' as const,
+                }}
+              />
+              {promoCode && (
+                <div style={{ fontSize: 11, color: '#22c55e', marginTop: 4 }}>
+                  ✅ {t('videoTranslator.promoApplied') || 'Промокод применён — лимиты сняты'}
+                </div>
+              )}
+            </div>
+          </details>
 
           {/* Submit */}
           <button onClick={handleSubmit} disabled={!isReady} style={{
