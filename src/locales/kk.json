@@ -1821,5 +1821,18 @@
   "nav.videoTranslator": "Бейне аудармашы",
   "dashboard.videoTranslatorDesc": "Бейнелерді кез келген тілге аударыңыз",
   "dashboard.aiThumbnailDesc": "AI көмегімен нобайларды жасаңыз",
-  "tools.aiThumbnail.title": "AI Нобай редакторы"
+  "tools.aiThumbnail.title": "AI Нобай редакторы",
+  "videoTranslator.title": "Бейне аудармашы",
+  "videoTranslator.subtitle": "Бейнені кез келген тілге аударыңыз",
+  "videoTranslator.tryAgain": "Қайталап көріңіз",
+  "videoTranslator.translateVideo": "Бейнені аудару",
+  "videoTranslator.translationReady": "Аударма дайын!",
+  "videoTranslator.download": "Жүктеу",
+  "videoTranslator.newTranslation": "Жаңа аударма",
+  "videoTranslator.videoTranslatedTo": "Бейне аударылды ",
+  "videoTranslator.uploadingToServer": "Серверге жүктелуде...",
+  "videoTranslator.defaultProcessing": "Өңделуде...",
+  "videoTranslator.mayTakeMinutes": "Бірнеше минут алуы мүмкін",
+  "videoTranslator.cloningVoice": "Дауыс клондалуда, аударылуда",
+  "videoTranslator.expectedTime": "Күтілетін уақыт"
 }

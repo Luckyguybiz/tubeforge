@@ -1821,5 +1821,18 @@
   "nav.videoTranslator": "Traductor de video",
   "dashboard.videoTranslatorDesc": "Traduce videos a cualquier idioma con tu voz clonada",
   "dashboard.aiThumbnailDesc": "Genera, recrea y analiza miniaturas con IA",
-  "tools.aiThumbnail.title": "Editor de miniaturas IA"
+  "tools.aiThumbnail.title": "Editor de miniaturas IA",
+  "videoTranslator.title": "Traductor de video",
+  "videoTranslator.subtitle": "Traduce video a cualquier idioma con tu voz clonada",
+  "videoTranslator.tryAgain": "Intentar de nuevo",
+  "videoTranslator.translateVideo": "Traducir video",
+  "videoTranslator.translationReady": "¡Traducción lista!",
+  "videoTranslator.download": "Descargar",
+  "videoTranslator.newTranslation": "Nueva traducción",
+  "videoTranslator.videoTranslatedTo": "Video traducido a ",
+  "videoTranslator.uploadingToServer": "Subiendo al servidor...",
+  "videoTranslator.defaultProcessing": "Procesando...",
+  "videoTranslator.mayTakeMinutes": "Esto puede tardar unos minutos",
+  "videoTranslator.cloningVoice": "Clonando voz, traduciendo y sincronizando",
+  "videoTranslator.expectedTime": "Tiempo esperado"
 }

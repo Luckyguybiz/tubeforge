@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
   /* ── Experimental flags ───────────────────────────────────────── */
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: '500mb',
     },
     optimizePackageImports: [
       'recharts',

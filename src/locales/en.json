@@ -1821,5 +1821,18 @@
   "nav.videoTranslator": "Video Translator",
   "dashboard.videoTranslatorDesc": "Translate videos to any language with your voice cloned",
   "dashboard.aiThumbnailDesc": "Generate, recreate and analyze thumbnails with AI",
-  "tools.aiThumbnail.title": "AI Thumbnail Editor"
+  "tools.aiThumbnail.title": "AI Thumbnail Editor",
+  "videoTranslator.title": "Video Translator",
+  "videoTranslator.subtitle": "Translate video to any language with your voice cloned",
+  "videoTranslator.tryAgain": "Try again",
+  "videoTranslator.translateVideo": "Translate video",
+  "videoTranslator.translationReady": "Translation ready!",
+  "videoTranslator.download": "Download",
+  "videoTranslator.newTranslation": "New translation",
+  "videoTranslator.videoTranslatedTo": "Video translated to ",
+  "videoTranslator.uploadingToServer": "Uploading to server...",
+  "videoTranslator.defaultProcessing": "Processing...",
+  "videoTranslator.mayTakeMinutes": "This may take a few minutes",
+  "videoTranslator.cloningVoice": "Cloning voice, translating and syncing",
+  "videoTranslator.expectedTime": "Expected time"
 }

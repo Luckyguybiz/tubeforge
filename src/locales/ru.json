@@ -1821,5 +1821,18 @@
   "nav.videoTranslator": "Перевод видео",
   "dashboard.videoTranslatorDesc": "Переводите видео на любой язык с клонированием вашего голоса",
   "dashboard.aiThumbnailDesc": "Генерируйте, пересоздавайте и анализируйте обложки с помощью AI",
-  "tools.aiThumbnail.title": "AI Редактор обложек"
+  "tools.aiThumbnail.title": "AI Редактор обложек",
+  "videoTranslator.title": "Перевод видео",
+  "videoTranslator.subtitle": "Переведите видео на любой язык с клонированием вашего голоса",
+  "videoTranslator.tryAgain": "Попробовать снова",
+  "videoTranslator.translateVideo": "Перевести видео",
+  "videoTranslator.translationReady": "Перевод готов!",
+  "videoTranslator.download": "Скачать",
+  "videoTranslator.newTranslation": "Новый перевод",
+  "videoTranslator.videoTranslatedTo": "Видео переведено на ",
+  "videoTranslator.uploadingToServer": "Загружаем на сервер...",
+  "videoTranslator.defaultProcessing": "Обрабатываем...",
+  "videoTranslator.mayTakeMinutes": "Это может занять несколько минут",
+  "videoTranslator.cloningVoice": "Клонируем голос, переводим и синхронизируем",
+  "videoTranslator.expectedTime": "Ожидаемое время"
 }
