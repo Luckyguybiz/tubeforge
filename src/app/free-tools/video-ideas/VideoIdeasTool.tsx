@@ -119,11 +119,11 @@ export function VideoIdeasTool() {
       {/* Input */}
       <div
         style={{
-          background: "#ffffff",
+          background: "#0a0a0a",
           borderRadius: 18,
           padding: "28px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          border: "1px solid #e5e5ea",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+          border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         <label
@@ -132,7 +132,7 @@ export function VideoIdeasTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#1d1d1f",
+            color: "#ffffff",
             marginBottom: 8,
           }}
         >
@@ -146,11 +146,11 @@ export function VideoIdeasTool() {
             width: "100%",
             padding: "14px 16px",
             fontSize: 17,
-            border: "1px solid #d2d2d7",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
             outline: "none",
-            background: "#fafafa",
-            color: "#1d1d1f",
+            background: "#1a1a1a",
+            color: "#ffffff",
             fontFamily: "inherit",
             transition: "border-color 0.2s ease",
             boxSizing: "border-box",
@@ -176,8 +176,8 @@ export function VideoIdeasTool() {
             marginTop: 16,
             width: "100%",
             padding: "14px 28px",
-            background: loading ? "#d2d2d7" : "#0071e3",
-            color: loading ? "#86868b" : "#fff",
+            background: loading ? "rgba(255,255,255,0.08)" : "#6366f1",
+            color: loading ? "rgba(255,255,255,0.3)" : "#fff",
             fontSize: 17,
             fontWeight: 500,
             border: "none",
@@ -201,7 +201,7 @@ export function VideoIdeasTool() {
             background: limitReached ? "rgba(0,113,227,0.06)" : "rgba(255,59,48,0.06)",
             borderRadius: 12,
             fontSize: 15,
-            color: limitReached ? "#0071e3" : "#ff3b30",
+            color: limitReached ? "#6366f1" : "#ff3b30",
             lineHeight: 1.5,
           }}
         >
@@ -211,7 +211,7 @@ export function VideoIdeasTool() {
               <Link
                 href="/register"
                 style={{
-                  color: "#0071e3",
+                  color: "#6366f1",
                   fontWeight: 600,
                   textDecoration: "underline",
                 }}
@@ -234,15 +234,15 @@ export function VideoIdeasTool() {
               marginBottom: 16,
             }}
           >
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", margin: 0 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: 0 }}>
               {totalIdeas} Video Ideas
             </h3>
             <button
               onClick={handleCopyAll}
               style={{
                 padding: "8px 16px",
-                background: copied === "__all__" ? "#34c759" : "rgba(0,113,227,0.08)",
-                color: copied === "__all__" ? "#fff" : "#0071e3",
+                background: copied === "__all__" ? "#34c759" : "rgba(99,102,241,0.1)",
+                color: copied === "__all__" ? "#fff" : "#6366f1",
                 fontSize: 14,
                 fontWeight: 500,
                 border: "none",
@@ -289,13 +289,13 @@ export function VideoIdeasTool() {
                         justifyContent: "space-between",
                         gap: 12,
                         padding: "12px 16px",
-                        background: "#fafafa",
+                        background: "#1a1a1a",
                         borderRadius: 10,
-                        border: "1px solid #e5e5ea",
+                        border: "1px solid rgba(255,255,255,0.06)",
                         transition: "all 0.2s ease",
                       }}
                     >
-                      <span style={{ fontSize: 15, color: "#1d1d1f", lineHeight: 1.5, flex: 1 }}>
+                      <span style={{ fontSize: 15, color: "#ffffff", lineHeight: 1.5, flex: 1 }}>
                         {idea}
                       </span>
                       <button
@@ -303,8 +303,8 @@ export function VideoIdeasTool() {
                         style={{
                           flexShrink: 0,
                           padding: "4px 12px",
-                          background: copied === idea ? "#34c759" : "rgba(0,113,227,0.08)",
-                          color: copied === idea ? "#fff" : "#0071e3",
+                          background: copied === idea ? "#34c759" : "rgba(99,102,241,0.1)",
+                          color: copied === idea ? "#fff" : "#6366f1",
                           fontSize: 12,
                           fontWeight: 500,
                           border: "none",

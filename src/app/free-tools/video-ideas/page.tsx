@@ -54,7 +54,7 @@ const JSON_LD = {
 
 export default function VideoIdeasPage() {
   return (
-    <div style={{ background: "#ffffff", color: "#1d1d1f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -70,7 +70,7 @@ export default function VideoIdeasPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              color: "#0071e3",
+              color: "#6366f1",
               fontSize: 13,
               fontWeight: 500,
               textDecoration: "none",
@@ -89,7 +89,7 @@ export default function VideoIdeasPage() {
               letterSpacing: "-0.025em",
               lineHeight: 1.08,
               margin: "0 0 16px",
-              color: "#1d1d1f",
+              color: "#ffffff",
             }}
           >
             Video Ideas Generator.
@@ -97,7 +97,7 @@ export default function VideoIdeasPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               maxWidth: 520,
               margin: "0 auto",
               lineHeight: 1.5,
@@ -117,21 +117,21 @@ export default function VideoIdeasPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#f5f5f7" }}>
+      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#111111" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
           >
             Turn ideas into videos.
           </h2>
-          <p style={{ fontSize: 19, color: "#86868b", margin: "0 0 32px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", margin: "0 0 32px", lineHeight: 1.5 }}>
             Sign up for TubeForge to generate scripts, thumbnails, and publish — all from one platform.
           </p>
           <Link
@@ -140,7 +140,7 @@ export default function VideoIdeasPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0071e3",
+              background: "#6366f1",
               color: "#fff",
               fontSize: 17,
               fontWeight: 400,
@@ -161,8 +161,8 @@ export default function VideoIdeasPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#f5f5f7", borderTop: "1px solid #e5e5ea", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "#86868b" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
       </footer>
     </div>
   );

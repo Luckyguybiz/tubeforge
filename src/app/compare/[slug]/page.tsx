@@ -286,7 +286,7 @@ const accentColor = '#6c5ce7';
 const tableCell: React.CSSProperties = {
   padding: '14px 18px',
   fontSize: 14,
-  borderBottom: '1px solid #e4e4e7',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
   verticalAlign: 'middle',
 };
 
@@ -327,8 +327,8 @@ export default async function ComparePage({
     <main
       style={{
         minHeight: '100dvh',
-        background: '#fff',
-        color: '#18181b',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "'Instrument Sans', sans-serif",
       }}
     >
@@ -349,7 +349,7 @@ export default async function ComparePage({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            color: '#71717a',
+            color: 'rgba(255,255,255,0.4)',
             textDecoration: 'none',
             fontSize: 14,
             fontWeight: 500,
@@ -362,8 +362,8 @@ export default async function ComparePage({
 
         {/* Hero */}
         <div style={{
-          background: '#fafafa',
-          border: '1px solid #e4e4e7',
+          background: '#1a1a1a',
+          border: '1px solid rgba(255,255,255,0.06)',
           borderRadius: 20,
           padding: '48px 40px',
           marginBottom: 32,
@@ -382,31 +382,31 @@ export default async function ComparePage({
               TubeForge
             </span>
             {' '}
-            <span style={{ fontSize: 20, color: '#a1a1aa', fontWeight: 600 }}>vs</span>
+            <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>vs</span>
             {' '}
             <span style={{
-              color: '#18181b',
+              color: '#ffffff',
             }}>
               {data.name}
             </span>
           </h1>
-          <p style={{ fontSize: 16, color: '#71717a', lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
             {data.description}
           </p>
         </div>
 
         {/* Feature comparison table */}
         <div style={{
-          background: '#fff',
-          border: '1px solid #e4e4e7',
+          background: '#0a0a0a',
+          border: '1px solid rgba(255,255,255,0.06)',
           borderRadius: 16,
           overflow: 'hidden',
           marginBottom: 32,
         }}>
           <div style={{
             padding: '20px 24px',
-            borderBottom: '1px solid #e4e4e7',
-            background: '#fafafa',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            background: '#1a1a1a',
           }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
               Feature Comparison
@@ -414,21 +414,21 @@ export default async function ComparePage({
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#fafafa' }}>
+              <tr style={{ background: '#1a1a1a' }}>
                 <th style={{ ...tableCell, fontWeight: 600, textAlign: 'left', width: '40%' }}>
                   Feature
                 </th>
                 <th style={{ ...tableCell, fontWeight: 700, textAlign: 'center', color: accentColor }}>
                   TubeForge
                 </th>
-                <th style={{ ...tableCell, fontWeight: 600, textAlign: 'center', color: '#71717a' }}>
+                <th style={{ ...tableCell, fontWeight: 600, textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
                   {data.name}
                 </th>
               </tr>
             </thead>
             <tbody>
               {data.features.map((f, i) => (
-                <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                <tr key={i} style={{ background: i % 2 === 0 ? '#0a0a0a' : '#111111' }}>
                   <td style={{ ...tableCell, fontWeight: 500 }}>{f.name}</td>
                   <td style={{ ...tableCell, textAlign: 'center' }}>{f.tubeforge}</td>
                   <td style={{ ...tableCell, textAlign: 'center' }}>{f.competitor}</td>
@@ -452,20 +452,20 @@ export default async function ComparePage({
             padding: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#71717a', marginBottom: 8 }}>TubeForge</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>TubeForge</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: accentColor, letterSpacing: '-.02em' }}>
               {data.pricing.tubeforge}
             </div>
           </div>
           <div style={{
-            background: '#fafafa',
-            border: '1px solid #e4e4e7',
+            background: '#1a1a1a',
+            border: '1px solid rgba(255,255,255,0.06)',
             borderRadius: 16,
             padding: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#71717a', marginBottom: 8 }}>{data.name}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#18181b', letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{data.name}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-.02em' }}>
               {data.pricing.competitor}
             </div>
           </div>
@@ -484,7 +484,7 @@ export default async function ComparePage({
             fontWeight: 800,
             margin: '0 0 20px',
             letterSpacing: '-.02em',
-            color: '#18181b',
+            color: '#ffffff',
           }}>
             Why TubeForge Is Better
           </h2>
@@ -496,7 +496,7 @@ export default async function ComparePage({
                 gap: 10,
                 fontSize: 15,
                 lineHeight: 1.6,
-                color: '#3f3f46',
+                color: 'rgba(255,255,255,0.7)',
               }}>
                 <span style={{
                   display: 'inline-flex',
@@ -530,7 +530,7 @@ export default async function ComparePage({
           }}>
             Try TubeForge for Free
           </h2>
-          <p style={{ color: '#71717a', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
             Start creating videos with AI today. Free, no credit card required.
           </p>
           <Link
@@ -556,7 +556,7 @@ export default async function ComparePage({
 
         {/* Other comparisons */}
         <div style={{
-          borderTop: '1px solid #e4e4e7',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
           paddingTop: 32,
           marginTop: 16,
         }}>
@@ -564,7 +564,7 @@ export default async function ComparePage({
             fontSize: 16,
             fontWeight: 700,
             marginBottom: 16,
-            color: '#71717a',
+            color: 'rgba(255,255,255,0.4)',
           }}>
             Other Comparisons
           </h3>
@@ -576,9 +576,9 @@ export default async function ComparePage({
                 style={{
                   padding: '8px 16px',
                   borderRadius: 8,
-                  border: '1px solid #e4e4e7',
-                  background: '#fafafa',
-                  color: '#3f3f46',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: '#1a1a1a',
+                  color: 'rgba(255,255,255,0.7)',
                   textDecoration: 'none',
                   fontSize: 13,
                   fontWeight: 600,

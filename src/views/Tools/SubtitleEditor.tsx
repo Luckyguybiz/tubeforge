@@ -146,17 +146,17 @@ export function SubtitleEditor() {
 
   /* ── Style helpers ─────────────────────────────────────────────────── */
   const cardStyle: React.CSSProperties = {
-    background: '#f5f5f7',
-    border: 'none',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 16,
     padding: 16,
   };
 
   const inputStyle: React.CSSProperties = {
-    background: '#ffffff',
-    border: 'none',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 10,
-    color: '#1d1d1f',
+    color: '#ffffff',
     padding: '10px 12px',
     fontSize: 13,
     fontFamily: 'monospace',
@@ -169,9 +169,9 @@ export function SubtitleEditor() {
   const smallBtnStyle: React.CSSProperties = {
     padding: '6px 14px',
     borderRadius: 20,
-    border: 'none',
-    background: '#f5f5f7',
-    color: '#1d1d1f',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
@@ -212,22 +212,22 @@ export function SubtitleEditor() {
               justifyContent: 'center',
               padding: '56px 24px',
               borderRadius: 16,
-              border: `2px dashed ${dragOver ? GRADIENT[0] : '#d2d2d7'}`,
-              background: dragOver ? `${GRADIENT[0]}10` : '#f5f5f7',
+              border: `2px dashed ${dragOver ? GRADIENT[0] : 'rgba(255,255,255,0.1)'}`,
+              background: dragOver ? `${GRADIENT[0]}15` : 'rgba(255,255,255,0.03)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               textAlign: 'center',
             }}
             onMouseEnter={(e) => {
               if (!dragOver) {
-                e.currentTarget.style.borderColor = '#86868b';
-                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
               }
             }}
             onMouseLeave={(e) => {
               if (!dragOver) {
-                e.currentTarget.style.borderColor = '#d2d2d7';
-                e.currentTarget.style.background = '#f5f5f7';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
               }
             }}
           >
@@ -575,7 +575,7 @@ function EntryRow({
         gap: 10,
         padding: '12px 14px',
         borderRadius: 16,
-        background: hovered ? '#ffffff' : '#f5f5f7',
+        background: hovered ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
         border: 'none',
         boxShadow: hovered ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
         transition: 'all 0.15s ease',

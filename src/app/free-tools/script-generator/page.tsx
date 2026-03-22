@@ -54,7 +54,7 @@ const JSON_LD = {
 
 export default function ScriptGeneratorPage() {
   return (
-    <div style={{ background: "#ffffff", color: "#1d1d1f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -70,7 +70,7 @@ export default function ScriptGeneratorPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              color: "#0071e3",
+              color: "#6366f1",
               fontSize: 13,
               fontWeight: 500,
               textDecoration: "none",
@@ -89,7 +89,7 @@ export default function ScriptGeneratorPage() {
               letterSpacing: "-0.025em",
               lineHeight: 1.08,
               margin: "0 0 16px",
-              color: "#1d1d1f",
+              color: "#ffffff",
             }}
           >
             YouTube Script Generator.
@@ -97,7 +97,7 @@ export default function ScriptGeneratorPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               maxWidth: 520,
               margin: "0 auto",
               lineHeight: 1.5,
@@ -117,7 +117,7 @@ export default function ScriptGeneratorPage() {
       </section>
 
       {/* Tips Section */}
-      <section style={{ padding: "80px 24px", background: "#f5f5f7" }}>
+      <section style={{ padding: "80px 24px", background: "#111111" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
@@ -126,7 +126,7 @@ export default function ScriptGeneratorPage() {
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
               margin: "0 0 12px",
-              color: "#1d1d1f",
+              color: "#ffffff",
               textAlign: "center",
             }}
           >
@@ -135,7 +135,7 @@ export default function ScriptGeneratorPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               textAlign: "center",
               margin: "0 auto 48px",
               maxWidth: 420,
@@ -155,15 +155,15 @@ export default function ScriptGeneratorPage() {
                 key={tip.title}
                 style={{
                   padding: "20px 24px",
-                  background: "#ffffff",
+                  background: "#0a0a0a",
                   borderRadius: 14,
-                  border: "1px solid #e5e5ea",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                <h3 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", margin: "0 0 6px" }}>
+                <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: "0 0 6px" }}>
                   {tip.title}
                 </h3>
-                <p style={{ fontSize: 15, color: "#86868b", margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.6 }}>
                   {tip.desc}
                 </p>
               </div>
@@ -173,21 +173,21 @@ export default function ScriptGeneratorPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#ffffff" }}>
+      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#0a0a0a" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
           >
             Want unlimited script generations?
           </h2>
-          <p style={{ fontSize: 19, color: "#86868b", margin: "0 0 32px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", margin: "0 0 32px", lineHeight: 1.5 }}>
             Sign up for TubeForge to get unlimited AI generations plus 14 more creator tools.
           </p>
           <Link
@@ -196,7 +196,7 @@ export default function ScriptGeneratorPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0071e3",
+              background: "#6366f1",
               color: "#fff",
               fontSize: 17,
               fontWeight: 400,
@@ -217,8 +217,8 @@ export default function ScriptGeneratorPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#f5f5f7", borderTop: "1px solid #e5e5ea", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "#86868b" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
       </footer>
     </div>
   );

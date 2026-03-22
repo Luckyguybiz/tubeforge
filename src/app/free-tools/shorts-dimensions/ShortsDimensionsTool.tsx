@@ -65,14 +65,14 @@ export function ShortsDimensionsTool() {
       {/* Upload / Preview */}
       <div
         style={{
-          background: "#ffffff",
+          background: "#0a0a0a",
           borderRadius: 18,
           padding: "28px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          border: "1px solid #e5e5ea",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+          border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <h3 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", margin: "0 0 16px" }}>
+        <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: "0 0 16px" }}>
           Preview your image as a YouTube Short
         </h3>
 
@@ -82,13 +82,13 @@ export function ShortsDimensionsTool() {
             onDragOver={handleDragOver}
             onClick={() => fileInputRef.current?.click()}
             style={{
-              border: "2px dashed #d2d2d7",
+              border: "2px dashed rgba(255,255,255,0.08)",
               borderRadius: 14,
               padding: "48px 24px",
               textAlign: "center",
               cursor: "pointer",
               transition: "all 0.2s ease",
-              background: "#fafafa",
+              background: "#1a1a1a",
             }}
           >
             <svg
@@ -96,7 +96,7 @@ export function ShortsDimensionsTool() {
               height="40"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#86868b"
+              stroke="rgba(255,255,255,0.3)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -106,7 +106,7 @@ export function ShortsDimensionsTool() {
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <p style={{ fontSize: 15, color: "#86868b", margin: "0 0 4px" }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", margin: "0 0 4px" }}>
               Drop an image here or click to upload
             </p>
             <p style={{ fontSize: 13, color: "#aeaeb2", margin: 0 }}>
@@ -128,7 +128,7 @@ export function ShortsDimensionsTool() {
                   width: 220,
                   height: 391,
                   borderRadius: 24,
-                  border: "4px solid #1d1d1f",
+                  border: "4px solid #ffffff",
                   overflow: "hidden",
                   position: "relative",
                   background: "#000",
@@ -194,13 +194,13 @@ export function ShortsDimensionsTool() {
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "10px 14px",
-                  background: "#fafafa",
+                  background: "#1a1a1a",
                   borderRadius: 10,
-                  border: "1px solid #e5e5ea",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                <span style={{ fontSize: 14, color: "#86868b" }}>File</span>
-                <span style={{ fontSize: 14, color: "#1d1d1f", fontWeight: 500 }}>{fileName}</span>
+                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>File</span>
+                <span style={{ fontSize: 14, color: "#ffffff", fontWeight: 500 }}>{fileName}</span>
               </div>
               {imageDimensions && (
                 <>
@@ -210,13 +210,13 @@ export function ShortsDimensionsTool() {
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: "10px 14px",
-                      background: "#fafafa",
+                      background: "#1a1a1a",
                       borderRadius: 10,
-                      border: "1px solid #e5e5ea",
+                      border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    <span style={{ fontSize: 14, color: "#86868b" }}>Dimensions</span>
-                    <span style={{ fontSize: 14, color: "#1d1d1f", fontWeight: 500 }}>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Dimensions</span>
+                    <span style={{ fontSize: 14, color: "#ffffff", fontWeight: 500 }}>
                       {imageDimensions.width} x {imageDimensions.height}
                     </span>
                   </div>
@@ -231,7 +231,7 @@ export function ShortsDimensionsTool() {
                       border: `1px solid ${isCorrectRatio ? "rgba(52,199,89,0.2)" : "rgba(255,149,0,0.2)"}`,
                     }}
                   >
-                    <span style={{ fontSize: 14, color: "#86868b" }}>Aspect ratio</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Aspect ratio</span>
                     <span
                       style={{
                         fontSize: 14,
@@ -254,7 +254,7 @@ export function ShortsDimensionsTool() {
                       border: `1px solid ${isCorrectResolution ? "rgba(52,199,89,0.2)" : "rgba(255,149,0,0.2)"}`,
                     }}
                   >
-                    <span style={{ fontSize: 14, color: "#86868b" }}>Resolution</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Resolution</span>
                     <span
                       style={{
                         fontSize: 14,

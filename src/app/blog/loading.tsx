@@ -6,8 +6,8 @@ export default function BlogLoading() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#ffffff',
-        color: '#1d1d1f',
+        background: '#0a0a0a',
+        color: '#ffffff',
       }}
     >
       {/* Header skeleton */}
@@ -56,8 +56,8 @@ export default function BlogLoading() {
           <div
             key={i}
             style={{
-              background: '#ffffff',
-              border: '1px solid #e5e5ea',
+              background: '#1a1a1a',
+              border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 16,
               padding: '32px 28px',
               display: 'flex',

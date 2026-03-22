@@ -6,19 +6,19 @@ export default function TermsPage() {
     fontSize: 20,
     fontWeight: 600,
     marginBottom: 14,
-    color: '#1d1d1f',
+    color: '#ffffff',
     letterSpacing: '-0.01em',
   };
   const paraStyle: React.CSSProperties = {
     fontSize: 17,
     lineHeight: 1.7,
-    color: '#3d3d42',
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 14,
   };
   const listStyle: React.CSSProperties = {
     fontSize: 17,
     lineHeight: 1.9,
-    color: '#3d3d42',
+    color: 'rgba(255,255,255,0.7)',
     paddingLeft: 28,
     margin: '10px 0 14px',
   };
@@ -32,26 +32,26 @@ export default function TermsPage() {
           fontWeight: 600,
           letterSpacing: '-0.02em',
           marginBottom: 8,
-          color: '#1d1d1f',
+          color: '#ffffff',
           lineHeight: 1.15,
         }}
       >
         Terms of Service
       </h1>
-      <p style={{ fontSize: 14, color: '#86868b', marginBottom: 24 }}>
+      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>
         Effective date: March 20, 2026
       </p>
 
       {/* Table of contents */}
       <nav
         style={{
-          background: '#f5f5f7',
+          background: '#1a1a1a',
           borderRadius: 12,
           padding: '20px 24px',
           marginBottom: 48,
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#86868b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Table of Contents
         </div>
         <ol
@@ -144,30 +144,30 @@ export default function TermsPage() {
         </p>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>Free:</strong> limited functionality at no cost
+            <strong style={{ color: '#ffffff' }}>Free:</strong> limited functionality at no cost
           </li>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>Pro ($12/mo):</strong> extended features for individual creators
+            <strong style={{ color: '#ffffff' }}>Pro ($12/mo):</strong> extended features for individual creators
           </li>
           <li>
-            <strong style={{ color: '#1d1d1f' }}>Studio ($30/mo):</strong> team plan with full access to all tools
+            <strong style={{ color: '#ffffff' }}>Studio ($30/mo):</strong> team plan with full access to all tools
           </li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Auto-renewal:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Auto-renewal:</p>
         <p style={paraStyle}>
           Paid subscriptions are billed monthly via Stripe. Payment is charged automatically
           at the beginning of each billing period. Subscriptions renew automatically until canceled.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Cancellation:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Cancellation:</p>
         <p style={paraStyle}>
           You can cancel your subscription at any time through the &ldquo;Billing&rdquo; section in your account settings.
           After cancellation, access to paid features is retained until the end of the paid period.
           No refunds are issued for the current billing period, except as required by law.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Refunds:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Refunds:</p>
         <p style={paraStyle}>
           If you are not satisfied with the service, contact support within 14 days of payment
           for a full refund.
@@ -217,21 +217,21 @@ export default function TermsPage() {
       <div style={sectionStyle}>
         <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>5. Intellectual Property</h2>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Your content:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Your content:</p>
         <p style={paraStyle}>
           Content created by you using TubeForge&apos;s AI tools (thumbnails, texts,
           metadata, scripts) belongs to you. TubeForge does not claim intellectual property rights
           over user content.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Our platform:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>Our platform:</p>
         <p style={paraStyle}>
           The TubeForge platform, including design, code, logos, trademarks, and documentation,
           is the intellectual property of TubeForge and is protected by copyright law. Copying, modification, or distribution
           of any part of the platform without our written consent is prohibited.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>License:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#ffffff' }}>License:</p>
         <p style={paraStyle}>
           You grant TubeForge a limited, non-exclusive license to store
           and process your content solely for the purpose of providing Service functionality.
@@ -265,7 +265,7 @@ export default function TermsPage() {
         <h2 id="izmenenie-usloviy" style={headingStyle}>7. Changes to Terms</h2>
         <p style={paraStyle}>
           TubeForge reserves the right to modify these Terms. We will notify you of significant changes
-          <strong style={{ color: '#1d1d1f' }}> at least 30 days</strong> before they take effect via one of the following methods:
+          <strong style={{ color: '#ffffff' }}> at least 30 days</strong> before they take effect via one of the following methods:
         </p>
         <ul style={listStyle}>
           <li>By email to the address associated with your account</li>

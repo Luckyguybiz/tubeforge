@@ -11,8 +11,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       role="main"
       style={{
         minHeight: '100dvh',
-        background: '#ffffff',
-        color: '#1d1d1f',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
@@ -47,7 +47,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             textAlign: 'center',
             marginTop: 48,
             fontSize: 13,
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.5)',
           }}
         >
           {'\u00A9'} {new Date().getFullYear()} TubeForge. {t('legal.copyright')}

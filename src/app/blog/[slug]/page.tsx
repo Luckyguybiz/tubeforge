@@ -156,8 +156,8 @@ export default async function BlogPostPage({ params }: PageProps) {
     <main
       style={{
         minHeight: '100dvh',
-        background: '#ffffff',
-        color: '#1d1d1f',
+        background: '#0a0a0a',
+        color: '#ffffff',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
@@ -216,7 +216,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             style={{
               fontSize: 40,
               fontWeight: 600,
-              color: '#1d1d1f',
+              color: '#ffffff',
               letterSpacing: '-0.02em',
               lineHeight: 1.2,
               margin: '0 0 24px',
@@ -232,11 +232,11 @@ export default async function BlogPostPage({ params }: PageProps) {
               alignItems: 'center',
               gap: 20,
               fontSize: 14,
-              color: '#86868b',
+              color: 'rgba(255,255,255,0.5)',
               marginBottom: 48,
               flexWrap: 'wrap',
               paddingBottom: 32,
-              borderBottom: '1px solid #e5e5ea',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
             <span>{post.author}</span>
@@ -251,7 +251,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             style={{
               fontSize: 17,
               lineHeight: 1.7,
-              color: '#3d3d42',
+              color: 'rgba(255,255,255,0.7)',
             }}
           />
 
@@ -263,7 +263,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               gap: 8,
               marginTop: 48,
               paddingTop: 32,
-              borderTop: '1px solid #e5e5ea',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
               marginBottom: 64,
             }}
           >
@@ -272,8 +272,8 @@ export default async function BlogPostPage({ params }: PageProps) {
                 key={tag}
                 style={{
                   fontSize: 13,
-                  color: '#86868b',
-                  background: '#f5f5f7',
+                  color: 'rgba(255,255,255,0.5)',
+                  background: '#111111',
                   padding: '6px 14px',
                   borderRadius: 20,
                   fontWeight: 500,
@@ -291,7 +291,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 style={{
                   fontSize: 24,
                   fontWeight: 600,
-                  color: '#1d1d1f',
+                  color: '#ffffff',
                   letterSpacing: '-0.01em',
                   marginBottom: 24,
                 }}
@@ -321,7 +321,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                       <div
                         className="related-card"
                         style={{
-                          background: '#f5f5f7',
+                          background: '#111111',
                           borderRadius: 16,
                           padding: '24px 20px',
                           display: 'flex',
@@ -346,7 +346,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                           style={{
                             fontSize: 16,
                             fontWeight: 600,
-                            color: '#1d1d1f',
+                            color: '#ffffff',
                             lineHeight: 1.35,
                             margin: 0,
                           }}
@@ -356,7 +356,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                         <span
                           style={{
                             fontSize: 13,
-                            color: '#86868b',
+                            color: 'rgba(255,255,255,0.5)',
                           }}
                         >
                           {relPost.readingTime} min read
@@ -376,7 +376,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             textAlign: 'center',
             marginTop: 64,
             fontSize: 13,
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.5)',
           }}
         >
           &copy; {new Date().getFullYear()} TubeForge. All rights reserved.
@@ -390,14 +390,14 @@ export default async function BlogPostPage({ params }: PageProps) {
           font-weight: 600;
           letter-spacing: -0.01em;
           margin: 40px 0 16px;
-          color: #1d1d1f;
+          color: #ffffff;
         }
         .blog-article-content h3 {
           font-size: 20px;
           font-weight: 600;
           letter-spacing: -0.01em;
           margin: 32px 0 12px;
-          color: #1d1d1f;
+          color: #ffffff;
         }
         .blog-article-content p {
           margin: 0 0 20px;
@@ -421,19 +421,19 @@ export default async function BlogPostPage({ params }: PageProps) {
         }
         .blog-article-content strong {
           font-weight: 600;
-          color: #1d1d1f;
+          color: #ffffff;
         }
         .blog-article-content blockquote {
           margin: 24px 0;
           padding: 20px 24px;
           border-left: 3px solid #6366f1;
-          background: #f5f5f7;
+          background: #1a1a1a;
           border-radius: 0 12px 12px 0;
           font-style: italic;
-          color: #3d3d42;
+          color: rgba(255,255,255,0.7);
         }
         .related-card:hover {
-          background: #ebebed !important;
+          background: rgba(255,255,255,0.08) !important;
           transform: translateY(-1px);
         }
         @media (max-width: 640px) {

@@ -123,7 +123,7 @@ const SPECS = [
 
 export default function ShortsDimensionsPage() {
   return (
-    <div style={{ background: "#ffffff", color: "#1d1d1f", minHeight: "100vh" }}>
+    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
@@ -143,7 +143,7 @@ export default function ShortsDimensionsPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              color: "#0071e3",
+              color: "#6366f1",
               fontSize: 13,
               fontWeight: 500,
               textDecoration: "none",
@@ -162,7 +162,7 @@ export default function ShortsDimensionsPage() {
               letterSpacing: "-0.025em",
               lineHeight: 1.08,
               margin: "0 0 16px",
-              color: "#1d1d1f",
+              color: "#ffffff",
             }}
           >
             YouTube Shorts Dimensions.
@@ -170,7 +170,7 @@ export default function ShortsDimensionsPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               maxWidth: 520,
               margin: "0 auto",
               lineHeight: 1.5,
@@ -198,16 +198,16 @@ export default function ShortsDimensionsPage() {
             <div
               key={spec.label}
               style={{
-                background: "#fafafa",
+                background: "#1a1a1a",
                 borderRadius: 14,
                 padding: "20px",
-                border: "1px solid #e5e5ea",
+                border: "1px solid rgba(255,255,255,0.06)",
               }}
             >
-              <div style={{ fontSize: 13, color: "#86868b", marginBottom: 4 }}>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>
                 {spec.label}
               </div>
-              <div style={{ fontSize: 21, fontWeight: 600, color: "#1d1d1f", marginBottom: 2 }}>
+              <div style={{ fontSize: 21, fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>
                 {spec.value}
               </div>
               <div style={{ fontSize: 13, color: "#aeaeb2" }}>
@@ -226,7 +226,7 @@ export default function ShortsDimensionsPage() {
       </section>
 
       {/* How to Create Section */}
-      <section style={{ padding: "80px 24px", background: "#f5f5f7" }}>
+      <section style={{ padding: "80px 24px", background: "#111111" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
@@ -235,7 +235,7 @@ export default function ShortsDimensionsPage() {
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
               margin: "0 0 12px",
-              color: "#1d1d1f",
+              color: "#ffffff",
               textAlign: "center",
             }}
           >
@@ -244,7 +244,7 @@ export default function ShortsDimensionsPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               textAlign: "center",
               margin: "0 auto 48px",
               maxWidth: 420,
@@ -267,9 +267,9 @@ export default function ShortsDimensionsPage() {
                   display: "flex",
                   gap: 16,
                   padding: "20px 24px",
-                  background: "#ffffff",
+                  background: "#0a0a0a",
                   borderRadius: 14,
-                  border: "1px solid #e5e5ea",
+                  border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
                 <div
@@ -277,8 +277,8 @@ export default function ShortsDimensionsPage() {
                     width: 32,
                     height: 32,
                     borderRadius: "50%",
-                    background: "rgba(0,113,227,0.08)",
-                    color: "#0071e3",
+                    background: "rgba(99,102,241,0.1)",
+                    color: "#6366f1",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -290,10 +290,10 @@ export default function ShortsDimensionsPage() {
                   {item.step}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", margin: "0 0 4px" }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: "0 0 4px" }}>
                     {item.title}
                   </h3>
-                  <p style={{ fontSize: 15, color: "#86868b", margin: 0, lineHeight: 1.6 }}>
+                  <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.6 }}>
                     {item.desc}
                   </p>
                 </div>
@@ -304,7 +304,7 @@ export default function ShortsDimensionsPage() {
       </section>
 
       {/* FAQ */}
-      <section style={{ padding: "80px 24px", background: "#ffffff" }}>
+      <section style={{ padding: "80px 24px", background: "#0a0a0a" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
@@ -313,7 +313,7 @@ export default function ShortsDimensionsPage() {
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
               margin: "0 0 12px",
-              color: "#1d1d1f",
+              color: "#ffffff",
               textAlign: "center",
             }}
           >
@@ -322,7 +322,7 @@ export default function ShortsDimensionsPage() {
           <p
             style={{
               fontSize: 19,
-              color: "#86868b",
+              color: "rgba(255,255,255,0.5)",
               textAlign: "center",
               margin: "0 auto 48px",
               maxWidth: 420,
@@ -336,21 +336,21 @@ export default function ShortsDimensionsPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#f5f5f7" }}>
+      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#111111" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 600,
               letterSpacing: "-0.02em",
-              color: "#1d1d1f",
+              color: "#ffffff",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
           >
             Create Shorts with TubeForge.
           </h2>
-          <p style={{ fontSize: 19, color: "#86868b", margin: "0 0 32px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", margin: "0 0 32px", lineHeight: 1.5 }}>
             AI-powered video editor with automatic Shorts formatting, captions, and publishing.
           </p>
           <Link
@@ -359,7 +359,7 @@ export default function ShortsDimensionsPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0071e3",
+              background: "#6366f1",
               color: "#fff",
               fontSize: 17,
               fontWeight: 400,
@@ -380,8 +380,8 @@ export default function ShortsDimensionsPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#f5f5f7", borderTop: "1px solid #e5e5ea", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "#86868b" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
       </footer>
 
       <style>{`

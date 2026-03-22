@@ -78,11 +78,11 @@ export function MoneyCalcTool() {
       {/* Input Card */}
       <div
         style={{
-          background: "#ffffff",
+          background: "#0a0a0a",
           borderRadius: 18,
           padding: "28px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          border: "1px solid #e5e5ea",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+          border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         {/* Daily views slider */}
@@ -92,7 +92,7 @@ export function MoneyCalcTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#1d1d1f",
+            color: "#ffffff",
             marginBottom: 8,
           }}
         >
@@ -111,7 +111,7 @@ export function MoneyCalcTool() {
               flex: 1,
               height: 6,
               appearance: "none",
-              background: `linear-gradient(to right, #0071e3 ${((dailyViews - 100) / (1000000 - 100)) * 100}%, #e5e5ea ${((dailyViews - 100) / (1000000 - 100)) * 100}%)`,
+              background: `linear-gradient(to right, #6366f1 ${((dailyViews - 100) / (1000000 - 100)) * 100}%, rgba(255,255,255,0.08) ${((dailyViews - 100) / (1000000 - 100)) * 100}%)`,
               borderRadius: 3,
               outline: "none",
               cursor: "pointer",
@@ -128,18 +128,18 @@ export function MoneyCalcTool() {
               padding: "10px 12px",
               fontSize: 15,
               fontWeight: 600,
-              border: "1px solid #d2d2d7",
+              border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 10,
               outline: "none",
-              background: "#fafafa",
-              color: "#1d1d1f",
+              background: "#1a1a1a",
+              color: "#ffffff",
               fontFamily: "inherit",
               textAlign: "right",
               boxSizing: "border-box",
             }}
           />
         </div>
-        <div style={{ fontSize: 13, color: "#86868b", marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 20 }}>
           {formatViews(dailyViews)} views per day
         </div>
 
@@ -149,7 +149,7 @@ export function MoneyCalcTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#1d1d1f",
+            color: "#ffffff",
             marginBottom: 8,
           }}
         >
@@ -170,10 +170,10 @@ export function MoneyCalcTool() {
                 fontSize: 14,
                 fontWeight: 600,
                 border: "1px solid",
-                borderColor: customCpm === null && cpmPreset === i ? "#0071e3" : "#d2d2d7",
+                borderColor: customCpm === null && cpmPreset === i ? "#6366f1" : "rgba(255,255,255,0.08)",
                 borderRadius: 12,
-                background: customCpm === null && cpmPreset === i ? "rgba(0,113,227,0.08)" : "#fafafa",
-                color: customCpm === null && cpmPreset === i ? "#0071e3" : "#1d1d1f",
+                background: customCpm === null && cpmPreset === i ? "rgba(99,102,241,0.1)" : "#1a1a1a",
+                color: customCpm === null && cpmPreset === i ? "#6366f1" : "#ffffff",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 fontFamily: "inherit",
@@ -182,7 +182,7 @@ export function MoneyCalcTool() {
             >
               <div>{preset.label}</div>
               <div style={{ fontSize: 17, marginTop: 2 }}>${preset.value.toFixed(2)}</div>
-              <div style={{ fontSize: 11, fontWeight: 400, color: "#86868b", marginTop: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 400, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
                 {preset.desc}
               </div>
             </button>
@@ -191,7 +191,7 @@ export function MoneyCalcTool() {
 
         {/* Custom CPM */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 13, color: "#86868b" }}>or custom:</span>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>or custom:</span>
           <div style={{ position: "relative", width: 100 }}>
             <span
               style={{
@@ -200,7 +200,7 @@ export function MoneyCalcTool() {
                 top: "50%",
                 transform: "translateY(-50%)",
                 fontSize: 15,
-                color: "#86868b",
+                color: "rgba(255,255,255,0.5)",
                 pointerEvents: "none",
               }}
             >
@@ -221,11 +221,11 @@ export function MoneyCalcTool() {
                 width: "100%",
                 padding: "8px 12px 8px 24px",
                 fontSize: 15,
-                border: "1px solid #d2d2d7",
+                border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 8,
                 outline: "none",
-                background: "#fafafa",
-                color: "#1d1d1f",
+                background: "#1a1a1a",
+                color: "#ffffff",
                 fontFamily: "inherit",
                 boxSizing: "border-box",
               }}
@@ -251,11 +251,11 @@ export function MoneyCalcTool() {
             <div
               key={item.label}
               style={{
-                background: "#ffffff",
+                background: "#0a0a0a",
                 borderRadius: 18,
                 padding: "24px 16px",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                border: "1px solid #e5e5ea",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+                border: "1px solid rgba(255,255,255,0.06)",
                 textAlign: "center",
               }}
             >
@@ -263,7 +263,7 @@ export function MoneyCalcTool() {
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "#86868b",
+                  color: "rgba(255,255,255,0.5)",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                   marginBottom: 8,
@@ -290,12 +290,12 @@ export function MoneyCalcTool() {
         <div
           style={{
             marginTop: 16,
-            background: "#f5f5f7",
+            background: "#111111",
             borderRadius: 14,
             padding: "20px",
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#1d1d1f", marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", marginBottom: 12 }}>
             Calculation breakdown
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -314,12 +314,12 @@ export function MoneyCalcTool() {
                   fontSize: 14,
                 }}
               >
-                <span style={{ color: "#86868b" }}>{row.label}</span>
-                <span style={{ fontWeight: 600, color: "#1d1d1f" }}>{row.value}</span>
+                <span style={{ color: "rgba(255,255,255,0.5)" }}>{row.label}</span>
+                <span style={{ fontWeight: 600, color: "#ffffff" }}>{row.value}</span>
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 12, color: "#86868b", marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>
             Estimates are approximate. Actual earnings depend on niche, audience location, ad types, engagement, and YouTube Premium revenue.
           </p>
         </div>
