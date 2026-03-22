@@ -14,7 +14,6 @@ import { LeftSidebar } from './LeftSidebar';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { OnlineUsers } from '@/components/ui/OnlineUsers';
 import { CollaborationCursors } from '@/components/ui/CollaborationCursors';
 import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
@@ -128,7 +127,18 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const onMiddleUp = useCallback(() => { isPanning.current = false; }, []);
 
   if (step === 'ai') return <AIGeneratorView projectId={projectId} />;
-  if (!projectId) return <ProjectPicker target="/thumbnails" title={t('thumbs.editor.title')} />;
+  if (!projectId) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
+      <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('thumbs.editor.title')}</div>
+      <div style={{ fontSize: 13, color: C.sub }}>{t('thumbs.noProject') || 'Open a project from My Works to edit thumbnails.'}</div>
+      <a
+        href="/dashboard"
+        style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}
+      >
+        {t('thumbs.openMyWorks') || 'Open My Works'}
+      </a>
+    </div>
+  );
   if (project.isLoading) return (
     <div>
       <Skeleton width="220px" height="28px" />

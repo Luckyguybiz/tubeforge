@@ -1,27 +1,26 @@
 'use client';
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
-const Metadata = dynamic(
-  () => import('@/views/Metadata/Metadata').then((m) => ({ default: m.Metadata })),
-  { loading: () => <Skeleton width="100%" height="80vh" />, ssr: false },
-);
-
-function MetadataContent() {
+function MetadataRedirect() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const projectId = searchParams.get('projectId');
-  return <Metadata projectId={projectId} />;
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', 'seo');
+    router.replace(`/preview?${params.toString()}`);
+  }, [router, searchParams]);
+
+  return <Skeleton width="100%" height="80vh" />;
 }
 
 export default function MetadataPage() {
   return (
-    <ErrorBoundary>
-      <Suspense fallback={<Skeleton width="100%" height="80vh" />}>
-        <MetadataContent />
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={<Skeleton width="100%" height="80vh" />}>
+      <MetadataRedirect />
+    </Suspense>
   );
 }

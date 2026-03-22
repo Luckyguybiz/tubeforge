@@ -4,6 +4,7 @@
   "nav.metadata": "Metadatos",
   "nav.thumbnails": "Miniaturas",
   "nav.preview": "Vista previa",
+  "nav.publish": "Publicar",
   "nav.team": "Equipo",
   "nav.settings": "Ajustes",
   "nav.admin": "Admin",
@@ -1718,6 +1719,8 @@
   "preview.downloading": "Descargando...",
   "preview.downloadComplete": "Descarga completa!",
   "preview.downloadFailed": "Error al descargar",
+  "publish.tabPreview": "Vista previa y exportar",
+  "publish.tabSeo": "Optimizador SEO",
   "dashboard.recentlyPublished": "Publicados recientemente",
   "dashboard.scheduled": "Programados",
   "dashboard.openLink": "Abrir",
@@ -1981,5 +1984,7 @@
   "tools.voiceover.engineBrowser": "TTS del navegador",
   "tools.voiceover.elevenLabsBadge": "Impulsado por ElevenLabs — TTS multilingüe de calidad estudio. Usa 1 crédito de IA.",
   "tools.voiceover.elevenLabsSuccess": "Locución generada exitosamente",
-  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs no está configurado. Cambia a TTS del navegador o contacta al administrador."
+  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs no está configurado. Cambia a TTS del navegador o contacta al administrador.",
+  "publish.tabPreview": "Vista previa y exportar",
+  "publish.tabSeo": "Optimizador SEO"
 }

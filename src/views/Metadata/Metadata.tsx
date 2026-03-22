@@ -9,7 +9,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { useRouter } from 'next/navigation';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import type { Theme } from '@/lib/types';
@@ -681,9 +680,20 @@ export function Metadata({ projectId }: { projectId: string | null }) {
     transition: 'border-color 0.2s, box-shadow 0.2s',
   }), [C.surface, C.border, C.text]);
 
-  /* ─── Project picker ─────────────────────────────── */
+  /* ─── No project — redirect to My Works ──────────── */
   if (!projectId) {
-    return <ProjectPicker target="/metadata" title={t('metadata.pageTitle')} />;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('metadata.pageTitle')}</div>
+        <div style={{ fontSize: 13, color: C.sub }}>{t('metadata.noProject') || 'Open a project from My Works to edit metadata.'}</div>
+        <button
+          onClick={() => router.push('/dashboard')}
+          style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          {t('metadata.openMyWorks') || 'Open My Works'}
+        </button>
+      </div>
+    );
   }
 
   /* ─── Loading state ──────────────────────────────── */
@@ -1015,7 +1025,7 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               <button
                 key={p.id}
                 onClick={() => {
-                  router.push(`/metadata?projectId=${p.id}`);
+                  router.push(`/preview?projectId=${p.id}&tab=seo`);
                   setShowProjectDropdown(false);
                 }}
                 style={{

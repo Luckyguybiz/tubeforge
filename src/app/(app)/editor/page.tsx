@@ -1,12 +1,13 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ProjectPicker } from '@/components/ui/ProjectPicker';
-import { useLocaleStore } from '@/stores/useLocaleStore';
+import { useThemeStore } from '@/stores/useThemeStore';
+import { trpc } from '@/lib/trpc';
+import { toast } from '@/stores/useNotificationStore';
 
 const EditorPage = dynamic(
   () => import('@/views/Editor/EditorPage').then((m) => ({ default: m.EditorPage })),
@@ -16,15 +17,34 @@ const EditorPage = dynamic(
 function EditorContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
-  const t = useLocaleStore((s) => s.t);
+  const router = useRouter();
+  const C = useThemeStore((s) => s.theme);
 
-  // If projectId provided — show the video editor
-  // Otherwise — show the project picker so the user selects a project first
-  if (projectId) {
-    return <EditorPage projectId={projectId} />;
+  // If no projectId in URL, create one silently and redirect
+  const autoCreate = trpc.project.create.useMutation();
+
+  useEffect(() => {
+    if (!projectId && !autoCreate.isPending && !autoCreate.isSuccess) {
+      autoCreate.mutate({ title: 'Untitled' }, {
+        onSuccess: (data) => {
+          router.replace(`/editor?projectId=${data.id}`);
+        },
+        onError: () => {
+          toast.error('Failed to create workspace');
+        },
+      });
+    }
+  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!projectId) {
+    return (
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, border: `2px solid ${C.accent}`, borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
   }
 
-  return <ProjectPicker target="/editor" title={t('editor.videoGeneration')} />;
+  return <EditorPage projectId={projectId} />;
 }
 
 export default function EditorRoute() {

@@ -6,7 +6,6 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useEditorStore, MUSIC_TRACKS } from '@/stores/useEditorStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ProjectPicker } from '@/components/ui/ProjectPicker';
 import { OnlineUsers } from '@/components/ui/OnlineUsers';
 import { SceneLockIndicator } from '@/components/ui/SceneLockIndicator';
 import { MODELS } from '@/lib/constants';
@@ -1151,26 +1150,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         >
           {t('editor.backToDashboard')}
         </button>
-      </div>
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     NO PROJECT — Project picker
-     ═══════════════════════════════════════════════════════════════ */
-  if (!projectId) {
-    return (
-      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%', maxWidth: 480, padding: '0 16px' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: C.accent + '10', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 28, color: C.accent, lineHeight: 1 }}>&#9998;</span>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 6 }}>{t('editor.title')}</div>
-            <div style={{ fontSize: 13, color: C.sub }}>{t('editor.emptyHint') || 'Create a new project or select an existing one to get started.'}</div>
-          </div>
-          <ProjectPicker target="/editor" title={t('editor.title')} />
-        </div>
       </div>
     );
   }
