@@ -122,6 +122,49 @@ function isStaticAsset(pathname) {
     pathname.startsWith('/_next/static/');
 }
 
+// ---- Push notification handling ----
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: 'TubeForge', body: event.data.text() };
+  }
+
+  const options = {
+    body: payload.body || '',
+    icon: payload.icon || '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: payload.tag || 'tubeforge-notification',
+    data: { url: payload.url || '/' },
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'TubeForge', options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      // Focus existing tab if open
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      // Open new tab
+      return self.clients.openWindow(url);
+    })
+  );
+});
+
 // ---- Message handling for update flow ----
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {

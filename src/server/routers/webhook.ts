@@ -17,7 +17,7 @@ async function checkRate(userId: string) {
 
 /**
  * Sign a webhook payload with HMAC-SHA256.
- * This is used when delivering webhooks (future implementation).
+ * Used by deliverWebhook() in src/lib/webhook-delivery.ts.
  */
 export function signPayload(secret: string, payload: string): string {
   return createHmac('sha256', secret).update(payload).digest('hex');

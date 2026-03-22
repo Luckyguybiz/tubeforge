@@ -75,7 +75,8 @@ model User {
   vpnPeer          VpnPeer?
   comments         Comment[]
   apiKeys          ApiKey[]
-  webhookEndpoints WebhookEndpoint[]
+  webhookEndpoints  WebhookEndpoint[]
+  pushSubscriptions PushSubscription[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -388,6 +389,18 @@ model WebhookEndpoint {
   events    String[]
   secret    String
   active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 
   @@index([userId])

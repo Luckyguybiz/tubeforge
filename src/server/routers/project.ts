@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
+import { deliverWebhook } from '@/lib/webhook-delivery';
 import type { Prisma } from '@prisma/client';
 
 /** Mutation rate limit: 20 writes per minute per user */
@@ -369,10 +370,20 @@ export const projectRouter = router({
         if ((user?._count.projects ?? 0) >= planLimit) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Project limit reached. Please upgrade your plan.' });
         }
-        return tx.project.create({
+        const created = await tx.project.create({
           data: { title: stripTags(input.title ?? 'Untitled'), userId: ctx.session.user.id },
           select: { id: true, title: true, status: true, createdAt: true },
         });
+
+        // Fire-and-forget webhook delivery
+        deliverWebhook(ctx.session.user.id, 'project.created', {
+          id: created.id,
+          title: created.title,
+          status: created.status,
+          createdAt: created.createdAt,
+        });
+
+        return created;
       });
     }),
 

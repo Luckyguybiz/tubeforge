@@ -3,6 +3,7 @@ import { db } from '@/server/db';
 import { rateLimit } from '@/lib/rate-limit';
 import { lookupApiKey, incrementApiUsage } from '@/lib/api-keys';
 import { stripTags } from '@/lib/sanitize';
+import { deliverWebhook } from '@/lib/webhook-delivery';
 
 export const dynamic = 'force-dynamic';
 
@@ -220,6 +221,14 @@ export async function POST(req: NextRequest) {
         createdAt: true,
         updatedAt: true,
       },
+    });
+
+    // Fire-and-forget webhook delivery
+    deliverWebhook(userId, 'project.created', {
+      id: project.id,
+      title: project.title,
+      status: project.status,
+      createdAt: project.createdAt,
     });
 
     return NextResponse.json(

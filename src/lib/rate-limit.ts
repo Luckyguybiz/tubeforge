@@ -1,41 +1,25 @@
 /**
- * Rate limiting utility — per-function-instance, best-effort.
+ * Rate limiting utility — Redis (Upstash) with in-memory fallback.
  *
- * IMPORTANT — SERVERLESS LIMITATION:
- * This module uses an in-memory Map. On Vercel (serverless / edge), each
- * function instance gets its own Map that is discarded on cold start. This
- * means the limiter is **best-effort only** within a single warm instance and
- * is NOT shared across concurrent serverless invocations.
+ * When UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are set,
+ * uses @upstash/ratelimit with a sliding window for production-grade,
+ * cross-instance rate limiting.
  *
- * The primary line of defence for global IP-based rate limiting lives in the
- * root middleware.ts (edge runtime), which has longer-lived instances than
- * individual serverless functions and therefore provides better coverage.
- *
- * For cross-instance, production-grade rate limiting you need a shared store
- * such as @upstash/ratelimit + @upstash/redis:
- *
- *   import { Ratelimit } from '@upstash/ratelimit';
- *   import { Redis }     from '@upstash/redis';
- *
- *   const ratelimit = new Ratelimit({
- *     redis: Redis.fromEnv(),
- *     limiter: Ratelimit.slidingWindow(limit, `${window} s`),
- *   });
+ * Otherwise, falls back to in-memory rate limiting (best-effort,
+ * per-process only). Suitable for single-instance PM2 deployments.
  */
 
-interface RateLimitEntry {
-  count: number;
-  resetTime: number;
-  /** Last time this entry was accessed (used for LRU eviction) */
-  lastAccess: number;
-}
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+/* ── Types ──────────────────────────────────────────────────── */
 
 interface RateLimitResult {
   /** Whether the request is allowed */
   success: boolean;
   /** Number of remaining requests in the current window */
   remaining: number;
-  /** Unix‑ms timestamp when the window resets */
+  /** Unix-ms timestamp when the window resets */
   reset: number;
 }
 
@@ -48,95 +32,109 @@ interface RateLimitOptions {
   window?: number;
 }
 
-const store = new Map<string, RateLimitEntry>();
+/* ── Redis backend (preferred) ──────────────────────────────── */
 
-/** Maximum number of entries in the rate-limit store */
+const useRedis = !!(
+  process.env.UPSTASH_REDIS_REST_URL &&
+  process.env.UPSTASH_REDIS_REST_TOKEN
+);
+
+let redis: Redis | null = null;
+
+function getRedis(): Redis {
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    });
+  }
+  return redis;
+}
+
+/** Cache of Ratelimit instances keyed by "limit:window" */
+const rlCache = new Map<string, Ratelimit>();
+
+function getRatelimiter(limit: number, window: number): Ratelimit {
+  const key = `${limit}:${window}`;
+  let rl = rlCache.get(key);
+  if (!rl) {
+    rl = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(limit, `${window} s`),
+      prefix: 'tf_rl',
+    });
+    rlCache.set(key, rl);
+  }
+  return rl;
+}
+
+async function rateLimitRedis({
+  identifier,
+  limit = 10,
+  window = 60,
+}: RateLimitOptions): Promise<RateLimitResult> {
+  const rl = getRatelimiter(limit, window);
+  const result = await rl.limit(identifier);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/* ── In-memory backend (fallback) ───────────────────────────── */
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+  lastAccess: number;
+}
+
+const store = new Map<string, RateLimitEntry>();
 const MAX_ENTRIES = 10_000;
-/** Percentage of entries to evict when the store is full (LRU) */
 const EVICT_PERCENT = 0.2;
-/** Threshold for logging a warning */
 const WARN_THRESHOLD = 5_000;
-/** Flag indicating an emergency cleanup is already running */
 let cleanupInProgress = false;
 
-/**
- * LRU eviction when the store exceeds MAX_ENTRIES.
- * 1. Remove expired entries first (cheap).
- * 2. If still over limit, evict the oldest 20 % by lastAccess (LRU).
- *
- * Called inline during rateLimit() — no background timer needed.
- */
 function emergencyCleanup(): void {
   if (cleanupInProgress) return;
   cleanupInProgress = true;
   try {
     const now = Date.now();
-
-    // Step 1: remove expired entries
     for (const [key, entry] of store) {
-      if (now >= entry.resetTime) {
-        store.delete(key);
-      }
+      if (now >= entry.resetTime) store.delete(key);
     }
-
-    // Step 2: if still >= MAX_ENTRIES, evict the least-recently-accessed 20 %
     if (store.size >= MAX_ENTRIES) {
       const entries = [...store.entries()].sort(
         (a, b) => a[1].lastAccess - b[1].lastAccess,
       );
       const toDelete = Math.ceil(entries.length * EVICT_PERCENT);
-      for (let i = 0; i < toDelete; i++) {
-        store.delete(entries[i][0]);
-      }
+      for (let i = 0; i < toDelete; i++) store.delete(entries[i][0]);
     }
   } finally {
     cleanupInProgress = false;
   }
 }
 
-/**
- * Check (and consume) a rate-limit token for the given identifier.
- *
- * NOTE: Best-effort in serverless environments — see module-level comment.
- *
- * @example
- * ```ts
- * const { success, remaining, reset } = await rateLimit({
- *   identifier: userId,
- *   limit: 10,
- *   window: 60,
- * });
- *
- * if (!success) {
- *   return new Response('Too many requests', { status: 429 });
- * }
- * ```
- */
-export async function rateLimit({
+async function rateLimitMemory({
   identifier,
   limit = 10,
   window = 60,
 }: RateLimitOptions): Promise<RateLimitResult> {
   const now = Date.now();
   const windowMs = window * 1000;
-
   const entry = store.get(identifier);
 
-  // No previous record or the window has expired — start fresh.
   if (!entry || now >= entry.resetTime) {
-    // Check store size before adding a new entry
-    if (store.size >= MAX_ENTRIES) {
-      emergencyCleanup();
-    }
+    if (store.size >= MAX_ENTRIES) emergencyCleanup();
     if (store.size >= WARN_THRESHOLD) {
-      console.warn(`[rate-limit] Store size: ${store.size} entries (warning threshold: ${WARN_THRESHOLD})`);
+      console.warn(`[rate-limit] Store size: ${store.size} entries`);
     }
     const resetTime = now + windowMs;
     store.set(identifier, { count: 1, resetTime, lastAccess: now });
     return { success: true, remaining: limit - 1, reset: resetTime };
   }
 
-  // Window still active — update LRU timestamp and increment.
   entry.lastAccess = now;
   entry.count += 1;
 
@@ -151,22 +149,36 @@ export async function rateLimit({
   };
 }
 
-/**
- * Periodically clean up expired entries so the Map does not grow unbounded.
- * Call once at module load; runs every 60 s.
- */
+/* ── Periodic cleanup for in-memory store ───────────────────── */
+
 function startCleanup(intervalMs = 60_000) {
   const timer = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of store) {
-      if (now >= entry.resetTime) {
-        store.delete(key);
-      }
+      if (now >= entry.resetTime) store.delete(key);
     }
   }, intervalMs);
-
-  // Allow the Node process to exit even if the timer is still running.
   if (timer.unref) timer.unref();
 }
 
-startCleanup();
+if (!useRedis) startCleanup();
+
+/* ── Public API ─────────────────────────────────────────────── */
+
+/**
+ * Check (and consume) a rate-limit token for the given identifier.
+ *
+ * Uses Redis when UPSTASH_REDIS_REST_URL is set, otherwise in-memory.
+ */
+export async function rateLimit(opts: RateLimitOptions): Promise<RateLimitResult> {
+  if (useRedis) {
+    try {
+      return await rateLimitRedis(opts);
+    } catch (err) {
+      // Redis failure — fall back to in-memory so the app doesn't crash
+      console.error('[rate-limit] Redis error, falling back to in-memory:', err);
+      return rateLimitMemory(opts);
+    }
+  }
+  return rateLimitMemory(opts);
+}

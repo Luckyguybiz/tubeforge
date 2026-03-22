@@ -22,6 +22,51 @@ function getStatus(): PushStatus {
   return 'prompt';
 }
 
+async function subscribeToPush(): Promise<PushSubscription | null> {
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  if (!vapidKey) return null;
+
+  const reg = await navigator.serviceWorker.ready;
+  const existing = await reg.pushManager.getSubscription();
+  if (existing) return existing;
+
+  return reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(vapidKey).buffer as ArrayBuffer,
+  });
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function sendSubscriptionToServer(sub: PushSubscription) {
+  const json = sub.toJSON();
+  await fetch('/api/push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      endpoint: json.endpoint,
+      keys: json.keys,
+    }),
+  });
+}
+
+async function removeSubscriptionFromServer(sub: PushSubscription) {
+  await fetch('/api/push', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ endpoint: sub.endpoint }),
+  });
+}
+
 export function usePushNotifications() {
   const [status, setStatus] = useState<PushStatus>('prompt');
 
@@ -35,6 +80,10 @@ export function usePushNotifications() {
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
+        const sub = await subscribeToPush();
+        if (sub) {
+          await sendSubscriptionToServer(sub);
+        }
         localStorage.setItem(LS_KEY, '1');
         setStatus('granted');
         return true;
@@ -48,8 +97,14 @@ export function usePushNotifications() {
     }
   }, []);
 
-  const disable = useCallback(() => {
+  const disable = useCallback(async () => {
     try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await removeSubscriptionFromServer(sub);
+        await sub.unsubscribe();
+      }
       localStorage.setItem(LS_KEY, '0');
     } catch { /* noop */ }
     setStatus('off');
