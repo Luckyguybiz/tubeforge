@@ -1277,216 +1277,273 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
         {/* ════════════════════════════════════════════════
             RIGHT PANEL — How it works / History / Styles
+            (mirrors AiThumbnailsPage layout)
             ════════════════════════════════════════════════ */}
         <ErrorBoundary>
         <div
           style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', background: C.bg,
+            flex: 1, minWidth: 0,
+            display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', padding: 20,
           }}
         >
-          {/* Tab pills at the top */}
-          <div style={{
-            display: 'flex', gap: 8, padding: '12px 16px',
-            borderBottom: `1px solid ${C.border}`, flexShrink: 0,
-          }}>
-            <button
-              onClick={() => setRightPanelTab('howto')}
-              style={{
-                padding: '7px 16px', borderRadius: 20,
-                fontSize: 12, fontWeight: 600,
-                background: rightPanelTab === 'howto' ? ACCENT_LIME + '18' : C.surface,
-                color: rightPanelTab === 'howto' ? ACCENT_LIME : C.sub,
-                border: `1px solid ${rightPanelTab === 'howto' ? ACCENT_LIME + '44' : C.border}`,
-                cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .15s', whiteSpace: 'nowrap',
-              }}
-            >
-              {'\uD83C\uDFAC'} How it works
-            </button>
-            <button
-              onClick={() => setRightPanelTab('history')}
-              style={{
-                padding: '7px 16px', borderRadius: 20,
-                fontSize: 12, fontWeight: 600,
-                background: rightPanelTab === 'history' ? ACCENT_LIME + '18' : C.surface,
-                color: rightPanelTab === 'history' ? ACCENT_LIME : C.sub,
-                border: `1px solid ${rightPanelTab === 'history' ? ACCENT_LIME + '44' : C.border}`,
-                cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .15s', whiteSpace: 'nowrap',
-              }}
-            >
-              {'\uD83D\uDCC1'} History
-            </button>
-            {rightPanelTab === 'styles' && (
-              <button
-                onClick={() => setRightPanelTab('howto')}
-                style={{
-                  padding: '7px 16px', borderRadius: 20,
-                  fontSize: 12, fontWeight: 600,
-                  background: ACCENT_LIME + '18',
-                  color: ACCENT_LIME,
-                  border: `1px solid ${ACCENT_LIME}44`,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all .15s', whiteSpace: 'nowrap',
-                }}
-              >
-                {'\uD83C\uDFA8'} Styles
-              </button>
-            )}
+          {/* ── Header: Tab switcher ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {([
+                { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
+                { id: 'history' as const, label: `History${scenes.length > 0 ? ` (${scenes.length})` : ''}`, icon: '\uD83D\uDCC1' },
+              ] as const).map((t2) => (
+                <button
+                  key={t2.id}
+                  onClick={() => setRightPanelTab(t2.id)}
+                  onMouseEnter={(e) => { if (rightPanelTab !== t2.id) e.currentTarget.style.borderColor = C.borderActive; }}
+                  onMouseLeave={(e) => { if (rightPanelTab !== t2.id) e.currentTarget.style.borderColor = C.border; }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 8,
+                    border: `1px solid ${rightPanelTab === t2.id ? C.accent : C.border}`,
+                    background: rightPanelTab === t2.id ? C.accentDim : 'transparent',
+                    color: rightPanelTab === t2.id ? C.accent : C.sub,
+                    fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                    outline: 'none',
+                  }}
+                >
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>{t2.icon}</span>
+                  {t2.label}
+                </button>
+              ))}
+              {rightPanelTab === 'styles' && (
+                <button
+                  onClick={() => setRightPanelTab('howto')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 8,
+                    border: `1px solid ${C.accent}`,
+                    background: C.accentDim,
+                    color: C.accent,
+                    fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                    outline: 'none',
+                  }}
+                >
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>{'\uD83C\uDFA8'}</span>
+                  Styles
+                </button>
+              )}
+            </div>
+            <div style={{ flex: 1 }} />
           </div>
 
-          {/* Tab content */}
-          <div style={{
-            flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden',
-            padding: '16px 20px',
-          }} className="ed-scene-list">
-
-            {/* ── How it works ── */}
+          {/* ── Content area (card container) ── */}
+          <div
+            style={{
+              flex: 1, borderRadius: 12, background: C.card,
+              border: `1px solid ${C.border}`,
+              display: 'flex', flexDirection: 'column',
+              overflow: 'hidden', minHeight: 0,
+            }}
+          >
+            {/* ── How it works tab ── */}
             {rightPanelTab === 'howto' && (
-              <div>
-                <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '-0.01em' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+                <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
                   MAKE VIDEOS IN ONE CLICK
                 </h2>
-                <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, lineHeight: 1.6 }}>
-                  250+ presets for camera control, framing, and high-quality VFX — or use the general preset for manual control.
+                <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
+                  250+ presets for camera control, framing, and high-quality VFX
                 </p>
 
-                {/* 3 step cards in a HORIZONTAL ROW */}
-                <div style={{ display: 'flex', gap: 16 }}>
-                  {[
-                    {
-                      step: '1', title: 'ADD IMAGE',
-                      desc: 'Upload or generate an image to start your animation',
-                      icon: (
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT_LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
-                        </svg>
-                      ),
-                    },
-                    {
-                      step: '2', title: 'CHOOSE PRESET',
-                      desc: 'Pick a style from 250+ animation presets',
-                      icon: (
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT_LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                        </svg>
-                      ),
-                    },
-                    {
-                      step: '3', title: 'GET VIDEO',
-                      desc: 'Click generate and download your video',
-                      icon: (
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT_LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                      ),
-                    },
-                  ].map((s) => (
-                    <div
-                      key={s.step}
-                      style={{
-                        flex: 1, minWidth: 0,
-                        background: C.surface,
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 14,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div style={{
-                        aspectRatio: '16/10',
-                        background: C.bg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {s.icon}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: 16,
+                }}>
+                  {/* Step 1 — Add Image */}
+                  <div
+                    className="ed-step-card"
+                    style={{
+                      background: C.surface, border: `1px solid ${C.border}`,
+                      borderRadius: 14, overflow: 'hidden',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      cursor: 'default',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Add Image
                       </div>
-                      <div style={{ padding: 14 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          {s.title}
-                        </div>
-                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          {s.desc}
-                        </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Upload or generate an image to start your animation
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Step 2 — Choose Preset */}
+                  <div
+                    className="ed-step-card"
+                    style={{
+                      background: C.surface, border: `1px solid ${C.border}`,
+                      borderRadius: 14, overflow: 'hidden',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      cursor: 'default',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Choose Preset
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Pick from 250+ animation presets for camera, framing, and VFX
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3 — Get Video */}
+                  <div
+                    className="ed-step-card"
+                    style={{
+                      background: C.surface, border: `1px solid ${C.border}`,
+                      borderRadius: 14, overflow: 'hidden',
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      cursor: 'default',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Get Video
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Click generate and download your high-quality video
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Video placeholder */}
+                {/* Video tutorial placeholder */}
                 <div style={{
                   marginTop: 20, padding: 16, borderRadius: 12,
                   background: C.surface, border: `1px solid ${C.border}`,
                   textAlign: 'center',
                 }}>
-                  <span style={{ fontSize: 13, color: C.dim }}>{'\uD83D\uDCF9'} Video tutorial coming soon</span>
+                  <span style={{ fontSize: 13, color: C.dim }}>
+                    Video tutorial coming soon
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* ── History ── */}
+            {/* ── History tab ── */}
             {rightPanelTab === 'history' && (
-              <div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                 {scenes.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No generations yet</div>
-                    <div style={{ fontSize: 12 }}>Your generated videos will appear here</div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 40, minHeight: 300 }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 16, background: C.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                      </svg>
+                    </div>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
+                      No generations yet
+                    </h3>
+                    <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                      Generate your first video and it will appear here
+                    </p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {scenes.map((sc) => (
-                      <div
-                        key={sc.id}
-                        onClick={() => setSelId(sc.id)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          padding: '8px 10px', borderRadius: 8,
-                          background: sc.id === selId ? ACCENT_LIME + '10' : 'transparent',
-                          border: `1px solid ${sc.id === selId ? ACCENT_LIME + '30' : 'transparent'}`,
-                          cursor: 'pointer', transition: 'all .15s',
-                        }}
-                        onMouseEnter={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
-                        onMouseLeave={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                      >
-                        {/* Thumbnail */}
-                        <div style={{
-                          width: 48, height: 32, borderRadius: 6,
-                          background: sc.sf
-                            ? `url(${sc.sf}) center/cover`
-                            : `linear-gradient(135deg, ${gc(sc.ck)}22, ${gc(sc.ck)}08)`,
-                          border: `1px solid ${C.border}`, flexShrink: 0,
-                        }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {sc.label}
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+                      Generated scenes ({scenes.length})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {scenes.map((sc) => (
+                        <div
+                          key={sc.id}
+                          onClick={() => setSelId(sc.id)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '8px 10px', borderRadius: 8,
+                            background: sc.id === selId ? C.accentDim : 'transparent',
+                            border: `1px solid ${sc.id === selId ? C.accent + '30' : 'transparent'}`,
+                            cursor: 'pointer', transition: 'all .15s',
+                          }}
+                          onMouseEnter={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                          onMouseLeave={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = sc.id === selId ? C.accentDim : 'transparent'; }}
+                        >
+                          {/* Thumbnail */}
+                          <div style={{
+                            width: 48, height: 32, borderRadius: 6,
+                            background: sc.sf
+                              ? `url(${sc.sf}) center/cover`
+                              : `linear-gradient(135deg, ${gc(sc.ck)}22, ${gc(sc.ck)}08)`,
+                            border: `1px solid ${C.border}`, flexShrink: 0,
+                          }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {sc.label}
+                            </div>
+                            <div style={{ fontSize: 9, color: C.dim }}>
+                              {fmtDur(sc.duration)} · {sc.status}
+                            </div>
                           </div>
-                          <div style={{ fontSize: 9, color: C.dim }}>
-                            {fmtDur(sc.duration)} · {sc.status}
-                          </div>
+                          <SceneLockIndicator sceneId={sc.id} />
                         </div>
-                        <SceneLockIndicator sceneId={sc.id} />
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => addScene()}
-                      style={{
-                        width: '100%', padding: '6px 0', borderRadius: 6,
-                        border: `1px dashed ${C.border}`, background: 'transparent',
-                        color: C.dim, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all .15s',
-                      }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = ACCENT_LIME + '55'; (e.currentTarget as HTMLElement).style.color = ACCENT_LIME; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.dim; }}
-                    >
-                      + {t('editor.addScene')}
-                    </button>
-                  </div>
+                      ))}
+                      <button
+                        onClick={() => addScene()}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55'; (e.currentTarget as HTMLElement).style.color = C.accent; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.dim; }}
+                        style={{
+                          width: '100%', padding: '6px 0', borderRadius: 6,
+                          border: `1px dashed ${C.border}`, background: 'transparent',
+                          color: C.dim, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all .15s',
+                        }}
+                      >
+                        + {t('editor.addScene')}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )}
 
             {/* ── Styles gallery ── */}
             {rightPanelTab === 'styles' && (
-              <div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                 {/* Filter tags */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
@@ -1498,13 +1555,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       onClick={() => setActiveCategory(cat.id)}
                       className="ed-filter-pill"
                       style={{
-                        padding: '6px 14px', borderRadius: 20,
+                        padding: '6px 14px', borderRadius: 8,
                         fontSize: 11, fontWeight: 600,
-                        background: activeCategory === cat.id ? ACCENT_LIME + '18' : C.surface,
-                        color: activeCategory === cat.id ? ACCENT_LIME : C.sub,
-                        border: `1px solid ${activeCategory === cat.id ? ACCENT_LIME + '44' : C.border}`,
+                        background: activeCategory === cat.id ? C.accentDim : 'transparent',
+                        color: activeCategory === cat.id ? C.accent : C.sub,
+                        border: `1px solid ${activeCategory === cat.id ? C.accent : C.border}`,
                         cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all .15s', whiteSpace: 'nowrap',
+                        transition: 'all 0.2s ease', whiteSpace: 'nowrap',
+                        outline: 'none',
                       }}
                     >
                       {cat.label}
@@ -1518,13 +1576,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       onChange={(e) => setStyleSearch(e.target.value)}
                       placeholder="Search styles..."
                       style={{
-                        padding: '6px 12px 6px 28px', borderRadius: 20,
+                        padding: '6px 12px 6px 28px', borderRadius: 8,
                         border: `1px solid ${C.border}`, background: C.surface,
                         color: C.text, fontSize: 11, fontFamily: 'inherit',
                         outline: 'none', width: 160, boxSizing: 'border-box',
-                        transition: 'border-color .15s',
+                        transition: 'border-color .2s',
                       }}
-                      onFocus={(e) => { e.currentTarget.style.borderColor = ACCENT_LIME + '55'; }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
                       onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
                     />
                     <svg
