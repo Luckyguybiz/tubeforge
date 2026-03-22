@@ -10,6 +10,7 @@ import {
 import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
+import { fal } from '@fal-ai/client';
 
 /* ────────────────────────────────────────────────────────
    Helpers
@@ -206,10 +207,12 @@ export const aiThumbnailsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      if (!env.OPENAI_API_KEY) {
+      const useFal = !!env.FAL_KEY;
+
+      if (!useFal && !env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'OpenAI API key not configured. Contact the administrator.',
+          message: 'Image generation API key not configured. Contact the administrator.',
         });
       }
 
@@ -266,10 +269,75 @@ export const aiThumbnailsRouter = router({
           ' Include a prominent person/face as the main subject, positioned prominently in the thumbnail.';
       }
 
-      const size = input.format === '16:9' ? '1792x1024' : '1024x1792';
+      // Generate images
+      const results: Array<{ url: string; id: string; revisedPrompt?: string }> = [];
+      let failedCount = 0;
 
-      const fullPrompt =
-        `Professional YouTube video thumbnail photo. ${input.prompt}.${contextParts}
+      if (useFal) {
+        // ── Flux via fal.ai ──
+        fal.config({ credentials: env.FAL_KEY });
+
+        const falSize = input.format === '9:16'
+          ? { width: 768, height: 1344 }
+          : { width: 1344, height: 768 };
+
+        const fluxPrompt =
+          `Professional YouTube thumbnail photo. ${input.prompt}.${contextParts}
+
+Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
+Dramatic cinematic side lighting, strong contrast, deep shadows.
+Extremely vibrant saturated colors, color graded like a Hollywood movie.
+Single clear focal point with shallow depth of field and creamy bokeh background.
+Person showing intense emotional expression, looking directly at camera.
+Composition leaves empty space on the right side for text overlay.
+DO NOT include any text, letters, words, or watermarks in the image.
+${styleDesc}
+Professional YouTube thumbnail that would get millions of clicks.
+8K, hyper-detailed, magazine quality.`.slice(0, 4000);
+
+        for (let i = 0; i < actualCount; i++) {
+          try {
+            const falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
+              input: {
+                prompt: fluxPrompt,
+                image_size: falSize,
+                num_images: 1,
+                safety_tolerance: '5',
+              },
+            }) as { data: { images: Array<{ url: string }> } };
+
+            const imageUrl = falResult.data?.images?.[0]?.url;
+            if (!imageUrl) {
+              failedCount++;
+              continue;
+            }
+
+            // Save to database
+            const gen = await ctx.db.thumbnailGeneration.create({
+              data: {
+                userId,
+                prompt: input.prompt,
+                style: input.style,
+                format: input.format,
+                imageUrl,
+                youtubeUrl: input.youtubeUrl ?? null,
+                photoUrl: input.photoUrl ?? null,
+              },
+              select: { id: true, imageUrl: true },
+            });
+
+            results.push({ url: gen.imageUrl, id: gen.id });
+          } catch {
+            failedCount++;
+            continue;
+          }
+        }
+      } else {
+        // ── Fallback: DALL-E 3 ──
+        const size = input.format === '16:9' ? '1792x1024' : '1024x1792';
+
+        const fullPrompt =
+          `Professional YouTube video thumbnail photo. ${input.prompt}.${contextParts}
 
 CRITICAL REQUIREMENTS for YouTube thumbnail:
 - Photorealistic, ultra high quality, 8K detail
@@ -283,70 +351,67 @@ CRITICAL REQUIREMENTS for YouTube thumbnail:
 - ${styleDesc}
 
 The image must look like a professional YouTube thumbnail that would get millions of clicks.`.slice(
-          0,
-          4000,
-        );
-
-      // Generate images (DALL-E 3 only supports n=1, so loop)
-      const results: Array<{ url: string; id: string; revisedPrompt?: string }> = [];
-      let failedCount = 0;
-
-      for (let i = 0; i < actualCount; i++) {
-        let res: Response;
-        try {
-          res = await fetchWithTimeout(
-            API_ENDPOINTS.OPENAI_IMAGES,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'dall-e-3',
-                prompt: fullPrompt,
-                n: 1,
-                size,
-                quality: 'hd',
-              }),
-            },
-            60000,
+            0,
+            4000,
           );
-        } catch {
-          failedCount++;
-          continue;
+
+        for (let i = 0; i < actualCount; i++) {
+          let res: Response;
+          try {
+            res = await fetchWithTimeout(
+              API_ENDPOINTS.OPENAI_IMAGES,
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'dall-e-3',
+                  prompt: fullPrompt,
+                  n: 1,
+                  size,
+                  quality: 'hd',
+                }),
+              },
+              60000,
+            );
+          } catch {
+            failedCount++;
+            continue;
+          }
+
+          if (!res.ok) {
+            failedCount++;
+            continue;
+          }
+
+          const data = (await res.json().catch(() => null)) as {
+            data?: Array<{ url: string; revised_prompt?: string }>;
+          } | null;
+          const imageUrl = data?.data?.[0]?.url;
+          const revisedPrompt = data?.data?.[0]?.revised_prompt;
+          if (!imageUrl) {
+            failedCount++;
+            continue;
+          }
+
+          // Save to database
+          const gen = await ctx.db.thumbnailGeneration.create({
+            data: {
+              userId,
+              prompt: input.prompt,
+              style: input.style,
+              format: input.format,
+              imageUrl,
+              youtubeUrl: input.youtubeUrl ?? null,
+              photoUrl: input.photoUrl ?? null,
+            },
+            select: { id: true, imageUrl: true },
+          });
+
+          results.push({ url: gen.imageUrl, id: gen.id, revisedPrompt });
         }
-
-        if (!res.ok) {
-          failedCount++;
-          continue;
-        }
-
-        const data = (await res.json().catch(() => null)) as {
-          data?: Array<{ url: string; revised_prompt?: string }>;
-        } | null;
-        const imageUrl = data?.data?.[0]?.url;
-        const revisedPrompt = data?.data?.[0]?.revised_prompt;
-        if (!imageUrl) {
-          failedCount++;
-          continue;
-        }
-
-        // Save to database
-        const gen = await ctx.db.thumbnailGeneration.create({
-          data: {
-            userId,
-            prompt: input.prompt,
-            style: input.style,
-            format: input.format,
-            imageUrl,
-            youtubeUrl: input.youtubeUrl ?? null,
-            photoUrl: input.photoUrl ?? null,
-          },
-          select: { id: true, imageUrl: true },
-        });
-
-        results.push({ url: gen.imageUrl, id: gen.id, revisedPrompt });
       }
 
       // Refund credits for failed generations
@@ -667,7 +732,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
     }),
 
   /* ═══════════════════════════════════════════════════════
-     Iterative edit (GPT-4o Vision describe + DALL-E regen)
+     Iterative edit (GPT-4o Vision describe + Flux/DALL-E regen)
      ═══════════════════════════════════════════════════════ */
   edit: protectedProcedure
     .input(
@@ -679,11 +744,20 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const useFal = !!env.FAL_KEY;
 
+      if (!useFal && !env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Image generation API key not configured. Contact the administrator.',
+        });
+      }
+
+      // GPT-4o Vision step always needs OpenAI
       if (!env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'OpenAI API key not configured. Contact the administrator.',
+          message: 'OpenAI API key not configured (required for image analysis). Contact the administrator.',
         });
       }
 
@@ -706,7 +780,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
         });
       }
 
-      // Costs 2 credits: GPT-4o Vision + DALL-E generation
+      // Costs 2 credits: GPT-4o Vision + image generation
       await checkAndIncrementAIUsage(userId, ctx.db);
       await checkAndIncrementAIUsage(userId, ctx.db);
 
@@ -775,66 +849,101 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       const description =
         visionData.choices?.[0]?.message?.content ?? '';
 
-      // Step 2: DALL-E 3 generates modified version
+      // Step 2: Generate modified version
       const editPrompt =
         `Recreate this YouTube thumbnail with modifications. Original: ${description}. EDIT: ${input.instruction}. ` +
         'Maintain the overall composition and style unless the edit specifically changes it. ' +
-        'High quality, 16:9, professional YouTube thumbnail.';
+        'Ultra photorealistic, 16:9, professional YouTube thumbnail. 8K, hyper-detailed.';
 
-      let dalleRes: Response;
-      try {
-        dalleRes = await fetchWithTimeout(
-          API_ENDPOINTS.OPENAI_IMAGES,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'dall-e-3',
+      let imageUrl: string;
+
+      if (useFal) {
+        // ── Flux via fal.ai ──
+        fal.config({ credentials: env.FAL_KEY });
+        try {
+          const falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
+            input: {
               prompt: editPrompt.slice(0, 4000),
-              n: 1,
-              size: '1792x1024',
-              quality: 'hd',
-            }),
-          },
-          60000,
-        );
-      } catch {
-        // Vision succeeded (1 credit consumed), refund only the DALL-E credit
-        await decrementAIUsage(userId, ctx.db);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'AI service error during image generation.',
-        });
-      }
+              image_size: { width: 1344, height: 768 },
+              num_images: 1,
+              safety_tolerance: '5',
+            },
+          }) as { data: { images: Array<{ url: string }> } };
 
-      if (!dalleRes.ok) {
-        await decrementAIUsage(userId, ctx.db);
-        const err = (await dalleRes.json().catch(() => ({}))) as {
-          error?: { message?: string };
-        };
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: err.error?.message ?? 'DALL-E API error',
-        });
-      }
+          const url = falResult.data?.images?.[0]?.url;
+          if (!url) {
+            await decrementAIUsage(userId, ctx.db);
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'No image returned from Flux.',
+            });
+          }
+          imageUrl = url;
+        } catch (e) {
+          if (e instanceof TRPCError) throw e;
+          await decrementAIUsage(userId, ctx.db);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'AI service error during image generation.',
+          });
+        }
+      } else {
+        // ── Fallback: DALL-E 3 ──
+        let dalleRes: Response;
+        try {
+          dalleRes = await fetchWithTimeout(
+            API_ENDPOINTS.OPENAI_IMAGES,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'dall-e-3',
+                prompt: editPrompt.slice(0, 4000),
+                n: 1,
+                size: '1792x1024',
+                quality: 'hd',
+              }),
+            },
+            60000,
+          );
+        } catch {
+          await decrementAIUsage(userId, ctx.db);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'AI service error during image generation.',
+          });
+        }
 
-      const dalleData = (await dalleRes.json().catch(() => {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to parse DALL-E response',
-        });
-      })) as { data?: Array<{ url: string; revised_prompt?: string }> };
+        if (!dalleRes.ok) {
+          await decrementAIUsage(userId, ctx.db);
+          const err = (await dalleRes.json().catch(() => ({}))) as {
+            error?: { message?: string };
+          };
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: err.error?.message ?? 'DALL-E API error',
+          });
+        }
 
-      const imageUrl = dalleData.data?.[0]?.url;
-      if (!imageUrl) {
-        await decrementAIUsage(userId, ctx.db);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'No image returned from DALL-E.',
-        });
+        const dalleData = (await dalleRes.json().catch(() => {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to parse DALL-E response',
+          });
+        })) as { data?: Array<{ url: string; revised_prompt?: string }> };
+
+        const url = dalleData.data?.[0]?.url;
+        if (!url) {
+          await decrementAIUsage(userId, ctx.db);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'No image returned from DALL-E.',
+          });
+        }
+        imageUrl = url;
       }
 
       // Save as child of original generation

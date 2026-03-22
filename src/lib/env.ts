@@ -85,6 +85,9 @@ export const env = {
   // ElevenLabs (voice cloning — optional)
   ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY ?? '',
 
+  // fal.ai (Flux image generation — optional, falls back to DALL-E)
+  FAL_KEY: process.env.FAL_KEY ?? '',
+
   // Error monitoring (Sentry) — disabled when not set
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
 } as const;
