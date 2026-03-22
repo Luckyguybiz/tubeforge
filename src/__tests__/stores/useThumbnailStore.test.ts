@@ -38,7 +38,7 @@ describe('useThumbnailStore', () => {
       const { els, selIds } = useThumbnailStore.getState();
       expect(els.length).toBe(1);
       expect(els[0].type).toBe('text');
-      expect(els[0].text).toBe('Новый текст');
+      expect(els[0].text).toBe('New text');
       expect(selIds).toContain(els[0].id);
     });
 
@@ -82,7 +82,7 @@ describe('useThumbnailStore', () => {
       expect(els.length).toBe(1);
       expect(els[0].type).toBe('stickyNote');
       expect(els[0].noteColor).toBe('#fef08a');
-      expect(els[0].noteText).toBe('Заметка');
+      expect(els[0].noteText).toBe('Note');
     });
 
     it('addTable creates a table', () => {

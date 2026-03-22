@@ -5,36 +5,6 @@ import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
 
-/**
- * In-memory comment store.
- *
- * Since there is no Comment model in Prisma, we store comments in-memory.
- * This is suitable for a single-server deployment and provides a working
- * commenting system that degrades gracefully on restart (comments reset).
- *
- * A persistent DB-backed version can be added later by creating a Comment model.
- */
-
-interface Comment {
-  id: string;
-  projectId: string;
-  sceneId: string | null;
-  userId: string;
-  userName: string;
-  userImage: string | null;
-  text: string;
-  resolved: boolean;
-  createdAt: string;
-}
-
-/** In-memory store keyed by projectId */
-const commentStore = new Map<string, Comment[]>();
-let commentIdCounter = 1;
-
-function getProjectComments(projectId: string): Comment[] {
-  return commentStore.get(projectId) ?? [];
-}
-
 /** Rate limit: 20 comment actions per minute per user */
 async function checkCommentRate(userId: string) {
   const { success } = await rateLimit({ identifier: `comment:${userId}`, limit: 20, window: 60 });
@@ -65,27 +35,29 @@ export const commentRouter = router({
       });
       if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      const comment: Comment = {
-        id: `cmt_${Date.now()}_${commentIdCounter++}`,
-        projectId: input.projectId,
-        sceneId: input.sceneId ?? null,
-        userId: ctx.session.user.id,
-        userName: ctx.session.user.name ?? 'User',
-        userImage: ctx.session.user.image ?? null,
-        text: stripTags(input.text),
-        resolved: false,
-        createdAt: new Date().toISOString(),
+      const comment = await ctx.db.comment.create({
+        data: {
+          projectId: input.projectId,
+          userId: ctx.session.user.id,
+          text: stripTags(input.text),
+          sceneId: input.sceneId ?? null,
+        },
+        include: {
+          user: { select: { name: true, image: true } },
+        },
+      });
+
+      return {
+        id: comment.id,
+        projectId: comment.projectId,
+        sceneId: comment.sceneId,
+        userId: comment.userId,
+        userName: comment.user.name ?? 'User',
+        userImage: comment.user.image ?? null,
+        text: comment.text,
+        resolved: comment.resolved,
+        createdAt: comment.createdAt.toISOString(),
       };
-
-      const existing = commentStore.get(input.projectId) ?? [];
-      // Keep max 100 comments per project
-      if (existing.length >= 100) {
-        existing.shift();
-      }
-      existing.push(comment);
-      commentStore.set(input.projectId, existing);
-
-      return comment;
     }),
 
   /** List comments for a project */
@@ -108,11 +80,31 @@ export const commentRouter = router({
       });
       if (!project) return [];
 
-      let comments = getProjectComments(input.projectId);
+      const where: { projectId: string; sceneId?: string } = { projectId: input.projectId };
       if (input.sceneId) {
-        comments = comments.filter((c) => c.sceneId === input.sceneId);
+        where.sceneId = input.sceneId;
       }
-      return comments;
+
+      const comments = await ctx.db.comment.findMany({
+        where,
+        include: {
+          user: { select: { name: true, image: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+        take: 100,
+      });
+
+      return comments.map((c) => ({
+        id: c.id,
+        projectId: c.projectId,
+        sceneId: c.sceneId,
+        userId: c.userId,
+        userName: c.user.name ?? 'User',
+        userImage: c.user.image ?? null,
+        text: c.text,
+        resolved: c.resolved,
+        createdAt: c.createdAt.toISOString(),
+      }));
     }),
 
   /** Resolve (or unresolve) a comment */
@@ -125,7 +117,7 @@ export const commentRouter = router({
     .mutation(async ({ ctx, input }) => {
       await checkCommentRate(ctx.session.user.id);
 
-      // Verify access
+      // Verify access to project
       const project = await ctx.db.project.findFirst({
         where: {
           id: input.projectId,
@@ -138,12 +130,30 @@ export const commentRouter = router({
       });
       if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      const comments = getProjectComments(input.projectId);
-      const comment = comments.find((c) => c.id === input.commentId);
+      const comment = await ctx.db.comment.findFirst({
+        where: { id: input.commentId, projectId: input.projectId },
+      });
       if (!comment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Comment not found' });
 
-      comment.resolved = input.resolved;
-      return comment;
+      const updated = await ctx.db.comment.update({
+        where: { id: input.commentId },
+        data: { resolved: input.resolved },
+        include: {
+          user: { select: { name: true, image: true } },
+        },
+      });
+
+      return {
+        id: updated.id,
+        projectId: updated.projectId,
+        sceneId: updated.sceneId,
+        userId: updated.userId,
+        userName: updated.user.name ?? 'User',
+        userImage: updated.user.image ?? null,
+        text: updated.text,
+        resolved: updated.resolved,
+        createdAt: updated.createdAt.toISOString(),
+      };
     }),
 
   /** Delete a comment (author or project owner only) */
@@ -167,17 +177,17 @@ export const commentRouter = router({
       });
       if (!project) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      const comments = getProjectComments(input.projectId);
-      const idx = comments.findIndex((c) => c.id === input.commentId);
-      if (idx === -1) throw new TRPCError({ code: 'NOT_FOUND' });
+      const comment = await ctx.db.comment.findFirst({
+        where: { id: input.commentId, projectId: input.projectId },
+      });
+      if (!comment) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      const comment = comments[idx];
       // Only author or project owner can delete
       if (comment.userId !== ctx.session.user.id && project.userId !== ctx.session.user.id) {
         throw new TRPCError({ code: 'FORBIDDEN' });
       }
 
-      comments.splice(idx, 1);
+      await ctx.db.comment.delete({ where: { id: input.commentId } });
       return { success: true };
     }),
 });

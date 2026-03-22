@@ -13,9 +13,9 @@ function jsonError(message: string, status: number) {
 
 /**
  * Authenticate the request using Bearer token from Authorization header.
- * Looks up the API key in the in-memory store and returns the userId.
+ * Looks up the API key hash in the database and returns the userId.
  */
-function authenticateRequest(req: NextRequest): string | null {
+async function authenticateRequest(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.slice(7).trim();
@@ -33,7 +33,7 @@ function authenticateRequest(req: NextRequest): string | null {
  */
 export async function GET(req: NextRequest) {
   // Auth
-  const userId = authenticateRequest(req);
+  const userId = await authenticateRequest(req);
   if (!userId) {
     return jsonError('Unauthorized. Provide a valid Bearer token in the Authorization header.', 401);
   }
@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   // Auth
-  const userId = authenticateRequest(req);
+  const userId = await authenticateRequest(req);
   if (!userId) {
     return jsonError('Unauthorized. Provide a valid Bearer token in the Authorization header.', 401);
   }

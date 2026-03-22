@@ -304,7 +304,7 @@ export const useContentPlannerStore = create<ContentPlannerState>()(
       },
     }),
     {
-      name: 'tubeforge-content-planner',
+      name: 'tf-content-planner',
       partialize: (state) => ({
         contentItems: state.contentItems,
         ideas: state.ideas,

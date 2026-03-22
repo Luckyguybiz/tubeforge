@@ -1,3 +1,4 @@
+import { NEW_BLOG_POSTS } from './blog-posts-new';
 export interface BlogPost {
   slug: string;
   title: string;
@@ -11,7 +12,7 @@ export interface BlogPost {
   coverImage?: string;
 }
 
-export const BLOG_POSTS: BlogPost[] = [
+const ORIGINAL_POSTS: BlogPost[] = [
   {
     slug: 'how-to-create-youtube-channel-2026',
     title: 'How to Create a YouTube Channel in 2026: The Complete Guide',
@@ -411,6 +412,8 @@ export const BLOG_POSTS: BlogPost[] = [
 </ul>`,
   },
 ];
+
+export const BLOG_POSTS: BlogPost[] = [...ORIGINAL_POSTS, ...NEW_BLOG_POSTS];
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((post) => post.slug === slug);

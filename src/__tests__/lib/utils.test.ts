@@ -59,14 +59,14 @@ describe('fmtTime', () => {
 /* ── fmtDur ──────────────────────────────────────────────────── */
 
 describe('fmtDur', () => {
-  it('uses seconds notation "с" for 0', () => {
-    expect(fmtDur(0)).toBe('0с');
+  it('uses seconds notation "s" for 0', () => {
+    expect(fmtDur(0)).toBe('0s');
   });
 
   it('uses seconds notation for values under 60', () => {
-    expect(fmtDur(1)).toBe('1с');
-    expect(fmtDur(30)).toBe('30с');
-    expect(fmtDur(59)).toBe('59с');
+    expect(fmtDur(1)).toBe('1s');
+    expect(fmtDur(30)).toBe('30s');
+    expect(fmtDur(59)).toBe('59s');
   });
 
   it('switches to time format at exactly 60', () => {
@@ -171,63 +171,63 @@ describe('pluralRu', () => {
 describe('timeAgo', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('returns "только что" for less than 1 minute ago', () => {
+  it('returns "just now" for less than 1 minute ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T12:00:30Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('только что');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('just now');
   });
 
-  it('returns "только что" for 0 seconds ago', () => {
+  it('returns "just now" for 0 seconds ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T12:00:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('только что');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('just now');
   });
 
   it('returns minutes for 1 minute ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T12:01:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('1 мин назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('1m ago');
   });
 
   it('returns minutes for 59 minutes ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T12:59:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('59 мин назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('59m ago');
   });
 
   it('returns hours for exactly 1 hour ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T13:00:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('1 ч назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('1h ago');
   });
 
   it('returns hours for 23 hours ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-02T11:00:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('23 ч назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('23h ago');
   });
 
   it('returns days for exactly 24 hours ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-02T12:00:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('1 д назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('1d ago');
   });
 
   it('returns days for multiple days ago', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-08T12:00:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('7 д назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('7d ago');
   });
 
   it('accepts Date objects as input', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T12:05:00Z'));
-    expect(timeAgo(new Date('2025-06-01T12:00:00Z'))).toBe('5 мин назад');
+    expect(timeAgo(new Date('2025-06-01T12:00:00Z'))).toBe('5m ago');
   });
 
   it('accepts ISO date strings as input', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-06-01T15:00:00Z'));
-    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('3 ч назад');
+    expect(timeAgo('2025-06-01T12:00:00Z')).toBe('3h ago');
   });
 });

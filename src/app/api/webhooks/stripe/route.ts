@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
                   data: {
                     oldPlan,
                     newPlan: updatedPlan,
-                    locale: 'ru',
+                    locale: 'en',
                   },
                 }).catch((err) => log.error('Plan change email failed', { error: String(err) }));
               } catch {
@@ -434,7 +434,7 @@ export async function POST(req: NextRequest) {
                 plan: paymentUser.plan,
                 amount: `${amountFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
                 date: paidDate,
-                locale: 'ru',
+                locale: 'en',
               },
             }).catch((err) => log.error('Payment receipt email failed', { error: String(err) }));
           }
@@ -488,7 +488,7 @@ export async function POST(req: NextRequest) {
                 data: {
                   amount: `${commissionFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
                   totalBalance: `${totalFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
-                  locale: 'ru',
+                  locale: 'en',
                 },
               }).catch((err) => log.error('Referral commission email failed', { error: String(err) }));
             }
@@ -543,7 +543,7 @@ export async function POST(req: NextRequest) {
                 data: {
                   plan: failedUser.plan,
                   attempt: attemptCount,
-                  locale: 'ru',
+                  locale: 'en',
                 },
               }).catch((err) => log.error('Payment-failed email failed', { error: String(err) }));
             }
