@@ -51,14 +51,14 @@ const COMPARISONS: Record<string, ComparisonData> = {
       { name: 'Cloud editor', tubeforge: '\u2705 Web app', competitor: '\u2705 Web + mobile' },
       { name: 'Video downloads', tubeforge: '\u2705 YouTube, TikTok, etc.', competitor: '\u274C No' },
       { name: 'AI thumbnails', tubeforge: '\u2705 Yes', competitor: '\u26A0\uFE0F Limited' },
-      { name: 'Referral program', tubeforge: '\u2705 30% commission', competitor: '\u274C No' },
+      { name: 'Referral program', tubeforge: '\u2705 20% commission', competitor: '\u274C No' },
     ],
     pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $0/mo (Free)' },
     advantages: [
       'YouTube specialization — SEO, analytics, publishing',
       'AI generation of full videos from descriptions',
       'Built-in video downloader',
-      'Referral program with 30% commission',
+      'Referral program with 20% commission',
     ],
   },
   'tubeforge-vs-pictory': {

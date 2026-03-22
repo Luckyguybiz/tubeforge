@@ -14,6 +14,19 @@ const VALID_PROMOS: Record<string, { maxUses: number }> = {
   'YOUTUBE-ACCESS-2026': { maxUses: 50 },
 };
 
+// In-memory usage counter for promo codes
+const promoUsageCount = new Map<string, number>();
+
+/** Get current usage count for a promo code */
+function getPromoUsage(code: string): number {
+  return promoUsageCount.get(code) ?? 0;
+}
+
+/** Increment usage count for a promo code */
+function incrementPromoUsage(code: string): void {
+  promoUsageCount.set(code, getPromoUsage(code) + 1);
+}
+
 /** Shared helper: generate VPN config for a user (creates peer, registers on server) */
 async function generateVpnForUser(ctx: { db: any; session: { user: { id: string } } }) {
   const userId = ctx.session.user.id;
@@ -98,9 +111,15 @@ export const vpnRouter = router({
       const { success } = await rateLimit({ identifier: `vpn-promo:${ctx.session.user.id}`, limit: 5, window: 60 });
       if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
 
-      const promo = VALID_PROMOS[input.code.toUpperCase()];
+      const normalizedCode = input.code.toUpperCase();
+      const promo = VALID_PROMOS[normalizedCode];
       if (!promo) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid promo code' });
+      }
+
+      // Enforce maxUses limit
+      if (getPromoUsage(normalizedCode) >= promo.maxUses) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Promo code has reached its maximum usage limit' });
       }
 
       // Check if user already has VPN access
@@ -111,7 +130,8 @@ export const vpnRouter = router({
 
       // Generate VPN config (bypasses plan check)
       await generateVpnForUser(ctx);
-      log.info('VPN unlocked via promo', { userId: ctx.session.user.id, code: input.code.toUpperCase() });
+      incrementPromoUsage(normalizedCode);
+      log.info('VPN unlocked via promo', { userId: ctx.session.user.id, code: normalizedCode, usageCount: getPromoUsage(normalizedCode) });
 
       return { success: true };
     }),

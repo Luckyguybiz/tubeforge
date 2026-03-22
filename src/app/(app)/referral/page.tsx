@@ -140,6 +140,18 @@ function ReferralContent() {
       toast.error(t('referral.activateError'));
     },
   });
+  const [claimingMilestone, setClaimingMilestone] = useState<string | null>(null);
+  const claimRewardMutation = trpc.referral.claimReward.useMutation({
+    onSuccess: (data) => {
+      rewards.refetch();
+      setClaimingMilestone(null);
+      toast.success(t('referral.claimSuccess').replace('{credits}', String(data.credits)));
+    },
+    onError: () => {
+      setClaimingMilestone(null);
+      toast.error('Failed to claim reward');
+    },
+  });
 
   const referralCode = myReferral.data?.code ?? null;
   const referralLink = referralCode ? `https://tubeforge.co?ref=${referralCode}` : '';
@@ -1015,6 +1027,42 @@ function ReferralContent() {
                             <span style={{ fontSize: 12, fontWeight: 600, color: r.earned ? '#f59e0b' : C.sub }}>
                               {rewardLabel}
                             </span>
+                            {r.earned && !r.claimed && (
+                              <button
+                                onClick={() => {
+                                  setClaimingMilestone(r.milestone);
+                                  claimRewardMutation.mutate({ milestone: r.milestone });
+                                }}
+                                disabled={claimingMilestone === r.milestone}
+                                style={{
+                                  marginLeft: 6,
+                                  padding: '3px 10px',
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: '#fff',
+                                  background: '#6366f1',
+                                  border: 'none',
+                                  borderRadius: 6,
+                                  cursor: claimingMilestone === r.milestone ? 'wait' : 'pointer',
+                                  opacity: claimingMilestone === r.milestone ? 0.6 : 1,
+                                  transition: 'opacity .15s ease',
+                                }}
+                              >
+                                {claimingMilestone === r.milestone ? '...' : t('referral.claimReward')}
+                              </button>
+                            )}
+                            {r.earned && r.claimed && (
+                              <span style={{
+                                marginLeft: 6,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                color: '#10b981',
+                                textTransform: 'uppercase',
+                                letterSpacing: '.04em',
+                              }}>
+                                {t('referral.rewardClaimed')}
+                              </span>
+                            )}
                           </div>
                         </div>
                       );

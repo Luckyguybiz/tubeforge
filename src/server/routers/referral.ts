@@ -3,6 +3,9 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { createHash } from 'crypto';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('referral');
 
 // Unambiguous alphanumeric chars (no O/0, I/1, l)
 const SAFE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -153,7 +156,7 @@ export const referralRouter = router({
   getRewards: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { referralCode: true, referralEarnings: true },
+      select: { referralCode: true, referralEarnings: true, claimedMilestones: true },
     });
     if (!user?.referralCode) return { rewards: [], totalBonusCredits: 0 };
 
@@ -164,23 +167,115 @@ export const referralRouter = router({
       where: { referredBy: user.referralCode, plan: { not: 'FREE' } },
     });
 
+    const claimed = user.claimedMilestones ?? [];
+
     // Calculate reward milestones
-    const rewards: { milestone: string; reward: string; earned: boolean }[] = [
-      { milestone: '1_signup', reward: 'bonus_50_credits', earned: invited >= 1 },
-      { milestone: '3_signups', reward: 'bonus_200_credits', earned: invited >= 3 },
-      { milestone: '1_paid', reward: 'extended_trial_7d', earned: paid >= 1 },
-      { milestone: '5_signups', reward: 'bonus_500_credits', earned: invited >= 5 },
-      { milestone: '5_paid', reward: 'bonus_1000_credits', earned: paid >= 5 },
-      { milestone: '10_paid', reward: 'pro_month_free', earned: paid >= 10 },
+    const rewards: { milestone: string; reward: string; earned: boolean; claimed: boolean }[] = [
+      { milestone: '1_signup', reward: 'bonus_50_credits', earned: invited >= 1, claimed: claimed.includes('1_signup') },
+      { milestone: '3_signups', reward: 'bonus_200_credits', earned: invited >= 3, claimed: claimed.includes('3_signups') },
+      { milestone: '1_paid', reward: 'extended_trial_7d', earned: paid >= 1, claimed: claimed.includes('1_paid') },
+      { milestone: '5_signups', reward: 'bonus_500_credits', earned: invited >= 5, claimed: claimed.includes('5_signups') },
+      { milestone: '5_paid', reward: 'bonus_1000_credits', earned: paid >= 5, claimed: claimed.includes('5_paid') },
+      { milestone: '10_paid', reward: 'pro_month_free', earned: paid >= 10, claimed: claimed.includes('10_paid') },
     ];
 
-    // Total bonus AI credits earned
+    // Total bonus AI credits (only count claimed milestones)
     let totalBonusCredits = 0;
-    if (invited >= 1) totalBonusCredits += 50;
-    if (invited >= 3) totalBonusCredits += 200;
-    if (invited >= 5) totalBonusCredits += 500;
-    if (paid >= 5) totalBonusCredits += 1000;
+    if (claimed.includes('1_signup')) totalBonusCredits += 50;
+    if (claimed.includes('3_signups')) totalBonusCredits += 200;
+    if (claimed.includes('5_signups')) totalBonusCredits += 500;
+    if (claimed.includes('5_paid')) totalBonusCredits += 1000;
 
     return { rewards, totalBonusCredits };
   }),
+
+  /** Claim a referral reward milestone — grants AI credits to the user */
+  claimReward: protectedProcedure
+    .input(z.object({ milestone: z.string().min(1).max(30) }))
+    .mutation(async ({ ctx, input }) => {
+      const { success } = await rateLimit({
+        identifier: `referral-claim:${ctx.session.user.id}`,
+        limit: 10,
+        window: 60,
+      });
+      if (!success) {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' });
+      }
+
+      const userId = ctx.session.user.id;
+      const { milestone } = input;
+
+      // Credit amounts per milestone (AI credits)
+      const MILESTONE_CREDITS: Record<string, number> = {
+        '1_signup': 50,
+        '3_signups': 200,
+        '5_signups': 500,
+        '5_paid': 1000,
+      };
+
+      // Valid milestones (non-credit rewards handled separately)
+      const VALID_MILESTONES = ['1_signup', '3_signups', '1_paid', '5_signups', '5_paid', '10_paid'];
+      if (!VALID_MILESTONES.includes(milestone)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid milestone' });
+      }
+
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { referralCode: true, claimedMilestones: true, aiUsage: true },
+      });
+
+      if (!user?.referralCode) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Referral program not activated' });
+      }
+
+      // Already claimed?
+      if ((user.claimedMilestones ?? []).includes(milestone)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Milestone already claimed' });
+      }
+
+      // Check if milestone is actually earned
+      const [invited, paid] = await Promise.all([
+        ctx.db.user.count({ where: { referredBy: user.referralCode } }),
+        ctx.db.user.count({ where: { referredBy: user.referralCode, plan: { not: 'FREE' } } }),
+      ]);
+
+      const milestoneEarned: Record<string, boolean> = {
+        '1_signup': invited >= 1,
+        '3_signups': invited >= 3,
+        '1_paid': paid >= 1,
+        '5_signups': invited >= 5,
+        '5_paid': paid >= 5,
+        '10_paid': paid >= 10,
+      };
+
+      if (!milestoneEarned[milestone]) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Milestone not yet reached' });
+      }
+
+      // Grant the reward
+      const credits = MILESTONE_CREDITS[milestone] ?? 0;
+      const updatedClaimed = [...(user.claimedMilestones ?? []), milestone];
+
+      // Use a transaction to atomically update claimedMilestones and grant credits
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await ctx.db.$transaction(async (tx: any) => {
+        // Mark milestone as claimed
+        await tx.user.update({
+          where: { id: userId },
+          data: { claimedMilestones: updatedClaimed },
+        });
+
+        // Grant AI credits by decrementing aiUsage (lower usage = more credits remaining)
+        if (credits > 0) {
+          await tx.user.update({
+            where: { id: userId },
+            data: { aiUsage: { decrement: credits } },
+          });
+        }
+      });
+
+      log.info('Referral milestone claimed', { userId, milestone, credits });
+
+      return { success: true, milestone, credits };
+    }),
 });
