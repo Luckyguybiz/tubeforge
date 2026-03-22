@@ -151,7 +151,30 @@ textarea:focus-visible, input:focus-visible {
 /* Fix 100vw scrollbar bug */
 html { overflow-x: hidden; }
 
+/* ── Dashboard showcase ─────────────────────────────── */
+
+.tf-dash-showcase-scroll::-webkit-scrollbar { display: none; }
+.tf-dash-showcase-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
 /* ── Dashboard responsive overrides ──────────────────── */
+
+@media (max-width: 768px) {
+  .tf-dash-showcase {
+    flex-direction: column !important;
+    padding: 24px !important;
+    gap: 20px !important;
+  }
+  .tf-dash-showcase-left {
+    min-width: unset !important;
+    text-align: center;
+  }
+  .tf-dash-showcase-left h2 {
+    font-size: 22px !important;
+  }
+}
 
 @media (max-width: 640px) {
   .tf-dash-heading {
