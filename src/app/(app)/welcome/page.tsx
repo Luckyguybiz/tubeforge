@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -63,6 +63,15 @@ function WelcomeInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const session = useSession();
+
+  // Redirect to onboarding quiz if not yet completed
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && localStorage.getItem('tf-quiz-done') !== 'true') {
+        router.replace('/onboarding');
+      }
+    } catch { /* localStorage unavailable */ }
+  }, [router]);
 
   const planParam = searchParams.get('plan')?.toUpperCase() ?? '';
   const sessionPlan = session.data?.user?.plan ?? '';

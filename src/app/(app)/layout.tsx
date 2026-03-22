@@ -26,6 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
   const isEditor = pathname === '/editor';
+  const isOnboarding = pathname === '/onboarding';
 
   const mobileMenuOpen = useMobileMenuStore((s) => s.open);
   const closeMobileMenu = useMobileMenuStore((s) => s.close);
@@ -158,35 +159,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-main-content{padding-bottom:68px!important}
         }
       `}</style>
-      <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
-      <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
-        {!isEditor && <div className="tf-sidebar" style={{ height: '100%', overflow: 'hidden', flexShrink: 0 }}><Sidebar /></div>}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <TopBar />
-          {isEditor ? (
-            <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
-          ) : (
-            <main id="main-content" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile sidebar drawer */}
-      {!isEditor && (
+      {/* Onboarding quiz: render fullscreen without sidebar/topbar */}
+      {isOnboarding ? (
+        <>{children}</>
+      ) : (
         <>
-          <div
-            className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
-            onClick={handleBackdropClick}
-            aria-hidden="true"
-          />
-          <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
-            <Sidebar />
+          <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
+          <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
+            {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <TopBar />
+              {isEditor ? (
+                <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
+              ) : (
+                <main id="main-content" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
+              )}
+            </div>
           </div>
+
+          {/* Mobile sidebar drawer */}
+          {!isEditor && (
+            <>
+              <div
+                className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
+                onClick={handleBackdropClick}
+                aria-hidden="true"
+              />
+              <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+                <Sidebar />
+              </div>
+            </>
+          )}
+
+          {/* Mobile bottom tab bar */}
+          {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
         </>
       )}
-
-      {/* Mobile bottom tab bar */}
-      {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
 
       <ServiceWorkerRegistration />
       <FeedbackWidget />
