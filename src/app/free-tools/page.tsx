@@ -34,8 +34,9 @@ const TOOLS = [
     title: "YouTube Title Generator",
     description: "Generate 10 click-worthy, SEO-optimized title variations for any video topic using AI.",
     href: "/free-tools/title-generator",
+    gradient: ["#6366f1", "#8b5cf6"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
       </svg>
@@ -45,8 +46,9 @@ const TOOLS = [
     title: "YouTube Description Generator",
     description: "Create SEO-optimized video descriptions with timestamps, hashtags, and links sections.",
     href: "/free-tools/description-generator",
+    gradient: ["#3b82f6", "#06b6d4"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
@@ -59,33 +61,11 @@ const TOOLS = [
     title: "YouTube Tag Generator",
     description: "Get 25 relevant, SEO-friendly tags mixing broad and long-tail keywords for maximum reach.",
     href: "/free-tools/tag-generator",
+    gradient: ["#10b981", "#34d399"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
         <line x1="7" y1="7" x2="7.01" y2="7" />
-      </svg>
-    ),
-  },
-  {
-    title: "Thumbnail Text Checker",
-    description: "Upload a thumbnail and get instant analysis of text readability, contrast, and composition.",
-    href: "/free-tools/thumbnail-checker",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <polyline points="21 15 16 10 5 21" />
-      </svg>
-    ),
-  },
-  {
-    title: "Channel Name Generator",
-    description: "Get 20 creative, brandable YouTube channel name ideas for any niche using AI.",
-    href: "/free-tools/channel-name-generator",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
       </svg>
     ),
   },
@@ -93,21 +73,22 @@ const TOOLS = [
     title: "YouTube Script Generator",
     description: "Generate complete video scripts with hook, intro, body, CTA, and outro for any topic and format.",
     href: "/free-tools/script-generator",
+    gradient: ["#f59e0b", "#f97316"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
       </svg>
     ),
   },
   {
-    title: "YouTube Character Counter",
-    description: "Real-time character counter for titles (100), descriptions (5000), and tags (500) with color indicators.",
-    href: "/free-tools/character-counter",
+    title: "Channel Name Generator",
+    description: "Get 20 creative, brandable YouTube channel name ideas for any niche using AI.",
+    href: "/free-tools/channel-name-generator",
+    gradient: ["#ec4899", "#f472b6"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="4 7 4 4 20 4 20 7" />
-        <line x1="9" y1="20" x2="15" y2="20" />
-        <line x1="12" y1="4" x2="12" y2="20" />
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
       </svg>
     ),
   },
@@ -115,8 +96,9 @@ const TOOLS = [
     title: "Video Ideas Generator",
     description: "Get 50+ video ideas categorized by trending, evergreen, Shorts, and series concepts.",
     href: "/free-tools/video-ideas",
+    gradient: ["#8b5cf6", "#ec4899"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="9" y1="18" x2="15" y2="18" />
         <line x1="10" y1="22" x2="14" y2="22" />
         <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
@@ -124,11 +106,38 @@ const TOOLS = [
     ),
   },
   {
+    title: "YouTube Character Counter",
+    description: "Real-time character counter for titles (100), descriptions (5000), and tags (500) with color indicators.",
+    href: "/free-tools/character-counter",
+    gradient: ["#14b8a6", "#22d3ee"],
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 7 4 4 20 4 20 7" />
+        <line x1="9" y1="20" x2="15" y2="20" />
+        <line x1="12" y1="4" x2="12" y2="20" />
+      </svg>
+    ),
+  },
+  {
+    title: "Thumbnail Text Checker",
+    description: "Upload a thumbnail and get instant analysis of text readability, contrast, and composition.",
+    href: "/free-tools/thumbnail-checker",
+    gradient: ["#22c55e", "#84cc16"],
+    icon: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+    ),
+  },
+  {
     title: "Shorts Dimensions Guide",
     description: "Complete 2026 guide to YouTube Shorts size, resolution, aspect ratio, and length with interactive preview.",
     href: "/free-tools/shorts-dimensions",
+    gradient: ["#ef4444", "#f97316"],
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
         <line x1="11" y1="18" x2="13" y2="18" />
       </svg>
@@ -226,25 +235,22 @@ export default function FreeToolsPage() {
               href={tool.href}
               className="free-tool-card"
               style={{
-                background: "#1a1a1a",
-                borderRadius: 18,
-                padding: "36px 28px",
+                background: "#141414",
+                borderRadius: 14,
                 textDecoration: "none",
                 color: "inherit",
                 transition: "all 0.3s ease",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
                 border: "1px solid rgba(255,255,255,0.06)",
                 display: "flex",
                 flexDirection: "column",
-                gap: 16,
+                overflow: "hidden",
               }}
             >
+              {/* Gradient visual area */}
               <div
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  background: "rgba(99,102,241,0.1)",
+                  height: 120,
+                  background: `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -252,43 +258,44 @@ export default function FreeToolsPage() {
               >
                 {tool.icon}
               </div>
-              <div>
+              {/* Text content */}
+              <div style={{ padding: "16px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
                 <h2
                   style={{
-                    fontSize: 21,
+                    fontSize: 18,
                     fontWeight: 600,
                     color: "#ffffff",
-                    margin: "0 0 8px",
+                    margin: "0 0 6px",
                   }}
                 >
                   {tool.title}
                 </h2>
                 <p
                   style={{
-                    fontSize: 15,
+                    fontSize: 14,
                     color: "rgba(255,255,255,0.5)",
-                    lineHeight: 1.6,
+                    lineHeight: 1.55,
                     margin: 0,
                   }}
                 >
                   {tool.description}
                 </p>
-              </div>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  color: "#6366f1",
-                  fontSize: 15,
-                  fontWeight: 500,
-                  marginTop: "auto",
-                }}
-              >
-                Try it free
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    color: tool.gradient[0],
+                    fontSize: 14,
+                    fontWeight: 500,
+                    marginTop: 14,
+                  }}
+                >
+                  Try it free
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
               </div>
             </Link>
           ))}
@@ -363,7 +370,7 @@ export default function FreeToolsPage() {
       <style>{`
         .free-tool-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+          box-shadow: 0 8px 24px rgba(99,102,241,0.15), 0 4px 12px rgba(0,0,0,0.25);
           border-color: rgba(255,255,255,0.1);
         }
         @media (max-width: 900px) {

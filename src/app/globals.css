@@ -156,7 +156,7 @@ html { overflow-x: hidden; }
 .tf-dash-showcase-scroll::-webkit-scrollbar { display: none; }
 .tf-dash-showcase-card:hover {
   transform: translateY(-4px) !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  box-shadow: 0 8px 24px rgba(99,102,241,0.15), 0 4px 12px rgba(0,0,0,0.2);
 }
 .tf-free-tools-scroll::-webkit-scrollbar { display: none; }
 
@@ -165,7 +165,7 @@ html { overflow-x: hidden; }
 .tf-top-choice-scroll::-webkit-scrollbar { display: none; }
 .tf-top-choice-card:hover {
   transform: translateY(-4px) !important;
-  box-shadow: 0 12px 32px rgba(0,0,0,.3);
+  box-shadow: 0 8px 24px rgba(99,102,241,0.15), 0 4px 12px rgba(0,0,0,0.2);
 }
 
 /* ── Dashboard responsive overrides ──────────────────── */
