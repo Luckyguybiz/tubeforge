@@ -69,6 +69,14 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     { enabled: !!projectId }
   );
 
+  // When no projectId, initialize with empty canvas so the editor is usable standalone
+  useEffect(() => {
+    if (!projectId && !loadedRef.current) {
+      store().loadFromProject({ els: [], canvasBg: '#0c0c14' });
+      loadedRef.current = true;
+    }
+  }, [projectId, store]);
+
   useEffect(() => {
     if (project.data && !loadedRef.current) {
       store().loadFromProject(project.data.thumbnailData as { els?: CanvasElement[]; canvasBg?: string; canvasW?: number; canvasH?: number } | null);
@@ -127,26 +135,14 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const onMiddleUp = useCallback(() => { isPanning.current = false; }, []);
 
   if (step === 'ai') return <AIGeneratorView projectId={projectId} />;
-  if (!projectId) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 14 }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('thumbs.editor.title')}</div>
-      <div style={{ fontSize: 13, color: C.sub }}>{t('thumbs.noProject') || 'Open a project from My Works to edit thumbnails.'}</div>
-      <a
-        href="/dashboard"
-        style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}
-      >
-        {t('thumbs.openMyWorks') || 'Open My Works'}
-      </a>
-    </div>
-  );
-  if (project.isLoading) return (
+  if (project.isLoading && projectId) return (
     <div>
       <Skeleton width="220px" height="28px" />
       <div style={{ marginTop: 8 }}><Skeleton width="340px" height="16px" /></div>
       <div style={{ marginTop: 24 }}><Skeleton width="100%" height="400px" rounded /></div>
     </div>
   );
-  if (project.error) return (
+  if (project.error && projectId) return (
     <div style={{ padding: 24, textAlign: 'center' }}>
       <p style={{ color: C.accent, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{t('thumbs.editor.loadError')}</p>
       <p style={{ color: C.sub, fontSize: 12, marginBottom: 16 }}>{project.error.message}</p>
@@ -658,13 +654,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <h2 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: '0' }}>{t('thumbs.editor.title')}</h2>
             {project.data?.title && <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>— {project.data.title}</span>}
-            <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              {saveCanvas.isPending ? (
-                <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> {t('thumbs.editor.saving')}</>
-              ) : (
-                <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 3 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> {t('thumbs.editor.saved')}</span>
-              )}
-            </span>
+            {projectId && (
+              <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                {saveCanvas.isPending ? (
+                  <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> {t('thumbs.editor.saving')}</>
+                ) : (
+                  <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 3 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> {t('thumbs.editor.saved')}</span>
+                )}
+              </span>
+            )}
           </div>
           <p style={{ color: C.sub, fontSize: 13, margin: '4px 0 0' }}>{t('thumbs.editor.subtitle')}</p>
         </div>
