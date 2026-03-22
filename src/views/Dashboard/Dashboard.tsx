@@ -1307,12 +1307,20 @@ export function Dashboard() {
             Explore all tools &#10022;
           </Link>
         </div>
-        {/* Right: horizontal scroll of product cards */}
-        <div style={{
-          display: 'flex', gap: 14, overflowX: 'auto', flex: 1,
-          scrollSnapType: 'x mandatory', paddingBottom: 4,
-          msOverflowStyle: 'none', scrollbarWidth: 'none',
-        }} className="tf-dash-showcase-scroll">
+        {/* Right: horizontal scroll of product cards — wheel scrolls horizontally */}
+        <div
+          onWheel={(e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+              e.currentTarget.scrollLeft += e.deltaY;
+              e.preventDefault();
+            }
+          }}
+          style={{
+            display: 'flex', gap: 14, overflowX: 'auto', flex: 1,
+            scrollSnapType: 'x mandatory', paddingBottom: 4,
+          }}
+          className="tf-dash-showcase-scroll"
+        >
           {([
             { href: '/ai-thumbnails', title: 'AI Thumbnails', gradientFrom: '#6366f1', gradientTo: '#8b5cf6', badge: 'NEW', badgeColor: '#84cc16',
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" /></svg> },
