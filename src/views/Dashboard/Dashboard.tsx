@@ -1445,15 +1445,6 @@ function PlanUsageWidget({
   if (isLoading) return null;
 
   const planLabel = getPlanLabel(plan, t);
-  const planGradient =
-    plan === 'STUDIO'
-      ? 'linear-gradient(135deg, #8b5cf6, #6366f1)'
-      : plan === 'PRO'
-        ? 'linear-gradient(135deg, #6366f1, #818cf8)'
-        : isDark
-          ? 'rgba(255,255,255,.08)'
-          : 'rgba(0,0,0,.06)';
-  const planColor = plan === 'FREE' ? C.sub : '#fff';
 
   return (
     <div style={{
@@ -1924,8 +1915,8 @@ function PublishHistoryWidget({
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '10px 12px', borderRadius: 10,
-                background: C.surface, border: `1px solid ${C.border}`,
-                transition: 'border-color .15s',
+                background: C.bg,
+                transition: 'all .15s',
               }}
             >
               {/* Platform icon */}
@@ -2284,28 +2275,24 @@ export function Dashboard() {
         label: t('dashboard.totalProjects'),
         value: String(total),
         icon: IconFolder,
-        gradient: `linear-gradient(135deg, ${C.accent}18, ${C.accent}08)`,
         iconColor: C.accent,
       },
       {
         label: t('dashboard.plan'),
         value: getPlanLabel(plan, t),
         icon: IconStar,
-        gradient: `linear-gradient(135deg, ${C.purple}18, ${C.purple}08)`,
         iconColor: C.purple,
       },
       {
         label: t('dashboard.aiRequests'),
         value: String(user?.aiUsage ?? 0),
         icon: IconFilm,
-        gradient: `linear-gradient(135deg, ${C.blue}18, ${C.blue}08)`,
         iconColor: C.blue,
       },
       {
         label: t('dashboard.channels'),
         value: String(user?.channels?.length ?? 0),
         icon: IconSend,
-        gradient: `linear-gradient(135deg, ${C.green}18, ${C.green}08)`,
         iconColor: C.green,
       },
     ];
@@ -2785,7 +2772,7 @@ export function Dashboard() {
 
                   {/* ── Template suggestions ── */}
                   <div style={{ marginTop: 32, width: '100%', maxWidth: 640 }}>
-                    <p style={{ color: C.sub, fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
+                    <p style={{ color: C.sub, fontSize: 13, fontWeight: 500, marginBottom: 14 }}>
                       {t('dashboard.emptyTemplateSuggestions')}
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
@@ -2800,16 +2787,18 @@ export function Dashboard() {
                             onMouseLeave={() => setHoveredBtn(null)}
                             style={{
                               padding: '14px 16px',
-                              borderRadius: 12,
+                              borderRadius: 14,
                               border: `1px solid ${C.border}`,
-                              background: hoveredBtn === `tpl-${tpl.id}` ? C.surface : C.card,
+                              background: hoveredBtn === `tpl-${tpl.id}` ? C.bg : C.card,
                               cursor: 'pointer',
-                              transition: 'all .15s ease',
+                              transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+                              transform: hoveredBtn === `tpl-${tpl.id}` ? 'translateY(-1px)' : 'none',
+                              boxShadow: hoveredBtn === `tpl-${tpl.id}` ? '0 4px 12px rgba(0,0,0,.06)' : 'none',
                               textAlign: 'left',
                             }}
                           >
                             <div style={{ fontSize: 20, marginBottom: 6 }}>{tpl.icon}</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
                               {isRuLocale ? tpl.name : tpl.nameEn}
                             </div>
                             <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.4 }}>
