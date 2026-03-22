@@ -168,11 +168,11 @@ export const TopBar = memo(function TopBar() {
   const navItem = NAV.find((n) => n.id === current);
   const pageLabel = pageLabelKey ? t(pageLabelKey) : navItem ? t(`nav.${navItem.id}`) : '';
 
-  const btnBase: React.CSSProperties = { width: 44, height: 44, minWidth: 44, minHeight: 44, borderRadius: 7, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
+  const btnBase: React.CSSProperties = { width: isDark ? 44 : 36, height: isDark ? 44 : 36, minWidth: isDark ? 44 : 36, minHeight: isDark ? 44 : 36, borderRadius: isDark ? 7 : 18, border: isDark ? `1px solid ${C.border}` : 'none', background: 'transparent', color: isDark ? C.sub : '#86868b', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
 
   const handleBtnHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, entering: boolean) => {
-    (e.currentTarget as HTMLButtonElement).style.background = entering ? C.surface : 'transparent';
-  }, [C.surface]);
+    (e.currentTarget as HTMLButtonElement).style.background = entering ? (isDark ? C.surface : '#f5f5f7') : 'transparent';
+  }, [C.surface, isDark]);
 
   const handleNotifKeyDown = useCallback((e: React.KeyboardEvent, n: Notification) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -184,7 +184,7 @@ export const TopBar = memo(function TopBar() {
   const mobileMenuToggle = useMobileMenuStore((s) => s.toggle);
 
   return (
-    <div className="tf-topbar" style={{ height: 52, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10, background: C.surface, flexShrink: 0 }}>
+    <div className="tf-topbar" style={{ height: 52, borderBottom: isDark ? `1px solid ${C.border}` : '1px solid #e5e5ea', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10, background: isDark ? C.surface : '#ffffff', flexShrink: 0 }}>
       {/* Hamburger – visible only below 768px */}
       <button
         className="tf-hamburger"
@@ -192,14 +192,14 @@ export const TopBar = memo(function TopBar() {
         onClick={mobileMenuToggle}
         style={{
           display: 'none', /* shown via @media in layout.tsx */
-          width: 44,
-          height: 44,
-          minWidth: 44,
-          minHeight: 44,
-          borderRadius: 7,
-          border: `1px solid ${C.border}`,
+          width: isDark ? 44 : 36,
+          height: isDark ? 44 : 36,
+          minWidth: isDark ? 44 : 36,
+          minHeight: isDark ? 44 : 36,
+          borderRadius: isDark ? 7 : 18,
+          border: isDark ? `1px solid ${C.border}` : 'none',
           background: 'transparent',
-          color: C.text,
+          color: isDark ? C.text : '#1d1d1f',
           cursor: 'pointer',
           alignItems: 'center',
           justifyContent: 'center',
@@ -236,7 +236,7 @@ export const TopBar = memo(function TopBar() {
               tabIndex={0}
               onClick={() => router.push('/dashboard')}
               onKeyDown={(e) => { if (e.key === 'Enter') router.push('/dashboard'); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, color: segments.length > 1 ? C.sub : C.text, fontWeight: segments.length > 1 ? 400 : 500, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, color: segments.length > 1 ? (isDark ? C.sub : '#86868b') : (isDark ? C.text : '#1d1d1f'), fontWeight: segments.length > 1 ? 400 : 500, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
             >
               <span style={{ width: 22, height: 22, borderRadius: 6, background: `linear-gradient(135deg,${C.accent},${C.pink})`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#fff', flexShrink: 0 }}>TF</span>
               {segments.length > 1 ? t('nav.dashboard') : ''}
@@ -254,7 +254,7 @@ export const TopBar = memo(function TopBar() {
                     tabIndex={0}
                     onClick={() => { if (!isLast) router.push(href); }}
                     onKeyDown={(e) => { if (!isLast && e.key === 'Enter') router.push(href); }}
-                    style={{ color: isLast ? C.text : C.sub, fontWeight: isLast ? 600 : 500, cursor: isLast ? 'default' : 'pointer', transition: 'color 0.15s' }}
+                    style={{ color: isLast ? (isDark ? C.text : '#1d1d1f') : (isDark ? C.sub : '#86868b'), fontWeight: isLast ? 600 : 500, cursor: isLast ? 'default' : 'pointer', transition: 'color 0.15s' }}
                   >
                     {label}
                   </span>
@@ -320,7 +320,7 @@ export const TopBar = memo(function TopBar() {
           onMouseLeave={(e) => handleBtnHover(e, false)}
           style={btnBase}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? C.sub : '#86868b'} strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
         </button>
@@ -341,10 +341,12 @@ export const TopBar = memo(function TopBar() {
         style={{
           padding: '6px 14px',
           borderRadius: 20,
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          background: isDark
+            ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+            : 'linear-gradient(135deg, #667eea, #a78bfa)',
           color: '#fff',
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: isDark ? 700 : 600,
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -352,7 +354,7 @@ export const TopBar = memo(function TopBar() {
           gap: 6,
           fontFamily: 'inherit',
           transition: 'all .2s ease',
-          boxShadow: '0 2px 8px rgba(99,102,241,.2)',
+          boxShadow: isDark ? '0 2px 8px rgba(99,102,241,.2)' : '0 1px 4px rgba(99,102,241,.15)',
           whiteSpace: 'nowrap',
         }}
       >
@@ -390,7 +392,7 @@ export const TopBar = memo(function TopBar() {
           onMouseLeave={(e) => handleBtnHover(e, false)}
           style={btnBase}
         >
-          <BellIcon size={14} color={C.sub} />
+          <BellIcon size={14} color={isDark ? C.sub : '#86868b'} />
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16,
@@ -479,9 +481,9 @@ export const TopBar = memo(function TopBar() {
         onMouseLeave={(e) => handleBtnHover(e, false)}
         style={btnBase}
       >
-        {themeMode === 'dark' && <MoonIcon size={14} color={C.sub} />}
-        {themeMode === 'light' && <SunIcon size={14} color={C.sub} />}
-        {themeMode === 'system' && <MonitorIcon size={14} color={C.sub} />}
+        {themeMode === 'dark' && <MoonIcon size={14} color={isDark ? C.sub : '#86868b'} />}
+        {themeMode === 'light' && <SunIcon size={14} color={isDark ? C.sub : '#86868b'} />}
+        {themeMode === 'system' && <MonitorIcon size={14} color={isDark ? C.sub : '#86868b'} />}
       </button>
 
       {/* Keyboard shortcuts modal is now rendered by ShortcutsModal in AppShell */}

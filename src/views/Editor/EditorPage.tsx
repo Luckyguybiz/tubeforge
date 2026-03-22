@@ -150,9 +150,9 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
           width: 112,
           maxWidth: '100%',
           height: 72,
-          borderRadius: 8,
+          borderRadius: 12,
           border: value ? `1.5px solid ${accentCol}30` : `1.5px dashed ${C.border}`,
-          background: value ? 'transparent' : C.card,
+          background: value ? 'transparent' : C.bg,
           position: 'relative',
           cursor: 'pointer',
           overflow: 'hidden',
@@ -173,7 +173,7 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
         onMouseLeave={(e) => {
           if (!value) {
             (e.currentTarget as HTMLElement).style.borderColor = C.border;
-            (e.currentTarget as HTMLElement).style.background = C.card;
+            (e.currentTarget as HTMLElement).style.background = C.bg;
           }
         }}
       >
@@ -296,26 +296,26 @@ function EditorSkeleton({ C }: { C: Theme }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel skeleton */}
-        <div style={{ width: 200, flexShrink: 0, background: C.surface, borderRight: `1px solid ${C.border}`, padding: '12px 8px' }}>
+        <div style={{ width: 176, flexShrink: 0, background: C.surface, borderRight: `1px solid ${C.border}`, padding: '14px 10px' }}>
           <Skeleton width="60%" height={14} />
-          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} width="100%" height={56} style={{ borderRadius: 10 }} />
+              <Skeleton key={i} width="100%" height={56} style={{ borderRadius: 12 }} />
             ))}
           </div>
         </div>
         {/* Center skeleton */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.bg, padding: 24 }}>
-          <Skeleton width="80%" height={0} style={{ borderRadius: 12, aspectRatio: '16/9', maxWidth: 640, paddingBottom: '45%' }} />
+          <Skeleton width="80%" height={0} style={{ borderRadius: 16, aspectRatio: '16/9', maxWidth: 640, paddingBottom: '45%' }} />
           <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
             <Skeleton width={36} height={36} rounded />
-            <Skeleton width={100} height={36} style={{ borderRadius: 8 }} />
+            <Skeleton width={100} height={36} style={{ borderRadius: 10 }} />
           </div>
         </div>
       </div>
       {/* Timeline skeleton */}
-      <div style={{ height: 52, background: C.surface, borderTop: `1px solid ${C.border}`, padding: '8px 16px' }}>
-        <Skeleton width="100%" height={36} style={{ borderRadius: 8 }} />
+      <div style={{ height: 52, background: C.bg, borderTop: `1px solid ${C.border}`, padding: '8px 16px' }}>
+        <Skeleton width="100%" height={36} style={{ borderRadius: 10 }} />
       </div>
     </div>
   );
@@ -364,14 +364,15 @@ const SceneThumb = memo(function SceneThumb({
       onDragOver={(e) => e.preventDefault()}
       onClick={() => onSelect(sc.id)}
       style={{
-        borderRadius: 10,
-        background: isSel ? col + '14' : C.card,
+        borderRadius: 12,
+        background: C.card,
         border: `1.5px solid ${isDragOver ? col + '66' : isSel ? col + '40' : sc.status === 'error' ? col + '50' : 'transparent'}`,
         cursor: 'pointer',
-        transition: 'all .15s',
+        transition: 'all .2s ease',
         opacity: isDragging ? 0.4 : 1,
         overflow: 'hidden',
         position: 'relative',
+        boxShadow: isSel ? `0 2px 12px rgba(0,0,0,.08)` : 'none',
       }}
     >
       {/* Drop indicator line */}
@@ -525,13 +526,13 @@ function TransitionPicker({ sceneId, current, C, onChange }: { sceneId: string; 
           top: '100%',
           left: '50%',
           transform: 'translateX(-50%)',
-          marginTop: 2,
+          marginTop: 4,
           background: C.card,
           border: `1px solid ${C.border}`,
-          borderRadius: 6,
-          padding: 2,
+          borderRadius: 10,
+          padding: 3,
           zIndex: 30,
-          boxShadow: '0 4px 16px rgba(0,0,0,.25)',
+          boxShadow: '0 4px 16px rgba(0,0,0,.1)',
           minWidth: 90,
         }}>
           {TRANSITION_OPTIONS.map((opt) => (
@@ -595,13 +596,13 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
       style={{
         position: 'absolute',
         top: 0,
-        left: typeof window !== 'undefined' && window.innerWidth < 768 ? 0 : 168,
+        left: typeof window !== 'undefined' && window.innerWidth < 768 ? 0 : 184,
         width: 280,
         maxWidth: 'calc(100vw - 32px)',
         background: C.card,
         border: `1px solid ${C.border}`,
-        borderRadius: 12,
-        boxShadow: '0 12px 40px rgba(0,0,0,.35)',
+        borderRadius: 16,
+        boxShadow: '0 4px 24px rgba(0,0,0,.12)',
         zIndex: 50,
         overflow: 'visible',
       }}
@@ -693,13 +694,13 @@ function SceneSettingsPopover({ scene: sc, C, onUpdate, onClose, modelsOpen, set
                   top: '100%',
                   left: 0,
                   right: 0,
-                  marginTop: 3,
+                  marginTop: 4,
                   background: C.card,
                   border: `1px solid ${C.border}`,
-                  borderRadius: 8,
-                  padding: 3,
+                  borderRadius: 12,
+                  padding: 4,
                   zIndex: 60,
-                  boxShadow: '0 8px 24px rgba(0,0,0,.3)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,.1)',
                 }}
               >
                 {MODELS.map((m) => (
@@ -1206,13 +1207,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          padding: '8px 12px',
+          padding: '10px 16px',
           background: C.surface,
           borderBottom: `1px solid ${C.border}`,
           flexShrink: 0,
-          minHeight: 42,
+          minHeight: 48,
           overflowX: 'auto',
           overflowY: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,.04)',
         }}
       >
         {/* Project title */}
@@ -1228,17 +1230,18 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               if (e.key === 'Escape') setEditingTitle(false);
             }}
             style={{
-              padding: '3px 8px',
-              borderRadius: 6,
+              padding: '5px 10px',
+              borderRadius: 8,
               border: `1.5px solid ${C.accent}55`,
-              background: C.card,
+              background: C.bg,
               color: C.text,
-              fontSize: 13,
-              fontWeight: 700,
+              fontSize: 14,
+              fontWeight: 500,
               outline: 'none',
               fontFamily: 'inherit',
               boxSizing: 'border-box',
-              width: 200,
+              width: 220,
+              transition: 'border-color .2s ease',
             }}
           />
         ) : (
@@ -1246,19 +1249,20 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             onClick={startEditTitle}
             title={t('editor.clickToEdit')}
             style={{
-              fontSize: 13,
-              fontWeight: 700,
+              fontSize: 14,
+              fontWeight: 600,
               color: C.text,
               cursor: 'pointer',
-              padding: '3px 8px',
-              borderRadius: 6,
-              transition: 'background .15s',
+              padding: '5px 10px',
+              borderRadius: 8,
+              transition: 'background .2s ease',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: 200,
+              maxWidth: 220,
+              letterSpacing: '-0.01em',
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.bg; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             {sync.project?.title || t('editor.untitled')}
@@ -1271,22 +1275,22 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           title={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
           aria-label={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 6,
-            border: `1px solid ${C.border}`,
-            background: 'transparent',
+            width: 34,
+            height: 34,
+            borderRadius: 8,
+            border: 'none',
+            background: C.bg,
             color: C.sub,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontFamily: 'inherit',
-            transition: 'all .15s',
+            transition: 'all .2s ease',
             flexShrink: 0,
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             {scenePanelOpen
               ? <><line x1="3" y1="3" x2="3" y2="21" /><line x1="9" y1="3" x2="9" y2="21" /><polyline points="15 8 19 12 15 16" /></>
               : <><line x1="3" y1="3" x2="3" y2="21" /><line x1="9" y1="3" x2="9" y2="21" /><polyline points="19 8 15 12 19 16" /></>}
@@ -1314,16 +1318,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           <button
             onClick={() => setMusicDropOpen(!musicDropOpen)}
             style={{
-              fontSize: 10,
-              padding: '4px 8px',
-              borderRadius: 6,
-              border: `1px solid ${musicTrackId ? C.accent + '55' : C.border}`,
-              background: musicTrackId ? C.accent + '08' : 'transparent',
+              fontSize: 11,
+              padding: '5px 10px',
+              borderRadius: 8,
+              border: 'none',
+              background: musicTrackId ? C.accent + '10' : C.bg,
               color: musicTrackId ? C.accent : C.sub,
               cursor: 'pointer',
               fontFamily: 'inherit',
               fontWeight: 500,
-              transition: 'all .15s',
+              transition: 'all .2s ease',
               display: 'flex',
               alignItems: 'center',
               gap: 4,
@@ -1338,14 +1342,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               position: 'absolute',
               top: '100%',
               right: 0,
-              marginTop: 4,
+              marginTop: 6,
               background: C.card,
               border: `1px solid ${C.border}`,
-              borderRadius: 8,
+              borderRadius: 12,
               padding: 4,
               zIndex: 60,
-              boxShadow: '0 8px 24px rgba(0,0,0,.3)',
-              minWidth: 180,
+              boxShadow: '0 4px 20px rgba(0,0,0,.1)',
+              minWidth: 190,
             }}>
               {/* None option */}
               <div
@@ -1440,17 +1444,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title={`${t('editor.toolbar.undo')} (Ctrl+Z)${historyLen > 0 ? ` \u2014 ${historyLen}` : ''}`}
             aria-label={`${t('editor.toolbar.undo')}${historyLen > 0 ? ` (${historyLen})` : ''}`}
             style={{
-              minWidth: 44,
-              height: 44,
-              borderRadius: 6,
-              border: `1px solid ${C.border}`,
-              background: 'transparent',
+              minWidth: 34,
+              height: 34,
+              borderRadius: 8,
+              border: 'none',
+              background: C.bg,
               color: historyLen === 0 ? C.dim : C.sub,
               fontSize: 13,
               cursor: historyLen === 0 ? 'default' : 'pointer',
               fontFamily: 'inherit',
-              opacity: historyLen === 0 ? 0.4 : 1,
-              transition: 'all .15s',
+              opacity: historyLen === 0 ? 0.35 : 1,
+              transition: 'all .2s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1467,17 +1471,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title={`${t('editor.toolbar.redo')} (Ctrl+Shift+Z)${futureLen > 0 ? ` \u2014 ${futureLen}` : ''}`}
             aria-label={`${t('editor.toolbar.redo')}${futureLen > 0 ? ` (${futureLen})` : ''}`}
             style={{
-              minWidth: 44,
-              height: 44,
-              borderRadius: 6,
-              border: `1px solid ${C.border}`,
-              background: 'transparent',
+              minWidth: 34,
+              height: 34,
+              borderRadius: 8,
+              border: 'none',
+              background: C.bg,
               color: futureLen === 0 ? C.dim : C.sub,
               fontSize: 13,
               cursor: futureLen === 0 ? 'default' : 'pointer',
               fontFamily: 'inherit',
-              opacity: futureLen === 0 ? 0.4 : 1,
-              transition: 'all .15s',
+              opacity: futureLen === 0 ? 0.35 : 1,
+              transition: 'all .2s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1495,13 +1499,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           title="Сгенерировать скрипт с помощью ИИ"
           aria-label={t('editor.toolbar.generateScript')}
           style={{
-            padding: '6px 12px',
-            borderRadius: 16,
-            border: `1px solid ${C.purple}44`,
-            background: C.purple + '0a',
+            padding: '6px 14px',
+            borderRadius: 20,
+            border: 'none',
+            background: C.bg,
             color: C.purple,
             fontSize: 11,
-            fontWeight: 600,
+            fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit',
             display: 'flex',
@@ -1509,12 +1513,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             gap: 5,
             whiteSpace: 'nowrap',
             flexShrink: 0,
-            transition: 'all .15s',
+            transition: 'all .2s ease',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '18'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '0a'; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '14'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.bg; }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
           Сгенерировать скрипт
@@ -1527,13 +1531,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title="Создать Shorts из проекта"
             aria-label={t('editor.toolbar.createShorts')}
             style={{
-              padding: '6px 12px',
-              borderRadius: 16,
-              border: `1px solid ${C.cyan}44`,
-              background: C.cyan + '0a',
+              padding: '6px 14px',
+              borderRadius: 20,
+              border: 'none',
+              background: C.bg,
               color: C.cyan,
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 500,
               cursor: 'pointer',
               fontFamily: 'inherit',
               display: 'flex',
@@ -1541,12 +1545,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               gap: 5,
               whiteSpace: 'nowrap',
               flexShrink: 0,
-              transition: 'all .15s',
+              transition: 'all .2s ease',
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '18'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '0a'; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '14'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.bg; }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="7" y="2" width="10" height="20" rx="2"/>
               <line x1="12" y1="18" x2="12" y2="18"/>
             </svg>
@@ -1560,20 +1564,20 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           onClick={handleGenerate}
           disabled={!sel || !sel.prompt.trim() || isGenerating}
           style={{
-            padding: '8px 16px',
+            padding: '8px 20px',
             borderRadius: 20,
             border: 'none',
             background: (!sel || !sel.prompt.trim() || isGenerating)
               ? C.dim
-              : `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+              : `linear-gradient(135deg, ${C.accent}, ${C.blue})`,
             color: '#fff',
             fontSize: 12,
-            fontWeight: 700,
+            fontWeight: 600,
             cursor: (!sel || !sel.prompt.trim() || isGenerating) ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
-            letterSpacing: '.02em',
-            opacity: (!sel || !sel.prompt.trim() || isGenerating) ? 0.45 : 1,
-            transition: 'all .2s',
+            letterSpacing: '-0.01em',
+            opacity: (!sel || !sel.prompt.trim() || isGenerating) ? 0.4 : 1,
+            transition: 'all .2s ease',
             display: 'flex',
             alignItems: 'center',
             gap: 7,
@@ -1581,7 +1585,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             flexShrink: 0,
             boxShadow: (!sel || !sel.prompt.trim() || isGenerating)
               ? 'none'
-              : `0 4px 16px ${C.accent}40`,
+              : `0 2px 12px ${C.accent}30`,
           }}
         >
           {isGenerating ? (
@@ -1620,8 +1624,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         <div
           className="tf-editor-scene-panel"
           style={{
-            width: scenePanelOpen ? 160 : 0,
-            maxWidth: scenePanelOpen ? 160 : 0,
+            width: scenePanelOpen ? 176 : 0,
+            maxWidth: scenePanelOpen ? 176 : 0,
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
@@ -1633,8 +1637,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           }}
         >
           {/* Scene list header */}
-          <div style={{ padding: '10px 10px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.sub, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+          <div style={{ padding: '14px 12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '1px' }}>
               {t('editor.scenes')}
             </span>
             <button
@@ -1642,11 +1646,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               title={t('editor.addScene')}
               aria-label={t('editor.addScene')}
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
-                border: `1px solid ${C.border}`,
-                background: 'transparent',
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                border: 'none',
+                background: C.bg,
                 color: C.sub,
                 fontSize: 14,
                 cursor: 'pointer',
@@ -1655,14 +1659,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 justifyContent: 'center',
                 fontFamily: 'inherit',
                 lineHeight: 1,
-                transition: 'all .15s',
+                transition: 'all .2s ease',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55';
+                (e.currentTarget as HTMLElement).style.background = C.accent + '14';
                 (e.currentTarget as HTMLElement).style.color = C.accent;
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = C.border;
+                (e.currentTarget as HTMLElement).style.background = C.bg;
                 (e.currentTarget as HTMLElement).style.color = C.sub;
               }}
             >
@@ -1694,32 +1698,32 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '32px 12px',
-                  gap: 8,
+                  padding: '36px 12px',
+                  gap: 10,
                   cursor: 'pointer',
-                  borderRadius: 10,
-                  transition: 'background .15s',
+                  borderRadius: 12,
+                  transition: 'background .2s ease',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.bg; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
               >
                 <div
                   style={{
                     width: 40,
                     height: 40,
-                    borderRadius: 12,
-                    background: C.accent + '10',
+                    borderRadius: 20,
+                    background: C.bg,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 18,
-                    color: C.accent,
-                    transition: 'background .15s',
+                    color: C.sub,
+                    transition: 'all .2s ease',
                   }}
                 >
                   +
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, textAlign: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: C.sub, textAlign: 'center' }}>
                   {t('editor.clickToAddScene')}
                 </span>
               </div>
@@ -1784,13 +1788,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 style={{
                   background: C.card,
                   border: `1px solid ${C.border}`,
-                  borderRadius: 12,
-                  padding: '16px 20px',
+                  borderRadius: 16,
+                  padding: '20px 24px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: 10,
-                  boxShadow: '0 8px 32px rgba(0,0,0,.3)',
+                  boxShadow: '0 4px 24px rgba(0,0,0,.12)',
                 }}
               >
                 <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.deleteSceneConfirm')}</span>
@@ -1799,16 +1803,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   <button
                     onClick={() => handleSceneConfirmDelete(confirmDel)}
                     style={{
-                      padding: '6px 20px',
-                      borderRadius: 8,
+                      padding: '7px 22px',
+                      borderRadius: 10,
                       border: 'none',
-                      background: C.accent,
+                      background: C.red,
                       color: '#fff',
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: 600,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
-                      transition: 'all .15s',
+                      transition: 'all .2s ease',
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
@@ -1818,19 +1822,19 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   <button
                     onClick={handleSceneCancelDelete}
                     style={{
-                      padding: '6px 20px',
-                      borderRadius: 8,
-                      border: `1px solid ${C.border}`,
-                      background: C.card,
-                      color: C.sub,
-                      fontSize: 11,
-                      fontWeight: 600,
+                      padding: '7px 22px',
+                      borderRadius: 10,
+                      border: 'none',
+                      background: C.bg,
+                      color: C.text,
+                      fontSize: 12,
+                      fontWeight: 500,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
-                      transition: 'all .15s',
+                      transition: 'all .2s ease',
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; (e.currentTarget as HTMLElement).style.color = C.text; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.card; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.bg; }}
                   >
                     {t('editor.cancel')}
                   </button>
@@ -1863,7 +1867,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: scenePanelOpen && typeof window !== 'undefined' && window.innerWidth < 768 ? '12px 12px 8px' : '20px 32px 12px',
+                  padding: scenePanelOpen && typeof window !== 'undefined' && window.innerWidth < 768 ? '12px 12px 8px' : '24px 36px 12px',
                   minHeight: 0,
                 }}
               >
@@ -1872,18 +1876,18 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     width: '100%',
                     maxWidth: 800,
                     aspectRatio: '16/9',
-                    borderRadius: 12,
+                    borderRadius: 16,
                     background: sel.status === 'ready'
                       ? '#000'
-                      : `radial-gradient(ellipse at center, ${selCol}08 0%, ${C.surface} 80%)`,
-                    border: `1px solid ${sel.status === 'ready' ? C.border : selCol + '18'}`,
+                      : C.surface,
+                    border: `1px solid ${sel.status === 'ready' ? C.border : C.border}`,
                     position: 'relative',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    boxShadow: '0 8px 40px rgba(0,0,0,.2)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06)',
                   }}
                 >
                   {/* Video content states */}
@@ -2073,39 +2077,41 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   )}
 
                   {/* Top-left scene label overlay */}
-                  <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4, alignItems: 'center' }}>
+                  <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 5, alignItems: 'center' }}>
                     <span
                       style={{
-                        padding: '2px 7px',
-                        borderRadius: 6,
-                        background: selCol + '18',
-                        color: selCol,
-                        fontSize: 9,
-                        fontWeight: 600,
-                        border: `1px solid ${selCol}20`,
-                        backdropFilter: 'blur(8px)',
+                        padding: '3px 8px',
+                        borderRadius: 8,
+                        background: 'rgba(255,255,255,.85)',
+                        color: C.text,
+                        fontSize: 10,
+                        fontWeight: 500,
+                        border: 'none',
+                        backdropFilter: 'blur(12px)',
+                        boxShadow: '0 1px 4px rgba(0,0,0,.08)',
                       }}
                     >
                       {sel.label}
                     </span>
-                    <StatusDot status={sel.status} C={C} size={5} />
+                    <StatusDot status={sel.status} C={C} size={6} />
                   </div>
 
                   {/* Top-right duration overlay */}
                   <span
                     style={{
                       position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      padding: '2px 7px',
-                      borderRadius: 6,
-                      background: C.card + 'dd',
+                      top: 10,
+                      right: 10,
+                      padding: '3px 8px',
+                      borderRadius: 8,
+                      background: 'rgba(255,255,255,.85)',
                       color: C.text,
-                      fontSize: 9,
-                      fontWeight: 600,
+                      fontSize: 10,
+                      fontWeight: 500,
                       fontFamily: "'JetBrains Mono', monospace",
-                      border: `1px solid ${C.border}`,
-                      backdropFilter: 'blur(8px)',
+                      border: 'none',
+                      backdropFilter: 'blur(12px)',
+                      boxShadow: '0 1px 4px rgba(0,0,0,.08)',
                     }}
                   >
                     {fmtDur(sel.duration)}
@@ -2173,26 +2179,30 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 12,
+                gap: 14,
               }}
             >
               <div
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 16,
-                  background: C.card,
-                  border: `1.5px solid ${C.border}`,
+                  width: 60,
+                  height: 60,
+                  borderRadius: 20,
+                  background: C.surface,
+                  border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: 24,
                   color: C.dim,
+                  boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06)',
                 }}
               >
-                &#9671;
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="3" />
+                  <path d="M10 8l6 4-6 4V8z" />
+                </svg>
               </div>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.sub }}>
+              <span style={{ fontSize: 15, fontWeight: 500, color: C.sub, letterSpacing: '-0.01em' }}>
                 {scenes.length === 0 ? t('editor.addFirstScene') : t('editor.selectSceneLeft')}
               </span>
               {scenes.length === 0 && (
@@ -2204,14 +2214,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     padding: '10px 28px',
                     borderRadius: 20,
                     border: 'none',
-                    background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+                    background: C.accent,
                     color: '#fff',
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
-                    transition: 'all .2s',
-                    boxShadow: `0 4px 16px ${C.accent}40`,
+                    transition: 'all .2s ease',
+                    boxShadow: `0 2px 12px ${C.accent}30`,
                   }}
                 >
                   {t('editor.addSceneBtn')}
@@ -2232,6 +2242,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           background: C.surface,
           borderTop: `1px solid ${C.border}`,
           position: 'relative',
+          boxShadow: '0 -1px 3px rgba(0,0,0,.03)',
         }}
       >
         {/* ── Row 1: Scene actions + compact inline prompt ── */}
@@ -2455,9 +2466,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 gap: 8,
                 background: C.bg,
                 border: `1px solid ${C.border}`,
-                borderRadius: 8,
-                padding: '6px 10px',
-                transition: 'border-color .15s',
+                borderRadius: 10,
+                padding: '8px 12px',
+                transition: 'border-color .2s ease, box-shadow .2s ease',
                 minWidth: 0,
                 width: '100%',
               }}
@@ -2533,11 +2544,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 3,
+            gap: 4,
             overflowX: 'auto',
             overflowY: 'hidden',
-            minHeight: 40,
-            padding: '6px 12px',
+            minHeight: 44,
+            padding: '8px 14px',
+            background: C.bg,
           }}
         >
           {scenes.map((sc, idx) => {
@@ -2557,9 +2569,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 style={{
                   flex: `0 0 ${Math.max(50, sc.duration * 6)}px`,
                   height: 36,
-                  background: isSelScene ? col + '18' : C.card,
-                  borderRadius: 6,
-                  border: `1.5px solid ${sc.id === dragOv ? col + '66' : isSelScene ? col + '40' : sc.status === 'error' ? C.accent + '50' : C.border}`,
+                  background: C.surface,
+                  borderRadius: 10,
+                  border: `2px solid ${sc.id === dragOv ? col + '66' : isSelScene ? col : sc.status === 'error' ? C.accent + '50' : 'transparent'}`,
                   cursor: 'pointer',
                   position: 'relative',
                   display: 'flex',
@@ -2567,9 +2579,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 2,
-                  transition: 'all .15s',
+                  transition: 'all .2s ease',
                   overflow: 'hidden',
                   opacity: dragId === sc.id ? 0.4 : 1,
+                  boxShadow: isSelScene ? `0 1px 4px rgba(0,0,0,.06)` : `0 1px 2px rgba(0,0,0,.04)`,
                 }}
                 title={`${sc.label} — ${fmtDur(sc.duration)}`}
               >
@@ -2582,13 +2595,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   style={{
                     position: 'absolute',
                     bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: isSelScene ? 3 : 2,
+                    left: 4,
+                    right: 4,
+                    height: isSelScene ? 2.5 : 0,
                     background: col,
-                    opacity: isSelScene ? 1 : 0.35,
-                    borderRadius: '0 0 4px 4px',
-                    transition: 'all .15s',
+                    opacity: isSelScene ? 1 : 0,
+                    borderRadius: 2,
+                    transition: 'all .2s ease',
                   }}
                 />
                 <span style={{ fontSize: 9, fontWeight: 700, color: isSelScene ? col : C.sub, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -2611,14 +2624,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             style={{
               flex: '0 0 36px',
               height: 36,
-              borderRadius: 6,
+              borderRadius: 10,
               border: `1.5px dashed ${C.border}`,
               background: 'transparent',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'all .15s',
+              transition: 'all .2s ease',
               color: C.dim,
               fontSize: 16,
             }}
@@ -2652,18 +2665,18 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           aria-label={t('editor.toolbar.generateScript')}
           onKeyDown={(e) => { if (e.key === 'Escape') setShowScriptModal(false); }}
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, backdropFilter: 'blur(4px)',
+            zIndex: 1000, backdropFilter: 'blur(12px)',
           }}
           onClick={() => setShowScriptModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
-              padding: '28px 24px', width: 420, maxWidth: 'calc(100vw - 32px)',
-              boxShadow: '0 20px 60px rgba(0,0,0,.4)',
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 20,
+              padding: '32px 28px', width: 420, maxWidth: 'calc(100vw - 32px)',
+              boxShadow: '0 8px 40px rgba(0,0,0,.12)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -2764,12 +2777,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               }}
               disabled={generateScript.isPending || !scriptTopic.trim()}
               style={{
-                width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-                background: (!scriptTopic.trim() || generateScript.isPending) ? C.dim : `linear-gradient(135deg, ${C.purple}, ${C.pink})`,
-                color: '#fff', fontSize: 14, fontWeight: 700, cursor: (!scriptTopic.trim() || generateScript.isPending) ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit', transition: 'all .2s',
-                opacity: (!scriptTopic.trim() || generateScript.isPending) ? 0.5 : 1,
+                width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
+                background: (!scriptTopic.trim() || generateScript.isPending) ? C.dim : C.purple,
+                color: '#fff', fontSize: 14, fontWeight: 600, cursor: (!scriptTopic.trim() || generateScript.isPending) ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit', transition: 'all .2s ease',
+                opacity: (!scriptTopic.trim() || generateScript.isPending) ? 0.4 : 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: (!scriptTopic.trim() || generateScript.isPending) ? 'none' : `0 2px 12px ${C.purple}30`,
               }}
             >
               {generateScript.isPending ? (
@@ -2787,19 +2801,19 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       {showCaptionsModal && captionsSrt && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, backdropFilter: 'blur(4px)',
+            zIndex: 1000, backdropFilter: 'blur(12px)',
           }}
           onClick={() => setShowCaptionsModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
-              padding: '28px 24px', width: 500, maxWidth: 'calc(100vw - 32px)',
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 20,
+              padding: '32px 28px', width: 500, maxWidth: 'calc(100vw - 32px)',
               maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
-              boxShadow: '0 20px 60px rgba(0,0,0,.4)',
+              boxShadow: '0 8px 40px rgba(0,0,0,.12)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
@@ -2869,18 +2883,18 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           aria-label={t('editor.toolbar.createShorts')}
           onKeyDown={(e) => { if (e.key === 'Escape') setShowShortsModal(false); }}
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, backdropFilter: 'blur(4px)',
+            zIndex: 1000, backdropFilter: 'blur(12px)',
           }}
           onClick={() => setShowShortsModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
-              padding: '32px 28px', width: 400, maxWidth: 'calc(100vw - 32px)',
-              boxShadow: '0 20px 60px rgba(0,0,0,.4)', textAlign: 'center',
+              background: C.card, border: `1px solid ${C.border}`, borderRadius: 20,
+              padding: '36px 32px', width: 400, maxWidth: 'calc(100vw - 32px)',
+              boxShadow: '0 8px 40px rgba(0,0,0,.12)', textAlign: 'center',
             }}
           >
             <div style={{
@@ -2920,11 +2934,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 toast.info('Скоро — эта функция в разработке');
               }}
               style={{
-                width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-                background: `linear-gradient(135deg, ${C.cyan}, ${C.blue})`,
-                color: '#fff', fontSize: 14, fontWeight: 700,
+                width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
+                background: C.blue,
+                color: '#fff', fontSize: 14, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all .2s',
+                transition: 'all .2s ease',
+                boxShadow: `0 2px 12px ${C.blue}30`,
               }}
             >
               Сгенерировать
@@ -2932,10 +2947,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             <button
               onClick={() => setShowShortsModal(false)}
               style={{
-                width: '100%', padding: '10px 0', marginTop: 8, borderRadius: 10,
-                border: `1px solid ${C.border}`, background: 'transparent',
+                width: '100%', padding: '11px 0', marginTop: 8, borderRadius: 12,
+                border: 'none', background: C.bg,
                 color: C.sub, fontSize: 13, fontWeight: 500,
                 cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .2s ease',
               }}
             >
               Отмена
@@ -2946,18 +2962,23 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
       {/* ── Global hover styles + keyframes ── */}
       <style>{`
-        .scene-thumb:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .scene-thumb:hover { transform: translateY(-1px); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
         .scene-thumb:hover .scene-drag-handle { opacity: 0.8 !important; }
-        .scene-thumb { transition: all .15s ease !important; }
+        .scene-thumb { transition: all .2s ease !important; }
+        .ed-action-btn { transition: all .2s ease !important; }
         .ed-action-btn:hover { background: ${C.cardHover} !important; border-color: ${C.borderActive} !important; color: ${C.text} !important; }
-        .ed-timeline-tab:hover { border-color: ${C.borderActive} !important; }
-        .ed-gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px ${C.accent}55 !important; }
+        .ed-timeline-tab { transition: all .2s ease !important; }
+        .ed-timeline-tab:hover { border-color: ${C.borderActive} !important; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+        .ed-gen-btn { transition: all .2s ease !important; }
+        .ed-gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px ${C.accent}33 !important; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .ed-scene-list::-webkit-scrollbar { width: 4px; }
+        /* Apple-style thin scrollbars */
+        .ed-scene-list::-webkit-scrollbar { width: 6px; }
         .ed-scene-list::-webkit-scrollbar-track { background: transparent; }
-        .ed-scene-list::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
-        .ed-scene-list::-webkit-scrollbar-thumb:hover { background: ${C.dim}; }
+        .ed-scene-list::-webkit-scrollbar-thumb { background: ${C.dim}44; border-radius: 3px; }
+        .ed-scene-list::-webkit-scrollbar-thumb:hover { background: ${C.dim}88; }
+        * { scrollbar-width: thin; scrollbar-color: ${C.dim}44 transparent; }
 
         /* ── Mobile editor optimizations ── */
         @media (max-width: 768px) {
@@ -2965,9 +2986,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             position: fixed !important;
             top: 0; left: 0; bottom: 0;
             z-index: 900;
-            width: 160px !important;
-            max-width: 160px !important;
-            box-shadow: 4px 0 24px rgba(0,0,0,.4);
+            width: 180px !important;
+            max-width: 180px !important;
+            box-shadow: 0 0 40px rgba(0,0,0,.12);
           }
           .tf-editor-topbar {
             padding: 6px 8px !important;
@@ -3001,12 +3022,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
    ═══════════════════════════════════════════════════════════════════ */
 function compactLabelStyle(C: Theme): React.CSSProperties {
   return {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 600,
     color: C.sub,
     textTransform: 'uppercase',
-    letterSpacing: '.04em',
-    marginBottom: 4,
+    letterSpacing: '1px',
+    marginBottom: 6,
     display: 'block',
   };
 }
@@ -3014,27 +3035,27 @@ function compactLabelStyle(C: Theme): React.CSSProperties {
 function compactInputStyle(C: Theme): React.CSSProperties {
   return {
     width: '100%',
-    padding: '6px 10px',
-    borderRadius: 8,
+    padding: '8px 12px',
+    borderRadius: 10,
     border: `1px solid ${C.border}`,
-    background: C.surface,
+    background: C.bg,
     color: C.text,
-    fontSize: 11,
-    fontWeight: 600,
+    fontSize: 12,
+    fontWeight: 500,
     outline: 'none',
     fontFamily: 'inherit',
     boxSizing: 'border-box' as const,
-    transition: 'border-color .15s',
+    transition: 'border-color .2s ease',
   };
 }
 
 function tinyBtnStyle(C: Theme, active: boolean): React.CSSProperties {
   return {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    border: `1px solid ${active ? C.accent + '55' : C.border}`,
-    background: active ? C.accent + '10' : 'transparent',
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    border: 'none',
+    background: active ? C.accent + '12' : C.bg,
     color: active ? C.accent : C.sub,
     fontSize: 12,
     cursor: 'pointer',
@@ -3044,6 +3065,6 @@ function tinyBtnStyle(C: Theme, active: boolean): React.CSSProperties {
     fontFamily: 'inherit',
     lineHeight: 1,
     padding: 0,
-    transition: 'all .15s',
+    transition: 'all .2s ease',
   };
 }
