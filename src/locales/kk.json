@@ -1740,7 +1740,6 @@
   "errors.RATE_LIMITED": "Тым көп сұрау. Сәл күтіңіз.",
   "videoGen.success": "Бейне жасалды!",
   "videoGen.error": "Бейне генерациясы қатесі",
-
   "tools.subedit.title": "Субтитр редакторы",
   "tools.subedit.subtitle": "SRT және VTT субтитр файлдарын өңдеу, жасау және түрлендіру",
   "tools.subedit.dropLabel": "Субтитр файлын осында сүйреңіз",
@@ -1763,7 +1762,6 @@
   "tools.subedit.statEntries": "жазба",
   "tools.subedit.statDuration": "ұзақтық",
   "tools.subedit.statAvgWords": "орт. сөз/жазба",
-
   "imggen.title": "AI Сурет генераторы",
   "imggen.subtitle": "DALL-E 3 көмегімен секундтарда суреттер жасаңыз",
   "imggen.prompt": "Сурет сипаттамасы",
@@ -1819,5 +1817,8 @@
   "dashboard.activity.projectExported": "Жоба экспортталды",
   "dashboard.activity.projectImported": "Жоба импортталды",
   "dashboard.emptyTemplateSuggestions": "Немесе үлгіден бастаңыз",
-  "dashboard.exploreTemplates": "Барлық үлгілер"
+  "dashboard.exploreTemplates": "Барлық үлгілер",
+  "nav.videoTranslator": "Бейне аудармашы",
+  "dashboard.videoTranslatorDesc": "Бейнелерді кез келген тілге аударыңыз",
+  "dashboard.aiThumbnailDesc": "AI көмегімен нобайларды жасаңыз"
 }

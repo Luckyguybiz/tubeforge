@@ -1738,10 +1738,8 @@
   "errors.BRAND_STUDIO_ONLY": "Бренд-кит доступен только на тарифе Studio.",
   "errors.STOCK_UNAVAILABLE": "Сервис стоковых фото временно недоступен.",
   "errors.RATE_LIMITED": "Слишком много запросов. Подождите немного.",
-
   "videoGen.success": "Видео сгенерировано!",
   "videoGen.error": "Ошибка генерации видео",
-
   "tools.subedit.title": "Редактор субтитров",
   "tools.subedit.subtitle": "Редактирование, создание и конвертация файлов субтитров SRT и VTT",
   "tools.subedit.dropLabel": "Перетащите файл субтитров сюда",
@@ -1764,7 +1762,6 @@
   "tools.subedit.statEntries": "записей",
   "tools.subedit.statDuration": "длительность",
   "tools.subedit.statAvgWords": "ср. слов/запись",
-
   "imggen.title": "AI Генератор изображений",
   "imggen.subtitle": "Создавайте изображения с помощью DALL-E 3 за секунды",
   "imggen.prompt": "Описание изображения",
@@ -1820,5 +1817,8 @@
   "dashboard.activity.projectExported": "Экспортирован проект",
   "dashboard.activity.projectImported": "Импортирован проект",
   "dashboard.emptyTemplateSuggestions": "Или начните с шаблона",
-  "dashboard.exploreTemplates": "Все шаблоны"
+  "dashboard.exploreTemplates": "Все шаблоны",
+  "nav.videoTranslator": "Перевод видео",
+  "dashboard.videoTranslatorDesc": "Переводите видео на любой язык с клонированием вашего голоса",
+  "dashboard.aiThumbnailDesc": "Генерируйте, пересоздавайте и анализируйте обложки с помощью AI"
 }

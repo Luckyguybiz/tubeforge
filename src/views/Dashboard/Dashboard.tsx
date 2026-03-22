@@ -541,7 +541,7 @@ function WelcomeSection({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <span style={{ fontSize: 20 }}>🌍</span>
-                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('nav.videoTranslator') || 'Video Translator'}</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('nav.videoTranslator')}</span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
@@ -597,7 +597,7 @@ function WelcomeSection({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <span style={{ fontSize: 20 }}>🎨</span>
-                <span style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>{t('tools.aiThumbnail.title') || 'AI Thumbnail Editor'}</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>{t('tools.aiThumbnail.title')}</span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: '#10b981', borderRadius: 4, padding: '1px 6px',
@@ -605,7 +605,7 @@ function WelcomeSection({
                 }}>{t('common.free')}</span>
               </div>
               <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
-                {t('tools.aiThumbnail.subtitle') || 'Generate, recreate and analyze thumbnails with AI'}
+                {t('dashboard.aiThumbnailDesc')}
               </div>
             </div>
             <div style={{
