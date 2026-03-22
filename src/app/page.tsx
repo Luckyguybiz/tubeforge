@@ -9,6 +9,7 @@ import {
   ClientCookieConsent,
   StickyMobileCTA,
   ReferralCapture,
+  ProductDemo,
 } from "@/components/landing";
 
 /* -- SEO Metadata ------------------------------------------------- */
@@ -368,6 +369,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== PRODUCT DEMO (vidIQ-style interactive tabs) ===== */}
+      <ProductDemo />
 
       {/* ===== HOW IT WORKS ===== */}
       <section id="how-it-works" style={{ padding: "80px 24px", background: BG_PRIMARY }}>
