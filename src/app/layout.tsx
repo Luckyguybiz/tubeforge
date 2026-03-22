@@ -23,8 +23,7 @@ export const metadata: Metadata = {
     title: 'TubeForge — AI Studio for YouTube Creators',
     description: 'Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing, analytics, and free tools.',
     type: 'website',
-    url: 'https://tubeforge.co',
-    locale: 'ru_RU',
+    locale: 'en_US',
     images: [
       {
         url: '/api/og',
@@ -71,13 +70,34 @@ const jsonLd = {
   },
 };
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'TubeForge',
+  url: 'https://tubeforge.co',
+  logo: 'https://tubeforge.co/icon-512.png',
+  sameAs: [
+    'https://youtube.com/@tubeforge',
+    'https://t.me/tubeforge',
+    'https://twitter.com/tubeforge',
+  ],
+  description: 'AI-powered video creation platform for YouTube creators',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         {/* Prevent flash of wrong theme: read persisted mode before paint */}
         <script
@@ -85,25 +105,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var s=JSON.parse(localStorage.getItem('tubeforge-theme')||'{}');var m=s.state&&s.state.mode||'light';var d=m==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches:m==='dark';document.documentElement.style.colorScheme=d?'dark':'light';document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.style.background=d?'#06060b':'#f3f3f7'}catch(e){}})()`
           }}
         />
-
-        {/* Yandex.Metrica counter */}
-        {process.env.NEXT_PUBLIC_YM_ID && (
-          <script
-            dangerouslySetInnerHTML={{ __html: `
-              (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-              m[i].l=1*new Date();
-              for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-              k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-              (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-              ym(${process.env.NEXT_PUBLIC_YM_ID}, "init", {
-                clickmap:true,
-                trackLinks:true,
-                accurateTrackBounce:true,
-                webvisor:true
-              });
-            `}}
-          />
-        )}
       </head>
       <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <Analytics />
