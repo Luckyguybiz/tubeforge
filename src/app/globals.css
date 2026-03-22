@@ -198,6 +198,12 @@ html { overflow-x: hidden; }
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(99,102,241,0.15), 0 4px 12px rgba(0,0,0,0.2);
 }
+.tf-card-hovered .tf-float-shape {
+  animation: float 3s ease-in-out infinite;
+}
+.tf-card-hovered .tf-float-shape-rev {
+  animation: float 4s ease-in-out infinite reverse;
+}
 
 /* ── Dashboard responsive overrides ──────────────────── */
 

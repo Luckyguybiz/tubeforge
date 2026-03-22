@@ -212,16 +212,24 @@ function TopChoiceCard({
         flexDirection: 'column',
       }}
     >
-      {/* Visual area — gradient with icon */}
-      <div style={{
-        height: 160,
-        background: `linear-gradient(135deg, ${from}, ${to})`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        borderRadius: '14px 14px 0 0',
-      }}>
+      {/* Visual area — gradient with icon + animated shapes */}
+      <div
+        onMouseEnter={(e) => { e.currentTarget.classList.add('tf-card-hovered'); }}
+        onMouseLeave={(e) => { e.currentTarget.classList.remove('tf-card-hovered'); }}
+        style={{
+          height: 160,
+          background: `linear-gradient(135deg, ${from}, ${to})`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          borderRadius: '14px 14px 0 0',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Animated bg shapes */}
+        <div style={{ position: 'absolute', width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', top: -15, right: -5 }} className="tf-float-shape" />
+        <div style={{ position: 'absolute', width: 35, height: 35, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', bottom: -8, left: '25%' }} className="tf-float-shape-rev" />
         {icon}
         {badge && (
           <span style={{
