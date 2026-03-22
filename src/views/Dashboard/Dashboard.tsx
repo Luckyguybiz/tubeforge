@@ -1547,37 +1547,6 @@ export function Dashboard() {
           </div>
 
           <div className="tf-dash-toolbar-right" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {/* Search */}
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
-                pointerEvents: 'none', display: 'flex', alignItems: 'center',
-              }}>
-                <IconSearch size={15} color={C.dim} />
-              </div>
-              <input
-                className="tf-dash-search-input"
-                type="search"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder={t('dashboard.search')}
-                aria-label={t('dashboard.searchProjects')}
-                style={{
-                  padding: '0 14px 0 32px',
-                  height: 44,
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 10,
-                  color: C.text,
-                  fontSize: 13,
-                  fontFamily: 'inherit',
-                  width: '100%',
-                  maxWidth: 200,
-                  transition: 'border-color .2s, box-shadow .2s',
-                }}
-              />
-            </div>
-
             {/* Sort */}
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <select
