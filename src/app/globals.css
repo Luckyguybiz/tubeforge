@@ -153,7 +153,10 @@ html { overflow-x: hidden; }
 
 /* ── Dashboard showcase ─────────────────────────────── */
 
-.tf-dash-showcase-scroll::-webkit-scrollbar { display: none; }
+.tf-dash-showcase-scroll::-webkit-scrollbar { height: 4px; }
+.tf-dash-showcase-scroll::-webkit-scrollbar-track { background: transparent; }
+.tf-dash-showcase-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+.tf-dash-showcase-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
 .tf-dash-showcase-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
