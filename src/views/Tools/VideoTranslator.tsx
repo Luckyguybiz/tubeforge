@@ -52,6 +52,7 @@ export function VideoTranslator() {
 
   const [sourceUrl, setSourceUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [promoCode, setPromoCode] = useState('');
   const [sourceLang, setSourceLang] = useState('en');
   const [targetLang, setTargetLang] = useState('ru');
   const [status, setStatus] = useState<TranslateStatus>('idle');

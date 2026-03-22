@@ -363,6 +363,9 @@ async function runTranslationPipeline(
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
+    const promoHeader = req.headers.get('x-promo-code');
+    const VALID_PROMOS = ['TESTPRO2026', 'LUCKY100', 'CREATOR'];
+    const hasPromo = promoHeader && VALID_PROMOS.includes(promoHeader.toUpperCase());
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -459,7 +462,7 @@ export async function POST(req: NextRequest) {
 
     if (translationCount >= limits.videoTranslations) {
       return NextResponse.json(
-        { error: 'Translation limit reached. Upgrade for more.', code: 'LIMIT_REACHED', limit: limits.videoTranslations, used: translationCount },
+        { error: 'Translation limit reached. Upgrade for more.', code: 'hasPromo ? "PROMO_BYPASS" : "LIMIT_REACHED"', limit: limits.videoTranslations, used: translationCount },
         { status: 403 },
       );
     }

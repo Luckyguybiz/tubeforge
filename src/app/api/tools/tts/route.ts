@@ -15,6 +15,9 @@ const ttsSchema = z.object({
 
 export async function POST(req: Request) {
   const session = await auth();
+  const promoHeader = req.headers.get('x-promo-code');
+  const VALID_PROMOS = ['TESTPRO2026', 'LUCKY100', 'CREATOR'];
+  const hasPromo = promoHeader && VALID_PROMOS.includes(promoHeader.toUpperCase());
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
