@@ -103,6 +103,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     '@type': 'Article',
     headline: post.title,
     description: post.excerpt,
+    image: post.coverImage ?? 'https://tubeforge.co/api/og',
     author: {
       '@type': 'Organization',
       name: post.author,
@@ -112,6 +113,10 @@ export default async function BlogPostPage({ params }: PageProps) {
       '@type': 'Organization',
       name: 'TubeForge',
       url: 'https://tubeforge.co',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://tubeforge.co/favicon.svg',
+      },
     },
     datePublished: post.publishedAt,
     mainEntityOfPage: {
