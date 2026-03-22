@@ -25,6 +25,7 @@
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@distube/ytdl-core": "^4.16.12",
+    "@fal-ai/client": "^1.9.4",
     "@prisma/client": "^6.9.0",
     "@sentry/nextjs": "^10.45.0",
     "@tanstack/react-query": "^5.90.21",
