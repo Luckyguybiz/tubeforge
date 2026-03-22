@@ -267,10 +267,22 @@ export const aiThumbnailsRouter = router({
       }
 
       const size = input.format === '16:9' ? '1792x1024' : '1024x1792';
-      const aspectDesc = input.format === '16:9' ? '16:9 landscape' : '9:16 vertical/portrait';
 
       const fullPrompt =
-        `Create a YouTube video thumbnail image. ${input.prompt}. Style: ${styleDesc}. ${aspectDesc} aspect ratio.${contextParts} Requirements: Bold, eye-catching composition optimized for small display sizes. High contrast, vibrant colors, clear focal point. Leave space for overlay text (do not add any text or letters to the image). Professional YouTube thumbnail quality. The image should make viewers want to click.`.slice(
+        `Professional YouTube video thumbnail photo. ${input.prompt}.${contextParts}
+
+CRITICAL REQUIREMENTS for YouTube thumbnail:
+- Photorealistic, ultra high quality, 8K detail
+- Dramatic cinematic lighting with strong contrast and shadows
+- Extremely vibrant, saturated colors that pop on small screens
+- Clear single focal point (usually a person's face showing strong emotion)
+- Composition leaves clear empty space on one side for text overlay
+- DO NOT include any text, letters, words, or watermarks in the image
+- Shot from slightly below eye level for power/authority feeling
+- Shallow depth of field with bokeh background
+- ${styleDesc}
+
+The image must look like a professional YouTube thumbnail that would get millions of clicks.`.slice(
           0,
           4000,
         );
@@ -354,6 +366,190 @@ export const aiThumbnailsRouter = router({
         prompt: input.prompt,
         style: input.style,
       };
+    }),
+
+  /* ═══════════════════════════════════════════════════════
+     Analyze thumbnail CTR score via GPT-4o Vision
+     ═══════════════════════════════════════════════════════ */
+  analyzeThumbnail: protectedProcedure
+    .input(z.object({ imageUrl: z.string(), prompt: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'OpenAI API key not configured. Contact the administrator.',
+        });
+      }
+
+      // Rate limit
+      await checkRate(userId, 'ai-thumb-analyze', 10);
+
+      // Costs 1 AI credit
+      await checkAndIncrementAIUsage(userId, ctx.db);
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(
+          API_ENDPOINTS.OPENAI_CHAT,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              max_tokens: 1000,
+              response_format: { type: 'json_object' },
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'image_url',
+                      image_url: { url: input.imageUrl },
+                    },
+                    {
+                      type: 'text',
+                      text: `Analyze this YouTube thumbnail image. The user's original prompt was: "${input.prompt}".
+
+Return JSON with this EXACT structure:
+{
+  "ctrScore": <number 1-10, e.g. 7.2>,
+  "summary": "<one sentence summary of the thumbnail's CTR potential>",
+  "strengths": ["<strength1>", "<strength2>", "<strength3>"],
+  "improvements": ["<improvement1>", "<improvement2>"],
+  "titleSuggestions": [
+    { "title": "<TITLE IN CAPS>", "score": <number 1-10>, "reason": "<why this title works>" },
+    { "title": "<TITLE IN CAPS>", "score": <number 1-10>, "reason": "<why this title works>" },
+    { "title": "<TITLE IN CAPS>", "score": <number 1-10>, "reason": "<why this title works>" }
+  ],
+  "scores": {
+    "emotion": <1-10>,
+    "contrast": <1-10>,
+    "composition": <1-10>,
+    "clickability": <1-10>
+  }
+}
+
+Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+          30000,
+        );
+      } catch {
+        await decrementAIUsage(userId, ctx.db);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'AI service error during thumbnail analysis.',
+        });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(userId, ctx.db);
+        const err = (await res.json().catch(() => ({}))) as {
+          error?: { message?: string };
+        };
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: err.error?.message ?? 'GPT-4o Vision API error',
+        });
+      }
+
+      const data = (await res.json().catch(() => {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to parse GPT-4o Vision response',
+        });
+      })) as { choices?: Array<{ message?: { content?: string } }> };
+
+      const text = data.choices?.[0]?.message?.content ?? '';
+
+      try {
+        const parsed = JSON.parse(text) as {
+          ctrScore?: number;
+          summary?: string;
+          strengths?: string[];
+          improvements?: string[];
+          titleSuggestions?: Array<{
+            title: string;
+            score: number;
+            reason: string;
+          }>;
+          scores?: {
+            emotion: number;
+            contrast: number;
+            composition: number;
+            clickability: number;
+          };
+        };
+        return {
+          ctrScore: parsed.ctrScore ?? 5,
+          summary: parsed.summary ?? '',
+          strengths: parsed.strengths ?? [],
+          improvements: parsed.improvements ?? [],
+          titleSuggestions: parsed.titleSuggestions ?? [],
+          scores: parsed.scores ?? {
+            emotion: 5,
+            contrast: 5,
+            composition: 5,
+            clickability: 5,
+          },
+        };
+      } catch {
+        // Try extracting JSON from text
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as {
+              ctrScore?: number;
+              summary?: string;
+              strengths?: string[];
+              improvements?: string[];
+              titleSuggestions?: Array<{
+                title: string;
+                score: number;
+                reason: string;
+              }>;
+              scores?: {
+                emotion: number;
+                contrast: number;
+                composition: number;
+                clickability: number;
+              };
+            };
+            return {
+              ctrScore: parsed.ctrScore ?? 5,
+              summary: parsed.summary ?? '',
+              strengths: parsed.strengths ?? [],
+              improvements: parsed.improvements ?? [],
+              titleSuggestions: parsed.titleSuggestions ?? [],
+              scores: parsed.scores ?? {
+                emotion: 5,
+                contrast: 5,
+                composition: 5,
+                clickability: 5,
+              },
+            };
+          } catch {
+            // fall through
+          }
+        }
+        return {
+          ctrScore: 5,
+          summary: 'Unable to analyze thumbnail.',
+          strengths: [],
+          improvements: [],
+          titleSuggestions: [],
+          scores: { emotion: 5, contrast: 5, composition: 5, clickability: 5 },
+        };
+      }
     }),
 
   /* ═══════════════════════════════════════════════════════
