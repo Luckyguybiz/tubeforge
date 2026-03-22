@@ -2,13 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useThemeStore } from '@/stores/useThemeStore';
 import { HELP_ARTICLES, HELP_CATEGORIES, type HelpArticle } from '@/lib/help-articles';
 
 type Category = HelpArticle['category'] | 'all';
 
 export default function HelpPage() {
-  const C = useThemeStore((s) => s.theme);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -37,12 +35,18 @@ export default function HelpPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
-      {/* Header */}
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#ffffff',
+        color: '#1d1d1f',
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
+      }}
+    >
+      {/* Minimal nav */}
       <header
         style={{
-          borderBottom: `1px solid ${C.border}`,
-          background: C.surface,
+          borderBottom: '1px solid #e5e5ea',
           padding: '16px 24px',
           display: 'flex',
           alignItems: 'center',
@@ -58,27 +62,26 @@ export default function HelpPage() {
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#fff',
-              fontWeight: 800,
+              fontWeight: 700,
               fontSize: 12,
             }}
           >
             TF
           </div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: C.text }}>TubeForge</span>
+          <span style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f' }}>TubeForge</span>
         </Link>
         <Link
           href="/"
           style={{
             textDecoration: 'none',
-            color: C.sub,
+            color: '#6366f1',
             fontSize: 14,
             fontWeight: 500,
-            transition: 'color .2s',
           }}
         >
           &larr; Home
@@ -86,28 +89,45 @@ export default function HelpPage() {
       </header>
 
       {/* Hero */}
-      <div style={{ textAlign: 'center', padding: '48px 24px 32px' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+      <div style={{ textAlign: 'center', padding: '56px 24px 36px' }}>
+        <h1
+          style={{
+            fontSize: 40,
+            fontWeight: 600,
+            margin: 0,
+            letterSpacing: '-0.02em',
+            color: '#1d1d1f',
+          }}
+        >
           Help Center
         </h1>
-        <p style={{ color: C.sub, fontSize: 16, marginTop: 8, maxWidth: 480, margin: '8px auto 0' }}>
+        <p
+          style={{
+            color: '#86868b',
+            fontSize: 17,
+            marginTop: 12,
+            maxWidth: 480,
+            margin: '12px auto 0',
+            lineHeight: 1.5,
+          }}
+        >
           Find answers to frequently asked questions or get in touch with us
         </p>
       </div>
 
       {/* Search */}
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 24px 24px' }}>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 24px 32px' }}>
         <div style={{ position: 'relative' }}>
           <svg
             width="18"
             height="18"
             viewBox="0 0 24 24"
             fill="none"
-            stroke={C.dim}
+            stroke="#86868b"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}
+            style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)' }}
           >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -119,36 +139,49 @@ export default function HelpPage() {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              padding: '14px 16px 14px 44px',
-              background: C.card,
-              border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              color: C.text,
-              fontSize: 15,
+              padding: '16px 20px 16px 50px',
+              background: '#f5f5f7',
+              border: '1px solid transparent',
+              borderRadius: 24,
+              color: '#1d1d1f',
+              fontSize: 16,
               outline: 'none',
               boxSizing: 'border-box',
-              transition: 'border-color .2s',
+              transition: 'border-color .2s, box-shadow .2s',
+              height: 52,
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#6366f1';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,.1)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           />
         </div>
       </div>
 
-      {/* Popular articles — shown when no search and 'all' category */}
+      {/* Popular articles -- shown when no search and 'all' category */}
       {!search.trim() && activeCategory === 'all' && (
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 28px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 36px' }}>
           <h2
             style={{
-              fontSize: 16,
-              fontWeight: 700,
-              margin: '0 0 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              fontSize: 17,
+              fontWeight: 600,
+              margin: '0 0 16px',
+              color: '#1d1d1f',
             }}
           >
-            <span style={{ fontSize: 18 }}>&#9733;</span> Popular Articles
+            Popular Articles
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
             {HELP_ARTICLES.slice(0, 5).map((article) => {
               const catInfo = HELP_CATEGORIES[article.category];
               return (
@@ -156,26 +189,26 @@ export default function HelpPage() {
                   key={article.id}
                   onClick={() => {
                     setExpandedId(article.id);
-                    // scroll to articles section
                     document.getElementById('help-articles')?.scrollIntoView({ behavior: 'smooth' });
                   }}
+                  className="popular-card"
                   style={{
-                    padding: '14px 16px',
-                    background: C.card,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 12,
+                    padding: '18px 18px',
+                    background: '#f5f5f7',
+                    border: 'none',
+                    borderRadius: 16,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    color: C.text,
-                    transition: 'border-color .2s',
+                    color: '#1d1d1f',
+                    transition: 'background .2s, transform .2s',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 6,
+                    gap: 8,
                   }}
                 >
-                  <span style={{ fontSize: 14 }}>{catInfo.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{article.title}</span>
-                  <span style={{ fontSize: 11, color: C.dim }}>{catInfo.label}</span>
+                  <span style={{ fontSize: 20 }}>{catInfo.icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.35 }}>{article.title}</span>
+                  <span style={{ fontSize: 12, color: '#86868b' }}>{catInfo.label}</span>
                 </button>
               );
             })}
@@ -188,7 +221,7 @@ export default function HelpPage() {
         style={{
           maxWidth: 800,
           margin: '0 auto',
-          padding: '0 24px 24px',
+          padding: '0 24px 28px',
           display: 'flex',
           flexWrap: 'wrap',
           gap: 8,
@@ -202,13 +235,13 @@ export default function HelpPage() {
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
               style={{
-                padding: '8px 16px',
+                padding: '8px 20px',
                 borderRadius: 20,
-                border: `1px solid ${active ? C.accent : C.border}`,
-                background: active ? C.accentDim : 'transparent',
-                color: active ? C.accent : C.sub,
-                fontSize: 13,
-                fontWeight: 600,
+                border: 'none',
+                background: active ? '#6366f1' : '#f5f5f7',
+                color: active ? '#ffffff' : '#3d3d42',
+                fontSize: 14,
+                fontWeight: 500,
                 cursor: 'pointer',
                 transition: 'all .2s',
                 display: 'flex',
@@ -216,7 +249,7 @@ export default function HelpPage() {
                 gap: 6,
               }}
             >
-              {cat.icon && <span>{cat.icon}</span>}
+              {cat.icon && <span style={{ fontSize: 14 }}>{cat.icon}</span>}
               {cat.label}
             </button>
           );
@@ -224,19 +257,19 @@ export default function HelpPage() {
       </div>
 
       {/* Articles */}
-      <div id="help-articles" style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 64px' }}>
+      <div id="help-articles" style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 80px' }}>
         {/* Result count when filtering */}
         {(search.trim() || activeCategory !== 'all') && filtered.length > 0 && (
-          <p style={{ fontSize: 13, color: C.dim, marginBottom: 12 }}>
+          <p style={{ fontSize: 13, color: '#86868b', marginBottom: 16 }}>
             {filtered.length === 1
               ? '1 article found'
               : `${filtered.length} articles found`}
           </p>
         )}
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: C.dim }}>
-            <p style={{ fontSize: 18, fontWeight: 600 }}>Nothing found</p>
-            <p style={{ fontSize: 14, marginTop: 8 }}>Try changing your query or category</p>
+          <div style={{ textAlign: 'center', padding: '56px 0', color: '#86868b' }}>
+            <p style={{ fontSize: 20, fontWeight: 600, color: '#1d1d1f' }}>Nothing found</p>
+            <p style={{ fontSize: 15, marginTop: 8 }}>Try changing your query or category</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -247,36 +280,36 @@ export default function HelpPage() {
                 <div
                   key={article.id}
                   style={{
-                    background: C.card,
-                    border: `1px solid ${expanded ? C.borderActive : C.border}`,
+                    background: expanded ? '#f5f5f7' : '#ffffff',
+                    border: `1px solid ${expanded ? '#d1d1d6' : '#e5e5ea'}`,
                     borderRadius: 12,
                     overflow: 'hidden',
-                    transition: 'border-color .2s',
+                    transition: 'all .2s',
                   }}
                 >
                   <button
                     onClick={() => setExpandedId(expanded ? null : article.id)}
                     style={{
                       width: '100%',
-                      padding: '16px 20px',
+                      padding: '18px 20px',
                       background: 'transparent',
                       border: 'none',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 12,
+                      gap: 14,
                       textAlign: 'left',
-                      color: C.text,
+                      color: '#1d1d1f',
                     }}
                   >
                     <span
                       style={{
-                        fontSize: 14,
+                        fontSize: 18,
                         flexShrink: 0,
-                        width: 28,
-                        height: 28,
-                        borderRadius: 8,
-                        background: C.accentDim,
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        background: '#f5f5f7',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -286,7 +319,7 @@ export default function HelpPage() {
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 600 }}>{article.title}</div>
-                      <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
+                      <div style={{ fontSize: 13, color: '#86868b', marginTop: 2 }}>
                         {catInfo.label}
                       </div>
                     </div>
@@ -295,7 +328,7 @@ export default function HelpPage() {
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke={C.dim}
+                      stroke="#86868b"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -313,11 +346,12 @@ export default function HelpPage() {
                     <div
                       style={{
                         padding: '0 20px 20px',
-                        fontSize: 14,
+                        paddingLeft: 70,
+                        fontSize: 15,
                         lineHeight: 1.7,
-                        color: C.sub,
+                        color: '#3d3d42',
                         whiteSpace: 'pre-line',
-                        borderTop: `1px solid ${C.border}`,
+                        borderTop: '1px solid #e5e5ea',
                         paddingTop: 16,
                       }}
                     >
@@ -333,28 +367,29 @@ export default function HelpPage() {
         {/* Contact CTA */}
         <div
           style={{
-            marginTop: 48,
+            marginTop: 56,
             textAlign: 'center',
-            padding: '32px 24px',
-            background: C.card,
+            padding: '40px 28px',
+            background: '#f5f5f7',
             borderRadius: 16,
-            border: `1px solid ${C.border}`,
           }}
         >
-          <p style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Didn&apos;t find an answer?</p>
-          <p style={{ color: C.sub, fontSize: 14, marginTop: 8 }}>
+          <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: '#1d1d1f' }}>
+            Didn&apos;t find an answer?
+          </p>
+          <p style={{ color: '#86868b', fontSize: 15, marginTop: 8 }}>
             Get in touch with our support team
           </p>
           <Link
             href="/contact"
             style={{
               display: 'inline-block',
-              marginTop: 16,
-              padding: '12px 28px',
-              background: C.accent,
+              marginTop: 20,
+              padding: '14px 32px',
+              background: '#6366f1',
               color: '#fff',
-              borderRadius: 10,
-              fontSize: 14,
+              borderRadius: 12,
+              fontSize: 15,
               fontWeight: 600,
               textDecoration: 'none',
               transition: 'opacity .2s',
@@ -364,6 +399,14 @@ export default function HelpPage() {
           </Link>
         </div>
       </div>
+
+      {/* Hover styles */}
+      <style>{`
+        .popular-card:hover {
+          background: #ebebed !important;
+          transform: translateY(-1px);
+        }
+      `}</style>
     </div>
   );
 }
