@@ -330,10 +330,10 @@ function RecentActivityFeed({
     return (
       <div style={{
         background: C.card,
-        borderRadius: 16,
+        borderRadius: 12,
         padding: '20px 22px',
         marginBottom: 20,
-        boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+        border: '1px solid rgba(255,255,255,0.06)',
       }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 12px', color: C.text }}>
           {t('dashboard.recentActivityTitle')}
@@ -348,10 +348,10 @@ function RecentActivityFeed({
   return (
     <div style={{
       background: C.card,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: '20px 22px',
       marginBottom: 20,
-      boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+      border: '1px solid rgba(255,255,255,0.06)',
     }}>
       <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 14px', color: C.text }}>
         {t('dashboard.recentActivityTitle')}
@@ -421,7 +421,7 @@ function WelcomeSection({
             minWidth: 200,
             height: 76,
             background: C.card,
-            borderRadius: 16,
+            borderRadius: 14,
             padding: '0 20px',
             cursor: 'pointer',
             display: 'flex',
@@ -430,14 +430,14 @@ function WelcomeSection({
             transition: 'all .2s cubic-bezier(.4,0,.2,1)',
             transform: hov === 'ac-0' ? 'translateY(-2px)' : 'none',
             boxShadow: hov === 'ac-0'
-              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
-            borderLeft: `3px solid ${C.accent}`,
+              ? '0 8px 24px rgba(0,0,0,.4)'
+              : 'none',
+            border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: `${C.accent}10`,
+            width: 40, height: 40, borderRadius: 10,
+            background: `${C.accent}14`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
@@ -445,7 +445,7 @@ function WelcomeSection({
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.videoEditor')}</div>
-            <div style={{ fontSize: 12, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.videoEditorDesc')}</div>
+            <div style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.videoEditorDesc')}</div>
           </div>
           <IconArrowRight size={14} color={C.dim} />
         </div>
@@ -464,7 +464,7 @@ function WelcomeSection({
             minWidth: 200,
             height: 76,
             background: C.card,
-            borderRadius: 16,
+            borderRadius: 14,
             padding: '0 20px',
             cursor: 'pointer',
             display: 'flex',
@@ -473,14 +473,14 @@ function WelcomeSection({
             transition: 'all .2s cubic-bezier(.4,0,.2,1)',
             transform: hov === 'ac-1' ? 'translateY(-2px)' : 'none',
             boxShadow: hov === 'ac-1'
-              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
-            borderLeft: `3px solid ${C.purple}`,
+              ? '0 8px 24px rgba(0,0,0,.4)'
+              : 'none',
+            border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: `${C.purple}10`,
+            width: 40, height: 40, borderRadius: 10,
+            background: `${C.purple}14`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
@@ -488,7 +488,7 @@ function WelcomeSection({
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.aiGeneration')}</div>
-            <div style={{ fontSize: 12, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.aiGenerationDesc')}</div>
+            <div style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.aiGenerationDesc')}</div>
           </div>
           <IconArrowRight size={14} color={C.dim} />
         </div>
@@ -507,7 +507,7 @@ function WelcomeSection({
             minWidth: 200,
             height: 76,
             background: C.card,
-            borderRadius: 16,
+            borderRadius: 14,
             padding: '0 20px',
             cursor: 'pointer',
             display: 'flex',
@@ -516,14 +516,14 @@ function WelcomeSection({
             transition: 'all .2s cubic-bezier(.4,0,.2,1)',
             transform: hov === 'ac-2' ? 'translateY(-2px)' : 'none',
             boxShadow: hov === 'ac-2'
-              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
-            borderLeft: `3px solid ${C.green}`,
+              ? '0 8px 24px rgba(0,0,0,.4)'
+              : 'none',
+            border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: `${C.green}10`,
+            width: 40, height: 40, borderRadius: 10,
+            background: `${C.green}14`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
@@ -538,7 +538,7 @@ function WelcomeSection({
                 lineHeight: '16px', letterSpacing: '.02em',
               }}>FREE</span>
             </div>
-            <div style={{ fontSize: 12, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.freeToolsDesc')}</div>
+            <div style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.freeToolsDesc')}</div>
           </div>
           <IconArrowRight size={14} color={C.dim} />
         </div>
@@ -559,15 +559,15 @@ function WelcomeSection({
             flex: '1 1 260px',
             minWidth: 0,
             minHeight: 170,
-            borderRadius: 16,
+            borderRadius: 14,
             background: C.card,
-            borderLeft: `3px solid ${C.purple}`,
+            border: '1px solid rgba(255,255,255,0.06)',
             cursor: 'pointer',
             transition: 'all .2s cubic-bezier(.4,0,.2,1)',
             transform: hov === 'ft-0' ? 'translateY(-2px)' : 'none',
             boxShadow: hov === 'ft-0'
-              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+              ? '0 8px 24px rgba(0,0,0,.4)'
+              : 'none',
             padding: '22px 20px',
             display: 'flex',
             flexDirection: 'column',
@@ -577,8 +577,8 @@ function WelcomeSection({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: `${C.purple}10`,
+                width: 40, height: 40, borderRadius: 10,
+                background: `${C.purple}14`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
@@ -618,15 +618,15 @@ function WelcomeSection({
             flex: '1 1 260px',
             minWidth: 0,
             minHeight: 170,
-            borderRadius: 16,
+            borderRadius: 14,
             background: C.card,
-            borderLeft: `3px solid ${C.green}`,
+            border: '1px solid rgba(255,255,255,0.06)',
             cursor: 'pointer',
             transition: 'all .2s cubic-bezier(.4,0,.2,1)',
             transform: hov === 'ft-1' ? 'translateY(-2px)' : 'none',
             boxShadow: hov === 'ft-1'
-              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+              ? '0 8px 24px rgba(0,0,0,.4)'
+              : 'none',
             padding: '22px 20px',
             display: 'flex',
             flexDirection: 'column',
@@ -636,8 +636,8 @@ function WelcomeSection({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: `${C.green}10`,
+                width: 40, height: 40, borderRadius: 10,
+                background: `${C.green}14`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
@@ -677,15 +677,15 @@ function WelcomeSection({
           gap: 16,
           padding: '16px 20px',
           marginBottom: 20,
-          borderRadius: 16,
+          borderRadius: 14,
           background: C.card,
-          borderLeft: `3px solid ${C.blue}`,
+          border: '1px solid rgba(255,255,255,0.06)',
           cursor: 'pointer',
           transition: 'all .2s cubic-bezier(.4,0,.2,1)',
           transform: hov === 'cl-ext' ? 'translateY(-2px)' : 'none',
           boxShadow: hov === 'cl-ext'
-            ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-            : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+            ? '0 8px 24px rgba(0,0,0,.4)'
+            : 'none',
           textDecoration: 'none',
           color: C.text,
         }}
@@ -929,14 +929,15 @@ const ProjectCard = memo(function ProjectCard({
       onMouseLeave={() => setIsHovered(false)}
       style={{
         background: C.card,
-        borderRadius: 16,
+        borderRadius: 14,
         overflow: 'hidden',
         cursor: 'pointer',
         transition: 'all .25s cubic-bezier(.4,0,.2,1)',
         transform: isHovered ? 'translateY(-2px)' : 'none',
         boxShadow: isHovered
-          ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-          : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+          ? '0 8px 24px rgba(0,0,0,.4)'
+          : 'none',
+        border: '1px solid rgba(255,255,255,0.06)',
         opacity: deleteIsPending && isDeleting ? 0.4 : 1,
         position: 'relative',
       }}
@@ -952,11 +953,11 @@ const ProjectCard = memo(function ProjectCard({
           style={{
             position: 'absolute', top: 10, left: 10, zIndex: 3,
             width: 24, height: 24, borderRadius: 6,
-            background: selected ? C.accent : 'rgba(255,255,255,.9)',
-            border: `2px solid ${selected ? C.accent : 'rgba(0,0,0,.2)'}`,
+            background: selected ? C.accent : C.surface,
+            border: `2px solid ${selected ? C.accent : C.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', transition: 'all .15s ease',
-            boxShadow: '0 1px 4px rgba(0,0,0,.15)',
+            boxShadow: '0 1px 4px rgba(0,0,0,.3)',
           }}
         >
           {selected && (
@@ -971,7 +972,7 @@ const ProjectCard = memo(function ProjectCard({
       <div style={{
         height: 140,
         background: C.bg,
-        borderRadius: 12,
+        borderRadius: 10,
         position: 'relative',
         overflow: 'hidden',
         margin: '8px 8px 0',
@@ -1049,14 +1050,14 @@ const ProjectCard = memo(function ProjectCard({
         }}>
           <div style={{
             width: 44, height: 44, borderRadius: '50%',
-            background: 'rgba(255,255,255,.9)',
+            background: C.accent,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             opacity: isHovered ? 1 : 0,
             transform: isHovered ? 'scale(1)' : 'scale(.7)',
             transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-            boxShadow: '0 4px 12px rgba(0,0,0,.2)',
+            boxShadow: '0 4px 12px rgba(0,0,0,.4)',
           }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
               <polygon points="6,3 21,12 6,21" />
             </svg>
           </div>
@@ -1126,7 +1127,7 @@ const ProjectCard = memo(function ProjectCard({
                   disabled={deleteIsPending}
                   style={{
                     padding: '6px 12px', borderRadius: 7, border: 'none',
-                    background: '#ef4444', color: '#fff', fontSize: 12, fontWeight: 600,
+                    background: C.red, color: '#fff', fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                     minHeight: 32,
                   }}
@@ -1222,15 +1223,15 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `delete-${p.id}` ? '#ef444440' : C.border}`,
-                    background: hovBtn === `delete-${p.id}` ? '#ef444412' : 'transparent',
-                    color: hovBtn === `delete-${p.id}` ? '#ef4444' : C.sub,
+                    border: `1px solid ${hovBtn === `delete-${p.id}` ? `${C.red}40` : C.border}`,
+                    background: hovBtn === `delete-${p.id}` ? `${C.red}12` : 'transparent',
+                    color: hovBtn === `delete-${p.id}` ? C.red : C.sub,
                     cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? '#ef4444' : C.sub} />
+                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? C.red : C.sub} />
                 </button>
               </>
             )}
@@ -1283,15 +1284,15 @@ function ReferralWidget({
     <div
       style={{
         marginBottom: 28,
-        borderRadius: 16,
+        borderRadius: 12,
         background: C.card,
-        borderLeft: `3px solid ${C.accent}`,
+        border: '1px solid rgba(255,255,255,0.06)',
         cursor: 'pointer',
         transition: 'all .2s cubic-bezier(.4,0,.2,1)',
         transform: hov ? 'translateY(-2px)' : 'none',
         boxShadow: hov
-          ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
-          : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+          ? '0 8px 24px rgba(0,0,0,.4)'
+          : 'none',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -1384,7 +1385,7 @@ function ReferralWidget({
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: '#6366f1',
+              color: C.accent,
               whiteSpace: 'nowrap',
             }}
           >
@@ -1414,7 +1415,7 @@ function DashboardUsageBar({
 }) {
   const isInfinite = !isFinite(total);
   const pct = isInfinite ? 0 : total > 0 ? Math.min((used / total) * 100, 100) : 0;
-  const barColor = pct > 90 ? '#ef4444' : pct > 60 ? '#eab308' : '#22c55e';
+  const barColor = pct > 90 ? C.red : pct > 60 ? C.orange : C.green;
   const displayTotal = isInfinite ? '\u221E' : String(total);
 
   return (
@@ -1459,10 +1460,10 @@ function PlanUsageWidget({
   return (
     <div style={{
       background: C.card,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: '20px 22px',
       marginBottom: 20,
-      boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+      border: '1px solid rgba(255,255,255,0.06)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1614,7 +1615,7 @@ function TemplatePickerModal({
         onClick={() => { if (!isCreating) onClose(); }}
         style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,.3)',
+          background: 'rgba(0,0,0,.6)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           zIndex: 999,
@@ -1627,14 +1628,15 @@ function TemplatePickerModal({
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         background: C.card,
-        borderRadius: 16,
+        borderRadius: 14,
+        border: '1px solid rgba(255,255,255,0.06)',
         width: '92%', maxWidth: 720,
         maxHeight: '88dvh',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 1000,
-        boxShadow: '0 24px 80px rgba(0,0,0,.15), 0 8px 24px rgba(0,0,0,.08)',
+        boxShadow: '0 24px 80px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3)',
         fontFamily: 'var(--font-sans), sans-serif',
       }}>
         {/* Header */}
@@ -1793,7 +1795,7 @@ function TemplatePickerModal({
                     transition: 'all .2s cubic-bezier(.4,0,.2,1)',
                     transform: hov === tpl.id ? 'translateY(-1px)' : 'none',
                     boxShadow: hov === tpl.id
-                      ? '0 4px 12px rgba(0,0,0,.06)'
+                      ? '0 4px 12px rgba(0,0,0,.3)'
                       : 'none',
                     display: 'flex',
                     flexDirection: 'column',
@@ -1904,10 +1906,10 @@ function PublishHistoryWidget({
   return (
     <div style={{
       background: C.card,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: '20px 22px',
       marginBottom: 20,
-      boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+      border: '1px solid rgba(255,255,255,0.06)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2373,8 +2375,8 @@ export function Dashboard() {
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: C.accent,
-              color: '#fff', border: 'none', borderRadius: 10,
-              padding: '10px 22px', minHeight: 40, fontSize: 14, fontWeight: 600,
+              color: '#fff', border: 'none', borderRadius: 12,
+              padding: '0 22px', height: 44, fontSize: 14, fontWeight: 600,
               cursor: createProject.isPending ? 'wait' : 'pointer',
               fontFamily: 'inherit', opacity: createProject.isPending ? 0.6 : 1,
               boxShadow: 'none',
@@ -2395,8 +2397,8 @@ export function Dashboard() {
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: C.card,
-              color: C.text, border: `1px solid ${C.border}`, borderRadius: 10,
-              padding: '10px 18px', minHeight: 40, fontSize: 14, fontWeight: 500,
+              color: C.text, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12,
+              padding: '0 18px', height: 44, fontSize: 14, fontWeight: 500,
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .2s ease',
@@ -2423,8 +2425,8 @@ export function Dashboard() {
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-new' ? C.bg : C.card,
+            border: `1px solid ${hoveredBtn === 'qa-new' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
+            background: hoveredBtn === 'qa-new' ? C.surface : C.card,
             color: C.text, fontSize: 13, fontWeight: 500,
             cursor: createProject.isPending ? 'wait' : 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
@@ -2441,8 +2443,8 @@ export function Dashboard() {
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-import' ? C.bg : C.card,
+            border: `1px solid ${hoveredBtn === 'qa-import' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
+            background: hoveredBtn === 'qa-import' ? C.surface : C.card,
             color: C.text, fontSize: 13, fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
@@ -2458,8 +2460,8 @@ export function Dashboard() {
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-template' ? C.bg : C.card,
+            border: `1px solid ${hoveredBtn === 'qa-template' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
+            background: hoveredBtn === 'qa-template' ? C.surface : C.card,
             color: C.text, fontSize: 13, fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
@@ -2475,8 +2477,8 @@ export function Dashboard() {
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-translator' ? C.bg : C.card,
+            border: `1px solid ${hoveredBtn === 'qa-translator' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
+            background: hoveredBtn === 'qa-translator' ? C.surface : C.card,
             color: C.text, fontSize: 13, fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
@@ -2487,7 +2489,7 @@ export function Dashboard() {
           <span style={{
             fontSize: 10, fontWeight: 700, color: '#fff',
             padding: '1px 6px', borderRadius: 4,
-            background: `linear-gradient(135deg, ${C.accent}, ${C.pink ?? C.accent})`,
+            background: C.purple,
             letterSpacing: '.02em',
           }}>Pro</span>
         </button>
@@ -2510,14 +2512,14 @@ export function Dashboard() {
                   className="tf-stat-card"
                   style={{
                     background: C.card,
-                    borderRadius: 14,
+                    borderRadius: 12,
                     padding: '18px 16px',
                     position: 'relative',
                     overflow: 'hidden',
                     cursor: 'default',
                     transition: 'box-shadow .25s ease, transform .25s ease',
                     minWidth: 0,
-                    boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+                    border: '1px solid rgba(255,255,255,0.06)',
                   }}
                 >
                   <div style={{
@@ -2526,7 +2528,7 @@ export function Dashboard() {
                   }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: '50%',
-                      background: `${s.iconColor}10`,
+                      background: `${s.iconColor}14`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}>
@@ -2535,7 +2537,7 @@ export function Dashboard() {
                   </div>
                   <div style={{ textAlign: 'center', minWidth: 0 }}>
                     <div className="tf-dash-stat-value" style={{
-                      fontSize: 22, fontWeight: 600, letterSpacing: '-.02em', lineHeight: 1.2,
+                      fontSize: 28, fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1.2,
                       color: C.text, marginBottom: 4,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
@@ -2568,9 +2570,9 @@ export function Dashboard() {
       {/* ── Projects section ────────────────────────── */}
       <div style={{
         background: C.card,
-        borderRadius: 16,
+        borderRadius: 12,
         overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+        border: '1px solid rgba(255,255,255,0.06)',
       }}>
         {/* Toolbar */}
         <div className="tf-dash-toolbar" style={{
@@ -2616,15 +2618,16 @@ export function Dashboard() {
                 placeholder={t('dashboard.search')}
                 aria-label={t('dashboard.searchProjects')}
                 style={{
-                  padding: '9px 14px 9px 32px',
-                  background: C.bg,
-                  border: `1px solid ${C.border}`,
+                  padding: '0 14px 0 32px',
+                  height: 44,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 10,
                   color: C.text,
                   fontSize: 13,
                   fontFamily: 'inherit',
                   width: '100%',
-                  maxWidth: 180,
+                  maxWidth: 200,
                   transition: 'border-color .2s, box-shadow .2s',
                 }}
               />
@@ -2721,9 +2724,9 @@ export function Dashboard() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{
                   background: C.card,
-                  borderRadius: 16,
+                  borderRadius: 14,
                   overflow: 'hidden',
-                  boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+                  border: '1px solid rgba(255,255,255,0.06)',
                 }}>
                   <ProjectCardSkeleton />
                 </div>
@@ -2826,7 +2829,7 @@ export function Dashboard() {
                               cursor: 'pointer',
                               transition: 'all .2s cubic-bezier(.4,0,.2,1)',
                               transform: hoveredBtn === `tpl-${tpl.id}` ? 'translateY(-1px)' : 'none',
-                              boxShadow: hoveredBtn === `tpl-${tpl.id}` ? '0 4px 12px rgba(0,0,0,.06)' : 'none',
+                              boxShadow: hoveredBtn === `tpl-${tpl.id}` ? '0 4px 12px rgba(0,0,0,.3)' : 'none',
                               textAlign: 'left',
                             }}
                           >
@@ -3008,7 +3011,8 @@ export function Dashboard() {
           display: 'flex',
           alignItems: 'center',
           gap: 14,
-          boxShadow: '0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06)',
+          boxShadow: '0 8px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3)',
+          border: '1px solid rgba(255,255,255,0.08)',
           zIndex: 1000,
           fontFamily: 'inherit',
         }}>
@@ -3044,7 +3048,7 @@ export function Dashboard() {
               padding: '8px 18px',
               borderRadius: 8,
               border: 'none',
-              background: '#ef4444',
+              background: C.red,
               color: '#fff',
               fontSize: 13,
               fontWeight: 600,
