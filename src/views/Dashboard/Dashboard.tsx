@@ -510,7 +510,7 @@ function WelcomeSection({
         {/* AutoClip */}
         <div
           className="tf-dash-featured-card"
-          onClick={() => router.push('/tools/autoclip')}
+          onClick={() => router.push('/tools/video-translator')}
           onMouseEnter={() => setHov('ft-0')}
           onMouseLeave={() => setHov(null)}
           role="button"
@@ -540,8 +540,8 @@ function WelcomeSection({
           }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <IconScissors size={20} color="#fff" />
-                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>AutoClip</span>
+                <span style={{ fontSize: 20 }}>🌍</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('nav.videoTranslator') || 'Video Translator'}</span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
@@ -566,7 +566,7 @@ function WelcomeSection({
         {/* Cut & Crop */}
         <div
           className="tf-dash-featured-card"
-          onClick={() => router.push('/tools/cut-crop')}
+          onClick={() => router.push('/tools/ai-thumbnail-editor')}
           onMouseEnter={() => setHov('ft-1')}
           onMouseLeave={() => setHov(null)}
           role="button"
@@ -596,8 +596,8 @@ function WelcomeSection({
           }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <IconScissors size={20} color={C.text} />
-                <span style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>Cut & Crop</span>
+                <span style={{ fontSize: 20 }}>🎨</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>{t('tools.aiThumbnail.title') || 'AI Thumbnail Editor'}</span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: '#10b981', borderRadius: 4, padding: '1px 6px',
@@ -605,7 +605,7 @@ function WelcomeSection({
                 }}>{t('common.free')}</span>
               </div>
               <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
-                {t('dashboard.cutCropDesc')}
+                {t('tools.aiThumbnail.subtitle') || 'Generate, recreate and analyze thumbnails with AI'}
               </div>
             </div>
             <div style={{
