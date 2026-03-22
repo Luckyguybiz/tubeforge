@@ -447,14 +447,13 @@ export function AiThumbnailsPage() {
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100dvh',
         background: C.bg,
         color: C.text,
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
       }}
     >
+      {/* ── Tool area (full viewport height) ──────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {/* ── Top Bar ────────────────────────────────────── */}
       <div
         style={{
@@ -1349,6 +1348,113 @@ export function AiThumbnailsPage() {
               </a>
             </div>
           )}
+        </div>
+      </div>
+      </div>{/* end tool area */}
+
+      {/* ── How it works section ──────────────────────── */}
+      <div style={{
+        padding: isMobile ? '36px 16px' : '48px 24px',
+        borderTop: `1px solid ${C.border}`,
+        background: C.surface,
+      }}>
+        <h2 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: C.text, marginBottom: 8 }}>
+          CREATE THUMBNAILS IN 3 STEPS
+        </h2>
+        <p style={{ fontSize: 15, color: C.sub, marginBottom: 32, maxWidth: 600 }}>
+          Our AI generates professional YouTube thumbnails that get clicks. Here&apos;s how it works:
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+          gap: 24,
+        }}>
+          {/* Step 1 — Describe */}
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 16, overflow: 'hidden',
+          }}>
+            <div style={{
+              aspectRatio: '16/9', background: C.bg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderBottom: `1px solid ${C.border}`,
+            }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                <path d="M15 5l4 4" />
+              </svg>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6, textTransform: 'uppercase' }}>
+                Describe Your Idea
+              </h3>
+              <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
+                Type a description of your thumbnail or use AI to generate ideas. Add a reference photo for better results.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 2 — Choose Style */}
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 16, overflow: 'hidden',
+          }}>
+            <div style={{
+              aspectRatio: '16/9', background: C.bg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderBottom: `1px solid ${C.border}`,
+            }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+              </svg>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6, textTransform: 'uppercase' }}>
+                Choose Style
+              </h3>
+              <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
+                Pick from 6 styles: Realistic, Anime, Cinematic, 3D, Minimalist, or Pop Art. Select format and number of variants.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 — Get Your Thumbnail */}
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 16, overflow: 'hidden',
+          }}>
+            <div style={{
+              aspectRatio: '16/9', background: C.bg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderBottom: `1px solid ${C.border}`,
+            }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6, textTransform: 'uppercase' }}>
+                Get Your Thumbnail
+              </h3>
+              <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
+                Download your AI-generated thumbnail, check CTR Score, get title suggestions, or edit with AI prompts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Video placeholder */}
+        <div style={{
+          marginTop: 32, padding: 24, borderRadius: 16,
+          background: C.card, border: `1px solid ${C.border}`,
+          textAlign: 'center',
+        }}>
+          <p style={{ fontSize: 14, color: C.dim }}>
+            Video tutorial coming soon — watch how creators use TubeForge to make viral thumbnails
+          </p>
         </div>
       </div>
 
