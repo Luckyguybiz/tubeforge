@@ -76,10 +76,10 @@ export function FeedbackWidget() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+          boxShadow: '0 2px 12px rgba(99,102,241,0.3), 0 1px 3px rgba(0,0,0,0.08)',
           zIndex: 9990,
-          transition: 'transform .2s, box-shadow .2s',
-          transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
+          transition: 'transform .25s cubic-bezier(.2,.8,.4,1), box-shadow .25s ease',
+          transform: open ? 'rotate(45deg) scale(1.05)' : 'rotate(0deg) scale(1)',
           fontSize: 22,
           fontWeight: 700,
         }}
@@ -113,11 +113,12 @@ export function FeedbackWidget() {
               width: 340,
               maxWidth: 'calc(100vw - 48px)',
               background: C.surface,
-              border: `1px solid ${C.border}`,
+              border: `1px solid rgba(0,0,0,0.06)`,
               borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04)',
               zIndex: 9992,
               overflow: 'hidden',
+              backdropFilter: 'blur(20px)',
             }}
           >
             {/* Header */}

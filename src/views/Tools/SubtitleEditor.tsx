@@ -146,31 +146,32 @@ export function SubtitleEditor() {
 
   /* ── Style helpers ─────────────────────────────────────────────────── */
   const cardStyle: React.CSSProperties = {
-    background: C.surface,
-    border: `1px solid ${C.border}`,
-    borderRadius: 12,
+    background: '#f5f5f7',
+    border: 'none',
+    borderRadius: 16,
     padding: 16,
   };
 
   const inputStyle: React.CSSProperties = {
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
-    color: C.text,
-    padding: '6px 10px',
+    background: '#ffffff',
+    border: 'none',
+    borderRadius: 10,
+    color: '#1d1d1f',
+    padding: '10px 12px',
     fontSize: 13,
     fontFamily: 'monospace',
     outline: 'none',
     width: '100%',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box' as const,
+    height: 44,
   };
 
   const smallBtnStyle: React.CSSProperties = {
-    padding: '6px 12px',
-    borderRadius: 8,
-    border: `1px solid ${C.border}`,
-    background: C.card,
-    color: C.text,
+    padding: '6px 14px',
+    borderRadius: 20,
+    border: 'none',
+    background: '#f5f5f7',
+    color: '#1d1d1f',
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
@@ -179,6 +180,7 @@ export function SubtitleEditor() {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
+    height: 36,
   };
 
   /* ═══════════ Upload / Empty state ═══════════ */
@@ -210,22 +212,22 @@ export function SubtitleEditor() {
               justifyContent: 'center',
               padding: '56px 24px',
               borderRadius: 16,
-              border: `2px dashed ${dragOver ? GRADIENT[0] : C.border}`,
-              background: dragOver ? `${GRADIENT[0]}10` : C.surface,
+              border: `2px dashed ${dragOver ? GRADIENT[0] : '#d2d2d7'}`,
+              background: dragOver ? `${GRADIENT[0]}10` : '#f5f5f7',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               textAlign: 'center',
             }}
             onMouseEnter={(e) => {
               if (!dragOver) {
-                e.currentTarget.style.borderColor = C.text;
-                e.currentTarget.style.background = C.card;
+                e.currentTarget.style.borderColor = '#86868b';
+                e.currentTarget.style.background = '#ffffff';
               }
             }}
             onMouseLeave={(e) => {
               if (!dragOver) {
-                e.currentTarget.style.borderColor = C.border;
-                e.currentTarget.style.background = C.surface;
+                e.currentTarget.style.borderColor = '#d2d2d7';
+                e.currentTarget.style.background = '#f5f5f7';
               }
             }}
           >
@@ -572,9 +574,10 @@ function EntryRow({
         display: 'flex',
         gap: 10,
         padding: '12px 14px',
-        borderRadius: 12,
-        background: hovered ? C.card : C.surface,
-        border: `1px solid ${hovered ? C.borderActive : C.border}`,
+        borderRadius: 16,
+        background: hovered ? '#ffffff' : '#f5f5f7',
+        border: 'none',
+        boxShadow: hovered ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
         transition: 'all 0.15s ease',
         alignItems: 'flex-start',
         flexWrap: 'wrap',

@@ -176,12 +176,12 @@ export function BackgroundRemover() {
           <label style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             padding: '48px 24px', borderRadius: 16,
-            border: `2px dashed ${dragOver ? '#8b5cf6' : C.border}`,
-            background: dragOver ? 'rgba(139,92,246,.06)' : C.surface,
+            border: `2px dashed ${dragOver ? '#8b5cf6' : '#d2d2d7'}`,
+            background: dragOver ? 'rgba(139,92,246,.06)' : '#f5f5f7',
             cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
           }}
-          onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.text; e.currentTarget.style.background = C.card; } }}
-          onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; } }}
+          onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = '#86868b'; e.currentTarget.style.background = '#ffffff'; } }}
+          onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = '#d2d2d7'; e.currentTarget.style.background = '#f5f5f7'; } }}
           >
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
@@ -209,15 +209,15 @@ export function BackgroundRemover() {
         <div>
           {/* ── File info bar ── */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 12,
-            border: `1px solid ${C.border}`, background: C.card, marginBottom: 20, flexWrap: 'wrap',
+            display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 16,
+            border: 'none', background: '#f5f5f7', marginBottom: 20, flexWrap: 'wrap',
           }}>
             <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              width: 40, height: 40, borderRadius: 12,
+              background: 'rgba(139,92,246,.12)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
@@ -230,11 +230,11 @@ export function BackgroundRemover() {
               onMouseEnter={() => setRemoveHover(true)}
               onMouseLeave={() => setRemoveHover(false)}
               style={{
-                padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`,
-                background: removeHover ? C.surface : C.card,
-                color: C.sub, fontSize: 12, cursor: 'pointer',
+                padding: '6px 14px', borderRadius: 20, border: 'none',
+                background: removeHover ? '#e8e8ed' : '#ffffff',
+                color: '#1d1d1f', fontSize: 12, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'all 0.2s ease',
-                flexShrink: 0, minHeight: 44,
+                flexShrink: 0, height: 36,
               }}
             >
               {t('tools.remove')}
@@ -249,10 +249,11 @@ export function BackgroundRemover() {
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   style={{
-                    padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                    border: viewMode === mode ? '2px solid #8b5cf6' : `1px solid ${C.border}`,
-                    background: viewMode === mode ? 'rgba(139,92,246,.1)' : C.card,
-                    color: viewMode === mode ? '#8b5cf6' : C.text,
+                    padding: '8px 20px', borderRadius: 20, fontSize: 13,
+                    fontWeight: viewMode === mode ? 700 : 500,
+                    height: 36, border: 'none',
+                    background: viewMode === mode ? 'rgba(139,92,246,.15)' : '#f5f5f7',
+                    color: viewMode === mode ? '#8b5cf6' : '#1d1d1f',
                     cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
                   }}
                 >
@@ -265,7 +266,7 @@ export function BackgroundRemover() {
           {/* ── Image preview ── */}
           <div style={{
             position: 'relative', borderRadius: 16, overflow: 'hidden',
-            border: `1px solid ${C.border}`, marginBottom: 20,
+            border: 'none', marginBottom: 20,
             ...(processed && viewMode === 'result' ? {
               backgroundImage: `linear-gradient(45deg, ${C.border} 25%, transparent 25%), linear-gradient(-45deg, ${C.border} 25%, transparent 25%), linear-gradient(45deg, transparent 75%, ${C.border} 75%), linear-gradient(-45deg, transparent 75%, ${C.border} 75%)`,
               backgroundSize: '20px 20px',
@@ -301,9 +302,9 @@ export function BackgroundRemover() {
           {/* ── Beta notice ── */}
           {processed && (
             <div style={{
-              padding: '14px 18px', borderRadius: 12, marginBottom: 20,
-              background: `rgba(139,92,246,.06)`, border: `1px solid rgba(139,92,246,.2)`,
-              fontSize: 13, color: C.sub, lineHeight: 1.6,
+              padding: '14px 18px', borderRadius: 16, marginBottom: 20,
+              background: '#f5f5f7', border: 'none',
+              fontSize: 13, color: '#86868b', lineHeight: 1.6,
             }}>
               <span style={{ fontWeight: 700 }}>BETA:</span>{' '}
               {t('tools.bgRemover.betaNotice') || 'Background removal runs locally in your browser using color detection. Works best with solid-color backgrounds (white, green screen, etc). For complex backgrounds, try remove.bg for better results.'}
@@ -337,12 +338,12 @@ export function BackgroundRemover() {
                 onMouseEnter={() => setDownloadHover(true)}
                 onMouseLeave={() => setDownloadHover(false)}
                 style={{
-                  padding: '12px 32px', borderRadius: 12,
-                  border: `1px solid ${C.border}`,
-                  background: downloadHover ? C.surface : C.card,
-                  color: C.text, fontSize: 15, fontWeight: 700,
+                  padding: '12px 32px', borderRadius: 22,
+                  border: 'none',
+                  background: downloadHover ? '#e8e8ed' : '#f5f5f7',
+                  color: '#1d1d1f', fontSize: 15, fontWeight: 600,
                   cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
-                  display: 'flex', alignItems: 'center', gap: 8, minHeight: 44,
+                  display: 'flex', alignItems: 'center', gap: 8, height: 44,
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

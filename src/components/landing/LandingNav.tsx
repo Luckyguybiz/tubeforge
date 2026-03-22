@@ -15,7 +15,7 @@ export function LandingNav() {
 
   const navLinks = [
     { label: 'Features', href: '#features' },
-    { label: 'Tools', href: '#tools' },
+    { label: 'How It Works', href: '#how-it-works' },
     { label: 'Pricing', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
   ];
@@ -28,61 +28,63 @@ export function LandingNav() {
         left: 0,
         right: 0,
         zIndex: 100,
-        background: scrolled ? 'rgba(10,10,10,0.85)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(180%)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
-        transition: 'all 0.4s cubic-bezier(.4,0,.2,1)',
+        height: 48,
+        background: scrolled ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderBottom: scrolled ? '1px solid #e5e5ea' : '1px solid transparent',
+        transition: 'all 0.3s ease',
       }}
     >
       <div
         style={{
-          maxWidth: 1200,
+          maxWidth: 980,
           margin: '0 auto',
-          padding: '16px 24px',
+          padding: '0 24px',
+          height: 48,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
         {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', minHeight: 44 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
           <div
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+              width: 28,
+              height: 28,
+              borderRadius: 7,
+              background: '#1d1d1f',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#fff',
-              fontWeight: 800,
-              fontSize: 14,
-              letterSpacing: -0.5,
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: -0.3,
             }}
           >
             TF
           </div>
-          <span style={{ fontSize: 20, fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>TubeForge</span>
+          <span style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.01em' }}>TubeForge</span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="desktop-nav">
+        {/* Desktop nav — centered */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 28 }} className="desktop-nav">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
               style={{
                 textDecoration: 'none',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: 14,
-                fontWeight: 500,
-                transition: 'color 0.2s',
+                color: '#1d1d1f',
+                fontSize: 12,
+                fontWeight: 400,
+                transition: 'color 0.3s ease',
                 letterSpacing: '0.01em',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#0071e3'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#1d1d1f'; }}
             >
               {link.label}
             </a>
@@ -90,46 +92,36 @@ export function LandingNav() {
         </nav>
 
         {/* Desktop auth */}
-        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link
             href="/login"
             style={{
               textDecoration: 'none',
-              color: 'rgba(255,255,255,0.6)',
-              fontSize: 14,
-              fontWeight: 500,
-              padding: '8px 16px',
-              borderRadius: 10,
-              transition: 'color 0.2s',
+              color: '#0071e3',
+              fontSize: 12,
+              fontWeight: 400,
+              transition: 'color 0.3s ease',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.72'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
           >
             Log In
           </Link>
           <Link
             href="/register"
+            className="tf-cta-primary"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 6,
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#0071e3',
               color: '#fff',
-              fontSize: 14,
-              fontWeight: 600,
-              padding: '9px 20px',
-              borderRadius: 10,
+              fontSize: 12,
+              fontWeight: 400,
+              padding: '8px 16px',
+              borderRadius: 980,
               textDecoration: 'none',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+              transition: 'all 0.3s ease',
+              border: 'none',
             }}
           >
             Start Free
@@ -143,7 +135,7 @@ export function LandingNav() {
           aria-label="Menu"
           style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" strokeWidth="2" strokeLinecap="round">
             {mobileOpen ? (
               <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
             ) : (
@@ -153,81 +145,33 @@ export function LandingNav() {
         </button>
       </div>
 
-      {/* Mobile full-screen overlay */}
+      {/* Mobile dropdown */}
       {mobileOpen && (
         <div
           className="mobile-menu-dropdown"
           style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 9999,
-            background: 'rgba(10,10,10,0.98)',
-            overflowY: 'auto',
+            background: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderTop: '1px solid #e5e5ea',
+            padding: '16px 24px 24px',
             display: 'flex',
             flexDirection: 'column',
-            padding: '0 24px 40px',
+            gap: 4,
           }}
         >
-          {/* Overlay header with logo and close button */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', flexShrink: 0 }}>
-            <Link href="/" onClick={() => setMobileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', minHeight: 44 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontWeight: 800,
-                  fontSize: 14,
-                  letterSpacing: -0.5,
-                }}
-              >
-                TF
-              </div>
-              <span style={{ fontSize: 20, fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>TubeForge</span>
-            </Link>
-            <button
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
               onClick={() => setMobileOpen(false)}
-              aria-label="Close menu"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 10,
-                minWidth: 44,
-                minHeight: 44,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              style={{ textDecoration: 'none', color: '#1d1d1f', fontSize: 17, fontWeight: 400, padding: '12px 0', borderBottom: '1px solid #e5e5ea' }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-          {/* Nav links */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 16 }}>
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, fontWeight: 500, padding: '14px 0', minHeight: 44, display: 'flex', alignItems: 'center' }}
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16, marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, fontWeight: 500, padding: '14px 0', minHeight: 44, display: 'flex', alignItems: 'center' }}>Log In</Link>
+              {link.label}
+            </a>
+          ))}
+          <div style={{ paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: '#0071e3', fontSize: 17, fontWeight: 400, padding: '10px 0' }}>Log In</Link>
             <Link
               href="/register"
               onClick={() => setMobileOpen(false)}
@@ -235,16 +179,14 @@ export function LandingNav() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                background: '#0071e3',
                 color: '#fff',
-                fontSize: 16,
-                fontWeight: 600,
-                padding: '16px 24px',
+                fontSize: 17,
+                fontWeight: 400,
+                padding: '14px 24px',
                 borderRadius: 12,
                 textDecoration: 'none',
                 border: 'none',
-                minHeight: 44,
               }}
             >
               Start Free

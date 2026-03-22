@@ -1,99 +1,167 @@
 'use client';
 
-import { useThemeStore } from '@/stores/useThemeStore';
-
 export default function PrivacyPage() {
-  const C = useThemeStore((s) => s.theme);
-
-  const sectionStyle: React.CSSProperties = { marginBottom: 36 };
-  const headingStyle: React.CSSProperties = { fontSize: 20, fontWeight: 700, marginBottom: 12, color: C.text };
-  const paraStyle: React.CSSProperties = { fontSize: 14, lineHeight: 1.8, color: C.sub, marginBottom: 12 };
-  const listStyle: React.CSSProperties = { fontSize: 14, lineHeight: 2, color: C.sub, paddingLeft: 24, margin: '8px 0 12px' };
+  const sectionStyle: React.CSSProperties = { marginBottom: 40 };
+  const headingStyle: React.CSSProperties = {
+    fontSize: 20,
+    fontWeight: 600,
+    marginBottom: 14,
+    color: '#1d1d1f',
+    letterSpacing: '-0.01em',
+  };
+  const paraStyle: React.CSSProperties = {
+    fontSize: 17,
+    lineHeight: 1.7,
+    color: '#3d3d42',
+    marginBottom: 14,
+  };
+  const listStyle: React.CSSProperties = {
+    fontSize: 17,
+    lineHeight: 1.9,
+    color: '#3d3d42',
+    paddingLeft: 28,
+    margin: '10px 0 14px',
+  };
+  const accentColor = '#6366f1';
 
   return (
     <div>
       <h1
         style={{
-          fontSize: 32,
-          fontWeight: 800,
-          letterSpacing: '-.02em',
+          fontSize: 40,
+          fontWeight: 600,
+          letterSpacing: '-0.02em',
           marginBottom: 8,
+          color: '#1d1d1f',
+          lineHeight: 1.15,
         }}
       >
-        Политика конфиденциальности
+        Privacy Policy
       </h1>
-      <p style={{ fontSize: 13, color: C.dim, marginBottom: 40 }}>
-        Дата вступления в силу: 20 марта 2026
+      <p style={{ fontSize: 14, color: '#86868b', marginBottom: 24 }}>
+        Effective date: March 20, 2026
       </p>
 
-      {/* 1. Введение */}
+      {/* Table of contents */}
+      <nav
+        style={{
+          background: '#f5f5f7',
+          borderRadius: 12,
+          padding: '20px 24px',
+          marginBottom: 48,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#86868b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Table of Contents
+        </div>
+        <ol
+          style={{
+            margin: 0,
+            paddingLeft: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          }}
+        >
+          {[
+            ['vvedenie', 'Introduction'],
+            ['sbor-dannyh', 'Data We Collect'],
+            ['youtube-api', 'YouTube API Services'],
+            ['ispolzovanie-dannyh', 'How We Use Data'],
+            ['tretji-storony', 'Third Parties'],
+            ['hranenie-dannyh', 'Data Storage'],
+            ['faily-cookie', 'Cookies'],
+            ['prava-polzovateley', 'Your Rights (GDPR)'],
+            ['ccpa', 'California Privacy Rights (CCPA/CPRA)'],
+            ['udalenie-dannyh', 'Data Deletion'],
+            ['bezopasnost', 'Data Security'],
+            ['izmenenie-politiki', 'Policy Changes'],
+            ['kontakty', 'Contact'],
+          ].map(([id, label]) => (
+            <li key={id} style={{ fontSize: 14, lineHeight: 1.6 }}>
+              <a
+                href={`#${id}`}
+                style={{
+                  color: accentColor,
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                }}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {/* 1 */}
       <div style={sectionStyle}>
-        <h2 id="vvedenie" style={headingStyle}>1. Введение</h2>
+        <h2 id="vvedenie" style={headingStyle}>1. Introduction</h2>
         <p style={paraStyle}>
-          Настоящая Политика конфиденциальности описывает, как TubeForge (далее — «мы», «нас», «Сервис»)
-          собирает, использует, хранит и защищает ваши персональные данные при использовании платформы
-          TubeForge, доступной по адресу{' '}
-          <a href="https://tubeforge.co" style={{ color: C.accent }}>tubeforge.co</a>.
+          This Privacy Policy describes how TubeForge (hereinafter &mdash; &ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;Service&rdquo;)
+          collects, uses, stores, and protects your personal data when using the TubeForge platform,
+          available at{' '}
+          <a href="https://tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>tubeforge.co</a>.
         </p>
         <p style={paraStyle}>
-          Используя наш Сервис, вы соглашаетесь с условиями настоящей Политики. Если вы не согласны
-          с какой-либо частью, пожалуйста, прекратите использование Сервиса.
+          By using our Service, you agree to the terms of this Policy. If you disagree
+          with any part, please stop using the Service.
         </p>
       </div>
 
-      {/* 2. Какие данные мы собираем */}
+      {/* 2 */}
       <div style={sectionStyle}>
-        <h2 id="sbor-dannyh" style={headingStyle}>2. Какие данные мы собираем</h2>
+        <h2 id="sbor-dannyh" style={headingStyle}>2. Data We Collect</h2>
         <p style={paraStyle}>
-          TubeForge собирает следующие категории персональных данных:
+          TubeForge collects the following categories of personal data:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Данные аккаунта (через Google OAuth):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Account data (via Google OAuth):</p>
         <ul style={listStyle}>
-          <li>Имя и фамилия</li>
-          <li>Адрес электронной почты</li>
-          <li>Фото профиля</li>
-          <li>Идентификатор Google-аккаунта</li>
+          <li>Full name</li>
+          <li>Email address</li>
+          <li>Profile photo</li>
+          <li>Google account identifier</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Данные проектов и контента:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Project and content data:</p>
         <ul style={listStyle}>
-          <li>Созданные проекты, обложки, тексты метаданных</li>
-          <li>Настройки и параметры ИИ-генерации</li>
-          <li>Статистика YouTube-канала (при подключении)</li>
+          <li>Created projects, thumbnails, metadata texts</li>
+          <li>AI generation settings and parameters</li>
+          <li>YouTube channel statistics (when connected)</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Платёжные данные (через Stripe):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Payment data (via Stripe):</p>
         <ul style={listStyle}>
-          <li>Информация о подписке и тарифном плане</li>
-          <li>История платежей и ID клиента Stripe</li>
-          <li>Номера банковских карт хранятся исключительно на серверах Stripe и не проходят через наши системы</li>
+          <li>Subscription and plan information</li>
+          <li>Payment history and Stripe customer ID</li>
+          <li>Card numbers are stored exclusively on Stripe servers and do not pass through our systems</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Данные об использовании (аналитика):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Usage data (analytics):</p>
         <ul style={listStyle}>
-          <li>IP-адрес, тип браузера, информация об устройстве</li>
-          <li>Действия в платформе, частота использования функций</li>
-          <li>Просмотры страниц и продолжительность сессий</li>
+          <li>IP address, browser type, device information</li>
+          <li>Platform actions, feature usage frequency</li>
+          <li>Page views and session duration</li>
         </ul>
       </div>
 
-      {/* 2a. YouTube API Services */}
+      {/* 2a */}
       <div style={sectionStyle}>
         <h2 id="youtube-api" style={headingStyle}>2a. YouTube API Services</h2>
         <p style={paraStyle}>
           TubeForge uses YouTube API Services. By using TubeForge, you agree to the{' '}
-          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
             YouTube Terms of Service
           </a>.
         </p>
         <p style={paraStyle}>
           Your use of YouTube data through TubeForge is also subject to the{' '}
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
             Google Privacy Policy
           </a>.
         </p>
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>YouTube data we collect and process:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>YouTube data we collect and process:</p>
         <ul style={listStyle}>
           <li>Channel name and profile information</li>
           <li>Subscriber count</li>
@@ -102,211 +170,211 @@ export default function PrivacyPage() {
         </ul>
         <p style={paraStyle}>
           You may revoke TubeForge&apos;s access to your YouTube data at any time via the{' '}
-          <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+          <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
             Google security settings page
           </a>.
         </p>
       </div>
 
-      {/* 3. Как мы используем данные */}
+      {/* 3 */}
       <div style={sectionStyle}>
-        <h2 id="ispolzovanie-dannyh" style={headingStyle}>3. Как мы используем данные</h2>
+        <h2 id="ispolzovanie-dannyh" style={headingStyle}>3. How We Use Data</h2>
         <p style={paraStyle}>
-          Мы используем собранные данные для следующих целей:
+          We use collected data for the following purposes:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Предоставление сервиса:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Service delivery:</p>
         <ul style={listStyle}>
-          <li>Аутентификация и управление аккаунтом</li>
-          <li>Генерация ИИ-контента (обложки, тексты, рекомендации по SEO)</li>
-          <li>Обработка платежей и управление подписками</li>
-          <li>Аналитика и визуализация статистики YouTube-канала</li>
+          <li>Authentication and account management</li>
+          <li>AI content generation (thumbnails, texts, SEO recommendations)</li>
+          <li>Payment processing and subscription management</li>
+          <li>YouTube channel analytics and statistics visualization</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Улучшение продукта:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Product improvement:</p>
         <ul style={listStyle}>
-          <li>Анализ использования для улучшения UX и функциональности</li>
-          <li>Диагностика и исправление технических проблем</li>
-          <li>Разработка новых функций на основе паттернов использования</li>
+          <li>Usage analysis to improve UX and functionality</li>
+          <li>Diagnosis and resolution of technical issues</li>
+          <li>Development of new features based on usage patterns</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Коммуникация:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Communication:</p>
         <ul style={listStyle}>
-          <li>Отправка уведомлений о сервисе и обновлениях</li>
-          <li>Транзакционные email (подтверждение оплаты, изменение подписки)</li>
-          <li>Ответы на запросы в службу поддержки</li>
+          <li>Service notifications and updates</li>
+          <li>Transactional emails (payment confirmation, subscription changes)</li>
+          <li>Responding to support requests</li>
         </ul>
       </div>
 
-      {/* 4. Третьи стороны */}
+      {/* 4 */}
       <div style={sectionStyle}>
-        <h2 id="tretji-storony" style={headingStyle}>4. Третьи стороны</h2>
+        <h2 id="tretji-storony" style={headingStyle}>4. Third Parties</h2>
         <p style={paraStyle}>
-          TubeForge интегрируется со следующими сторонними сервисами для предоставления
-          функциональности платформы:
+          TubeForge integrates with the following third-party services to provide
+          platform functionality:
         </p>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: C.text }}>Stripe</strong> — обработка платежей. Платёжные данные (номера карт)
-            обрабатываются исключительно Stripe (PCI-DSS Level 1) и не хранятся на наших серверах.
-            См.{' '}
-            <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-              Политику конфиденциальности Stripe
+            <strong style={{ color: '#1d1d1f' }}>Stripe</strong> &mdash; payment processing. Payment data (card numbers)
+            is processed exclusively by Stripe (PCI-DSS Level 1) and is not stored on our servers.
+            See{' '}
+            <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
+              Stripe Privacy Policy
             </a>.
           </li>
           <li>
-            <strong style={{ color: C.text }}>Google</strong> — аутентификация через OAuth 2.0, доступ
-            к аналитике YouTube-канала. Использование данных регулируется{' '}
-            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-              Политикой конфиденциальности Google
+            <strong style={{ color: '#1d1d1f' }}>Google</strong> &mdash; OAuth 2.0 authentication, access
+            to YouTube channel analytics. Data usage is governed by the{' '}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
+              Google Privacy Policy
             </a>.
           </li>
           <li>
-            <strong style={{ color: C.text }}>OpenAI</strong> — генерация ИИ-контента (обложки, тексты, рекомендации).
-            Ваш контент может обрабатываться через API OpenAI. Мы не передаём персональные данные в OpenAI,
-            только контент проектов для генерации.
+            <strong style={{ color: '#1d1d1f' }}>OpenAI</strong> &mdash; AI content generation (thumbnails, texts, recommendations).
+            Your content may be processed through OpenAI&apos;s API. We do not send personal data to OpenAI,
+            only project content for generation.
           </li>
           <li>
-            <strong style={{ color: C.text }}>Resend</strong> — отправка транзакционных email-сообщений
-            (уведомления, подтверждения оплаты, восстановление доступа). Передаётся только email-адрес
-            и содержимое письма.
+            <strong style={{ color: '#1d1d1f' }}>Resend</strong> &mdash; sending transactional emails
+            (notifications, payment confirmations, access recovery). Only email address
+            and message content are shared.
           </li>
           <li>
-            <strong style={{ color: C.text }}>PostHog</strong> — продуктовая аналитика (только с вашего явного
-            согласия через баннер cookie-consent). См.{' '}
-            <a href="https://posthog.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-              Политику конфиденциальности PostHog
+            <strong style={{ color: '#1d1d1f' }}>PostHog</strong> &mdash; product analytics (only with your explicit
+            consent via the cookie consent banner). See{' '}
+            <a href="https://posthog.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
+              PostHog Privacy Policy
             </a>.
           </li>
         </ul>
         <p style={paraStyle}>
-          Мы не продаём ваши персональные данные третьим лицам. Данные передаются только
-          перечисленным сервисам в объёме, необходимом для предоставления функциональности.
+          We do not sell your personal data to third parties. Data is shared only
+          with the listed services to the extent necessary for providing functionality.
         </p>
       </div>
 
-      {/* 5. Хранение данных */}
+      {/* 5 */}
       <div style={sectionStyle}>
-        <h2 id="hranenie-dannyh" style={headingStyle}>5. Хранение данных</h2>
+        <h2 id="hranenie-dannyh" style={headingStyle}>5. Data Storage</h2>
         <p style={paraStyle}>
-          Ваши данные хранятся на серверах, расположенных в Европейском Союзе (EU).
-          Мы используем надёжных хостинг-провайдеров с сертификацией ISO 27001 для обеспечения
-          безопасности и доступности данных.
+          Your data is stored on servers located in the European Union (EU).
+          We use reliable hosting providers with ISO 27001 certification to ensure
+          data security and availability.
         </p>
         <p style={paraStyle}>
-          Данные хранятся в течение всего срока использования вашего аккаунта. При удалении аккаунта
-          персональные данные удаляются в течение 30 дней, за исключением данных, которые мы обязаны
-          хранить в соответствии с требованиями законодательства (например, записи о транзакциях — до 7 лет).
+          Data is stored for the entire duration of your account usage. Upon account deletion,
+          personal data is removed within 30 days, except for data we are required to retain
+          under applicable law (e.g., transaction records &mdash; up to 7 years).
         </p>
       </div>
 
-      {/* 6. Файлы cookie */}
+      {/* 6 */}
       <div style={sectionStyle}>
-        <h2 id="faily-cookie" style={headingStyle}>6. Файлы cookie</h2>
+        <h2 id="faily-cookie" style={headingStyle}>6. Cookies</h2>
         <p style={paraStyle}>
-          TubeForge использует следующие типы файлов cookie:
+          TubeForge uses the following types of cookies:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Необходимые (всегда активны):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Essential (always active):</p>
         <ul style={listStyle}>
-          <li>Аутентификация и поддержание сессии (Auth.js)</li>
-          <li>Защита от CSRF-атак</li>
-          <li>Сохранение согласия на cookie</li>
+          <li>Authentication and session management (Auth.js)</li>
+          <li>CSRF protection</li>
+          <li>Cookie consent storage</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Аналитические (только с вашего согласия):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Analytics (consent required):</p>
         <ul style={listStyle}>
-          <li>PostHog — идентификатор сессии и устройства</li>
-          <li>Google Analytics — идентификатор пользователя</li>
+          <li>PostHog &mdash; session and device identifier</li>
+          <li>Google Analytics &mdash; user identifier</li>
         </ul>
 
         <table
           style={{
             width: '100%',
             borderCollapse: 'collapse',
-            fontSize: 13,
+            fontSize: 14,
             lineHeight: 1.7,
-            color: C.sub,
-            marginBottom: 16,
+            color: '#3d3d42',
+            marginBottom: 20,
           }}
         >
           <thead>
-            <tr style={{ borderBottom: `1px solid ${C.border}`, textAlign: 'left' }}>
-              <th style={{ padding: '6px 8px', color: C.text }}>Cookie</th>
-              <th style={{ padding: '6px 8px', color: C.text }}>Тип</th>
-              <th style={{ padding: '6px 8px', color: C.text }}>Срок</th>
-              <th style={{ padding: '6px 8px', color: C.text }}>Назначение</th>
+            <tr style={{ borderBottom: '1px solid #e5e5ea', textAlign: 'left' }}>
+              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Cookie</th>
+              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Type</th>
+              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Duration</th>
+              <th style={{ padding: '8px 10px', color: '#1d1d1f', fontWeight: 600 }}>Purpose</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              <td style={{ padding: '6px 8px' }}>next-auth.session-token</td>
-              <td style={{ padding: '6px 8px' }}>Необходимый</td>
-              <td style={{ padding: '6px 8px' }}>до 30 дней</td>
-              <td style={{ padding: '6px 8px' }}>Аутентификация пользователя</td>
+            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+              <td style={{ padding: '8px 10px' }}>next-auth.session-token</td>
+              <td style={{ padding: '8px 10px' }}>Essential</td>
+              <td style={{ padding: '8px 10px' }}>up to 30 days</td>
+              <td style={{ padding: '8px 10px' }}>User authentication</td>
             </tr>
-            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              <td style={{ padding: '6px 8px' }}>next-auth.csrf-token</td>
-              <td style={{ padding: '6px 8px' }}>Необходимый</td>
-              <td style={{ padding: '6px 8px' }}>Сессия</td>
-              <td style={{ padding: '6px 8px' }}>Защита от CSRF-атак</td>
+            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+              <td style={{ padding: '8px 10px' }}>next-auth.csrf-token</td>
+              <td style={{ padding: '8px 10px' }}>Essential</td>
+              <td style={{ padding: '8px 10px' }}>Session</td>
+              <td style={{ padding: '8px 10px' }}>CSRF protection</td>
             </tr>
-            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              <td style={{ padding: '6px 8px' }}>tf-cookie-consent</td>
-              <td style={{ padding: '6px 8px' }}>Необходимый</td>
-              <td style={{ padding: '6px 8px' }}>Бессрочный</td>
-              <td style={{ padding: '6px 8px' }}>Хранение выбора согласия на cookie</td>
+            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+              <td style={{ padding: '8px 10px' }}>tf-cookie-consent</td>
+              <td style={{ padding: '8px 10px' }}>Essential</td>
+              <td style={{ padding: '8px 10px' }}>Permanent</td>
+              <td style={{ padding: '8px 10px' }}>Cookie consent choice storage</td>
             </tr>
-            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              <td style={{ padding: '6px 8px' }}>ph_*</td>
-              <td style={{ padding: '6px 8px' }}>Аналитический</td>
-              <td style={{ padding: '6px 8px' }}>1 год</td>
-              <td style={{ padding: '6px 8px' }}>PostHog: аналитика использования</td>
+            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+              <td style={{ padding: '8px 10px' }}>ph_*</td>
+              <td style={{ padding: '8px 10px' }}>Analytics</td>
+              <td style={{ padding: '8px 10px' }}>1 year</td>
+              <td style={{ padding: '8px 10px' }}>PostHog: usage analytics</td>
             </tr>
-            <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              <td style={{ padding: '6px 8px' }}>_ga, _ga_*</td>
-              <td style={{ padding: '6px 8px' }}>Аналитический</td>
-              <td style={{ padding: '6px 8px' }}>2 года</td>
-              <td style={{ padding: '6px 8px' }}>Google Analytics: идентификатор</td>
+            <tr style={{ borderBottom: '1px solid #e5e5ea' }}>
+              <td style={{ padding: '8px 10px' }}>_ga, _ga_*</td>
+              <td style={{ padding: '8px 10px' }}>Analytics</td>
+              <td style={{ padding: '8px 10px' }}>2 years</td>
+              <td style={{ padding: '8px 10px' }}>Google Analytics: identifier</td>
             </tr>
           </tbody>
         </table>
 
         <p style={paraStyle}>
-          Аналитические cookie устанавливаются <strong style={{ color: C.text }}>только после вашего
-          явного согласия</strong> через баннер cookie-consent. Вы можете изменить свой выбор в любое время,
-          очистив localStorage браузера или нажав «Настроить» в баннере cookie.
+          Analytics cookies are set <strong style={{ color: '#1d1d1f' }}>only after your
+          explicit consent</strong> via the cookie consent banner. You can change your choice at any time
+          by clearing your browser localStorage or clicking &ldquo;Settings&rdquo; in the cookie banner.
         </p>
       </div>
 
-      {/* 7. Права пользователей (GDPR) */}
+      {/* 7 */}
       <div style={sectionStyle}>
-        <h2 id="prava-polzovateley" style={headingStyle}>7. Ваши права (GDPR)</h2>
+        <h2 id="prava-polzovateley" style={headingStyle}>7. Your Rights (GDPR)</h2>
         <p style={paraStyle}>
-          В соответствии с Общим регламентом по защите данных (GDPR) и другим применимым
-          законодательством, вы имеете следующие права:
+          In accordance with the General Data Protection Regulation (GDPR) and other applicable
+          legislation, you have the following rights:
         </p>
         <ul style={listStyle}>
-          <li><strong style={{ color: C.text }}>Право на доступ</strong> — получить копию ваших персональных данных, которые мы обрабатываем</li>
-          <li><strong style={{ color: C.text }}>Право на исправление</strong> — запросить исправление неточных или неполных данных</li>
-          <li><strong style={{ color: C.text }}>Право на удаление</strong> — запросить удаление ваших персональных данных (право быть забытым)</li>
-          <li><strong style={{ color: C.text }}>Право на ограничение обработки</strong> — ограничить обработку ваших данных в определённых случаях</li>
-          <li><strong style={{ color: C.text }}>Право на переносимость данных</strong> — получить ваши данные в машиночитаемом формате (JSON/CSV)</li>
-          <li><strong style={{ color: C.text }}>Право на возражение</strong> — возразить против обработки данных в маркетинговых целях</li>
-          <li><strong style={{ color: C.text }}>Право на отзыв согласия</strong> — отозвать ранее данное согласие в любое время</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right of access</strong> &mdash; obtain a copy of your personal data that we process</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to rectification</strong> &mdash; request correction of inaccurate or incomplete data</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to erasure</strong> &mdash; request deletion of your personal data (right to be forgotten)</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to restriction</strong> &mdash; restrict processing of your data in certain cases</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to portability</strong> &mdash; receive your data in a machine-readable format (JSON/CSV)</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to object</strong> &mdash; object to processing for marketing purposes</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to withdraw consent</strong> &mdash; withdraw previously given consent at any time</li>
         </ul>
         <p style={paraStyle}>
-          Для реализации любого из указанных прав свяжитесь с нами по адресу{' '}
-          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>privacy@tubeforge.co</a>.
-          Мы обязуемся ответить на ваш запрос в течение 30 дней.
+          To exercise any of these rights, contact us at{' '}
+          <a href="mailto:privacy@tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>privacy@tubeforge.co</a>.
+          We commit to responding to your request within 30 days.
         </p>
         <p style={paraStyle}>
-          Вы также можете экспортировать свои данные через настройки аккаунта в разделе
-          «Настройки» → «Данные и конфиденциальность».
+          You can also export your data through account settings under
+          &ldquo;Settings&rdquo; &rarr; &ldquo;Data &amp; Privacy&rdquo;.
         </p>
       </div>
 
-      {/* 7a. Your California Privacy Rights (CCPA/CPRA) */}
+      {/* 7a */}
       <div style={sectionStyle}>
         <h2 id="ccpa" style={headingStyle}>7a. Your California Privacy Rights (CCPA/CPRA)</h2>
         <p style={paraStyle}>
@@ -314,7 +382,7 @@ export default function PrivacyPage() {
           Privacy Act (CCPA) and the California Privacy Rights Act (CPRA):
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Categories of personal information we collect:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Categories of personal information we collect:</p>
         <ul style={listStyle}>
           <li>Identifiers (name, email address, account ID)</li>
           <li>Commercial information (subscription plan, payment history)</li>
@@ -322,220 +390,89 @@ export default function PrivacyPage() {
           <li>Professional information (YouTube channel data when connected)</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Your rights:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Your rights:</p>
         <ul style={listStyle}>
-          <li><strong style={{ color: C.text }}>Right to Know</strong> — request what personal information we have collected about you</li>
-          <li><strong style={{ color: C.text }}>Right to Delete</strong> — request deletion of your personal information</li>
-          <li><strong style={{ color: C.text }}>Right to Opt-Out</strong> — opt out of the sale or sharing of your personal information</li>
-          <li><strong style={{ color: C.text }}>Right to Non-Discrimination</strong> — exercise your rights without receiving discriminatory treatment</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to Know</strong> &mdash; request what personal information we have collected about you</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to Delete</strong> &mdash; request deletion of your personal information</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to Opt-Out</strong> &mdash; opt out of the sale or sharing of your personal information</li>
+          <li><strong style={{ color: '#1d1d1f' }}>Right to Non-Discrimination</strong> &mdash; exercise your rights without receiving discriminatory treatment</li>
         </ul>
 
         <p style={paraStyle}>
-          <strong style={{ color: C.text }}>We do not sell your personal information.</strong> We do not share your
+          <strong style={{ color: '#1d1d1f' }}>We do not sell your personal information.</strong> We do not share your
           personal information for cross-context behavioral advertising.
         </p>
         <p style={paraStyle}>
           To exercise your California privacy rights, contact us at{' '}
-          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>privacy@tubeforge.co</a>.
+          <a href="mailto:privacy@tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>privacy@tubeforge.co</a>.
           We will respond to verifiable consumer requests within 45 days.
         </p>
       </div>
 
-      {/* 8. Удаление данных */}
+      {/* 8 */}
       <div style={sectionStyle}>
-        <h2 id="udalenie-dannyh" style={headingStyle}>8. Удаление данных</h2>
+        <h2 id="udalenie-dannyh" style={headingStyle}>8. Data Deletion</h2>
         <p style={paraStyle}>
-          Вы можете запросить полное удаление ваших данных через настройки аккаунта или по email.
-          При удалении аккаунта мы:
+          You can request complete deletion of your data through account settings or by email.
+          Upon account deletion, we will:
         </p>
         <ul style={listStyle}>
-          <li>Удалим все персональные данные в течение 30 дней</li>
-          <li>Удалим загруженный контент (видео, обложки) с наших серверов</li>
-          <li>Отзовём доступ к YouTube API</li>
-          <li>Отменим активные подписки через Stripe</li>
+          <li>Delete all personal data within 30 days</li>
+          <li>Remove uploaded content (videos, thumbnails) from our servers</li>
+          <li>Revoke YouTube API access</li>
+          <li>Cancel active subscriptions via Stripe</li>
         </ul>
         <p style={paraStyle}>
-          Некоторые данные могут быть сохранены в анонимизированном виде для статистических целей
-          или в соответствии с требованиями законодательства (записи о транзакциях — до 7 лет).
+          Some data may be retained in anonymized form for statistical purposes
+          or in accordance with legal requirements (transaction records &mdash; up to 7 years).
         </p>
       </div>
 
-      {/* 9. Безопасность данных */}
+      {/* 9 */}
       <div style={sectionStyle}>
-        <h2 id="bezopasnost" style={headingStyle}>9. Безопасность данных</h2>
+        <h2 id="bezopasnost" style={headingStyle}>9. Data Security</h2>
         <p style={paraStyle}>
-          Мы принимаем организационные и технические меры для защиты ваших данных:
+          We implement organizational and technical measures to protect your data:
         </p>
         <ul style={listStyle}>
-          <li>Шифрование данных при передаче (TLS/HTTPS) и хранении</li>
-          <li>Аутентификация через OAuth 2.0 — мы не храним пароли</li>
-          <li>Обработка платежей через Stripe (PCI-DSS Level 1)</li>
-          <li>Регулярное резервное копирование базы данных</li>
-          <li>Ограничение доступа к персональным данным</li>
-        </ul>
-      </div>
-
-
-      {/* 10. Pravovoe osnovanie */}
-      <div style={sectionStyle}>
-        <h2 id="pravovoe-osnovanie" style={headingStyle}>10. Правовое основание обработки</h2>
-        <p style={paraStyle}>
-          Мы обрабатываем ваши персональные данные на следующих правовых основаниях:
-        </p>
-        <ul style={listStyle}>
-          <li>
-            <strong style={{ color: C.text }}>Согласие пользователя</strong> (ст. 6(1)(a) GDPR, ст. 6 ФЗ-152) —
-            аналитические cookie, маркетинговые коммуникации, продуктовая аналитика (PostHog).
-            Вы можете отозвать своё согласие в любое время.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Исполнение договора</strong> (ст. 6(1)(b) GDPR) —
-            предоставление Сервиса, управление аккаунтом, обработка платежей, генерация ИИ-контента.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Законный интерес</strong> (ст. 6(1)(f) GDPR) —
-            обеспечение безопасности Сервиса, предотвращение мошенничества, улучшение продукта,
-            техническая диагностика.
-          </li>
+          <li>Data encryption in transit (TLS/HTTPS) and at rest</li>
+          <li>Authentication via OAuth 2.0 &mdash; we do not store passwords</li>
+          <li>Payment processing via Stripe (PCI-DSS Level 1)</li>
+          <li>Regular database backups</li>
+          <li>Restricted access to personal data</li>
         </ul>
       </div>
 
-      {/* 11. Mezhdunarodnaya peredacha */}
+      {/* 10 */}
       <div style={sectionStyle}>
-        <h2 id="mezhdunarodnaya-peredacha" style={headingStyle}>11. Международная передача данных</h2>
+        <h2 id="izmenenie-politiki" style={headingStyle}>10. Policy Changes</h2>
         <p style={paraStyle}>
-          Для предоставления функциональности Сервиса ваши данные могут передаваться
-          за пределы Европейского Союза и Российской Федерации следующим получателям:
+          We may update this Privacy Policy. We will notify you of significant changes
+          by email and/or via a notification on the platform at least
+          30 days before changes take effect.
         </p>
-        <ul style={listStyle}>
-          <li>
-            <strong style={{ color: C.text }}>OpenAI (США)</strong> — обработка AI-запросов
-            (генерация обложек, текстов, рекомендаций). Передаётся только контент проектов,
-            без персональных данных.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Stripe (США)</strong> — обработка платежей и управление
-            подписками. Stripe сертифицирован по PCI-DSS Level 1.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>ElevenLabs (США/ЕС)</strong> — обработка голоса
-            для функций перевода и озвучивания видео.
-          </li>
-        </ul>
         <p style={paraStyle}>
-          Для обеспечения надлежащего уровня защиты данных при международной передаче
-          используются стандартные договорные оговорки (Standard Contractual Clauses, SCC),
-          утверждённые Европейской комиссией, а также дополнительные технические и организационные меры.
+          By continuing to use the Service after changes take effect, you agree
+          to the updated Policy.
         </p>
       </div>
 
-      {/* 12. Avtomatizirovannoe prinyatie resheniy */}
+      {/* 11 */}
       <div style={sectionStyle}>
-        <h2 id="avtomatizirovannoe-prinyatie" style={headingStyle}>12. Автоматизированное принятие решений</h2>
+        <h2 id="kontakty" style={headingStyle}>11. Contact</h2>
         <p style={paraStyle}>
-          TubeForge использует автоматизированную обработку данных, включая профилирование,
-          для предоставления следующих функций:
-        </p>
-        <ul style={listStyle}>
-          <li>
-            <strong style={{ color: C.text }}>AI-анализ видео</strong> — автоматическая оценка
-            качества обложек, заголовков и метаданных с помощью алгоритмов машинного обучения.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>AI-генерация изображений</strong> — создание обложек
-            и визуального контента на основе ваших параметров с использованием нейросетей.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>AI-рекомендации по SEO</strong> — автоматические
-            предложения по оптимизации метаданных видео.
-          </li>
-        </ul>
-        <p style={paraStyle}>
-          Автоматизированное принятие решений не имеет юридических последствий и не оказывает
-          существенного влияния на вас. Все оценки и рекомендации носят вспомогательный характер.
-        </p>
-        <p style={paraStyle}>
-          В соответствии со ст. 22 GDPR, вы имеете право запросить ручную проверку любого
-          автоматизированного решения. Для этого свяжитесь с нами по адресу{" "}
-          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>privacy@tubeforge.co</a>.
-        </p>
-      </div>
-
-      {/* 13. Prava sub"ektov dannykh po FZ-152 */}
-      <div style={sectionStyle}>
-        <h2 id="prava-fz152" style={headingStyle}>13. Права субъектов данных по ФЗ-152</h2>
-        <p style={paraStyle}>
-          В дополнение к правам, предусмотренным GDPR (раздел 7), в соответствии с Федеральным
-          законом от 27.07.2006 N 152-ФЗ «О персональных данных» вы имеете следующие права:
-        </p>
-        <ul style={listStyle}>
-          <li>
-            <strong style={{ color: C.text }}>Право на получение информации</strong> (ст. 14 ФЗ-152) —
-            получить сведения об обработке ваших персональных данных, включая правовые основания,
-            цели обработки, состав данных и сроки хранения.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Право на уточнение данных</strong> (ст. 14 ФЗ-152) —
-            потребовать уточнения, блокирования или уничтожения неполных, устаревших,
-            неточных или незаконно полученных данных.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Право на отзыв согласия</strong> (ст. 9 ФЗ-152) —
-            отозвать ранее данное согласие на обработку персональных данных в любое время.
-            Отзыв не влияет на законность обработки до момента отзыва.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Право требовать прекращения обработки</strong> (ст. 17 ФЗ-152) —
-            потребовать прекращения обработки персональных данных в целях продвижения товаров
-            и услуг.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Право на обжалование</strong> (ст. 17 ФЗ-152) —
-            обжаловать действия или бездействие оператора в уполномоченный орган по защите
-            прав субъектов персональных данных (Роскомнадзор) или в судебном порядке.
-          </li>
-          <li>
-            <strong style={{ color: C.text }}>Право на возмещение убытков</strong> (ст. 17 ФЗ-152) —
-            требовать возмещения убытков и компенсации морального вреда в судебном порядке.
-          </li>
-        </ul>
-        <p style={paraStyle}>
-          Для реализации прав по ФЗ-152 направьте запрос на{" "}
-          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>privacy@tubeforge.co</a>.
-          Ответ предоставляется в течение 10 рабочих дней с момента получения запроса.
-        </p>
-      </div>
-
-      {/* 14. Изменение политики */}
-      <div style={sectionStyle}>
-        <h2 id="izmenenie-politiki" style={headingStyle}>14. Изменение политики</h2>
-        <p style={paraStyle}>
-          Мы можем обновлять настоящую Политику конфиденциальности. О существенных изменениях
-          мы уведомим вас по электронной почте и/или через уведомление в платформе не менее чем
-          за 30 дней до вступления изменений в силу.
-        </p>
-        <p style={paraStyle}>
-          Продолжая использовать Сервис после вступления изменений в силу, вы соглашаетесь
-          с обновлённой Политикой.
-        </p>
-      </div>
-
-      {/* 15. Контактная информация */}
-      <div style={sectionStyle}>
-        <h2 id="kontakty" style={headingStyle}>15. Контактная информация</h2>
-        <p style={paraStyle}>
-          По всем вопросам, связанным с конфиденциальностью и обработкой персональных данных,
-          обращайтесь:
+          For all privacy and personal data processing questions,
+          please contact:
         </p>
         <p style={paraStyle}>
           Email:{' '}
-          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>
+          <a href="mailto:privacy@tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>
             privacy@tubeforge.co
           </a>
         </p>
         <p style={paraStyle}>
-          Если вы считаете, что ваши права были нарушены, вы имеете право подать жалобу
-          в надзорный орган по защите данных.
+          If you believe your rights have been violated, you have the right to file a complaint
+          with the relevant data protection supervisory authority.
         </p>
       </div>
     </div>

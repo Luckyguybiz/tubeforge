@@ -106,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`} style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, var(--font-sans), sans-serif", backgroundColor: '#fff' }}>
         <Analytics />
         <WebVitals />
         <Providers>{children}</Providers>

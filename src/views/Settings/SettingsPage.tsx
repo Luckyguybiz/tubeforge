@@ -165,27 +165,38 @@ export function SettingsPage() {
     if (val && val !== profile.data?.name) updateProfile.mutate({ name: val });
   }, [profile.data?.name, updateProfile]);
 
+  /* ── Apple design tokens ──────────────────────── */
+  const textPrimary = isDark ? C.text : '#1d1d1f';
+  const textSecondary = isDark ? C.sub : '#86868b';
+  const cardBg = isDark ? C.card : '#ffffff';
+  const cardBorder = isDark ? C.border : '#e5e5ea';
+  const cardShadow = isDark ? 'none' : '0 2px 12px rgba(0,0,0,0.06)';
+  const inputBg = isDark ? C.surface : '#f5f5f7';
+  const secondaryBtnBg = isDark ? C.surface : '#f5f5f7';
+
   /* ── Shared styles ──────────────────────────── */
 
   const sectionStyle: React.CSSProperties = {
-    background: C.card,
-    border: `1px solid ${C.border}`,
+    background: cardBg,
+    border: `1px solid ${cardBorder}`,
     borderRadius: 16,
+    boxShadow: cardShadow,
     padding: '28px 24px',
-    marginBottom: 20,
+    marginBottom: 32,
   };
 
   const sectionHeaderStyle: React.CSSProperties = {
-    fontSize: 17,
-    fontWeight: 700,
-    color: C.text,
+    fontSize: 20,
+    fontWeight: 600,
+    color: textPrimary,
     margin: 0,
     marginBottom: 6,
+    letterSpacing: '-.01em',
   };
 
   const sectionDescStyle: React.CSSProperties = {
     fontSize: 13,
-    color: C.sub,
+    color: textSecondary,
     margin: 0,
     marginBottom: 20,
     lineHeight: 1.5,
@@ -194,7 +205,7 @@ export function SettingsPage() {
   const labelStyle: React.CSSProperties = {
     fontSize: 13,
     fontWeight: 600,
-    color: C.sub,
+    color: textSecondary,
     marginBottom: 6,
     display: 'block',
   };
@@ -202,10 +213,11 @@ export function SettingsPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '12px 16px',
+    minHeight: 44,
     borderRadius: 10,
-    border: `1px solid ${C.border}`,
-    background: C.surface,
-    color: C.text,
+    border: `1px solid ${cardBorder}`,
+    background: inputBg,
+    color: textPrimary,
     fontSize: 14,
     fontFamily: 'inherit',
     outline: 'none',
@@ -215,9 +227,9 @@ export function SettingsPage() {
 
   const readOnlyInputStyle: React.CSSProperties = {
     ...inputStyle,
-    color: C.dim,
+    color: textSecondary,
     cursor: 'not-allowed',
-    background: C.bg,
+    background: isDark ? C.bg : '#f5f5f7',
     borderStyle: 'dashed',
     paddingRight: 36,
   };
@@ -279,10 +291,10 @@ export function SettingsPage() {
                 <div style={{
                   width: 72,
                   height: 72,
-                  borderRadius: 20,
+                  borderRadius: '50%',
                   overflow: 'hidden',
-                  background: C.surface,
-                  border: `2px solid ${C.border}`,
+                  background: inputBg,
+                  border: `2px solid ${cardBorder}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1263,177 +1275,104 @@ export function SettingsPage() {
         <h2 style={sectionHeaderStyle}>{t('settings.themeTitle')}</h2>
         <p style={sectionDescStyle}>{t('settings.themeDesc')}</p>
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {/* Dark theme option */}
+        {/* Apple-style segmented control for theme */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0,
+          padding: '3px',
+          borderRadius: 10,
+          background: isDark ? 'rgba(255,255,255,.06)' : '#e5e5ea',
+        }}>
           <button
             onClick={() => setThemeMode('dark')}
             aria-pressed={themeMode === 'dark'}
             style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: 14,
-              border: `2px solid ${themeMode === 'dark' ? C.accent : C.border}`,
-              background: themeMode === 'dark' ? `${C.accent}08` : C.surface,
+              padding: '10px 24px',
+              minHeight: 44,
+              borderRadius: 8,
+              border: 'none',
+              background: themeMode === 'dark' ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+              color: themeMode === 'dark' ? textPrimary : textSecondary,
+              fontSize: 14,
+              fontWeight: 600,
               cursor: 'pointer',
-              textAlign: 'center',
               fontFamily: 'inherit',
-              transition: 'border-color .15s, background .15s',
-            }}
-          >
-            <div style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: isDark ? C.card : '#111119',
+              transition: 'all .2s ease',
+              boxShadow: themeMode === 'dark' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 10px',
-              border: `1px solid ${isDark ? C.border : '#1e1e2e'}`,
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDark ? C.text : '#e8e8f0'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-              {t('settings.dark')}
-            </div>
-            <div style={{ fontSize: 11, color: C.sub }}>
-              {t('settings.darkDesc')}
-            </div>
-            {themeMode === 'dark' && (
-              <div style={{
-                marginTop: 8,
-                padding: '3px 10px',
-                borderRadius: 6,
-                background: C.accentDim,
-                color: C.accent,
-                fontSize: 10,
-                fontWeight: 700,
-                display: 'inline-block',
-                letterSpacing: 0.3,
-              }}>
-                {t('settings.activeTheme')}
-              </div>
-            )}
+              gap: 8,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            {t('settings.dark')}
           </button>
 
-          {/* Light theme option */}
           <button
             onClick={() => setThemeMode('light')}
             aria-pressed={themeMode === 'light'}
             style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: 14,
-              border: `2px solid ${themeMode === 'light' ? C.accent : C.border}`,
-              background: themeMode === 'light' ? `${C.accent}08` : C.surface,
+              padding: '10px 24px',
+              minHeight: 44,
+              borderRadius: 8,
+              border: 'none',
+              background: themeMode === 'light' ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+              color: themeMode === 'light' ? textPrimary : textSecondary,
+              fontSize: 14,
+              fontWeight: 600,
               cursor: 'pointer',
-              textAlign: 'center',
               fontFamily: 'inherit',
-              transition: 'border-color .15s, background .15s',
-            }}
-          >
-            <div style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: isDark ? '#f3f3f7' : C.card,
+              transition: 'all .2s ease',
+              boxShadow: themeMode === 'light' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 10px',
-              border: `1px solid ${isDark ? '#d4d4de' : C.border}`,
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#1a1a2e' : C.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-              {t('settings.light')}
-            </div>
-            <div style={{ fontSize: 11, color: C.sub }}>
-              {t('settings.lightDesc')}
-            </div>
-            {themeMode === 'light' && (
-              <div style={{
-                marginTop: 8,
-                padding: '3px 10px',
-                borderRadius: 6,
-                background: C.accentDim,
-                color: C.accent,
-                fontSize: 10,
-                fontWeight: 700,
-                display: 'inline-block',
-                letterSpacing: 0.3,
-              }}>
-                {t('settings.activeTheme')}
-              </div>
-            )}
+              gap: 8,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            {t('settings.light')}
           </button>
 
-          {/* System theme option */}
           <button
             onClick={() => setThemeMode('system')}
             aria-pressed={themeMode === 'system'}
             style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: 14,
-              border: `2px solid ${themeMode === 'system' ? C.accent : C.border}`,
-              background: themeMode === 'system' ? `${C.accent}08` : C.surface,
+              padding: '10px 24px',
+              minHeight: 44,
+              borderRadius: 8,
+              border: 'none',
+              background: themeMode === 'system' ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+              color: themeMode === 'system' ? textPrimary : textSecondary,
+              fontSize: 14,
+              fontWeight: 600,
               cursor: 'pointer',
-              textAlign: 'center',
               fontFamily: 'inherit',
-              transition: 'border-color .15s, background .15s',
-            }}
-          >
-            <div style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: isDark ? C.card : C.card,
+              transition: 'all .2s ease',
+              boxShadow: themeMode === 'system' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 10px',
-              border: `1px solid ${C.border}`,
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                <line x1="8" y1="21" x2="16" y2="21" />
-                <line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-              {t('settings.system')}
-            </div>
-            <div style={{ fontSize: 11, color: C.sub }}>
-              {t('settings.systemDesc')}
-            </div>
-            {themeMode === 'system' && (
-              <div style={{
-                marginTop: 8,
-                padding: '3px 10px',
-                borderRadius: 6,
-                background: C.accentDim,
-                color: C.accent,
-                fontSize: 10,
-                fontWeight: 700,
-                display: 'inline-block',
-                letterSpacing: 0.3,
-              }}>
-                {t('settings.activeTheme')}
-              </div>
-            )}
+              gap: 8,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            {t('settings.system')}
           </button>
         </div>
       </div>
@@ -1447,13 +1386,22 @@ export function SettingsPage() {
         </div>
         <p style={sectionDescStyle}>{t('settings.languageDescFull')}</p>
 
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {/* Apple-style segmented language selector */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0,
+          padding: '3px',
+          borderRadius: 10,
+          background: isDark ? 'rgba(255,255,255,.06)' : '#e5e5ea',
+          flexWrap: 'wrap',
+        }}>
           {([
-            { code: 'ru' as const, label: 'Русский', flag: 'RU' },
-            { code: 'en' as const, label: 'English', flag: 'EN' },
-            { code: 'kk' as const, label: 'Қазақша', flag: 'KZ' },
-            { code: 'es' as const, label: 'Español', flag: 'ES' },
-          ]).map(({ code, label, flag }) => (
+            { code: 'ru' as const, label: 'RU' },
+            { code: 'en' as const, label: 'EN' },
+            { code: 'kk' as const, label: 'KZ' },
+            { code: 'es' as const, label: 'ES' },
+          ]).map(({ code, label }) => (
             <button
               key={code}
               onClick={() => {
@@ -1462,31 +1410,21 @@ export function SettingsPage() {
               }}
               aria-pressed={language === code}
               style={{
-                ...btnBase,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '12px 20px',
-                minWidth: 110,
-                background: language === code ? `${C.accent}0c` : C.surface,
-                color: language === code ? C.text : C.sub,
-                border: `2px solid ${language === code ? C.accent : C.border}`,
-                borderRadius: 12,
-                transition: 'border-color .15s, background .15s, color .15s',
+                padding: '10px 20px',
+                minHeight: 44,
+                borderRadius: 8,
+                border: 'none',
+                background: language === code ? (isDark ? 'rgba(255,255,255,.12)' : '#ffffff') : 'transparent',
+                color: language === code ? textPrimary : textSecondary,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all .2s ease',
+                boxShadow: language === code ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               }}
             >
-              <span style={{
-                fontSize: 11,
-                fontWeight: 700,
-                background: language === code ? C.accent : C.dim,
-                color: '#fff',
-                borderRadius: 4,
-                padding: '2px 6px',
-                letterSpacing: 0.5,
-              }}>
-                {flag}
-              </span>
-              <span style={{ fontSize: 14 }}>{label}</span>
+              {label}
             </button>
           ))}
         </div>
@@ -2112,11 +2050,11 @@ export function SettingsPage() {
       {/* ====================================================== */}
       <div style={{
         ...sectionStyle,
-        borderColor: '#dc262630',
-        borderWidth: 2,
+        borderColor: isDark ? 'rgba(220, 38, 38, 0.25)' : 'rgba(220, 38, 38, 0.2)',
+        borderWidth: 1,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/>
             <line x1="12" y1="17" x2="12.01" y2="17"/>

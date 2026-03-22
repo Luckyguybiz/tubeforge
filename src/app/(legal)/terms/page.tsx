@@ -1,318 +1,332 @@
 'use client';
 
-import { useThemeStore } from '@/stores/useThemeStore';
-
 export default function TermsPage() {
-  const C = useThemeStore((s) => s.theme);
-
-  const sectionStyle: React.CSSProperties = { marginBottom: 36 };
-  const headingStyle: React.CSSProperties = { fontSize: 20, fontWeight: 700, marginBottom: 12, color: C.text };
-  const paraStyle: React.CSSProperties = { fontSize: 14, lineHeight: 1.8, color: C.sub, marginBottom: 12 };
-  const listStyle: React.CSSProperties = { fontSize: 14, lineHeight: 2, color: C.sub, paddingLeft: 24, margin: '8px 0 12px' };
+  const sectionStyle: React.CSSProperties = { marginBottom: 40 };
+  const headingStyle: React.CSSProperties = {
+    fontSize: 20,
+    fontWeight: 600,
+    marginBottom: 14,
+    color: '#1d1d1f',
+    letterSpacing: '-0.01em',
+  };
+  const paraStyle: React.CSSProperties = {
+    fontSize: 17,
+    lineHeight: 1.7,
+    color: '#3d3d42',
+    marginBottom: 14,
+  };
+  const listStyle: React.CSSProperties = {
+    fontSize: 17,
+    lineHeight: 1.9,
+    color: '#3d3d42',
+    paddingLeft: 28,
+    margin: '10px 0 14px',
+  };
+  const accentColor = '#6366f1';
 
   return (
     <div>
       <h1
         style={{
-          fontSize: 32,
-          fontWeight: 800,
-          letterSpacing: '-.02em',
+          fontSize: 40,
+          fontWeight: 600,
+          letterSpacing: '-0.02em',
           marginBottom: 8,
+          color: '#1d1d1f',
+          lineHeight: 1.15,
         }}
       >
-        Условия использования
+        Terms of Service
       </h1>
-      <p style={{ fontSize: 13, color: C.dim, marginBottom: 40 }}>
-        Дата вступления в силу: 20 марта 2026
+      <p style={{ fontSize: 14, color: '#86868b', marginBottom: 24 }}>
+        Effective date: March 20, 2026
       </p>
 
-      {/* 1. Описание сервиса */}
+      {/* Table of contents */}
+      <nav
+        style={{
+          background: '#f5f5f7',
+          borderRadius: 12,
+          padding: '20px 24px',
+          marginBottom: 48,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#86868b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Table of Contents
+        </div>
+        <ol
+          style={{
+            margin: 0,
+            paddingLeft: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          }}
+        >
+          {[
+            ['opisanie-servisa', 'Service Description'],
+            ['registratsiya', 'Registration & Account'],
+            ['podpiski', 'Subscriptions & Payments'],
+            ['youtube-tos', 'YouTube Terms of Service'],
+            ['dopustimoe-ispolzovanie', 'Acceptable Use'],
+            ['intellektualnaya-sobstvennost', 'Intellectual Property'],
+            ['ogranichenie-otvetstvennosti', 'Limitation of Liability'],
+            ['izmenenie-usloviy', 'Changes to Terms'],
+            ['prekrashchenie', 'Termination'],
+            ['primenimoe-pravo', 'Governing Law'],
+            ['kontakty', 'Contact'],
+          ].map(([id, label]) => (
+            <li key={id} style={{ fontSize: 14, lineHeight: 1.6 }}>
+              <a
+                href={`#${id}`}
+                style={{
+                  color: accentColor,
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                }}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {/* 1 */}
       <div style={sectionStyle}>
-        <h2 id="opisanie-servisa" style={headingStyle}>1. Описание сервиса</h2>
+        <h2 id="opisanie-servisa" style={headingStyle}>1. Service Description</h2>
         <p style={paraStyle}>
-          TubeForge (далее — «Сервис», «мы», «нас») — это ИИ-платформа для YouTube-креаторов,
-          предоставляющая инструменты для создания контента, генерации обложек, оптимизации метаданных,
-          видеомонтажа и аналитики каналов. Сервис доступен по адресу{' '}
-          <a href="https://tubeforge.co" style={{ color: C.accent }}>tubeforge.co</a>.
+          TubeForge (hereinafter &mdash; &ldquo;Service&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is an AI-powered platform for YouTube creators,
+          providing tools for content creation, thumbnail generation, metadata optimization,
+          video editing, and channel analytics. The Service is available at{' '}
+          <a href="https://tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>tubeforge.co</a>.
         </p>
         <p style={paraStyle}>
-          Используя Сервис, вы подтверждаете, что ознакомились с настоящими Условиями использования
-          (далее — «Условия») и принимаете их в полном объёме. Если вы не согласны с какой-либо
-          частью Условий, прекратите использование Сервиса.
+          By using the Service, you confirm that you have read these Terms of Service
+          (hereinafter &mdash; &ldquo;Terms&rdquo;) and accept them in full. If you disagree with any
+          part of the Terms, please stop using the Service.
         </p>
       </div>
 
-      {/* 2. Регистрация и аккаунт */}
+      {/* 2 */}
       <div style={sectionStyle}>
-        <h2 id="registratsiya" style={headingStyle}>2. Регистрация и аккаунт</h2>
+        <h2 id="registratsiya" style={headingStyle}>2. Registration & Account</h2>
         <p style={paraStyle}>
-          Регистрация в TubeForge осуществляется через Google OAuth. При регистрации
-          мы получаем ваше имя, email и фото профиля из Google-аккаунта. Мы не храним
-          паролей — аутентификация происходит через протокол OAuth 2.0.
+          Registration with TubeForge is done via Google OAuth. During registration,
+          we receive your name, email, and profile photo from your Google account. We do not store
+          passwords &mdash; authentication is handled via the OAuth 2.0 protocol.
         </p>
         <p style={paraStyle}>
           You must be at least 13 years old to use TubeForge. In jurisdictions where parental consent
           is required, the minimum age is 16.
         </p>
         <p style={paraStyle}>
-          При создании аккаунта вы обязуетесь:
+          When creating an account, you agree to:
         </p>
         <ul style={listStyle}>
-          <li>Предоставлять достоверную информацию</li>
-          <li>Обеспечивать безопасность своего Google-аккаунта, используемого для входа</li>
-          <li>Незамедлительно уведомлять нас о несанкционированном доступе к аккаунту</li>
-          <li>Не передавать доступ к аккаунту третьим лицам</li>
-          <li>Нести ответственность за все действия, совершённые через ваш аккаунт</li>
+          <li>Provide accurate information</li>
+          <li>Ensure the security of your Google account used for sign-in</li>
+          <li>Immediately notify us of any unauthorized access to your account</li>
+          <li>Not share account access with third parties</li>
+          <li>Be responsible for all actions performed through your account</li>
         </ul>
         <p style={paraStyle}>
-          TubeForge не несёт ответственности за убытки, возникшие в результате несанкционированного
-          использования вашего аккаунта, если вы не обеспечили его надлежащую защиту.
+          TubeForge is not liable for losses arising from unauthorized use of your account
+          if you failed to protect it adequately.
         </p>
       </div>
 
-      {/* 3. Подписки и оплата */}
+      {/* 3 */}
       <div style={sectionStyle}>
-        <h2 id="podpiski" style={headingStyle}>3. Подписки и оплата</h2>
+        <h2 id="podpiski" style={headingStyle}>3. Subscriptions & Payments</h2>
         <p style={paraStyle}>
-          TubeForge предлагает следующие тарифные планы:
+          TubeForge offers the following plans:
         </p>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: C.text }}>Free:</strong> бесплатный тариф с ограниченным
-            функционалом
+            <strong style={{ color: '#1d1d1f' }}>Free:</strong> limited functionality at no cost
           </li>
           <li>
-            <strong style={{ color: C.text }}>Pro ($12/mo):</strong> расширенный функционал для
-            индивидуальных авторов
+            <strong style={{ color: '#1d1d1f' }}>Pro ($12/mo):</strong> extended features for individual creators
           </li>
           <li>
-            <strong style={{ color: C.text }}>Studio ($30/mo):</strong> командный тариф с полным
-            доступом ко всем инструментам
+            <strong style={{ color: '#1d1d1f' }}>Studio ($30/mo):</strong> team plan with full access to all tools
           </li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Автопродление:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Auto-renewal:</p>
         <p style={paraStyle}>
-          Платные подписки оплачиваются ежемесячно через Stripe. Оплата списывается автоматически
-          в начале каждого расчётного периода. Подписка продлевается автоматически до момента отмены.
+          Paid subscriptions are billed monthly via Stripe. Payment is charged automatically
+          at the beginning of each billing period. Subscriptions renew automatically until canceled.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Отмена подписки:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Cancellation:</p>
         <p style={paraStyle}>
-          Вы можете отменить подписку в любое время через раздел «Биллинг» в настройках аккаунта.
-          После отмены доступ к платным функциям сохраняется до конца оплаченного периода.
-          Возврат средств за текущий расчётный период не производится, за исключением случаев,
-          предусмотренных законодательством.
+          You can cancel your subscription at any time through the &ldquo;Billing&rdquo; section in your account settings.
+          After cancellation, access to paid features is retained until the end of the paid period.
+          No refunds are issued for the current billing period, except as required by law.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Возврат средств:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Refunds:</p>
         <p style={paraStyle}>
-          Если вы не удовлетворены сервисом, обратитесь в поддержку в течение 14 дней после оплаты
-          для получения полного возврата.
+          If you are not satisfied with the service, contact support within 14 days of payment
+          for a full refund.
         </p>
       </div>
 
-      {/* 3a. YouTube Terms of Service */}
+      {/* 3a */}
       <div style={sectionStyle}>
         <h2 id="youtube-tos" style={headingStyle}>3a. YouTube Terms of Service</h2>
         <p style={paraStyle}>
           By using TubeForge&apos;s YouTube features (analytics, channel management, video tools), you agree
           to the{' '}
-          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
             YouTube Terms of Service
           </a>.
           Your use of YouTube data is also subject to the{' '}
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none' }}>
             Google Privacy Policy
           </a>.
         </p>
       </div>
 
-      {/* 4. Допустимое использование */}
+      {/* 4 */}
       <div style={sectionStyle}>
-        <h2 id="dopustimoe-ispolzovanie" style={headingStyle}>4. Допустимое использование</h2>
+        <h2 id="dopustimoe-ispolzovanie" style={headingStyle}>4. Acceptable Use</h2>
         <p style={paraStyle}>
-          При использовании TubeForge запрещается:
+          When using TubeForge, the following is prohibited:
         </p>
         <ul style={listStyle}>
-          <li>Создание и распространение спама, вводящего в заблуждение контента</li>
-          <li>Создание контента, разжигающего ненависть (hate speech), дискриминацию или насилие</li>
-          <li>Загрузка контента, нарушающего авторские права третьих лиц (copyright violation)</li>
-          <li>Создание или распространение нелегального контента (illegal content)</li>
-          <li>Попытки обойти ограничения тарифного плана или системы безопасности</li>
-          <li>Использование автоматизированных средств для массового доступа к Сервису</li>
-          <li>Реверс-инжиниринг, декомпиляция или дизассемблирование программного обеспечения</li>
-          <li>Перепродажа или сублицензирование доступа к Сервису</li>
-          <li>Нарушение Условий использования YouTube, политик Google или законодательства</li>
+          <li>Creating and distributing spam or misleading content</li>
+          <li>Creating content that incites hatred (hate speech), discrimination, or violence</li>
+          <li>Uploading content that infringes third-party copyrights</li>
+          <li>Creating or distributing illegal content</li>
+          <li>Attempting to circumvent plan limits or security systems</li>
+          <li>Using automated means for mass access to the Service</li>
+          <li>Reverse engineering, decompiling, or disassembling the software</li>
+          <li>Reselling or sublicensing access to the Service</li>
+          <li>Violating YouTube Terms of Service, Google policies, or applicable law</li>
         </ul>
         <p style={paraStyle}>
-          Нарушение данных правил может привести к немедленной приостановке или удалению аккаунта
-          без предварительного уведомления и возврата средств.
+          Violation of these rules may result in immediate suspension or deletion of your account
+          without prior notice or refund.
         </p>
       </div>
 
-
-      {/* 5. Сторонние сервисы и API */}
+      {/* 5 */}
       <div style={sectionStyle}>
-        <h2 id="storonnie-servisy" style={headingStyle}>5. Сторонние сервисы и API</h2>
+        <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>5. Intellectual Property</h2>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>YouTube API:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Your content:</p>
         <p style={paraStyle}>
-          TubeForge использует YouTube API Services для предоставления функциональности,
-          связанной с анализом и управлением YouTube-контентом. Используя эти функции,
-          вы также соглашаетесь с{' '}
-          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-            Условиями использования YouTube
-          </a>{' '}
-          и{' '}
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-            Политикой конфиденциальности Google
-          </a>.
-          Подробнее о YouTube API Services:{' '}
-          <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-            YouTube API Services Terms of Service
-          </a>.
-        </p>
-        <p style={paraStyle}>
-          Вы можете отозвать доступ TubeForge к вашим данным YouTube в любое время через{' '}
-          <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
-            настройки безопасности Google
-          </a>.
+          Content created by you using TubeForge&apos;s AI tools (thumbnails, texts,
+          metadata, scripts) belongs to you. TubeForge does not claim intellectual property rights
+          over user content.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Перевод и озвучивание видео (ElevenLabs):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>Our platform:</p>
         <p style={paraStyle}>
-          Функции перевода и озвучивания видео реализованы с использованием сторонних
-          ИИ-сервисов, включая ElevenLabs. При использовании этих функций аудиоданные
-          вашего видео передаются в ElevenLabs для обработки. TubeForge не несёт
-          ответственности за качество, точность перевода или озвучивания, выполненного
-          сторонними сервисами.
+          The TubeForge platform, including design, code, logos, trademarks, and documentation,
+          is the intellectual property of TubeForge and is protected by copyright law. Copying, modification, or distribution
+          of any part of the platform without our written consent is prohibited.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Генерация ИИ-контента (OpenAI):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: '#1d1d1f' }}>License:</p>
         <p style={paraStyle}>
-          Генерация обложек, текстов и рекомендаций осуществляется с использованием
-          API OpenAI. Контент, созданный с помощью ИИ, может содержать неточности
-          и требует проверки пользователем перед публикацией.
+          You grant TubeForge a limited, non-exclusive license to store
+          and process your content solely for the purpose of providing Service functionality.
+          This license terminates when your account is deleted.
         </p>
       </div>
 
-      {/* 6. Интеллектуальная собственность */}
+      {/* 6 */}
       <div style={sectionStyle}>
-        <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>6. Интеллектуальная собственность</h2>
-
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Ваш контент:</p>
+        <h2 id="ogranichenie-otvetstvennosti" style={headingStyle}>6. Limitation of Liability</h2>
         <p style={paraStyle}>
-          Контент, созданный вами с помощью ИИ-инструментов TubeForge (обложки, тексты,
-          метаданные, скрипты), принадлежит вам. TubeForge не претендует на права
-          интеллектуальной собственности на пользовательский контент.
-        </p>
-
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Наша платформа:</p>
-        <p style={paraStyle}>
-          Платформа TubeForge, включая дизайн, код, логотипы, торговые марки и документацию,
-          является интеллектуальной собственностью TubeForge и защищена законодательством
-          об авторском праве. Запрещается копирование, модификация или распространение
-          любой части платформы без нашего письменного согласия.
-        </p>
-
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Лицензия:</p>
-        <p style={paraStyle}>
-          Вы предоставляете TubeForge ограниченную, неисключительную лицензию на хранение
-          и обработку вашего контента исключительно для предоставления функциональности Сервиса.
-          Эта лицензия прекращается при удалении вашего аккаунта.
-        </p>
-      </div>
-
-      {/* 6. Ограничение ответственности */}
-      <div style={sectionStyle}>
-        <h2 id="ogranichenie-otvetstvennosti" style={headingStyle}>7. Ограничение ответственности</h2>
-        <p style={paraStyle}>
-          Сервис предоставляется «как есть» (as is) без каких-либо гарантий, явных или
-          подразумеваемых. TubeForge не гарантирует:
+          The Service is provided &ldquo;as is&rdquo; without any warranties, express or
+          implied. TubeForge does not guarantee:
         </p>
         <ul style={listStyle}>
-          <li>Бесперебойную и безошибочную работу Сервиса</li>
-          <li>Конкретные результаты от использования ИИ-инструментов</li>
-          <li>Рост показателей или монетизацию YouTube-канала</li>
-          <li>Сохранность данных в случае форс-мажорных обстоятельств</li>
+          <li>Uninterrupted and error-free operation of the Service</li>
+          <li>Specific results from using AI tools</li>
+          <li>Growth in metrics or monetization of your YouTube channel</li>
+          <li>Data safety in case of force majeure</li>
         </ul>
         <p style={paraStyle}>
-          Максимальная совокупная ответственность TubeForge перед пользователем ограничена суммой,
-          уплаченной пользователем за последние 12 месяцев. TubeForge не несёт ответственности за
-          косвенные, случайные, особые или штрафные убытки, включая упущенную выгоду,
-          потерю данных или прерывание деятельности.
+          The maximum aggregate liability of TubeForge to a user is limited to the amount
+          paid by the user in the last 12 months. TubeForge is not liable for
+          indirect, incidental, special, or punitive damages, including lost profits,
+          data loss, or business interruption.
         </p>
       </div>
 
-      {/* 7. Изменение условий */}
+      {/* 7 */}
       <div style={sectionStyle}>
-        <h2 id="izmenenie-usloviy" style={headingStyle}>8. Изменение условий</h2>
+        <h2 id="izmenenie-usloviy" style={headingStyle}>7. Changes to Terms</h2>
         <p style={paraStyle}>
-          TubeForge оставляет за собой право изменять настоящие Условия. О существенных изменениях
-          мы уведомим вас <strong style={{ color: C.text }}>не менее чем за 30 дней</strong> до вступления
-          изменений в силу одним из следующих способов:
+          TubeForge reserves the right to modify these Terms. We will notify you of significant changes
+          <strong style={{ color: '#1d1d1f' }}> at least 30 days</strong> before they take effect via one of the following methods:
         </p>
         <ul style={listStyle}>
-          <li>По электронной почте, указанной в вашем аккаунте</li>
-          <li>Через уведомление в платформе</li>
-          <li>Через обновление даты на данной странице</li>
+          <li>By email to the address associated with your account</li>
+          <li>Via a notification on the platform</li>
+          <li>By updating the date on this page</li>
         </ul>
         <p style={paraStyle}>
-          Продолжая использовать Сервис после вступления изменений в силу, вы соглашаетесь
-          с обновлёнными Условиями. Если вы не согласны с изменениями, вы можете удалить
-          аккаунт до вступления новых Условий в силу.
+          By continuing to use the Service after changes take effect, you agree
+          to the updated Terms. If you disagree with changes, you may delete
+          your account before the new Terms take effect.
         </p>
       </div>
 
-      {/* 8. Прекращение действия */}
+      {/* 8 */}
       <div style={sectionStyle}>
-        <h2 id="prekrashchenie" style={headingStyle}>9. Прекращение действия</h2>
+        <h2 id="prekrashchenie" style={headingStyle}>8. Termination</h2>
         <p style={paraStyle}>
-          TubeForge может приостановить или прекратить доступ к вашему аккаунту в случаях:
+          TubeForge may suspend or terminate access to your account in the following cases:
         </p>
         <ul style={listStyle}>
-          <li>Нарушения настоящих Условий использования</li>
-          <li>Нарушения правил допустимого использования</li>
-          <li>Неоплаты подписки</li>
-          <li>По вашему запросу на удаление аккаунта</li>
-          <li>По требованию законодательства</li>
+          <li>Violation of these Terms of Service</li>
+          <li>Violation of acceptable use policies</li>
+          <li>Non-payment of subscription</li>
+          <li>At your request to delete your account</li>
+          <li>As required by law</li>
         </ul>
         <p style={paraStyle}>
-          При прекращении действия аккаунта вы потеряете доступ к данным и контенту.
-          Рекомендуем экспортировать важные данные до удаления аккаунта.
+          Upon account termination, you will lose access to data and content.
+          We recommend exporting important data before deleting your account.
         </p>
       </div>
 
-      {/* 9. Применимое право */}
+      {/* 9 */}
       <div style={sectionStyle}>
-        <h2 id="primenimoe-pravo" style={headingStyle}>10. Применимое право</h2>
+        <h2 id="primenimoe-pravo" style={headingStyle}>9. Governing Law</h2>
         <p style={paraStyle}>
-          Настоящие Условия регулируются и толкуются в соответствии с действующим законодательством
-          Европейского Союза, включая Общий регламент по защите данных (GDPR).
+          These Terms are governed by and construed in accordance with the applicable legislation
+          of the European Union, including the General Data Protection Regulation (GDPR).
         </p>
         <p style={paraStyle}>
-          Все споры, возникающие из настоящих Условий, подлежат разрешению путём переговоров.
-          В случае невозможности разрешения спора путём переговоров он передаётся на рассмотрение
-          в компетентный суд в соответствии с применимым законодательством.
+          All disputes arising from these Terms shall be resolved through negotiation.
+          If a dispute cannot be resolved through negotiation, it shall be referred
+          to the competent court in accordance with applicable law.
         </p>
       </div>
 
-      {/* 10. Контакты */}
+      {/* 10 */}
       <div style={sectionStyle}>
-        <h2 id="kontakty" style={headingStyle}>11. Контакты</h2>
+        <h2 id="kontakty" style={headingStyle}>10. Contact</h2>
         <p style={paraStyle}>
-          По всем вопросам, связанным с настоящими Условиями использования, обращайтесь:
+          For all questions regarding these Terms of Service, please contact:
         </p>
         <p style={paraStyle}>
           Email:{' '}
-          <a href="mailto:legal@tubeforge.co" style={{ color: C.accent }}>
+          <a href="mailto:legal@tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>
             legal@tubeforge.co
           </a>
         </p>
         <p style={paraStyle}>
-          Общая поддержка:{' '}
-          <a href="mailto:support@tubeforge.co" style={{ color: C.accent }}>
+          General support:{' '}
+          <a href="mailto:support@tubeforge.co" style={{ color: accentColor, textDecoration: 'none' }}>
             support@tubeforge.co
           </a>
         </p>
