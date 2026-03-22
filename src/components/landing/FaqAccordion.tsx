@@ -15,18 +15,16 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {items.map((item, i) => {
         const isOpen = openFaq === i;
         return (
           <div
             key={i}
             style={{
-              background: isOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-              borderRadius: 16,
-              border: '1px solid ' + (isOpen ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)'),
+              borderTop: i === 0 ? '1px solid #e5e5ea' : 'none',
+              borderBottom: '1px solid #e5e5ea',
               overflow: 'hidden',
-              transition: 'all 0.3s ease',
             }}
           >
             <button
@@ -37,7 +35,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 16,
-                padding: '20px 24px',
+                padding: '20px 0',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
@@ -45,13 +43,13 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <span style={{ fontSize: 16, fontWeight: 600, color: '#ffffff' }}>{item.q}</span>
+              <span style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f' }}>{item.q}</span>
               <svg
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255,255,255,0.3)"
+                stroke="#86868b"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -69,10 +67,10 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 maxHeight: isOpen ? 300 : 0,
                 overflow: 'hidden',
                 transition: 'max-height 0.35s cubic-bezier(.4,0,.2,1), padding 0.35s cubic-bezier(.4,0,.2,1)',
-                padding: isOpen ? '0 24px 20px' : '0 24px 0',
+                padding: isOpen ? '0 0 20px' : '0 0 0',
               }}
             >
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: 0 }}>{item.a}</p>
+              <p style={{ fontSize: 17, color: '#86868b', lineHeight: 1.6, margin: 0 }}>{item.a}</p>
             </div>
           </div>
         );
