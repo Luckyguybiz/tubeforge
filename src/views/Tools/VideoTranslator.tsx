@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WaitingGame } from '@/components/ui/WaitingGame';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -27,6 +27,9 @@ const LANGUAGES: { code: string; name: string; flag: string }[] = [
   { code: 'nl', name: 'Nederlands', flag: '\uD83C\uDDF3\uD83C\uDDF1' },
 ];
 
+/** Max file size: 500 MB */
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
 type DubStatus = 'idle' | 'uploading' | 'processing' | 'dubbed' | 'error';
 
 export function VideoTranslator() {
@@ -37,8 +40,8 @@ export function VideoTranslator() {
 
   const [sourceUrl, setSourceUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [sourceLang, setSourceLang] = useState('auto');
-  const [targetLang, setTargetLang] = useState('en');
+  const [sourceLang, setSourceLang] = useState('en');
+  const [targetLang, setTargetLang] = useState('ru');
   const [numSpeakers, setNumSpeakers] = useState(1);
   const [dropBg, setDropBg] = useState(true);
   const [addSubtitles, setAddSubtitles] = useState(false);
@@ -48,6 +51,7 @@ export function VideoTranslator() {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('');
   const [expectedDuration, setExpectedDuration] = useState(0);
+  const [fileWarning, setFileWarning] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +62,47 @@ export function VideoTranslator() {
     border: `1px solid ${C?.border ?? '#eee'}`,
     borderRadius: 16, padding: 24, marginBottom: 12,
   };
+
+  /* ── Estimated processing time based on file size ─────────── */
+  const estimatedTime = useMemo(() => {
+    if (!file) return null;
+    // Rough estimate: ~2 min per 10 MB with highest_resolution
+    const sizeMB = file.size / (1024 * 1024);
+    const minutes = Math.max(2, Math.ceil(sizeMB / 5));
+    return minutes;
+  }, [file]);
+
+  /* ── File validation on select ────────────────────────────── */
+  const handleFileSelect = useCallback((f: File) => {
+    setFileWarning(null);
+
+    // Validate MIME type
+    if (!f.type.startsWith('video/') && !f.type.startsWith('audio/')) {
+      setFileWarning(t('videoTranslator.invalidFileType') || 'Invalid file type. Please upload a video or audio file.');
+      return;
+    }
+
+    // Validate file size
+    if (f.size > MAX_FILE_SIZE) {
+      setFileWarning(
+        (t('videoTranslator.fileTooLarge') || 'File too large') +
+        ` (${(f.size / 1024 / 1024).toFixed(0)} MB). ` +
+        (t('videoTranslator.maxFileSize') || 'Maximum is 500 MB.'),
+      );
+      return;
+    }
+
+    // Warn if file is very small (likely short video = worse voice cloning)
+    if (f.size < 1 * 1024 * 1024) {
+      setFileWarning(
+        t('videoTranslator.shortVideoWarning') ||
+        'Short videos (under 10 seconds) may produce less accurate voice cloning. For best results, use videos with 30+ seconds of clear speech.',
+      );
+    }
+
+    setFile(f);
+    setSourceUrl('');
+  }, [t]);
 
   /* ── Cleanup polling on unmount ────────────────────────────── */
   useEffect(() => {
@@ -143,7 +188,7 @@ export function VideoTranslator() {
       setStatus('error');
       setError((err as Error)?.message ?? useLocaleStore.getState().t('videoTranslator.unknownError'));
     }
-  }, [sourceUrl, file, sourceLang, targetLang, startPolling]);
+  }, [sourceUrl, file, sourceLang, targetLang, numSpeakers, dropBg, startPolling]);
 
   /* ── Download ──────────────────────────────────────────────── */
   const handleDownload = useCallback(() => {
@@ -155,10 +200,11 @@ export function VideoTranslator() {
   const handleReset = useCallback(() => {
     setStatus('idle'); setError(null); setDubbingId(null);
     setProgress(0); setFile(null); setSourceUrl('');
+    setFileWarning(null);
     if (pollRef.current) clearInterval(pollRef.current);
   }, []);
 
-  const isReady = (sourceUrl.trim() || file) && targetLang;
+  const isReady = (sourceUrl.trim() || file) && targetLang && sourceLang !== '';
 
   /* ── Render ─────────────────────────────────────────────────── */
   return (
@@ -192,6 +238,27 @@ export function VideoTranslator() {
 
       {status === 'idle' && (
         <>
+          {/* Voice Cloning Quality Tip */}
+          <div style={{
+            ...card,
+            marginBottom: 16,
+            background: isDark ? 'rgba(124,92,252,0.06)' : 'rgba(124,92,252,0.03)',
+            border: `1px solid ${isDark ? 'rgba(124,92,252,0.2)' : 'rgba(124,92,252,0.15)'}`,
+            display: 'flex', gap: 12, alignItems: 'flex-start', padding: 16,
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 4 }}>
+                {t('videoTranslator.qualityTipTitle') || 'Voice Cloning Quality Tips'}
+              </div>
+              <div style={{ fontSize: 11, color: C?.sub ?? '#888', lineHeight: 1.5 }}>
+                {t('videoTranslator.qualityTipText') || 'For best voice cloning: use videos with clear speech, minimal background noise, and 30+ seconds of audio. Always specify the source language instead of using auto-detect. Single-speaker videos produce the most accurate voice clones.'}
+              </div>
+            </div>
+          </div>
+
           {/* Source: URL or File */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             {/* URL input */}
@@ -199,7 +266,7 @@ export function VideoTranslator() {
               <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.videoLink')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, border: `1px solid ${C?.border ?? '#eee'}`, background: C?.bg ?? '#fafafa' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C?.dim ?? '#aaa'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                <input type="text" value={sourceUrl} onChange={(e) => { setSourceUrl(e.target.value); setFile(null); }}
+                <input type="text" value={sourceUrl} onChange={(e) => { setSourceUrl(e.target.value); setFile(null); setFileWarning(null); }}
                   placeholder="YouTube, TikTok, Vimeo..."
                   style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: C?.text ?? '#111', fontSize: 14, fontFamily: 'inherit' }}
                 />
@@ -211,7 +278,7 @@ export function VideoTranslator() {
             <div style={card}>
               <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.orUploadFile')}</div>
               <input ref={fileRef} type="file" accept="video/*,audio/*" style={{ display: 'none' }}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) { setFile(f); setSourceUrl(''); } }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
               />
               <button onClick={() => fileRef.current?.click()} style={{
                 width: '100%', padding: '20px 16px', borderRadius: 10,
@@ -228,6 +295,24 @@ export function VideoTranslator() {
                 )}
               </button>
               <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 8 }}>MP4, MOV, MP3, WAV {`\u2022 ${t('videoTranslator.upTo500mb')}`}</div>
+              {/* File validation warning */}
+              {fileWarning && (
+                <div style={{
+                  marginTop: 8, padding: '8px 10px', borderRadius: 8,
+                  background: isDark ? 'rgba(234,179,8,0.1)' : 'rgba(234,179,8,0.08)',
+                  border: '1px solid rgba(234,179,8,0.3)',
+                  fontSize: 11, color: '#b45309', lineHeight: 1.4,
+                }}>
+                  {fileWarning}
+                </div>
+              )}
+              {/* Estimated processing time */}
+              {file && estimatedTime && !fileWarning?.includes('Invalid') && !fileWarning?.includes('too large') && (
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {t('videoTranslator.estimatedTime') || 'Estimated processing time'}: ~{estimatedTime} {t('videoTranslator.min') || 'min'}
+                </div>
+              )}
             </div>
           </div>
 
@@ -235,16 +320,39 @@ export function VideoTranslator() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'start', marginBottom: 12 }}>
             {/* Source lang */}
             <div style={card}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.sourceLanguage')}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111' }}>{t('videoTranslator.sourceLanguage')}</div>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                  background: isDark ? 'rgba(234,179,8,0.15)' : 'rgba(234,179,8,0.1)',
+                  color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em',
+                }}>
+                  {t('videoTranslator.important') || 'Important'}
+                </div>
+              </div>
               <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)} style={{
                 width: '100%', padding: '10px 12px', borderRadius: 10,
-                border: `1px solid ${C?.border ?? '#eee'}`, background: C?.bg ?? '#fafafa',
+                border: `1px solid ${sourceLang === 'auto' ? 'rgba(234,179,8,0.5)' : (C?.border ?? '#eee')}`,
+                background: C?.bg ?? '#fafafa',
                 color: C?.text ?? '#111', fontSize: 14, fontFamily: 'inherit', outline: 'none',
                 appearance: 'none', cursor: 'pointer',
               }}>
-                <option value="auto">{`\uD83C\uDF10 ${t('videoTranslator.autoDetect')}`}</option>
+                <option value="auto">{`\uD83C\uDF10 ${t('videoTranslator.autoDetect')} (${t('videoTranslator.notRecommended') || 'not recommended'})`}</option>
                 {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
               </select>
+              {sourceLang === 'auto' && (
+                <div style={{
+                  marginTop: 8, padding: '6px 10px', borderRadius: 6,
+                  background: isDark ? 'rgba(234,179,8,0.1)' : 'rgba(234,179,8,0.06)',
+                  border: '1px solid rgba(234,179,8,0.25)',
+                  fontSize: 10, color: '#b45309', lineHeight: 1.4,
+                }}>
+                  {t('videoTranslator.autoDetectWarning') || 'Auto-detect produces lower quality voice cloning. Please select the actual source language for best results.'}
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 6 }}>
+                {t('videoTranslator.sourceLangHint') || 'Specifying the correct source language significantly improves voice cloning accuracy'}
+              </div>
             </div>
 
             {/* Arrow */}
@@ -308,7 +416,32 @@ export function VideoTranslator() {
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}>{t('videoTranslator.auto')}</button>
                 </div>
+                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>
+                  {t('videoTranslator.speakersHint') || 'Set to 1 for single-speaker videos (best voice cloning)'}
+                </div>
               </div>
+
+              {/* Drop background audio */}
+              <div>
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>
+                  {t('videoTranslator.backgroundAudio') || 'Background audio'}
+                </div>
+                <button onClick={() => setDropBg(!dropBg)} style={{
+                  padding: '8px 16px', borderRadius: 8,
+                  border: `1px solid ${dropBg ? '#22c55e' : (C?.border ?? '#eee')}`,
+                  background: dropBg ? (isDark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.06)') : 'transparent',
+                  color: dropBg ? '#16a34a' : (C?.sub ?? '#888'),
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                }}>
+                  {dropBg
+                    ? (t('videoTranslator.bgDropped') || 'Removed (cleaner voice)')
+                    : (t('videoTranslator.bgKept') || 'Keep background audio')}
+                </button>
+                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>
+                  {t('videoTranslator.bgHint') || 'Removing background audio improves voice cloning quality'}
+                </div>
+              </div>
+
               {/* Add subtitles */}
               <div>
                 <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{t('videoTranslator.subtitles')}</div>
@@ -321,6 +454,23 @@ export function VideoTranslator() {
                 }}>{addSubtitles ? '\u2705 \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C' : '\u274C \u0411\u0435\u0437 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432'}</button>
                 <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{t('videoTranslator.overlaySubtitles')}</div>
               </div>
+            </div>
+          </div>
+
+          {/* Quality Settings Info */}
+          <div style={{
+            ...card, marginBottom: 16, padding: 16,
+            background: isDark ? 'rgba(34,197,94,0.04)' : 'rgba(34,197,94,0.02)',
+            border: `1px solid ${isDark ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.1)'}`,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              {t('videoTranslator.activeOptimizations') || 'Active Voice Cloning Optimizations'}
+            </div>
+            <div style={{ fontSize: 11, color: C?.sub ?? '#888', lineHeight: 1.6 }}>
+              {`\u2022 ${t('videoTranslator.optHighRes') || 'Highest resolution mode enabled (best voice fidelity)'}`}<br/>
+              {`\u2022 ${t('videoTranslator.optVoiceClone') || 'Voice cloning enabled (using original speaker voice, not library)'}`}<br/>
+              {`\u2022 ${t('videoTranslator.optNoProfanity') || 'Profanity filter disabled (accurate, unaltered translation)'}`}
             </div>
           </div>
 

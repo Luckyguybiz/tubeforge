@@ -16,6 +16,15 @@ export const maxDuration = 300; // 5 min timeout for large uploads
 
 const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
 
+/** Maximum upload file size: 500 MB */
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
+/** Minimum video duration warning threshold (seconds) */
+const MIN_DURATION_WARNING_SEC = 10;
+
+/** MIME types considered valid video/audio uploads */
+const VALID_MIME_PREFIXES = ['video/', 'audio/'];
+
 const SUPPORTED_LANGUAGES: Record<string, string> = {
   en: 'English', ru: 'Русский', es: 'Español', fr: 'Français',
   de: 'Deutsch', it: 'Italiano', pt: 'Português', ja: '日本語',
@@ -153,6 +162,8 @@ export async function POST(req: NextRequest) {
     let targetLang = 'en';
     let file: Blob | undefined;
     let fileName: string | undefined;
+    let fileType: string | undefined;
+    let fileSize = 0;
     let watermark = false;
     let dropBgAudio = true;
     let numSpeakers = 1;
@@ -163,12 +174,14 @@ export async function POST(req: NextRequest) {
       sourceLang = (formData.get('source_lang') as string) || 'auto';
       targetLang = (formData.get('target_lang') as string) || 'en';
       watermark = formData.get('watermark') === 'true';
-      dropBgAudio = formData.get('drop_background_audio') === 'true';
+      dropBgAudio = formData.get('drop_background_audio') !== 'false'; // default true
       numSpeakers = parseInt(formData.get('num_speakers') as string || '1', 10) || 1;
       const uploadedFile = formData.get('file') as File | null;
       if (uploadedFile && uploadedFile.size > 0) {
         file = uploadedFile;
         fileName = uploadedFile.name;
+        fileType = uploadedFile.type;
+        fileSize = uploadedFile.size;
       }
     } else {
       const body = await req.json();
@@ -176,7 +189,7 @@ export async function POST(req: NextRequest) {
       sourceLang = body.source_lang || 'auto';
       targetLang = body.target_lang || 'en';
       watermark = body.watermark ?? false;
-      dropBgAudio = body.drop_background_audio ?? false;
+      dropBgAudio = body.drop_background_audio ?? true;
       numSpeakers = body.num_speakers ?? 1;
     }
 
@@ -188,14 +201,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Unsupported target language: ${targetLang}` }, { status: 400 });
     }
 
-    // Build multipart form for ElevenLabs
+    /* ── File validation ────────────────────────────────────────── */
+    if (file) {
+      // Check MIME type
+      if (fileType && !VALID_MIME_PREFIXES.some((p) => fileType!.startsWith(p))) {
+        return NextResponse.json(
+          { error: `Invalid file type: ${fileType}. Please upload a video or audio file.` },
+          { status: 400 },
+        );
+      }
+
+      // Check file size (500 MB max)
+      if (fileSize > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { error: `File too large (${(fileSize / 1024 / 1024).toFixed(0)} MB). Maximum is 500 MB.` },
+          { status: 400 },
+        );
+      }
+    }
+
+    /* ── Build multipart form for ElevenLabs ────────────────────── */
     const elForm = new FormData();
     elForm.append('target_lang', targetLang);
     elForm.append('source_lang', sourceLang);
     elForm.append('num_speakers', String(numSpeakers));
     elForm.append('watermark', String(watermark));
-    elForm.append('drop_background_audio', String(dropBgAudio));
+
+    // --- Voice cloning quality parameters ---
+    // Always use highest resolution for best voice cloning fidelity
     elForm.append('highest_resolution', 'true');
+    // Drop background audio for cleaner voice extraction & better cloning
+    elForm.append('drop_background_audio', String(dropBgAudio));
+    // Explicitly ensure voice cloning is ENABLED (not using library voices)
+    elForm.append('disable_voice_cloning', 'false');
+    // Disable profanity filter for accurate, unaltered translations
+    elForm.append('use_profanity_filter', 'false');
 
     if (file) {
       elForm.append('file', file, fileName ?? 'video.mp4');
@@ -203,7 +243,18 @@ export async function POST(req: NextRequest) {
       elForm.append('source_url', sourceUrl);
     }
 
-    log.info('Starting dubbing', { targetLang, sourceLang, hasFile: !!file, sourceUrl: sourceUrl?.slice(0, 60) });
+    log.info('Starting dubbing', {
+      targetLang,
+      sourceLang,
+      numSpeakers,
+      dropBgAudio,
+      hasFile: !!file,
+      fileSize: fileSize || undefined,
+      sourceUrl: sourceUrl?.slice(0, 60),
+      highestResolution: true,
+      disableVoiceCloning: false,
+      useProfanityFilter: false,
+    });
 
     const dubRes = await fetch(`${ELEVENLABS_API}/dubbing`, {
       method: 'POST',
