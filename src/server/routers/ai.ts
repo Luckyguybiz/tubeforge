@@ -81,6 +81,18 @@ export const aiRouter = router({
       await checkRateLimit(ctx.session.user.id, 'ai-thumbnail', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
+      // YouTube-optimized style modifiers for DALL-E
+      const styleModifiers: Record<string, string> = {
+        realistic: 'photorealistic, cinematic lighting, high detail, professional photography',
+        anime: 'anime art style, vibrant colors, manga-inspired, clean lines',
+        cinematic: 'cinematic movie poster style, dramatic lighting, film grain, epic composition',
+        minimalist: 'minimalist design, clean composition, bold typography space, simple shapes',
+        '3d': '3D rendered, Pixar-style, volumetric lighting, smooth surfaces',
+        popart: 'pop art style, bold colors, halftone dots, comic book aesthetic',
+      };
+
+      const thumbnailPrompt = `Create a YouTube video thumbnail image. ${input.prompt}. Style: ${styleModifiers[input.style] || 'photorealistic'}. Requirements: Bold, eye-catching composition optimized for small display sizes. High contrast, vibrant colors, clear focal point. Leave space for overlay text (do not add any text or letters to the image). Professional YouTube thumbnail quality, 16:9 aspect ratio composition. The image should make viewers want to click.`;
+
       let res: Response;
       try {
         res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_IMAGES, {
@@ -91,7 +103,7 @@ export const aiRouter = router({
           },
           body: JSON.stringify({
             model: 'dall-e-3',
-            prompt: `YouTube thumbnail: ${input.prompt}. Style: ${input.style}. High quality, eye-catching, 16:9 aspect ratio.`,
+            prompt: thumbnailPrompt.slice(0, 4000),
             n: 1,
             size: '1792x1024',
             quality: 'hd',

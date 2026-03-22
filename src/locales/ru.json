@@ -1928,6 +1928,8 @@
   "aithumbs.upload.preview": "Загруженный референс",
   "aithumbs.voice.title": "Голосовой ввод",
   "aithumbs.suggestIdea": "Нужна идея?",
+  "aithumbs.suggestingIdea": "Думаю...",
+  "aithumbs.toast.ideaGenerated": "AI идея сгенерирована!",
   "aithumbs.section.style": "Стиль",
   "aithumbs.style.realistic": "Реалистичный",
   "aithumbs.style.anime": "Аниме",
