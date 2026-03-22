@@ -359,7 +359,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     get().pushHistory();
     const ne: CanvasElement = {
       id: uid(), type: 'text', x: 100 + Math.random() * 200, y: 100 + Math.random() * 200, w: 500, h: 80,
-      text: 'Новый текст', font: 'Instrument Sans', size: 64, bold: true, italic: false, color: '#ffffff',
+      text: 'New text', font: 'Instrument Sans', size: 64, bold: true, italic: false, color: '#ffffff',
       shadow: 'none', opacity: 1, bg: 'transparent', borderR: 0, rot: 0,
     };
     set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));
@@ -436,7 +436,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       id: uid(), type: 'stickyNote',
       x: x ?? 200 + Math.random() * 100, y: y ?? 150 + Math.random() * 100,
       w: 200, h: 150,
-      noteColor: STICKY_NOTE_COLOR, noteText: 'Заметка',
+      noteColor: STICKY_NOTE_COLOR, noteText: 'Note',
       size: 14, opacity: 1, rot: 0,
     };
     set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));

@@ -375,9 +375,9 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
       <div
         role="button"
         tabIndex={0}
-        aria-label="Убрать фон"
-        onClick={() => toast.info('Скоро — удаление фона в разработке')}
-        title="Убрать фон"
+        aria-label={t('thumbs.removeBg.ariaLabel')}
+        onClick={() => toast.info(t('thumbs.removeBg.comingSoon'))}
+        title={t('thumbs.removeBg.ariaLabel')}
         style={{
           width: 44, height: 44, borderRadius: 10,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
@@ -390,16 +390,16 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
           <path d="M20.49 9A9 9 0 1 0 5.64 5.64L1 10h6V4"/>
           <path d="M12 7v5l4 2"/>
         </svg>
-        <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: C.dim }}>Фон</span>
+        <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: C.dim }}>{t('thumbs.removeBg.short')}</span>
       </div>
 
       {/* Z6: A/B Test button */}
       <div
         role="button"
         tabIndex={0}
-        aria-label="A/B тест обложки"
+        aria-label={t('thumbs.abTest.ariaLabel')}
         onClick={() => setShowABTestModal(true)}
-        title="A/B тест обложки"
+        title={t('thumbs.abTest.ariaLabel')}
         style={{
           width: 44, height: 44, borderRadius: 10,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
@@ -453,22 +453,22 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             </div>
 
             <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>
-              A/B Тест обложки
+              {t('thumbs.abTest.title')}
             </h3>
             <p style={{ fontSize: 13, color: C.sub, margin: '0 0 20px', lineHeight: 1.6 }}>
-              Создайте 2-3 варианта обложки, и мы проверим какой работает лучше.
+              {t('thumbs.abTest.description')}
             </p>
 
             <div style={{
               background: C.surface, borderRadius: 10, padding: 16,
               border: `1px solid ${C.border}`, marginBottom: 20, textAlign: 'left',
             }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8 }}>Как это работает:</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8 }}>{t('thumbs.abTest.howItWorks')}</div>
               <ul style={{ margin: 0, paddingLeft: 18, color: C.sub, fontSize: 12, lineHeight: 1.8 }}>
-                <li>Создайте несколько вариантов обложки</li>
-                <li>Подключите YouTube канал</li>
-                <li>ИИ автоматически чередует обложки</li>
-                <li>Аналитика покажет лучший вариант по CTR</li>
+                <li>{t('thumbs.abTest.step1')}</li>
+                <li>{t('thumbs.abTest.step2')}</li>
+                <li>{t('thumbs.abTest.step3')}</li>
+                <li>{t('thumbs.abTest.step4')}</li>
               </ul>
             </div>
 
@@ -479,7 +479,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             }}>
               <span style={{ fontSize: 14 }}>&#9733;</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: C.orange }}>
-                Подключите YouTube канал для автоматического тестирования
+                {t('thumbs.abTest.connectYouTube')}
               </span>
             </div>
 
@@ -489,7 +489,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
               fontSize: 11, color: C.dim, display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <span style={{ fontWeight: 700, color: C.purple }}>PRO+</span>
-              Доступно на тарифах PRO и STUDIO
+              {t('thumbs.abTest.proRequired')}
             </div>
 
             <button
@@ -501,7 +501,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              Понятно
+              {t('thumbs.abTest.gotIt')}
             </button>
           </div>
         </div>

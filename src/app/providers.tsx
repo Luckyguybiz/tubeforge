@@ -21,7 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         refetchOnWindowFocus: false,
       },
       mutations: {
-        retry: false, // Никогда не повторять мутации автоматически
+        retry: false, // Never retry mutations automatically
         onError: (error: unknown) => {
           const message = (error as { message?: string })?.message;
           if (message && !message.includes('UNAUTHORIZED')) {

@@ -851,7 +851,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       });
       setShowScriptModal(false);
       setScriptTopic('');
-      toast.success('Сценарий сгенерирован! Создано сцен: ' + data.scenes.length);
+      toast.success(t('editor.script.generated') + data.scenes.length);
       trackEvent('ai_script_generated', { tone: scriptTone, duration: scriptDuration, scenesCount: data.scenes.length });
     },
     onError: (err) => toast.error(err.message),
@@ -862,7 +862,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     onSuccess: (data) => {
       setCaptionsSrt(data.srt);
       setShowCaptionsModal(true);
-      toast.success('Субтитры сгенерированы!');
+      toast.success(t('editor.captions.generated'));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -1496,7 +1496,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         {/* Z1: AI Script Generator button */}
         <button
           onClick={() => setShowScriptModal(true)}
-          title="Сгенерировать скрипт с помощью ИИ"
+          title={t('editor.script.generateBtnTitle')}
           aria-label={t('editor.toolbar.generateScript')}
           style={{
             padding: '6px 14px',
@@ -1521,14 +1521,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
-          Сгенерировать скрипт
+          {t('editor.script.generateBtn')}
         </button>
 
         {/* Z5: Create Shorts button (3+ scenes) */}
         {scenes.length >= 3 && (
           <button
             onClick={() => setShowShortsModal(true)}
-            title="Создать Shorts из проекта"
+            title={t('editor.shorts.createTitle')}
             aria-label={t('editor.toolbar.createShorts')}
             style={{
               padding: '6px 14px',
@@ -1554,7 +1554,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               <rect x="7" y="2" width="10" height="20" rx="2"/>
               <line x1="12" y1="18" x2="12" y2="18"/>
             </svg>
-            Создать Shorts
+            {t('editor.shorts.createBtn')}
           </button>
         )}
 
@@ -2327,13 +2327,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     duration: s.duration,
                   }));
                   if (scenesData.length === 0) {
-                    toast.info('Добавьте текст в сцены для генерации субтитров');
+                    toast.info(t('editor.captions.addTextHint'));
                     return;
                   }
                   generateCaptions.mutate({ scenes: scenesData });
                 }}
                 disabled={generateCaptions.isPending}
-                title="Сгенерировать субтитры для всех сцен"
+                title={t('editor.captions.generateTitle')}
                 style={{
                   ...tinyBtnStyle(C, false),
                   minWidth: 'auto',
@@ -2351,7 +2351,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
                   <path d="M7 15h4m-4-3h10"/>
                 </svg>
-                {generateCaptions.isPending ? 'Генерация...' : 'Субтитры'}
+                {generateCaptions.isPending ? t('editor.captions.generating') : t('editor.captions.label')}
               </button>
 
               {/* Scene duration inline control */}
@@ -2684,7 +2684,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.purple} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
-                Сгенерировать скрипт
+                {t('editor.script.generateTitle')}
               </h3>
               <button
                 onClick={() => setShowScriptModal(false)}
@@ -2696,11 +2696,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>Тема видео</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>{t('editor.script.videoTopic')}</label>
               <input
                 value={scriptTopic}
                 onChange={(e) => setScriptTopic(e.target.value)}
-                placeholder="Напр. Как ИИ изменит YouTube в 2026"
+                placeholder={t('editor.script.topicPlaceholder')}
                 maxLength={500}
                 style={{
                   width: '100%', padding: '10px 14px', borderRadius: 10,
@@ -2715,12 +2715,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>Тон</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>{t('editor.script.tone')}</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {([
-                    { value: 'professional' as const, label: 'Профессиональный' },
-                    { value: 'casual' as const, label: 'Разговорный' },
-                    { value: 'fun' as const, label: 'Весёлый' },
+                    { value: 'professional' as const, label: t('editor.script.toneProfessional') },
+                    { value: 'casual' as const, label: t('editor.script.toneCasual') },
+                    { value: 'fun' as const, label: t('editor.script.toneFun') },
                   ]).map((opt) => (
                     <button
                       key={opt.value}
@@ -2740,12 +2740,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </div>
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>Длительность</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6, display: 'block' }}>{t('editor.script.durationLabel')}</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {([
-                    { value: '30s' as const, label: '30 секунд' },
-                    { value: '1min' as const, label: '1 минута' },
-                    { value: '3min' as const, label: '3 минуты' },
+                    { value: '30s' as const, label: t('editor.script.duration30s') },
+                    { value: '1min' as const, label: t('editor.script.duration1min') },
+                    { value: '3min' as const, label: t('editor.script.duration3min') },
                   ]).map((opt) => (
                     <button
                       key={opt.value}
@@ -2767,12 +2767,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </div>
 
             <div style={{ fontSize: 11, color: C.dim, marginBottom: 16 }}>
-              Стоимость: 2 AI кредита. ИИ создаст сцены с описаниями для генерации видео.
+              {t('editor.script.costNote')}
             </div>
 
             <button
               onClick={() => {
-                if (!scriptTopic.trim()) { toast.error('Укажите тему видео'); return; }
+                if (!scriptTopic.trim()) { toast.error(t('editor.script.topicRequired')); return; }
                 generateScript.mutate({ topic: scriptTopic, tone: scriptTone, duration: scriptDuration });
               }}
               disabled={generateScript.isPending || !scriptTopic.trim()}
@@ -2789,9 +2789,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               {generateScript.isPending ? (
                 <>
                   <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,.3)', borderTopColor: '#fff', animation: 'spin .8s linear infinite', flexShrink: 0 }} />
-                  Генерация...
+                  {t('editor.script.generating')}
                 </>
-              ) : 'Сгенерировать сценарий'}
+              ) : t('editor.script.generateScenario')}
             </button>
           </div>
         </div>
@@ -2817,7 +2817,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
-              <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>Субтитры (SRT)</h3>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>{t('editor.captions.title')}</h3>
               <button
                 onClick={() => setShowCaptionsModal(false)}
                 style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
@@ -2847,7 +2847,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   a.click();
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
-                  toast.success('SRT файл скачан!');
+                  toast.success(t('editor.captions.downloaded'));
                 }}
                 style={{
                   flex: 1, padding: '11px 0', borderRadius: 10, border: 'none',
@@ -2855,11 +2855,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
-                Скачать .SRT
+                {t('editor.captions.downloadSrt')}
               </button>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(captionsSrt).then(() => toast.success('Скопировано!'));
+                  navigator.clipboard.writeText(captionsSrt).then(() => toast.success(t('editor.captions.copied')));
                 }}
                 style={{
                   flex: 1, padding: '11px 0', borderRadius: 10,
@@ -2868,7 +2868,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
-                Копировать
+                {t('editor.captions.copy')}
               </button>
             </div>
           </div>
@@ -2909,29 +2909,29 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </div>
 
             <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>
-              Создать Shorts
+              {t('editor.shorts.title')}
             </h3>
             <p style={{ fontSize: 13, color: C.sub, margin: '0 0 20px', lineHeight: 1.6 }}>
-              ИИ анализирует ваше видео и создаёт короткие клипы для YouTube Shorts, TikTok и Reels.
+              {t('editor.shorts.description')}
             </p>
 
             <div style={{
               background: C.surface, borderRadius: 10, padding: 16,
               border: `1px solid ${C.border}`, marginBottom: 20, textAlign: 'left',
             }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8 }}>Что будет сделано:</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8 }}>{t('editor.shorts.whatWillBeDone')}</div>
               <ul style={{ margin: 0, paddingLeft: 18, color: C.sub, fontSize: 12, lineHeight: 1.8 }}>
-                <li>Анализ самых ярких моментов</li>
-                <li>Автоматическая обрезка до 60 секунд</li>
-                <li>Вертикальный формат 9:16</li>
-                <li>Оптимизация для алгоритмов</li>
+                <li>{t('editor.shorts.analyzeHighlights')}</li>
+                <li>{t('editor.shorts.autoCrop')}</li>
+                <li>{t('editor.shorts.verticalFormat')}</li>
+                <li>{t('editor.shorts.optimizeAlgorithms')}</li>
               </ul>
             </div>
 
             <button
               onClick={() => {
                 setShowShortsModal(false);
-                toast.info('Скоро — эта функция в разработке');
+                toast.info(t('editor.shorts.comingSoon'));
               }}
               style={{
                 width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
@@ -2942,7 +2942,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 boxShadow: `0 2px 12px ${C.blue}30`,
               }}
             >
-              Сгенерировать
+              {t('editor.shorts.generate')}
             </button>
             <button
               onClick={() => setShowShortsModal(false)}
@@ -2954,7 +2954,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 transition: 'all .2s ease',
               }}
             >
-              Отмена
+              {t('editor.shorts.cancel')}
             </button>
           </div>
         </div>

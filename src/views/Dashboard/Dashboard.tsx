@@ -1736,7 +1736,7 @@ function TemplatePickerModal({
                 whiteSpace: 'nowrap',
               }}
             >
-              {isRu ? 'Все' : 'All'}
+              {t('dashboard.templateAll')}
             </button>
             {TEMPLATE_CATEGORIES.map((cat) => {
               const info = CATEGORY_INFO[cat];
@@ -1847,8 +1847,8 @@ function TemplatePickerModal({
                       whiteSpace: 'nowrap',
                     }}>
                       {tpl.sceneCount} {isRu
-                        ? (tpl.sceneCount === 1 ? 'сцена' : tpl.sceneCount < 5 ? 'сцены' : 'сцен')
-                        : (tpl.sceneCount === 1 ? 'scene' : 'scenes')}
+                        ? t('dashboard.scene.one')
+                        : t('dashboard.scene.other')}
                     </span>
                   </div>
                 </div>
@@ -1861,7 +1861,7 @@ function TemplatePickerModal({
               textAlign: 'center', padding: '24px 0',
               color: C.dim, fontSize: 13,
             }}>
-              {isRu ? 'Нет шаблонов в этой категории' : 'No templates in this category'}
+              {t('dashboard.noTemplates')}
             </div>
           )}
         </div>

@@ -25,7 +25,7 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
     where: { userId, provider: 'google' },
     select: { id: true, access_token: true, refresh_token: true, expires_at: true },
   });
-  if (!account?.access_token) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'YouTube не подключён' });
+  if (!account?.access_token) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'YouTube is not connected' });
 
   // Refresh expired token
   if (account.expires_at && account.expires_at * 1000 < Date.now() && account.refresh_token) {
@@ -64,11 +64,11 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
       // knows to re-authenticate.
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'Токен обновлён, но access_token отсутствует в ответе. Переподключите аккаунт Google.',
+        message: 'Token refreshed but access_token is missing from the response. Please reconnect your Google account.',
       });
     }
     // Token was expired and refresh HTTP request failed — do not fall back to the old expired token
-    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не удалось обновить токен YouTube. Переподключите аккаунт Google.' });
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Failed to refresh YouTube token. Please reconnect your Google account.' });
   }
 
   return account.access_token;
@@ -81,7 +81,7 @@ async function verifyChannelOwnership(channelId: string, userId: string, db: Pri
     select: { id: true },
   });
   if (!channel) {
-    throw new TRPCError({ code: 'NOT_FOUND', message: 'Канал не найден' });
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Channel not found' });
   }
 }
 
@@ -91,8 +91,8 @@ export const youtubeRouter = router({
     const res = await fetchWithTimeout(`${API_ENDPOINTS.YOUTUBE_CHANNELS}?part=snippet,statistics&mine=true`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка YouTube API' });
-    const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ YouTube API' }); });
+    if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'YouTube API error' });
+    const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse YouTube API response' }); });
     // Sync channels to DB in a single transaction
     const items = data.items ?? [];
     if (items.length > 0) {
@@ -128,16 +128,16 @@ export const youtubeRouter = router({
         `${API_ENDPOINTS.YOUTUBE_SEARCH}?part=snippet&channelId=${input.channelId}&maxResults=${input.maxResults}&order=date&type=video`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!searchRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка поиска видео YouTube API' });
-      const searchData = await searchRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ YouTube API' }); });
+      if (!searchRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'YouTube API video search error' });
+      const searchData = await searchRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse YouTube API response' }); });
       const videoIds = (searchData.items ?? []).map((i: { id: { videoId?: string } }) => i.id.videoId).filter(Boolean).join(',');
       if (!videoIds) return [];
       const statsRes = await fetchWithTimeout(
         `${API_ENDPOINTS.YOUTUBE_VIDEOS}?part=statistics,snippet&id=${videoIds}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!statsRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка получения статистики YouTube API' });
-      const statsData = await statsRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ YouTube API' }); });
+      if (!statsRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'YouTube API statistics error' });
+      const statsData = await statsRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse YouTube API response' }); });
       return statsData.items ?? [];
     }),
 
@@ -155,8 +155,8 @@ export const youtubeRouter = router({
         `${API_ENDPOINTS.YOUTUBE_ANALYTICS}?ids=channel==${input.channelId}&startDate=${startDate}&endDate=${endDate}&metrics=views,subscribersGained,estimatedMinutesWatched,averageViewPercentage&dimensions=day`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка Analytics API' });
-      return res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось разобрать ответ Analytics API' }); });
+      if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Analytics API error' });
+      return res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Analytics API response' }); });
     }),
 
   uploadVideo: protectedProcedure
@@ -207,14 +207,14 @@ export const youtubeRouter = router({
           }),
         }
       );
-      if (!metadataRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Не удалось начать загрузку видео' });
+      if (!metadataRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to initiate video upload' });
 
       const uploadUrl = metadataRes.headers.get('location');
       return {
         uploadUrl,
         scheduled: !!input.publishAt,
         publishAt: input.publishAt ?? null,
-        message: input.publishAt ? 'Публикация запланирована' : 'Загрузка начата',
+        message: input.publishAt ? 'Publishing scheduled' : 'Upload started',
       };
     }),
 });

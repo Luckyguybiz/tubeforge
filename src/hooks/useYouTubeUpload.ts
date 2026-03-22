@@ -20,11 +20,11 @@ export function useYouTubeUpload() {
     try {
       const result = await initUpload.mutateAsync(params);
       setStatus('done');
-      toast.success('Видео загружено на YouTube');
+      toast.success('Video uploaded to YouTube');
       return result.uploadUrl;
     } catch (err) {
       setStatus('error');
-      toast.error('Ошибка загрузки на YouTube');
+      toast.error('YouTube upload failed');
       return null;
     }
   };

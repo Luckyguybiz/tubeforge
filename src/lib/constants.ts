@@ -49,10 +49,10 @@ export const light: Theme = {
 export const PK: ColorKey[] = ['accent', 'blue', 'purple', 'green', 'orange', 'cyan', 'pink'];
 
 export const MODELS: Model[] = [
-  { id: 'turbo', name: 'Turbo (Быстрая)', desc: 'Быстро', speed: '~10с', icon: '⚡' },
-  { id: 'standard', name: 'Standard (Стандарт)', desc: 'Баланс', speed: '~30с', icon: '◆' },
-  { id: 'pro', name: 'Pro (Максимум)', desc: 'Макс. качество', speed: '~60с', icon: '✦' },
-  { id: 'cinematic', name: 'Cinematic (Кино)', desc: 'Кино-эффекты', speed: '~90с', icon: '🎬' },
+  { id: 'turbo', name: 'Turbo', desc: 'Fast', speed: '~10s', icon: '⚡' },
+  { id: 'standard', name: 'Standard', desc: 'Balanced', speed: '~30s', icon: '◆' },
+  { id: 'pro', name: 'Pro', desc: 'Max quality', speed: '~60s', icon: '✦' },
+  { id: 'cinematic', name: 'Cinematic', desc: 'Cinema effects', speed: '~90s', icon: '🎬' },
 ];
 
 export const AVATARS = [
@@ -61,32 +61,32 @@ export const AVATARS = [
 ];
 
 export const STATUS: Record<string, StatusInfo> = {
-  empty: { l: 'Пусто', c: 'dim' },
-  editing: { l: 'Черновик', c: 'blue' },
-  generating: { l: 'Генерация…', c: 'orange' },
-  ready: { l: 'Готово', c: 'green' },
-  error: { l: 'Ошибка', c: 'accent' },
+  empty: { l: 'Empty', c: 'dim' },
+  editing: { l: 'Draft', c: 'blue' },
+  generating: { l: 'Generating…', c: 'orange' },
+  ready: { l: 'Ready', c: 'green' },
+  error: { l: 'Error', c: 'accent' },
 };
 
 export const NAV: NavItem[] = [
-  { id: 'dashboard', icon: '◉', label: 'Главная' },
-  { id: 'editor', icon: '▶', label: 'Редактор' },
-  { id: 'metadata', icon: '✎', label: 'Метаданные' },
-  { id: 'thumbnails', icon: '◫', label: 'Обложки' },
-  { id: 'preview', icon: '◎', label: 'Превью' },
+  { id: 'dashboard', icon: '◉', label: 'Dashboard' },
+  { id: 'editor', icon: '▶', label: 'Editor' },
+  { id: 'metadata', icon: '✎', label: 'Metadata' },
+  { id: 'thumbnails', icon: '◫', label: 'Thumbnails' },
+  { id: 'preview', icon: '◎', label: 'Preview' },
 ];
 
 export const STATS: StatItem[] = [
-  { label: 'Просмотры', value: '1.2M', change: '+12.4%', up: true },
-  { label: 'Подписчики', value: '48.3K', change: '+2.1K', up: true },
-  { label: 'Время просмотра', value: '86.4K ч', change: '+8.7%', up: true },
+  { label: 'Views', value: '1.2M', change: '+12.4%', up: true },
+  { label: 'Subscribers', value: '48.3K', change: '+2.1K', up: true },
+  { label: 'Watch time', value: '86.4K hrs', change: '+8.7%', up: true },
   { label: 'CTR', value: '6.8%', change: '-0.3%', up: false },
 ];
 
 export const VIDEOS: VideoItem[] = [
-  { title: 'Как ИИ изменит YouTube в 2026', views: '142K', ctr: '8.2%', st: 'live' },
-  { title: 'Топ-10 нейросетей для контента', views: '89K', ctr: '7.1%', st: 'live' },
-  { title: 'Секреты вирусных обложек', views: '—', ctr: '—', st: 'draft' },
+  { title: 'How AI Will Change YouTube in 2026', views: '142K', ctr: '8.2%', st: 'live' },
+  { title: 'Top 10 AI Tools for Content', views: '89K', ctr: '7.1%', st: 'live' },
+  { title: 'Secrets of Viral Thumbnails', views: '—', ctr: '—', st: 'draft' },
 ];
 
 export const CANVAS_W = 1280;
@@ -107,39 +107,39 @@ export const STICKY_NOTE_PRESETS = ['#fef08a', '#fecdd3', '#bfdbfe', '#bbf7d0', 
 
 export const KEYBOARD_SHORTCUTS = [
   // Global / Navigation
-  { keys: 'Ctrl+K', label: 'Поиск', key: 'Ctrl+K', description: 'Open search', category: 'navigation' },
-  { keys: '/', label: 'Фокус поиск', key: '/', description: 'Focus search bar', category: 'navigation' },
-  { keys: '?', label: 'Горячие клавиши', key: '?', description: 'Show keyboard shortcuts help', category: 'navigation' },
-  { keys: 'Ctrl+/', label: 'Горячие клавиши', key: 'Ctrl+/', description: 'Show keyboard shortcuts help', category: 'navigation' },
-  { keys: 'Escape', label: 'Закрыть / снять выделение', key: 'Escape', description: 'Close modal / deselect', category: 'navigation' },
-  { keys: 'G then D', label: 'Перейти на главную', key: 'G then D', description: 'Navigate to Dashboard', category: 'navigation' },
-  { keys: 'G then E', label: 'Перейти к Редактору', key: 'G then E', description: 'Navigate to Editor', category: 'navigation' },
-  { keys: 'G then T', label: 'Перейти к Инструментам', key: 'G then T', description: 'Navigate to Tools', category: 'navigation' },
-  { keys: 'G then B', label: 'Перейти к Биллингу', key: 'G then B', description: 'Navigate to Billing', category: 'navigation' },
-  { keys: 'G then S', label: 'Перейти к Настройкам', key: 'G then S', description: 'Navigate to Settings', category: 'navigation' },
+  { keys: 'Ctrl+K', label: 'Search', key: 'Ctrl+K', description: 'Open search', category: 'navigation' },
+  { keys: '/', label: 'Focus search', key: '/', description: 'Focus search bar', category: 'navigation' },
+  { keys: '?', label: 'Keyboard shortcuts', key: '?', description: 'Show keyboard shortcuts help', category: 'navigation' },
+  { keys: 'Ctrl+/', label: 'Keyboard shortcuts', key: 'Ctrl+/', description: 'Show keyboard shortcuts help', category: 'navigation' },
+  { keys: 'Escape', label: 'Close / deselect', key: 'Escape', description: 'Close modal / deselect', category: 'navigation' },
+  { keys: 'G then D', label: 'Go to Dashboard', key: 'G then D', description: 'Navigate to Dashboard', category: 'navigation' },
+  { keys: 'G then E', label: 'Go to Editor', key: 'G then E', description: 'Navigate to Editor', category: 'navigation' },
+  { keys: 'G then T', label: 'Go to Tools', key: 'G then T', description: 'Navigate to Tools', category: 'navigation' },
+  { keys: 'G then B', label: 'Go to Billing', key: 'G then B', description: 'Navigate to Billing', category: 'navigation' },
+  { keys: 'G then S', label: 'Go to Settings', key: 'G then S', description: 'Navigate to Settings', category: 'navigation' },
   // Editor / Editing
-  { keys: 'Ctrl+Z', label: 'Отменить', key: 'Ctrl+Z', description: 'Undo last action', category: 'editing' },
-  { keys: 'Ctrl+Shift+Z', label: 'Повторить', key: 'Ctrl+Shift+Z', description: 'Redo last undone action', category: 'editing' },
-  { keys: 'Ctrl+S', label: 'Сохранить', key: 'Ctrl+S', description: 'Save current project', category: 'general' },
-  { keys: 'Ctrl+D', label: 'Дублировать', key: 'Ctrl+D', description: 'Duplicate selected element', category: 'editing' },
-  { keys: 'Delete', label: 'Удалить', key: 'Delete', description: 'Remove selected element', category: 'editing' },
-  { keys: 'Ctrl+C', label: 'Копировать', key: 'Ctrl+C', description: 'Copy selected element', category: 'editing' },
-  { keys: 'Ctrl+V', label: 'Вставить', key: 'Ctrl+V', description: 'Paste from clipboard', category: 'editing' },
-  { keys: 'Ctrl+X', label: 'Вырезать', key: 'Ctrl+X', description: 'Cut selected element', category: 'editing' },
-  { keys: 'Ctrl+A', label: 'Выделить все', key: 'Ctrl+A', description: 'Select all elements', category: 'editing' },
-  { keys: 'Ctrl+=', label: 'Увеличить', key: 'Ctrl+=', description: 'Zoom in', category: 'editing' },
-  { keys: 'Ctrl+-', label: 'Уменьшить', key: 'Ctrl+-', description: 'Zoom out', category: 'editing' },
-  { keys: 'Ctrl+0', label: 'По размеру экрана', key: 'Ctrl+0', description: 'Fit to screen', category: 'editing' },
+  { keys: 'Ctrl+Z', label: 'Undo', key: 'Ctrl+Z', description: 'Undo last action', category: 'editing' },
+  { keys: 'Ctrl+Shift+Z', label: 'Redo', key: 'Ctrl+Shift+Z', description: 'Redo last undone action', category: 'editing' },
+  { keys: 'Ctrl+S', label: 'Save', key: 'Ctrl+S', description: 'Save current project', category: 'general' },
+  { keys: 'Ctrl+D', label: 'Duplicate', key: 'Ctrl+D', description: 'Duplicate selected element', category: 'editing' },
+  { keys: 'Delete', label: 'Delete', key: 'Delete', description: 'Remove selected element', category: 'editing' },
+  { keys: 'Ctrl+C', label: 'Copy', key: 'Ctrl+C', description: 'Copy selected element', category: 'editing' },
+  { keys: 'Ctrl+V', label: 'Paste', key: 'Ctrl+V', description: 'Paste from clipboard', category: 'editing' },
+  { keys: 'Ctrl+X', label: 'Cut', key: 'Ctrl+X', description: 'Cut selected element', category: 'editing' },
+  { keys: 'Ctrl+A', label: 'Select all', key: 'Ctrl+A', description: 'Select all elements', category: 'editing' },
+  { keys: 'Ctrl+=', label: 'Zoom in', key: 'Ctrl+=', description: 'Zoom in', category: 'editing' },
+  { keys: 'Ctrl+-', label: 'Zoom out', key: 'Ctrl+-', description: 'Zoom out', category: 'editing' },
+  { keys: 'Ctrl+0', label: 'Fit to screen', key: 'Ctrl+0', description: 'Fit to screen', category: 'editing' },
   // Tools
-  { keys: 'Ctrl+Enter', label: 'Генерировать', key: 'Ctrl+Enter', description: 'Start AI generation', category: 'general' },
-  { keys: 'Ctrl+]', label: 'На передний план', key: 'Ctrl+]', description: 'Bring to front', category: 'general' },
-  { keys: 'Ctrl+[', label: 'На задний план', key: 'Ctrl+[', description: 'Send to back', category: 'general' },
+  { keys: 'Ctrl+Enter', label: 'Generate', key: 'Ctrl+Enter', description: 'Start AI generation', category: 'general' },
+  { keys: 'Ctrl+]', label: 'Bring to front', key: 'Ctrl+]', description: 'Bring to front', category: 'general' },
+  { keys: 'Ctrl+[', label: 'Send to back', key: 'Ctrl+[', description: 'Send to back', category: 'general' },
 ] as const;
 
 export const SHORTCUT_CATEGORIES: Record<string, string> = {
-  navigation: 'Навигация',
-  editing: 'Редактирование',
-  general: 'Общие',
+  navigation: 'Navigation',
+  editing: 'Editing',
+  general: 'General',
 };
 
 /* ── Upload limits ────────────────────────────────── */
@@ -148,7 +148,7 @@ export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
 
 /* ── Error messages ───────────────────────────────── */
 
-export const RATE_LIMIT_ERROR = 'Слишком много запросов. Попробуйте через минуту.';
+export const RATE_LIMIT_ERROR = 'Too many requests. Please try again in a minute.';
 
 /* ── Timing constants (ms) ──────────────────────────── */
 
@@ -212,6 +212,29 @@ export type PlanName = keyof typeof PLAN_LIMITS;
 
 export function getPlanLimits(plan: string) {
   return PLAN_LIMITS[plan as PlanName] ?? PLAN_LIMITS.FREE;
+}
+
+/* ── AI Thumbnail Generator limits (per day) ─── */
+
+export const AI_THUMBNAIL_LIMITS = {
+  /** Max thumbnail generations per day */
+  dailyGenerations: { FREE: 3, PRO: 100, STUDIO: Infinity },
+  /** Max images per single generation request */
+  multiGen: { FREE: 1, PRO: 2, STUDIO: 3 },
+  /** Max saved face photos */
+  faces: { FREE: 3, PRO: 10, STUDIO: 20 },
+  /** Max edits per day (FREE gets 1 total, PRO+ unlimited) */
+  dailyEdits: { FREE: 1, PRO: Infinity, STUDIO: Infinity },
+  /** Idea suggestion rate limit per day */
+  dailySuggestions: { FREE: 3, PRO: 20, STUDIO: 20 },
+} as const;
+
+export function getAiThumbnailLimit(
+  limitKey: keyof typeof AI_THUMBNAIL_LIMITS,
+  plan: string,
+): number {
+  const limits = AI_THUMBNAIL_LIMITS[limitKey];
+  return limits[plan as PlanName] ?? limits.FREE;
 }
 
 /* ── API endpoint base URLs ─────────────────────────── */

@@ -368,10 +368,10 @@ export const projectRouter = router({
         });
         const planLimit = PLAN_LIMITS[user?.plan ?? 'FREE'];
         if ((user?._count.projects ?? 0) >= planLimit) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Достигнут лимит проектов. Обновите тарифный план.' });
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Project limit reached. Please upgrade your plan.' });
         }
         return tx.project.create({
-          data: { title: stripTags(input.title ?? 'Без названия'), userId: ctx.session.user.id },
+          data: { title: stripTags(input.title ?? 'Untitled'), userId: ctx.session.user.id },
           select: { id: true, title: true, status: true, createdAt: true },
         });
       });
