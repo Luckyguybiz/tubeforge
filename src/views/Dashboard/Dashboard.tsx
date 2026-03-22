@@ -17,9 +17,7 @@ import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trackEvent } from '@/lib/analytics-events';
 import { TEMPLATES, TEMPLATE_CATEGORIES, CATEGORY_INFO, type ProjectTemplate, type TemplateCategory } from '@/lib/templates';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
-import { ActivityStreak } from '@/components/dashboard/ActivityStreak';
-import { UsageMilestones } from '@/components/dashboard/UsageMilestones';
-import { logActivity, getRecentActivity, type ActivityEntry, type ActivityType } from '@/lib/activity-log';
+import { logActivity, getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
 
 /* ── Status config ─────────────────────────────────────── */
 
@@ -97,30 +95,6 @@ function IconSearch({ size = 16, color = 'currentColor' }: { size?: number; colo
   );
 }
 
-function IconFolder({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-    </svg>
-  );
-}
-
-function IconSend({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
-  );
-}
-
-function IconStar({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  );
-}
-
 function IconTrash({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -162,68 +136,6 @@ function IconChevronRight({ size = 16, color = 'currentColor' }: { size?: number
   );
 }
 
-function IconPlay({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="5 3 19 12 5 21 5 3" />
-    </svg>
-  );
-}
-
-function IconImage({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  );
-}
-function IconArrowRight({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  );
-}
-
-function IconTranslate({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 8l6 0" /><path d="M4 6l8 0" /><path d="M8 6v-1a2 2 0 0 1 2-2h0" />
-      <path d="M4 12c1.5-2 3.5-3.5 6-4" /><path d="M10 12c-1.5-2-3.5-3.5-6-4" />
-      <path d="M13 15l3.5-7 3.5 7" /><path d="M14 18l1.5-3h5l1.5 3" /><path d="M15 17h4" />
-    </svg>
-  );
-}
-
-/* ── Additional icons for welcome section ─────────────── */
-
-function IconWrench({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-    </svg>
-  );
-}
-
-function IconSparkles({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
-      <path d="M18 14l.67 2 2 .67-2 .67L18 19.33l-.67-2-2-.67 2-.67L18 14z" />
-    </svg>
-  );
-}
-function IconDownload({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
 function IconUploadSmall({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -233,40 +145,10 @@ function IconUploadSmall({ size = 16, color = 'currentColor' }: { size?: number;
   );
 }
 
-
-function IconScissors({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+function IconLayout({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" />
-      <line x1="20" y1="4" x2="8.12" y2="15.88" /><line x1="14.47" y1="14.48" x2="20" y2="20" />
-      <line x1="8.12" y1="8.12" x2="12" y2="12" />
-    </svg>
-  );
-}
-
-/* ── Additional icons for welcome section tools ── */
-
-function IconMusic({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-    </svg>
-  );
-}
-
-function IconCompress({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
-      <line x1="14" y1="10" x2="21" y2="3" /><line x1="3" y1="21" x2="10" y2="14" />
-    </svg>
-  );
-}
-
-function IconChart({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" />
     </svg>
   );
 }
@@ -287,541 +169,20 @@ function IconSortDesc({ size = 16, color = 'currentColor' }: { size?: number; co
   );
 }
 
-function IconClock({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function IconLayout({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" />
-    </svg>
-  );
-}
-
-/* ── Activity type to locale key mapping ─────────────── */
-
-const ACTIVITY_LABEL_MAP: Record<ActivityType, string> = {
-  project_created: 'dashboard.activity.projectCreated',
-  project_deleted: 'dashboard.activity.projectDeleted',
-  project_renamed: 'dashboard.activity.projectRenamed',
-  project_duplicated: 'dashboard.activity.projectDuplicated',
-  video_generated: 'dashboard.activity.videoGenerated',
-  project_exported: 'dashboard.activity.projectExported',
-  project_imported: 'dashboard.activity.projectImported',
-};
-
-/* ── Recent Activity Feed ────────────────────────────── */
-
-function RecentActivityFeed({
-  C,
-  t,
-  activities,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  t: (key: string) => string;
-  activities: ActivityEntry[];
-}) {
-  if (activities.length === 0) {
-    return (
-      <div style={{
-        background: C.card,
-        borderRadius: 12,
-        padding: '20px 22px',
-        marginBottom: 20,
-        border: '1px solid rgba(255,255,255,0.06)',
-      }}>
-        <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 12px', color: C.text }}>
-          {t('dashboard.recentActivityTitle')}
-        </h3>
-        <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>
-          {t('dashboard.noRecentActivity')}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{
-      background: C.card,
-      borderRadius: 12,
-      padding: '20px 22px',
-      marginBottom: 20,
-      border: '1px solid rgba(255,255,255,0.06)',
-    }}>
-      <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 14px', color: C.text }}>
-        {t('dashboard.recentActivityTitle')}
-      </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {activities.map((a) => (
-          <div key={a.id} style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '8px 0',
-            borderBottom: `1px solid ${C.border}22`,
-          }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: `${C.accent}14`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <IconClock size={14} color={C.accent} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {t(ACTIVITY_LABEL_MAP[a.type] ?? 'dashboard.activity.projectCreated')}
-              </div>
-              <div style={{ fontSize: 12, color: C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {a.label}
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: C.dim, whiteSpace: 'nowrap', flexShrink: 0 }}>
-              {timeAgo(new Date(a.timestamp))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── Welcome Section (minimalist, Crayo-style) ───────── */
-
-function WelcomeSection({
-  C,
-  router,
-  t,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  router: ReturnType<typeof useRouter>;
-  t: (key: string) => string;
-}) {
-  const [hov, setHov] = useState<string | null>(null);
-
-  return (
-    <div style={{ marginBottom: 28 }}>
-
-      {/* ── Row 1: Three action cards (compact, horizontal) ── */}
-      <div className="tf-dash-welcome-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
-        {/* Card 1: Video Editor */}
-        <div
-          className="tf-dash-welcome-card"
-          onClick={() => router.push('/editor')}
-          onMouseEnter={() => setHov('ac-0')}
-          onMouseLeave={() => setHov(null)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
-          style={{
-            flex: '1 1 220px',
-            minWidth: 200,
-            height: 76,
-            background: C.card,
-            borderRadius: 14,
-            padding: '0 20px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-            transform: hov === 'ac-0' ? 'translateY(-2px)' : 'none',
-            boxShadow: hov === 'ac-0'
-              ? '0 8px 24px rgba(0,0,0,.4)'
-              : 'none',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <div style={{
-            width: 40, height: 40, borderRadius: 10,
-            background: `${C.accent}14`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <IconPlay size={18} color={C.accent} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.videoEditor')}</div>
-            <div style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.videoEditorDesc')}</div>
-          </div>
-          <IconArrowRight size={14} color={C.dim} />
-        </div>
-
-        {/* Card 2: AI Generation */}
-        <div
-          className="tf-dash-welcome-card"
-          onClick={() => router.push('/editor')}
-          onMouseEnter={() => setHov('ac-1')}
-          onMouseLeave={() => setHov(null)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/editor'); } }}
-          style={{
-            flex: '1 1 220px',
-            minWidth: 200,
-            height: 76,
-            background: C.card,
-            borderRadius: 14,
-            padding: '0 20px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-            transform: hov === 'ac-1' ? 'translateY(-2px)' : 'none',
-            boxShadow: hov === 'ac-1'
-              ? '0 8px 24px rgba(0,0,0,.4)'
-              : 'none',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <div style={{
-            width: 40, height: 40, borderRadius: 10,
-            background: `${C.purple}14`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <IconSparkles size={18} color={C.purple} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.aiGeneration')}</div>
-            <div style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.aiGenerationDesc')}</div>
-          </div>
-          <IconArrowRight size={14} color={C.dim} />
-        </div>
-
-        {/* Card 3: Free tools */}
-        <div
-          className="tf-dash-welcome-card"
-          onClick={() => router.push('/tools')}
-          onMouseEnter={() => setHov('ac-2')}
-          onMouseLeave={() => setHov(null)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
-          style={{
-            flex: '1 1 220px',
-            minWidth: 200,
-            height: 76,
-            background: C.card,
-            borderRadius: 14,
-            padding: '0 20px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-            transform: hov === 'ac-2' ? 'translateY(-2px)' : 'none',
-            boxShadow: hov === 'ac-2'
-              ? '0 8px 24px rgba(0,0,0,.4)'
-              : 'none',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}
-        >
-          <div style={{
-            width: 40, height: 40, borderRadius: 10,
-            background: `${C.green}14`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <IconWrench size={18} color={C.green} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.freeTools')}</span>
-              <span style={{
-                fontSize: 10, fontWeight: 600, color: C.green,
-                background: `${C.green}12`, borderRadius: 10, padding: '1px 7px',
-                lineHeight: '16px', letterSpacing: '.02em',
-              }}>FREE</span>
-            </div>
-            <div style={{ fontSize: 13, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.freeToolsDesc')}</div>
-          </div>
-          <IconArrowRight size={14} color={C.dim} />
-        </div>
-      </div>
-
-      {/* ── Row 2: Two featured tool cards ────────────────── */}
-      <div className="tf-dash-featured-row" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 20 }}>
-        {/* AutoClip */}
-        <div
-          className="tf-dash-featured-card"
-          onClick={() => router.push('/tools/autoclip')}
-          onMouseEnter={() => setHov('ft-0')}
-          onMouseLeave={() => setHov(null)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/autoclip'); } }}
-          style={{
-            flex: '1 1 260px',
-            minWidth: 0,
-            minHeight: 170,
-            borderRadius: 14,
-            background: C.card,
-            border: '1px solid rgba(255,255,255,0.06)',
-            cursor: 'pointer',
-            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-            transform: hov === 'ft-0' ? 'translateY(-2px)' : 'none',
-            boxShadow: hov === 'ft-0'
-              ? '0 8px 24px rgba(0,0,0,.4)'
-              : 'none',
-            padding: '22px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: `${C.purple}14`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <IconScissors size={18} color={C.purple} />
-              </div>
-              <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>AutoClip</span>
-              <span style={{
-                fontSize: 10, fontWeight: 600, color: C.purple,
-                background: `${C.purple}12`, borderRadius: 10, padding: '1px 8px',
-                lineHeight: '16px',
-              }}>Pro</span>
-            </div>
-            <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
-              {t('dashboard.autoClipDesc')}
-            </div>
-          </div>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontSize: 13, fontWeight: 600, color: C.accent,
-            opacity: hov === 'ft-0' ? 1 : 0.7, transition: 'opacity .15s ease',
-            marginTop: 14,
-          }}>
-            {t('dashboard.tryIt')} <IconArrowRight size={13} color={C.accent} />
-          </div>
-        </div>
-
-        {/* Cut & Crop */}
-        <div
-          className="tf-dash-featured-card"
-          onClick={() => router.push('/tools/cut-crop')}
-          onMouseEnter={() => setHov('ft-1')}
-          onMouseLeave={() => setHov(null)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/cut-crop'); } }}
-          style={{
-            flex: '1 1 260px',
-            minWidth: 0,
-            minHeight: 170,
-            borderRadius: 14,
-            background: C.card,
-            border: '1px solid rgba(255,255,255,0.06)',
-            cursor: 'pointer',
-            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-            transform: hov === 'ft-1' ? 'translateY(-2px)' : 'none',
-            boxShadow: hov === 'ft-1'
-              ? '0 8px 24px rgba(0,0,0,.4)'
-              : 'none',
-            padding: '22px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: `${C.green}14`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <IconScissors size={18} color={C.green} />
-              </div>
-              <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>Cut & Crop</span>
-              <span style={{
-                fontSize: 10, fontWeight: 600, color: C.green,
-                background: `${C.green}12`, borderRadius: 10, padding: '1px 8px',
-                lineHeight: '16px',
-              }}>{t('common.free')}</span>
-            </div>
-            <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
-              {t('dashboard.cutCropDesc')}
-            </div>
-          </div>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontSize: 13, fontWeight: 600, color: C.accent,
-            opacity: hov === 'ft-1' ? 1 : 0.7, transition: 'opacity .15s ease',
-            marginTop: 14,
-          }}>
-            {t('dashboard.tryIt')} <IconArrowRight size={13} color={C.accent} />
-          </div>
-        </div>
-      </div>
-
-      {/* ── ChannelLens Extension Banner ──────────────────── */}
-      <a
-        href="/downloads/channellens-v1.0.0.zip"
-        download
-        onMouseEnter={() => setHov('cl-ext')}
-        onMouseLeave={() => setHov(null)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          padding: '16px 20px',
-          marginBottom: 20,
-          borderRadius: 14,
-          background: C.card,
-          border: '1px solid rgba(255,255,255,0.06)',
-          cursor: 'pointer',
-          transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-          transform: hov === 'cl-ext' ? 'translateY(-2px)' : 'none',
-          boxShadow: hov === 'cl-ext'
-            ? '0 8px 24px rgba(0,0,0,.4)'
-            : 'none',
-          textDecoration: 'none',
-          color: C.text,
-        }}
-      >
-        <div style={{
-          width: 44, height: 44, borderRadius: 12,
-          background: `${C.blue}10`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-            <path d="M8 11h6" strokeWidth="1.5"/><path d="M11 8v6" strokeWidth="1.5"/>
-          </svg>
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-.01em', color: C.text }}>ChannelLens</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 1 }}>
-            Chrome extension — analyze any YouTube channel's revenue & competitors
-          </div>
-        </div>
-        <div style={{
-          padding: '6px 14px', borderRadius: 10,
-          background: C.bg,
-          border: `1px solid ${C.border}`,
-          fontSize: 12, fontWeight: 600,
-          whiteSpace: 'nowrap',
-          color: C.text,
-        }}>
-          Download
-        </div>
-      </a>
-
-      {/* ── Row 3: Quick tools strip ─────────────────────── */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>{t('dashboard.tools')}</h2>
-          <span
-            onClick={() => router.push('/tools')}
-            onMouseEnter={() => setHov('all-tools')}
-            onMouseLeave={() => setHov(null)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
-            style={{
-              fontSize: 13, fontWeight: 500, cursor: 'pointer', color: C.accent,
-              opacity: hov === 'all-tools' ? 1 : 0.8, transition: 'opacity .15s ease',
-            }}
-          >
-            {t('dashboard.allTools')}
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
-          {([
-            { title: 'Video Analyzer', href: '/tools/youtube-downloader', Icon: IconSearch, iconColor: C.accent, badge: 'Free', badgeColor: C.green },
-            { title: t('dashboard.tool.mp3Converter'), href: '/tools/mp3-converter', Icon: IconMusic, iconColor: C.orange, badge: 'Free', badgeColor: C.green },
-            { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, iconColor: C.cyan, badge: 'Free', badgeColor: C.green },
-            { title: t('dashboard.tool.aiThumbnails'), href: '/thumbnails', Icon: IconImage, iconColor: C.pink, badge: 'Pro', badgeColor: C.purple },
-            { title: 'AI SEO', href: '/metadata', Icon: IconSearch, iconColor: C.purple, badge: 'Pro', badgeColor: C.purple },
-            { title: t('dashboard.tool.shortsAnalytics'), href: '/shorts-analytics', Icon: IconChart, iconColor: C.green, badge: 'Free', badgeColor: C.green },
-          ] as const).map((tool) => (
-            <div
-              key={tool.href}
-              onClick={() => router.push(tool.href)}
-              onMouseEnter={() => setHov(`qt-${tool.href}`)}
-              onMouseLeave={() => setHov(null)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(tool.href); } }}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-                width: 80,
-                minWidth: 72,
-                padding: '10px 4px',
-                borderRadius: 12,
-                cursor: 'pointer',
-                transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-                transform: hov === `qt-${tool.href}` ? 'translateY(-2px)' : 'none',
-                background: hov === `qt-${tool.href}` ? C.bg : 'transparent',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ position: 'relative' }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 14,
-                  background: `${tool.iconColor}10`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: 'none',
-                  transition: 'all .15s ease',
-                }}>
-                  <tool.Icon size={20} color={tool.iconColor} />
-                </div>
-                <span style={{
-                  position: 'absolute', top: -4, right: -8,
-                  fontSize: 9, fontWeight: 600, color: tool.badgeColor,
-                  background: `${tool.badgeColor}12`, borderRadius: 10, padding: '0px 5px',
-                  lineHeight: '15px', letterSpacing: '.02em',
-                }}>
-                  {tool.badge}
-                </span>
-              </div>
-              <span style={{
-                fontSize: 11, fontWeight: 500, textAlign: 'center',
-                lineHeight: 1.2, color: C.sub,
-              }}>
-                {tool.title}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── Empty state illustration ──────────────────────────── */
 
 function EmptyIllustration({ color, dimColor, label }: { color: string; dimColor: string; label: string }) {
   return (
     <svg width="160" height="130" viewBox="0 0 160 130" fill="none">
-      {/* Film strip */}
       <rect x="30" y="20" width="100" height="70" rx="10" stroke={dimColor} strokeWidth="2" strokeDasharray="6 4" />
       <rect x="42" y="35" width="24" height="18" rx="4" fill={`${color}18`} stroke={color} strokeWidth="1.2" />
       <rect x="72" y="35" width="24" height="18" rx="4" fill={`${color}18`} stroke={color} strokeWidth="1.2" />
       <rect x="102" y="35" width="24" height="18" rx="4" fill={`${color}10`} stroke={dimColor} strokeWidth="1" strokeDasharray="3 3" />
-      {/* Play button */}
       <circle cx="80" cy="78" r="12" fill={`${color}20`} stroke={color} strokeWidth="1.5" />
       <polygon points="76,72 88,78 76,84" fill={color} />
-      {/* Plus badge */}
       <circle cx="120" cy="28" r="14" fill={color} />
       <line x1="120" y1="22" x2="120" y2="34" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
       <line x1="114" y1="28" x2="126" y2="28" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-      {/* Sparkles */}
       <circle cx="25" cy="50" r="2" fill={`${color}40`} />
       <circle cx="138" cy="65" r="1.5" fill={`${color}30`} />
       <circle cx="45" cy="100" r="1.8" fill={`${color}25`} />
@@ -845,14 +206,6 @@ function ProjectCardSkeleton() {
           <Skeleton height={24} width={80} rounded />
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatCardSkeleton() {
-  return (
-    <div style={{ flex: '1 1 0', minWidth: 140 }}>
-      <Skeleton height={90} style={{ borderRadius: 14 }} />
     </div>
   );
 }
@@ -928,7 +281,7 @@ const ProjectCard = memo(function ProjectCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: C.card,
+        background: '#1a1a1a',
         borderRadius: 14,
         overflow: 'hidden',
         cursor: 'pointer',
@@ -953,8 +306,8 @@ const ProjectCard = memo(function ProjectCard({
           style={{
             position: 'absolute', top: 10, left: 10, zIndex: 3,
             width: 24, height: 24, borderRadius: 6,
-            background: selected ? C.accent : C.surface,
-            border: `2px solid ${selected ? C.accent : C.border}`,
+            background: selected ? C.accent : 'rgba(255,255,255,0.08)',
+            border: `2px solid ${selected ? C.accent : 'rgba(255,255,255,0.15)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', transition: 'all .15s ease',
             boxShadow: '0 1px 4px rgba(0,0,0,.3)',
@@ -971,7 +324,7 @@ const ProjectCard = memo(function ProjectCard({
       {/* Thumbnail area */}
       <div style={{
         height: 140,
-        background: C.bg,
+        background: '#111',
         borderRadius: 10,
         position: 'relative',
         overflow: 'hidden',
@@ -999,17 +352,17 @@ const ProjectCard = memo(function ProjectCard({
           }}>
             <div style={{
               width: 48, height: 48, borderRadius: 12,
-              background: `${C.accent}12`,
+              background: 'rgba(255,255,255,0.04)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform .3s ease',
               transform: isHovered ? 'scale(1.1)' : 'scale(1)',
             }}>
-              <IconFilm size={24} color={C.dim} />
+              <IconFilm size={24} color="rgba(255,255,255,0.2)" />
             </div>
           </div>
         )}
 
-        {/* Status badge — top-right */}
+        {/* Status badge */}
         <div style={{
           position: 'absolute', top: 10, right: 10,
           padding: '4px 10px',
@@ -1025,7 +378,7 @@ const ProjectCard = memo(function ProjectCard({
           {statusLabel}
         </div>
 
-        {/* Scene count badge — bottom-left */}
+        {/* Scene count badge */}
         <div style={{
           position: 'absolute', bottom: 10, left: 10,
           padding: '3px 8px',
@@ -1084,14 +437,14 @@ const ProjectCard = memo(function ProjectCard({
               fontSize: 14, fontWeight: 600,
               border: `1.5px solid ${C.accent}`,
               borderRadius: 8, padding: '5px 8px',
-              background: C.card, color: C.text,
+              background: '#1a1a1a', color: '#fff',
               fontFamily: 'inherit', width: '100%',
               marginBottom: 8,
             }}
           />
         ) : (
           <div style={{
-            fontSize: 14, fontWeight: 600, marginBottom: 8, color: C.text,
+            fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#fff',
             lineHeight: 1.4, letterSpacing: '-.01em',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
@@ -1103,7 +456,7 @@ const ProjectCard = memo(function ProjectCard({
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: 12, color: C.sub, fontWeight: 400 }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>
             {timeAgo(p.updatedAt)}
           </span>
 
@@ -1116,7 +469,7 @@ const ProjectCard = memo(function ProjectCard({
             {isDeleting ? (
               <>
                 <span style={{
-                  fontSize: 11, color: C.sub, fontWeight: 500,
+                  fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500,
                   maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   marginRight: 4,
                 }}>
@@ -1138,8 +491,8 @@ const ProjectCard = memo(function ProjectCard({
                   onClick={() => onCancelDelete()}
                   style={{
                     padding: '6px 12px', borderRadius: 7,
-                    border: `1px solid ${C.border}`, background: 'transparent',
-                    color: C.sub, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                    border: '1px solid rgba(255,255,255,0.1)', background: 'transparent',
+                    color: 'rgba(255,255,255,0.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     minHeight: 32,
                   }}
@@ -1160,16 +513,15 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `rename-${p.id}` ? C.borderActive : C.border}`,
-                    background: hovBtn === `rename-${p.id}` ? C.card : 'transparent',
-                    color: C.sub, cursor: 'pointer',
+                    border: `1px solid ${hovBtn === `rename-${p.id}` ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                    background: hovBtn === `rename-${p.id}` ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
-                    /* Invisible touch target expansion for mobile */
                     position: 'relative',
                   }}
                 >
-                  <IconEdit size={14} color={C.sub} />
+                  <IconEdit size={14} color="rgba(255,255,255,0.5)" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -1182,14 +534,14 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `dup-${p.id}` ? C.borderActive : C.border}`,
-                    background: hovBtn === `dup-${p.id}` ? C.card : 'transparent',
-                    color: C.sub, cursor: 'pointer',
+                    border: `1px solid ${hovBtn === `dup-${p.id}` ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                    background: hovBtn === `dup-${p.id}` ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconPlus size={14} color={C.sub} />
+                  <IconPlus size={14} color="rgba(255,255,255,0.5)" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -1202,14 +554,14 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `share-${p.id}` ? C.borderActive : C.border}`,
-                    background: hovBtn === `share-${p.id}` ? C.card : 'transparent',
-                    color: C.sub, cursor: 'pointer',
+                    border: `1px solid ${hovBtn === `share-${p.id}` ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+                    background: hovBtn === `share-${p.id}` ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconShareLink size={14} color={C.sub} />
+                  <IconShareLink size={14} color="rgba(255,255,255,0.5)" />
                 </button>
                 <ExportButton projectId={p.id} projectTitle={p.title} />
                 <button
@@ -1223,15 +575,15 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `delete-${p.id}` ? `${C.red}40` : C.border}`,
+                    border: `1px solid ${hovBtn === `delete-${p.id}` ? `${C.red}40` : 'rgba(255,255,255,0.06)'}`,
                     background: hovBtn === `delete-${p.id}` ? `${C.red}12` : 'transparent',
-                    color: hovBtn === `delete-${p.id}` ? C.red : C.sub,
+                    color: hovBtn === `delete-${p.id}` ? C.red : 'rgba(255,255,255,0.5)',
                     cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? C.red : C.sub} />
+                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? C.red : 'rgba(255,255,255,0.5)'} />
                 </button>
               </>
             )}
@@ -1242,286 +594,6 @@ const ProjectCard = memo(function ProjectCard({
   );
 });
 
-
-/* ── Referral Widget ────────────────────────────────── */
-
-function ReferralWidget({
-  C,
-  t,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  t: (key: string) => string;
-}) {
-  const router = useRouter();
-  const [copied, setCopied] = useState(false);
-  const [hov, setHov] = useState(false);
-
-  const myReferral = trpc.referral.getMyReferral.useQuery();
-  const referralCode = myReferral.data?.code ?? null;
-  const referralLink = referralCode ? `https://tubeforge.co?ref=${referralCode}` : '';
-
-  const handleCopy = useCallback(async () => {
-    if (!referralLink) return;
-    try {
-      await navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = referralLink;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }, [referralLink]);
-
-  if (myReferral.isLoading) return null;
-
-  return (
-    <div
-      style={{
-        marginBottom: 28,
-        borderRadius: 12,
-        background: C.card,
-        border: '1px solid rgba(255,255,255,0.06)',
-        cursor: 'pointer',
-        transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-        transform: hov ? 'translateY(-2px)' : 'none',
-        boxShadow: hov
-          ? '0 8px 24px rgba(0,0,0,.4)'
-          : 'none',
-      }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      onClick={() => router.push('/referral')}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/referral'); } }}
-    >
-      <div style={{
-        background: 'transparent',
-        borderRadius: 14,
-        padding: '18px 22px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 16,
-        flexWrap: 'wrap',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: `${C.accent}10`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="8" width="16" height="10" rx="2" stroke={C.accent} strokeWidth="1.5" />
-              <path d="M10 8V18" stroke={C.accent} strokeWidth="1.5" />
-              <path d="M2 11H18" stroke={C.accent} strokeWidth="1.5" />
-              <path d="M10 8C10 8 10 4 7 4C5.5 4 4 5 5 6.5C6 8 10 8 10 8Z" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M10 8C10 8 10 4 13 4C14.5 4 16 5 15 6.5C14 8 10 8 10 8Z" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>
-              {t('dashboard.referralWidget.title')}
-            </div>
-            <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-              {t('dashboard.referralWidget.desc')}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          {referralCode ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleCopy(); }}
-              style={{
-                height: 36,
-                padding: '0 14px',
-                borderRadius: 10,
-                border: `1px solid ${copied ? C.green : C.accent}`,
-                background: copied ? `${C.green}10` : `${C.accent}10`,
-                color: copied ? C.green : C.accent,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                transition: 'all .2s ease',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {copied ? t('dashboard.referralWidget.copied') : t('dashboard.referralWidget.copy')}
-            </button>
-          ) : (
-            <span style={{
-              height: 36,
-              padding: '0 14px',
-              borderRadius: 10,
-              background: `${C.accent}10`,
-              border: `1px solid ${C.accent}`,
-              color: C.accent,
-              fontSize: 12,
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              whiteSpace: 'nowrap',
-            }}>
-              {t('dashboard.referralWidget.activate')}
-            </span>
-          )}
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: C.accent,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {t('dashboard.referralWidget.goToReferral')}
-            <span style={{ marginLeft: 4 }}>&rarr;</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Plan Usage Widget ──────────────────────────────────── */
-
-function DashboardUsageBar({
-  label,
-  used,
-  total,
-  C,
-  isDark,
-}: {
-  label: string;
-  used: number;
-  total: number;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  isDark: boolean;
-}) {
-  const isInfinite = !isFinite(total);
-  const pct = isInfinite ? 0 : total > 0 ? Math.min((used / total) * 100, 100) : 0;
-  const barColor = pct > 90 ? C.red : pct > 60 ? C.orange : C.green;
-  const displayTotal = isInfinite ? '\u221E' : String(total);
-
-  return (
-    <div style={{ flex: 1, minWidth: 120 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-        <span style={{ fontSize: 12, fontWeight: 500, color: C.sub }}>{label}</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{used}/{displayTotal}</span>
-      </div>
-      <div style={{
-        height: 6,
-        borderRadius: 3,
-        background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%',
-          borderRadius: 3,
-          width: isInfinite ? '0%' : `${pct}%`,
-          background: barColor,
-          transition: 'width .4s ease',
-        }} />
-      </div>
-    </div>
-  );
-}
-
-function PlanUsageWidget({
-  C,
-  t,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  t: (key: string) => string;
-}) {
-  const isDark = useThemeStore((s) => s.isDark);
-  const router = useRouter();
-  const { plan, projectCount, aiCount, limits, isLoading } = usePlanLimits();
-
-  if (isLoading) return null;
-
-  const planLabel = getPlanLabel(plan, t);
-
-  return (
-    <div style={{
-      background: C.card,
-      borderRadius: 12,
-      padding: '20px 22px',
-      marginBottom: 20,
-      border: '1px solid rgba(255,255,255,0.06)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('dashboard.yourPlan')}</span>
-          <span style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: plan === 'FREE' ? C.sub : C.accent,
-            padding: '3px 10px',
-            borderRadius: 20,
-            background: plan === 'FREE' ? C.bg : `${C.accent}10`,
-            letterSpacing: '.02em',
-          }}>
-            {planLabel}
-          </span>
-        </div>
-        {plan === 'FREE' && (
-          <button
-            onClick={() => router.push('/billing')}
-            style={{
-              padding: '8px 18px',
-              borderRadius: 10,
-              border: `1px solid ${C.accent}`,
-              background: `${C.accent}10`,
-              color: C.accent,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all .2s ease',
-              boxShadow: 'none',
-            }}
-          >
-            {t('dashboard.upgradeCta')}
-          </button>
-        )}
-      </div>
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-        <DashboardUsageBar
-          label={t('dashboard.usageProjects')}
-          used={projectCount}
-          total={limits.projects}
-          C={C}
-          isDark={isDark}
-        />
-        <DashboardUsageBar
-          label={t('dashboard.usageAi')}
-          used={aiCount}
-          total={limits.ai}
-          C={C}
-          isDark={isDark}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ── Project Templates (imported from src/lib/templates.ts) ── */
 
 /* ── Template Picker Modal ─────────────────────────────── */
 
@@ -1543,7 +615,6 @@ function TemplatePickerModal({
   const [hov, setHov] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<TemplateCategory | null>(null);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -1627,7 +698,7 @@ function TemplatePickerModal({
         position: 'fixed',
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: C.card,
+        background: '#1a1a1a',
         borderRadius: 14,
         border: '1px solid rgba(255,255,255,0.06)',
         width: '92%', maxWidth: 720,
@@ -1645,7 +716,7 @@ function TemplatePickerModal({
           padding: '18px 22px 0',
           flexShrink: 0,
         }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: '#fff' }}>
             {t('dashboard.newProject')}
           </h2>
           <button
@@ -1653,18 +724,18 @@ function TemplatePickerModal({
             disabled={isCreating}
             style={{
               background: 'none', border: 'none',
-              color: C.sub, cursor: isCreating ? 'not-allowed' : 'pointer',
+              color: 'rgba(255,255,255,0.5)', cursor: isCreating ? 'not-allowed' : 'pointer',
               padding: 4, display: 'flex', borderRadius: 6,
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
 
         <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
-          <p style={{ fontSize: 13, color: C.sub, margin: '0 0 14px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '0 0 14px', lineHeight: 1.5 }}>
             {t('dashboard.templatePickerDesc')}
           </p>
 
@@ -1679,8 +750,8 @@ function TemplatePickerModal({
             style={{
               padding: '14px 16px',
               borderRadius: 14,
-              border: `1px solid ${hov === 'blank' ? C.accent : C.border}`,
-              background: hov === 'blank' ? `${C.accent}06` : C.bg,
+              border: `1px solid ${hov === 'blank' ? C.accent : 'rgba(255,255,255,0.06)'}`,
+              background: hov === 'blank' ? `${C.accent}06` : '#111',
               cursor: isCreating ? 'wait' : 'pointer',
               transition: 'all .15s ease',
               marginBottom: 10,
@@ -1699,10 +770,10 @@ function TemplatePickerModal({
               <IconPlus size={22} color={C.accent} />
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
                 {t('dashboard.blankProject')}
               </div>
-              <div style={{ fontSize: 12, color: C.sub }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
                 {t('dashboard.blankProjectDesc')}
               </div>
             </div>
@@ -1713,11 +784,11 @@ function TemplatePickerModal({
             display: 'flex', alignItems: 'center', gap: 12,
             margin: '14px 0',
           }}>
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-            <span style={{ fontSize: 11, color: C.dim, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
               {t('dashboard.orTemplate')}
             </span>
-            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
           </div>
 
           {/* Category filter pills */}
@@ -1728,8 +799,8 @@ function TemplatePickerModal({
                 padding: '5px 14px',
                 borderRadius: 20,
                 border: 'none',
-                background: !categoryFilter ? `${C.accent}12` : C.bg,
-                color: !categoryFilter ? C.accent : C.sub,
+                background: !categoryFilter ? `${C.accent}12` : '#111',
+                color: !categoryFilter ? C.accent : 'rgba(255,255,255,0.5)',
                 fontSize: 12,
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -1751,8 +822,8 @@ function TemplatePickerModal({
                     padding: '5px 14px',
                     borderRadius: 20,
                     border: 'none',
-                    background: isActive ? `${info.color}12` : C.bg,
-                    color: isActive ? info.color : C.sub,
+                    background: isActive ? `${info.color}12` : '#111',
+                    color: isActive ? info.color : 'rgba(255,255,255,0.5)',
                     fontSize: 12,
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -1789,8 +860,8 @@ function TemplatePickerModal({
                   style={{
                     padding: '14px 16px',
                     borderRadius: 14,
-                    border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
-                    background: hov === tpl.id ? `${C.accent}04` : C.bg,
+                    border: `1px solid ${hov === tpl.id ? C.accent : 'rgba(255,255,255,0.06)'}`,
+                    background: hov === tpl.id ? `${C.accent}04` : '#111',
                     cursor: isCreating ? 'wait' : 'pointer',
                     transition: 'all .2s cubic-bezier(.4,0,.2,1)',
                     transform: hov === tpl.id ? 'translateY(-1px)' : 'none',
@@ -1803,26 +874,24 @@ function TemplatePickerModal({
                     opacity: isCreating ? 0.6 : 1,
                   }}
                 >
-                  {/* Top row: icon + name + category badge */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 12,
-                      background: C.card,
+                      background: '#1a1a1a',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0, fontSize: 18,
                     }}>
                       {tpl.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>
                         {isRu ? tpl.name : tpl.nameEn}
                       </div>
                     </div>
                   </div>
 
-                  {/* Description */}
                   <div style={{
-                    fontSize: 12, color: C.sub, lineHeight: 1.5,
+                    fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical' as const,
@@ -1831,7 +900,6 @@ function TemplatePickerModal({
                     {isRu ? tpl.description : tpl.descriptionEn}
                   </div>
 
-                  {/* Bottom row: category badge + scene count */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{
                       fontSize: 10, fontWeight: 700,
@@ -1845,7 +913,7 @@ function TemplatePickerModal({
                       {isRu ? catInfo.name : catInfo.nameEn}
                     </span>
                     <span style={{
-                      fontSize: 11, fontWeight: 600, color: C.dim,
+                      fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)',
                       whiteSpace: 'nowrap',
                     }}>
                       {tpl.sceneCount} {isRu
@@ -1861,7 +929,7 @@ function TemplatePickerModal({
           {filteredTemplates.length === 0 && (
             <div style={{
               textAlign: 'center', padding: '24px 0',
-              color: C.dim, fontSize: 13,
+              color: 'rgba(255,255,255,0.3)', fontSize: 13,
             }}>
               {t('dashboard.noTemplates')}
             </div>
@@ -1872,129 +940,6 @@ function TemplatePickerModal({
   );
 }
 
-/* ── Publishing History Widget ──────────────────────────── */
-
-interface PublishHistoryEntry {
-  platform: string;
-  title: string;
-  url: string;
-  publishedAt: string;
-  scheduled?: boolean;
-}
-
-function PublishHistoryWidget({
-  C,
-  t,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  t: (key: string) => string;
-}) {
-  const [entries, setEntries] = useState<PublishHistoryEntry[]>([]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('tf-publish-history');
-      if (raw) {
-        const parsed = JSON.parse(raw) as PublishHistoryEntry[];
-        setEntries(parsed.slice(0, 5));
-      }
-    } catch { /* localStorage unavailable */ }
-  }, []);
-
-  if (entries.length === 0) return null;
-
-  return (
-    <div style={{
-      background: C.card,
-      borderRadius: 12,
-      padding: '20px 22px',
-      marginBottom: 20,
-      border: '1px solid rgba(255,255,255,0.06)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-        <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('dashboard.recentlyPublished')}</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {entries.map((entry, i) => {
-          const date = new Date(entry.publishedAt);
-          const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-          return (
-            <div
-              key={`${entry.publishedAt}-${i}`}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 12px', borderRadius: 10,
-                background: C.bg,
-                transition: 'all .15s',
-              }}
-            >
-              {/* Platform icon */}
-              <div style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: entry.platform === 'YouTube' ? '#ff000015' : `${C.accent}10`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {entry.platform === 'YouTube' ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff0000">
-                    <path d="M23.5 6.19a3 3 0 00-2.11-2.13C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.39.56A3 3 0 00.5 6.19 31 31 0 000 12a31 31 0 00.5 5.81 3 3 0 002.11 2.13c1.89.56 9.39.56 9.39.56s7.5 0 9.39-.56a3 3 0 002.11-2.13A31 31 0 0024 12a31 31 0 00-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" />
-                  </svg>
-                )}
-              </div>
-
-              {/* Title + date */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 13, fontWeight: 600, color: C.text,
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>
-                  {entry.title}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.dim, marginTop: 2 }}>
-                  <span>{entry.platform}</span>
-                  <span>&#183;</span>
-                  <span>{dateStr}</span>
-                  {entry.scheduled && (
-                    <>
-                      <span>&#183;</span>
-                      <span style={{ color: C.orange }}>{t('dashboard.scheduled')}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Link button */}
-              {entry.url && (
-                <a
-                  href={entry.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    padding: '5px 12px', borderRadius: 6,
-                    border: `1px solid ${C.border}`,
-                    background: 'transparent', color: C.sub,
-                    fontSize: 11, fontWeight: 600, textDecoration: 'none',
-                    transition: 'all .15s', flexShrink: 0,
-                  }}
-                >
-                  {t('dashboard.openLink')}
-                </a>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 /* ── Main Dashboard Component ──────────────────────────── */
 
@@ -2007,7 +952,7 @@ export function Dashboard() {
   const searchParams = useSearchParams();
   const utils = trpc.useUtils();
 
-  /* ── Local state (initialized from URL params) ── */
+  /* ── Local state ── */
   const [searchInput, setSearchInput] = useState(() => searchParams?.get('q') ?? '');
   const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams?.get('q') ?? '');
   const [statusFilter, setStatusFilter] = useState<'DRAFT' | 'RENDERING' | 'READY' | 'PUBLISHED' | undefined>(() => {
@@ -2033,7 +978,7 @@ export function Dashboard() {
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [recentActivities, setRecentActivities] = useState<ActivityEntry[]>([]);
+  const [_recentActivities, setRecentActivities] = useState<ActivityEntry[]>([]);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   /* ── Auto-trigger checkout when arriving from pricing CTA ── */
@@ -2104,6 +1049,9 @@ export function Dashboard() {
     page,
     limit: 12,
   });
+
+  /* ── Plan limits for stat pills ──────────────── */
+  const { plan: currentPlan, projectCount, aiCount, limits } = usePlanLimits();
 
   /* ── tRPC mutations ───────────────────────────── */
   const createProject = trpc.project.create.useMutation({
@@ -2272,43 +1220,20 @@ export function Dashboard() {
     }
   }, [selectedIds, deleteProject, t, utils]);
 
-  /* ── Compute stats ────────────────────────────── */
+  /* ── Compute stats for pills ───────────────────── */
   const user = profile.data;
   const plan = user?.plan ?? 'FREE';
-  const stats = useMemo(() => {
+
+  const statPills = useMemo(() => {
     const total = totalProjects.data?.total ?? user?._count?.projects ?? 0;
-    // Count statuses from the unfiltered first-page query hint — for accurate stats
-    // we rely on totalProjects (which has no filter). For status breakdown we check
-    // the currently loaded items. Since the stats query only fetches 1 item, we use
-    // the total count from profile for project count, and we cannot get per-status
-    // counts without separate queries. Keep it simple and useful.
+    const maxProjects = isFinite(limits.projects) ? `/${limits.projects}` : '';
+    const maxAi = isFinite(limits.ai) ? `/${limits.ai}` : '';
     return [
-      {
-        label: t('dashboard.totalProjects'),
-        value: String(total),
-        icon: IconFolder,
-        iconColor: C.accent,
-      },
-      {
-        label: t('dashboard.plan'),
-        value: getPlanLabel(plan, t),
-        icon: IconStar,
-        iconColor: C.purple,
-      },
-      {
-        label: t('dashboard.aiRequests'),
-        value: String(user?.aiUsage ?? 0),
-        icon: IconFilm,
-        iconColor: C.blue,
-      },
-      {
-        label: t('dashboard.channels'),
-        value: String(user?.channels?.length ?? 0),
-        icon: IconSend,
-        iconColor: C.green,
-      },
+      { value: `${total}${maxProjects}`, label: t('dashboard.totalProjects') },
+      { value: `${aiCount}${maxAi}`, label: t('dashboard.aiRequests') },
+      { value: getPlanLabel(plan, t), label: t('dashboard.plan') },
     ];
-  }, [totalProjects.data?.total, user?._count?.projects, plan, user?.aiUsage, user?.channels?.length, C, t]);
+  }, [totalProjects.data?.total, user?._count?.projects, plan, aiCount, limits, t]);
 
   /* ── Error states ─────────────────────────────── */
   if (profile.isError) {
@@ -2336,253 +1261,182 @@ export function Dashboard() {
 
   return (
     <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
-      {/* ── Welcome Hero Section (Crayo-style) ───────── */}
-      <WelcomeSection C={C} router={router} t={t} />
 
-      {/* ── Onboarding Checklist ─────────────────────── */}
-      <OnboardingChecklist />
-
-      {/* ── Activity Streak ──────────────────────────── */}
-      <div style={{ marginBottom: 20 }}>
-        <ActivityStreak />
+      {/* ── Welcome header ────────────────────────── */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 className="tf-dash-heading" style={{
+          fontSize: 26, fontWeight: 600, margin: '0 0 4px',
+          letterSpacing: '-.02em', lineHeight: 1.2, color: '#fff',
+        }}>
+          {profile.isLoading
+            ? <Skeleton width={260} height={34} />
+            : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}`
+          }
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, margin: 0, lineHeight: 1.5, fontWeight: 400 }}>
+          {profile.isLoading
+            ? <Skeleton width={160} height={16} style={{ marginTop: 4 }} />
+            : t('dashboard.manageProjects')
+          }
+        </p>
       </div>
 
-      {/* ── Usage Milestones (floating toast) ────────── */}
-      <UsageMilestones />
-
-      {/* ── Header ──────────────────────────────────── */}
-      <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
-        <div style={{ minWidth: 0 }}>
-          <h1 className="tf-dash-heading" style={{ fontSize: 26, fontWeight: 600, margin: '0 0 4px', letterSpacing: '-.02em', lineHeight: 1.2, color: C.text }}>
-            {profile.isLoading ? <Skeleton width={260} height={34} /> : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}!`}
-          </h1>
-          <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5, fontWeight: 400 }}>
-            {profile.isLoading ? (
-              <Skeleton width={160} height={16} style={{ marginTop: 4 }} />
-            ) : (
-              <>{t('dashboard.manageProjects')}</>
-            )}
-          </p>
-        </div>
-        <div className="tf-dash-header-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button
-            className="tf-dash-create-btn"
-            data-tour="new-project"
-            onClick={() => setTemplateModalOpen(true)}
-            disabled={createProject.isPending}
-            onMouseEnter={() => setHoveredBtn('create-main')}
-            onMouseLeave={() => setHoveredBtn(null)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: C.accent,
-              color: '#fff', border: 'none', borderRadius: 12,
-              padding: '0 22px', height: 44, fontSize: 14, fontWeight: 600,
-              cursor: createProject.isPending ? 'wait' : 'pointer',
-              fontFamily: 'inherit', opacity: createProject.isPending ? 0.6 : 1,
-              boxShadow: 'none',
-              transition: 'all .2s cubic-bezier(.4,0,.2,1)',
-              transform: hoveredBtn === 'create-main' ? 'translateY(-1px)' : 'none',
-              letterSpacing: '-.01em',
-              flexShrink: 0,
-            }}
-          >
-            <IconPlus size={16} color="#fff" />
-            {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
-          </button>
-          <button
-            className="tf-dash-import-btn"
-            onClick={() => setImportOpen(true)}
-            onMouseEnter={() => setHoveredBtn('import-main')}
-            onMouseLeave={() => setHoveredBtn(null)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: C.card,
-              color: C.text, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12,
-              padding: '0 18px', height: 44, fontSize: 14, fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all .2s ease',
-              boxShadow: 'none',
-              flexShrink: 0,
-            }}
-          >
-            <IconUploadSmall size={16} color={C.sub} />
-            {t('dashboard.importProject')}
-          </button>
-        </div>
-      </div>
-      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
-
-      {/* ── Quick Actions Bar ────────────────────────── */}
-      <div style={{
-        display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap',
-      }}>
+      {/* ── Action bar: 3 buttons ─────────────────── */}
+      <div className="tf-dash-header-actions" style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
         <button
-          onClick={() => createProject.mutate({ title: t('dashboard.newProject') })}
+          className="tf-dash-create-btn"
+          data-tour="new-project"
+          onClick={() => setTemplateModalOpen(true)}
           disabled={createProject.isPending}
-          onMouseEnter={() => setHoveredBtn('qa-new')}
+          onMouseEnter={() => setHoveredBtn('act-new')}
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${hoveredBtn === 'qa-new' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
-            background: hoveredBtn === 'qa-new' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 500,
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 10,
+            padding: '0 20px', height: 44, fontSize: 14, fontWeight: 600,
             cursor: createProject.isPending ? 'wait' : 'pointer',
-            fontFamily: 'inherit', transition: 'all .15s ease',
+            fontFamily: 'inherit',
             opacity: createProject.isPending ? 0.6 : 1,
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hoveredBtn === 'act-new' ? 'translateY(-1px)' : 'none',
+            boxShadow: hoveredBtn === 'act-new' ? '0 4px 16px rgba(0,0,0,.3)' : 'none',
+            letterSpacing: '-.01em',
+            flexShrink: 0,
           }}
         >
-          <IconPlus size={15} color={C.sub} />
-          {t('dashboard.newProject')}
-        </button>
-        <button
-          onClick={() => setImportOpen(true)}
-          onMouseEnter={() => setHoveredBtn('qa-import')}
-          onMouseLeave={() => setHoveredBtn(null)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${hoveredBtn === 'qa-import' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
-            background: hoveredBtn === 'qa-import' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 500,
-            cursor: 'pointer',
-            fontFamily: 'inherit', transition: 'all .15s ease',
-          }}
-        >
-          <IconUploadSmall size={15} color={C.sub} />
-          {t('dashboard.importProject')}
+          <IconPlus size={16} color="#fff" />
+          {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
         </button>
         <button
           onClick={() => setTemplateModalOpen(true)}
-          onMouseEnter={() => setHoveredBtn('qa-template')}
+          onMouseEnter={() => setHoveredBtn('act-tpl')}
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${hoveredBtn === 'qa-template' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
-            background: hoveredBtn === 'qa-template' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 500,
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 10,
+            padding: '0 20px', height: 44, fontSize: 14, fontWeight: 500,
             cursor: 'pointer',
-            fontFamily: 'inherit', transition: 'all .15s ease',
+            fontFamily: 'inherit',
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hoveredBtn === 'act-tpl' ? 'translateY(-1px)' : 'none',
+            boxShadow: hoveredBtn === 'act-tpl' ? '0 4px 16px rgba(0,0,0,.3)' : 'none',
+            flexShrink: 0,
           }}
         >
-          <IconLayout size={15} color={C.sub} />
+          <IconLayout size={16} color="rgba(255,255,255,0.5)" />
           {t('dashboard.fromTemplate')}
         </button>
         <button
-          onClick={() => router.push('/tools/video-translator')}
-          onMouseEnter={() => setHoveredBtn('qa-translator')}
+          className="tf-dash-import-btn"
+          onClick={() => setImportOpen(true)}
+          onMouseEnter={() => setHoveredBtn('act-import')}
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '9px 18px', borderRadius: 10,
-            border: `1px solid ${hoveredBtn === 'qa-translator' ? C.borderActive : 'rgba(255,255,255,0.08)'}`,
-            background: hoveredBtn === 'qa-translator' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 500,
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 10,
+            padding: '0 20px', height: 44, fontSize: 14, fontWeight: 500,
             cursor: 'pointer',
-            fontFamily: 'inherit', transition: 'all .15s ease',
+            fontFamily: 'inherit',
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hoveredBtn === 'act-import' ? 'translateY(-1px)' : 'none',
+            boxShadow: hoveredBtn === 'act-import' ? '0 4px 16px rgba(0,0,0,.3)' : 'none',
+            flexShrink: 0,
           }}
         >
-          <IconTranslate size={15} color={C.sub} />
-          Video Translator
-          <span style={{
-            fontSize: 10, fontWeight: 700, color: '#fff',
-            padding: '1px 6px', borderRadius: 4,
-            background: C.purple,
-            letterSpacing: '.02em',
-          }}>Pro</span>
+          <IconUploadSmall size={16} color="rgba(255,255,255,0.5)" />
+          {t('dashboard.importProject')}
         </button>
       </div>
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
-      {/* ── Stat cards ──────────────────────────────── */}
+      {/* ── Stat pills (inline) ───────────────────── */}
       <div className="tf-dash-stat-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 12,
-        marginBottom: 28,
+        display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap',
       }}>
         {profile.isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
-          : stats.map((s, i) => {
-              const StatIcon = s.icon;
-              return (
-                <div
-                  key={i}
-                  className="tf-stat-card"
-                  style={{
-                    background: C.card,
-                    borderRadius: 12,
-                    padding: '18px 16px',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    cursor: 'default',
-                    transition: 'box-shadow .25s ease, transform .25s ease',
-                    minWidth: 0,
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 12,
-                  }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: '50%',
-                      background: `${s.iconColor}14`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <StatIcon size={18} color={s.iconColor} />
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'center', minWidth: 0 }}>
-                    <div className="tf-dash-stat-value" style={{
-                      fontSize: 28, fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1.2,
-                      color: C.text, marginBottom: 4,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {s.value}
-                    </div>
-                    <div style={{
-                      fontSize: 12, color: C.sub, fontWeight: 400,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {s.label}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} width={100} height={36} style={{ borderRadius: 10 }} />
+            ))
+          : statPills.map((s, i) => (
+              <div
+                key={i}
+                className="tf-stat-card"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: '#1a1a1a',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 10,
+                  padding: '8px 14px',
+                  cursor: 'default',
+                }}
+              >
+                <span style={{
+                  fontSize: 14, fontWeight: 700, color: '#fff',
+                  letterSpacing: '-.01em',
+                }}>
+                  {s.value}
+                </span>
+                <span style={{
+                  fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 400,
+                }}>
+                  {s.label}
+                </span>
+              </div>
+            ))
+        }
+        {/* Upgrade pill for free users */}
+        {!profile.isLoading && currentPlan === 'FREE' && (
+          <button
+            onClick={() => router.push('/billing')}
+            onMouseEnter={() => setHoveredBtn('upgrade-pill')}
+            onMouseLeave={() => setHoveredBtn(null)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: `${C.accent}10`,
+              border: `1px solid ${C.accent}30`,
+              borderRadius: 10,
+              padding: '8px 14px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .2s ease',
+              transform: hoveredBtn === 'upgrade-pill' ? 'translateY(-1px)' : 'none',
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>
+              {t('dashboard.upgradeCta')}
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* ── Plan Usage Widget ─────────────────────────── */}
-      <PlanUsageWidget C={C} t={t} />
-
-      {/* ── Recent Activity Feed ────────────────────── */}
-      <RecentActivityFeed C={C} t={t} activities={recentActivities} />
-
-      {/* ── Referral Widget ──────────────────────────── */}
-      <ReferralWidget C={C} t={t} />
-
-      {/* ── Publishing History Widget ─────────────────── */}
-      <PublishHistoryWidget C={C} t={t} />
+      {/* ── Onboarding Checklist (new users only) ─── */}
+      <OnboardingChecklist />
 
       {/* ── Projects section ────────────────────────── */}
       <div style={{
-        background: C.card,
-        borderRadius: 12,
+        background: '#1a1a1a',
+        borderRadius: 14,
         overflow: 'hidden',
         border: '1px solid rgba(255,255,255,0.06)',
       }}>
         {/* Toolbar */}
         <div className="tf-dash-toolbar" style={{
           padding: '18px 22px 16px',
-          borderBottom: `1px solid ${C.border}`,
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           flexWrap: 'wrap', gap: 12,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: '#fff' }}>
               {t('dashboard.myProjects')}
             </h2>
             {projects.isRefetching && (
@@ -2593,8 +1447,8 @@ export function Dashboard() {
             )}
             {projects.data && !projects.isLoading && (
               <span style={{
-                fontSize: 12, color: C.sub, fontWeight: 500,
-                background: C.surface, padding: '2px 8px', borderRadius: 6,
+                fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500,
+                background: 'rgba(255,255,255,0.04)', padding: '2px 8px', borderRadius: 6,
               }}>
                 {'total' in projects.data ? String(projects.data.total ?? '') : ''}
               </span>
@@ -2608,7 +1462,7 @@ export function Dashboard() {
                 position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
                 pointerEvents: 'none', display: 'flex', alignItems: 'center',
               }}>
-                <IconSearch size={15} color={C.dim} />
+                <IconSearch size={15} color="rgba(255,255,255,0.3)" />
               </div>
               <input
                 className="tf-dash-search-input"
@@ -2621,9 +1475,9 @@ export function Dashboard() {
                   padding: '0 14px 0 32px',
                   height: 44,
                   background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.06)',
                   borderRadius: 10,
-                  color: C.text,
+                  color: '#fff',
                   fontSize: 13,
                   fontFamily: 'inherit',
                   width: '100%',
@@ -2642,10 +1496,10 @@ export function Dashboard() {
                 aria-label={t('dashboard.sortProjects')}
                 style={{
                   padding: '8px 10px',
-                  background: C.bg,
-                  border: `1px solid ${C.border}`,
+                  background: '#111',
+                  border: '1px solid rgba(255,255,255,0.06)',
                   borderRadius: 10,
-                  color: C.text,
+                  color: '#fff',
                   fontSize: 13,
                   fontFamily: 'inherit',
                   cursor: 'pointer',
@@ -2663,17 +1517,17 @@ export function Dashboard() {
                 onMouseLeave={() => setHoveredBtn(null)}
                 style={{
                   width: 36, height: 36, borderRadius: 10,
-                  border: `1px solid ${C.border}`,
-                  background: hoveredBtn === 'sort-dir' ? C.surface : 'transparent',
-                  color: C.sub, cursor: 'pointer',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: hoveredBtn === 'sort-dir' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                  color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: 'inherit', transition: 'all .15s ease',
                   flexShrink: 0,
                 }}
               >
                 {sortOrder === 'desc'
-                  ? <IconSortDesc size={15} color={C.sub} />
-                  : <IconSortAsc size={15} color={C.sub} />
+                  ? <IconSortDesc size={15} color="rgba(255,255,255,0.5)" />
+                  : <IconSortAsc size={15} color="rgba(255,255,255,0.5)" />
                 }
               </button>
             </div>
@@ -2698,8 +1552,8 @@ export function Dashboard() {
                       cursor: 'pointer',
                       fontFamily: 'inherit',
                       transition: 'all .2s ease',
-                      background: isActive ? `${C.accent}12` : (hoveredBtn === `filter-${f.label}` ? C.bg : C.bg),
-                      color: isActive ? C.accent : C.sub,
+                      background: isActive ? `${C.accent}12` : 'rgba(255,255,255,0.04)',
+                      color: isActive ? C.accent : 'rgba(255,255,255,0.5)',
                       whiteSpace: 'nowrap',
                       minHeight: 34,
                     }}
@@ -2718,12 +1572,12 @@ export function Dashboard() {
             /* ── Skeleton grid ─────────────── */
             <div className="tf-dash-project-grid" style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
               gap: 16,
             }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{
-                  background: C.card,
+                  background: '#1a1a1a',
                   borderRadius: 14,
                   overflow: 'hidden',
                   border: '1px solid rgba(255,255,255,0.06)',
@@ -2741,12 +1595,12 @@ export function Dashboard() {
               {hasFilters ? (
                 <>
                   <div style={{ marginBottom: 16, opacity: 0.6 }}>
-                    <IconSearch size={48} color={C.dim} />
+                    <IconSearch size={48} color="rgba(255,255,255,0.2)" />
                   </div>
-                  <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: C.text }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#fff' }}>
                     {t('dashboard.nothingFound')}
                   </h3>
-                  <p style={{ color: C.sub, fontSize: 14, marginBottom: 20, maxWidth: 320, lineHeight: 1.5 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 20, maxWidth: 320, lineHeight: 1.5 }}>
                     {t('dashboard.tryChangingSearch')}
                   </p>
                   <button
@@ -2755,10 +1609,10 @@ export function Dashboard() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       padding: '11px 28px',
-                      borderRadius: 12,
-                      background: hoveredBtn === 'reset' ? C.surface : 'transparent',
-                      color: C.text,
-                      border: `1px solid ${C.border}`,
+                      borderRadius: 10,
+                      background: hoveredBtn === 'reset' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.06)',
                       fontSize: 14,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -2772,12 +1626,12 @@ export function Dashboard() {
               ) : (
                 <>
                   <div style={{ marginBottom: 20 }}>
-                    <EmptyIllustration color={C.accent} dimColor={C.dim} label={t('dashboard.studioAwaits')} />
+                    <EmptyIllustration color={C.accent} dimColor="rgba(255,255,255,0.2)" label={t('dashboard.studioAwaits')} />
                   </div>
-                  <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', color: C.text, letterSpacing: '-.02em' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', color: '#fff', letterSpacing: '-.02em' }}>
                     {t('dashboard.createFirstProject')}
                   </h3>
-                  <p style={{ color: C.sub, fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6, fontWeight: 400 }}>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6, fontWeight: 400 }}>
                     {t('dashboard.createFirstDesc')}
                   </p>
                   <button
@@ -2808,7 +1662,7 @@ export function Dashboard() {
 
                   {/* ── Template suggestions ── */}
                   <div style={{ marginTop: 32, width: '100%', maxWidth: 640 }}>
-                    <p style={{ color: C.sub, fontSize: 13, fontWeight: 500, marginBottom: 14 }}>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 500, marginBottom: 14 }}>
                       {t('dashboard.emptyTemplateSuggestions')}
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
@@ -2824,8 +1678,8 @@ export function Dashboard() {
                             style={{
                               padding: '14px 16px',
                               borderRadius: 14,
-                              border: `1px solid ${C.border}`,
-                              background: hoveredBtn === `tpl-${tpl.id}` ? C.bg : C.card,
+                              border: '1px solid rgba(255,255,255,0.06)',
+                              background: hoveredBtn === `tpl-${tpl.id}` ? '#111' : '#1a1a1a',
                               cursor: 'pointer',
                               transition: 'all .2s cubic-bezier(.4,0,.2,1)',
                               transform: hoveredBtn === `tpl-${tpl.id}` ? 'translateY(-1px)' : 'none',
@@ -2834,10 +1688,10 @@ export function Dashboard() {
                             }}
                           >
                             <div style={{ fontSize: 20, marginBottom: 6 }}>{tpl.icon}</div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
                               {isRuLocale ? tpl.name : tpl.nameEn}
                             </div>
-                            <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.4 }}>
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>
                               {tpl.sceneCount} {t('dashboard.scene.many')}
                             </div>
                           </div>
@@ -2873,7 +1727,7 @@ export function Dashboard() {
             <>
               <div className="tf-dash-project-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
                 gap: 16,
               }}>
                 {(projects.data?.items ?? []).map((p) => (
@@ -2913,7 +1767,6 @@ export function Dashboard() {
                     gap: 6, paddingTop: 24, marginTop: 8,
                   }}
                 >
-                  {/* Prev button */}
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
@@ -2922,21 +1775,19 @@ export function Dashboard() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      border: `1px solid ${C.border}`,
-                      background: hoveredBtn === 'page-prev' && page > 1 ? C.surface : 'transparent',
-                      color: page <= 1 ? C.dim : C.sub,
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      background: hoveredBtn === 'page-prev' && page > 1 ? 'rgba(255,255,255,0.06)' : 'transparent',
+                      color: page <= 1 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)',
                       cursor: page <= 1 ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'inherit', transition: 'all .15s ease',
                       opacity: page <= 1 ? 0.4 : 1,
                     }}
                   >
-                    <IconChevronLeft size={16} color={page <= 1 ? C.dim : C.sub} />
+                    <IconChevronLeft size={16} color={page <= 1 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)'} />
                   </button>
 
-                  {/* Page numbers */}
                   {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                    // Smart pagination: show pages around current page
                     let pageNum: number;
                     if (totalPages <= 7) {
                       pageNum = i + 1;
@@ -2958,12 +1809,12 @@ export function Dashboard() {
                         onMouseLeave={() => setHoveredBtn(null)}
                         style={{
                           width: 36, height: 36, borderRadius: 10,
-                          border: `1px solid ${isCurrent ? C.accent : C.border}`,
+                          border: `1px solid ${isCurrent ? C.accent : 'rgba(255,255,255,0.06)'}`,
                           fontSize: 13, fontWeight: 600,
                           cursor: 'pointer', fontFamily: 'inherit',
                           transition: 'all .2s ease',
-                          background: isCurrent ? C.accent : (hoveredBtn === `page-${pageNum}` ? C.surface : 'transparent'),
-                          color: isCurrent ? '#fff' : C.sub,
+                          background: isCurrent ? C.accent : (hoveredBtn === `page-${pageNum}` ? 'rgba(255,255,255,0.06)' : 'transparent'),
+                          color: isCurrent ? '#fff' : 'rgba(255,255,255,0.5)',
                         }}
                       >
                         {pageNum}
@@ -2971,7 +1822,6 @@ export function Dashboard() {
                     );
                   })}
 
-                  {/* Next button */}
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
@@ -2980,16 +1830,16 @@ export function Dashboard() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      border: `1px solid ${C.border}`,
-                      background: hoveredBtn === 'page-next' && page < totalPages ? C.surface : 'transparent',
-                      color: page >= totalPages ? C.dim : C.sub,
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      background: hoveredBtn === 'page-next' && page < totalPages ? 'rgba(255,255,255,0.06)' : 'transparent',
+                      color: page >= totalPages ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)',
                       cursor: page >= totalPages ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'inherit', transition: 'all .15s ease',
                       opacity: page >= totalPages ? 0.4 : 1,
                     }}
                   >
-                    <IconChevronRight size={16} color={page >= totalPages ? C.dim : C.sub} />
+                    <IconChevronRight size={16} color={page >= totalPages ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)'} />
                   </button>
                 </nav>
               )}
@@ -3005,24 +1855,23 @@ export function Dashboard() {
           bottom: 24,
           left: '50%',
           transform: 'translateX(-50%)',
-          background: C.card,
+          background: '#1a1a1a',
           borderRadius: 14,
           padding: '10px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: 14,
           boxShadow: '0 8px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.06)',
           zIndex: 1000,
           fontFamily: 'inherit',
         }}>
-          {/* Select all checkbox */}
           <button
             onClick={handleSelectAll}
             style={{
               width: 22, height: 22, borderRadius: 5,
               background: selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : 'transparent',
-              border: `2px solid ${selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : C.dim}`,
+              border: `2px solid ${selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : 'rgba(255,255,255,0.2)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', transition: 'all .15s ease', flexShrink: 0,
             }}
@@ -3035,11 +1884,11 @@ export function Dashboard() {
             )}
           </button>
 
-          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
             {t('dashboard.selected')}: {selectedIds.size}
           </span>
 
-          <div style={{ width: 1, height: 24, background: C.border, flexShrink: 0 }} />
+          <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
           <button
             onClick={handleBulkDelete}
@@ -3071,9 +1920,9 @@ export function Dashboard() {
             style={{
               padding: '8px 16px',
               borderRadius: 8,
-              border: `1px solid ${C.border}`,
+              border: '1px solid rgba(255,255,255,0.06)',
               background: 'transparent',
-              color: C.sub,
+              color: 'rgba(255,255,255,0.5)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
