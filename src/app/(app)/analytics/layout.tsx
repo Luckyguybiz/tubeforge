@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Analytics',
-  description: 'View your content creation statistics, project activity, AI usage, and tool usage breakdown.',
+  description: 'Trending content insights for YouTube Shorts and TikTok — discover top-performing short-form videos.',
   openGraph: {
     title: 'Analytics — TubeForge',
-    description: 'Track your YouTube content creation stats, project activity, AI usage, and tool usage.',
+    description: 'Trending content insights for YouTube Shorts and TikTok.',
     type: 'website',
   },
   alternates: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Analytics — TubeForge',
-    description: 'Track your YouTube content creation stats and AI usage.',
+    description: 'Trending content insights for YouTube Shorts and TikTok.',
   },
   robots: { index: false, follow: false },
 };

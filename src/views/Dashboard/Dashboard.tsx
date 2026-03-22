@@ -6,6 +6,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
@@ -1279,6 +1280,87 @@ export function Dashboard() {
             : t('dashboard.manageProjects')
           }
         </p>
+      </div>
+
+      {/* ── Product showcase: "What will you create today?" ── */}
+      <div style={{
+        background: C.surface, borderRadius: 16, padding: 32,
+        marginBottom: 24, display: 'flex', gap: 32, alignItems: 'center',
+        overflow: 'hidden',
+      }} className="tf-dash-showcase">
+        {/* Left: headline + CTA */}
+        <div style={{ flexShrink: 0, minWidth: 200 }} className="tf-dash-showcase-left">
+          <h2 style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1.1, margin: 0 }}>
+            WHAT WILL YOU<br />
+            <span style={{ color: C.accent }}>CREATE TODAY?</span>
+          </h2>
+          <p style={{ fontSize: 14, color: C.sub, marginTop: 12, maxWidth: 220, marginBottom: 0 }}>
+            AI-powered tools for YouTube creators
+          </p>
+          <Link href="/free-tools" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            marginTop: 20, padding: '10px 20px',
+            background: C.accent, color: '#000',
+            borderRadius: 10, fontSize: 13, fontWeight: 700,
+            textDecoration: 'none',
+          }}>
+            Explore all tools &#10022;
+          </Link>
+        </div>
+        {/* Right: horizontal scroll of product cards */}
+        <div style={{
+          display: 'flex', gap: 14, overflowX: 'auto', flex: 1,
+          scrollSnapType: 'x mandatory', paddingBottom: 4,
+          msOverflowStyle: 'none', scrollbarWidth: 'none',
+        }} className="tf-dash-showcase-scroll">
+          {([
+            { href: '/ai-thumbnails', title: 'AI Thumbnails', gradientFrom: '#6366f1', gradientTo: '#8b5cf6', badge: 'NEW', badgeColor: '#84cc16',
+              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" /></svg> },
+            { href: '/editor', title: 'Video Editor', gradientFrom: '#3b82f6', gradientTo: '#06b6d4', badge: null, badgeColor: '',
+              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21" /></svg> },
+            { href: '/metadata', title: 'SEO Optimizer', gradientFrom: '#10b981', gradientTo: '#34d399', badge: null, badgeColor: '',
+              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> },
+            { href: '/thumbnails', title: 'Thumbnail Editor', gradientFrom: '#f59e0b', gradientTo: '#f97316', badge: null, badgeColor: '',
+              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
+            { href: '/free-tools', title: 'Free Tools', gradientFrom: '#6366f1', gradientTo: '#ec4899', badge: 'FREE', badgeColor: '#22c55e',
+              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg> },
+            { href: '/tools/youtube-downloader', title: 'Video Analyzer', gradientFrom: '#14b8a6', gradientTo: '#22d3ee', badge: 'FREE', badgeColor: '#22c55e',
+              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg> },
+          ] as const).map((product) => (
+            <Link key={product.href} href={product.href} className="tf-dash-showcase-card" style={{
+              width: 180, flexShrink: 0, scrollSnapAlign: 'start',
+              background: C.card, border: `1px solid ${C.border}`,
+              borderRadius: 14, overflow: 'hidden',
+              textDecoration: 'none', transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{
+                height: 140, background: `linear-gradient(135deg, ${product.gradientFrom}, ${product.gradientTo})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative',
+              }}>
+                {product.icon}
+                {product.badge && (
+                  <span style={{
+                    position: 'absolute', top: 8, right: 8,
+                    background: product.badgeColor, color: '#000',
+                    fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                    borderRadius: 6, letterSpacing: '.03em',
+                  }}>
+                    {product.badge}
+                  </span>
+                )}
+              </div>
+              <div style={{
+                padding: '12px 14px', display: 'flex',
+                alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{product.title}</span>
+                <span style={{ color: C.dim, fontSize: 16 }}>&rarr;</span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* ── Action bar: 3 buttons ─────────────────── */}
