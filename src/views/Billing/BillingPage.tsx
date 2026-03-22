@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -38,6 +38,30 @@ const RocketIcon = () => (
   </svg>
 );
 
+const ChevronDownIcon = ({ open }: { open: boolean }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="none"
+    style={{
+      transform: open ? 'rotate(180deg)' : 'rotate(0)',
+      transition: 'transform .25s ease',
+      flexShrink: 0,
+    }}
+  >
+    <path d="M5 8L10 13L15 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ShieldCheckIcon = ({ color }: { color: string }) => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" fill={color} opacity=".15" />
+    <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" stroke={color} strokeWidth="1" opacity=".6" />
+    <path d="M5.5 8L7 9.5L10.5 6" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 /* ── Types ─────────────────────────────────────────────────────────── */
 
 type PlanId = 'FREE' | 'PRO' | 'STUDIO';
@@ -59,6 +83,11 @@ interface CompareFeature {
   free: string | boolean;
   pro: string | boolean;
   studio: string | boolean;
+}
+
+interface FaqItem {
+  question: string;
+  answer: string;
 }
 
 /* ── Data ──────────────────────────────────────────────────────────── */
@@ -136,6 +165,35 @@ function getCompareFeatures(t: (key: string) => string): CompareFeature[] {
   ];
 }
 
+function getFaqItems(): FaqItem[] {
+  return [
+    {
+      question: 'Can I cancel anytime?',
+      answer: 'Yes, cancel anytime from your account settings.',
+    },
+    {
+      question: 'What payment methods do you accept?',
+      answer: 'We accept all major credit cards via Stripe.',
+    },
+    {
+      question: 'Is there a free trial?',
+      answer: 'Yes, the Free plan is forever free with basic features.',
+    },
+    {
+      question: 'Can I switch plans?',
+      answer: 'Yes, upgrade or downgrade anytime. Changes take effect immediately.',
+    },
+    {
+      question: 'Do you offer refunds?',
+      answer: 'Yes, 14-day money-back guarantee on all paid plans.',
+    },
+    {
+      question: 'What happens when I reach my limit?',
+      answer: "You'll be prompted to upgrade. Your existing work is never deleted.",
+    },
+  ];
+}
+
 /* ── Main Component ────────────────────────────────────────────────── */
 
 export function BillingPage() {
@@ -202,10 +260,19 @@ export function BillingPage() {
 
   const PLANS = useMemo(() => getPlans(t), [t]);
   const COMPARE = useMemo(() => getCompareFeatures(t), [t]);
+  const FAQ_ITEMS = useMemo(() => getFaqItems(), []);
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [hoveredFaq, setHoveredFaq] = useState<number | null>(null);
+
+  /* ── Toggle refs for sliding pill ─── */
+  const toggleContainerRef = useRef<HTMLDivElement>(null);
+  const monthlyBtnRef = useRef<HTMLButtonElement>(null);
+  const annualBtnRef = useRef<HTMLButtonElement>(null);
 
   /* ── Accent colors ───────────────────────────────────── */
   const accent = '#6366f1';
@@ -235,6 +302,11 @@ export function BillingPage() {
           0%, 100% { box-shadow: 0 0 20px ${accentGlow}, 0 0 60px rgba(99, 102, 241, 0.1); }
           50% { box-shadow: 0 0 30px ${accentGlow}, 0 0 80px rgba(99, 102, 241, 0.15); }
         }
+        @keyframes tf-border-shimmer {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
         @media(max-width:960px){
           .tf-pricing-grid{grid-template-columns:1fr!important}
           .tf-pricing-card{max-width:480px!important;margin:0 auto!important}
@@ -244,6 +316,7 @@ export function BillingPage() {
           .tf-pricing-heading{font-size:28px!important}
           .tf-pricing-subheading{font-size:15px!important}
           .tf-compare-table{font-size:12px!important}
+          .tf-faq-section{padding:0 8px!important}
         }
         @media(max-width:480px){
           .tf-pricing-inner{padding:16px 10px 32px!important}
@@ -442,52 +515,76 @@ export function BillingPage() {
             </div>
           )}
 
-          {/* ── Monthly / Annual toggle ──────────────── */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0,
-            marginTop: 32,
-            padding: 4,
-            borderRadius: 12,
-            background: surfaceBg,
-            border: `1px solid ${cardBorder}`,
-          }}>
+          {/* ── Monthly / Annual toggle with sliding pill ── */}
+          <div
+            ref={toggleContainerRef}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0,
+              marginTop: 32,
+              padding: 4,
+              borderRadius: 12,
+              background: surfaceBg,
+              border: `1px solid ${cardBorder}`,
+              position: 'relative',
+            }}
+          >
+            {/* Sliding pill indicator */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 4,
+                left: 4,
+                height: 'calc(100% - 8px)',
+                width: 'calc(50% - 4px)',
+                borderRadius: 9,
+                background: cardBg,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                transition: 'transform .3s cubic-bezier(.4,0,.2,1)',
+                transform: isAnnual ? 'translateX(100%)' : 'translateX(0)',
+                zIndex: 0,
+              }}
+            />
             <button
+              ref={monthlyBtnRef}
               onClick={() => setIsAnnual(false)}
               style={{
                 padding: '10px 24px',
                 borderRadius: 9,
                 border: 'none',
-                background: !isAnnual ? cardBg : 'transparent',
+                background: 'transparent',
                 color: !isAnnual ? C.text : C.sub,
                 fontSize: 14,
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
-                transition: 'all .2s ease',
-                boxShadow: !isAnnual ? `0 1px 4px rgba(0,0,0,0.15)` : 'none',
+                transition: 'color .25s ease',
+                position: 'relative',
+                zIndex: 1,
               }}
             >
               {t('billing.monthlyLabel')}
             </button>
             <button
+              ref={annualBtnRef}
               onClick={() => setIsAnnual(true)}
               style={{
                 padding: '10px 24px',
                 borderRadius: 9,
                 border: 'none',
-                background: isAnnual ? cardBg : 'transparent',
+                background: 'transparent',
                 color: isAnnual ? C.text : C.sub,
                 fontSize: 14,
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
-                transition: 'all .2s ease',
+                transition: 'color .25s ease',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                boxShadow: isAnnual ? `0 1px 4px rgba(0,0,0,0.15)` : 'none',
+                position: 'relative',
+                zIndex: 1,
               }}
             >
               {t('billing.annualLabel')}
@@ -526,17 +623,17 @@ export function BillingPage() {
               ? Math.round(plan.price * 0.8)
               : plan.price;
 
-            return (
+            /* Pro card uses an outer wrapper for the animated gradient border */
+            const cardContent = (
               <div
-                key={plan.id}
                 className="tf-pricing-card"
                 onMouseEnter={() => setHoveredCard(`plan-${plan.id}`)}
                 onMouseLeave={() => setHoveredCard(null)}
                 style={{
                   padding: 0,
-                  borderRadius: 20,
+                  borderRadius: isPro ? 18 : 20,
                   border: isPro
-                    ? `2px solid ${accent}`
+                    ? 'none'
                     : `1px solid ${cardBorder}`,
                   background: cardBg,
                   position: 'relative',
@@ -544,13 +641,16 @@ export function BillingPage() {
                   transition: 'all .3s cubic-bezier(.4,0,.2,1)',
                   transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
                   boxShadow: isPro
-                    ? `0 0 20px ${accentGlow}, 0 0 60px rgba(99, 102, 241, 0.1)`
+                    ? 'none'
                     : isHovered
                       ? '0 8px 32px rgba(0,0,0,0.25)'
                       : '0 2px 12px rgba(0,0,0,0.08)',
-                  animation: isPro ? 'tf-glow-pulse 3s ease-in-out infinite' : 'none',
                   display: 'flex',
-                  flexDirection: 'column',
+                  flexDirection: 'column' as const,
+                  flex: 1,
+                  height: isPro ? 'calc(100% - 4px)' : undefined,
+                  width: isPro ? 'calc(100% - 4px)' : undefined,
+                  margin: isPro ? '2px' : undefined,
                 }}
               >
                 {/* Popular badge */}
@@ -637,15 +737,18 @@ export function BillingPage() {
                         }}>
                           {plan.priceLabel}{t('billing.perMonth')}
                         </span>
+                        {/* Save 20% pill badge */}
                         <span style={{
                           fontSize: 11,
                           fontWeight: 700,
-                          color: C.green,
-                          background: `${C.green}15`,
-                          padding: '2px 8px',
+                          color: '#fff',
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          padding: '3px 10px',
                           borderRadius: 50,
+                          boxShadow: '0 2px 8px rgba(16,185,129,0.25)',
+                          letterSpacing: '.02em',
                         }}>
-                          {t('billing.annualSave').replace('{amount}', `$${Math.round(plan.price * 0.2 * 12)}`)}
+                          Save 20%
                         </span>
                       </div>
                     )}
@@ -783,7 +886,7 @@ export function BillingPage() {
                     </button>
                   )}
 
-                  {/* Guarantee badge for paid plans */}
+                  {/* Money-back guarantee badge below CTA */}
                   {plan.price > 0 && (
                     <div style={{
                       display: 'flex',
@@ -792,17 +895,41 @@ export function BillingPage() {
                       gap: 6,
                       marginTop: 16,
                     }}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                        <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" fill={C.green} opacity=".15" />
-                        <path d="M8 1L2 4V7.5C2 11.4 4.7 14.3 8 15C11.3 14.3 14 11.4 14 7.5V4L8 1Z" stroke={C.green} strokeWidth="1" opacity=".6" />
-                        <path d="M5.5 8L7 9.5L10.5 6" stroke={C.green} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      <ShieldCheckIcon color={C.green} />
                       <span style={{ fontSize: 12, fontWeight: 500, color: C.green }}>
                         {t('billing.guarantee')}
                       </span>
                     </div>
                   )}
                 </div>
+              </div>
+            );
+
+            /* Pro card: wrap in animated gradient border container */
+            if (isPro) {
+              return (
+                <div
+                  key={plan.id}
+                  style={{
+                    borderRadius: 20,
+                    padding: 2,
+                    background: `linear-gradient(135deg, ${accent}, ${accentLight}, #a78bfa, ${accent})`,
+                    backgroundSize: '200% 200%',
+                    animation: 'tf-border-shimmer 3s ease-in-out infinite',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: `0 0 20px ${accentGlow}, 0 0 60px rgba(99, 102, 241, 0.1)`,
+                    transition: 'box-shadow .3s ease',
+                  }}
+                >
+                  {cardContent}
+                </div>
+              );
+            }
+
+            return (
+              <div key={plan.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                {cardContent}
               </div>
             );
           })}
@@ -866,17 +993,24 @@ export function BillingPage() {
               </div>
             </div>
 
-            {/* Table rows */}
+            {/* Table rows with hover highlight + alternating backgrounds */}
             {COMPARE.map((row, idx) => (
               <div
                 key={row.name}
+                onMouseEnter={() => setHoveredRow(idx)}
+                onMouseLeave={() => setHoveredRow(null)}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1.8fr 1fr 1fr 1fr',
                   padding: '16px 28px',
                   borderBottom: idx < COMPARE.length - 1 ? `1px solid ${cardBorder}` : 'none',
-                  background: idx % 2 === 1 ? `${surfaceBg}80` : 'transparent',
+                  background: hoveredRow === idx
+                    ? `${accent}10`
+                    : idx % 2 === 1
+                      ? `${surfaceBg}80`
+                      : 'transparent',
                   transition: 'background .15s ease',
+                  cursor: 'default',
                 }}
               >
                 <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>
@@ -914,6 +1048,101 @@ export function BillingPage() {
                 ))}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ── FAQ Section ─────────────────────────────── */}
+        <div className="tf-faq-section" style={{ marginBottom: 80, maxWidth: 720, margin: '0 auto 80px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <h2 style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: C.text,
+              margin: 0,
+              letterSpacing: '-.02em',
+            }}>
+              Frequently Asked Questions
+            </h2>
+            <p style={{
+              fontSize: 15,
+              color: C.sub,
+              margin: '8px 0 0',
+              lineHeight: 1.5,
+            }}>
+              Everything you need to know about our plans
+            </p>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}>
+            {FAQ_ITEMS.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              const isFaqHovered = hoveredFaq === idx;
+
+              return (
+                <div
+                  key={idx}
+                  onMouseEnter={() => setHoveredFaq(idx)}
+                  onMouseLeave={() => setHoveredFaq(null)}
+                  style={{
+                    borderRadius: 14,
+                    border: `1px solid ${isOpen ? accent + '40' : cardBorder}`,
+                    background: isFaqHovered ? `${surfaceBg}` : cardBg,
+                    overflow: 'hidden',
+                    transition: 'all .2s ease',
+                  }}
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 16,
+                      padding: '18px 24px',
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: isOpen ? accentLight : C.text,
+                      transition: 'color .2s ease',
+                    }}>
+                      {faq.question}
+                    </span>
+                    <ChevronDownIcon open={isOpen} />
+                  </button>
+
+                  {/* Expandable answer */}
+                  <div
+                    style={{
+                      maxHeight: isOpen ? 200 : 0,
+                      overflow: 'hidden',
+                      transition: 'max-height .3s cubic-bezier(.4,0,.2,1), padding .3s ease',
+                      padding: isOpen ? '0 24px 18px' : '0 24px 0',
+                    }}
+                  >
+                    <p style={{
+                      fontSize: 14,
+                      color: C.sub,
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}>
+                      {faq.answer}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
