@@ -220,6 +220,17 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   {
+    id: 'ai-thumbnails',
+    href: '/ai-thumbnails',
+    labelKey: 'nav.aiThumbnails',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="3" />
+        <path d="M12 8l1.5 3.5L17 12.5l-2.5 2.2l.5 3.8L12 16.5l-3 2l.5-3.8L7 12.5l3.5-1L12 8z" />
+      </svg>
+    ),
+  },
+  {
     id: 'dashboard',
     href: '/dashboard',
     labelKey: 'nav.dashboard',

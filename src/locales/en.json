@@ -1,5 +1,5 @@
 {
-  "nav.dashboard": "Dashboard",
+  "nav.dashboard": "My Works",
   "nav.editor": "Editor",
   "nav.metadata": "Metadata",
   "nav.thumbnails": "Thumbnails",
@@ -1330,7 +1330,7 @@
   "welcome.continue": "Continue",
   "welcome.needHelp": "Need help?",
   "welcome.supportDesc": "We have a support team on Telegram, and you can also email us.",
-  "welcome.goToDashboard": "Go to dashboard",
+  "welcome.goToDashboard": "Start creating",
   "referral.activated": "Referral program activated!",
   "referral.activateError": "Failed to activate. Try again.",
   "referral.shareText": "Join TubeForge — the best AI video creation platform! Sign up with my link:",

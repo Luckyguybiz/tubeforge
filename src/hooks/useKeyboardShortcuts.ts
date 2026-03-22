@@ -277,7 +277,7 @@ export function useGlobalShortcuts() {
     // ── Navigation sequences ──────────────
     {
       id: 'go-dashboard',
-      label: 'Go to Dashboard',
+      label: 'Go to My Works',
       keys: 'G then D',
       category: 'global',
       handler: () => navigate('/dashboard'),

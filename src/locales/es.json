@@ -1,5 +1,5 @@
 {
-  "nav.dashboard": "Panel",
+  "nav.dashboard": "Mis trabajos",
   "nav.editor": "Editor",
   "nav.metadata": "Metadatos",
   "nav.thumbnails": "Miniaturas",
@@ -1330,7 +1330,7 @@
   "welcome.continue": "Continuar",
   "welcome.needHelp": "¿Necesitas ayuda?",
   "welcome.supportDesc": "Tenemos un equipo de soporte en Telegram y también puedes escribirnos por email.",
-  "welcome.goToDashboard": "Ir al panel",
+  "welcome.goToDashboard": "Empezar a crear",
   "referral.activated": "¡Programa de referidos activado!",
   "referral.activateError": "No se pudo activar. Intenta de nuevo.",
   "referral.shareText": "¡Únete a TubeForge — la mejor plataforma de creación de videos con IA! Regístrate con mi enlace:",

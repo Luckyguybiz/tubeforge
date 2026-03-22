@@ -85,7 +85,7 @@ function processAuthCheck(pathname: string, cookies: Map<string, string>): AuthR
     const safeCallback =
       pathname.startsWith('/') && !pathname.startsWith('//')
         ? pathname
-        : '/dashboard';
+        : '/ai-thumbnails';
     return { action: 'redirect', redirectUrl: `/login?callbackUrl=${encodeURIComponent(safeCallback)}` };
   }
 
@@ -164,13 +164,13 @@ describe('Auth flow', () => {
 
     it('prevents open redirect by sanitizing callbackUrl in redirect', () => {
       // Test the callbackUrl sanitization logic directly:
-      // Paths starting with "//" should be replaced with "/dashboard"
+      // Paths starting with "//" should be replaced with "/ai-thumbnails"
       const maliciousPath = '//evil.com/steal-data';
       const safeCallback =
         maliciousPath.startsWith('/') && !maliciousPath.startsWith('//')
           ? maliciousPath
-          : '/dashboard';
-      expect(safeCallback).toBe('/dashboard');
+          : '/ai-thumbnails';
+      expect(safeCallback).toBe('/ai-thumbnails');
       expect(safeCallback).not.toContain('evil.com');
     });
 
@@ -179,7 +179,7 @@ describe('Auth flow', () => {
       const safeCallback =
         normalPath.startsWith('/') && !normalPath.startsWith('//')
           ? normalPath
-          : '/dashboard';
+          : '/ai-thumbnails';
       expect(safeCallback).toBe('/editor/project-123');
     });
   });
