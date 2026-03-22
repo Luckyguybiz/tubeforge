@@ -18,6 +18,7 @@ const PAGE_LABEL_KEYS: Record<string, string> = {
   referral: 'nav.referral',
   blog: 'nav.blog',
   'ai-thumbnails': 'nav.aiThumbnails',
+  thumbnails: 'nav.designStudio',
 };
 
 const NOTIF_ICONS: Record<Notification['type'], string> = {
@@ -185,7 +186,7 @@ export const TopBar = memo(function TopBar() {
   const mobileMenuToggle = useMobileMenuStore((s) => s.toggle);
 
   return (
-    <div className="tf-topbar" style={{ height: 56, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10, background: 'rgba(10,10,10,0.85)', backdropFilter: 'blur(12px)', flexShrink: 0 }}>
+    <div className="tf-topbar" style={{ height: 56, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10, background: isDark ? 'rgba(10,10,10,0.85)' : 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', flexShrink: 0, color: C.text }}>
       {/* Hamburger – visible only below 768px */}
       <button
         className="tf-hamburger"

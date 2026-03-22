@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { Z_INDEX } from '@/lib/constants';
 
 const COLLAPSE_PAGES = ['thumbnails'];
 
@@ -233,7 +234,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
       label: t('sidebar.tools'),
       items: [
         { id: 'tools', label: t('nav.tools') },
-        { id: 'thumbnails', label: t('nav.thumbnails') },
+        { id: 'thumbnails', label: t('nav.designStudio') },
         { id: 'analytics', label: t('nav.analytics') },
       ],
     },
@@ -463,6 +464,213 @@ function SidebarUsageWidget({
   );
 }
 
+/* ── Profile Dropdown ─────────────────────────────────────────────── */
+
+function ProfileDropdown({
+  C,
+  isDark,
+  userName,
+  userEmail,
+  userId,
+  plan,
+  planLabel,
+  planBadgeBg,
+  planBadgeColor,
+  collapsed,
+  navigate,
+  t,
+  onClose,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  isDark: boolean;
+  userName: string;
+  userEmail: string;
+  userId: string;
+  plan: string;
+  planLabel: string;
+  planBadgeBg: string;
+  planBadgeColor: string;
+  collapsed: boolean;
+  navigate: (path: string) => void;
+  t: (key: string) => string;
+  onClose: () => void;
+}) {
+  const { remainingAI } = usePlanLimits();
+
+  const menuItemStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 14px',
+    border: 'none',
+    background: 'transparent',
+    color: C.text,
+    fontSize: 12.5,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    textAlign: 'left',
+    borderRadius: 6,
+    transition: 'background .12s ease',
+    letterSpacing: '-.01em',
+  };
+
+  const handleItemHover = (e: React.MouseEvent<HTMLButtonElement>, entering: boolean) => {
+    e.currentTarget.style.background = entering ? C.surface : 'transparent';
+  };
+
+  const handleClick = (path: string) => {
+    onClose();
+    navigate(path);
+  };
+
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        position: 'absolute',
+        bottom: '100%',
+        left: collapsed ? '50%' : 10,
+        transform: collapsed ? 'translateX(-50%)' : 'none',
+        marginBottom: 8,
+        width: 220,
+        background: isDark ? C.card : C.bg,
+        border: `1px solid ${C.border}`,
+        borderRadius: 12,
+        boxShadow: isDark
+          ? '0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04)'
+          : '0 8px 32px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)',
+        zIndex: Z_INDEX.DROPDOWN,
+        overflow: 'hidden',
+        animation: 'none',
+      }}
+    >
+      {/* User name + email */}
+      <div style={{ padding: '14px 14px 10px' }}>
+        <div style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: C.text,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          lineHeight: 1.3,
+        }}>
+          {userName}
+        </div>
+        {userEmail && (
+          <div style={{
+            fontSize: 11,
+            color: C.sub,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            marginTop: 2,
+            lineHeight: 1.3,
+          }}>
+            {userEmail}
+          </div>
+        )}
+        {/* Plan badge */}
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: planBadgeColor,
+            padding: '2px 8px',
+            borderRadius: 5,
+            background: planBadgeBg,
+            letterSpacing: '.02em',
+          }}>
+            {planLabel}
+          </span>
+        </div>
+        {/* Credits remaining */}
+        <div style={{
+          marginTop: 8,
+          fontSize: 11.5,
+          fontWeight: 500,
+          color: C.sub,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+        }}>
+          <span style={{ fontSize: 13 }}>{'\u26A1'}</span>
+          {isFinite(remainingAI) ? `${remainingAI} ${t('sidebar.creditsRemaining')}` : `\u221E ${t('sidebar.creditsRemaining')}`}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: C.border, margin: '0 10px' }} />
+
+      {/* Menu items */}
+      <div style={{ padding: '6px 6px' }}>
+        <button
+          onClick={() => handleClick('settings')}
+          onMouseEnter={(e) => handleItemHover(e, true)}
+          onMouseLeave={(e) => handleItemHover(e, false)}
+          style={menuItemStyle}
+        >
+          {icons.settings(C.sub)}
+          {t('sidebar.manageAccount')}
+        </button>
+
+        <button
+          onClick={() => handleClick(`profile/${userId}`)}
+          onMouseEnter={(e) => handleItemHover(e, true)}
+          onMouseLeave={(e) => handleItemHover(e, false)}
+          style={menuItemStyle}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="7" r="3.5" stroke={C.sub} strokeWidth="1.5" opacity=".85" />
+            <path d="M4 17C4 13.5 6.5 11 10 11C13.5 11 16 13.5 16 17" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" opacity=".7" />
+          </svg>
+          {t('sidebar.viewProfile')}
+        </button>
+
+        {plan === 'FREE' && (
+          <button
+            onClick={() => handleClick('billing')}
+            onMouseEnter={(e) => handleItemHover(e, true)}
+            onMouseLeave={(e) => handleItemHover(e, false)}
+            style={{ ...menuItemStyle, color: C.accent, fontWeight: 600 }}
+          >
+            {icons.sparkle(C.accent)}
+            {t('sidebar.upgradeToPro')}
+          </button>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: C.border, margin: '0 10px' }} />
+
+      {/* Sign out */}
+      <div style={{ padding: '6px 6px' }}>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+            signOut({ callbackUrl: '/' });
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
+            e.currentTarget.style.color = C.red;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = C.sub;
+          }}
+          style={{ ...menuItemStyle, color: C.sub }}
+        >
+          {icons.logout(C.red)}
+          {t('sidebar.signOut')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Sidebar Component ─────────────────────────────────────────────── */
 
 export const Sidebar = memo(function Sidebar() {
@@ -487,6 +695,29 @@ export const Sidebar = memo(function Sidebar() {
   const [tooltipId, setTooltipId] = useState<string | null>(null);
   const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [userMenuOpen]);
+
+  // Close profile dropdown on Escape
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [userMenuOpen]);
 
   useEffect(() => {
     localStorage.setItem('tf-sidebar', collapsed ? '1' : '0');
@@ -1032,8 +1263,9 @@ export const Sidebar = memo(function Sidebar() {
         }}
       />
 
-      {/* ── User Panel ───────────────────────────────────── */}
+      {/* ── User Panel with Profile Dropdown ─────────────── */}
       <div
+        ref={userMenuRef}
         style={{
           padding: collapsed ? '14px 8px' : '14px 14px',
           display: 'flex',
@@ -1042,17 +1274,13 @@ export const Sidebar = memo(function Sidebar() {
           justifyContent: collapsed ? 'center' : 'flex-start',
           flexDirection: collapsed ? 'column' : 'row',
           position: 'relative',
-          zIndex: 1,
+          zIndex: Z_INDEX.DROPDOWN,
+          cursor: 'pointer',
         }}
+        onClick={() => setUserMenuOpen((v) => !v)}
       >
         {/* Avatar with status ring */}
-        <div
-          style={{
-            position: 'relative',
-            cursor: 'pointer',
-          }}
-          onClick={() => collapsed && setUserMenuOpen(!userMenuOpen)}
-        >
+        <div style={{ position: 'relative' }}>
           {/* Avatar */}
           <div
             style={{
@@ -1124,7 +1352,6 @@ export const Sidebar = memo(function Sidebar() {
                   background: planBadgeBg,
                   letterSpacing: '.02em',
                   lineHeight: 1.3,
-                  ...(plan !== 'FREE' ? {} : {}),
                 }}
               >
                 {planLabel}
@@ -1133,99 +1360,40 @@ export const Sidebar = memo(function Sidebar() {
           </div>
         )}
 
-        {/* Settings + Logout actions */}
+        {/* Chevron indicator (expanded only) */}
         {!collapsed && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {/* Settings gear */}
-            <button
-              onClick={() => navigate('settings')}
-              title={t('sidebar.settingsLabel')}
-              aria-label={t('sidebar.settingsLabel')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = C.border;
-                e.currentTarget.style.transform = 'rotate(30deg)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.transform = 'rotate(0deg)';
-              }}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                border: 'none',
-                background: 'transparent',
-                color: C.dim,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all .3s cubic-bezier(.4,0,.2,1)',
-                flexShrink: 0,
-              }}
-            >
-              {icons.gear(C.dim)}
-            </button>
-
-            {/* Logout */}
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              title={t('sidebar.logout')}
-              aria-label={t('sidebar.logoutLabel')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
-                e.currentTarget.style.color = C.red;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = C.dim;
-              }}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                border: 'none',
-                background: 'transparent',
-                color: C.dim,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                transition: 'all .2s ease',
-              }}
-            >
-              {icons.logout(C.dim)}
-            </button>
-          </div>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            style={{
+              flexShrink: 0,
+              transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform .2s ease',
+            }}
+          >
+            <path d="M3.5 5.5L7 9L10.5 5.5" stroke={C.dim} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         )}
 
-        {/* Collapsed user actions */}
-        {collapsed && (
-          <Tooltip label={t('sidebar.logout')} show={hoveredId === '_logout'}>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              onMouseEnter={() => handleMouseEnter('_logout')}
-              onMouseLeave={handleMouseLeave}
-              aria-label={t('sidebar.logoutLabel')}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                border: 'none',
-                background: 'transparent',
-                color: C.dim,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                transition: 'all .2s ease',
-              }}
-            >
-              {icons.logout(C.dim)}
-            </button>
-          </Tooltip>
+        {/* ── Profile Dropdown ───────────────────────────── */}
+        {userMenuOpen && (
+          <ProfileDropdown
+            C={C}
+            isDark={isDark}
+            userName={userName}
+            userEmail={session?.user?.email ?? ''}
+            userId={session?.user?.id ?? ''}
+            plan={plan}
+            planLabel={planLabel}
+            planBadgeBg={planBadgeBg}
+            planBadgeColor={planBadgeColor}
+            collapsed={collapsed}
+            navigate={navigate}
+            t={t}
+            onClose={() => setUserMenuOpen(false)}
+          />
         )}
       </div>
     </nav>

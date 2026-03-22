@@ -181,6 +181,7 @@ html { overflow-x: hidden; }
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
+.tf-free-tools-scroll::-webkit-scrollbar { display: none; }
 
 /* ── Dashboard responsive overrides ──────────────────── */
 
@@ -197,47 +198,20 @@ html { overflow-x: hidden; }
   .tf-dash-showcase-left h2 {
     font-size: 22px !important;
   }
+  .tf-tools-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 @media (max-width: 640px) {
   .tf-dash-heading {
     font-size: 22px !important;
   }
-  .tf-dash-header-actions {
-    flex-direction: column;
-  }
-  .tf-dash-header-actions button {
-    width: 100%;
-    justify-content: center;
-  }
-  .tf-dash-stat-grid {
-    gap: 6px !important;
-  }
-  .tf-stat-card {
-    padding: 6px 10px !important;
-  }
-  .tf-dash-toolbar {
-    padding: 14px 16px 12px !important;
-  }
-  .tf-dash-toolbar-right {
-    width: 100%;
-  }
-  .tf-dash-content {
-    padding: 14px 16px 18px !important;
-  }
-  .tf-dash-filter-pills {
-    width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap !important;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
-  }
-  .tf-dash-project-grid {
+  .tf-tools-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
-  .tf-dash-search-input {
-    max-width: none !important;
-    width: 100% !important;
+  .tf-history-grid {
+    grid-template-columns: 1fr !important;
   }
 }

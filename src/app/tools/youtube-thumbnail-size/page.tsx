@@ -245,7 +245,7 @@ export default function YouTubeThumbnailSizePage() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "16px 28px",
-                  borderBottom: i < SPECS.length - 1 ? "1px solid #f0f0f2" : "none",
+                  borderBottom: i < SPECS.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
                 }}
               >
                 <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)" }}>{spec.label}</span>
@@ -271,7 +271,7 @@ export default function YouTubeThumbnailSizePage() {
           >
             Why thumbnail size matters
           </h2>
-          <div style={{ fontSize: 17, color: "#424245", lineHeight: 1.8 }}>
+          <div style={{ fontSize: 17, color: "rgba(255,255,255,0.7)", lineHeight: 1.8 }}>
             <p style={{ margin: "0 0 16px" }}>
               Your thumbnail is the first thing viewers see when browsing YouTube. It appears at different sizes depending on the context: large in suggested videos (around 360px wide), medium in search results (around 246px), and small on mobile (around 120px).
             </p>

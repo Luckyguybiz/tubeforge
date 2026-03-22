@@ -3,6 +3,7 @@
   "nav.editor": "Редактор",
   "nav.metadata": "Метадеректер",
   "nav.thumbnails": "Мұқабалар",
+  "nav.designStudio": "Дизайн Студиясы",
   "nav.preview": "Алдын ала қарау",
   "nav.publish": "Жариялау",
   "nav.team": "Команда",
@@ -1984,5 +1985,10 @@
   "tools.voiceover.engineBrowser": "Браузер TTS",
   "tools.voiceover.elevenLabsBadge": "ElevenLabs негізінде — студиялық сапалы көптілді TTS. 1 AI-кредит қолданады.",
   "tools.voiceover.elevenLabsSuccess": "Дауыстау сәтті жасалды",
-  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs конфигурацияланбаған. Браузер TTS-ке ауысыңыз немесе әкімшіге хабарласыңыз."
+  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs конфигурацияланбаған. Браузер TTS-ке ауысыңыз немесе әкімшіге хабарласыңыз.",
+  "sidebar.manageAccount": "Аккаунтты басқару",
+  "sidebar.viewProfile": "Профильді көру",
+  "sidebar.upgradeToPro": "Pro-ға жаңарту",
+  "sidebar.creditsRemaining": "кредит қалды",
+  "sidebar.signOut": "Шығу"
 }

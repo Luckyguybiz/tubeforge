@@ -93,6 +93,11 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'sidebar.logout': 'Logout',
           'sidebar.logoutLabel': 'Sign out',
           'sidebar.settingsLabel': 'Settings',
+          'sidebar.manageAccount': 'Manage Account',
+          'sidebar.viewProfile': 'View Profile',
+          'sidebar.upgradeToPro': 'Upgrade to Pro',
+          'sidebar.creditsRemaining': 'credits remaining',
+          'sidebar.signOut': 'Sign Out',
           'common.user': 'User',
           'common.free': 'Free',
           'common.pro': 'Pro',
@@ -232,16 +237,21 @@ describe('Sidebar', () => {
     expect(screen.getByLabelText('Open search')).toBeDefined();
   });
 
-  it('renders the logout button', () => {
+  it('opens profile dropdown and shows sign out', () => {
     render(<Sidebar />);
-    const logoutBtn = screen.getByLabelText('Sign out');
-    expect(logoutBtn).toBeDefined();
+    // Click user panel to open dropdown
+    const userName = screen.getByText('Test User');
+    fireEvent.click(userName.closest('div[style]')!);
+    expect(screen.getByText('Sign Out')).toBeDefined();
   });
 
-  it('calls signOut when logout is clicked', () => {
+  it('calls signOut when sign out is clicked in dropdown', () => {
     render(<Sidebar />);
-    const logoutBtn = screen.getByLabelText('Sign out');
-    fireEvent.click(logoutBtn);
+    // Click user panel to open dropdown
+    const userName = screen.getByText('Test User');
+    fireEvent.click(userName.closest('div[style]')!);
+    const signOutBtn = screen.getByText('Sign Out');
+    fireEvent.click(signOutBtn);
     expect(mockSignOut).toHaveBeenCalledWith({ callbackUrl: '/' });
   });
 
