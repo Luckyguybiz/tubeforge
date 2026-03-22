@@ -8,11 +8,25 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('vpn');
 
-// Hardcoded promo codes for VPN unlock (can move to DB later)
-const VALID_PROMOS: Record<string, { maxUses: number }> = {
-  'TUBEFORGE-VPN-TEST': { maxUses: 100 },
-  'YOUTUBE-ACCESS-2026': { maxUses: 50 },
-};
+// VPN promo codes — read from env (JSON string) with fallback to defaults.
+// Format: VPN_PROMO_CODES='{"TUBEFORGE-VPN-TEST":{"maxUses":100},"YOUTUBE-ACCESS-2026":{"maxUses":50}}'
+function loadPromoCodes(): Record<string, { maxUses: number }> {
+  const envCodes = process.env.VPN_PROMO_CODES;
+  if (envCodes) {
+    try {
+      return JSON.parse(envCodes) as Record<string, { maxUses: number }>;
+    } catch {
+      log.warn('Failed to parse VPN_PROMO_CODES env var, using defaults');
+    }
+  }
+  // Fallback defaults
+  return {
+    'TUBEFORGE-VPN-TEST': { maxUses: 100 },
+    'YOUTUBE-ACCESS-2026': { maxUses: 50 },
+  };
+}
+
+const VALID_PROMOS: Record<string, { maxUses: number }> = loadPromoCodes();
 
 // In-memory usage counter for promo codes
 const promoUsageCount = new Map<string, number>();
@@ -24,7 +38,22 @@ function getPromoUsage(code: string): number {
 
 /** Increment usage count for a promo code */
 function incrementPromoUsage(code: string): void {
-  promoUsageCount.set(code, getPromoUsage(code) + 1);
+  const newCount = getPromoUsage(code) + 1;
+  promoUsageCount.set(code, newCount);
+
+  // Warn when approaching maxUses (80% threshold)
+  const promo = VALID_PROMOS[code];
+  if (promo) {
+    const threshold = Math.floor(promo.maxUses * 0.8);
+    if (newCount >= threshold) {
+      log.warn('Promo code approaching maxUses limit', {
+        code,
+        currentUsage: newCount,
+        maxUses: promo.maxUses,
+        remaining: promo.maxUses - newCount,
+      });
+    }
+  }
 }
 
 /** Shared helper: generate VPN config for a user (creates peer, registers on server) */

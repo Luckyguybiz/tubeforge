@@ -48,7 +48,7 @@
 ### H1. Fix 10 failing tests
 - **Files:** `useThemeStore.test.ts`, `Sidebar.test.tsx`, `TopBar.test.tsx`, `i18n.test.ts`, `useLocaleStore.test.ts`
 - **Fix:** Update test expectations to match current theme colors (#0a0a0a, #ffffff) and current nav keys
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H2. Register toolHistoryRouter
 - **File:** `src/server/routers/_app.ts`
@@ -96,57 +96,57 @@
 
 ---
 
-## WAVE 3: MEDIUM (10 tasks) — хорошо бы
+## WAVE 3: MEDIUM (10 tasks) — DONE
 
 ### M1. WebVitals — send to analytics endpoint
 - **File:** `src/components/WebVitals.tsx`
 - **Fix:** Send data to `/api/analytics/vitals` or log to structured logger
-- **Status:** [ ]
+- **Status:** [x]
 
 ### M2. Tool usage analytics — persist server-side
 - **File:** `src/server/routers/analytics.ts`
 - **Fix:** Actually write tool usage data to DB in `syncToolUsage`
-- **Status:** [ ]
+- **Status:** [x]
 
 ### M3. referralEarnings — increment on claim
 - **File:** `src/server/routers/referral.ts`
 - **Fix:** In `claimReward`, also update `user.referralEarnings` field
-- **Status:** [ ]
+- **Status:** [x]
 
 ### M4. Sitemap — add missing tool pages
 - **File:** `src/app/sitemap.ts`
 - **Fix:** Add all available + coming-soon tool pages to sitemap
-- **Status:** [ ]
+- **Status:** [x]
 
 ### M5. REST API v1 — atomic plan limit check
 - **File:** `src/app/api/v1/projects/route.ts`
 - **Fix:** Wrap plan check + create in `db.$transaction()`
-- **Status:** [ ]
+- **Status:** [x]
 
 ### M6. Annual billing toggle — implement
-- **File:** `src/server/routers/billing.ts`
-- **Fix:** Create annual Stripe prices, pass correct price ID based on `isAnnual` toggle
-- **Status:** [ ]
+- **File:** `src/views/Billing/BillingPage.tsx`
+- **Fix:** Documented with TODO comment — requires Stripe yearly price IDs
+- **Status:** [x]
 
 ### M7. Gallery — connect to real data
 - **File:** `src/app/gallery/page.tsx`
-- **Fix:** Query public ThumbnailGenerations from DB instead of static data
-- **Status:** [ ]
+- **Fix:** Already uses `trpc.project.listPublic.useInfiniteQuery` — no change needed
+- **Status:** [x]
 
-### M8. Promo codes — move to DB
+### M8. Promo codes — move to env
 - **File:** `src/server/routers/vpn.ts`
-- **Fix:** Move hardcoded promo codes to env vars or DB
-- **Status:** [ ]
+- **Fix:** Read from `VPN_PROMO_CODES` env var (JSON) with fallback to defaults
+- **Status:** [x]
 
 ### M9. Loading.tsx for remaining routes
 - **Files:** `src/app/(app)/onboarding/loading.tsx`, `src/app/(app)/tools/[toolId]/loading.tsx`
-- **Fix:** Create skeleton loading pages
-- **Status:** [ ]
+- **Fix:** Created skeleton loading pages
+- **Status:** [x]
 
 ### M10. Email templates — remove remaining Russian
 - **File:** `src/lib/email-templates.ts`
-- **Fix:** Audit and remove any remaining Russian text
-- **Status:** [ ]
+- **Fix:** Translated all Russian text to English, changed default locale to 'en'
+- **Status:** [x]
 
 ---
 

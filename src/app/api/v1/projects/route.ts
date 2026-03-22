@@ -187,39 +187,43 @@ export async function POST(req: NextRequest) {
     .map((t) => stripTags(t).slice(0, 100));
 
   try {
-    // Check plan limits
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { plan: true, _count: { select: { projects: true } } },
-    });
-
-    if (!user) {
-      return jsonError('User not found.', 404);
-    }
-
+    // Atomic plan limit check + project creation inside a transaction
+    // to prevent race conditions where concurrent requests bypass the limit
     const PLAN_LIMITS: Record<string, number> = { FREE: 3, PRO: 25, STUDIO: Infinity };
-    const planLimit = PLAN_LIMITS[user.plan] ?? 3;
 
-    if (user._count.projects >= planLimit) {
-      return jsonError('Project limit reached. Upgrade your plan.', 403);
-    }
+    const project = await db.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { plan: true, _count: { select: { projects: true } } },
+      });
 
-    const project = await db.project.create({
-      data: {
-        title: title || 'Untitled',
-        description: description ?? null,
-        tags: tags ?? [],
-        userId,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        status: true,
-        tags: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      if (!user) {
+        throw new Error('USER_NOT_FOUND');
+      }
+
+      const planLimit = PLAN_LIMITS[user.plan] ?? 3;
+
+      if (user._count.projects >= planLimit) {
+        throw new Error('PLAN_LIMIT_REACHED');
+      }
+
+      return tx.project.create({
+        data: {
+          title: title || 'Untitled',
+          description: description ?? null,
+          tags: tags ?? [],
+          userId,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          tags: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
     });
 
     return NextResponse.json(
@@ -234,6 +238,10 @@ export async function POST(req: NextRequest) {
       },
     );
   } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === 'USER_NOT_FOUND') return jsonError('User not found.', 404);
+      if (err.message === 'PLAN_LIMIT_REACHED') return jsonError('Project limit reached. Upgrade your plan.', 403);
+    }
     console.error('[API v1] POST /projects error:', err);
     return jsonError('Internal server error.', 500);
   }
