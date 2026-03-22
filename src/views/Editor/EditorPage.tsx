@@ -15,6 +15,7 @@ import { useVideoGeneration } from '@/hooks/useVideoGeneration';
 import { useCollaboration, useSceneEditLock } from '@/hooks/useCollaboration';
 import { useUndoHint } from '@/hooks/useUndoHint';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { trpc } from '@/lib/trpc';
@@ -77,6 +78,12 @@ const STYLE_CATEGORIES: StyleCategory[] = [
   { id: 'realistic', label: 'Realistic' },
   { id: 'meme', label: 'Meme Style' },
   { id: 'story', label: 'Story Animation' },
+];
+
+const EXAMPLE_PROMPTS = [
+  'A woman walking through a neon-lit city at night, cinematic',
+  'A cat playing piano in a cozy room, soft lighting',
+  'Drone flying through mountains at golden hour, epic scenery',
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -306,7 +313,6 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
         boxShadow: isSelected ? '0 0 16px #c8ff0033' : 'none',
       }}
     >
-      {/* Badge */}
       {badgeColor && s.badge && (
         <span style={{
           position: 'absolute', top: 6, right: 6,
@@ -319,8 +325,6 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
           {s.badge}
         </span>
       )}
-
-      {/* Name */}
       <span style={{
         fontSize: 11, fontWeight: 800, color: '#fff',
         textTransform: 'uppercase', letterSpacing: '0.04em',
@@ -338,34 +342,22 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
    ═══════════════════════════════════════════════════════════════════ */
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <div style={{ width: 320, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: '16px 16px' }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} width="33%" height={36} style={{ borderRadius: 8 }} />
-            ))}
-          </div>
-          <Skeleton width="100%" height={120} style={{ borderRadius: 12, marginBottom: 14 }} />
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 14 }}>
-            <Skeleton width={112} height={80} style={{ borderRadius: 12 }} />
-            <Skeleton width={112} height={80} style={{ borderRadius: 12 }} />
-          </div>
-          <Skeleton width="100%" height={100} style={{ borderRadius: 10, marginBottom: 14 }} />
-          <Skeleton width="100%" height={48} style={{ borderRadius: 12 }} />
+    <div style={{ display: 'flex', height: '100dvh', background: C.bg, overflow: 'hidden' }}>
+      <div style={{ width: 380, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Skeleton width="100%" height={80} style={{ borderRadius: 12 }} />
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Skeleton width="50%" height={80} style={{ borderRadius: 12 }} />
+          <Skeleton width="50%" height={80} style={{ borderRadius: 12 }} />
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.bg, padding: 24 }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} width={80} height={32} style={{ borderRadius: 20 }} />
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, flex: 1 }}>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} width="100%" height={100} style={{ borderRadius: 12 }} />
-            ))}
-          </div>
+        <Skeleton width="100%" height={100} style={{ borderRadius: 12 }} />
+        <Skeleton width="100%" height={48} style={{ borderRadius: 12 }} />
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 20 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+          <Skeleton width={140} height={32} style={{ borderRadius: 8 }} />
+          <Skeleton width={140} height={32} style={{ borderRadius: 8 }} />
         </div>
+        <Skeleton width="100%" height="100%" style={{ borderRadius: 12, flex: 1 }} />
       </div>
     </div>
   );
@@ -380,14 +372,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const t = useLocaleStore((s) => s.t);
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const { canUseAI, remainingAI, plan } = usePlanLimits();
 
   const scenes = useEditorStore((s) => s.scenes);
   const selId = useEditorStore((s) => s.selId);
   const setSelId = useEditorStore((s) => s.setSelId);
-  const dragId = useEditorStore((s) => s.dragId);
-  const setDragId = useEditorStore((s) => s.setDragId);
-  const dragOv = useEditorStore((s) => s.dragOv);
-  const setDragOv = useEditorStore((s) => s.setDragOv);
   const confirmDel = useEditorStore((s) => s.confirmDel);
   const setConfirmDel = useEditorStore((s) => s.setConfirmDel);
   const saveStatus = useEditorStore((s) => s.saveStatus);
@@ -399,49 +388,54 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   useCollaboration(projectId);
   useSceneEditLock(selId);
 
-  // Higgsfield-style state
-  const [activeTab, setActiveTab] = useState<'create' | 'edit' | 'motion'>('create');
+  // UI state
   const [selectedStyleId, setSelectedStyleId] = useState('general');
   const [activeCategory, setActiveCategory] = useState('all');
   const [styleSearch, setStyleSearch] = useState('');
-  const [multiShot, setMultiShot] = useState(false);
-  const [multiShotMode, setMultiShotMode] = useState<'auto' | 'custom'>('auto');
-  const [enhance, setEnhance] = useState(true);
-  const [soundOn, setSoundOn] = useState(true);
-  const [durationInput, setDurationInput] = useState('5');
+  const [durationValue, setDurationValue] = useState(5);
   const [aspectRatio, setAspectRatio] = useState('16:9');
   const [resolution, setResolution] = useState('720p');
   const [rightPanelTab, setRightPanelTab] = useState<'howto' | 'history' | 'styles'>('howto');
 
-  // Scene management state (kept for backward compat)
-  const [scenePanelOpen, setScenePanelOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [modPick, setModPick] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [musicDropOpen, setMusicDropOpen] = useState(false);
+  // AI ideas
+  const [aiIdeas, setAiIdeas] = useState<string[]>([]);
+
+  // Scene management state
   const [leftModelsOpen, setLeftModelsOpen] = useState(false);
   const leftModDropRef = useRef<HTMLDivElement>(null);
 
-  // Z1: AI Script Generator
+  // Modals
   const [showScriptModal, setShowScriptModal] = useState(false);
   const [scriptTopic, setScriptTopic] = useState('');
   const [scriptTone, setScriptTone] = useState<'professional' | 'casual' | 'fun'>('professional');
   const [scriptDuration, setScriptDuration] = useState<'30s' | '1min' | '3min'>('1min');
-
-  // Z2: AI Captions
   const [showCaptionsModal, setShowCaptionsModal] = useState(false);
   const [captionsSrt, setCaptionsSrt] = useState<string | null>(null);
-
-  // Z5: AI Content Repurposing
   const [showShortsModal, setShowShortsModal] = useState(false);
 
+  // Progress & result
+  const [showResult, setShowResult] = useState(false);
+  const [videoRevealed, setVideoRevealed] = useState(false);
+
   const musicAudioRef = useRef<HTMLAudioElement | null>(null);
-  const musicDropRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
-  const savedRef = useRef(false);
 
   // Video generation hook for selected scene
   const videoGen = useVideoGeneration(selId);
+
+  // AI Ideas mutation
+  const suggestIdeas = trpc.aiThumbnails.suggestIdeas.useMutation({
+    onSuccess: (data) => {
+      if (data.ideas.length > 0) {
+        setAiIdeas(data.ideas);
+      } else {
+        toast.info('No ideas generated. Try a different topic.');
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to generate ideas.');
+    },
+  });
 
   // Z1: AI Script Generator mutation
   const generateScript = trpc.ai.generateScript.useMutation({
@@ -476,6 +470,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     },
     onError: (err) => toast.error(err.message),
   });
+
+  // Suppress unused variable warnings
+  void generateCaptions;
 
   // Auto-save
   useEffect(() => {
@@ -520,15 +517,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   }, []);
 
   useEffect(() => {
-    if (!musicDropOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (musicDropRef.current && !musicDropRef.current.contains(e.target as Node)) setMusicDropOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [musicDropOpen]);
-
-  useEffect(() => {
     if (!leftModelsOpen) return;
     const handler = (e: MouseEvent) => {
       if (leftModDropRef.current && !leftModDropRef.current.contains(e.target as Node)) setLeftModelsOpen(false);
@@ -536,11 +524,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [leftModelsOpen]);
-
-  useEffect(() => {
-    setShowSettings(false);
-    setModPick(false);
-  }, [selId]);
 
   // Sync wrappers
   const updScene = useCallback((id: string, patch: Partial<Scene>) => {
@@ -556,32 +539,19 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     if (projectId) { sync.deleteScene(id); } else { useEditorStore.getState().delScene(id); }
   }, [projectId, sync]);
 
-  const dupScene = useCallback((id: string) => {
-    if (projectId) { sync.duplicateScene(id); } else { useEditorStore.getState().dupScene(id); }
-  }, [projectId, sync]);
-
-  const reorderScenes = useCallback((fromId: string, toId: string) => {
-    if (projectId) { sync.reorder(fromId, toId); } else { useEditorStore.getState().reorderScenes(fromId, toId); }
-  }, [projectId, sync]);
-
-  const handleTransitionChange = useCallback((sceneId: string, transition: TransitionType) => {
-    useEditorStore.getState().setTransition(sceneId, transition);
-    if (projectId) { sync.updateScene(sceneId, { transition } as Partial<Scene>); }
-  }, [projectId, sync]);
-
   const handleGenerate = useCallback(() => {
     const store = useEditorStore.getState();
     const currentSel = store.scenes.find((s) => s.id === store.selId);
     if (!currentSel || !currentSel.prompt.trim() || videoGen.isGenerating) return;
+    if (!canUseAI) { toast.error('AI credits exhausted. Upgrade your plan.'); return; }
 
-    // Prepend style info to the prompt for generation
     const activeStyle = ANIMATION_STYLES.find((s) => s.id === selectedStyleId);
     const stylePrefix = activeStyle ? `[Style: ${activeStyle.name}] ` : '';
     const fullPrompt = stylePrefix + currentSel.prompt;
 
     trackEvent('video_generate', { model: currentSel.model, duration: currentSel.duration, style: selectedStyleId });
     videoGen.start(fullPrompt, currentSel.model, currentSel.duration);
-  }, [videoGen, selectedStyleId]);
+  }, [videoGen, selectedStyleId, canUseAI]);
 
   // Keyboard shortcut: Ctrl+Enter to generate
   useEffect(() => {
@@ -596,8 +566,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   }, [handleGenerate]);
 
   // Undo / Redo
-  const undo = useEditorStore((s) => s.undo);
-  const redo = useEditorStore((s) => s.redo);
   const historyLen = useEditorStore((s) => s.historyCount);
   const futureLen = useEditorStore((s) => s.futureCount);
   useUndoHint(historyLen);
@@ -642,21 +610,27 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     el.style.overflowY = sh > maxH ? 'auto' : 'hidden';
   }, []);
 
+  // AI Ideas handler
+  const handleGetIdeas = useCallback(() => {
+    if (suggestIdeas.isPending) return;
+    const currentPrompt = useEditorStore.getState().scenes.find((s) => s.id === useEditorStore.getState().selId)?.prompt || '';
+    suggestIdeas.mutate({ topic: currentPrompt.trim() || undefined });
+  }, [suggestIdeas]);
+
   /* --- Computed --- */
   const gc = useCallback((k: string) => (C[k as keyof Theme] as string) || C.accent, [C]);
   const sel = useMemo(() => scenes.find((s) => s.id === selId), [scenes, selId]);
-  const totalDur = useMemo(() => scenes.reduce((a, s) => a + s.duration, 0), [scenes]);
 
   const isGenerating = videoGen.isGenerating;
   const progress = videoGen.progress;
-  const lastError = videoGen.lastError;
 
   const selectedStyle = useMemo(() => ANIMATION_STYLES.find((s) => s.id === selectedStyleId) || ANIMATION_STYLES[0], [selectedStyleId]);
+  const selCol = sel ? gc(sel.ck) : C.accent;
+  const selMod = sel ? (MODELS.find((m) => m.id === sel.model) || MODELS[1]) : MODELS[1];
 
   // Filter styles based on category and search
   const filteredStyles = useMemo(() => {
     let styles = ANIMATION_STYLES;
-
     if (activeCategory === 'new') {
       styles = styles.filter((s) => s.badge === 'New');
     } else if (activeCategory === 'trending') {
@@ -664,12 +638,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     } else if (activeCategory !== 'all') {
       styles = styles.filter((s) => s.category === activeCategory);
     }
-
     if (styleSearch.trim()) {
       const q = styleSearch.toLowerCase();
       styles = styles.filter((s) => s.name.toLowerCase().includes(q) || s.category.includes(q));
     }
-
     return styles;
   }, [activeCategory, styleSearch]);
 
@@ -678,8 +650,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     setRightPanelTab('howto');
   }, []);
 
-  const selCol = sel ? gc(sel.ck) : C.accent;
-  const selMod = sel ? (MODELS.find((m) => m.id === sel.model) || MODELS[1]) : MODELS[1];
+  const disabled = !sel?.prompt?.trim() || !canUseAI || isGenerating;
 
   /* ═══════════════════════════════════════════════════════════════
      MOBILE FALLBACK
@@ -688,7 +659,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100%', padding: 24,
+        justifyContent: 'center', height: '100dvh', padding: 24,
         textAlign: 'center', background: C.bg,
       }}>
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
@@ -728,7 +699,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
      ═══════════════════════════════════════════════════════════════ */
   if (sync.isError) {
     return (
-      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+      <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: C.accent }}>!</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('editor.loadError')}</div>
@@ -749,96 +720,164 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     MAIN RENDER — HIGGSFIELD LAYOUT
+     MAIN RENDER
+     Layout: 1:1 match with AiThumbnailsPage
      ═══════════════════════════════════════════════════════════════ */
   const ACCENT_LIME = '#c8ff00';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: C.bg }}>
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-
-        {/* ════════════════════════════════════════════════
-            LEFT PANEL — Creation Controls (320px)
-            ════════════════════════════════════════════════ */}
-        <ErrorBoundary>
+    <div
+      style={{
+        background: C.bg,
+        color: C.text,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+        {/* ── Top Bar (same as AiThumbnails) ─────────────── */}
         <div
-          className="tf-editor-left-panel"
           style={{
-            width: 320,
-            flexShrink: 0,
+            height: 56,
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '0 20px',
+            borderBottom: `1px solid ${C.border}`,
             background: C.card,
-            borderRight: `1px solid ${C.border}`,
-            overflow: 'hidden',
-            position: 'relative',
+            flexShrink: 0,
+            gap: 12,
           }}
         >
-          {/* Tab bar */}
-          <div style={{
-            display: 'flex', gap: 0, padding: '0',
-            borderBottom: `1px solid ${C.border}`, flexShrink: 0,
-          }}>
-            {([
-              { id: 'create' as const, label: 'Create Video' },
-              { id: 'edit' as const, label: 'Edit Video' },
-              { id: 'motion' as const, label: 'Motion Control' },
-            ]).map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="ed-tab-btn"
-                style={{
-                  flex: 1, padding: '12px 4px', fontSize: 11, fontWeight: 600,
-                  color: activeTab === tab.id ? C.text : C.dim,
-                  background: 'transparent', border: 'none',
-                  borderBottom: activeTab === tab.id ? `2px solid ${ACCENT_LIME}` : '2px solid transparent',
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all .15s', whiteSpace: 'nowrap',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: C.accentDim,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
+              Video Editor
+            </span>
+            <OnlineUsers />
           </div>
 
-          {/* Scrollable controls area */}
+          {/* Save status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {autoSaveDirty ? (
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.orange, flexShrink: 0 }} title={t('editor.autoSave.unsaved')} />
+            ) : saveStatus === 'saved' ? (
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, flexShrink: 0, opacity: 0.7 }} title={t('editor.autoSave.saved')} />
+            ) : saveStatus === 'saving' ? (
+              <span style={{ width: 6, height: 6, borderRadius: '50%', border: '1.5px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block', flexShrink: 0 }} />
+            ) : null}
+          </div>
+
+          {/* Undo/Redo */}
+          <div style={{ display: 'flex', gap: 2 }}>
+            <button
+              onClick={() => { const es = useEditorStore.getState(); if (es.historyCount > 0) es.undo(); }}
+              disabled={historyLen === 0}
+              title={`${t('editor.toolbar.undo')} (Ctrl+Z)`}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: historyLen === 0 ? C.dim : C.sub, fontSize: 14,
+                cursor: historyLen === 0 ? 'default' : 'pointer',
+                fontFamily: 'inherit', opacity: historyLen === 0 ? 0.3 : 1,
+                transition: 'all .15s', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', padding: 0,
+              }}
+            >
+              &#8617;
+            </button>
+            <button
+              onClick={() => { const es = useEditorStore.getState(); if (es.futureCount > 0) es.redo(); }}
+              disabled={futureLen === 0}
+              title={`${t('editor.toolbar.redo')} (Ctrl+Shift+Z)`}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: futureLen === 0 ? C.dim : C.sub, fontSize: 14,
+                cursor: futureLen === 0 ? 'default' : 'pointer',
+                fontFamily: 'inherit', opacity: futureLen === 0 ? 0.3 : 1,
+                transition: 'all .15s', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', padding: 0,
+              }}
+            >
+              &#8618;
+            </button>
+          </div>
+
+          {/* Credits badge */}
           <div
-            className="ed-scene-list"
             style={{
-              flex: 1, minHeight: 0,
-              overflowY: 'auto', overflowX: 'hidden',
-              padding: '14px 14px 12px',
-              display: 'flex', flexDirection: 'column', gap: 12,
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '5px 12px', borderRadius: 20,
+              background: canUseAI ? C.accentDim : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${canUseAI ? C.accent + '26' : 'rgba(239,68,68,0.2)'}`,
             }}
           >
-            {/* Style Preview Card */}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? C.accent : C.red} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 700, color: canUseAI ? C.accent : C.red }}>
+              {remainingAI}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Main Content ───────────────────────────────── */}
+        <div
+          style={{
+            flex: 1, display: 'flex',
+            flexDirection: 'row',
+            gap: 0, overflow: 'hidden', minHeight: 0,
+          }}
+        >
+          {/* LEFT PANEL (380px) — same width as AiThumbnails */}
+          <div
+            style={{
+              width: 380,
+              flexShrink: 0,
+              background: C.card,
+              borderRight: `1px solid ${C.border}`,
+              padding: 20,
+              display: 'flex', flexDirection: 'column', gap: 14,
+              overflowY: 'auto',
+              maxHeight: '100%',
+            }}
+          >
+            {/* ── 1. Style Preview Card (clickable to open styles) ── */}
             <div
-              role="button"
-              tabIndex={0}
               onClick={() => setRightPanelTab('styles')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRightPanelTab('styles'); } }}
               style={{
-              borderRadius: 12,
-              background: `linear-gradient(135deg, ${selectedStyle.gradient[0]}, ${selectedStyle.gradient[1]})`,
-              padding: '16px 14px 14px',
-              position: 'relative',
-              minHeight: 80,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              cursor: 'pointer',
-              transition: 'filter .15s',
-            }}>
+                borderRadius: 12,
+                background: `linear-gradient(135deg, ${selectedStyle.gradient[0]}, ${selectedStyle.gradient[1]})`,
+                padding: '16px 14px 14px',
+                position: 'relative',
+                minHeight: 80,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                cursor: 'pointer',
+                transition: 'transform .15s ease, box-shadow .15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
               <span
                 style={{
                   position: 'absolute', top: 8, right: 8,
                   fontSize: 9, fontWeight: 600, color: '#ffffffcc',
-                  background: 'rgba(0,0,0,.3)',
+                  background: 'rgba(0,0,0,.3)', border: 'none',
                   borderRadius: 6, padding: '4px 8px',
-                  fontFamily: 'inherit',
-                  backdropFilter: 'blur(4px)', transition: 'background .15s',
-                  pointerEvents: 'none',
+                  backdropFilter: 'blur(4px)',
                 }}
               >
                 Change
@@ -851,7 +890,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </span>
             </div>
 
-            {/* Frame upload slots */}
+            {/* ── 2. Frame upload slots ── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <FrameSlot
                 label={t('editor.frame.startFrame')}
@@ -870,171 +909,164 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               />
             </div>
 
-            {/* Multi-shot Toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: C.sub }}>Multi-shot</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button
-                  onClick={() => setMultiShot(!multiShot)}
-                  style={{
-                    width: 36, height: 20, borderRadius: 10,
-                    background: multiShot ? ACCENT_LIME : C.surface,
-                    border: `1px solid ${multiShot ? ACCENT_LIME : C.border}`,
-                    cursor: 'pointer', position: 'relative',
-                    transition: 'all .2s', padding: 0,
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute', top: 2,
-                    left: multiShot ? 18 : 2,
-                    width: 14, height: 14, borderRadius: '50%',
-                    background: multiShot ? '#000' : C.dim,
-                    transition: 'all .2s',
-                  }} />
-                </button>
-                {multiShot && (
-                  <div style={{ display: 'flex', gap: 2 }}>
-                    {(['auto', 'custom'] as const).map((mode) => (
-                      <button
-                        key={mode}
-                        onClick={() => setMultiShotMode(mode)}
-                        style={{
-                          padding: '3px 10px', borderRadius: 6,
-                          fontSize: 10, fontWeight: 600,
-                          background: multiShotMode === mode ? ACCENT_LIME + '20' : 'transparent',
-                          color: multiShotMode === mode ? ACCENT_LIME : C.dim,
-                          border: `1px solid ${multiShotMode === mode ? ACCENT_LIME + '44' : 'transparent'}`,
-                          cursor: 'pointer', fontFamily: 'inherit',
-                          textTransform: 'capitalize', transition: 'all .15s',
-                        }}
-                      >
-                        {mode}
-                      </button>
-                    ))}
-                  </div>
-                )}
+            {/* ── 3. Prompt section ── */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  Describe your video <span style={{ color: C.accent }}>*</span>
+                </span>
+                <span style={{ fontSize: 11, color: (sel?.prompt?.length || 0) > 1800 ? C.red : C.dim }}>
+                  {sel?.prompt?.length || 0}/2000
+                </span>
               </div>
-            </div>
 
-            {/* Prompt textarea */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div
-                style={{
-                  position: 'relative',
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 10,
-                  padding: '10px 12px',
-                  transition: 'border-color .2s, box-shadow .2s',
+              <textarea
+                ref={promptRef}
+                value={sel?.prompt || ''}
+                rows={4}
+                onChange={(e) => {
+                  if (!sel) return;
+                  updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
+                  autoResize(e.target);
+                  useEditorStore.getState().pushHistoryDebounced();
                 }}
-                onFocus={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = ACCENT_LIME + '55';
-                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 2px ${ACCENT_LIME}18`;
-                }}
-                onBlur={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                    (e.currentTarget as HTMLElement).style.borderColor = C.border;
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleGenerate();
                   }
                 }}
-              >
-                <textarea
-                  ref={promptRef}
-                  value={sel?.prompt || ''}
-                  rows={1}
-                  onChange={(e) => {
-                    if (!sel) return;
-                    updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
-                    autoResize(e.target);
-                    useEditorStore.getState().pushHistoryDebounced();
-                  }}
-                  onKeyDown={(e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                      e.preventDefault();
-                      handleGenerate();
-                    }
-                  }}
-                  placeholder="Describe your video, like 'A woman walking through a neon-lit city'. Add elements using @"
-                  maxLength={2000}
-                  style={{
-                    width: '100%', background: 'transparent', border: 'none',
-                    outline: 'none', color: C.text, fontSize: 12, lineHeight: '18px',
-                    resize: 'none', fontFamily: 'inherit',
-                    minHeight: 60, maxHeight: 140, overflow: 'hidden',
-                    padding: 0, boxSizing: 'border-box',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-                  <span style={{ fontSize: 9, color: (sel?.prompt?.length || 0) > 1800 ? '#ef4444' : C.dim, fontFamily: "'JetBrains Mono', monospace" }}>
-                    {sel?.prompt?.length || 0}/2000
-                  </span>
-                </div>
+                placeholder="Describe your video, like 'A woman walking through a neon-lit city'. Add elements using @"
+                maxLength={2000}
+                style={{
+                  width: '100%', minHeight: 90, padding: 14,
+                  borderRadius: 12, border: `1px solid ${C.border}`,
+                  background: C.surface, color: C.text,
+                  fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
+                  outline: 'none', transition: 'border-color 0.2s ease',
+                  boxSizing: 'border-box', lineHeight: 1.5,
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+              />
+            </div>
+
+            {/* ── 4. "Need an idea?" button + idea chips ── */}
+            <button
+              onClick={handleGetIdeas}
+              disabled={suggestIdeas.isPending}
+              onMouseEnter={(e) => { if (!suggestIdeas.isPending) e.currentTarget.style.borderColor = C.accent + '60'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', borderRadius: 10,
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
+                fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s ease',
+                fontSize: 13, fontWeight: 600,
+                opacity: suggestIdeas.isPending ? 0.6 : 1,
+              }}
+            >
+              {suggestIdeas.isPending ? (
+                <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}>
+                  <circle cx="7" cy="7" r="5" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
+                  <path d="M7 2a5 5 0 013.54 1.46" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              )}
+              {suggestIdeas.isPending ? 'Generating ideas...' : 'Need an idea?'}
+            </button>
+
+            {/* AI idea chips */}
+            {aiIdeas.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {aiIdeas.map((idea, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      if (sel) updScene(sel.id, { prompt: idea, status: 'editing' });
+                      setAiIdeas([]);
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.accent + '30'; }}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: `1px solid ${C.accent}30`,
+                      background: C.accentDim,
+                      color: C.text,
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      transition: 'all 0.15s ease',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={idea}
+                  >
+                    {idea.length > 80 ? idea.slice(0, 80) + '...' : idea}
+                  </button>
+                ))}
               </div>
+            )}
+
+            {/* Divider */}
+            <div style={{ height: 1, background: C.border }} />
+
+            {/* ── 5. Settings ── */}
+
+            {/* Duration slider */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Duration
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {durationValue}s
+                </span>
+              </div>
+              <input
+                type="range"
+                min={3}
+                max={30}
+                step={1}
+                value={durationValue}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setDurationValue(v);
+                  if (sel) updScene(sel.id, { duration: v });
+                }}
+                style={{
+                  width: '100%', height: 6,
+                  appearance: 'none', WebkitAppearance: 'none',
+                  borderRadius: 3, background: C.border,
+                  outline: 'none', cursor: 'pointer',
+                  accentColor: ACCENT_LIME,
+                }}
+              />
             </div>
 
-            {/* Settings row: Enhance + Sound + Elements */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {/* Enhance toggle */}
-              <button
-                onClick={() => {
-                  setEnhance(!enhance);
-                  if (sel) updScene(sel.id, { enh: !enhance });
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  padding: '5px 10px', borderRadius: 8,
-                  background: enhance ? ACCENT_LIME + '12' : 'transparent',
-                  border: `1px solid ${enhance ? ACCENT_LIME + '44' : C.border}`,
-                  color: enhance ? ACCENT_LIME : C.dim,
-                  fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'inherit', transition: 'all .15s',
-                }}
-              >
-                Enhance {enhance ? 'On' : 'Off'}
-              </button>
-
-              {/* Sound toggle */}
-              <button
-                onClick={() => {
-                  setSoundOn(!soundOn);
-                  if (sel) updScene(sel.id, { snd: !soundOn });
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  padding: '5px 10px', borderRadius: 8,
-                  background: soundOn ? C.blue + '12' : 'transparent',
-                  border: `1px solid ${soundOn ? C.blue + '44' : C.border}`,
-                  color: soundOn ? C.blue : C.dim,
-                  fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'inherit', transition: 'all .15s',
-                }}
-              >
-                Sound {soundOn ? 'On' : 'Off'}
-              </button>
-
-              {/* @ Elements */}
-              <button
-                onClick={() => toast.info('Element picker coming soon')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 2,
-                  padding: '5px 8px', borderRadius: 8,
-                  background: 'transparent', border: `1px solid ${C.border}`,
-                  color: C.dim, fontSize: 10, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                }}
-              >
-                @ Elem
-              </button>
-            </div>
-
-            {/* Model selector + Params */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* Model dropdown */}
+            <div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Model
+              </span>
               <div style={{ position: 'relative' }} ref={leftModDropRef}>
                 <button
                   onClick={() => setLeftModelsOpen(!leftModelsOpen)}
                   style={{
                     width: '100%', padding: '8px 12px', borderRadius: 10,
-                    border: `1px solid ${leftModelsOpen ? ACCENT_LIME + '55' : C.border}`,
+                    border: `1px solid ${leftModelsOpen ? C.borderActive : C.border}`,
                     background: C.surface, color: C.text,
                     fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
@@ -1088,546 +1120,634 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Duration + Aspect + Resolution pills */}
+            {/* Aspect Ratio pills */}
+            <div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Aspect Ratio
+              </span>
               <div style={{ display: 'flex', gap: 6 }}>
-                {/* Duration pills */}
-                <div style={{ display: 'flex', gap: 3, flex: 1 }}>
-                  {[3, 5, 10, 15].map((dur) => (
-                    <button
-                      key={dur}
-                      onClick={() => {
-                        setDurationInput(String(dur));
-                        if (sel) updScene(sel.id, { duration: dur });
-                      }}
-                      style={{
-                        flex: 1, height: 30, borderRadius: 6,
-                        border: `1px solid ${sel?.duration === dur ? ACCENT_LIME + '55' : C.border}`,
-                        background: sel?.duration === dur ? ACCENT_LIME + '12' : C.surface,
-                        color: sel?.duration === dur ? ACCENT_LIME : C.dim,
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        transition: 'all .15s', padding: 0,
-                      }}
-                    >
-                      {dur}s
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Aspect ratio + Resolution */}
-              <div style={{ display: 'flex', gap: 6 }}>
-                <div style={{ display: 'flex', gap: 3, flex: 1 }}>
-                  {['16:9', '9:16', '1:1'].map((ar) => (
-                    <button
-                      key={ar}
-                      onClick={() => setAspectRatio(ar)}
-                      style={{
-                        flex: 1, height: 28, borderRadius: 6,
-                        border: `1px solid ${aspectRatio === ar ? ACCENT_LIME + '55' : C.border}`,
-                        background: aspectRatio === ar ? ACCENT_LIME + '12' : C.surface,
-                        color: aspectRatio === ar ? ACCENT_LIME : C.dim,
-                        fontSize: 9, fontWeight: 600, cursor: 'pointer',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        transition: 'all .15s', padding: 0,
-                      }}
-                    >
-                      {ar}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: 3 }}>
-                  {['720p', '1080p'].map((res) => (
-                    <button
-                      key={res}
-                      onClick={() => setResolution(res)}
-                      style={{
-                        height: 28, borderRadius: 6, padding: '0 10px',
-                        border: `1px solid ${resolution === res ? ACCENT_LIME + '55' : C.border}`,
-                        background: resolution === res ? ACCENT_LIME + '12' : C.surface,
-                        color: resolution === res ? ACCENT_LIME : C.dim,
-                        fontSize: 9, fontWeight: 600, cursor: 'pointer',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        transition: 'all .15s',
-                      }}
-                    >
-                      {res}
-                    </button>
-                  ))}
-                </div>
+                {['16:9', '9:16', '1:1'].map((ar) => (
+                  <button
+                    key={ar}
+                    onClick={() => setAspectRatio(ar)}
+                    style={{
+                      flex: 1, padding: '7px 14px', borderRadius: 8,
+                      border: `1px solid ${aspectRatio === ar ? C.accent : C.border}`,
+                      background: aspectRatio === ar ? C.accentDim : 'transparent',
+                      color: aspectRatio === ar ? C.accent : C.sub,
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
+                    }}
+                  >
+                    {ar}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Generate CTA */}
+            {/* Resolution pills */}
+            <div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Resolution
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {['720p', '1080p', '4K'].map((res) => (
+                  <button
+                    key={res}
+                    onClick={() => setResolution(res)}
+                    style={{
+                      position: 'relative', flex: 1, padding: '7px 14px', borderRadius: 8,
+                      border: `1px solid ${resolution === res ? C.accent : C.border}`,
+                      background: resolution === res ? C.accentDim : 'transparent',
+                      color: resolution === res ? C.accent : C.sub,
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
+                    }}
+                  >
+                    {res}
+                    {res === '4K' && plan === 'FREE' && (
+                      <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                        PRO
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Credit cost */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: C.accentDim }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
+                1 credit
+              </span>
+            </div>
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* ── 6. Generate CTA — same as AiThumbnails ── */}
             <button
               className="ed-gen-btn"
               onClick={handleGenerate}
-              disabled={!sel?.prompt?.trim() || isGenerating}
+              disabled={disabled}
+              aria-busy={isGenerating || undefined}
+              onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.boxShadow = `0 6px 28px ${C.accent}40`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = disabled ? 'none' : `0 4px 20px ${C.accent}30`; }}
               style={{
-                width: '100%', height: 48, borderRadius: 12,
-                border: 'none',
-                background: (!sel?.prompt?.trim() || isGenerating)
-                  ? C.border
-                  : `linear-gradient(135deg, ${ACCENT_LIME}, #a0cc00)`,
-                color: (!sel?.prompt?.trim() || isGenerating) ? C.dim : '#000',
-                fontSize: 15, fontWeight: 800,
-                cursor: (!sel?.prompt?.trim() || isGenerating) ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit', letterSpacing: '-0.01em',
-                transition: 'all .2s ease-out',
+                width: '100%', padding: '14px 0', borderRadius: 12,
+                background: disabled ? C.border : `linear-gradient(135deg, ${C.accent}, ${C.accent}cc)`,
+                color: disabled ? C.dim : '#fff',
+                fontSize: 15, fontWeight: 700, border: 'none',
+                cursor: disabled ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: (!sel?.prompt?.trim() || isGenerating)
-                  ? 'none'
-                  : `0 4px 24px ${ACCENT_LIME}44, 0 0 48px ${ACCENT_LIME}12`,
-                flexShrink: 0,
+                boxShadow: disabled ? 'none' : `0 4px 20px ${C.accent}30`,
+                transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none', flexShrink: 0,
               }}
             >
               {isGenerating ? (
                 <>
-                  <span style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${C.dim}`, borderTopColor: '#000', animation: 'spin .8s linear infinite', flexShrink: 0 }} />
+                  <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: 'spin 1s linear infinite' }}>
+                    <circle cx="9" cy="9" r="7" stroke="rgba(255,255,255,.2)" strokeWidth="2" fill="none" />
+                    <path d="M9 2a7 7 0 015.2 2.33" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </svg>
                   {t('editor.generating')}
                 </>
               ) : (
-                <>{'Generate \u26A1 6'}</>
+                <>{'Generate \u26A1 1'}</>
               )}
             </button>
 
-            {/* Save status + Undo/Redo (subtle) */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {autoSaveDirty ? (
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.orange, flexShrink: 0 }} title={t('editor.autoSave.unsaved')} />
-                ) : saveStatus === 'saved' ? (
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, flexShrink: 0, opacity: 0.7 }} title={t('editor.autoSave.saved')} />
-                ) : saveStatus === 'saving' ? (
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', border: '1.5px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block', flexShrink: 0 }} />
-                ) : null}
-                {saveStatus === 'error' && (
-                  <span style={{ fontSize: 9, color: C.accent, fontWeight: 500 }}>{t('editor.saveError')}</span>
-                )}
-                <OnlineUsers />
-              </div>
-              <div style={{ display: 'flex', gap: 2 }}>
-                <button
-                  onClick={undo} disabled={historyLen === 0}
-                  title={`${t('editor.toolbar.undo')} (Ctrl+Z)`}
-                  aria-label={`${t('editor.toolbar.undo')}${historyLen > 0 ? ` (${historyLen})` : ''}`}
-                  style={{
-                    width: 28, height: 28, borderRadius: 6,
-                    border: `1px solid ${C.border}`, background: 'transparent',
-                    color: historyLen === 0 ? C.dim : C.sub, fontSize: 12,
-                    cursor: historyLen === 0 ? 'default' : 'pointer',
-                    fontFamily: 'inherit', opacity: historyLen === 0 ? 0.3 : 1,
-                    transition: 'all .15s', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', padding: 0,
-                  }}
-                >
-                  &#8617;
-                </button>
-                <button
-                  onClick={redo} disabled={futureLen === 0}
-                  title={`${t('editor.toolbar.redo')} (Ctrl+Shift+Z)`}
-                  aria-label={`${t('editor.toolbar.redo')}${futureLen > 0 ? ` (${futureLen})` : ''}`}
-                  style={{
-                    width: 28, height: 28, borderRadius: 6,
-                    border: `1px solid ${C.border}`, background: 'transparent',
-                    color: futureLen === 0 ? C.dim : C.sub, fontSize: 12,
-                    cursor: futureLen === 0 ? 'default' : 'pointer',
-                    fontFamily: 'inherit', opacity: futureLen === 0 ? 0.3 : 1,
-                    transition: 'all .15s', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', padding: 0,
-                  }}
-                >
-                  &#8618;
-                </button>
-              </div>
-            </div>
+            {/* Upgrade prompt */}
+            {!canUseAI && (
+              <a
+                href="/billing"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '10px 16px', borderRadius: 12,
+                  background: C.accentDim, border: `1px solid ${C.accent}26`,
+                  color: C.accent, fontSize: 13, fontWeight: 600,
+                  textDecoration: 'none', textAlign: 'center', transition: 'all 0.2s ease',
+                }}
+              >
+                Upgrade for more credits
+              </a>
+            )}
           </div>
 
-          {/* Delete confirmation overlay */}
-          {confirmDel && (
-            <div
-              style={{
-                position: 'absolute', inset: 0, background: C.overlay,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                zIndex: 40,
-              }}
-            >
-              <div style={{
-                background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
-                padding: '20px 24px', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,.4)',
-              }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.deleteSceneConfirm')}</span>
-                <span style={{ fontSize: 10, color: C.sub }}>{t('editor.deleteIrreversible')}</span>
-                <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
-                  <button
-                    onClick={() => { delScene(confirmDel); setConfirmDel(null); }}
-                    style={{ padding: '7px 22px', borderRadius: 10, border: 'none', background: C.red, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >
-                    {t('editor.delete')}
-                  </button>
-                  <button
-                    onClick={() => setConfirmDel(null)}
-                    style={{ padding: '7px 22px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >
-                    {t('editor.cancel')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        </ErrorBoundary>
-
-        {/* ════════════════════════════════════════════════
-            RIGHT PANEL — How it works / History / Styles
-            (mirrors AiThumbnailsPage layout)
-            ════════════════════════════════════════════════ */}
-        <ErrorBoundary>
-        <div
-          style={{
-            flex: 1, minWidth: 0,
-            display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', padding: 20,
-          }}
-        >
-          {/* ── Header: Tab switcher ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {([
-                { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
-                { id: 'history' as const, label: `History${scenes.length > 0 ? ` (${scenes.length})` : ''}`, icon: '\uD83D\uDCC1' },
-              ] as const).map((t2) => (
-                <button
-                  key={t2.id}
-                  onClick={() => setRightPanelTab(t2.id)}
-                  onMouseEnter={(e) => { if (rightPanelTab !== t2.id) e.currentTarget.style.borderColor = C.borderActive; }}
-                  onMouseLeave={(e) => { if (rightPanelTab !== t2.id) e.currentTarget.style.borderColor = C.border; }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '6px 14px', borderRadius: 8,
-                    border: `1px solid ${rightPanelTab === t2.id ? C.accent : C.border}`,
-                    background: rightPanelTab === t2.id ? C.accentDim : 'transparent',
-                    color: rightPanelTab === t2.id ? C.accent : C.sub,
-                    fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                    outline: 'none',
-                  }}
-                >
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>{t2.icon}</span>
-                  {t2.label}
-                </button>
-              ))}
-              {rightPanelTab === 'styles' && (
-                <button
-                  onClick={() => setRightPanelTab('howto')}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '6px 14px', borderRadius: 8,
-                    border: `1px solid ${C.accent}`,
-                    background: C.accentDim,
-                    color: C.accent,
-                    fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                    outline: 'none',
-                  }}
-                >
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>{'\uD83C\uDFA8'}</span>
-                  Styles
-                </button>
-              )}
-            </div>
-            <div style={{ flex: 1 }} />
-          </div>
-
-          {/* ── Content area (card container) ── */}
+          {/* RIGHT PANEL (flex) — same structure as AiThumbnails */}
           <div
             style={{
-              flex: 1, borderRadius: 12, background: C.card,
-              border: `1px solid ${C.border}`,
+              flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column',
-              overflow: 'hidden', minHeight: 0,
+              overflow: 'hidden', padding: 20,
             }}
           >
-            {/* ── How it works tab ── */}
-            {rightPanelTab === 'howto' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-                <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
-                  MAKE VIDEOS IN ONE CLICK
-                </h2>
-                <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
-                  250+ presets for camera control, framing, and high-quality VFX
-                </p>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 16,
-                }}>
-                  {/* Step 1 — Add Image */}
-                  <div
-                    className="ed-step-card"
-                    style={{
-                      background: C.surface, border: `1px solid ${C.border}`,
-                      borderRadius: 14, overflow: 'hidden',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                      cursor: 'default',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Add Image
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Upload or generate an image to start your animation
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 2 — Choose Preset */}
-                  <div
-                    className="ed-step-card"
-                    style={{
-                      background: C.surface, border: `1px solid ${C.border}`,
-                      borderRadius: 14, overflow: 'hidden',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                      cursor: 'default',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Choose Preset
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Pick from 250+ animation presets for camera, framing, and VFX
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3 — Get Video */}
-                  <div
-                    className="ed-step-card"
-                    style={{
-                      background: C.surface, border: `1px solid ${C.border}`,
-                      borderRadius: 14, overflow: 'hidden',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                      cursor: 'default',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  >
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Get Video
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Click generate and download your high-quality video
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Video tutorial placeholder */}
-                <div style={{
-                  marginTop: 20, padding: 16, borderRadius: 12,
-                  background: C.surface, border: `1px solid ${C.border}`,
-                  textAlign: 'center',
-                }}>
-                  <span style={{ fontSize: 13, color: C.dim }}>
-                    Video tutorial coming soon
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* ── History tab ── */}
-            {rightPanelTab === 'history' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-                {scenes.length === 0 ? (
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 40, minHeight: 300 }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 16, background: C.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                      </svg>
-                    </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                      No generations yet
-                    </h3>
-                    <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                      Generate your first video and it will appear here
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                      Generated scenes ({scenes.length})
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {scenes.map((sc) => (
-                        <div
-                          key={sc.id}
-                          onClick={() => setSelId(sc.id)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '8px 10px', borderRadius: 8,
-                            background: sc.id === selId ? C.accentDim : 'transparent',
-                            border: `1px solid ${sc.id === selId ? C.accent + '30' : 'transparent'}`,
-                            cursor: 'pointer', transition: 'all .15s',
-                          }}
-                          onMouseEnter={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
-                          onMouseLeave={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = sc.id === selId ? C.accentDim : 'transparent'; }}
-                        >
-                          {/* Thumbnail */}
-                          <div style={{
-                            width: 48, height: 32, borderRadius: 6,
-                            background: sc.sf
-                              ? `url(${sc.sf}) center/cover`
-                              : `linear-gradient(135deg, ${gc(sc.ck)}22, ${gc(sc.ck)}08)`,
-                            border: `1px solid ${C.border}`, flexShrink: 0,
-                          }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {sc.label}
-                            </div>
-                            <div style={{ fontSize: 9, color: C.dim }}>
-                              {fmtDur(sc.duration)} · {sc.status}
-                            </div>
-                          </div>
-                          <SceneLockIndicator sceneId={sc.id} />
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => addScene()}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55'; (e.currentTarget as HTMLElement).style.color = C.accent; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.dim; }}
-                        style={{
-                          width: '100%', padding: '6px 0', borderRadius: 6,
-                          border: `1px dashed ${C.border}`, background: 'transparent',
-                          color: C.dim, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit',
-                          transition: 'all .15s',
-                        }}
-                      >
-                        + {t('editor.addScene')}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* ── Styles gallery ── */}
-            {rightPanelTab === 'styles' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-                {/* Filter tags */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  marginBottom: 12, flexWrap: 'wrap',
-                }}>
-                  {STYLE_CATEGORIES.map((cat) => (
+            {/* ── Header: Tab switcher / Preview pill + actions ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
+              {isGenerating || (sel?.videoUrl && showResult) ? (
+                <>
+                  {sel?.videoUrl && showResult && !isGenerating && (
                     <button
-                      key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
-                      className="ed-filter-pill"
+                      onClick={() => setShowResult(false)}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
                       style={{
-                        padding: '6px 14px', borderRadius: 8,
-                        fontSize: 11, fontWeight: 600,
-                        background: activeCategory === cat.id ? C.accentDim : 'transparent',
-                        color: activeCategory === cat.id ? C.accent : C.sub,
-                        border: `1px solid ${activeCategory === cat.id ? C.accent : C.border}`,
-                        cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all 0.2s ease', whiteSpace: 'nowrap',
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '5px 12px', borderRadius: 8,
+                        border: `1px solid ${C.border}`, background: 'transparent',
+                        color: C.sub, fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
                         outline: 'none',
                       }}
                     >
-                      {cat.label}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                      Back
                     </button>
-                  ))}
+                  )}
+                  <span
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '5px 14px', borderRadius: 20,
+                      background: C.accentDim, border: `1px solid ${C.accent}1a`,
+                      fontSize: 11, fontWeight: 700, color: C.accent,
+                      textTransform: 'uppercase', letterSpacing: 1,
+                    }}
+                  >
+                    PREVIEW {aspectRatio}
+                  </span>
+                  <div style={{ flex: 1 }} />
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {([
+                      { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
+                      { id: 'history' as const, label: `History${scenes.length > 0 ? ` (${scenes.length})` : ''}`, icon: '\uD83D\uDCC1' },
+                    ] as const).map((t2) => (
+                      <button
+                        key={t2.id}
+                        onClick={() => setRightPanelTab(t2.id)}
+                        onMouseEnter={(e) => { if (rightPanelTab !== t2.id) e.currentTarget.style.borderColor = C.borderActive; }}
+                        onMouseLeave={(e) => { if (rightPanelTab !== t2.id) e.currentTarget.style.borderColor = C.border; }}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '6px 14px', borderRadius: 8,
+                          border: `1px solid ${rightPanelTab === t2.id ? C.accent : C.border}`,
+                          background: rightPanelTab === t2.id ? C.accentDim : 'transparent',
+                          color: rightPanelTab === t2.id ? C.accent : C.sub,
+                          fontSize: 12, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                          outline: 'none',
+                        }}
+                      >
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{t2.icon}</span>
+                        {t2.label}
+                      </button>
+                    ))}
+                    {rightPanelTab === 'styles' && (
+                      <button
+                        onClick={() => setRightPanelTab('howto')}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '6px 14px', borderRadius: 8,
+                          border: `1px solid ${C.accent}`,
+                          background: C.accentDim,
+                          color: C.accent,
+                          fontSize: 12, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                          outline: 'none',
+                        }}
+                      >
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>{'\uD83C\uDFA8'}</span>
+                        Styles
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }} />
+                </>
+              )}
+            </div>
 
-                  {/* Search */}
-                  <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                    <input
-                      value={styleSearch}
-                      onChange={(e) => setStyleSearch(e.target.value)}
-                      placeholder="Search styles..."
-                      style={{
-                        padding: '6px 12px 6px 28px', borderRadius: 8,
-                        border: `1px solid ${C.border}`, background: C.surface,
-                        color: C.text, fontSize: 11, fontFamily: 'inherit',
-                        outline: 'none', width: 160, boxSizing: 'border-box',
-                        transition: 'border-color .2s',
-                      }}
-                      onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-                      onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                    />
-                    <svg
-                      width="12" height="12" viewBox="0 0 24 24" fill="none"
-                      stroke={C.dim} strokeWidth="2" strokeLinecap="round"
-                      style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
-                    >
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            {/* ── Preview / Content area ────────────────────── */}
+            <div
+              style={{
+                flex: 1, borderRadius: 12, background: C.card,
+                border: `1px solid ${C.border}`,
+                display: 'flex', flexDirection: 'column',
+                overflow: 'hidden', minHeight: 0,
+              }}
+            >
+              {isGenerating ? (
+                /* ── Loading animation with progress ──────── */
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, position: 'relative' }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: 20,
+                    background: `linear-gradient(135deg, ${C.accent}33, ${C.accent}0d)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    animation: 'pulse-glow 2s ease-in-out infinite',
+                  }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill={C.accent} opacity="0.8" />
                     </svg>
                   </div>
-                </div>
 
-                {/* Style grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-                  gap: 10,
-                }}>
-                  {filteredStyles.map((s) => (
-                    <StyleCard
-                      key={s.id}
-                      style={s}
-                      isSelected={s.id === selectedStyleId}
-                      C={C}
-                      onSelect={handleStyleSelect}
-                    />
-                  ))}
-                </div>
-
-                {filteredStyles.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No styles found</div>
-                    <div style={{ fontSize: 12 }}>Try a different filter or search term</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>
+                    Generating... {Math.round(progress || 0)}%
                   </div>
-                )}
+
+                  <div style={{ width: 240, height: 6, borderRadius: 3, background: C.border, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 3,
+                      width: `${Math.round(progress || 0)}%`,
+                      background: `linear-gradient(90deg, ${C.accent}, ${C.accent}cc)`,
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+
+                  <div style={{ fontSize: 13, color: C.dim, maxWidth: 300, textAlign: 'center', lineHeight: 1.5 }}>
+                    {(progress || 0) < 30 ? 'AI is composing the perfect shot...'
+                      : (progress || 0) < 60 ? 'Generating frames and adding motion...'
+                      : (progress || 0) < 90 ? 'Encoding video and optimizing quality...'
+                      : 'Almost there, finalizing details...'}
+                  </div>
+                </div>
+              ) : sel?.videoUrl && showResult ? (
+                /* ── Generated result with blur reveal ──── */
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ padding: 16, flex: 1 }}>
+                    <div style={{
+                      width: '100%',
+                      aspectRatio: aspectRatio === '16:9' ? '16/9' : aspectRatio === '9:16' ? '9/16' : '1/1',
+                      maxHeight: '60vh',
+                      position: 'relative', overflow: 'hidden', borderRadius: 12,
+                      background: C.bg,
+                      boxShadow: `0 0 20px ${C.accent}15, 0 4px 16px rgba(0,0,0,0.3)`,
+                      margin: '0 auto',
+                    }}>
+                      <video
+                        src={sel.videoUrl}
+                        controls
+                        autoPlay
+                        loop
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                          filter: videoRevealed ? 'blur(0px)' : 'blur(20px)',
+                          transform: videoRevealed ? 'scale(1)' : 'scale(1.05)',
+                          transition: 'filter 0.8s ease-out, transform 0.8s ease-out',
+                        }}
+                        onCanPlay={() => setVideoRevealed(true)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : rightPanelTab === 'howto' ? (
+                /* ── How it works tab ────────────────────────── */
+                <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+                  <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
+                    MAKE VIDEOS IN ONE CLICK
+                  </h2>
+                  <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
+                    250+ presets for camera control, framing, and high-quality VFX
+                  </p>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 16,
+                  }}>
+                    {/* Step 1 — Add Image */}
+                    <div
+                      style={{
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 14, overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        aspectRatio: '16/10', background: C.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Add Image
+                        </div>
+                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                          Upload or generate an image to start your animation
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2 — Choose Preset */}
+                    <div
+                      style={{
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 14, overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        aspectRatio: '16/10', background: C.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                        </svg>
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Choose Preset
+                        </div>
+                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                          Pick from 250+ animation presets for camera, framing, and VFX
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3 — Get Video */}
+                    <div
+                      style={{
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 14, overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        aspectRatio: '16/10', background: C.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Get Video
+                        </div>
+                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                          Click generate and download your high-quality video
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Video tutorial placeholder */}
+                  <div style={{
+                    marginTop: 20, padding: 16, borderRadius: 12,
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    textAlign: 'center',
+                  }}>
+                    <span style={{ fontSize: 13, color: C.dim }}>
+                      Video tutorial coming soon
+                    </span>
+                  </div>
+
+                  {/* Example prompt chips */}
+                  <div style={{ marginTop: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                      Try an example
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {EXAMPLE_PROMPTS.map((ep, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (sel) updScene(sel.id, { prompt: ep, status: 'editing' });
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                          style={{
+                            width: '100%', padding: '10px 14px',
+                            borderRadius: 10,
+                            border: `1px solid ${C.border}`,
+                            background: 'transparent',
+                            color: C.sub,
+                            fontSize: 13,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                            transition: 'all 0.15s ease',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {ep}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : rightPanelTab === 'history' ? (
+                /* ── History tab ─────────────────────────────── */
+                <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+                  {scenes.length === 0 ? (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 40, minHeight: 300 }}>
+                      <div style={{ width: 64, height: 64, borderRadius: 16, background: C.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                      </div>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
+                        No generations yet
+                      </h3>
+                      <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                        Generate your first video and it will appear here
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+                        Generated scenes ({scenes.length})
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {scenes.map((sc) => (
+                          <div
+                            key={sc.id}
+                            onClick={() => setSelId(sc.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 10,
+                              padding: '8px 10px', borderRadius: 8,
+                              background: sc.id === selId ? C.accentDim : 'transparent',
+                              border: `1px solid ${sc.id === selId ? C.accent + '30' : 'transparent'}`,
+                              cursor: 'pointer', transition: 'all .15s',
+                            }}
+                            onMouseEnter={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                            onMouseLeave={(e) => { if (sc.id !== selId) (e.currentTarget as HTMLElement).style.background = sc.id === selId ? C.accentDim : 'transparent'; }}
+                          >
+                            <div style={{
+                              width: 48, height: 32, borderRadius: 6,
+                              background: sc.sf
+                                ? `url(${sc.sf}) center/cover`
+                                : `linear-gradient(135deg, ${gc(sc.ck)}22, ${gc(sc.ck)}08)`,
+                              border: `1px solid ${C.border}`, flexShrink: 0,
+                            }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 10, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {sc.label}
+                              </div>
+                              <div style={{ fontSize: 9, color: C.dim }}>
+                                {fmtDur(sc.duration)} · {sc.status}
+                              </div>
+                            </div>
+                            <SceneLockIndicator sceneId={sc.id} />
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => addScene()}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55'; (e.currentTarget as HTMLElement).style.color = C.accent; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.dim; }}
+                          style={{
+                            width: '100%', padding: '6px 0', borderRadius: 6,
+                            border: `1px dashed ${C.border}`, background: 'transparent',
+                            color: C.dim, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit',
+                            transition: 'all .15s',
+                          }}
+                        >
+                          + {t('editor.addScene')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : rightPanelTab === 'styles' ? (
+                /* ── Styles gallery ── */
+                <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+                  {/* Filter tags */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    marginBottom: 12, flexWrap: 'wrap',
+                  }}>
+                    {STYLE_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className="ed-filter-pill"
+                        style={{
+                          padding: '6px 14px', borderRadius: 8,
+                          fontSize: 11, fontWeight: 600,
+                          background: activeCategory === cat.id ? C.accentDim : 'transparent',
+                          color: activeCategory === cat.id ? C.accent : C.sub,
+                          border: `1px solid ${activeCategory === cat.id ? C.accent : C.border}`,
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all 0.2s ease', whiteSpace: 'nowrap',
+                          outline: 'none',
+                        }}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+
+                    {/* Search */}
+                    <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                      <input
+                        value={styleSearch}
+                        onChange={(e) => setStyleSearch(e.target.value)}
+                        placeholder="Search styles..."
+                        style={{
+                          padding: '6px 12px 6px 28px', borderRadius: 8,
+                          border: `1px solid ${C.border}`, background: C.surface,
+                          color: C.text, fontSize: 11, fontFamily: 'inherit',
+                          outline: 'none', width: 160, boxSizing: 'border-box',
+                          transition: 'border-color .2s',
+                        }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                      />
+                      <svg
+                        width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke={C.dim} strokeWidth="2" strokeLinecap="round"
+                        style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
+                      >
+                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Style grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                    gap: 10,
+                  }}>
+                    {filteredStyles.map((s) => (
+                      <StyleCard
+                        key={s.id}
+                        style={s}
+                        isSelected={s.id === selectedStyleId}
+                        C={C}
+                        onSelect={handleStyleSelect}
+                      />
+                    ))}
+                  </div>
+
+                  {filteredStyles.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No styles found</div>
+                      <div style={{ fontSize: 12 }}>Try a different filter or search term</div>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            {/* ── Premium banner ──────────────────────────── */}
+            {plan === 'FREE' && (
+              <div
+                style={{
+                  marginTop: 16, padding: '14px 20px',
+                  borderRadius: 12, border: `1px solid ${C.accent}33`,
+                  background: `linear-gradient(135deg, ${C.accent}14, transparent)`,
+                  display: 'flex', alignItems: 'center', gap: 16,
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
+                    Want 4K, longer videos, and unlimited presets?
+                  </div>
+                  <div style={{ fontSize: 12, color: C.sub }}>
+                    Upgrade to Pro for unlimited creative power.
+                  </div>
+                </div>
+                <a
+                  href="/billing"
+                  style={{
+                    padding: '8px 20px', borderRadius: 8,
+                    background: C.accent, color: '#fff',
+                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                >
+                  Upgrade to Pro
+                </a>
               </div>
             )}
           </div>
         </div>
-        </ErrorBoundary>
       </div>
 
       {/* ═══ Z1: Script Generator Modal ═══ */}
@@ -1933,38 +2053,74 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         </div>
       )}
 
-      {/* Global hover styles + keyframes */}
+      {/* Delete confirmation overlay */}
+      {confirmDel && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: C.overlay,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+            padding: '20px 24px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,.4)',
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.deleteSceneConfirm')}</span>
+            <span style={{ fontSize: 10, color: C.sub }}>{t('editor.deleteIrreversible')}</span>
+            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+              <button
+                onClick={() => { delScene(confirmDel); setConfirmDel(null); }}
+                style={{ padding: '7px 22px', borderRadius: 10, border: 'none', background: C.red, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                {t('editor.delete')}
+              </button>
+              <button
+                onClick={() => setConfirmDel(null)}
+                style={{ padding: '7px 22px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                {t('editor.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS animations */}
       <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+        @keyframes pulse-glow {
+          0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 20px rgba(99,102,241,0.1); }
+          50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 40px rgba(99,102,241,0.2); }
+        }
         .style-card { transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease !important; }
         .style-card:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
-        .ed-action-btn { transition: all .2s ease-out !important; }
-        .ed-action-btn:hover { background: ${C.border} !important; border-color: ${C.border} !important; color: ${C.text} !important; }
-        .ed-filter-pill:hover { border-color: ${ACCENT_LIME}44 !important; color: ${ACCENT_LIME} !important; }
         .ed-gen-btn { transition: all .2s ease-out !important; }
-        .ed-gen-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 6px 24px ${ACCENT_LIME}55 !important; }
-        .ed-tab-btn:hover { color: ${C.text} !important; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        /* Thin scrollbars */
-        .ed-scene-list::-webkit-scrollbar { width: 4px; height: 4px; }
-        .ed-scene-list::-webkit-scrollbar-track { background: transparent; }
-        .ed-scene-list::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
-        .ed-scene-list::-webkit-scrollbar-thumb:hover { background: ${C.borderActive}; }
+        .ed-gen-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 6px 24px ${C.accent}55 !important; }
+        .ed-filter-pill:hover { border-color: ${C.accent}44 !important; color: ${C.accent} !important; }
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none; -webkit-appearance: none;
+          width: 16px; height: 16px; border-radius: 50%;
+          background: ${ACCENT_LIME}; border: 2px solid #fff;
+          cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 16px; height: 16px; border-radius: 50%;
+          background: ${ACCENT_LIME}; border: 2px solid #fff;
+          cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+        }
         * { scrollbar-width: thin; scrollbar-color: ${C.border} transparent; }
-        .ed-action-btn:focus-visible,
-        .ed-gen-btn:focus-visible {
-          outline: 2px solid ${ACCENT_LIME};
-          outline-offset: 2px;
-        }
-        .tf-editor-left-panel { position: relative; }
-        @media (max-width: 768px) {
-          .tf-editor-left-panel {
-            position: fixed !important;
-            top: 0; left: 0; bottom: 0;
-            z-index: 900; width: 300px !important;
-            box-shadow: 0 0 40px rgba(0,0,0,.5);
-          }
-        }
       `}</style>
     </div>
   );
