@@ -6,29 +6,8 @@ import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { sanitizeUrl, stripTags } from '@/lib/sanitize';
 import { randomBytes, createHmac } from 'crypto';
 
-/* ── In-memory webhook store ─────────────────────────
- * No Webhook model in Prisma yet, so we store in memory.
- * Production upgrade: add Webhook model and persist to DB.
- */
-
 export const WEBHOOK_EVENTS = ['video.completed', 'project.created'] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
-
-export interface WebhookEntry {
-  id: string;
-  userId: string;
-  url: string;
-  events: WebhookEvent[];
-  secret: string;
-  active: boolean;
-  createdAt: Date;
-}
-
-/** Map from webhook id -> WebhookEntry */
-const webhookStore = new Map<string, WebhookEntry>();
-
-/** Map from userId -> Set of webhook ids */
-const userWebhooks = new Map<string, Set<string>>();
 
 /** Mutation rate limit */
 async function checkRate(userId: string) {
@@ -54,7 +33,7 @@ export const webhookRouter = router({
     .mutation(async ({ ctx, input }) => {
       await checkRate(ctx.session.user.id);
 
-      // Check plan — only STUDIO users get webhook access
+      // Check plan - only STUDIO users get webhook access
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
         select: { plan: true },
@@ -73,38 +52,41 @@ export const webhookRouter = router({
       }
 
       // Limit: max 10 webhooks per user
-      const existing = userWebhooks.get(ctx.session.user.id);
-      if (existing && existing.size >= 10) {
+      const existingCount = await ctx.db.webhookEndpoint.count({
+        where: { userId: ctx.session.user.id },
+      });
+      if (existingCount >= 10) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Maximum 10 webhooks allowed. Delete an existing webhook first.',
         });
       }
 
-      const id = randomBytes(12).toString('hex');
       const secret = `whsec_${randomBytes(24).toString('hex')}`;
 
-      const entry: WebhookEntry = {
-        id,
-        userId: ctx.session.user.id,
-        url: stripTags(url),
-        events: input.events,
-        secret,
-        active: true,
-        createdAt: new Date(),
-      };
-
-      webhookStore.set(id, entry);
-      if (!userWebhooks.has(ctx.session.user.id)) {
-        userWebhooks.set(ctx.session.user.id, new Set());
-      }
-      userWebhooks.get(ctx.session.user.id)!.add(id);
+      const entry = await ctx.db.webhookEndpoint.create({
+        data: {
+          userId: ctx.session.user.id,
+          url: stripTags(url),
+          events: input.events,
+          secret,
+          active: true,
+        },
+        select: {
+          id: true,
+          url: true,
+          events: true,
+          secret: true,
+          active: true,
+          createdAt: true,
+        },
+      });
 
       return {
         id: entry.id,
         url: entry.url,
         events: entry.events,
-        /** Secret — shown only once at registration */
+        /** Secret - shown only once at registration */
         secret: entry.secret,
         active: entry.active,
         createdAt: entry.createdAt,
@@ -112,18 +94,20 @@ export const webhookRouter = router({
     }),
 
   /** List all webhooks for the current user. Secrets are NOT returned. */
-  list: protectedProcedure.query(({ ctx }) => {
-    const ids = userWebhooks.get(ctx.session.user.id);
-    if (!ids) return [];
-    const result: Array<Omit<WebhookEntry, 'secret' | 'userId'>> = [];
-    for (const id of ids) {
-      const entry = webhookStore.get(id);
-      if (entry) {
-        const { secret: _s, userId: _u, ...rest } = entry;
-        result.push(rest);
-      }
-    }
-    return result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const webhooks = await ctx.db.webhookEndpoint.findMany({
+      where: { userId: ctx.session.user.id },
+      select: {
+        id: true,
+        url: true,
+        events: true,
+        active: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return webhooks;
   }),
 
   /** Delete a webhook by id. */
@@ -131,12 +115,16 @@ export const webhookRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await checkRate(ctx.session.user.id);
-      const entry = webhookStore.get(input.id);
-      if (!entry || entry.userId !== ctx.session.user.id) {
+
+      const entry = await ctx.db.webhookEndpoint.findFirst({
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: { id: true },
+      });
+      if (!entry) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Webhook not found.' });
       }
-      webhookStore.delete(input.id);
-      userWebhooks.get(ctx.session.user.id)?.delete(input.id);
+
+      await ctx.db.webhookEndpoint.delete({ where: { id: input.id } });
       return { success: true };
     }),
 });

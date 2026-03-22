@@ -24,7 +24,7 @@ export const apikeyRouter = router({
     .mutation(async ({ ctx, input }) => {
       await checkRate(ctx.session.user.id);
 
-      // Check plan — only STUDIO users get API access
+      // Check plan - only STUDIO users get API access
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
         select: { plan: true },
@@ -37,7 +37,7 @@ export const apikeyRouter = router({
       }
 
       // Limit: max 5 keys per user
-      const existing = listApiKeys(ctx.session.user.id);
+      const existing = await listApiKeys(ctx.session.user.id);
       if (existing.length >= 5) {
         throw new TRPCError({
           code: 'FORBIDDEN',
@@ -46,10 +46,10 @@ export const apikeyRouter = router({
       }
 
       const label = stripTags(input.label ?? 'Default');
-      const { fullKey, entry } = generateApiKey(ctx.session.user.id, label);
+      const { fullKey, entry } = await generateApiKey(ctx.session.user.id, label);
 
       return {
-        /** Full key — shown only once */
+        /** Full key - shown only once */
         key: fullKey,
         id: entry.id,
         last4: entry.last4,
@@ -59,7 +59,7 @@ export const apikeyRouter = router({
     }),
 
   /** List all API keys for the current user (last 4 chars only). */
-  list: protectedProcedure.query(({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     return listApiKeys(ctx.session.user.id);
   }),
 
@@ -68,7 +68,7 @@ export const apikeyRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await checkRate(ctx.session.user.id);
-      const ok = revokeApiKey(ctx.session.user.id, input.id);
+      const ok = await revokeApiKey(ctx.session.user.id, input.id);
       if (!ok) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'API key not found.' });
       }
@@ -76,7 +76,7 @@ export const apikeyRouter = router({
     }),
 
   /** Get API usage count for the current month. */
-  usage: protectedProcedure.query(({ ctx }) => {
-    return { count: getApiUsage(ctx.session.user.id), month: new Date().toISOString().slice(0, 7) };
+  usage: protectedProcedure.query(async ({ ctx }) => {
+    return { count: await getApiUsage(ctx.session.user.id), month: new Date().toISOString().slice(0, 7) };
   }),
 });

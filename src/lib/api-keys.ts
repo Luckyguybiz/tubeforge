@@ -1,40 +1,13 @@
 /**
- * In-memory API key store.
+ * Database-backed API key management.
  *
- * Since there is no ApiKey model in the Prisma schema, we store API keys
- * in memory. Keys survive process lifetime only (PM2 restart clears them).
- *
- * Each entry maps a SHA-256 hash of the full key to metadata.
- * The full key is returned only once at generation time.
- *
- * Production upgrade: add an ApiKey model to Prisma and persist to DB.
+ * Keys are stored as SHA-256 hashes in the ApiKey table. The full key is
+ * returned only once at generation time. Verification hashes the incoming
+ * key and looks it up in the database.
  */
 
 import { createHash, randomBytes } from 'crypto';
-
-export interface ApiKeyEntry {
-  id: string;
-  userId: string;
-  keyHash: string;
-  /** Last 4 characters of the key (for display) */
-  last4: string;
-  label: string;
-  createdAt: Date;
-}
-
-/** Map from keyHash -> ApiKeyEntry */
-const keyStore = new Map<string, ApiKeyEntry>();
-
-/** Map from userId -> Set of keyHashes */
-const userKeys = new Map<string, Set<string>>();
-
-/** Simple API usage counter: userId -> count this month */
-const usageCounters = new Map<string, { count: number; month: string }>();
-
-function currentMonth(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
+import { db } from '@/server/db';
 
 export function hashKey(key: string): string {
   return createHash('sha256').update(key).digest('hex');
@@ -44,86 +17,109 @@ export function hashKey(key: string): string {
  * Generate a new API key for a user.
  * Returns the full key (only shown once) and the stored entry.
  */
-export function generateApiKey(userId: string, label: string): { fullKey: string; entry: ApiKeyEntry } {
+export async function generateApiKey(
+  userId: string,
+  label: string,
+): Promise<{ fullKey: string; entry: { id: string; last4: string; label: string; createdAt: Date } }> {
   const raw = randomBytes(32).toString('hex');
   const fullKey = `tf_${raw}`;
   const keyH = hashKey(fullKey);
-  const id = randomBytes(8).toString('hex');
+  const prefix = fullKey.slice(0, 7); // "tf_" + first 4 hex chars
 
-  const entry: ApiKeyEntry = {
-    id,
-    userId,
-    keyHash: keyH,
-    last4: fullKey.slice(-4),
-    label: label || 'Default',
-    createdAt: new Date(),
+  const record = await db.apiKey.create({
+    data: {
+      userId,
+      name: label || 'Default',
+      keyHash: keyH,
+      prefix,
+    },
+    select: { id: true, name: true, createdAt: true },
+  });
+
+  return {
+    fullKey,
+    entry: {
+      id: record.id,
+      last4: fullKey.slice(-4),
+      label: record.name,
+      createdAt: record.createdAt,
+    },
   };
-
-  keyStore.set(keyH, entry);
-
-  if (!userKeys.has(userId)) {
-    userKeys.set(userId, new Set());
-  }
-  userKeys.get(userId)!.add(keyH);
-
-  return { fullKey, entry };
 }
 
-/** Look up a user by their raw API key. Returns userId or null. */
-export function lookupApiKey(rawKey: string): string | null {
+/**
+ * Look up a user by their raw API key.
+ * Updates lastUsed and usageCount on match. Returns userId or null.
+ */
+export async function lookupApiKey(rawKey: string): Promise<string | null> {
   const h = hashKey(rawKey);
-  const entry = keyStore.get(h);
-  return entry?.userId ?? null;
+  const entry = await db.apiKey.findUnique({
+    where: { keyHash: h },
+    select: { userId: true, id: true },
+  });
+  if (!entry) return null;
+
+  // Fire-and-forget: update lastUsed and usageCount
+  db.apiKey
+    .update({
+      where: { id: entry.id },
+      data: { lastUsed: new Date(), usageCount: { increment: 1 } },
+    })
+    .catch(() => {
+      // Non-critical - don't block the request if the update fails
+    });
+
+  return entry.userId;
 }
 
-/** List all keys for a user (last4 only, never the full key). */
-export function listApiKeys(userId: string): Omit<ApiKeyEntry, 'keyHash'>[] {
-  const hashes = userKeys.get(userId);
-  if (!hashes) return [];
-  const result: Omit<ApiKeyEntry, 'keyHash'>[] = [];
-  for (const h of hashes) {
-    const entry = keyStore.get(h);
-    if (entry) {
-      const { keyHash: _kh, ...rest } = entry;
-      result.push(rest);
-    }
-  }
-  return result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+/** List all keys for a user (prefix only, never the full key). */
+export async function listApiKeys(
+  userId: string,
+): Promise<Array<{ id: string; last4: string; label: string; createdAt: Date; lastUsed: Date | null; usageCount: number }>> {
+  const keys = await db.apiKey.findMany({
+    where: { userId },
+    select: { id: true, name: true, prefix: true, createdAt: true, lastUsed: true, usageCount: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return keys.map((k) => ({
+    id: k.id,
+    last4: k.prefix.slice(-4),
+    label: k.name,
+    createdAt: k.createdAt,
+    lastUsed: k.lastUsed,
+    usageCount: k.usageCount,
+  }));
 }
 
-/** Revoke (delete) an API key by its id. Returns true if found. */
-export function revokeApiKey(userId: string, keyId: string): boolean {
-  const hashes = userKeys.get(userId);
-  if (!hashes) return false;
-  for (const h of hashes) {
-    const entry = keyStore.get(h);
-    if (entry && entry.id === keyId) {
-      keyStore.delete(h);
-      hashes.delete(h);
-      return true;
-    }
-  }
-  return false;
+/** Revoke (delete) an API key by its id. Returns true if found and deleted. */
+export async function revokeApiKey(userId: string, keyId: string): Promise<boolean> {
+  const key = await db.apiKey.findFirst({
+    where: { id: keyId, userId },
+    select: { id: true },
+  });
+  if (!key) return false;
+
+  await db.apiKey.delete({ where: { id: keyId } });
+  return true;
 }
 
-/** Increment API usage counter for a user. Returns new count. */
-export function incrementApiUsage(userId: string): number {
-  const month = currentMonth();
-  const existing = usageCounters.get(userId);
-  if (existing && existing.month === month) {
-    existing.count += 1;
-    return existing.count;
-  }
-  usageCounters.set(userId, { count: 1, month });
-  return 1;
+/** Get API usage count for a user (sum of all key usageCounts). */
+export async function getApiUsage(userId: string): Promise<number> {
+  const result = await db.apiKey.aggregate({
+    where: { userId },
+    _sum: { usageCount: true },
+  });
+  return result._sum.usageCount ?? 0;
 }
 
-/** Get API usage count for a user this month. */
-export function getApiUsage(userId: string): number {
-  const month = currentMonth();
-  const existing = usageCounters.get(userId);
-  if (existing && existing.month === month) {
-    return existing.count;
-  }
+/**
+ * Increment API usage counter for a user.
+ * This is now handled automatically by lookupApiKey, but kept for
+ * backward compatibility with the REST API route.
+ */
+export async function incrementApiUsage(_userId: string): Promise<number> {
+  // Usage is tracked per-key in lookupApiKey now.
+  // This function is kept as a no-op for backward compatibility.
   return 0;
 }

@@ -80,12 +80,12 @@ function makeRequest(overrides: Partial<MockRequest> & { url?: string } = {}): M
   };
 }
 
-function authenticateRequest(req: MockRequest): string | null {
+async function authenticateRequest(req: MockRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.slice(7).trim();
   if (!token) return null;
-  return lookupApiKey(token) as string | null;
+  return lookupApiKey(token) as unknown as string | null;
 }
 
 interface JsonResponse {
@@ -99,7 +99,7 @@ function jsonResponse(body: any, status: number, headers: Record<string, string>
 }
 
 async function handleGET(req: MockRequest): Promise<JsonResponse> {
-  const userId = authenticateRequest(req);
+  const userId = await authenticateRequest(req);
   if (!userId) {
     return jsonResponse({ error: 'Unauthorized. Provide a valid Bearer token in the Authorization header.' }, 401);
   }
@@ -166,7 +166,7 @@ async function handleGET(req: MockRequest): Promise<JsonResponse> {
 }
 
 async function handlePOST(req: MockRequest): Promise<JsonResponse> {
-  const userId = authenticateRequest(req);
+  const userId = await authenticateRequest(req);
   if (!userId) {
     return jsonResponse({ error: 'Unauthorized. Provide a valid Bearer token in the Authorization header.' }, 401);
   }
