@@ -110,6 +110,26 @@ textarea:focus-visible, input:focus-visible {
   box-shadow: 0 0 0 2px var(--focus-bg, #0a0a0a), 0 0 0 4px #6366f1;
 }
 
+/* Neon shimmer for interactive buttons */
+@keyframes neon-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.tf-neon-btn {
+  position: relative;
+  overflow: hidden;
+}
+.tf-neon-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 30%, rgba(99,102,241,0.08) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: neon-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
 /* Skip to content link - hidden until focused */
 .skip-to-content {
   position: absolute;

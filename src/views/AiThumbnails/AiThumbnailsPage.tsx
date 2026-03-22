@@ -1065,9 +1065,8 @@ export function AiThumbnailsPage() {
                 {/* Main image */}
                 <div style={{ padding: 16, flex: 1 }}>
                   <div style={{
-                    width: '100%',
-                    aspectRatio: format === '16:9' ? '16/9' : '9/16',
-                    maxHeight: '60vh',
+                    width: format === '9:16' ? '50%' : '100%',
+                    maxHeight: '65vh',
                     position: 'relative', overflow: 'hidden', borderRadius: 12,
                     background: C.bg,
                     boxShadow: `0 0 20px ${C.accent}15, 0 4px 16px rgba(0,0,0,0.3)`,
@@ -1079,7 +1078,7 @@ export function AiThumbnailsPage() {
                       alt={selectedImage.prompt}
                       className="thumbnail-reveal-img"
                       style={{
-                        width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                        width: '100%', height: 'auto', maxHeight: '65vh', objectFit: 'contain', display: 'block',
                         filter: imageRevealed ? 'blur(0px)' : 'blur(20px)',
                         transform: imageRevealed ? 'scale(1)' : 'scale(1.05)',
                         transition: 'filter 0.8s ease-out, transform 0.8s ease-out',
