@@ -227,7 +227,7 @@ describe('downloadAndStore', () => {
 
     await expect(
       downloadAndStore('https://example.com/missing.png', 'missing.png')
-    ).rejects.toThrow('Не удалось скачать файл: Not Found');
+    ).rejects.toThrow('Failed to download file: Not Found');
   });
 
   it('should throw with the exact statusText from the response', async () => {

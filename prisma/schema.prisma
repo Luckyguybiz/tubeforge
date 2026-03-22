@@ -96,7 +96,7 @@ model Channel {
 
 model Project {
   id            String        @id @default(cuid())
-  title         String        @default("Без названия")
+  title         String        @default("Untitled")
   description   String?       @db.Text
   tags          String[]
   thumbnailUrl  String?

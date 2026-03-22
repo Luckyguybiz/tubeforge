@@ -267,6 +267,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/background-remover',
     available: true,
+    badge: 'Beta',
     gradient: ['#8b5cf6', '#7c3aed'],
   },
   {
@@ -306,7 +307,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     id: 'ai-video-generator',
     name: 'AI Video Generator',
     subtitle: 'Runway · Kling · Pika · Veo',
-    description: 'Choose from top AI video providers — Runway ML, Kling AI, Pika, Luma, Google Veo 2 and more.',
+    description: 'Explore AI video generation services — Runway ML, Kling AI, Pika, Luma, Google Veo 2 and more.',
     category: 'ai',
     route: '/tools/ai-video-generator',
     available: true,
@@ -332,7 +333,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/video-translator',
     available: true,
-    badge: 'Pro',
+    badge: 'Beta',
     gradient: ['#06b6d4', '#0ea5e9'],
   },
   {
