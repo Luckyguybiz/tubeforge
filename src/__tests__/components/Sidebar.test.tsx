@@ -64,6 +64,7 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'nav.admin': 'Admin',
           'nav.billing': 'Billing',
           'nav.tools': 'All Tools',
+          'nav.keywords': 'Keywords',
           'nav.referral': 'Referral',
           'nav.shortsAnalytics': 'Shorts Analytics',
           'nav.tiktokAnalytics': 'TikTok Analytics',

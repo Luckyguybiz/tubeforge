@@ -124,6 +124,21 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <rect x="11" y="11" width="7" height="7" rx="2" fill={c} opacity=".35" />
     </svg>
   ),
+  keywords: (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="kw-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="13" width="3" height="5" rx="1" fill={a ? 'url(#kw-g)' : c} opacity=".6" />
+      <rect x="7" y="9" width="3" height="9" rx="1" fill={a ? 'url(#kw-g)' : c} opacity=".75" />
+      <rect x="12" y="5" width="3" height="13" rx="1" fill={a ? 'url(#kw-g)' : c} opacity=".85" />
+      <circle cx="14" cy="6" r="4" stroke={c} strokeWidth="1.3" opacity=".7" />
+      <path d="M16.8 9L19 11.2" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".5" />
+    </svg>
+  ),
   billing: (c) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="2" y="4" width="16" height="12" rx="2.5" stroke={c} strokeWidth="1.5" opacity=".85" />
@@ -234,6 +249,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
       label: t('sidebar.tools'),
       items: [
         { id: 'tools', label: t('nav.tools') },
+        { id: 'keywords', label: t('nav.keywords') },
         { id: 'thumbnails', label: t('nav.designStudio') },
         { id: 'analytics', label: t('nav.analytics') },
       ],
@@ -264,6 +280,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   billing: ['green', 'cyan'],
   referral: ['green', 'cyan'],
   admin: ['accent', 'orange'],
+  keywords: ['green', 'blue'],
   analytics: ['cyan', 'purple'],
   blog: ['blue', 'purple'],
   media: ['blue', 'purple'],

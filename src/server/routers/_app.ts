@@ -20,6 +20,7 @@ import { stockRouter } from './stock';
 import { brandRouter } from './brand';
 import { commentRouter } from './comment';
 import { aiThumbnailsRouter } from './aiThumbnails';
+import { keywordsRouter } from './keywords';
 
 export const appRouter = router({
   user: userRouter,
@@ -43,6 +44,7 @@ export const appRouter = router({
   brand: brandRouter,
   comment: commentRouter,
   aiThumbnails: aiThumbnailsRouter,
+  keywords: keywordsRouter,
 });
 
 export type AppRouter = typeof appRouter;
