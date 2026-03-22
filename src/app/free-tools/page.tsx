@@ -224,8 +224,9 @@ export default function FreeToolsPage() {
             <Link
               key={tool.href}
               href={tool.href}
+              className="free-tool-card"
               style={{
-                background: "#0a0a0a",
+                background: "#1a1a1a",
                 borderRadius: 18,
                 padding: "36px 28px",
                 textDecoration: "none",
@@ -360,6 +361,11 @@ export default function FreeToolsPage() {
       </footer>
 
       <style>{`
+        .free-tool-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+          border-color: rgba(255,255,255,0.1);
+        }
         @media (max-width: 900px) {
           .free-tools-grid {
             grid-template-columns: repeat(2, 1fr) !important;
