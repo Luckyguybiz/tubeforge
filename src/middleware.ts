@@ -213,11 +213,14 @@ export default function middleware(req: NextRequest) {
     '/api/stripe/webhook',
     '/api/webhooks',
     '/api/health',
+    '/api/free-tools',
     '/privacy',
     '/terms',
     '/dpa',
     '/sla',
     '/security',
+    '/free-tools',
+    '/tools',
   ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
