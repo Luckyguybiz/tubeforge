@@ -735,6 +735,7 @@ function WelcomeSection({
             { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, iconColor: C.cyan, badge: 'Free', badgeColor: C.green },
             { title: t('dashboard.tool.aiThumbnails'), href: '/thumbnails', Icon: IconImage, iconColor: C.pink, badge: 'Pro', badgeColor: C.purple },
             { title: 'AI SEO', href: '/metadata', Icon: IconSearch, iconColor: C.purple, badge: 'Pro', badgeColor: C.purple },
+            { title: 'Video Translator', href: '/tools/video-translator', Icon: IconCompress, iconColor: C.blue, badge: 'Pro', badgeColor: C.purple },
             { title: t('dashboard.tool.shortsAnalytics'), href: '/shorts-analytics', Icon: IconChart, iconColor: C.green, badge: 'Free', badgeColor: C.green },
           ] as const).map((tool) => (
             <div
