@@ -1985,5 +1985,10 @@
   "tools.voiceover.engineBrowser": "Браузерный TTS",
   "tools.voiceover.elevenLabsBadge": "На базе ElevenLabs — студийное качество, мультиязычный TTS. Использует 1 AI-кредит.",
   "tools.voiceover.elevenLabsSuccess": "Озвучка успешно сгенерирована",
-  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs не настроен. Переключитесь на браузерный TTS или обратитесь к администратору."
+  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs не настроен. Переключитесь на браузерный TTS или обратитесь к администратору.",
+  "sidebar.manageAccount": "Управление аккаунтом",
+  "sidebar.viewProfile": "Просмотр профиля",
+  "sidebar.upgradeToPro": "Перейти на Pro",
+  "sidebar.creditsRemaining": "кредитов осталось",
+  "sidebar.signOut": "Выйти"
 }

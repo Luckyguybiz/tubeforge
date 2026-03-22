@@ -1985,5 +1985,10 @@
   "tools.voiceover.engineBrowser": "Browser TTS",
   "tools.voiceover.elevenLabsBadge": "Powered by ElevenLabs — studio-quality multilingual TTS. Uses 1 AI credit.",
   "tools.voiceover.elevenLabsSuccess": "Voiceover generated successfully",
-  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs is not configured. Switch to Browser TTS or contact the administrator."
+  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs is not configured. Switch to Browser TTS or contact the administrator.",
+  "sidebar.manageAccount": "Manage Account",
+  "sidebar.viewProfile": "View Profile",
+  "sidebar.upgradeToPro": "Upgrade to Pro",
+  "sidebar.creditsRemaining": "credits remaining",
+  "sidebar.signOut": "Sign Out"
 }
