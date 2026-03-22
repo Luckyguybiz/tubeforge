@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ── Helpers ──────────────────────────────────────────────────── */
 
@@ -39,6 +40,7 @@ function safeStr(v: unknown): string {
 
 function CircleGauge({ value, label, max = 10 }: { value: number; label: string; max?: number }) {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const r = 40;
   const stroke = 6;
   const circ = 2 * Math.PI * r;
@@ -93,6 +95,7 @@ function StatCell({ label, value }: { label: string; value: string }) {
 export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const router = useRouter();
 
   const [url, setUrl] = useState('');
@@ -140,17 +143,17 @@ export function YoutubeDownloader() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as Record<string, any>)?.error ?? `\u041E\u0448\u0438\u0431\u043A\u0430 ${res.status}`);
+        throw new Error((body as Record<string, any>)?.error ?? `${t('youtubeAnalyzer.error')} ${res.status}`);
       }
       setData(await res.json());
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError') return;
-      setError((err as Error)?.message ?? '\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430');
+      setError((err as Error)?.message ?? t('youtubeAnalyzer.unknownError'));
     } finally { setLoading(false); }
-  }, [url]);
+  }, [url, t]);
 
   const handlePaste = useCallback(async () => {
-    try { const t = await navigator.clipboard.readText(); if (t) setUrl(t); } catch {}
+    try { const clip = await navigator.clipboard.readText(); if (clip) setUrl(clip); } catch {}
   }, []);
 
   /* ── Derived ────────────────────────────────────────────────── */
@@ -196,10 +199,10 @@ export function YoutubeDownloader() {
         </div>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 800, color: C?.text ?? '#111', letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0 }}>
-            {'\u0410\u043D\u0430\u043B\u0438\u0437 \u0432\u0438\u0434\u0435\u043E YouTube'}
+            {t('youtubeAnalyzer.title')}
           </h1>
           <p style={{ fontSize: 12, color: C?.dim ?? '#999', margin: 0, marginTop: 2 }}>
-            {'\u0420\u0430\u0437\u0431\u043E\u0440 \u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u044B, \u0445\u0443\u043A\u0430 \u0438 \u0444\u0430\u043A\u0442\u043E\u0440\u043E\u0432 \u0443\u0441\u043F\u0435\u0445\u0430'}
+            {t('youtubeAnalyzer.subtitle')}
           </p>
         </div>
       </div>
@@ -229,7 +232,7 @@ export function YoutubeDownloader() {
             border: `1px solid ${C?.border ?? '#eee'}`, background: C?.bg ?? '#fafafa',
             color: C?.text ?? '#111', fontSize: 13, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-          }}>{'\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C'}</button>
+          }}>{t('youtubeAnalyzer.paste')}</button>
         </div>
       </div>
 
@@ -246,9 +249,9 @@ export function YoutubeDownloader() {
         }}
       >
         {loading ? (
-          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeDasharray="56" strokeDashoffset="14"/></svg>{'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0435\u043C...'}</>
+          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeDasharray="56" strokeDashoffset="14"/></svg>{t('youtubeAnalyzer.analyzing')}</>
         ) : (
-          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>{'\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u0442\u044C'}</>
+          <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>{t('youtubeAnalyzer.analyze')}</>
         )}
       </button>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
@@ -297,13 +300,13 @@ export function YoutubeDownloader() {
             {/* Gauges Card */}
             {(analysis?.hookScore != null || analysis?.titleScore != null) && (
               <div style={{ ...card, marginBottom: 0, display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: 12, padding: '24px 12px' }}>
-                {analysis?.hookScore != null && <CircleGauge value={Number(analysis.hookScore)} label={'\u0425\u0443\u043A'} />}
-                {analysis?.titleScore != null && <CircleGauge value={Number(analysis.titleScore)} label={'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'} />}
+                {analysis?.hookScore != null && <CircleGauge value={Number(analysis.hookScore)} label={t('youtubeAnalyzer.hook')} />}
+                {analysis?.titleScore != null && <CircleGauge value={Number(analysis.titleScore)} label={t('youtubeAnalyzer.titleScore')} />}
                 {analysis?.estimatedCTR != null && (
                   <CircleGauge value={analysis.estimatedCTR === 'high' ? 8 : analysis.estimatedCTR === 'medium' ? 5 : 3} label="CTR" />
                 )}
                 {analysis?.engagementRate != null && (
-                  <CircleGauge value={Math.min(Math.round(Number(analysis.engagementRate)), 10)} label={'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'} />
+                  <CircleGauge value={Math.min(Math.round(Number(analysis.engagementRate)), 10)} label={t('youtubeAnalyzer.engagement')} />
                 )}
               </div>
             )}
@@ -314,13 +317,13 @@ export function YoutubeDownloader() {
             {/* Engagement */}
             {engagement && (
               <div style={card}>
-                <h4 style={sectionTitle}>{'\u0412\u043E\u0432\u043B\u0435\u0447\u0451\u043D\u043D\u043E\u0441\u0442\u044C'}</h4>
+                <h4 style={sectionTitle}>{t('youtubeAnalyzer.engagement')}</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {engagement?.likeRate != null && <StatCell label="Like rate" value={`${String(engagement.likeRate)}%`} />}
                   {engagement?.commentRate != null && <StatCell label="Comment rate" value={`${String(engagement.commentRate)}%`} />}
-                  {engagement?.viralCoefficient != null && <StatCell label={'\u0412\u0438\u0440\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'} value={String(engagement.viralCoefficient)} />}
-                  {engagement?.audienceRetentionEstimate != null && <StatCell label={'\u0423\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435'} value={String(engagement.audienceRetentionEstimate)} />}
-                  {engagement?.benchmarkComparison != null && <StatCell label={'\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435'} value={String(engagement.benchmarkComparison)} />}
+                  {engagement?.viralCoefficient != null && <StatCell label={t('youtubeAnalyzer.virality')} value={String(engagement.viralCoefficient)} />}
+                  {engagement?.audienceRetentionEstimate != null && <StatCell label={t('youtubeAnalyzer.retention')} value={String(engagement.audienceRetentionEstimate)} />}
+                  {engagement?.benchmarkComparison != null && <StatCell label={t('youtubeAnalyzer.comparison')} value={String(engagement.benchmarkComparison)} />}
                 </div>
               </div>
             )}
@@ -330,12 +333,12 @@ export function YoutubeDownloader() {
               <div style={card}>
                 <h4 style={sectionTitle}>SEO</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {seo?.titleLength != null && <StatCell label={'\u0417\u0430\u0433\u043E\u043B\u043E\u0432\u043E\u043A'} value={`${safeStr(seo.titleLength)} \u0441\u0438\u043C\u0432.`} />}
-                  {seo?.descriptionLength != null && <StatCell label={'\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435'} value={`${String(seo.descriptionLength)} \u0441\u0438\u043C\u0432.`} />}
-                  {seo?.tagsCount != null && <StatCell label={'\u0422\u0435\u0433\u043E\u0432'} value={String(seo.tagsCount)} />}
-                  {seo?.readabilityScore != null && <StatCell label={'\u0427\u0438\u0442\u0430\u0435\u043C\u043E\u0441\u0442\u044C'} value={`${String(seo.readabilityScore)}/10`} />}
-                  {seo?.languageDetected != null && <StatCell label={'\u042F\u0437\u044B\u043A'} value={String(seo.languageDetected)} />}
-                  {seo?.searchOptimization != null && <StatCell label={'\u041F\u043E\u0438\u0441\u043A\u043E\u0432\u0430\u044F \u043E\u043F\u0442.'} value={String(seo.searchOptimization)} />}
+                  {seo?.titleLength != null && <StatCell label={t('youtubeAnalyzer.titleScore')} value={`${safeStr(seo.titleLength)} ${t('youtubeAnalyzer.chars')}`} />}
+                  {seo?.descriptionLength != null && <StatCell label={t('youtubeAnalyzer.seoDescription')} value={`${String(seo.descriptionLength)} ${t('youtubeAnalyzer.chars')}`} />}
+                  {seo?.tagsCount != null && <StatCell label={t('youtubeAnalyzer.tagsCount')} value={String(seo.tagsCount)} />}
+                  {seo?.readabilityScore != null && <StatCell label={t('youtubeAnalyzer.readability')} value={`${String(seo.readabilityScore)}/10`} />}
+                  {seo?.languageDetected != null && <StatCell label={t('youtubeAnalyzer.language')} value={String(seo.languageDetected)} />}
+                  {seo?.searchOptimization != null && <StatCell label={t('youtubeAnalyzer.searchOpt')} value={String(seo.searchOptimization)} />}
                 </div>
               </div>
             )}
@@ -343,12 +346,12 @@ export function YoutubeDownloader() {
             {/* Strategy */}
             {strategy && (
               <div style={card}>
-                <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044F'}</h4>
+                <h4 style={sectionTitle}>{t('youtubeAnalyzer.strategy')}</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {strategy?.bestPostingTime != null && <StatCell label={'\u041B\u0443\u0447\u0448\u0435\u0435 \u0432\u0440\u0435\u043C\u044F'} value={String(strategy.bestPostingTime)} />}
-                  {strategy?.recommendedFrequency != null && <StatCell label={'\u0427\u0430\u0441\u0442\u043E\u0442\u0430'} value={String(strategy.recommendedFrequency)} />}
+                  {strategy?.bestPostingTime != null && <StatCell label={t('youtubeAnalyzer.bestTime')} value={String(strategy.bestPostingTime)} />}
+                  {strategy?.recommendedFrequency != null && <StatCell label={t('youtubeAnalyzer.frequency')} value={String(strategy.recommendedFrequency)} />}
   
-                  {strategy?.audienceAge != null && <StatCell label={'\u0410\u0443\u0434\u0438\u0442\u043E\u0440\u0438\u044F'} value={String(strategy.audienceAge)} />}
+                  {strategy?.audienceAge != null && <StatCell label={t('youtubeAnalyzer.audience')} value={String(strategy.audienceAge)} />}
                 </div>
                 {((strategy?.crossPlatformPotential ?? []) as string[]).length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 12 }}>
@@ -366,10 +369,10 @@ export function YoutubeDownloader() {
             {/* Keywords / Tags */}
             {seo && (((seo?.titleKeywords ?? []) as string[]).length > 0 || ((seo?.tags ?? []) as string[]).length > 0) && (
               <div style={card}>
-                <h4 style={sectionTitle}>{'\u041A\u043B\u044E\u0447\u0435\u0432\u044B\u0435 \u0441\u043B\u043E\u0432\u0430 \u0438 \u0442\u0435\u0433\u0438'}</h4>
+                <h4 style={sectionTitle}>{t('youtubeAnalyzer.keywordsAndTags')}</h4>
                 {((seo?.titleKeywords ?? []) as string[]).length > 0 && (
                   <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8, fontWeight: 500 }}>{'\u0418\u0437 \u0437\u0430\u0433\u043E\u043B\u043E\u0432\u043A\u0430'}</div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8, fontWeight: 500 }}>{t('youtubeAnalyzer.fromTitle')}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {((seo.titleKeywords) as string[]).map((k, i) => <span key={i} style={pill}>{String(k)}</span>)}
                     </div>
@@ -377,7 +380,7 @@ export function YoutubeDownloader() {
                 )}
                 {((seo?.tags ?? []) as string[]).length > 0 && (
                   <div>
-                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8, fontWeight: 500 }}>{'\u0422\u0435\u0433\u0438 \u0432\u0438\u0434\u0435\u043E'}</div>
+                    <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 8, fontWeight: 500 }}>{t('youtubeAnalyzer.videoTags')}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {((seo.tags) as string[]).map((t, i) => (
                         <span key={i} style={{ ...pill, background: isDark ? 'rgba(255,255,255,0.04)' : '#f3f4f6', color: C?.sub ?? '#666' }}>{String(t)}</span>
@@ -391,10 +394,10 @@ export function YoutubeDownloader() {
             {/* Competition */}
             {competition && (
               <div style={card}>
-                <h4 style={sectionTitle}>{'\u041A\u043E\u043D\u043A\u0443\u0440\u0435\u043D\u0446\u0438\u044F'}</h4>
+                <h4 style={sectionTitle}>{t('youtubeAnalyzer.competition')}</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {competition?.nichePopularity != null && <StatCell label={'\u041F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u043E\u0441\u0442\u044C \u043D\u0438\u0448\u0438'} value={String(competition.nichePopularity)} />}
-                  {competition?.contentSaturation != null && <StatCell label={'\u041D\u0430\u0441\u044B\u0449\u0435\u043D\u043D\u043E\u0441\u0442\u044C'} value={String(competition.contentSaturation)} />}
+                  {competition?.nichePopularity != null && <StatCell label={t('youtubeAnalyzer.nichePopularity')} value={String(competition.nichePopularity)} />}
+                  {competition?.contentSaturation != null && <StatCell label={t('youtubeAnalyzer.saturation')} value={String(competition.contentSaturation)} />}
                 </div>
               </div>
             )}
@@ -405,7 +408,7 @@ export function YoutubeDownloader() {
             {/* Viral Factors */}
             {viralFactors.length > 0 && (
               <div style={card}>
-                <h4 style={sectionTitle}>{'\u0424\u0430\u043A\u0442\u043E\u0440\u044B \u0443\u0441\u043F\u0435\u0445\u0430'}</h4>
+                <h4 style={sectionTitle}>{t('youtubeAnalyzer.successFactors')}</h4>
                 {viralFactors.map((f, i) => (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 8 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#22c55e" style={{ marginTop: 2, flexShrink: 0 }}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -418,7 +421,7 @@ export function YoutubeDownloader() {
             {/* Structure */}
             {structure.length > 0 && (
               <div style={card}>
-                <h4 style={sectionTitle}>{'\u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u0430 \u0432\u0438\u0434\u0435\u043E'}</h4>
+                <h4 style={sectionTitle}>{t('youtubeAnalyzer.videoStructure')}</h4>
                 {structure.map((seg, i) => (
                   <div key={i} style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0',
@@ -441,12 +444,12 @@ export function YoutubeDownloader() {
             <div style={card}>
               <h4 style={sectionTitle}>Shorts</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                {shorts?.hookQuality != null && <StatCell label={'\u0425\u0443\u043A'} value={String(shorts.hookQuality)} />}
-                {shorts?.loopPotential != null && <StatCell label={'\u0417\u0430\u0446\u0438\u043A\u043B\u0438\u0432\u0430\u043D\u0438\u0435'} value={`${String(shorts.loopPotential)}/10`} />}
-                {shorts?.shareability != null && <StatCell label={'\u0412\u0438\u0440\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'} value={`${String(shorts.shareability)}/10`} />}
-                {shorts?.verticalOptimized != null && <StatCell label={'\u0412\u0435\u0440\u0442\u0438\u043A\u0430\u043B\u044C\u043D\u044B\u0439'} value={shorts.verticalOptimized ? '\u2705 \u0414\u0430' : '\u274C \u041D\u0435\u0442'} />}
-                {shorts?.optimalLength != null && <StatCell label={'\u041E\u043F\u0442\u0438\u043C. \u0434\u043B\u0438\u043D\u0430'} value={String(shorts.optimalLength)} />}
-                {shorts?.trendAlignment != null && <StatCell label={'\u0422\u0440\u0435\u043D\u0434\u044B'} value={String(shorts.trendAlignment)} />}
+                {shorts?.hookQuality != null && <StatCell label={t('youtubeAnalyzer.hook')} value={String(shorts.hookQuality)} />}
+                {shorts?.loopPotential != null && <StatCell label={t('youtubeAnalyzer.looping')} value={`${String(shorts.loopPotential)}/10`} />}
+                {shorts?.shareability != null && <StatCell label={t('youtubeAnalyzer.shareability')} value={`${String(shorts.shareability)}/10`} />}
+                {shorts?.verticalOptimized != null && <StatCell label={t('youtubeAnalyzer.vertical')} value={shorts.verticalOptimized ? `\u2705 ${t('youtubeAnalyzer.yes')}` : `\u274C ${t('youtubeAnalyzer.no')}`} />}
+                {shorts?.optimalLength != null && <StatCell label={t('youtubeAnalyzer.optimalLength')} value={String(shorts.optimalLength)} />}
+                {shorts?.trendAlignment != null && <StatCell label={t('youtubeAnalyzer.trends')} value={String(shorts.trendAlignment)} />}
               </div>
             </div>
           )}
@@ -454,11 +457,11 @@ export function YoutubeDownloader() {
           {/* Thumbnail */}
           {thumb && !data?.isShorts && (
             <div style={card}>
-              <h4 style={sectionTitle}>{'\u041F\u0440\u0435\u0432\u044C\u044E'}</h4>
+              <h4 style={sectionTitle}>{t('youtubeAnalyzer.thumbnail')}</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                {thumb?.hasCustomThumbnail != null && <StatCell label={'\u041A\u0430\u0441\u0442\u043E\u043C\u043D\u0430\u044F'} value={thumb.hasCustomThumbnail ? '\u2705 \u0414\u0430' : '\u274C \u041D\u0435\u0442'} />}
-                {thumb?.resolution != null && <StatCell label={'\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0435'} value={String(thumb.resolution)} />}
-                {thumb?.aspectRatio != null && <StatCell label={'\u0421\u043E\u043E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u0435'} value={String(thumb.aspectRatio)} />}
+                {thumb?.hasCustomThumbnail != null && <StatCell label={t('youtubeAnalyzer.customThumb')} value={thumb.hasCustomThumbnail ? `\u2705 ${t('youtubeAnalyzer.yes')}` : `\u274C ${t('youtubeAnalyzer.no')}`} />}
+                {thumb?.resolution != null && <StatCell label={t('youtubeAnalyzer.resolution')} value={String(thumb.resolution)} />}
+                {thumb?.aspectRatio != null && <StatCell label={t('youtubeAnalyzer.aspectRatio')} value={String(thumb.aspectRatio)} />}
               </div>
             </div>
           )}
@@ -466,11 +469,11 @@ export function YoutubeDownloader() {
           {/* Channel Info */}
           {channelStats && (
             <div style={card}>
-              <h4 style={sectionTitle}>{String.fromCharCode(0x41A, 0x430, 0x43D, 0x430, 0x43B)}</h4>
+              <h4 style={sectionTitle}>{t('youtubeAnalyzer.channel')}</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                <StatCell label={String.fromCharCode(0x41F, 0x43E, 0x434, 0x43F, 0x438, 0x441, 0x447, 0x438, 0x43A, 0x438)} value={fmt(channelStats.subscribers)} />
-                <StatCell label={String.fromCharCode(0x412, 0x438, 0x434, 0x435, 0x43E, 0x20, 0x43D, 0x430, 0x20, 0x43A, 0x430, 0x43D, 0x430, 0x43B, 0x435)} value={fmt(channelStats.totalVideos)} />
-                {channelStats.createdAt && <StatCell label={String.fromCharCode(0x41A, 0x430, 0x43D, 0x430, 0x43B, 0x20, 0x441, 0x43E, 0x437, 0x434, 0x430, 0x43D)} value={String(channelStats.createdAt).slice(0, 10)} />}
+                <StatCell label={t('youtubeAnalyzer.subscribers')} value={fmt(channelStats.subscribers)} />
+                <StatCell label={t('youtubeAnalyzer.videosOnChannel')} value={fmt(channelStats.totalVideos)} />
+                {channelStats.createdAt && <StatCell label={t('youtubeAnalyzer.channelCreated')} value={String(channelStats.createdAt).slice(0, 10)} />}
               </div>
             </div>
           )}
@@ -478,7 +481,7 @@ export function YoutubeDownloader() {
           {/* Description */}
           {videoDescription && (
             <div style={card}>
-              <h4 style={sectionTitle}>{String.fromCharCode(0x41E, 0x43F, 0x438, 0x441, 0x430, 0x43D, 0x438, 0x435)}</h4>
+              <h4 style={sectionTitle}>{t('youtubeAnalyzer.videoDescription')}</h4>
               <pre style={{ ...sub, fontSize: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, maxHeight: 200, overflow: 'auto', fontFamily: 'inherit' }}>
                 {videoDescription}
               </pre>
@@ -488,7 +491,7 @@ export function YoutubeDownloader() {
           {/* Author Comments */}
           {authorComments.length > 0 && (
             <div style={card}>
-              <h4 style={sectionTitle}>{String.fromCharCode(0x41A, 0x43E, 0x43C, 0x43C, 0x435, 0x43D, 0x442, 0x430, 0x440, 0x438, 0x438, 0x20, 0x430, 0x432, 0x442, 0x43E, 0x440, 0x430)}</h4>
+              <h4 style={sectionTitle}>{t('youtubeAnalyzer.authorComments')}</h4>
               {authorComments.map((c, i) => (
                 <div key={i} style={{ padding: '10px 0', borderBottom: i < authorComments.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none' }}>
                   <div style={{ ...sub, fontSize: 13 }}>{c.text.replace(/<[^>]*>/g, '')}</div>
@@ -504,7 +507,7 @@ export function YoutubeDownloader() {
           {/* Top Comments */}
           {topComments.length > 0 && (
             <div style={card}>
-              <h4 style={sectionTitle}>{String.fromCharCode(0x422, 0x43E, 0x43F, 0x20, 0x43A, 0x43E, 0x43C, 0x43C, 0x435, 0x43D, 0x442, 0x430, 0x440, 0x438, 0x438)}</h4>
+              <h4 style={sectionTitle}>{t('youtubeAnalyzer.topComments')}</h4>
               {topComments.map((c, i) => (
                 <div key={i} style={{ padding: '10px 0', borderBottom: i < topComments.length - 1 ? `1px solid ${C?.border ?? '#eee'}` : 'none' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: C?.text ?? '#111', marginBottom: 4 }}>{c.author}</div>

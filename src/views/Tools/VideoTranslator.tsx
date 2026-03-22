@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { WaitingGame } from '@/components/ui/WaitingGame';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -30,6 +31,7 @@ type DubStatus = 'idle' | 'uploading' | 'processing' | 'dubbed' | 'error';
 
 export function VideoTranslator() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const isDark = useThemeStore((s) => s.isDark);
   const router = useRouter();
 
@@ -78,16 +80,16 @@ export function VideoTranslator() {
           if (pollRef.current) clearInterval(pollRef.current);
         } else if (data.status === 'failed' || data.error) {
           setStatus('error');
-          setError(data.error ?? '\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0435');
+          setError(data.error ?? useLocaleStore.getState().t('videoTranslator.processingError'));
           if (pollRef.current) clearInterval(pollRef.current);
         } else {
           // Show real status from ElevenLabs
           const statusMap: Record<string, string> = {
-            preparing: '\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430 \u0432\u0438\u0434\u0435\u043E...',
-            transcribing: '\u0420\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u0451\u043C \u0440\u0435\u0447\u044C...',
-            translating: '\u041F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0442\u0435\u043A\u0441\u0442...',
-            generating: '\u0413\u0435\u043D\u0435\u0440\u0438\u0440\u0443\u0435\u043C \u043E\u0437\u0432\u0443\u0447\u043A\u0443...',
-            rendering: '\u0421\u0431\u043E\u0440\u043A\u0430 \u0432\u0438\u0434\u0435\u043E...',
+            preparing: useLocaleStore.getState().t('videoTranslator.preparing'),
+            transcribing: useLocaleStore.getState().t('videoTranslator.transcribing'),
+            translating: useLocaleStore.getState().t('videoTranslator.translating'),
+            generating: useLocaleStore.getState().t('videoTranslator.generating'),
+            rendering: useLocaleStore.getState().t('videoTranslator.rendering'),
           };
           const phaseProgress: Record<string, number> = {
             preparing: 15,
@@ -128,7 +130,7 @@ export function VideoTranslator() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as any)?.error ?? `\u041E\u0448\u0438\u0431\u043A\u0430 ${res.status}`);
+        throw new Error((body as any)?.error ?? `${useLocaleStore.getState().t('videoTranslator.processingError')} ${res.status}`);
       }
 
       const data = await res.json();
@@ -139,7 +141,7 @@ export function VideoTranslator() {
       startPolling(data.dubbing_id, targetLang);
     } catch (err: unknown) {
       setStatus('error');
-      setError((err as Error)?.message ?? '\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430');
+      setError((err as Error)?.message ?? useLocaleStore.getState().t('videoTranslator.unknownError'));
     }
   }, [sourceUrl, file, sourceLang, targetLang, startPolling]);
 
@@ -180,10 +182,10 @@ export function VideoTranslator() {
         </div>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 800, color: C?.text ?? '#111', letterSpacing: '-0.02em', margin: 0 }}>
-            {'\u041F\u0435\u0440\u0435\u0432\u043E\u0434 \u0432\u0438\u0434\u0435\u043E'}
+            {t('videoTranslator.title')}
           </h1>
           <p style={{ fontSize: 12, color: C?.dim ?? '#999', margin: 0, marginTop: 2 }}>
-            {'\u041F\u0435\u0440\u0435\u0432\u043E\u0434 \u0430\u0443\u0434\u0438\u043E \u0441 \u043A\u043B\u043E\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435\u043C \u0433\u043E\u043B\u043E\u0441\u0430 \u043D\u0430 32 \u044F\u0437\u044B\u043A\u0430'}
+            {t('videoTranslator.subtitle')}
           </p>
         </div>
       </div>
@@ -194,7 +196,7 @@ export function VideoTranslator() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             {/* URL input */}
             <div style={card}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{'\u0421\u0441\u044B\u043B\u043A\u0430 \u043D\u0430 \u0432\u0438\u0434\u0435\u043E'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.videoLink')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, border: `1px solid ${C?.border ?? '#eee'}`, background: C?.bg ?? '#fafafa' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C?.dim ?? '#aaa'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
                 <input type="text" value={sourceUrl} onChange={(e) => { setSourceUrl(e.target.value); setFile(null); }}
@@ -202,12 +204,12 @@ export function VideoTranslator() {
                   style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: C?.text ?? '#111', fontSize: 14, fontFamily: 'inherit' }}
                 />
               </div>
-              <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 8 }}>YouTube, TikTok, Vimeo, X {'\u0438\u043B\u0438 \u043F\u0440\u044F\u043C\u0430\u044F \u0441\u0441\u044B\u043B\u043A\u0430'}</div>
+              <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 8 }}>YouTube, TikTok, Vimeo, X {t('videoTranslator.orDirectLink')}</div>
             </div>
 
             {/* File upload */}
             <div style={card}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{'\u0418\u043B\u0438 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u0444\u0430\u0439\u043B'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.orUploadFile')}</div>
               <input ref={fileRef} type="file" accept="video/*,audio/*" style={{ display: 'none' }}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) { setFile(f); setSourceUrl(''); } }}
               />
@@ -222,10 +224,10 @@ export function VideoTranslator() {
                 {file ? (
                   <span style={{ color: accent, fontWeight: 600 }}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
                 ) : (
-                  <span>{'\u041D\u0430\u0436\u043C\u0438\u0442\u0435 \u0438\u043B\u0438 \u043F\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435'}</span>
+                  <span>{t('videoTranslator.clickOrDrag')}</span>
                 )}
               </button>
-              <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 8 }}>MP4, MOV, MP3, WAV {'\u2022 \u0434\u043E 500 MB'}</div>
+              <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginTop: 8 }}>MP4, MOV, MP3, WAV {`\u2022 ${t('videoTranslator.upTo500mb')}`}</div>
             </div>
           </div>
 
@@ -233,14 +235,14 @@ export function VideoTranslator() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'start', marginBottom: 12 }}>
             {/* Source lang */}
             <div style={card}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{'\u042F\u0437\u044B\u043A \u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B\u0430'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.sourceLanguage')}</div>
               <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)} style={{
                 width: '100%', padding: '10px 12px', borderRadius: 10,
                 border: `1px solid ${C?.border ?? '#eee'}`, background: C?.bg ?? '#fafafa',
                 color: C?.text ?? '#111', fontSize: 14, fontFamily: 'inherit', outline: 'none',
                 appearance: 'none', cursor: 'pointer',
               }}>
-                <option value="auto">{'\uD83C\uDF10 \u0410\u0432\u0442\u043E\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u0435'}</option>
+                <option value="auto">{`\uD83C\uDF10 ${t('videoTranslator.autoDetect')}`}</option>
                 {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
               </select>
             </div>
@@ -252,7 +254,7 @@ export function VideoTranslator() {
 
             {/* Target lang */}
             <div style={card}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{'\u041D\u0430 \u043A\u0430\u043A\u043E\u0439 \u044F\u0437\u044B\u043A'}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 12 }}>{t('videoTranslator.targetLanguage')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
                 {LANGUAGES.slice(0, 12).map((l) => (
                   <button key={l.code} onClick={() => setTargetLang(l.code)} style={{
@@ -273,7 +275,7 @@ export function VideoTranslator() {
                 color: C?.sub ?? '#888', fontSize: 12, fontFamily: 'inherit', outline: 'none',
                 appearance: 'none', cursor: 'pointer',
               }}>
-                <option value="">{'\u0412\u0441\u0435 \u044F\u0437\u044B\u043A\u0438...'}</option>
+                <option value="">{t('videoTranslator.allLanguages')}</option>
                 {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
               </select>
             </div>
@@ -281,11 +283,11 @@ export function VideoTranslator() {
 
           {/* Settings */}
           <div style={{ ...card, marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 16 }}>{String.fromCharCode(0x41D, 0x430, 0x441, 0x442, 0x440, 0x43E, 0x439, 0x43A, 0x438)}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 16 }}>{t('videoTranslator.settings')}</div>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
               {/* Num speakers */}
               <div>
-                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{String.fromCharCode(0x421, 0x43F, 0x438, 0x43A, 0x435, 0x440, 0x43E, 0x432, 0x20, 0x432, 0x20, 0x432, 0x438, 0x434, 0x435, 0x43E)}</div>
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{t('videoTranslator.speakersInVideo')}</div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {[1, 2, 3].map((n) => (
                     <button key={n} onClick={() => setNumSpeakers(n)} style={{
@@ -304,12 +306,12 @@ export function VideoTranslator() {
                     color: numSpeakers === 0 ? accent : (C?.text ?? '#111'),
                     fontSize: 12, fontWeight: numSpeakers === 0 ? 700 : 500,
                     cursor: 'pointer', fontFamily: 'inherit',
-                  }}>{'\u0410\u0432\u0442\u043E'}</button>
+                  }}>{t('videoTranslator.auto')}</button>
                 </div>
               </div>
               {/* Add subtitles */}
               <div>
-                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{'\u0421\u0443\u0431\u0442\u0438\u0442\u0440\u044B'}</div>
+                <div style={{ fontSize: 11, color: C?.dim ?? '#aaa', marginBottom: 6 }}>{t('videoTranslator.subtitles')}</div>
                 <button onClick={() => setAddSubtitles(!addSubtitles)} style={{
                   padding: '8px 16px', borderRadius: 8,
                   border: `1px solid ${addSubtitles ? accent : (C?.border ?? '#eee')}`,
@@ -317,7 +319,7 @@ export function VideoTranslator() {
                   color: addSubtitles ? accent : (C?.sub ?? '#888'),
                   fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 }}>{addSubtitles ? '\u2705 \u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C' : '\u274C \u0411\u0435\u0437 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u043E\u0432'}</button>
-                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{'\u041D\u0430\u043B\u043E\u0436\u0438\u0442\u044C \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0435 \u0441\u0443\u0431\u0442\u0438\u0442\u0440\u044B \u043D\u0430 \u0432\u0438\u0434\u0435\u043E'}</div>
+                <div style={{ fontSize: 10, color: C?.dim ?? '#aaa', marginTop: 4 }}>{t('videoTranslator.overlaySubtitles')}</div>
               </div>
             </div>
           </div>
@@ -331,7 +333,7 @@ export function VideoTranslator() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.913 17H20.087M3.913 17H11.087"/><circle cx="12" cy="17" r="1"/><path d="M5.5 7H18.5"/><path d="M3 12H21"/></svg>
-            {'\u041F\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0432\u0438\u0434\u0435\u043E'}
+            {t('videoTranslator.translateVideo')}
           </button>
         </>
       )}
@@ -346,15 +348,15 @@ export function VideoTranslator() {
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: C?.text ?? '#111', marginBottom: 8 }}>
             {status === 'uploading'
-              ? '\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u0432\u0438\u0434\u0435\u043E \u043D\u0430 \u0441\u0435\u0440\u0432\u0435\u0440...'
-              : (statusText || '\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0430...')}
+              ? t('videoTranslator.uploadingToServer')
+              : (statusText || t('videoTranslator.defaultProcessing'))}
           </div>
           <div style={{ fontSize: 13, color: C?.sub ?? '#888', marginBottom: 20 }}>
             {status === 'uploading'
-              ? '\u042D\u0442\u043E \u043C\u043E\u0436\u0435\u0442 \u0437\u0430\u043D\u044F\u0442\u044C \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u043C\u0438\u043D\u0443\u0442 \u0434\u043B\u044F \u0431\u043E\u043B\u044C\u0448\u0438\u0445 \u0444\u0430\u0439\u043B\u043E\u0432'
+              ? t('videoTranslator.mayTakeMinutes')
               : (expectedDuration > 0
-                ? `\u041E\u0436\u0438\u0434\u0430\u0435\u043C\u043E\u0435 \u0432\u0440\u0435\u043C\u044F: ~${Math.ceil(expectedDuration / 60)} \u043C\u0438\u043D.`
-                : '\u041A\u043B\u043E\u043D\u0438\u0440\u0443\u0435\u043C \u0433\u043E\u043B\u043E\u0441, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u043C \u0438 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0435\u043C')}
+                ? `${t('videoTranslator.expectedTime')}: ~${Math.ceil(expectedDuration / 60)} ${t('videoTranslator.min')}`
+                : t('videoTranslator.cloningVoice'))}
           </div>
           {/* Progress bar — only show during processing, not upload */}
           {status === 'processing' && (
@@ -381,10 +383,10 @@ export function VideoTranslator() {
         <div style={{ ...card, textAlign: 'center', padding: 48 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>{'\u2705'}</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: C?.text ?? '#111', marginBottom: 8 }}>
-            {'\u041F\u0435\u0440\u0435\u0432\u043E\u0434 \u0433\u043E\u0442\u043E\u0432!'}
+            {t('videoTranslator.translationReady')}
           </div>
           <div style={{ fontSize: 13, color: C?.sub ?? '#888', marginBottom: 24 }}>
-            {'\u0412\u0438\u0434\u0435\u043E \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0435\u043D\u043E \u043D\u0430 '}{LANGUAGES.find((l) => l.code === targetLang)?.name ?? targetLang}
+            {t('videoTranslator.videoTranslatedTo')}{LANGUAGES.find((l) => l.code === targetLang)?.name ?? targetLang}
           </div>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={handleDownload} style={{
@@ -394,14 +396,14 @@ export function VideoTranslator() {
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              {'\u0421\u043A\u0430\u0447\u0430\u0442\u044C'}
+              {t('videoTranslator.download')}
             </button>
             <button onClick={handleReset} style={{
               padding: '12px 28px', borderRadius: 12,
               border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
               color: C?.text ?? '#111', fontWeight: 600, fontSize: 14, fontFamily: 'inherit', cursor: 'pointer',
             }}>
-              {'\u041D\u043E\u0432\u044B\u0439 \u043F\u0435\u0440\u0435\u0432\u043E\u0434'}
+              {t('videoTranslator.newTranslation')}
             </button>
           </div>
         </div>
@@ -417,7 +419,7 @@ export function VideoTranslator() {
             border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
             color: C?.text ?? '#111', fontWeight: 600, fontSize: 14, fontFamily: 'inherit', cursor: 'pointer',
           }}>
-            {'\u041F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C \u0441\u043D\u043E\u0432\u0430'}
+            {t('videoTranslator.tryAgain')}
           </button>
         </div>
       )}

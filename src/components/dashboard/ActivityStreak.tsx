@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ── LocalStorage streak tracking ─────────────────────── */
 
@@ -66,6 +67,7 @@ function updateStreak(): number {
 
 export function ActivityStreak() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export function ActivityStreak() {
         color: C.orange ?? '#f59e0b',
         letterSpacing: '-.01em',
       }}>
-        {streak} {streak < 5 ? '\u0434\u043D\u044F' : '\u0434\u043D\u0435\u0439'} {'\u043F\u043E\u0434\u0440\u044F\u0434!'}
+        {streak} {streak < 5 ? t('streak.daysShort') : t('streak.daysLong')} {t('streak.inARow')}
       </span>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ToolPageShell, UploadArea, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const GRADIENT: [string, string] = ['#10b981', '#06b6d4'];
 
@@ -187,6 +188,7 @@ function formatTime(seconds: number): string {
 
 export function SpeechEnhancer() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   // --- state ---
   const [file, setFile] = useState<File | null>(null);
@@ -243,7 +245,7 @@ export function SpeechEnhancer() {
         });
       } catch {
         if (!cancelled) {
-          setError('Could not decode audio file. Please try a different format (MP3, WAV, OGG, etc.).');
+          setError(t('speechEnhancer.decodeError'));
         }
       }
     })();
@@ -419,7 +421,7 @@ export function SpeechEnhancer() {
       );
       setEnhancedBuffer(result);
     } catch {
-      setError('Error processing audio. Please try again.');
+      setError(t('speechEnhancer.processError'));
     } finally {
       setLoading(false);
     }
@@ -569,8 +571,8 @@ export function SpeechEnhancer() {
 
   return (
     <ToolPageShell
-      title="AI Speech Enhancer"
-      subtitle="Remove noise, echo, and enhance clarity of any audio or video speech"
+      title={t('speechEnhancer.title')}
+      subtitle={t('speechEnhancer.subtitle')}
       gradient={GRADIENT}
       badge="New"
       badgeColor={GRADIENT[0]}
@@ -613,7 +615,7 @@ export function SpeechEnhancer() {
               C={C}
               accept="audio/*,video/*"
               onFile={handleFileSet}
-              label="Drop audio/video file here or click to upload"
+              label={t('speechEnhancer.uploadLabel')}
             />
           </div>
         ) : (
@@ -650,7 +652,7 @@ export function SpeechEnhancer() {
               onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
               onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
             >
-              Remove
+              {t('speechEnhancer.remove')}
             </button>
           </div>
         )}
@@ -659,12 +661,12 @@ export function SpeechEnhancer() {
         <div style={{
           padding: 16, borderRadius: 16, border: `1px solid ${C.border}`, background: C.card,
         }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.text, display: 'block', marginBottom: 16 }}>Enhancement Options</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.text, display: 'block', marginBottom: 16 }}>{t('speechEnhancer.enhancementOptions')}</span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
             {/* Noise Reduction */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Noise Reduction</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t('speechEnhancer.noiseReduction')}</span>
                 <span style={{ fontSize: 13, color: GRADIENT[0], fontWeight: 600 }}>{noiseReduction}%</span>
               </div>
               <input
@@ -682,7 +684,7 @@ export function SpeechEnhancer() {
             {/* Clarity Boost */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Clarity Boost</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t('speechEnhancer.clarityBoost')}</span>
                 <span style={{ fontSize: 13, color: GRADIENT[0], fontWeight: 600 }}>{clarityBoost}%</span>
               </div>
               <input
@@ -699,8 +701,8 @@ export function SpeechEnhancer() {
             {/* Echo Removal Toggle */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block' }}>Echo Removal</span>
-                <span style={{ fontSize: 10, color: C.dim }}>Dynamics compressor</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block' }}>{t('speechEnhancer.echoRemoval')}</span>
+                <span style={{ fontSize: 10, color: C.dim }}>{t('speechEnhancer.dynamicsCompressor')}</span>
               </div>
               <button
                 onClick={() => setEchoRemoval(!echoRemoval)}
@@ -718,8 +720,8 @@ export function SpeechEnhancer() {
             {/* Volume Normalization Toggle */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block' }}>Volume Normalization</span>
-                <span style={{ fontSize: 10, color: C.dim }}>Normalize to -1 dB peak</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block' }}>{t('speechEnhancer.volumeNormalization')}</span>
+                <span style={{ fontSize: 10, color: C.dim }}>{t('speechEnhancer.normalizeTo')}</span>
               </div>
               <button
                 onClick={() => setVolumeNorm(!volumeNorm)}
@@ -739,7 +741,7 @@ export function SpeechEnhancer() {
         {/* Before / After Comparison */}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <WaveformPanel
-            label="Before (Original)"
+            label={t('speechEnhancer.before')}
             color="#ef4444"
             canvasRef={originalCanvasRef}
             hasAudio={hasSource}
@@ -749,7 +751,7 @@ export function SpeechEnhancer() {
             duration={sourceDuration}
           />
           <WaveformPanel
-            label="After (Enhanced)"
+            label={t('speechEnhancer.after')}
             color={GRADIENT[0]}
             canvasRef={enhancedCanvasRef}
             hasAudio={enhancedBuffer !== null}
@@ -769,14 +771,14 @@ export function SpeechEnhancer() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GRADIENT[0]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
             </svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Speech enhanced successfully</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t('speechEnhancer.success')}</span>
           </div>
         )}
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <ActionButton
-            label={loading ? 'Enhancing...' : enhancedBuffer ? 'Re-enhance' : 'Enhance'}
+            label={loading ? t('speechEnhancer.enhancing') : enhancedBuffer ? t('speechEnhancer.reEnhance') : t('speechEnhancer.enhance')}
             gradient={GRADIENT}
             onClick={handleEnhance}
             loading={loading}
@@ -803,7 +805,7 @@ export function SpeechEnhancer() {
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Download Enhanced WAV
+              {t('speechEnhancer.download')}
             </button>
           )}
         </div>

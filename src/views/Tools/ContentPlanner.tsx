@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import {
   useContentPlannerStore,
   type ContentStatus,
@@ -20,8 +21,8 @@ import {
 
 const GRADIENT: [string, string] = ['#06b6d4', '#8b5cf6'];
 
-const TABS = ['Calendar', 'Content List', 'Ideas Bank', 'Templates'] as const;
-type Tab = (typeof TABS)[number];
+const TAB_KEYS = ['Calendar', 'Content List', 'Ideas Bank', 'Templates'] as const;
+type Tab = (typeof TAB_KEYS)[number];
 
 const STATUS_COLORS: Record<ContentStatus, string> = {
   Idea: '#6b7280',
@@ -43,18 +44,20 @@ const ALL_TYPES: ContentType[] = ['Video', 'Short', 'Post', 'Story', 'Reel'];
 const ALL_PLATFORMS: Platform[] = ['YouTube', 'TikTok', 'Instagram', 'Twitter', 'Facebook'];
 const FILTER_STATUSES: FilterStatus[] = ['All', ...ALL_STATUSES];
 const FILTER_TYPES: FilterType[] = ['All', ...ALL_TYPES];
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'date-desc', label: 'Newest First' },
-  { value: 'date-asc', label: 'Oldest First' },
-  { value: 'title-asc', label: 'Title A-Z' },
-  { value: 'title-desc', label: 'Title Z-A' },
-  { value: 'status', label: 'By Status' },
+const SORT_OPTION_KEYS: { value: SortOption; key: string }[] = [
+  { value: 'date-desc', key: 'contentPlanner.sort.newestFirst' },
+  { value: 'date-asc', key: 'contentPlanner.sort.oldestFirst' },
+  { value: 'title-asc', key: 'contentPlanner.sort.titleAZ' },
+  { value: 'title-desc', key: 'contentPlanner.sort.titleZA' },
+  { value: 'status', key: 'contentPlanner.sort.byStatus' },
 ];
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+const DAY_KEYS = ['contentPlanner.day.sun', 'contentPlanner.day.mon', 'contentPlanner.day.tue', 'contentPlanner.day.wed', 'contentPlanner.day.thu', 'contentPlanner.day.fri', 'contentPlanner.day.sat'];
+const MONTH_KEYS = [
+  'contentPlanner.month.january', 'contentPlanner.month.february', 'contentPlanner.month.march',
+  'contentPlanner.month.april', 'contentPlanner.month.may', 'contentPlanner.month.june',
+  'contentPlanner.month.july', 'contentPlanner.month.august', 'contentPlanner.month.september',
+  'contentPlanner.month.october', 'contentPlanner.month.november', 'contentPlanner.month.december',
 ];
 
 const IDEA_CATEGORIES = ['General', 'Tutorial', 'Vlog', 'Review', 'Shorts', 'Challenge', 'Collab', 'Trend'];
@@ -104,6 +107,33 @@ function isToday(year: number, month: number, day: number): boolean {
 
 export function ContentPlanner() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
+
+  const TAB_LABELS: Record<Tab, string> = {
+    'Calendar': t('contentPlanner.tab.calendar'),
+    'Content List': t('contentPlanner.tab.contentList'),
+    'Ideas Bank': t('contentPlanner.tab.ideasBank'),
+    'Templates': t('contentPlanner.tab.templates'),
+  };
+  const SORT_OPTIONS = SORT_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.key) }));
+  const DAYS = DAY_KEYS.map((k) => t(k));
+  const MONTHS = MONTH_KEYS.map((k) => t(k));
+
+  const STATUS_LABELS: Record<string, string> = {
+    'All': t('contentPlanner.filter.all'),
+    'Idea': t('contentPlanner.filter.idea'),
+    'Draft': t('contentPlanner.filter.draft'),
+    'Scheduled': t('contentPlanner.filter.scheduled'),
+    'Published': t('contentPlanner.filter.published'),
+  };
+  const TYPE_LABELS: Record<string, string> = {
+    'All': t('contentPlanner.filter.all'),
+    'Video': t('contentPlanner.filter.video'),
+    'Short': t('contentPlanner.filter.short'),
+    'Post': t('contentPlanner.filter.post'),
+    'Story': t('contentPlanner.filter.story'),
+    'Reel': t('contentPlanner.filter.reel'),
+  };
   const isDark = useThemeStore((s) => s.isDark);
 
   const store = useContentPlannerStore();
@@ -390,8 +420,8 @@ export function ContentPlanner() {
 
   return (
     <ToolPageShell
-      title="Content Planner"
-      subtitle="Plan, schedule, and organize your content pipeline across all platforms"
+      title={t('contentPlanner.title')}
+      subtitle={t('contentPlanner.subtitle')}
       gradient={GRADIENT}
     >
       {/* ── Stats Bar ────────────────────────────────────── */}
@@ -402,10 +432,10 @@ export function ContentPlanner() {
         marginBottom: 24,
       }}>
         {[
-          { label: 'Total Items', value: stats.total, color: C.accent },
-          { label: 'Scheduled', value: stats.scheduled, color: '#3b82f6' },
-          { label: 'Ideas', value: stats.ideaCount, color: '#f59e0b' },
-          { label: 'Published', value: stats.published, color: '#10b981' },
+          { label: t('contentPlanner.stats.totalItems'), value: stats.total, color: C.accent },
+          { label: t('contentPlanner.stats.scheduled'), value: stats.scheduled, color: '#3b82f6' },
+          { label: t('contentPlanner.stats.ideas'), value: stats.ideaCount, color: '#f59e0b' },
+          { label: t('contentPlanner.stats.published'), value: stats.published, color: '#10b981' },
         ].map((stat) => (
           <div key={stat.label} style={{
             padding: '16px 20px',
@@ -442,7 +472,7 @@ export function ContentPlanner() {
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
       }}>
-        {TABS.map((tab) => {
+        {TAB_KEYS.map((tab) => {
           const isActive = activeTab === tab;
           const isHovered = hoveredTab === tab;
           return (
@@ -468,7 +498,7 @@ export function ContentPlanner() {
                 minHeight: 44,
               }}
             >
-              {tab}
+              {TAB_LABELS[tab]}
             </button>
           );
         })}
@@ -477,7 +507,7 @@ export function ContentPlanner() {
       {/* ── Add Content Button ───────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
         <ActionButton
-          label="+ New Content"
+          label={t('contentPlanner.newContent')}
           gradient={GRADIENT}
           onClick={() => openAddModal()}
         />
@@ -531,7 +561,7 @@ export function ContentPlanner() {
               onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = C.card; }}
             >
-              Today
+              {t('contentPlanner.today')}
             </button>
           </div>
 
@@ -646,12 +676,12 @@ export function ContentPlanner() {
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
                 >
-                  + Add Content
+                  {t('contentPlanner.addContent')}
                 </button>
               </div>
               {selectedDateItems.length === 0 ? (
                 <div style={{ padding: '32px 16px', textAlign: 'center', color: C.dim, fontSize: 14 }}>
-                  No content scheduled for this date. Click &quot;+ Add Content&quot; to get started.
+                  {t('contentPlanner.noContentForDate')}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -736,7 +766,7 @@ export function ContentPlanner() {
                     onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = C.cardHover; }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = C.card; }}
                   >
-                    {s}
+                    {STATUS_LABELS[s] ?? s}
                   </button>
                 );
               })}
@@ -766,7 +796,7 @@ export function ContentPlanner() {
                     onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = C.cardHover; }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = C.card; }}
                   >
-                    {t}
+                    {TYPE_LABELS[t] ?? t}
                   </button>
                 );
               })}
@@ -801,12 +831,12 @@ export function ContentPlanner() {
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               <p style={{ fontSize: 15, fontWeight: 600, color: C.sub, margin: 0 }}>
-                No content items found
+                {t('contentPlanner.noContentItems')}
               </p>
               <p style={{ fontSize: 13, color: C.dim, margin: '8px 0 0' }}>
                 {filterStatus !== 'All' || filterType !== 'All'
-                  ? 'Try adjusting your filters to see more items.'
-                  : 'Click "+ New Content" to create your first content item.'}
+                  ? t('contentPlanner.adjustFilters')
+                  : t('contentPlanner.clickNewContent')}
               </p>
             </div>
           ) : (
@@ -921,16 +951,16 @@ export function ContentPlanner() {
             background: C.card, border: `1px solid ${C.border}`, marginBottom: 20,
           }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>
-              Quick Add Idea
+              {t('contentPlanner.quickAddIdea')}
             </h3>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
               <div style={{ flex: '1 1 250px' }}>
-                <label style={labelStyle}>Idea</label>
+                <label style={labelStyle}>{t('contentPlanner.idea')}</label>
                 <input
                   type="text"
                   value={ideaText}
                   onChange={(e) => setIdeaText(e.target.value)}
-                  placeholder="What's your next content idea?"
+                  placeholder={t('contentPlanner.ideaPlaceholder')}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleAddIdea(); }}
                   style={inputStyle}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
@@ -938,7 +968,7 @@ export function ContentPlanner() {
                 />
               </div>
               <div style={{ flex: '0 0 140px' }}>
-                <label style={labelStyle}>Category</label>
+                <label style={labelStyle}>{t('contentPlanner.category')}</label>
                 <select
                   value={ideaCategory}
                   onChange={(e) => setIdeaCategory(e.target.value)}
@@ -952,7 +982,7 @@ export function ContentPlanner() {
                 </select>
               </div>
               <div style={{ flex: '0 0 120px' }}>
-                <label style={labelStyle}>Priority</label>
+                <label style={labelStyle}>{t('contentPlanner.priority')}</label>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {([1, 2, 3] as const).map((p) => (
                     <button
@@ -976,7 +1006,7 @@ export function ContentPlanner() {
               </div>
               <div style={{ flex: '0 0 auto' }}>
                 <ActionButton
-                  label="Add"
+                  label={t('contentPlanner.add')}
                   gradient={GRADIENT}
                   onClick={handleAddIdea}
                   disabled={!ideaText.trim()}
@@ -995,10 +1025,10 @@ export function ContentPlanner() {
                 <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               <p style={{ fontSize: 15, fontWeight: 600, color: C.sub, margin: 0 }}>
-                Your ideas bank is empty
+                {t('contentPlanner.ideasBankEmpty')}
               </p>
               <p style={{ fontSize: 13, color: C.dim, margin: '8px 0 0' }}>
-                Capture fleeting ideas quickly. Add your first idea above!
+                {t('contentPlanner.captureIdeas')}
               </p>
             </div>
           ) : (
@@ -1105,10 +1135,10 @@ export function ContentPlanner() {
                 <path d="M3 9h18" /><path d="M9 21V9" />
               </svg>
               <p style={{ fontSize: 15, fontWeight: 600, color: C.sub, margin: 0 }}>
-                No templates available
+                {t('contentPlanner.noTemplates')}
               </p>
               <p style={{ fontSize: 13, color: C.dim, margin: '8px 0 0' }}>
-                Templates help you create content faster with pre-filled structures.
+                {t('contentPlanner.templatesHelp')}
               </p>
             </div>
           ) : (
@@ -1191,7 +1221,7 @@ export function ContentPlanner() {
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                           <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                         </svg>
-                        Best at {tpl.optimalTime}
+                        {t('contentPlanner.bestAt')} {tpl.optimalTime}
                       </span>
                     </div>
 
@@ -1216,7 +1246,7 @@ export function ContentPlanner() {
                       fontSize: 12, fontWeight: 700, color: catColor,
                       display: 'flex', alignItems: 'center', gap: 6, marginTop: 2,
                     }}>
-                      Use Template
+                      {t('contentPlanner.useTemplate')}
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                         <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
                       </svg>
@@ -1264,7 +1294,7 @@ export function ContentPlanner() {
               borderRadius: '18px 18px 0 0', zIndex: 1, gap: 8,
             }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                {editingItem ? 'Edit Content' : 'New Content'}
+                {editingItem ? t('contentPlanner.editContent') : t('contentPlanner.newContentModal')}
               </h2>
               <button
                 onClick={closeModal}
@@ -1289,12 +1319,12 @@ export function ContentPlanner() {
             <div style={{ padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
               {/* Title */}
               <div>
-                <label style={labelStyle}>Title</label>
+                <label style={labelStyle}>{t('contentPlanner.titleLabel')}</label>
                 <input
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Enter a title for your content"
+                  placeholder={t('contentPlanner.titlePlaceholder')}
                   style={inputStyle}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -1303,11 +1333,11 @@ export function ContentPlanner() {
 
               {/* Description */}
               <div>
-                <label style={labelStyle}>Description</label>
+                <label style={labelStyle}>{t('contentPlanner.description')}</label>
                 <textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Write a description for your content..."
+                  placeholder={t('contentPlanner.descriptionPlaceholder')}
                   rows={3}
                   style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
@@ -1317,11 +1347,11 @@ export function ContentPlanner() {
 
               {/* Script */}
               <div>
-                <label style={labelStyle}>Script</label>
+                <label style={labelStyle}>{t('contentPlanner.script')}</label>
                 <textarea
                   value={formScript}
                   onChange={(e) => setFormScript(e.target.value)}
-                  placeholder="Draft your script or talking points..."
+                  placeholder={t('contentPlanner.scriptPlaceholder')}
                   rows={4}
                   style={{
                     ...inputStyle, resize: 'vertical', minHeight: 100,
@@ -1335,7 +1365,7 @@ export function ContentPlanner() {
               {/* Two-column: Content Type + Status */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
                 <div>
-                  <label style={labelStyle}>Content Type</label>
+                  <label style={labelStyle}>{t('contentPlanner.contentType')}</label>
                   <select
                     value={formContentType}
                     onChange={(e) => setFormContentType(e.target.value as ContentType)}
@@ -1349,7 +1379,7 @@ export function ContentPlanner() {
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Status</label>
+                  <label style={labelStyle}>{t('contentPlanner.status')}</label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as ContentStatus)}
@@ -1366,7 +1396,7 @@ export function ContentPlanner() {
 
               {/* Scheduled Date */}
               <div>
-                <label style={labelStyle}>Scheduled Date</label>
+                <label style={labelStyle}>{t('contentPlanner.scheduledDate')}</label>
                 <input
                   type="date"
                   value={formScheduledDate}
@@ -1379,7 +1409,7 @@ export function ContentPlanner() {
 
               {/* Platforms (Multi-select checkboxes) */}
               <div>
-                <label style={labelStyle}>Platforms</label>
+                <label style={labelStyle}>{t('contentPlanner.platforms')}</label>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {ALL_PLATFORMS.map((p) => {
                     const isChecked = formPlatforms.includes(p);
@@ -1426,12 +1456,12 @@ export function ContentPlanner() {
 
               {/* Tags */}
               <div>
-                <label style={labelStyle}>Tags (comma-separated)</label>
+                <label style={labelStyle}>{t('contentPlanner.tags')}</label>
                 <input
                   type="text"
                   value={formTags}
                   onChange={(e) => setFormTags(e.target.value)}
-                  placeholder="#vlog, #tutorial, #tech"
+                  placeholder={t('contentPlanner.tagsPlaceholder')}
                   style={inputStyle}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -1453,11 +1483,11 @@ export function ContentPlanner() {
 
               {/* Notes */}
               <div>
-                <label style={labelStyle}>Notes</label>
+                <label style={labelStyle}>{t('contentPlanner.notes')}</label>
                 <textarea
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="Any additional notes, links, or reminders..."
+                  placeholder={t('contentPlanner.notesPlaceholder')}
                   rows={3}
                   style={{ ...inputStyle, resize: 'vertical', minHeight: 72 }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
@@ -1488,7 +1518,7 @@ export function ContentPlanner() {
                     onMouseEnter={(e) => { e.currentTarget.style.background = '#ef444425'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = '#ef444412'; }}
                   >
-                    Delete
+                    {t('contentPlanner.delete')}
                   </button>
                 )}
               </div>
@@ -1505,10 +1535,10 @@ export function ContentPlanner() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = C.surface; }}
                 >
-                  Cancel
+                  {t('contentPlanner.cancel')}
                 </button>
                 <ActionButton
-                  label={editingItem ? 'Save Changes' : 'Create'}
+                  label={editingItem ? t('contentPlanner.saveChanges') : t('contentPlanner.create')}
                   gradient={GRADIENT}
                   onClick={handleSave}
                 />

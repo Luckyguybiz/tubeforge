@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 export function NewsletterForm() {
+  const t = useLocaleStore((s) => s.t);
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -45,7 +47,7 @@ export function NewsletterForm() {
         <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        Готово! Вы подписаны на обновления.
+        {t('newsletter.success')}
       </div>
     );
   }
@@ -101,11 +103,11 @@ export function NewsletterForm() {
           whiteSpace: 'nowrap',
         }}
       >
-        {status === 'loading' ? 'Отправка...' : 'Подписаться'}
+        {status === 'loading' ? t('newsletter.sending') : t('newsletter.subscribe')}
       </button>
       {status === 'error' && (
         <p style={{ width: '100%', textAlign: 'center', color: '#ef4444', fontSize: 13, margin: '4px 0 0' }}>
-          Проверьте email и попробуйте ещё раз
+          {t('newsletter.error')}
         </p>
       )}
     </form>
