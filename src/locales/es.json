@@ -1984,7 +1984,5 @@
   "tools.voiceover.engineBrowser": "TTS del navegador",
   "tools.voiceover.elevenLabsBadge": "Impulsado por ElevenLabs — TTS multilingüe de calidad estudio. Usa 1 crédito de IA.",
   "tools.voiceover.elevenLabsSuccess": "Locución generada exitosamente",
-  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs no está configurado. Cambia a TTS del navegador o contacta al administrador.",
-  "publish.tabPreview": "Vista previa y exportar",
-  "publish.tabSeo": "Optimizador SEO"
+  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs no está configurado. Cambia a TTS del navegador o contacta al administrador."
 }

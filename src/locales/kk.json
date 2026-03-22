@@ -1984,7 +1984,5 @@
   "tools.voiceover.engineBrowser": "Браузер TTS",
   "tools.voiceover.elevenLabsBadge": "ElevenLabs негізінде — студиялық сапалы көптілді TTS. 1 AI-кредит қолданады.",
   "tools.voiceover.elevenLabsSuccess": "Дауыстау сәтті жасалды",
-  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs конфигурацияланбаған. Браузер TTS-ке ауысыңыз немесе әкімшіге хабарласыңыз.",
-  "publish.tabPreview": "Алдын ала қарау және экспорт",
-  "publish.tabSeo": "SEO оңтайландырушы"
+  "tools.voiceover.elevenLabsNotConfigured": "ElevenLabs конфигурацияланбаған. Браузер TTS-ке ауысыңыз немесе әкімшіге хабарласыңыз."
 }
