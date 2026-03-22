@@ -250,39 +250,26 @@ interface NavGroup {
 function getNavGroups(t: (key: string) => string): NavGroup[] {
   return [
     {
-      label: t('sidebar.creation'),
+      label: t('sidebar.create'),
       items: [
         { id: 'dashboard', label: t('nav.dashboard') },
+        { id: 'ai-thumbnails', label: t('nav.aiThumbnails') },
         { id: 'editor', label: t('nav.editor') },
-        { id: 'metadata', label: t('nav.metadata') },
+        { id: 'preview', label: t('nav.preview') },
       ],
     },
     {
       label: t('sidebar.tools'),
       items: [
         { id: 'tools', label: t('nav.tools') },
-        { id: 'ai-thumbnails', label: t('nav.aiThumbnails') },
         { id: 'thumbnails', label: t('nav.thumbnails') },
-        { id: 'preview', label: t('nav.preview') },
-        { id: 'media', label: t('nav.media') },
-        { id: 'brand', label: t('nav.brand') },
-        { id: 'shorts-analytics', label: t('nav.shortsAnalytics') },
-        { id: 'tiktok-analytics', label: t('nav.tiktokAnalytics') },
+        { id: 'metadata', label: t('nav.seoOptimizer') },
         { id: 'analytics', label: t('nav.analytics') },
       ],
     },
     {
-      label: t('sidebar.team'),
+      label: t('sidebar.account'),
       items: [
-        { id: 'team', label: t('nav.team') },
-      ],
-      condition: (plan) => plan === 'STUDIO',
-    },
-    {
-      label: t('sidebar.system'),
-      items: [
-        { id: 'blog', label: t('nav.blog') },
-        { id: 'referral', label: t('nav.referral') },
         { id: 'settings', label: t('nav.settings') },
         { id: 'billing', label: t('nav.billing') },
         { id: 'admin', label: t('nav.admin') },
@@ -553,7 +540,7 @@ export const Sidebar = memo(function Sidebar() {
   const planLabel = ({ FREE: t('common.free'), PRO: t('common.pro'), STUDIO: t('common.studio') } as Record<string, string>)[plan] ?? plan;
   const role = session?.user?.role ?? 'USER';
 
-  const W = collapsed ? 68 : 240;
+  const W = collapsed ? 64 : 220;
 
   const navigate = useCallback(
     (path: string) => {
@@ -598,16 +585,11 @@ export const Sidebar = memo(function Sidebar() {
     const isHovered = hoveredId === id;
     const showTooltip = collapsed && tooltipId === id;
 
-    // Gradient icon colors
-    const gradientKeys = ICON_GRADIENTS[id] ?? ['sub', 'dim'];
     const iconColor = isActive
-      ? C.accent
+      ? '#6366f1'
       : isHovered
         ? 'rgba(255,255,255,0.7)'
         : 'rgba(255,255,255,0.4)';
-    const iconAccent = isActive
-      ? C[gradientKeys[1] as keyof typeof C]
-      : undefined;
 
     // data-tour markers for onboarding spotlight
     const tourId = id === 'tools' ? 'tools-section' : id === 'billing' ? 'billing-section' : undefined;
@@ -624,27 +606,27 @@ export const Sidebar = memo(function Sidebar() {
         style={{
           position: 'relative',
           width: '100%',
+          height: 40,
           display: 'flex',
           alignItems: 'center',
-          gap: collapsed ? 0 : 12,
-          padding: collapsed ? '10px 0' : '9px 14px',
+          gap: collapsed ? 0 : 10,
+          padding: collapsed ? '0' : '0 12px',
           borderRadius: 10,
           border: 'none',
           background: isActive
-            ? C.accentDim
+            ? 'rgba(99,102,241,0.08)'
             : isHovered
               ? 'rgba(255,255,255,0.04)'
               : 'transparent',
           color: isActive
-            ? C.accent
+            ? '#6366f1'
             : isHovered
-              ? 'rgba(255,255,255,0.8)'
-              : C.sub,
+              ? 'rgba(255,255,255,0.7)'
+              : 'rgba(255,255,255,0.4)',
           fontSize: 13.5,
           fontWeight: isActive ? 600 : 450,
           cursor: 'pointer',
           textAlign: 'left',
-          marginBottom: 1,
           fontFamily: 'inherit',
           justifyContent: collapsed ? 'center' : 'flex-start',
           transition: 'all .15s ease',
@@ -653,27 +635,17 @@ export const Sidebar = memo(function Sidebar() {
         }}
       >
         {/* Active indicator bar */}
-        {isActive && (
+        {isActive && !collapsed && (
           <div
             style={{
               position: 'absolute',
-              left: collapsed ? '50%' : 0,
-              ...(collapsed
-                ? {
-                    bottom: -1,
-                    width: 20,
-                    height: 3,
-                    transform: 'translateX(-50%)',
-                    borderRadius: '3px 3px 0 0',
-                  }
-                : {
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: 3,
-                    height: 20,
-                    borderRadius: 2,
-                  }),
-              background: C.accent,
+              left: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 3,
+              height: 20,
+              borderRadius: 2,
+              background: '#6366f1',
               transition: 'all .2s ease',
             }}
           />
@@ -693,7 +665,7 @@ export const Sidebar = memo(function Sidebar() {
             transition: 'all .15s ease',
           }}
         >
-          {icons[id]?.(iconColor, iconAccent) ?? null}
+          {icons[id]?.(iconColor) ?? null}
         </span>
 
         {!collapsed && (
@@ -703,9 +675,28 @@ export const Sidebar = memo(function Sidebar() {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               transition: 'color .15s ease',
+              flex: 1,
             }}
           >
             {label}
+          </span>
+        )}
+
+        {/* NEW badge for AI Thumbnails */}
+        {id === 'ai-thumbnails' && !collapsed && (
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              color: '#6366f1',
+              background: 'rgba(99,102,241,0.12)',
+              padding: '2px 6px',
+              borderRadius: 4,
+              letterSpacing: 0.5,
+              marginLeft: 'auto',
+            }}
+          >
+            NEW
           </span>
         )}
 
@@ -719,7 +710,7 @@ export const Sidebar = memo(function Sidebar() {
               width: 5,
               height: 5,
               borderRadius: '50%',
-              background: C.accent,
+              background: '#6366f1',
             }}
           />
         )}
@@ -739,10 +730,10 @@ export const Sidebar = memo(function Sidebar() {
     return (
       <div
         style={{
-          padding: '16px 14px 6px',
+          padding: '20px 12px 6px',
           fontSize: 10,
           fontWeight: 600,
-          color: C.dim,
+          color: 'rgba(255,255,255,0.25)',
           textTransform: 'uppercase',
           letterSpacing: '2px',
           userSelect: 'none',
@@ -769,7 +760,6 @@ export const Sidebar = memo(function Sidebar() {
   const visibleGroups = NAV_GROUPS.map((group) => {
     const filteredItems = group.items.filter((item) => {
       if (item.id === 'admin' && role !== 'ADMIN') return false;
-      if (item.id === 'analytics' && plan !== 'PRO' && plan !== 'STUDIO') return false;
       return true;
     });
     if (group.condition && !group.condition(plan, role)) return null;
@@ -1018,7 +1008,7 @@ export const Sidebar = memo(function Sidebar() {
             {renderSectionLabel(group.label)}
 
             {/* Group items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {group.items.map((item) => renderNavBtn(item))}
             </div>
           </div>

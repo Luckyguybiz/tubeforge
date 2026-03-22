@@ -56,6 +56,7 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'nav.dashboard': 'Dashboard',
           'nav.editor': 'Editor',
           'nav.metadata': 'Metadata',
+          'nav.seoOptimizer': 'SEO Optimizer',
           'nav.thumbnails': 'Thumbnails',
           'nav.preview': 'Preview',
           'nav.team': 'Team',
@@ -67,13 +68,16 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'nav.shortsAnalytics': 'Shorts Analytics',
           'nav.tiktokAnalytics': 'TikTok Analytics',
           'nav.analytics': 'Analytics',
+          'nav.aiThumbnails': 'AI Thumbnails',
           'nav.media': 'Media',
           'nav.brand': 'Brand',
           'nav.blog': 'Blog',
           'sidebar.creation': 'Creation',
+          'sidebar.create': 'Create',
           'sidebar.tools': 'Tools',
           'sidebar.team': 'Team',
           'sidebar.system': 'System',
+          'sidebar.account': 'Account',
           'sidebar.collapse': 'Collapse',
           'sidebar.collapseLabel': 'Collapse sidebar',
           'sidebar.expand': 'Expand',
@@ -148,23 +152,24 @@ describe('Sidebar', () => {
     expect(screen.getByText('Creator Studio')).toBeDefined();
   });
 
-  it('renders navigation items for creation section', () => {
+  it('renders navigation items for create section', () => {
     render(<Sidebar />);
     expect(screen.getByText('Dashboard')).toBeDefined();
+    expect(screen.getByText('AI Thumbnails')).toBeDefined();
     expect(screen.getByText('Editor')).toBeDefined();
-    expect(screen.getByText('Metadata')).toBeDefined();
+    expect(screen.getByText('Preview')).toBeDefined();
   });
 
   it('renders tools section items', () => {
     render(<Sidebar />);
     expect(screen.getByText('All Tools')).toBeDefined();
     expect(screen.getByText('Thumbnails')).toBeDefined();
-    expect(screen.getByText('Preview')).toBeDefined();
+    expect(screen.getByText('SEO Optimizer')).toBeDefined();
+    expect(screen.getByText('Analytics')).toBeDefined();
   });
 
-  it('renders system section items', () => {
+  it('renders account section items', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Referral')).toBeDefined();
     expect(screen.getByText('Settings')).toBeDefined();
     expect(screen.getByText('Billing')).toBeDefined();
   });
@@ -211,9 +216,9 @@ describe('Sidebar', () => {
 
   it('renders section labels', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Creation')).toBeDefined();
+    expect(screen.getByText('Create')).toBeDefined();
     expect(screen.getByText('Tools')).toBeDefined();
-    expect(screen.getByText('System')).toBeDefined();
+    expect(screen.getByText('Account')).toBeDefined();
   });
 
   it('has a collapse button', () => {
