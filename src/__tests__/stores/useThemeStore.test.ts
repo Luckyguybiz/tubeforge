@@ -20,7 +20,7 @@ describe('useThemeStore', () => {
     const state = useThemeStore.getState();
     expect(state.mode).toBe('light');
     expect(state.isDark).toBe(false);
-    expect(state.theme.bg).toBe('#f3f3f7');
+    expect(state.theme.bg).toBe('#f5f5f7');
   });
 
   it('should toggle from light to system', () => {
@@ -43,8 +43,8 @@ describe('useThemeStore', () => {
     const state = useThemeStore.getState();
     expect(state.mode).toBe('light');
     expect(state.isDark).toBe(false);
-    expect(state.theme.bg).toBe('#f3f3f7');
-    expect(state.theme.text).toBe('#1a1a2e');
+    expect(state.theme.bg).toBe('#f5f5f7');
+    expect(state.theme.text).toBe('#1d1d1f');
   });
 
   it('setMode("dark") should set dark theme', () => {

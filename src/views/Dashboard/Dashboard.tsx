@@ -188,6 +188,16 @@ function IconArrowRight({ size = 16, color = 'currentColor' }: { size?: number; 
   );
 }
 
+function IconTranslate({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 8l6 0" /><path d="M4 6l8 0" /><path d="M8 6v-1a2 2 0 0 1 2-2h0" />
+      <path d="M4 12c1.5-2 3.5-3.5 6-4" /><path d="M10 12c-1.5-2-3.5-3.5-6-4" />
+      <path d="M13 15l3.5-7 3.5 7" /><path d="M14 18l1.5-3h5l1.5 3" /><path d="M15 17h4" />
+    </svg>
+  );
+}
+
 /* ── Additional icons for welcome section ─────────────── */
 
 function IconWrench({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
@@ -1727,7 +1737,7 @@ function TemplatePickerModal({
                 whiteSpace: 'nowrap',
               }}
             >
-              {isRu ? 'Все' : 'All'}
+              {t('dashboard.templateAll')}
             </button>
             {TEMPLATE_CATEGORIES.map((cat) => {
               const info = CATEGORY_INFO[cat];
@@ -1838,8 +1848,8 @@ function TemplatePickerModal({
                       whiteSpace: 'nowrap',
                     }}>
                       {tpl.sceneCount} {isRu
-                        ? (tpl.sceneCount === 1 ? 'сцена' : tpl.sceneCount < 5 ? 'сцены' : 'сцен')
-                        : (tpl.sceneCount === 1 ? 'scene' : 'scenes')}
+                        ? t('dashboard.scene.one')
+                        : t('dashboard.scene.other')}
                     </span>
                   </div>
                 </div>
@@ -1852,7 +1862,7 @@ function TemplatePickerModal({
               textAlign: 'center', padding: '24px 0',
               color: C.dim, fontSize: 13,
             }}>
-              {isRu ? 'Нет шаблонов в этой категории' : 'No templates in this category'}
+              {t('dashboard.noTemplates')}
             </div>
           )}
         </div>
@@ -2458,6 +2468,29 @@ export function Dashboard() {
         >
           <IconLayout size={15} color={C.sub} />
           {t('dashboard.fromTemplate')}
+        </button>
+        <button
+          onClick={() => router.push('/tools/video-translator')}
+          onMouseEnter={() => setHoveredBtn('qa-translator')}
+          onMouseLeave={() => setHoveredBtn(null)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '9px 18px', borderRadius: 10,
+            border: `1px solid ${C.border}`,
+            background: hoveredBtn === 'qa-translator' ? C.bg : C.card,
+            color: C.text, fontSize: 13, fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all .15s ease',
+          }}
+        >
+          <IconTranslate size={15} color={C.sub} />
+          Video Translator
+          <span style={{
+            fontSize: 10, fontWeight: 700, color: '#fff',
+            padding: '1px 6px', borderRadius: 4,
+            background: `linear-gradient(135deg, ${C.accent}, ${C.pink ?? C.accent})`,
+            letterSpacing: '.02em',
+          }}>Pro</span>
         </button>
       </div>
 

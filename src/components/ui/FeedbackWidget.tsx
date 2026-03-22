@@ -3,18 +3,26 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 type FeedbackType = 'bug' | 'feature' | 'question';
 
-const FEEDBACK_TYPES: { key: FeedbackType; label: string; icon: string }[] = [
-  { key: 'bug', label: 'Баг', icon: '\uD83D\uDC1B' },
-  { key: 'feature', label: 'Идея', icon: '\uD83D\uDCA1' },
-  { key: 'question', label: 'Вопрос', icon: '\u2753' },
-];
+const FEEDBACK_ICONS: Record<FeedbackType, string> = {
+  bug: '\uD83D\uDC1B',
+  feature: '\uD83D\uDCA1',
+  question: '\u2753',
+};
 
 export function FeedbackWidget() {
   const C = useThemeStore((s) => s.theme);
   const addToast = useNotificationStore((s) => s.addToast);
+  const t = useLocaleStore((s) => s.t);
+
+  const FEEDBACK_TYPES: { key: FeedbackType; label: string; icon: string }[] = [
+    { key: 'bug', label: t('feedback.bug'), icon: FEEDBACK_ICONS.bug },
+    { key: 'feature', label: t('feedback.idea'), icon: FEEDBACK_ICONS.feature },
+    { key: 'question', label: t('feedback.question'), icon: FEEDBACK_ICONS.question },
+  ];
 
   const [open, setOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
@@ -23,7 +31,7 @@ export function FeedbackWidget() {
 
   const handleSubmit = useCallback(() => {
     if (!text.trim()) {
-      addToast('warning', 'Введите описание');
+      addToast('warning', t('feedback.enterDescription'));
       return;
     }
     setSubmitting(true);
@@ -39,7 +47,7 @@ export function FeedbackWidget() {
     console.info('[FeedbackWidget]', payload);
 
     setTimeout(() => {
-      addToast('success', 'Спасибо! Мы ответим в течение 24 часов');
+      addToast('success', t('feedback.thanks'));
       setText('');
       setOpen(false);
       setSubmitting(false);
@@ -61,7 +69,7 @@ export function FeedbackWidget() {
       {/* Floating trigger button */}
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Обратная связь"
+        aria-label={t('feedback.ariaLabel')}
         style={{
           position: 'fixed',
           bottom: 24,
@@ -128,9 +136,9 @@ export function FeedbackWidget() {
                 borderBottom: `1px solid ${C.border}`,
               }}
             >
-              <div style={{ fontSize: 16, fontWeight: 700 }}>Обратная связь</div>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>{t('feedback.title')}</div>
               <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
-                Сообщите о проблеме или предложите идею
+                {t('feedback.subtitle')}
               </div>
             </div>
 
@@ -173,10 +181,10 @@ export function FeedbackWidget() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder={
                   feedbackType === 'bug'
-                    ? 'Опишите проблему...'
+                    ? t('feedback.placeholderBug')
                     : feedbackType === 'feature'
-                      ? 'Какую функцию вы хотели бы видеть?'
-                      : 'Задайте ваш вопрос...'
+                      ? t('feedback.placeholderFeature')
+                      : t('feedback.placeholderQuestion')
                 }
                 rows={4}
                 style={{
@@ -214,7 +222,7 @@ export function FeedbackWidget() {
                   transition: 'opacity .2s',
                 }}
               >
-                {submitting ? 'Отправка...' : 'Отправить'}
+                {submitting ? t('feedback.submitting') : t('feedback.submit')}
               </button>
             </div>
           </div>

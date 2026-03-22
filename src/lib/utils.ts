@@ -15,8 +15,8 @@ export const fmtTime = (s: number) => {
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 };
 
-/** Short duration: "5с" for ≤59s, "1:30" for ≥60s */
-export const fmtDur = (s: number) => (s < 60 ? `${s}с` : fmtTime(s));
+/** Short duration: "5s" for ≤59s, "1:30" for ≥60s */
+export const fmtDur = (s: number) => (s < 60 ? `${s}s` : fmtTime(s));
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
@@ -24,7 +24,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Russian plural forms helper.
- * Usage: pluralRu(5, 'сцена', 'сцены', 'сцен') → "5 сцен"
+ * Usage: pluralRu(5, 'scene', 'scenes', 'scenes') → "5 scenes"
  */
 export function pluralRu(n: number, one: string, few: string, many: string): string {
   const abs = Math.abs(n);
@@ -37,15 +37,15 @@ export function pluralRu(n: number, one: string, few: string, many: string): str
 
 /**
  * Human-readable relative time in Russian.
- * "только что", "5 мин назад", "3 ч назад", "2 д назад"
+ * "just now", "5m ago", "3h ago", "2d ago"
  */
 export function timeAgo(date: Date | string): string {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'только что';
-  if (mins < 60) return `${mins} мин назад`;
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} ч назад`;
+  if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
-  return `${days} д назад`;
+  return `${days}d ago`;
 }

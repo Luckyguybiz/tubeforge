@@ -13,12 +13,9 @@ interface Provider {
   name: string;
   logo: string;        // emoji or icon
   description: string;
-  descriptionRu: string;
   features: string[];
-  featuresRu: string[];
   url: string;         // referral link
   pricing: string;
-  pricingRu: string;
   badge?: string;
   gradient: [string, string];
 }
@@ -29,12 +26,9 @@ const PROVIDERS: Provider[] = [
     name: 'Runway ML',
     logo: '🎬',
     description: 'Industry-leading AI video generation. Gen-3 Alpha creates photorealistic videos from text or images.',
-    descriptionRu: 'Лидер индустрии ИИ-видео. Gen-3 Alpha создаёт фотореалистичные видео из текста или изображений.',
     features: ['Text to Video', 'Image to Video', 'Video to Video', 'Motion Brush', 'Lip Sync'],
-    featuresRu: ['Текст → Видео', 'Изображение → Видео', 'Видео → Видео', 'Motion Brush', 'Синхронизация губ'],
     url: 'https://runwayml.com/?ref=tubeforge',
     pricing: 'From $12/mo • 625 credits',
-    pricingRu: 'От $12/мес • 625 кредитов',
     badge: 'Popular',
     gradient: ['#7c3aed', '#c026d3'],
   },
@@ -43,12 +37,9 @@ const PROVIDERS: Provider[] = [
     name: 'Kling AI',
     logo: '🎥',
     description: 'Professional AI video with cinematic quality. Excellent motion consistency and character coherence.',
-    descriptionRu: 'Профессиональное ИИ-видео кинематографического качества. Отличная консистентность движений и персонажей.',
     features: ['1080p Video', 'Camera Control', 'Character Consistency', 'Up to 2 min', 'Lip Sync'],
-    featuresRu: ['Видео 1080p', 'Управление камерой', 'Консистентность персонажей', 'До 2 минут', 'Синхронизация губ'],
     url: 'https://klingai.com/?ref=tubeforge',
     pricing: 'From $5.99/mo • 660 credits',
-    pricingRu: 'От $5.99/мес • 660 кредитов',
     badge: 'Best Value',
     gradient: ['#0891b2', '#0d9488'],
   },
@@ -57,12 +48,9 @@ const PROVIDERS: Provider[] = [
     name: 'Pika',
     logo: '⚡',
     description: 'Fast and creative AI video generation with unique style effects and scene transformations.',
-    descriptionRu: 'Быстрая и креативная генерация видео с уникальными стилями и трансформациями сцен.',
     features: ['Text to Video', 'Pikaffects', 'Scene Ingredients', 'Lip Sync', 'Extend Video'],
-    featuresRu: ['Текст → Видео', 'Спецэффекты', 'Ингредиенты сцены', 'Синхронизация губ', 'Продление видео'],
     url: 'https://pika.art/?ref=tubeforge',
     pricing: 'From $8/mo • 250 credits',
-    pricingRu: 'От $8/мес • 250 кредитов',
     gradient: ['#f59e0b', '#ef4444'],
   },
   {
@@ -70,12 +58,9 @@ const PROVIDERS: Provider[] = [
     name: 'Luma Dream Machine',
     logo: '🌙',
     description: 'High-quality video generation powered by Luma\'s multimodal AI. Great for cinematic scenes.',
-    descriptionRu: 'Высококачественная генерация видео на мультимодальном ИИ от Luma. Отлично для кинематографичных сцен.',
     features: ['Text to Video', 'Image to Video', 'Keyframes', 'Camera Motion', '4K Upscale'],
-    featuresRu: ['Текст → Видео', 'Изображение → Видео', 'Ключевые кадры', 'Движение камеры', 'Масштаб до 4K'],
     url: 'https://lumalabs.ai/dream-machine?ref=tubeforge',
     pricing: 'From $9.99/mo • 150 generations',
-    pricingRu: 'От $9.99/мес • 150 генераций',
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -83,12 +68,9 @@ const PROVIDERS: Provider[] = [
     name: 'MiniMax (Hailuo)',
     logo: '🔮',
     description: 'Powerful Chinese AI video model with impressive quality and long video generation capabilities.',
-    descriptionRu: 'Мощная китайская модель для видео с впечатляющим качеством и генерацией длинных роликов.',
     features: ['Text to Video', 'Image to Video', 'Long Videos', 'High Quality', 'Director Mode'],
-    featuresRu: ['Текст → Видео', 'Изображение → Видео', 'Длинные видео', 'Высокое качество', 'Режим режиссёра'],
     url: 'https://hailuoai.video/?ref=tubeforge',
     pricing: 'Free tier available • Pro from $9.99/mo',
-    pricingRu: 'Есть бесплатный тариф • Pro от $9.99/мес',
     gradient: ['#ec4899', '#f43f5e'],
   },
   {
@@ -96,12 +78,9 @@ const PROVIDERS: Provider[] = [
     name: 'Google Veo 2',
     logo: '🌐',
     description: 'Google\'s latest AI video model. Available through Google AI Studio and Vertex AI.',
-    descriptionRu: 'Новейшая модель Google для видео. Доступна через Google AI Studio и Vertex AI.',
     features: ['Text to Video', 'Image to Video', '4K Output', 'Cinematic Quality', 'Long Duration'],
-    featuresRu: ['Текст → Видео', 'Изображение → Видео', 'Выход 4K', 'Кинематографическое качество', 'Длинные видео'],
     url: 'https://aistudio.google.com/?ref=tubeforge',
     pricing: 'Free with Google account',
-    pricingRu: 'Бесплатно с аккаунтом Google',
     badge: 'Free',
     gradient: ['#4285f4', '#34a853'],
   },
@@ -109,9 +88,8 @@ const PROVIDERS: Provider[] = [
 
 export function AiVideoGenerator() {
   const C = useThemeStore((s) => s.theme);
-  const { locale } = useLocaleStore();
   const t = useLocaleStore((s) => s.t);
-  const isRu = locale === 'ru' || locale === 'kk';
+
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
@@ -125,7 +103,7 @@ export function AiVideoGenerator() {
           marginBottom: 8,
           letterSpacing: '-0.02em',
         }}>
-          {isRu ? '🎬 ИИ-генерация видео' : '🎬 AI Video Generation'}
+          {'🎬 ' + t('tools.aiVideo.title')}
         </h1>
         <p style={{
           fontSize: 15,
@@ -134,9 +112,7 @@ export function AiVideoGenerator() {
           maxWidth: 600,
           margin: '0 auto',
         }}>
-          {isRu
-            ? 'Выберите провайдера для генерации видео с помощью ИИ. Каждый сервис предлагает уникальные возможности и стили.'
-            : 'Choose a provider for AI video generation. Each service offers unique capabilities and styles.'}
+          {t('tools.aiVideo.subtitle')}
         </p>
       </div>
 
@@ -151,9 +127,7 @@ export function AiVideoGenerator() {
         color: C.sub,
         lineHeight: 1.6,
       }}>
-        💡 {isRu
-          ? 'Совет: Для YouTube-контента мы рекомендуем Runway ML (лучшее качество) или Kling AI (лучшее соотношение цена/качество). Для бесплатного старта — Google Veo 2.'
-          : 'Tip: For YouTube content we recommend Runway ML (best quality) or Kling AI (best value). For a free start — Google Veo 2.'}
+        💡 {t('tools.aiVideo.tip')}
       </div>
 
       {/* Provider cards */}
@@ -215,7 +189,7 @@ export function AiVideoGenerator() {
                   )}
                 </div>
                 <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
-                  {isRu ? p.pricingRu : p.pricing}
+                  {p.pricing}
                 </div>
               </div>
             </div>
@@ -227,12 +201,12 @@ export function AiVideoGenerator() {
               lineHeight: 1.5,
               margin: '0 0 14px',
             }}>
-              {isRu ? p.descriptionRu : p.description}
+              {p.description}
             </p>
 
             {/* Features */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {(isRu ? p.featuresRu : p.features).map((f, i) => (
+              {p.features.map((f, i) => (
                 <span
                   key={i}
                   style={{
@@ -261,7 +235,7 @@ export function AiVideoGenerator() {
               color: C.accent,
               gap: 6,
             }}>
-              {isRu ? 'Перейти' : 'Visit'}
+              {t('tools.aiVideo.visit')}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 17l9.2-9.2M17 17V7H7" />
               </svg>
@@ -282,9 +256,7 @@ export function AiVideoGenerator() {
         lineHeight: 1.6,
         textAlign: 'center',
       }}>
-        {isRu
-          ? '⚙️ Полная интеграция генерации видео в TubeForge — в разработке. Следите за обновлениями!'
-          : '⚙️ Full video generation integration inside TubeForge — coming soon. Stay tuned!'}
+        {'⚙️ ' + t('tools.aiVideo.comingSoon')}
       </div>
     </div>
   );

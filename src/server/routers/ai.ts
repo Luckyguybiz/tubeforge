@@ -364,9 +364,9 @@ Return ONLY valid JSON, no markdown.`,
       const cfg = durationMap[input.duration] ?? durationMap['1min'];
 
       const toneMap: Record<string, string> = {
-        professional: 'профессиональный, деловой',
-        casual: 'разговорный, дружелюбный',
-        fun: 'весёлый, энергичный, с юмором',
+        professional: 'professional, business-like',
+        casual: 'casual, friendly',
+        fun: 'fun, energetic, humorous',
       };
 
       let res: Response;
@@ -384,28 +384,28 @@ Return ONLY valid JSON, no markdown.`,
             messages: [
               {
                 role: 'system',
-                content: `Ты — сценарист YouTube-видео. Создавай сценарии на русском языке. Отвечай ТОЛЬКО в JSON формате.`,
+                content: `You are a YouTube video scriptwriter. Create scripts in English. Respond ONLY in JSON format.`,
               },
               {
                 role: 'user',
-                content: `Создай сценарий YouTube-видео на тему: "${input.topic}".
+                content: `Create a YouTube video script on the topic: "${input.topic}".
 
-Тон: ${toneMap[input.tone] ?? 'профессиональный'}.
-Общая длительность: ~${cfg.totalSec} секунд.
-Количество сцен: ${cfg.scenes}.
+Tone: ${toneMap[input.tone] ?? 'professional'}.
+Total duration: ~${cfg.totalSec} seconds.
+Number of scenes: ${cfg.scenes}.
 
-Верни JSON:
+Return JSON:
 {
   "scenes": [
-    { "text": "Текст/описание для сцены (промпт для генерации видео)", "duration": <число секунд> }
+    { "text": "Text/description for the scene (prompt for video generation)", "duration": <number of seconds> }
   ]
 }
 
-Каждая сцена должна содержать:
-- text: описание визуальной сцены для AI-генерации видео (что показывать, какая атмосфера)
-- duration: длительность в секундах (сумма должна быть ~${cfg.totalSec})
+Each scene must contain:
+- text: description of the visual scene for AI video generation (what to show, what atmosphere)
+- duration: duration in seconds (sum should be ~${cfg.totalSec})
 
-Сделай сцены визуально разнообразными и увлекательными.`,
+Make the scenes visually diverse and engaging.`,
               },
             ],
           }),
@@ -479,7 +479,7 @@ Return ONLY valid JSON, no markdown.`,
       await checkRateLimit(ctx.session.user.id, 'ai-captions', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
-      const sceneSummary = input.scenes.map((s, i) => `Сцена ${i + 1} (${s.duration}с): ${s.text}`).join('\n');
+      const sceneSummary = input.scenes.map((s, i) => `Scene ${i + 1} (${s.duration}s): ${s.text}`).join('\n');
 
       let res: Response;
       try {
@@ -496,23 +496,23 @@ Return ONLY valid JSON, no markdown.`,
             messages: [
               {
                 role: 'system',
-                content: 'Ты генерируешь субтитры для видео в формате SRT. Отвечай ТОЛЬКО в JSON.',
+                content: 'You generate subtitles for videos in SRT format. Respond ONLY in JSON.',
               },
               {
                 role: 'user',
-                content: `Создай субтитры для видео на основе описаний сцен:
+                content: `Create subtitles for a video based on scene descriptions:
 
 ${sceneSummary}
 
-Верни JSON:
+Return JSON:
 {
-  "srt": "полный текст SRT файла с таймкодами",
+  "srt": "full SRT file text with timecodes",
   "captions": [
-    { "index": 1, "start": "00:00:00,000", "end": "00:00:03,000", "text": "Текст субтитра" }
+    { "index": 1, "start": "00:00:00,000", "end": "00:00:03,000", "text": "Subtitle text" }
   ]
 }
 
-Разбей текст на короткие субтитры (макс 2 строки, ~10 слов). Таймкоды должны точно покрывать длительность каждой сцены.`,
+Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must precisely cover the duration of each scene.`,
               },
             ],
           }),

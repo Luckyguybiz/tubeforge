@@ -67,6 +67,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <>
       <style>{`
         ::-webkit-scrollbar-thumb{background:${C.border}}
+        .tf-sidebar-nav::-webkit-scrollbar{width:6px}
+        .tf-sidebar-nav::-webkit-scrollbar-track{background:transparent}
+        .tf-sidebar-nav::-webkit-scrollbar-thumb{background:rgba(128,128,128,.18);border-radius:3px}
+        .tf-sidebar-nav::-webkit-scrollbar-thumb:hover{background:rgba(128,128,128,.32)}
+        .tf-sidebar-nav{scrollbar-gutter:stable}
         .sc-row{transition:all .12s}.sc-row:hover{background:${C.cardHover}!important}
         .gen-shimmer{background-image:linear-gradient(90deg,${C.card},${C.borderActive},${C.card});background-size:200% 100%;animation:shimmer 1.8s linear infinite}
         textarea:focus,input:focus{border-color:${C.borderActive}!important}

@@ -2,17 +2,17 @@
  * Project Template Library
  *
  * Pre-made templates that let users start projects with scenes already configured.
- * Each template has bilingual names/descriptions (Russian primary, English secondary)
- * and realistic scene prompts in Russian for AI image/video generation.
+ * Each template has bilingual names/descriptions (English primary, Russian secondary)
+ * and scene prompts in English for AI image/video generation.
  */
 
 export type TemplateCategory = 'youtube' | 'shorts' | 'social' | 'business' | 'education';
 
 export interface ProjectTemplate {
   id: string;
-  name: string;         // Russian name
-  nameEn: string;       // English name
-  description: string;  // Russian description
+  name: string;         // English name (primary)
+  nameEn: string;       // English name (alias)
+  description: string;  // English description (primary)
   descriptionEn: string;
   category: TemplateCategory;
   icon: string;         // Emoji icon
@@ -25,29 +25,29 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 1. YouTube Intro ─────────────────────────────────── */
   {
     id: 'youtube-intro',
-    name: 'Интро для YouTube',
+    name: 'YouTube Intro',
     nameEn: 'YouTube Intro',
-    description: 'Динамичное интро с анимацией логотипа — 3 сцены',
+    description: 'Dynamic intro with logo animation — 3 scenes',
     descriptionEn: 'Dynamic intro with logo reveal animation — 3 scenes',
     category: 'youtube',
     icon: '\uD83C\uDFAC',
     sceneCount: 3,
     scenes: [
       {
-        label: 'Заставка',
-        prompt: 'Яркая динамичная 3D-анимация: камера пролетает сквозь неоновый тоннель из светящихся частиц, быстрое движение, кинематографический свет, тёмный фон с электрическими бликами',
+        label: 'Opening',
+        prompt: 'Bright dynamic 3D animation: camera flies through a neon tunnel of glowing particles, fast motion, cinematic light, dark background with electric highlights',
         style: 'cinematic',
         duration: 3,
       },
       {
-        label: 'Логотип',
-        prompt: 'Эпичное появление логотипа канала: металлические буквы собираются из рассыпающихся частиц, вспышки света, объёмные тени, глубокий тёмно-синий фон с градиентом',
+        label: 'Logo',
+        prompt: 'Epic logo reveal: metallic letters assemble from scattering particles, light flashes, volumetric shadows, deep dark blue background with gradient',
         style: 'cinematic',
         duration: 4,
       },
       {
-        label: 'Переход',
-        prompt: 'Плавный переход: логотип уменьшается и улетает вверх, за ним раскрывается размытый фон основного контента, мягкий свет, лёгкая глубина резкости',
+        label: 'Transition',
+        prompt: 'Smooth transition: logo shrinks and flies upward, behind it the blurred background of main content opens up, soft light, gentle depth of field',
         style: 'cinematic',
         duration: 3,
       },
@@ -58,23 +58,23 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 2. YouTube Outro ─────────────────────────────────── */
   {
     id: 'youtube-outro',
-    name: 'Аутро для YouTube',
+    name: 'YouTube Outro',
     nameEn: 'YouTube Outro',
-    description: 'Экран подписки и ссылки на соцсети — 2 сцены',
+    description: 'Subscribe screen and social links — 2 scenes',
     descriptionEn: 'Subscribe CTA + social links — 2 scenes',
     category: 'youtube',
     icon: '\uD83D\uDC4B',
     sceneCount: 2,
     scenes: [
       {
-        label: 'Подписка',
-        prompt: 'Стильный end-screen: анимированная кнопка подписки по центру, вокруг неё появляются иконки лайка и колокольчика, тёплый градиентный фон, приятная типографика',
+        label: 'Subscribe',
+        prompt: 'Stylish end-screen: animated subscribe button in the center, like and bell icons appear around it, warm gradient background, pleasant typography',
         style: 'motion-graphics',
         duration: 8,
       },
       {
-        label: 'Соцсети',
-        prompt: 'Минималистичный экран соцсетей: иконки Instagram, Telegram, TikTok плавно появляются в ряд, под ними текст с никнеймом, чистый светлый фон с мягкими тенями',
+        label: 'Social',
+        prompt: 'Minimalist social media screen: Instagram, Telegram, TikTok icons appear smoothly in a row, username text below, clean light background with soft shadows',
         style: 'motion-graphics',
         duration: 7,
       },
@@ -85,41 +85,41 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 3. Tutorial ──────────────────────────────────────── */
   {
     id: 'tutorial',
-    name: 'Туториал',
+    name: 'Tutorial',
     nameEn: 'Tutorial',
-    description: 'Пошаговый образовательный контент — 5 сцен',
+    description: 'Step-by-step educational content — 5 scenes',
     descriptionEn: 'Step-by-step educational content — 5 scenes',
     category: 'education',
     icon: '\uD83D\uDCDA',
     sceneCount: 5,
     scenes: [
       {
-        label: 'Введение',
-        prompt: 'Учитель стоит перед интерактивной доской в современном классе, показывает на экран с темой урока, дружелюбная атмосфера, мягкий дневной свет из окна',
+        label: 'Introduction',
+        prompt: 'Teacher stands in front of an interactive board in a modern classroom, pointing at the screen with lesson topic, friendly atmosphere, soft daylight from window',
         style: 'realistic',
         duration: 10,
       },
       {
-        label: 'Шаг 1',
-        prompt: 'Крупный план рабочего стола: руки демонстрируют первый этап — открытие программы, на экране монитора видны элементы интерфейса, боковой мягкий свет',
+        label: 'Step 1',
+        prompt: 'Close-up of workspace: hands demonstrate the first step — opening the program, monitor screen shows interface elements, soft side lighting',
         style: 'realistic',
         duration: 15,
       },
       {
-        label: 'Шаг 2',
-        prompt: 'Анимированная инфографика: схема показывает второй шаг процесса, стрелки и иконки последовательно появляются, минималистичный дизайн на белом фоне',
+        label: 'Step 2',
+        prompt: 'Animated infographic: diagram shows the second step of the process, arrows and icons appear sequentially, minimalist design on white background',
         style: 'motion-graphics',
         duration: 15,
       },
       {
-        label: 'Шаг 3',
-        prompt: 'Экран разделён на две части: слева — правильный результат с зелёной галочкой, справа — типичная ошибка с красным крестом, чёткая визуальная подсказка',
+        label: 'Step 3',
+        prompt: 'Split screen: left — correct result with green checkmark, right — common mistake with red cross, clear visual hint',
         style: 'motion-graphics',
         duration: 15,
       },
       {
-        label: 'Итог',
-        prompt: 'Финальный слайд с кратким резюме: три ключевых пункта урока на стильном фоне, внизу призыв задать вопрос в комментариях, мягкий градиент',
+        label: 'Summary',
+        prompt: 'Final slide with brief summary: three key lesson points on stylish background, call to ask questions in comments below, soft gradient',
         style: 'motion-graphics',
         duration: 10,
       },
@@ -130,35 +130,35 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 4. Product Review ────────────────────────────────── */
   {
     id: 'product-review',
-    name: 'Обзор продукта',
+    name: 'Product Review',
     nameEn: 'Product Review',
-    description: 'Распаковка, обзор функций и вердикт — 4 сцены',
+    description: 'Unboxing, feature overview and verdict — 4 scenes',
     descriptionEn: 'Unboxing + features + verdict — 4 scenes',
     category: 'youtube',
     icon: '\u2B50',
     sceneCount: 4,
     scenes: [
       {
-        label: 'Распаковка',
-        prompt: 'Стильная распаковка на чистом белом столе: руки аккуратно открывают красивую коробку, камера сверху, мягкий студийный свет, лёгкое боке на заднем плане',
+        label: 'Unboxing',
+        prompt: 'Stylish unboxing on clean white desk: hands carefully open a beautiful box, camera from above, soft studio light, slight bokeh in background',
         style: 'realistic',
         duration: 12,
       },
       {
-        label: 'Обзор',
-        prompt: 'Крупные планы продукта с разных ракурсов: медленное вращение на поворотном столе, камера фиксирует детали, текстуры и элементы дизайна, нейтральный серый фон',
+        label: 'Overview',
+        prompt: 'Close-ups of product from different angles: slow rotation on turntable, camera captures details, textures and design elements, neutral gray background',
         style: 'realistic',
         duration: 20,
       },
       {
-        label: 'Плюсы и минусы',
-        prompt: 'Разделённый экран: слева зелёная колонка с иконками плюсов, справа красная с минусами, каждый пункт появляется с анимацией, современный минималистичный дизайн',
+        label: 'Pros & Cons',
+        prompt: 'Split screen: left green column with plus icons, right red with minus icons, each point appears with animation, modern minimalist design',
         style: 'motion-graphics',
         duration: 15,
       },
       {
-        label: 'Вердикт',
-        prompt: 'Финальная оценка: большая цифра рейтинга в центре экрана с анимированными звёздами, краткий текст вердикта внизу, тёмный элегантный фон с акцентным цветом',
+        label: 'Verdict',
+        prompt: 'Final rating: large rating number in center of screen with animated stars, brief verdict text below, dark elegant background with accent color',
         style: 'motion-graphics',
         duration: 10,
       },
@@ -169,35 +169,35 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 5. Vlog ──────────────────────────────────────────── */
   {
     id: 'vlog',
-    name: 'Влог',
+    name: 'Vlog',
     nameEn: 'Vlog',
-    description: 'День из жизни: утро, активность, вечер, итог — 4 сцены',
+    description: 'A day in life: morning, activity, evening, recap — 4 scenes',
     descriptionEn: 'Day-in-the-life format — 4 scenes',
     category: 'youtube',
     icon: '\uD83C\uDFA5',
     sceneCount: 4,
     scenes: [
       {
-        label: 'Утро',
-        prompt: 'Тёплое утро: человек сидит у окна с чашкой кофе, мягкий золотистый свет из окна, уютная атмосфера, слегка размытый фон кухни, естественные цвета',
+        label: 'Morning',
+        prompt: 'Warm morning: person sits by window with coffee cup, soft golden light from window, cozy atmosphere, slightly blurred kitchen background, natural colors',
         style: 'realistic',
         duration: 10,
       },
       {
-        label: 'Активность',
-        prompt: 'Динамичный кадр: прогулка по городу, кафе и улицы в расфокусе, яркий дневной свет, городская жизнь вокруг, камера следует за человеком, уличная фотография',
+        label: 'Activity',
+        prompt: 'Dynamic shot: walking through the city, cafes and streets out of focus, bright daylight, city life around, camera follows person, street photography',
         style: 'realistic',
         duration: 15,
       },
       {
-        label: 'Вечер',
-        prompt: 'Вечернее настроение: съёмка golden hour на крыше или в парке, тёплые оранжевые тона, силуэты на фоне заката, атмосферная кинематографическая картинка',
+        label: 'Evening',
+        prompt: 'Evening mood: golden hour footage on rooftop or in park, warm orange tones, silhouettes against sunset, atmospheric cinematic picture',
         style: 'cinematic',
         duration: 12,
       },
       {
-        label: 'Итоги дня',
-        prompt: 'Уютная обстановка вечером: разговор на камеру в комнате с мягким тёплым светом, книжная полка на фоне, лёгкое боке огоньков гирлянды',
+        label: 'Day recap',
+        prompt: 'Cozy evening setting: talking to camera in room with soft warm light, bookshelf in background, slight bokeh of fairy lights',
         style: 'realistic',
         duration: 10,
       },
@@ -210,27 +210,27 @@ export const TEMPLATES: ProjectTemplate[] = [
     id: 'shorts-hook',
     name: 'YouTube Shorts',
     nameEn: 'YouTube Shorts',
-    description: 'Вертикальное видео: хук, контент, призыв — 3 сцены',
+    description: 'Vertical video: hook, content, CTA — 3 scenes',
     descriptionEn: 'Hook + content + CTA for vertical video — 3 scenes',
     category: 'shorts',
     icon: '\u26A1',
     sceneCount: 3,
     scenes: [
       {
-        label: 'Хук',
-        prompt: 'Яркий захватывающий кадр: крупный текст с провокационным вопросом на фоне динамичной графики, вертикальный формат 9:16, контрастные цвета, мгновенное внимание',
+        label: 'Hook',
+        prompt: 'Bright captivating shot: large text with provocative question on dynamic graphics background, vertical 9:16 format, contrasting colors, instant attention',
         style: 'motion-graphics',
         duration: 3,
       },
       {
-        label: 'Контент',
-        prompt: 'Быстрая смена кадров: основной контент с крупными титрами, каждый факт подкреплён визуалом, энергичная подача, яркие акцентные цвета, вертикальный формат',
+        label: 'Content',
+        prompt: 'Quick scene changes: main content with large titles, each fact backed by visuals, energetic delivery, bright accent colors, vertical format',
         style: 'motion-graphics',
         duration: 15,
       },
       {
         label: 'CTA',
-        prompt: 'Финальный экран: анимированная стрелка указывает на кнопку подписки, текст "Подпишись, чтобы не пропустить!", пульсирующий акцентный цвет, вертикальный формат',
+        prompt: 'Final screen: animated arrow points to subscribe button, text "Subscribe to not miss out!", pulsing accent color, vertical format',
         style: 'motion-graphics',
         duration: 5,
       },
@@ -241,29 +241,29 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 7. TikTok Trend ──────────────────────────────────── */
   {
     id: 'tiktok-trend',
-    name: 'TikTok тренд',
+    name: 'TikTok Trend',
     nameEn: 'TikTok Trend',
-    description: 'Формат трендового ролика: завязка, развитие, финал — 3 сцены',
+    description: 'Trend video: setup, build-up, finale — 3 scenes',
     descriptionEn: 'Trending video format — 3 scenes',
     category: 'social',
     icon: '\uD83C\uDFB5',
     sceneCount: 3,
     scenes: [
       {
-        label: 'Завязка',
-        prompt: 'Начало тренда: человек стоит перед камерой в стильной одежде, на экране появляется текст с вызовом или вопросом, яркий неоновый фон, вертикальный формат',
+        label: 'Setup',
+        prompt: 'Trend opening: person stands before camera in stylish outfit, challenge or question text appears on screen, bright neon background, vertical format',
         style: 'realistic',
         duration: 5,
       },
       {
-        label: 'Развитие',
-        prompt: 'Быстрая трансформация: серия коротких переходов — смена образов, локаций, действий, каждый кадр длится секунду, динамичная музыкальная нарезка',
+        label: 'Build-up',
+        prompt: 'Quick transformation: series of short transitions — changing looks, locations, actions, each frame lasts a second, dynamic musical montage',
         style: 'cinematic',
         duration: 12,
       },
       {
-        label: 'Финал',
-        prompt: 'Эффектная концовка: неожиданный результат или забавный поворот, крупный план реакции, стоп-кадр с текстом и хештегами, яркие цвета',
+        label: 'Finale',
+        prompt: 'Dramatic ending: unexpected result or funny twist, close-up reaction, freeze frame with text and hashtags, bright colors',
         style: 'realistic',
         duration: 5,
       },
@@ -274,35 +274,35 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 8. Ad / Promo ────────────────────────────────────── */
   {
     id: 'ad-promo',
-    name: 'Рекламный ролик',
+    name: 'Commercial',
     nameEn: 'Ad / Promo',
-    description: 'Проблема, решение, предложение и призыв к действию — 4 сцены',
+    description: 'Problem, solution, offer and CTA — 4 scenes',
     descriptionEn: 'Problem + solution + offer + CTA — 4 scenes',
     category: 'business',
     icon: '\uD83D\uDCE2',
     sceneCount: 4,
     scenes: [
       {
-        label: 'Проблема',
-        prompt: 'Человек в затруднении: хмурый взгляд, вокруг хаос из бумаг или уведомлений на экране, серые приглушённые тона, лёгкое виньетирование, эмоциональный кадр',
+        label: 'Problem',
+        prompt: 'Person in trouble: frowning look, chaos of papers or notifications on screen around, muted gray tones, slight vignette, emotional shot',
         style: 'realistic',
         duration: 8,
       },
       {
-        label: 'Решение',
-        prompt: 'Момент озарения: яркий свет появляется на экране, человек улыбается, вокруг чистое пространство, цвета становятся насыщенными, продукт в руках крупным планом',
+        label: 'Solution',
+        prompt: 'Eureka moment: bright light appears on screen, person smiles, clean space around, colors become saturated, product in hands close-up',
         style: 'realistic',
         duration: 10,
       },
       {
-        label: 'Предложение',
-        prompt: 'Элегантная презентация продукта: объект парит в центре кадра, вокруг него вращаются иконки преимуществ, минималистичный тёмный фон с акцентным освещением',
+        label: 'Offer',
+        prompt: 'Elegant product presentation: object floats in center of frame, advantage icons rotate around it, minimalist dark background with accent lighting',
         style: 'cinematic',
         duration: 10,
       },
       {
-        label: 'Призыв',
-        prompt: 'Финальный CTA: крупная кнопка "Попробовать бесплатно" с пульсирующим свечением, под ней краткий текст оффера, таймер ограниченного предложения, фирменные цвета бренда',
+        label: 'CTA',
+        prompt: 'Final CTA: large "Try for Free" button with pulsing glow, brief offer text below, limited-time offer timer, brand colors',
         style: 'motion-graphics',
         duration: 7,
       },
@@ -313,41 +313,41 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 9. Explainer ─────────────────────────────────────── */
   {
     id: 'explainer',
-    name: 'Объяснение',
+    name: 'Explainer',
     nameEn: 'Explainer',
-    description: 'Анимированное объяснение: проблема, как работает, примеры — 5 сцен',
+    description: 'Animated explanation: problem, how it works, examples — 5 scenes',
     descriptionEn: 'Animated explainer format — 5 scenes',
     category: 'education',
     icon: '\uD83D\uDCA1',
     sceneCount: 5,
     scenes: [
       {
-        label: 'Вопрос',
-        prompt: 'Большой знак вопроса в центре экрана, вокруг него появляются маленькие иконки связанных понятий, плоский дизайн, пастельные цвета, анимированные линии',
+        label: 'Question',
+        prompt: 'Large question mark in center of screen, small related concept icons appear around it, flat design, pastel colors, animated lines',
         style: 'motion-graphics',
         duration: 8,
       },
       {
-        label: 'Контекст',
-        prompt: 'Инфографика с таймлайном: ключевые даты и события появляются на временной шкале, иконки и стрелки связывают факты, чистый белый фон, акцентные цвета',
+        label: 'Context',
+        prompt: 'Timeline infographic: key dates and events appear on timeline, icons and arrows connect facts, clean white background, accent colors',
         style: 'motion-graphics',
         duration: 12,
       },
       {
-        label: 'Механизм',
-        prompt: 'Анимированная схема: шестерёнки и блоки показывают как работает процесс, стрелки указывают поток данных или действий, изометрический 3D-стиль, яркие цвета',
+        label: 'Mechanism',
+        prompt: 'Animated diagram: gears and blocks show how the process works, arrows indicate data or action flow, isometric 3D style, bright colors',
         style: 'motion-graphics',
         duration: 15,
       },
       {
-        label: 'Пример',
-        prompt: 'Реальный пример: сплит-экран до/после, числа и графики показывают результат, зелёные стрелки роста, убедительная визуализация данных',
+        label: 'Example',
+        prompt: 'Real example: before/after split screen, numbers and charts show results, green growth arrows, convincing data visualization',
         style: 'motion-graphics',
         duration: 12,
       },
       {
-        label: 'Вывод',
-        prompt: 'Итоговый слайд: три ключевых вывода с галочками, внизу ссылка или QR-код, минималистичный дизайн с градиентным фоном, профессиональная типографика',
+        label: 'Conclusion',
+        prompt: 'Summary slide: three key takeaways with checkmarks, link or QR code below, minimalist design with gradient background, professional typography',
         style: 'motion-graphics',
         duration: 8,
       },
@@ -358,29 +358,29 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 10. Gaming ───────────────────────────────────────── */
   {
     id: 'gaming',
-    name: 'Игровой контент',
+    name: 'Gaming Content',
     nameEn: 'Gaming Content',
-    description: 'Хайлайты геймплея: лучшие моменты — 3 сцены',
+    description: 'Gameplay highlights: best moments — 3 scenes',
     descriptionEn: 'Gameplay highlights — 3 scenes',
     category: 'youtube',
     icon: '\uD83C\uDFAE',
     sceneCount: 3,
     scenes: [
       {
-        label: 'Эпичный момент',
-        prompt: 'Игровой экран с эпичным моментом: взрыв эффектов, яркие вспышки, счётчик комбо, динамичный HUD-интерфейс, тёмный фон с неоновыми акцентами, формат игрового монтажа',
+        label: 'Epic moment',
+        prompt: 'Game screen with epic moment: explosion of effects, bright flashes, combo counter, dynamic HUD interface, dark background with neon accents, gaming montage format',
         style: 'cinematic',
         duration: 10,
       },
       {
-        label: 'Фейл/Вин',
-        prompt: 'Смешной или впечатляющий момент: стоп-кадр с увеличением, красная рамка "FAIL" или золотая "WIN", на фоне замедленная съёмка ключевого действия, игровая стилистика',
+        label: 'Fail/Win',
+        prompt: 'Funny or impressive moment: freeze frame with zoom, red "FAIL" or gold "WIN" frame, slow-motion key action in background, gaming aesthetics',
         style: 'cinematic',
         duration: 8,
       },
       {
-        label: 'Аутро',
-        prompt: 'Игровое аутро: неоновый текст "GG" с рейтингом матча, статистика по центру, вокруг частицы и эффекты, тёмно-фиолетовый фон с кибер-стилистикой',
+        label: 'Outro',
+        prompt: 'Gaming outro: neon "GG" text with match rating, stats in center, particles and effects around, dark purple background with cyber aesthetics',
         style: 'cinematic',
         duration: 7,
       },
@@ -391,35 +391,35 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 11. News ─────────────────────────────────────────── */
   {
     id: 'news',
-    name: 'Новостной выпуск',
+    name: 'News Report',
     nameEn: 'News Segment',
-    description: 'Заголовок, детали, анализ, итог — 4 сцены',
+    description: 'Headline, details, analysis, summary — 4 scenes',
     descriptionEn: 'Headline + details + analysis + summary — 4 scenes',
     category: 'business',
     icon: '\uD83D\uDCF0',
     sceneCount: 4,
     scenes: [
       {
-        label: 'Заголовок',
-        prompt: 'Срочные новости: красная плашка "BREAKING NEWS" анимируется в верхней части экрана, крупный заголовок появляется по центру, профессиональный новостной дизайн, синий фон',
+        label: 'Headline',
+        prompt: 'Breaking news: red "BREAKING NEWS" banner animates at top of screen, large headline appears in center, professional news design, blue background',
         style: 'motion-graphics',
         duration: 5,
       },
       {
-        label: 'Детали',
-        prompt: 'Подробности новости: карта или фото на фоне, информационная плашка внизу экрана с бегущей строкой, боковая панель с ключевыми фактами, новостная стилистика',
+        label: 'Details',
+        prompt: 'News details: map or photo in background, info bar at bottom with scrolling text, side panel with key facts, news aesthetics',
         style: 'motion-graphics',
         duration: 15,
       },
       {
-        label: 'Анализ',
-        prompt: 'Аналитическая графика: диаграммы и графики показывают тренды, стрелки указывают на ключевые данные, разделённый экран с цифрами и процентами, деловой стиль',
+        label: 'Analysis',
+        prompt: 'Analytical graphics: charts and graphs show trends, arrows point to key data, split screen with numbers and percentages, business style',
         style: 'motion-graphics',
         duration: 12,
       },
       {
-        label: 'Итог',
-        prompt: 'Заключение выпуска: три основных вывода в колонках, внизу дата и источник, фирменная плашка канала, призыв подписаться на новости, строгий профессиональный дизайн',
+        label: 'Summary',
+        prompt: 'Closing: three main takeaways in columns, date and source below, channel branding, subscribe call, strict professional design',
         style: 'motion-graphics',
         duration: 8,
       },
@@ -430,35 +430,35 @@ export const TEMPLATES: ProjectTemplate[] = [
   /* ── 12. Recipe ───────────────────────────────────────── */
   {
     id: 'recipe',
-    name: 'Рецепт',
+    name: 'Recipe',
     nameEn: 'Recipe',
-    description: 'Кулинарный рецепт: ингредиенты, шаги, результат, подача — 4 сцены',
+    description: 'Cooking recipe: ingredients, steps, result, plating — 4 scenes',
     descriptionEn: 'Recipe: ingredients + steps + result + serve — 4 scenes',
     category: 'education',
     icon: '\uD83C\uDF73',
     sceneCount: 4,
     scenes: [
       {
-        label: 'Ингредиенты',
-        prompt: 'Красивая раскладка ингредиентов на мраморной столешнице: овощи, специи, масла разложены в аккуратных мисочках, вид сверху, мягкий дневной свет, food-фотография',
+        label: 'Ingredients',
+        prompt: 'Beautiful ingredient layout on marble countertop: vegetables, spices, oils arranged in neat bowls, top view, soft daylight, food photography',
         style: 'realistic',
         duration: 8,
       },
       {
-        label: 'Готовка',
-        prompt: 'Процесс приготовления: руки шефа нарезают ингредиенты на деревянной доске, на сковороде что-то шипит, пар поднимается, тёплый свет, уютная кухня, детальные крупные планы',
+        label: 'Cooking',
+        prompt: 'Cooking process: chef hands chopping ingredients on wooden board, something sizzling in the pan, steam rising, warm light, cozy kitchen, detailed close-ups',
         style: 'realistic',
         duration: 20,
       },
       {
-        label: 'Результат',
-        prompt: 'Готовое блюдо: красивая подача на тарелке, гарнир, соус, зелень, идеальная food-стилистика, мягкий боковой свет, лёгкий пар от горячего блюда, аппетитные цвета',
+        label: 'Result',
+        prompt: 'Finished dish: beautiful plating on plate, garnish, sauce, herbs, perfect food styling, soft side light, slight steam from hot dish, appetizing colors',
         style: 'realistic',
         duration: 8,
       },
       {
-        label: 'Подача',
-        prompt: 'Сервировка и наслаждение: стол накрыт, руки берут приборы, первый кусочек на вилке, довольное выражение, тёплая домашняя атмосфера, мягкий фокус на заднем плане',
+        label: 'Plating',
+        prompt: 'Table setting and enjoyment: table is set, hands pick up utensils, first bite on fork, pleased expression, warm home atmosphere, soft focus in background',
         style: 'realistic',
         duration: 8,
       },
@@ -490,7 +490,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
 export const CATEGORY_INFO: Record<TemplateCategory, { name: string; nameEn: string; color: string }> = {
   youtube:   { name: 'YouTube',      nameEn: 'YouTube',    color: '#ff0000' },
   shorts:    { name: 'Shorts',       nameEn: 'Shorts',     color: '#ff6b35' },
-  social:    { name: 'Соцсети',      nameEn: 'Social',     color: '#e91e8c' },
-  business:  { name: 'Бизнес',       nameEn: 'Business',   color: '#2563eb' },
-  education: { name: 'Обучение',     nameEn: 'Education',  color: '#16a34a' },
+  social:    { name: 'Social',      nameEn: 'Social',     color: '#e91e8c' },
+  business:  { name: 'Business',       nameEn: 'Business',   color: '#2563eb' },
+  education: { name: 'Education',     nameEn: 'Education',  color: '#16a34a' },
 };

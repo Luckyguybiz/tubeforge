@@ -78,7 +78,7 @@ export const assetRouter = router({
           if (currentCount >= maxAssets) {
             throw new TRPCError({
               code: 'FORBIDDEN',
-              message: `Достигнут лимит загрузок для плана ${plan} (${maxAssets}). Перейдите на более высокий тариф.`,
+              message: `Upload limit reached for ${plan} plan (${maxAssets}). Please upgrade to a higher plan.`,
             });
           }
         }
@@ -111,7 +111,7 @@ export const assetRouter = router({
           select: { id: true },
         });
         if (!folder) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Папка назначения не найдена' });
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Destination folder not found' });
         }
       }
 

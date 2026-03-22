@@ -5,15 +5,15 @@ import { z } from 'zod';
 export const createProjectSchema = z.object({
   title: z
     .string()
-    .min(1, 'Название обязательно')
-    .max(100, 'Название должно быть не длиннее 100 символов'),
+    .min(1, 'Title is required')
+    .max(100, 'Title must be 100 characters or less'),
   description: z
     .string()
-    .max(5000, 'Описание должно быть не длиннее 5 000 символов')
+    .max(5000, 'Description must be 5,000 characters or less')
     .optional(),
   tags: z
     .array(z.string().max(50))
-    .max(30, 'Максимум 30 тегов')
+    .max(30, 'Maximum 30 tags')
     .optional(),
 });
 
@@ -22,19 +22,19 @@ export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export const updateProjectSchema = z.object({
   title: z
     .string()
-    .min(1, 'Название обязательно')
-    .max(100, 'Название должно быть не длиннее 100 символов')
+    .min(1, 'Title is required')
+    .max(100, 'Title must be 100 characters or less')
     .optional(),
   description: z
     .string()
-    .max(5000, 'Описание должно быть не длиннее 5 000 символов')
+    .max(5000, 'Description must be 5,000 characters or less')
     .optional(),
   tags: z
     .array(z.string().max(50))
-    .max(30, 'Максимум 30 тегов')
+    .max(30, 'Maximum 30 tags')
     .optional(),
   status: z.enum(['draft', 'published', 'archived']).optional(),
-  thumbnailUrl: z.string().url('Некорректный URL обложки').optional(),
+  thumbnailUrl: z.string().url('Invalid thumbnail URL').optional(),
 });
 
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
@@ -44,8 +44,8 @@ export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export const generateAISchema = z.object({
   prompt: z
     .string()
-    .min(1, 'Промпт обязателен')
-    .max(2000, 'Промпт должен быть не длиннее 2 000 символов'),
+    .min(1, 'Prompt is required')
+    .max(2000, 'Prompt must be 2,000 characters or less'),
   style: z
     .enum([
       'realistic',
@@ -59,12 +59,12 @@ export const generateAISchema = z.object({
   count: z
     .number()
     .int()
-    .min(1, 'Минимум 1 вариант')
-    .max(6, 'Максимум 6 вариантов')
+    .min(1, 'At least 1 variant required')
+    .max(6, 'Maximum 6 variants')
     .optional()
     .default(4),
   preserveText: z.boolean().optional().default(true),
-  referenceImageUrl: z.string().url('Некорректный URL референса').optional(),
+  referenceImageUrl: z.string().url('Invalid reference URL').optional(),
 });
 
 export type GenerateAIInput = z.infer<typeof generateAISchema>;
@@ -74,20 +74,20 @@ export type GenerateAIInput = z.infer<typeof generateAISchema>;
 export const updateProfileSchema = z.object({
   name: z
     .string()
-    .min(1, 'Имя обязательно')
-    .max(60, 'Имя должно быть не длиннее 60 символов')
+    .min(1, 'Name is required')
+    .max(60, 'Name must be 60 characters or less')
     .optional(),
   bio: z
     .string()
-    .max(500, 'Биография должна быть не длиннее 500 символов')
+    .max(500, 'Bio must be 500 characters or less')
     .optional(),
-  avatarUrl: z.string().url('Некорректный URL аватара').optional(),
+  avatarUrl: z.string().url('Invalid avatar URL').optional(),
   channelUrl: z
     .string()
-    .url('Некорректный URL канала')
+    .url('Invalid channel URL')
     .regex(
       /youtube\.com|youtu\.be/,
-      'Укажите корректный URL YouTube-канала',
+      'Please enter a valid YouTube channel URL',
     )
     .optional(),
 });

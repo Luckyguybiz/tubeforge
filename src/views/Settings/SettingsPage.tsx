@@ -1882,7 +1882,7 @@ export function SettingsPage() {
       {plan === 'STUDIO' && (
         <div style={sectionStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>AI Голос</h2>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.aiVoice.title')}</h2>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
               background: `${C.purple}15`, color: C.purple,
@@ -1891,7 +1891,7 @@ export function SettingsPage() {
             </span>
           </div>
           <p style={sectionDescStyle}>
-            Клонирование голоса и озвучка с помощью ИИ. Создайте уникальный голос для вашего канала.
+            {t('settings.aiVoice.description')}
           </p>
 
           <div style={{
@@ -1917,10 +1917,10 @@ export function SettingsPage() {
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-                  Клонирование голоса — скоро
+                  {t('settings.aiVoice.cloneTitle')}
                 </div>
                 <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
-                  Загрузите образец вашего голоса, и ИИ создаст озвучку для всех ваших видео.
+                  {t('settings.aiVoice.cloneDescription')}
                 </div>
               </div>
             </div>
@@ -1940,7 +1940,7 @@ export function SettingsPage() {
                 <line x1="12" y1="16" x2="12" y2="12"/>
                 <line x1="12" y1="8" x2="12.01" y2="8"/>
               </svg>
-              Мы работаем над интеграцией с ElevenLabs. Функция будет доступна в ближайшем обновлении.
+              {t('settings.aiVoice.integrationNote')}
             </div>
           </div>
         </div>
@@ -2962,12 +2962,13 @@ function ApiKeysSection({
 
 /** Z3: Voice clone status badge — checks ElevenLabs API key on server */
 function VoiceCloneStatusBadge({ C }: { C: Theme }) {
+  const t = useLocaleStore((s) => s.t);
   const status = trpc.ai.checkVoiceCloneStatus.useQuery(undefined, { retry: false });
   if (status.isLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.bg, borderRadius: 8 }}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', border: '2px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
-        <span style={{ fontSize: 12, color: C.dim }}>Проверка...</span>
+        <span style={{ fontSize: 12, color: C.dim }}>{t('settings.aiVoice.checking')}</span>
       </div>
     );
   }
@@ -2975,14 +2976,14 @@ function VoiceCloneStatusBadge({ C }: { C: Theme }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: `${C.green}0a`, borderRadius: 8, border: `1px solid ${C.green}25` }}>
         <span style={{ fontSize: 14, color: C.green }}>&#10003;</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: C.green }}>API подключён</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.green }}>{t('settings.aiVoice.apiConnected')}</span>
       </div>
     );
   }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: C.bg, borderRadius: 8, border: `1px solid ${C.border}` }}>
       <span style={{ fontSize: 14, color: C.dim }}>&#9679;</span>
-      <span style={{ fontSize: 12, color: C.sub }}>Для активации свяжитесь с поддержкой</span>
+      <span style={{ fontSize: 12, color: C.sub }}>{t('settings.aiVoice.contactSupport')}</span>
     </div>
   );
 }

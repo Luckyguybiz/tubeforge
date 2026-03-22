@@ -50,7 +50,7 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
     select: { role: true },
   });
   if (user?.role !== 'ADMIN') {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Требуются права администратора' });
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin privileges required' });
   }
   return next({ ctx });
 });

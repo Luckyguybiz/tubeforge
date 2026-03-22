@@ -196,9 +196,9 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        toast.success('SRT файл скачан!');
+        toast.success(t('editor.captions.downloaded'));
       } else {
-        toast.error('Не удалось сгенерировать субтитры');
+        toast.error(t('editor.captions.generateFailed'));
       }
     },
     onError: (err: { message: string }) => toast.error(err.message),
@@ -585,13 +585,13 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                 duration: s.duration,
               }));
               if (scenesData.length === 0) {
-                toast.info('Нет текста сцен для генерации субтитров');
+                toast.info(t('editor.captions.noText'));
                 return;
               }
               generateCaptions.mutate({ scenes: scenesData });
             }}
             disabled={generateCaptions.isPending || scenes.length === 0}
-            title="Сгенерировать и скачать субтитры (.SRT)"
+            title={t('editor.captions.generateAndDownload')}
             style={{
               padding: '9px 18px', minHeight: 44, borderRadius: 10, border: `1px solid ${C.border}`,
               background: 'transparent', color: scenes.length > 0 && !generateCaptions.isPending ? C.text : C.dim,
@@ -606,7 +606,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
             {generateCaptions.isPending ? (
               <>
                 <span style={{ width: 12, height: 12, borderRadius: '50%', border: `2px solid ${C.dim}44`, borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block' }} />
-                Генерация...
+                {t('editor.captions.generating')}
               </>
             ) : (
               <>
@@ -614,7 +614,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
                   <path d="M7 15h4m-4-3h10"/>
                 </svg>
-                Скачать .SRT
+                {t('editor.captions.downloadSrt')}
               </>
             )}
           </button>

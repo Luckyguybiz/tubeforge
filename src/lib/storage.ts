@@ -124,7 +124,7 @@ export async function downloadAndStore(
   validateExternalUrl(url);
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Не удалось скачать файл: ${res.statusText}`);
+  if (!res.ok) throw new Error(`Failed to download file: ${res.statusText}`);
 
   // Check Content-Length before downloading (if provided)
   const contentLength = res.headers.get('content-length');
