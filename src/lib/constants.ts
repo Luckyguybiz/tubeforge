@@ -1,26 +1,26 @@
 import type { Theme, Model, StatusInfo, NavItem, StatItem, VideoItem, ColorKey } from './types';
 
 export const dark: Theme = {
-  bg: '#06060b',
-  surface: '#0c0c14',
-  card: '#111119',
-  cardHover: '#17171f',
-  border: '#1e1e2e',
-  borderActive: '#2e2e44',
-  accent: '#ff2d55',
-  accentDim: 'rgba(255,45,85,.1)',
-  blue: '#3a7bfd',
-  green: '#2dd4a0',
+  bg: '#0a0a0a',           // Primary dark bg (near-black)
+  surface: '#141414',       // Slightly elevated surface
+  card: '#1a1a1a',          // Card backgrounds
+  cardHover: '#222222',     // Card hover state
+  border: 'rgba(255,255,255,0.08)',     // Subtle borders
+  borderActive: 'rgba(255,255,255,0.16)', // Active borders
+  accent: '#6366f1',        // Indigo accent (keep TubeForge brand)
+  accentDim: 'rgba(99,102,241,0.1)',
+  blue: '#3b82f6',
+  green: '#10b981',
   purple: '#8b5cf6',
   orange: '#f59e0b',
   cyan: '#06b6d4',
   pink: '#ec4899',
   red: '#ef4444',
-  text: '#e8e8f0',
-  sub: '#8d8da6',
-  dim: '#44445a',
-  overlay: 'rgba(0,0,0,.4)',
-  overlayLight: 'rgba(0,0,0,.5)',
+  text: '#ffffff',          // Pure white text
+  sub: 'rgba(255,255,255,0.5)',  // 50% white for secondary
+  dim: 'rgba(255,255,255,0.2)',  // 20% white for disabled
+  overlay: 'rgba(0,0,0,0.6)',
+  overlayLight: 'rgba(0,0,0,0.8)',
 };
 
 export const light: Theme = {
@@ -94,8 +94,8 @@ export const CANVAS_H = 720;
 
 /* ── Canvas defaults ──────────────────────────────── */
 
-export const CANVAS_DEFAULT_BG = '#0c0c14';
-export const CANVAS_DEFAULT_DRAW_COLOR = '#ff2d55';
+export const CANVAS_DEFAULT_BG = '#141414';
+export const CANVAS_DEFAULT_DRAW_COLOR = '#6366f1';
 export const CANVAS_DEFAULT_DRAW_SIZE = 3;
 export const CANVAS_ZOOM_MIN = 0.25;
 export const CANVAS_ZOOM_MAX = 3;

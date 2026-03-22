@@ -32,9 +32,9 @@ const CYCLE: ThemeMode[] = ['dark', 'light', 'system'];
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      mode: 'light',
-      isDark: false,
-      theme: light,
+      mode: 'dark',
+      isDark: true,
+      theme: dark,
       setMode: (mode) => {
         const resolved = resolveIsDark(mode);
         set({ mode, isDark: resolved, theme: resolved ? dark : light });
