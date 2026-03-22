@@ -238,10 +238,44 @@ async function runTranslationPipeline(
     job.status = 'merging';
     job.progress = 88;
 
-    await execAsync(
-      `ffmpeg -y -i "${inputPath}" -i "${ttsPath}" -c:v copy -map 0:v:0 -map 1:a:0 -shortest "${outputPath}"`,
-      { timeout: 120000 },
+    // Get original video duration and TTS audio duration
+    const { stdout: videoDurStr } = await execAsync(
+      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputPath}"`,
     );
+    const { stdout: ttsDurStr } = await execAsync(
+      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${ttsPath}"`,
+    );
+    const videoDur = parseFloat(videoDurStr.trim()) || 0;
+    const ttsDur = parseFloat(ttsDurStr.trim()) || 0;
+
+    log.info('Duration comparison', { jobId, videoDur, ttsDur });
+
+    // If TTS is significantly shorter/longer than video, use atempo to match
+    let mergeCmd: string;
+    if (ttsDur > 0 && videoDur > 0 && Math.abs(videoDur - ttsDur) / videoDur > 0.1) {
+      // Speed ratio: if video is 60s and TTS is 30s, ratio = 0.5 (slow down TTS to 50% speed)
+      const ratio = ttsDur / videoDur;
+      // atempo filter accepts 0.5 to 100.0 — chain multiple if needed
+      let atempoFilter: string;
+      if (ratio >= 0.5 && ratio <= 2.0) {
+        atempoFilter = `atempo=${ratio.toFixed(4)}`;
+      } else if (ratio < 0.5) {
+        // Chain two atempo filters for extreme slowdown
+        const sqrtRatio = Math.sqrt(ratio);
+        atempoFilter = `atempo=${sqrtRatio.toFixed(4)},atempo=${sqrtRatio.toFixed(4)}`;
+      } else {
+        // ratio > 2.0 — chain two for speedup
+        const sqrtRatio = Math.sqrt(ratio);
+        atempoFilter = `atempo=${sqrtRatio.toFixed(4)},atempo=${sqrtRatio.toFixed(4)}`;
+      }
+      mergeCmd = `ffmpeg -y -i "${inputPath}" -i "${ttsPath}" -filter_complex "[1:a]${atempoFilter}[aout]" -map 0:v:0 -map "[aout]" -c:v copy -shortest "${outputPath}"`;
+      log.info('Using atempo adjustment', { jobId, ratio, atempoFilter });
+    } else {
+      // Durations are close enough — merge directly
+      mergeCmd = `ffmpeg -y -i "${inputPath}" -i "${ttsPath}" -c:v copy -map 0:v:0 -map 1:a:0 -shortest "${outputPath}"`;
+    }
+
+    await execAsync(mergeCmd, { timeout: 120000 });
 
     const outputStat = await stat(outputPath);
     log.info('Video merged', { jobId, outputSize: outputStat.size });
