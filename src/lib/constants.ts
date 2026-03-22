@@ -189,6 +189,11 @@ export const PLAN_LIMITS = {
     teamMembers: 0,        // no team on FREE
     storageMB: 500,        // 500 MB
     storageBytes: 500 * 1024 * 1024,
+    videoTranslations: 1,      // 1 translation per month
+    ttsGenerations: 3,         // 3 TTS voiceovers per month
+    imageGenerations: 5,       // 5 AI images per month
+    maxVideoLengthSec: 60,     // 1 min max video for translation
+    youtubeAnalyses: 5,        // 5 analyses per day
   },
   PRO: {
     projects: 25,
@@ -197,6 +202,11 @@ export const PLAN_LIMITS = {
     teamMembers: 0,        // no team on PRO
     storageMB: 5120,       // 5 GB
     storageBytes: 5 * 1024 * 1024 * 1024,
+    videoTranslations: 20,     // 20 translations per month
+    ttsGenerations: 50,        // 50 TTS per month
+    imageGenerations: 100,     // 100 AI images per month
+    maxVideoLengthSec: 600,    // 10 min max video
+    youtubeAnalyses: 50,       // 50 analyses per day
   },
   STUDIO: {
     projects: Infinity,
@@ -205,14 +215,26 @@ export const PLAN_LIMITS = {
     teamMembers: 10,       // 10 team members
     storageMB: 51200,      // 50 GB
     storageBytes: 50 * 1024 * 1024 * 1024,
+    videoTranslations: 100,    // 100 translations per month
+    ttsGenerations: 200,       // 200 TTS per month
+    imageGenerations: Infinity,
+    maxVideoLengthSec: 1800,   // 30 min max video
+    youtubeAnalyses: Infinity, // unlimited analyses per day
   },
-} as const;
+};
 
 export type PlanName = keyof typeof PLAN_LIMITS;
 
 export function getPlanLimits(plan: string) {
   return PLAN_LIMITS[plan as PlanName] ?? PLAN_LIMITS.FREE;
 }
+
+export type ToolLimitKey = 'videoTranslations' | 'ttsGenerations' | 'youtubeAnalyses' | 'imageGenerations';
+
+export function getToolLimit(plan: string, tool: ToolLimitKey): number {
+  return getPlanLimits(plan)[tool];
+}
+
 
 /* ── API endpoint base URLs ─────────────────────────── */
 

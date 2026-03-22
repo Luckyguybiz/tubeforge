@@ -314,6 +314,18 @@ function getTools(t: (key: string) => string): ToolDef[] {
     gradient: ['#8b5cf6', '#ec4899'],
   },
 
+  {
+    id: 'ai-thumbnail-editor',
+    name: 'AI Thumbnail Editor',
+    subtitle: 'GPT-4o Vision · DALL-E 3',
+    description: 'Generate, recreate, edit and analyze YouTube thumbnails with AI. CTR scoring and style transfer.',
+    category: 'ai',
+    route: '/tools/ai-thumbnail-editor',
+    available: true,
+    badge: 'NEW',
+    gradient: ['#f43f5e', '#ec4899'],
+  },
+
   /* ── Coming Soon ───────────────────────────────────── */
   {
     id: 'scenario',
@@ -566,6 +578,7 @@ const TOOL_ICONS: Record<string, (color: string) => React.ReactNode> = {
       <circle cx="9" cy="9" r="5" /><circle cx="15" cy="15" r="5" /><path d="M16 8l2-2 2 2" /><path d="M8 16l-2 2-2-2" />
     </svg>
   ),
+  'ai-thumbnail-editor': (c: string) => (    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">      <rect x="2" y="4" width="20" height="14" rx="2" /><path d="M12 2l2 4-2 2-2-2z" /><circle cx="8" cy="11" r="2" /><path d="M14 9h4" /><path d="M14 13h4" />    </svg>  ),
 };
 
 /* ═══════════════════════════════════════════════════════════════════

@@ -12,6 +12,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { randomUUID } from 'crypto';
 import OpenAI from 'openai';
+import { getPlanLimits } from '@/lib/constants';
 
 const execAsync = promisify(exec);
 const log = createLogger('video-translate');
@@ -433,6 +434,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
+
+    // ── Plan usage check ────────────────────────────────────────
+    const user = await db.user.findUnique({
+      where: { id: session.user.id! },
+      select: { plan: true },
+    });
+    const plan = user?.plan ?? 'FREE';
+    const limits = getPlanLimits(plan);
+
+    // Check monthly translation usage
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const translationCount = await db.auditLog.count({
+      where: {
+        userId: session.user.id!,
+        action: 'TOOL_USAGE',
+        target: 'video-translate',
+        createdAt: { gte: monthStart },
+      },
+    });
+
+    if (translationCount >= limits.videoTranslations) {
+      return NextResponse.json(
+        { error: 'Translation limit reached. Upgrade for more.', code: 'LIMIT_REACHED', limit: limits.videoTranslations, used: translationCount },
+        { status: 403 },
+      );
+    }
+
     // Create job
     const jobId = randomUUID();
     const jobDir = join(TEMP_DIR, jobId);
@@ -463,6 +494,30 @@ export async function POST(req: NextRequest) {
         const dlBuf = Buffer.from(await dlRes.arrayBuffer());
         await writeFile(inputPath, dlBuf);
       }
+    }
+
+
+    // ── Check video duration against plan limit ─────────────────
+    try {
+      const { stdout: durationStr } = await execAsync(
+        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputPath}"`,
+        { timeout: 30000 },
+      );
+      const durationSec = parseFloat(durationStr.trim());
+      if (!isNaN(durationSec) && durationSec > limits.maxVideoLengthSec) {
+        return NextResponse.json(
+          {
+            error: `Video too long (${Math.ceil(durationSec)}s). Your plan allows up to ${limits.maxVideoLengthSec}s. Upgrade for longer videos.`,
+            code: 'VIDEO_TOO_LONG',
+            durationSec: Math.ceil(durationSec),
+            maxDurationSec: limits.maxVideoLengthSec,
+          },
+          { status: 403 },
+        );
+      }
+    } catch (probeErr) {
+      log.warn('Failed to probe video duration', { jobId, error: String(probeErr) });
+      // Non-blocking: allow processing if probe fails
     }
 
     // Register job

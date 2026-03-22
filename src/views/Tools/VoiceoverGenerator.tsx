@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { trpc } from '@/lib/trpc';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const MAX_CHARS = 5000;
@@ -42,6 +43,13 @@ export function VoiceoverGenerator() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [downloadHover, setDownloadHover] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Fetch tool usage limits
+  const { data: usage, refetch: refetchUsage } = trpc.user.getToolUsage.useQuery(undefined, {
+    staleTime: 30_000,
+  });
+  const ttsRemaining = usage ? Math.max(0, usage.tts.limit - usage.tts.used) : null;
+  const ttsLimitReached = usage ? usage.tts.used >= usage.tts.limit : false;
 
   const AI_VOICES = [
     { id: 'alloy', label: 'Alloy' },
@@ -170,6 +178,7 @@ export function VoiceoverGenerator() {
       audio.onended = () => { setIsPlaying(false); setIsSpeaking(false); };
       audio.onerror = () => { setIsPlaying(false); setIsSpeaking(false); };
       audio.play();
+      refetchUsage();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'AI voice generation failed';
       setError(msg);
@@ -193,6 +202,22 @@ export function VoiceoverGenerator() {
       subtitle={t('tools.voiceover.subtitle')}
       gradient={['#3b82f6', '#6366f1']}
     >
+      {/* TTS Usage Banner */}
+      {usage && ttsMode === 'ai' && (
+        <div style={{
+          padding: '10px 14px', borderRadius: 10, marginBottom: 16,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: ttsLimitReached ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
+          border: `1px solid ${ttsLimitReached ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.15)'}`,
+        }}>
+          <span style={{ fontSize: 12, color: C.sub }}>
+            {ttsLimitReached
+              ? 'AI voice limit reached this month.'
+              : `${ttsRemaining} AI voice generation${ttsRemaining === 1 ? '' : 's'} remaining this month.`}
+          </span>
+        </div>
+      )}
+
       {/* ── TTS Mode Toggle ── */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {(['browser', 'ai'] as const).map((mode) => (
@@ -405,7 +430,7 @@ export function VoiceoverGenerator() {
             label={aiLoading ? (t('tools.voiceover.generating') || 'Generating...') : (t('tools.voiceover.generateAi') || 'Generate AI Voice')}
             gradient={['#6366f1', '#8b5cf6']}
             onClick={handleAiGenerate}
-            disabled={!text.trim() || aiLoading}
+            disabled={!text.trim() || aiLoading || ttsLimitReached}
             loading={aiLoading}
           />
         ) : (

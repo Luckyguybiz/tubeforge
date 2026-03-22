@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server';
 import Stripe from 'stripe';
 import { env } from '@/lib/env';
 import { rateLimit } from '@/lib/rate-limit';
-import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
 import { removePeerFromServer } from '@/lib/wireguard';
 
@@ -36,6 +36,54 @@ export const userRouter = router({
         _count: { select: { projects: true } },
       },
     });
+  }),
+
+
+  getToolUsage: protectedProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { plan: true },
+    });
+    const plan = user?.plan ?? 'FREE';
+    const limits = getPlanLimits(plan);
+
+    const [translations, tts, analyses] = await Promise.all([
+      ctx.db.auditLog.count({
+        where: {
+          userId: ctx.session.user.id,
+          action: 'TOOL_USAGE',
+          target: 'video-translate',
+          createdAt: { gte: monthStart },
+        },
+      }),
+      ctx.db.auditLog.count({
+        where: {
+          userId: ctx.session.user.id,
+          action: 'TOOL_USAGE',
+          target: 'tts',
+          createdAt: { gte: monthStart },
+        },
+      }),
+      ctx.db.auditLog.count({
+        where: {
+          userId: ctx.session.user.id,
+          action: 'TOOL_USAGE',
+          target: 'youtube-analyzer',
+          createdAt: { gte: dayStart },
+        },
+      }),
+    ]);
+
+    return {
+      translations: { used: translations, limit: limits.videoTranslations, period: 'month' as const },
+      tts: { used: tts, limit: limits.ttsGenerations, period: 'month' as const },
+      analyses: { used: analyses, limit: limits.youtubeAnalyses, period: 'day' as const },
+      plan,
+    };
   }),
 
   completeOnboarding: protectedProcedure.mutation(async ({ ctx }) => {

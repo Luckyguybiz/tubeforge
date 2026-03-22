@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { trpc } from '@/lib/trpc';
 
 /* ── Helpers ──────────────────────────────────────────────────── */
 
@@ -98,6 +99,13 @@ export function YoutubeDownloader() {
   const t = useLocaleStore((s) => s.t);
   const router = useRouter();
 
+  // Fetch tool usage limits
+  const { data: usage } = trpc.user.getToolUsage.useQuery(undefined, {
+    staleTime: 30_000,
+  });
+  const analysesRemaining = usage ? Math.max(0, usage.analyses.limit - usage.analyses.used) : null;
+  const analysisLimitReached = usage ? usage.analyses.used >= usage.analyses.limit : false;
+
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +143,10 @@ export function YoutubeDownloader() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     try {
+      if (analysisLimitReached) {
+        setError('Daily analysis limit reached. Upgrade your plan for more.');
+        return;
+      }
       const res = await fetch('/api/tools/youtube-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

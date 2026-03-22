@@ -5,6 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { createLogger } from '@/lib/logger';
 
 import { db } from '@/server/db';
+import { getPlanLimits } from '@/lib/constants';
 
 const ytLog = createLogger('youtube-analyzer');
 
@@ -1150,6 +1151,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
       { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
+  }
+
+  // ── Plan usage check: daily YouTube analysis limit ──────────
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { plan: true },
+  });
+  const plan = user?.plan ?? 'FREE';
+  const limits = getPlanLimits(plan);
+
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+
+  const analysisCount = await db.auditLog.count({
+    where: {
+      userId: session.user.id,
+      action: 'TOOL_USAGE',
+      target: 'youtube-analyzer',
+      createdAt: { gte: dayStart },
+    },
+  });
+
+  if (analysisCount >= limits.youtubeAnalyses) {
+    return NextResponse.json(
+      {
+        error: 'Daily analysis limit reached. Upgrade your plan for more.',
+        code: 'LIMIT_REACHED',
+        limit: limits.youtubeAnalyses,
+        used: analysisCount,
+      },
+      { status: 403 },
     );
   }
 

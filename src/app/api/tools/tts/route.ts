@@ -3,6 +3,7 @@ import { db } from '@/server/db';
 import { rateLimit } from '@/lib/rate-limit';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getPlanLimits } from '@/lib/constants';
 
 const ttsSchema = z.object({
   text: z.string().min(1).max(5000),
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // Plan check: FREE users limited to 3 TTS requests per day
+  // Plan check: enforce monthly TTS limits per plan
   const user = await db.user.findUnique({
     where: { id: session.user.id },
     select: { plan: true },
@@ -48,21 +49,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  if (user.plan === 'FREE') {
-    const dailyRl = await rateLimit({
-      identifier: `tts-daily:${session.user.id}`,
-      limit: 3,
-      window: 86400,
-    });
-    if (!dailyRl.success) {
-      return NextResponse.json(
-        {
-          error:
-            'Free plan limit reached (3 per day). Upgrade to PRO or STUDIO for unlimited TTS.',
-        },
-        { status: 429 },
-      );
-    }
+  const limits = getPlanLimits(user.plan ?? 'FREE');
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const ttsCount = await db.auditLog.count({
+    where: {
+      userId: session.user.id,
+      action: 'TOOL_USAGE',
+      target: 'tts',
+      createdAt: { gte: monthStart },
+    },
+  });
+
+  if (ttsCount >= limits.ttsGenerations) {
+    return NextResponse.json(
+      {
+        error: 'TTS limit reached for this month. Upgrade your plan for more.',
+        code: 'LIMIT_REACHED',
+        limit: limits.ttsGenerations,
+        used: ttsCount,
+      },
+      { status: 403 },
+    );
   }
 
   try {
@@ -112,6 +123,26 @@ export async function POST(req: Request) {
     }
 
     const audioBuffer = await response.arrayBuffer();
+
+    // Log TTS usage for plan limit tracking
+    try {
+      await db.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: 'TOOL_USAGE',
+          target: 'tts',
+          metadata: {
+            tool: 'tts',
+            voice,
+            model,
+            textLength: text.length,
+          },
+        },
+      });
+    } catch {
+      // Non-blocking: don't fail the request if audit log fails
+    }
+
     return new NextResponse(audioBuffer, {
       headers: {
         'Content-Type': 'audio/mpeg',
