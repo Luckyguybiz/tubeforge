@@ -51,6 +51,10 @@ export default function TermsPage() {
           паролей — аутентификация происходит через протокол OAuth 2.0.
         </p>
         <p style={paraStyle}>
+          You must be at least 13 years old to use TubeForge. In jurisdictions where parental consent
+          is required, the minimum age is 16.
+        </p>
+        <p style={paraStyle}>
           При создании аккаунта вы обязуетесь:
         </p>
         <ul style={listStyle}>
@@ -78,11 +82,11 @@ export default function TermsPage() {
             функционалом
           </li>
           <li>
-            <strong style={{ color: C.text }}>Pro (990 &#8381;/мес):</strong> расширенный функционал для
+            <strong style={{ color: C.text }}>Pro ($12/mo):</strong> расширенный функционал для
             индивидуальных авторов
           </li>
           <li>
-            <strong style={{ color: C.text }}>Studio (2490 &#8381;/мес):</strong> командный тариф с полным
+            <strong style={{ color: C.text }}>Studio ($30/mo):</strong> командный тариф с полным
             доступом ко всем инструментам
           </li>
         </ul>
@@ -105,6 +109,22 @@ export default function TermsPage() {
         <p style={paraStyle}>
           Если вы не удовлетворены сервисом, обратитесь в поддержку в течение 14 дней после оплаты
           для получения полного возврата.
+        </p>
+      </div>
+
+      {/* 3a. YouTube Terms of Service */}
+      <div style={sectionStyle}>
+        <h2 id="youtube-tos" style={headingStyle}>3a. YouTube Terms of Service</h2>
+        <p style={paraStyle}>
+          By using TubeForge&apos;s YouTube features (analytics, channel management, video tools), you agree
+          to the{' '}
+          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            YouTube Terms of Service
+          </a>.
+          Your use of YouTube data is also subject to the{' '}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            Google Privacy Policy
+          </a>.
         </p>
       </div>
 

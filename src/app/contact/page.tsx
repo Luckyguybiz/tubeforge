@@ -6,16 +6,16 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 
 const SUBJECTS = [
-  'Техническая поддержка',
-  'Вопрос по оплате',
-  'Партнёрство',
-  'Другое',
+  'Technical Support',
+  'Billing Question',
+  'Partnership',
+  'Other',
 ] as const;
 
 const RESPONSE_TIMES = [
-  { plan: 'FREE', time: '48 часов', color: '#6b6b82' },
-  { plan: 'PRO', time: '24 часа', color: '#3a7bfd' },
-  { plan: 'STUDIO', time: '4 часа', color: '#8b5cf6' },
+  { plan: 'FREE', time: '48 hours', color: '#6b6b82' },
+  { plan: 'PRO', time: '24 hours', color: '#3a7bfd' },
+  { plan: 'STUDIO', time: '4 hours', color: '#8b5cf6' },
 ];
 
 export default function ContactPage() {
@@ -31,14 +31,14 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !message.trim()) {
-      addToast('warning', 'Заполните все обязательные поля');
+      addToast('warning', 'Please fill in all required fields');
       return;
     }
     setSubmitting(true);
     // For now — log and show toast
     console.info('[Contact Form]', { name, email, subject, message });
     setTimeout(() => {
-      addToast('success', 'Спасибо! Мы ответим в течение 24 часов');
+      addToast('success', 'Thank you! We will respond within 24 hours');
       setName('');
       setEmail('');
       setSubject(SUBJECTS[0]);
@@ -113,16 +113,16 @@ export default function ContactPage() {
             fontWeight: 500,
           }}
         >
-          &larr; На главную
+          &larr; Home
         </Link>
       </header>
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px 64px' }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em', textAlign: 'center' }}>
-          Свяжитесь с нами
+          Contact Us
         </h1>
         <p style={{ color: C.sub, fontSize: 16, textAlign: 'center', marginTop: 8 }}>
-          Мы всегда рады помочь. Заполните форму или напишите на email.
+          We&apos;re always happy to help. Fill out the form or send us an email.
         </p>
 
         <div
@@ -137,12 +137,12 @@ export default function ContactPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
-              <label style={labelStyle}>Имя *</label>
+              <label style={labelStyle}>Name *</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ваше имя"
+                placeholder="Your name"
                 style={inputStyle}
                 required
               />
@@ -159,7 +159,7 @@ export default function ContactPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Тема</label>
+              <label style={labelStyle}>Subject</label>
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -173,11 +173,11 @@ export default function ContactPage() {
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Сообщение *</label>
+              <label style={labelStyle}>Message *</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Опишите ваш вопрос..."
+                placeholder="Describe your question..."
                 rows={6}
                 style={{ ...inputStyle, resize: 'vertical' }}
                 required
@@ -199,7 +199,7 @@ export default function ContactPage() {
                 transition: 'opacity .2s',
               }}
             >
-              {submitting ? 'Отправка...' : 'Отправить'}
+              {submitting ? 'Sending...' : 'Send'}
             </button>
           </form>
 
@@ -214,7 +214,7 @@ export default function ContactPage() {
                 padding: '24px',
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Контакты</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Contact Info</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
                   <div style={{ fontSize: 12, color: C.dim, marginBottom: 4, fontWeight: 500 }}>Email</div>
@@ -249,13 +249,13 @@ export default function ContactPage() {
               }}
             >
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
-                Часы работы
+                Office Hours
               </div>
               <p style={{ fontSize: 14, color: C.sub, margin: 0, lineHeight: 1.6 }}>
-                Пн — Пт, 9:00 — 18:00 UTC
+                Mon — Fri, 9:00 AM — 6:00 PM UTC
               </p>
               <p style={{ fontSize: 12, color: C.dim, margin: '8px 0 0', lineHeight: 1.5 }}>
-                В выходные и праздники мы обрабатываем запросы с задержкой. Срочные вопросы — пишите в Telegram.
+                On weekends and holidays, we process requests with a delay. For urgent matters, reach out via Telegram.
               </p>
             </div>
 
@@ -269,7 +269,7 @@ export default function ContactPage() {
               }}
             >
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>
-                Время ответа
+                Response Time
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {RESPONSE_TIMES.map((rt) => (
@@ -294,7 +294,7 @@ export default function ContactPage() {
                       {rt.plan}
                     </span>
                     <span style={{ fontSize: 14, color: C.sub, fontWeight: 500 }}>
-                      до {rt.time}
+                      up to {rt.time}
                     </span>
                   </div>
                 ))}
@@ -312,10 +312,10 @@ export default function ContactPage() {
               }}
             >
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
-                Быстрые ответы
+                Quick Answers
               </div>
               <p style={{ fontSize: 13, color: C.sub, marginBottom: 12 }}>
-                Возможно, ответ уже есть в центре помощи
+                The answer might already be in the help center
               </p>
               <Link
                 href="/help"
@@ -331,7 +331,7 @@ export default function ContactPage() {
                   transition: 'border-color .2s',
                 }}
               >
-                Центр помощи &rarr;
+                Help Center &rarr;
               </Link>
             </div>
           </div>

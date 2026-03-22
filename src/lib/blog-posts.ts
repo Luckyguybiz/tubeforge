@@ -13,371 +13,371 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    slug: 'kak-sozdat-youtube-kanal-2026',
-    title: 'Как создать YouTube канал в 2026 году: полный гайд',
+    slug: 'how-to-create-youtube-channel-2026',
+    title: 'How to Create a YouTube Channel in 2026: The Complete Guide',
     excerpt:
-      'Пошаговая инструкция по созданию YouTube канала с нуля: выбор ниши, оформление, SEO-оптимизация и первые шаги к монетизации.',
+      'A step-by-step guide to creating a YouTube channel from scratch: choosing a niche, branding, SEO optimization, and first steps toward monetization.',
     author: 'TubeForge',
     publishedAt: '2026-03-18',
     readingTime: 8,
-    category: 'Гайды',
-    tags: ['youtube', 'создание канала', 'гайд', 'seo', 'обложки'],
-    content: `<h2>Зачем создавать YouTube канал в 2026 году?</h2>
-<p>YouTube остаётся крупнейшей видеоплатформой в мире с более чем 2.5 миллиардами активных пользователей ежемесячно. Несмотря на конкуренцию со стороны TikTok и других платформ, YouTube по-прежнему предоставляет лучшие возможности для монетизации и долгосрочного роста аудитории. В 2026 году создание канала — это инвестиция в персональный бренд, которая может приносить доход годами.</p>
+    category: 'Guides',
+    tags: ['youtube', 'channel creation', 'guide', 'seo', 'thumbnails'],
+    content: `<h2>Why Create a YouTube Channel in 2026?</h2>
+<p>YouTube remains the world's largest video platform with over 2.5 billion monthly active users. Despite competition from TikTok and other platforms, YouTube still offers the best opportunities for monetization and long-term audience growth. In 2026, creating a channel is an investment in your personal brand that can generate income for years to come.</p>
 
-<h2>Шаг 1: Выбор ниши</h2>
-<p>Выбор правильной ниши — это фундамент успешного канала. Вот ключевые критерии:</p>
+<h2>Step 1: Choosing a Niche</h2>
+<p>Choosing the right niche is the foundation of a successful channel. Here are the key criteria:</p>
 <ul>
-<li><strong>Ваши компетенции</strong> — снимайте о том, в чём разбираетесь. Экспертность привлекает аудиторию и повышает доверие.</li>
-<li><strong>Спрос аудитории</strong> — проверьте, что людям интересна тема. Используйте Google Trends и YouTube Search Suggest для анализа.</li>
-<li><strong>Конкуренция</strong> — слишком перегретые ниши (например, «обзоры смартфонов») требуют больших вложений. Ищите поднишу, где вы сможете выделиться.</li>
-<li><strong>Монетизация</strong> — некоторые ниши (финансы, технологии, образование) имеют значительно более высокий CPM, чем развлекательный контент.</li>
+<li><strong>Your expertise</strong> — create content about what you know. Expertise attracts an audience and builds trust.</li>
+<li><strong>Audience demand</strong> — verify that people are interested in the topic. Use Google Trends and YouTube Search Suggest for analysis.</li>
+<li><strong>Competition</strong> — overly saturated niches (e.g., "smartphone reviews") require significant investment. Look for a sub-niche where you can stand out.</li>
+<li><strong>Monetization potential</strong> — some niches (finance, technology, education) have significantly higher CPM than entertainment content.</li>
 </ul>
-<blockquote>Совет: начните с пересечения вашей экспертизы и интересов аудитории. Канал о «финансах для фрилансеров» лучше, чем просто «про деньги».</blockquote>
+<blockquote>Tip: start at the intersection of your expertise and audience interest. A channel about "finances for freelancers" is better than just "about money."</blockquote>
 
-<h2>Шаг 2: Создание и оформление канала</h2>
-<p>Создайте Google-аккаунт (или используйте существующий) и перейдите на YouTube Studio. При оформлении канала обратите внимание на следующие элементы:</p>
+<h2>Step 2: Creating and Branding Your Channel</h2>
+<p>Create a Google account (or use an existing one) and go to YouTube Studio. When branding your channel, pay attention to these elements:</p>
 <ul>
-<li><strong>Название канала</strong> — должно быть запоминающимся, коротким и релевантным нише. Избегайте цифр и случайных символов.</li>
-<li><strong>Аватар</strong> — качественное фото или логотип, который хорошо выглядит в маленьком размере. Используйте <a href="/thumbnails" style="color: #3a7bfd">TubeForge Thumbnail Editor</a> для создания.</li>
-<li><strong>Баннер</strong> — формат 2560x1440 пикселей. Укажите расписание выхода видео и кратко опишите тематику канала.</li>
-<li><strong>Описание канала</strong> — включите ключевые слова для SEO. Расскажите, для кого канал и что зритель получит от подписки.</li>
-</ul>
-
-<h2>Шаг 3: SEO-оптимизация с первого видео</h2>
-<p>YouTube — это вторая по величине поисковая система в мире. SEO критически важна с самого начала:</p>
-<ul>
-<li><strong>Заголовок</strong> — включите основной ключевой запрос в первые 60 символов. Сделайте заголовок кликабельным, но избегайте кликбейта.</li>
-<li><strong>Описание</strong> — первые 2-3 строки видны без нажатия «Ещё». Включите ключевые слова, ссылки и призыв к действию.</li>
-<li><strong>Теги</strong> — используйте 15-20 релевантных тегов. Начните с точных запросов, затем добавьте более широкие.</li>
-<li><strong>Хештеги</strong> — добавьте 3-5 хештегов в описание для дополнительной видимости.</li>
-</ul>
-<p>Для оптимизации метаданных воспользуйтесь <a href="/metadata" style="color: #3a7bfd">TubeForge Metadata Optimizer</a> — он автоматически анализирует и предлагает улучшения для ваших заголовков, описаний и тегов.</p>
-
-<h2>Шаг 4: Создание кликабельных обложек</h2>
-<p>Обложка (thumbnail) — это ваша реклама на YouTube. По статистике, CTR обложки влияет на ранжирование видео больше, чем любой другой фактор. Правила эффективных обложек:</p>
-<ul>
-<li><strong>Крупное лицо с эмоцией</strong> — лица повышают CTR на 30-40%</li>
-<li><strong>Контрастные цвета</strong> — обложка должна выделяться в ленте</li>
-<li><strong>Минимум текста</strong> — 3-5 слов крупным шрифтом, читаемых с мобильного</li>
-<li><strong>Единый стиль</strong> — создайте узнаваемый визуальный бренд канала</li>
-</ul>
-<p>Используйте <a href="/thumbnails" style="color: #3a7bfd">AI Thumbnail Generator</a> в TubeForge для быстрого создания профессиональных обложек.</p>
-
-<h2>Шаг 5: Как TubeForge помогает автоматизировать создание контента</h2>
-<p>TubeForge — это комплексная платформа для YouTube-креаторов, которая значительно ускоряет рабочий процесс:</p>
-<ul>
-<li><strong>AI Video Generator</strong> — создавайте видеоконтент из текстового описания</li>
-<li><strong>Script Generator</strong> — генерируйте сценарии для роликов за минуту</li>
-<li><strong>Subtitle Editor</strong> — автоматические субтитры на любом языке</li>
-<li><strong>Content Planner</strong> — AI-планирование контент-стратегии на основе трендов</li>
-<li><strong>Analytics Dashboard</strong> — отслеживайте ключевые метрики в одном месте</li>
-</ul>
-<p>С TubeForge вы сможете тратить больше времени на творчество и меньше — на рутинные задачи. <a href="/dashboard" style="color: #3a7bfd">Попробуйте бесплатно</a> и убедитесь сами.</p>
-
-<h2>Частые ошибки новичков</h2>
-<ul>
-<li><strong>Нерегулярные публикации</strong> — алгоритм YouTube продвигает каналы с постоянной активностью. Начните с 1-2 видео в неделю.</li>
-<li><strong>Игнорирование аналитики</strong> — без данных невозможно расти. Изучайте удержание аудитории, CTR и источники трафика.</li>
-<li><strong>Копирование других</strong> — вдохновляйтесь, но создавайте свой уникальный стиль и подачу.</li>
-<li><strong>Ожидание мгновенных результатов</strong> — первые 6-12 месяцев требуют терпения и постоянной работы.</li>
+<li><strong>Channel name</strong> — should be memorable, short, and relevant to your niche. Avoid numbers and random characters.</li>
+<li><strong>Avatar</strong> — a quality photo or logo that looks good at small sizes. Use <a href="/thumbnails" style="color: #3a7bfd">TubeForge Thumbnail Editor</a> to create one.</li>
+<li><strong>Banner</strong> — 2560x1440 pixel format. Include your upload schedule and briefly describe the channel's topic.</li>
+<li><strong>Channel description</strong> — include keywords for SEO. Explain who the channel is for and what viewers will get from subscribing.</li>
 </ul>
 
-<h3>Заключение</h3>
-<p>Создание успешного YouTube-канала в 2026 году — это марафон, а не спринт. Выберите правильную нишу, оптимизируйте контент с первого дня и используйте современные AI-инструменты для ускорения процесса. TubeForge поможет вам на каждом этапе — от создания обложек до анализа эффективности.</p>`,
+<h2>Step 3: SEO Optimization from Your First Video</h2>
+<p>YouTube is the world's second-largest search engine. SEO is critically important from the very beginning:</p>
+<ul>
+<li><strong>Title</strong> — include your main keyword in the first 60 characters. Make the title clickable but avoid clickbait.</li>
+<li><strong>Description</strong> — the first 2-3 lines are visible without clicking "Show more." Include keywords, links, and a call to action.</li>
+<li><strong>Tags</strong> — use 15-20 relevant tags. Start with exact queries, then add broader ones.</li>
+<li><strong>Hashtags</strong> — add 3-5 hashtags in the description for additional visibility.</li>
+</ul>
+<p>To optimize metadata, use <a href="/metadata" style="color: #3a7bfd">TubeForge Metadata Optimizer</a> — it automatically analyzes and suggests improvements for your titles, descriptions, and tags.</p>
+
+<h2>Step 4: Creating Click-Worthy Thumbnails</h2>
+<p>A thumbnail is your advertisement on YouTube. Statistically, thumbnail CTR affects video ranking more than any other factor. Rules for effective thumbnails:</p>
+<ul>
+<li><strong>Large face with emotion</strong> — faces increase CTR by 30-40%</li>
+<li><strong>Contrasting colors</strong> — the thumbnail should stand out in the feed</li>
+<li><strong>Minimal text</strong> — 3-5 words in large font, readable on mobile</li>
+<li><strong>Consistent style</strong> — create a recognizable visual brand for your channel</li>
+</ul>
+<p>Use <a href="/thumbnails" style="color: #3a7bfd">AI Thumbnail Generator</a> in TubeForge for quick creation of professional thumbnails.</p>
+
+<h2>Step 5: How TubeForge Automates Content Creation</h2>
+<p>TubeForge is a comprehensive platform for YouTube creators that significantly speeds up your workflow:</p>
+<ul>
+<li><strong>AI Video Generator</strong> — create video content from text descriptions</li>
+<li><strong>Script Generator</strong> — generate scripts for videos in minutes</li>
+<li><strong>Subtitle Editor</strong> — automatic subtitles in any language</li>
+<li><strong>Content Planner</strong> — AI-powered content strategy planning based on trends</li>
+<li><strong>Analytics Dashboard</strong> — track key metrics in one place</li>
+</ul>
+<p>With TubeForge, you can spend more time on creativity and less on routine tasks. <a href="/dashboard" style="color: #3a7bfd">Try it free</a> and see for yourself.</p>
+
+<h2>Common Beginner Mistakes</h2>
+<ul>
+<li><strong>Irregular uploads</strong> — YouTube's algorithm promotes channels with consistent activity. Start with 1-2 videos per week.</li>
+<li><strong>Ignoring analytics</strong> — you can't grow without data. Study audience retention, CTR, and traffic sources.</li>
+<li><strong>Copying others</strong> — get inspired, but create your own unique style and delivery.</li>
+<li><strong>Expecting instant results</strong> — the first 6-12 months require patience and consistent effort.</li>
+</ul>
+
+<h3>Conclusion</h3>
+<p>Building a successful YouTube channel in 2026 is a marathon, not a sprint. Choose the right niche, optimize content from day one, and use modern AI tools to speed up the process. TubeForge will help you at every step — from creating thumbnails to analyzing performance.</p>`,
   },
   {
-    slug: '10-sovetov-dlya-virusnogo-youtube-shorts',
-    title: '10 советов для вирусного YouTube Shorts',
+    slug: '10-tips-for-viral-youtube-shorts',
+    title: '10 Tips for Viral YouTube Shorts',
     excerpt:
-      'Как создавать YouTube Shorts, которые набирают миллионы просмотров: техники крючка, оптимальная длина, трендовые форматы и переупаковка контента.',
+      'How to create YouTube Shorts that get millions of views: hook techniques, optimal length, trending formats, and content repurposing.',
     author: 'TubeForge',
     publishedAt: '2026-03-15',
     readingTime: 5,
-    category: 'Советы',
-    tags: ['youtube shorts', 'вирусный контент', 'короткие видео', 'алгоритм'],
-    content: `<h2>Почему YouTube Shorts — это мощный инструмент роста</h2>
-<p>YouTube Shorts ежедневно набирает более 70 миллиардов просмотров. Это самый быстрый способ привлечь новую аудиторию на свой канал. В отличие от длинных видео, Shorts может получить миллионы просмотров даже на канале с нулевой базой подписчиков. Разберём 10 проверенных советов для создания вирусных Shorts.</p>
+    category: 'Tips',
+    tags: ['youtube shorts', 'viral content', 'short videos', 'algorithm'],
+    content: `<h2>Why YouTube Shorts Is a Powerful Growth Tool</h2>
+<p>YouTube Shorts gets over 70 billion daily views. It's the fastest way to attract a new audience to your channel. Unlike long-form videos, Shorts can get millions of views even on a channel with zero subscribers. Let's break down 10 proven tips for creating viral Shorts.</p>
 
-<h2>1. Крючок в первую секунду</h2>
-<p>У вас есть ровно 1 секунда, чтобы удержать зрителя. Техники эффективного крючка:</p>
+<h2>1. Hook in the First Second</h2>
+<p>You have exactly 1 second to retain the viewer. Effective hook techniques:</p>
 <ul>
-<li><strong>Провокационный вопрос</strong> — «А вы знали, что 90% ютуберов делают ЭТУ ошибку?»</li>
-<li><strong>Шокирующий факт</strong> — начните с неожиданной статистики</li>
-<li><strong>Визуальный крючок</strong> — яркое, необычное действие в первом кадре</li>
-<li><strong>Обещание ценности</strong> — «За 30 секунд покажу трюк, который сэкономит вам 5 часов»</li>
+<li><strong>Provocative question</strong> — "Did you know that 90% of YouTubers make THIS mistake?"</li>
+<li><strong>Shocking fact</strong> — start with unexpected statistics</li>
+<li><strong>Visual hook</strong> — a bright, unusual action in the first frame</li>
+<li><strong>Value promise</strong> — "In 30 seconds I'll show you a trick that saves 5 hours"</li>
 </ul>
-<blockquote>Правило: если первая секунда не цепляет — зритель свайпнет дальше. Тестируйте разные крючки!</blockquote>
+<blockquote>Rule: if the first second doesn't hook them — the viewer swipes away. Test different hooks!</blockquote>
 
-<h2>2. Оптимальная длина — 30-45 секунд</h2>
-<p>Анализ миллионов Shorts показывает, что оптимальная длина — от 30 до 45 секунд. Слишком короткие видео (менее 15 секунд) не набирают достаточного времени просмотра. Слишком длинные (около 60 секунд) теряют зрителей до конца. Золотая середина — 35 секунд.</p>
+<h2>2. Optimal Length — 30-45 Seconds</h2>
+<p>Analysis of millions of Shorts shows that the optimal length is 30 to 45 seconds. Videos that are too short (under 15 seconds) don't accumulate enough watch time. Videos that are too long (around 60 seconds) lose viewers before the end. The sweet spot is 35 seconds.</p>
 
-<h2>3. Зацикленность (Loop Effect)</h2>
-<p>Один из самых мощных приёмов — создайте видео так, чтобы конец плавно переходил в начало. Зрители пересматривают такие Shorts несколько раз, что резко повышает метрику «время просмотра» и продвигает видео в рекомендации.</p>
+<h2>3. Loop Effect</h2>
+<p>One of the most powerful techniques — create your video so that the ending seamlessly transitions into the beginning. Viewers rewatch such Shorts multiple times, which dramatically boosts the "watch time" metric and pushes the video into recommendations.</p>
 
-<h2>4. Субтитры обязательны</h2>
-<p>Более 85% коротких видео смотрят без звука. Крупные субтитры — не опция, а необходимость. Используйте <a href="/tools/subtitle-editor" style="color: #3a7bfd">TubeForge Subtitle Editor</a> для автоматического создания субтитров с анимацией.</p>
+<h2>4. Subtitles Are a Must</h2>
+<p>Over 85% of short videos are watched without sound. Large subtitles aren't optional — they're essential. Use <a href="/tools/subtitle-editor" style="color: #3a7bfd">TubeForge Subtitle Editor</a> for automatic subtitle creation with animations.</p>
 
-<h2>5. Трендовые форматы 2026 года</h2>
-<p>Форматы, которые сейчас набирают максимум просмотров:</p>
+<h2>5. Trending Formats in 2026</h2>
+<p>Formats currently getting the most views:</p>
 <ul>
-<li><strong>Split-screen реакции</strong> — ваша реакция + оригинальное видео</li>
-<li><strong>Закадровый голос + B-roll</strong> — рассказываете историю поверх монтажа</li>
-<li><strong>Мини-туториалы</strong> — «как сделать X за 30 секунд»</li>
-<li><strong>До/после</strong> — трансформации всегда привлекают внимание</li>
-<li><strong>Storytelling</strong> — короткие истории с неожиданной развязкой</li>
+<li><strong>Split-screen reactions</strong> — your reaction + original video</li>
+<li><strong>Voiceover + B-roll</strong> — narrating a story over edited footage</li>
+<li><strong>Mini-tutorials</strong> — "how to do X in 30 seconds"</li>
+<li><strong>Before/after</strong> — transformations always attract attention</li>
+<li><strong>Storytelling</strong> — short stories with an unexpected twist</li>
 </ul>
 
-<h2>6. Заголовок и хештеги решают</h2>
-<p>Заголовок Shorts — это мини-SEO. Включите ключевое слово в первые 40 символов. Добавьте 3-5 релевантных хештегов: #Shorts обязательно, плюс тематические хештеги вашей ниши.</p>
+<h2>6. Title and Hashtags Matter</h2>
+<p>The Shorts title is mini-SEO. Include your keyword in the first 40 characters. Add 3-5 relevant hashtags: #Shorts is mandatory, plus topic-specific hashtags for your niche.</p>
 
-<h2>7. Переупаковка длинного контента</h2>
-<p>У вас уже есть длинные видео? Превратите лучшие моменты в Shorts! Используйте <a href="/tools/auto-clip" style="color: #3a7bfd">TubeForge Auto Clip</a> — AI автоматически находит самые яркие фрагменты и нарезает их в формат Shorts.</p>
+<h2>7. Repurpose Long-Form Content</h2>
+<p>Already have long videos? Turn the best moments into Shorts! Use <a href="/tools/auto-clip" style="color: #3a7bfd">TubeForge Auto Clip</a> — AI automatically finds the most engaging segments and clips them into Shorts format.</p>
 
-<h2>8. Публикуйте в прайм-тайм</h2>
-<p>Лучшее время для публикации Shorts:</p>
+<h2>8. Publish at Peak Times</h2>
+<p>Best times to publish Shorts:</p>
 <ul>
-<li><strong>Будни:</strong> 12:00-14:00 и 18:00-21:00 по часовому поясу вашей аудитории</li>
-<li><strong>Выходные:</strong> 10:00-12:00 и 17:00-20:00</li>
+<li><strong>Weekdays:</strong> 12:00-2:00 PM and 6:00-9:00 PM in your audience's time zone</li>
+<li><strong>Weekends:</strong> 10:00 AM-12:00 PM and 5:00-8:00 PM</li>
 </ul>
-<p>Отслеживайте эффективность публикаций через <a href="/shorts-analytics" style="color: #3a7bfd">TubeForge Shorts Analytics</a>.</p>
+<p>Track publishing performance through <a href="/shorts-analytics" style="color: #3a7bfd">TubeForge Shorts Analytics</a>.</p>
 
-<h2>9. Серийность увеличивает подписки</h2>
-<p>Создавайте серии Shorts: «Факт дня #1», «Лайфхак недели #5». Серийный контент стимулирует зрителей подписываться, чтобы не пропустить следующий выпуск. Это одна из самых эффективных стратегий для конвертации просмотров в подписчиков.</p>
+<h2>9. Serialized Content Boosts Subscriptions</h2>
+<p>Create Shorts series: "Fact of the Day #1," "Weekly Hack #5." Serialized content motivates viewers to subscribe so they don't miss the next episode. This is one of the most effective strategies for converting views into subscribers.</p>
 
-<h2>10. Анализируйте и адаптируйтесь</h2>
-<p>Публикуйте минимум 4-5 Shorts в неделю и анализируйте результаты. Какие крючки работают лучше? Какие темы набирают больше просмотров? Какой процент зрителей досматривает до конца? Данные — ваш лучший советник.</p>
+<h2>10. Analyze and Adapt</h2>
+<p>Publish at least 4-5 Shorts per week and analyze the results. Which hooks work best? Which topics get more views? What percentage of viewers watch to the end? Data is your best advisor.</p>
 
-<h3>Бонусный совет</h3>
-<p>Кросс-постите лучшие Shorts на TikTok и Instagram Reels. Один контент — три платформы — тройной охват. TubeForge позволяет оптимизировать видео под каждую платформу автоматически.</p>`,
+<h3>Bonus Tip</h3>
+<p>Cross-post your best Shorts to TikTok and Instagram Reels. One piece of content — three platforms — triple the reach. TubeForge lets you optimize videos for each platform automatically.</p>`,
   },
   {
-    slug: 'ii-v-sozdanii-video-tubeforge-2026',
-    title: 'ИИ в создании видео: что умеет TubeForge в 2026',
+    slug: 'ai-in-video-creation-tubeforge-2026',
+    title: 'AI in Video Creation: What TubeForge Can Do in 2026',
     excerpt:
-      'Обзор AI-возможностей TubeForge: генерация изображений, создание сценариев, автоматические субтитры и сравнение с ручным созданием видео.',
+      'An overview of TubeForge AI capabilities: image generation, script creation, automatic subtitles, and a comparison with manual video production.',
     author: 'TubeForge',
     publishedAt: '2026-03-12',
     readingTime: 6,
-    category: 'Продукт',
-    tags: ['ai', 'нейросети', 'tubeforge', 'генерация видео', 'автоматизация'],
-    content: `<h2>Революция AI в видеопроизводстве</h2>
-<p>2026 год стал переломным для AI в видеоиндустрии. Нейросети научились генерировать реалистичные видеоролики, создавать профессиональные обложки и автоматизировать рутинные задачи. TubeForge объединяет лучшие AI-технологии в одной платформе, доступной каждому креатору.</p>
+    category: 'Product',
+    tags: ['ai', 'neural networks', 'tubeforge', 'video generation', 'automation'],
+    content: `<h2>The AI Revolution in Video Production</h2>
+<p>2026 has been a turning point for AI in the video industry. Neural networks have learned to generate realistic video clips, create professional thumbnails, and automate routine tasks. TubeForge brings together the best AI technologies in a single platform accessible to every creator.</p>
 
-<h2>AI-генерация изображений и обложек</h2>
-<p>Обложка видео определяет, кликнет зритель или пройдёт мимо. <a href="/thumbnails" style="color: #3a7bfd">AI Thumbnail Generator</a> в TubeForge позволяет создавать профессиональные обложки за секунды:</p>
+<h2>AI Image and Thumbnail Generation</h2>
+<p>A video thumbnail determines whether a viewer clicks or scrolls past. <a href="/thumbnails" style="color: #3a7bfd">AI Thumbnail Generator</a> in TubeForge lets you create professional thumbnails in seconds:</p>
 <ul>
-<li><strong>Текстовое описание → готовая обложка</strong> — опишите идею словами, AI создаст визуал</li>
-<li><strong>Стили и шаблоны</strong> — от минимализма до ярких YouTube-обложек в стиле MrBeast</li>
-<li><strong>Автоматическое удаление фона</strong> — <a href="/tools/background-remover" style="color: #3a7bfd">Background Remover</a> вырезает объект за 2 секунды</li>
-<li><strong>Пакетная генерация</strong> — создайте 10 вариантов обложки и выберите лучший</li>
+<li><strong>Text description to finished thumbnail</strong> — describe your idea in words, AI creates the visual</li>
+<li><strong>Styles and templates</strong> — from minimalism to bold YouTube thumbnails in the MrBeast style</li>
+<li><strong>Automatic background removal</strong> — <a href="/tools/background-remover" style="color: #3a7bfd">Background Remover</a> isolates subjects in 2 seconds</li>
+<li><strong>Batch generation</strong> — create 10 thumbnail variants and pick the best one</li>
 </ul>
 
-<h2>Генерация сценариев с AI</h2>
-<p>Написание сценария — одна из самых трудоёмких задач для ютубера. AI Script Generator в TubeForge анализирует вашу тему и создаёт структурированный сценарий:</p>
+<h2>AI Script Generation</h2>
+<p>Writing a script is one of the most time-consuming tasks for a YouTuber. The AI Script Generator in TubeForge analyzes your topic and creates a structured script:</p>
 <ul>
-<li><strong>Крючок</strong> — цепляющее начало, адаптированное под вашу нишу</li>
-<li><strong>Структура</strong> — логичное повествование с тезисами и примерами</li>
-<li><strong>CTA</strong> — призыв к действию, встроенный в контент естественным образом</li>
-<li><strong>Оптимизация длины</strong> — сценарий подстраивается под целевую длину видео</li>
+<li><strong>Hook</strong> — an engaging opening adapted to your niche</li>
+<li><strong>Structure</strong> — logical narrative with key points and examples</li>
+<li><strong>CTA</strong> — a call to action naturally woven into the content</li>
+<li><strong>Length optimization</strong> — the script adjusts to your target video length</li>
 </ul>
-<blockquote>Пример: вы указываете тему «5 ошибок при инвестировании» и получаете готовый сценарий на 10 минут с хуками, переходами и заключением.</blockquote>
+<blockquote>Example: you specify the topic "5 investing mistakes" and get a complete 10-minute script with hooks, transitions, and a conclusion.</blockquote>
 
-<h2>Автоматические субтитры и перевод</h2>
-<p><a href="/tools/subtitle-editor" style="color: #3a7bfd">Subtitle Editor</a> в TubeForge использует передовые модели распознавания речи:</p>
+<h2>Automatic Subtitles and Translation</h2>
+<p><a href="/tools/subtitle-editor" style="color: #3a7bfd">Subtitle Editor</a> in TubeForge uses cutting-edge speech recognition models:</p>
 <ul>
-<li><strong>Точность 97%+</strong> — на русском, английском и ещё 50+ языках</li>
-<li><strong>Автоперевод</strong> — мгновенный перевод субтитров для международной аудитории</li>
-<li><strong>Стилизация</strong> — настраиваемые шрифты, цвета и анимация субтитров</li>
-<li><strong>Экспорт</strong> — SRT, VTT, ASS форматы для любых платформ</li>
-</ul>
-
-<h2>AI-озвучка и улучшение аудио</h2>
-<p>TubeForge предлагает полный набор AI-инструментов для работы со звуком:</p>
-<ul>
-<li><strong>Voiceover Generator</strong> — реалистичная озвучка на десятках языков, идеально для каналов-компиляций</li>
-<li><strong>Speech Enhancer</strong> — удаление фонового шума, улучшение качества голоса</li>
-<li><strong>Vocal Remover</strong> — извлечение голоса из музыки для создания закадрового текста</li>
+<li><strong>97%+ accuracy</strong> — in English, Spanish, and 50+ other languages</li>
+<li><strong>Auto-translation</strong> — instant subtitle translation for an international audience</li>
+<li><strong>Styling</strong> — customizable fonts, colors, and subtitle animations</li>
+<li><strong>Export</strong> — SRT, VTT, ASS formats for any platform</li>
 </ul>
 
-<h2>Сравнение: AI vs ручное создание</h2>
-<p>Насколько AI ускоряет процесс? Вот реальные цифры:</p>
+<h2>AI Voiceover and Audio Enhancement</h2>
+<p>TubeForge offers a complete set of AI audio tools:</p>
 <ul>
-<li><strong>Обложка:</strong> 2-3 часа вручную → 30 секунд с AI</li>
-<li><strong>Сценарий:</strong> 3-5 часов → 5 минут</li>
-<li><strong>Субтитры:</strong> 1-2 часа → 2 минуты</li>
-<li><strong>Метаданные:</strong> 30-60 минут → 1 минута</li>
+<li><strong>Voiceover Generator</strong> — realistic narration in dozens of languages, perfect for compilation channels</li>
+<li><strong>Speech Enhancer</strong> — background noise removal, voice quality improvement</li>
+<li><strong>Vocal Remover</strong> — extract vocals from music for creating voiceovers</li>
 </ul>
-<p>В итоге AI экономит <strong>8-12 часов</strong> на каждом видео, позволяя публиковать больше контента без потери качества.</p>
 
-<h2>Что AI пока не может заменить</h2>
-<p>Важно понимать ограничения:</p>
+<h2>Comparison: AI vs Manual Creation</h2>
+<p>How much does AI speed up the process? Here are real numbers:</p>
 <ul>
-<li><strong>Экспертизу и уникальный опыт</strong> — AI генерирует контент, но не заменяет вашу личность и знания</li>
-<li><strong>Эмоциональную связь</strong> — зрители подписываются на людей, а не на алгоритмы</li>
-<li><strong>Креативную стратегию</strong> — выбор направления канала остаётся за вами</li>
+<li><strong>Thumbnail:</strong> 2-3 hours manually vs. 30 seconds with AI</li>
+<li><strong>Script:</strong> 3-5 hours vs. 5 minutes</li>
+<li><strong>Subtitles:</strong> 1-2 hours vs. 2 minutes</li>
+<li><strong>Metadata:</strong> 30-60 minutes vs. 1 minute</li>
 </ul>
-<p>AI — это мощный инструмент, но успех канала по-прежнему зависит от вашей уникальности и последовательности.</p>
+<p>In total, AI saves <strong>8-12 hours</strong> per video, letting you publish more content without sacrificing quality.</p>
 
-<h3>Попробуйте TubeForge</h3>
-<p>Все AI-инструменты доступны на <a href="/dashboard" style="color: #3a7bfd">платформе TubeForge</a>. Бесплатный план включает базовые функции, Pro — безлимитную AI-генерацию и приоритетную поддержку.</p>`,
+<h2>What AI Still Can't Replace</h2>
+<p>It's important to understand the limitations:</p>
+<ul>
+<li><strong>Expertise and unique experience</strong> — AI generates content but doesn't replace your personality and knowledge</li>
+<li><strong>Emotional connection</strong> — viewers subscribe to people, not algorithms</li>
+<li><strong>Creative strategy</strong> — choosing your channel's direction is still up to you</li>
+</ul>
+<p>AI is a powerful tool, but your channel's success still depends on your uniqueness and consistency.</p>
+
+<h3>Try TubeForge</h3>
+<p>All AI tools are available on the <a href="/dashboard" style="color: #3a7bfd">TubeForge platform</a>. The free plan includes basic features; Pro includes unlimited AI generation and priority support.</p>`,
   },
   {
-    slug: 'monetizatsiya-youtube-poshagovyj-plan',
-    title: 'Монетизация YouTube: пошаговый план для начинающих',
+    slug: 'youtube-monetization-step-by-step-plan',
+    title: 'YouTube Monetization: A Step-by-Step Plan for Beginners',
     excerpt:
-      'Как заработать на YouTube в 2026: требования партнёрской программы, альтернативные источники дохода — спонсоры, мерч, курсы, реферальные программы.',
+      'How to make money on YouTube in 2026: partner program requirements, alternative revenue sources — sponsors, merch, courses, referral programs.',
     author: 'TubeForge',
     publishedAt: '2026-03-08',
     readingTime: 7,
-    category: 'Монетизация',
-    tags: ['монетизация', 'youtube partner program', 'заработок', 'спонсоры'],
-    content: `<h2>Когда YouTube начинает приносить деньги?</h2>
-<p>Многие начинающие креаторы задают вопрос: «Сколько можно заработать на YouTube?». Ответ зависит от ниши, аудитории и стратегии монетизации. В 2026 году средний доход канала с 100,000 подписчиков составляет от $500 до $5,000 в месяц только от рекламы. Но реклама — это лишь один из источников дохода.</p>
+    category: 'Monetization',
+    tags: ['monetization', 'youtube partner program', 'earnings', 'sponsors'],
+    content: `<h2>When Does YouTube Start Making Money?</h2>
+<p>Many aspiring creators ask: "How much can you earn on YouTube?" The answer depends on your niche, audience, and monetization strategy. In 2026, the average income for a channel with 100,000 subscribers ranges from $500 to $5,000 per month from ads alone. But ads are just one source of income.</p>
 
-<h2>Шаг 1: Вступление в YouTube Partner Program (YPP)</h2>
-<p>Требования для вступления в партнёрскую программу YouTube в 2026 году:</p>
+<h2>Step 1: Joining the YouTube Partner Program (YPP)</h2>
+<p>Requirements for joining the YouTube Partner Program in 2026:</p>
 <ul>
-<li><strong>1,000 подписчиков</strong> — минимальная база для подключения монетизации</li>
-<li><strong>4,000 часов просмотра</strong> за последние 12 месяцев (для длинных видео)</li>
-<li><strong>ИЛИ 10 миллионов просмотров Shorts</strong> за 90 дней (альтернативный путь)</li>
-<li><strong>Включённая двухфакторная аутентификация</strong></li>
-<li><strong>Соответствие правилам сообщества</strong> — без страйков за последние 90 дней</li>
+<li><strong>1,000 subscribers</strong> — the minimum base for enabling monetization</li>
+<li><strong>4,000 watch hours</strong> over the past 12 months (for long-form videos)</li>
+<li><strong>OR 10 million Shorts views</strong> in 90 days (alternative path)</li>
+<li><strong>Two-factor authentication enabled</strong></li>
+<li><strong>Community guidelines compliance</strong> — no strikes in the last 90 days</li>
 </ul>
-<blockquote>Совет: сосредоточьтесь на Shorts для быстрого набора просмотров и подписчиков. Многие каналы выполняют требования YPP за 2-3 месяца благодаря вирусным Shorts.</blockquote>
+<blockquote>Tip: focus on Shorts for rapid view and subscriber growth. Many channels meet YPP requirements in 2-3 months thanks to viral Shorts.</blockquote>
 
-<h2>Шаг 2: Оптимизация дохода от рекламы</h2>
-<p>После подключения монетизации ваш доход зависит от CPM (стоимости за 1000 показов). Как увеличить CPM:</p>
+<h2>Step 2: Optimizing Ad Revenue</h2>
+<p>After enabling monetization, your income depends on CPM (cost per 1,000 impressions). How to increase CPM:</p>
 <ul>
-<li><strong>Выбирайте высокодоходные ниши</strong> — финансы ($15-30 CPM), технологии ($10-20), бизнес ($12-25)</li>
-<li><strong>Целитесь в аудиторию из стран Tier-1</strong> — США, Канада, Великобритания, Австралия имеют самый высокий CPM</li>
-<li><strong>Делайте видео длиннее 8 минут</strong> — это позволяет размещать mid-roll рекламу</li>
-<li><strong>Оптимизируйте удержание аудитории</strong> — чем дольше зрители смотрят, тем больше рекламы показывается</li>
-</ul>
-
-<h2>Шаг 3: Спонсорские интеграции</h2>
-<p>Спонсорские интеграции — один из самых прибыльных источников дохода для ютуберов. Примерные ставки в 2026 году:</p>
-<ul>
-<li><strong>10,000-50,000 подписчиков:</strong> $200-1,000 за интеграцию</li>
-<li><strong>50,000-200,000 подписчиков:</strong> $1,000-5,000 за интеграцию</li>
-<li><strong>200,000+ подписчиков:</strong> $5,000-50,000+ за интеграцию</li>
-</ul>
-<p>Для привлечения спонсоров создайте медиакит с аналитикой канала. Используйте <a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a> для формирования профессионального отчёта о вашей аудитории.</p>
-
-<h2>Шаг 4: Создание и продажа собственных продуктов</h2>
-<p>Собственные продукты — самый масштабируемый источник дохода:</p>
-<ul>
-<li><strong>Онлайн-курсы</strong> — если вы эксперт в нише, создайте обучающий курс. Средний чек: $50-500</li>
-<li><strong>Мерч</strong> — футболки, кружки, стикеры с брендом канала. Маржинальность: 40-70%</li>
-<li><strong>Цифровые продукты</strong> — шаблоны, пресеты, электронные книги. Нет затрат на производство</li>
-<li><strong>Консультации</strong> — предлагайте индивидуальные консультации для аудитории</li>
+<li><strong>Choose high-revenue niches</strong> — finance ($15-30 CPM), technology ($10-20), business ($12-25)</li>
+<li><strong>Target Tier-1 audiences</strong> — US, Canada, UK, Australia have the highest CPM</li>
+<li><strong>Make videos longer than 8 minutes</strong> — this allows mid-roll ad placement</li>
+<li><strong>Optimize audience retention</strong> — the longer viewers watch, the more ads are shown</li>
 </ul>
 
-<h2>Шаг 5: Реферальные и партнёрские программы</h2>
-<p>Рекомендуйте продукты и получайте комиссию за каждую продажу:</p>
+<h2>Step 3: Sponsored Integrations</h2>
+<p>Sponsored integrations are one of the most profitable income sources for YouTubers. Approximate rates in 2026:</p>
 <ul>
-<li><strong>Amazon Associates</strong> — 1-10% комиссии с товаров</li>
-<li><strong>SaaS-партнёрки</strong> — до 30-50% рекуррентной комиссии (TubeForge, Canva, и др.)</li>
-<li><strong>Образовательные платформы</strong> — Skillshare, Udemy и другие платят за привлечение учеников</li>
+<li><strong>10,000-50,000 subscribers:</strong> $200-1,000 per integration</li>
+<li><strong>50,000-200,000 subscribers:</strong> $1,000-5,000 per integration</li>
+<li><strong>200,000+ subscribers:</strong> $5,000-50,000+ per integration</li>
 </ul>
-<p>TubeForge также предлагает <a href="/referral" style="color: #3a7bfd">реферальную программу</a> с щедрыми условиями для креаторов.</p>
+<p>To attract sponsors, create a media kit with channel analytics. Use <a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a> to generate a professional report about your audience.</p>
 
-<h2>Шаг 6: Членство и донаты</h2>
-<p>YouTube предлагает встроенные инструменты для прямой поддержки от аудитории:</p>
+<h2>Step 4: Creating and Selling Your Own Products</h2>
+<p>Your own products are the most scalable income source:</p>
 <ul>
-<li><strong>Членство канала</strong> — подписчики платят $4.99+ в месяц за эксклюзивный контент</li>
-<li><strong>Super Chat и Super Thanks</strong> — разовые пожертвования во время стримов и под видео</li>
-<li><strong>Внешние платформы</strong> — Patreon, Boosty для дополнительной монетизации</li>
-</ul>
-
-<h2>Реальные цифры: сколько зарабатывают ютуберы</h2>
-<p>Примерный месячный доход канала с диверсифицированной монетизацией (100K подписчиков, ниша «технологии»):</p>
-<ul>
-<li><strong>Реклама:</strong> $1,500-3,000</li>
-<li><strong>Спонсоры:</strong> $2,000-5,000</li>
-<li><strong>Партнёрские ссылки:</strong> $500-1,500</li>
-<li><strong>Собственные продукты:</strong> $1,000-10,000</li>
-<li><strong>Итого:</strong> $5,000-19,500/мес</li>
+<li><strong>Online courses</strong> — if you're a niche expert, create a training course. Average price: $50-500</li>
+<li><strong>Merch</strong> — t-shirts, mugs, stickers with your channel brand. Margins: 40-70%</li>
+<li><strong>Digital products</strong> — templates, presets, ebooks. No production costs</li>
+<li><strong>Consulting</strong> — offer individual consultations to your audience</li>
 </ul>
 
-<h3>Начните сегодня</h3>
-<p>Монетизация YouTube — это процесс, который начинается с первого видео. Используйте <a href="/dashboard" style="color: #3a7bfd">TubeForge</a> для создания профессионального контента с первого дня, и путь к монетизации будет значительно короче.</p>`,
+<h2>Step 5: Referral and Affiliate Programs</h2>
+<p>Recommend products and earn a commission on every sale:</p>
+<ul>
+<li><strong>Amazon Associates</strong> — 1-10% commission on products</li>
+<li><strong>SaaS affiliates</strong> — up to 30-50% recurring commission (TubeForge, Canva, etc.)</li>
+<li><strong>Educational platforms</strong> — Skillshare, Udemy, and others pay for student referrals</li>
+</ul>
+<p>TubeForge also offers a <a href="/referral" style="color: #3a7bfd">referral program</a> with generous terms for creators.</p>
+
+<h2>Step 6: Memberships and Donations</h2>
+<p>YouTube offers built-in tools for direct audience support:</p>
+<ul>
+<li><strong>Channel memberships</strong> — subscribers pay $4.99+/month for exclusive content</li>
+<li><strong>Super Chat and Super Thanks</strong> — one-time donations during livestreams and on videos</li>
+<li><strong>External platforms</strong> — Patreon, Buy Me a Coffee for additional monetization</li>
+</ul>
+
+<h2>Real Numbers: How Much YouTubers Earn</h2>
+<p>Approximate monthly income for a channel with diversified monetization (100K subscribers, "technology" niche):</p>
+<ul>
+<li><strong>Ads:</strong> $1,500-3,000</li>
+<li><strong>Sponsors:</strong> $2,000-5,000</li>
+<li><strong>Affiliate links:</strong> $500-1,500</li>
+<li><strong>Own products:</strong> $1,000-10,000</li>
+<li><strong>Total:</strong> $5,000-19,500/month</li>
+</ul>
+
+<h3>Start Today</h3>
+<p>YouTube monetization is a process that begins with your first video. Use <a href="/dashboard" style="color: #3a7bfd">TubeForge</a> to create professional content from day one, and the path to monetization will be significantly shorter.</p>`,
   },
   {
-    slug: 'tubeforge-vs-konkurenty-sravnenie-2026',
-    title: 'TubeForge vs конкуренты: честное сравнение 2026',
+    slug: 'tubeforge-vs-competitors-comparison-2026',
+    title: 'TubeForge vs Competitors: An Honest Comparison for 2026',
     excerpt:
-      'Подробное сравнение TubeForge с Canva, CapCut, InVideo и Pictory: функции, цены, удобство, AI-возможности. Когда и что использовать.',
+      'A detailed comparison of TubeForge with Canva, CapCut, InVideo, and Pictory: features, pricing, usability, and AI capabilities. When to use what.',
     author: 'TubeForge',
     publishedAt: '2026-03-05',
     readingTime: 6,
-    category: 'Сравнения',
-    tags: ['сравнение', 'canva', 'capcut', 'invideo', 'pictory', 'tubeforge'],
-    content: `<h2>Зачем сравнивать инструменты</h2>
-<p>Рынок инструментов для видеокреаторов в 2026 году переполнен. Canva, CapCut, InVideo, Pictory, Descript — каждый сервис обещает ускорить создание контента. Но какой из них реально подходит YouTube-креатору? В этом обзоре мы честно сравним TubeForge с основными конкурентами по ключевым параметрам.</p>
+    category: 'Comparisons',
+    tags: ['comparison', 'canva', 'capcut', 'invideo', 'pictory', 'tubeforge'],
+    content: `<h2>Why Compare Tools</h2>
+<p>The market for video creator tools in 2026 is crowded. Canva, CapCut, InVideo, Pictory, Descript — each service promises to speed up content creation. But which one is actually right for a YouTube creator? In this review, we'll honestly compare TubeForge with the main competitors across key parameters.</p>
 
 <h2>TubeForge vs Canva</h2>
-<p><strong>Canva</strong> — универсальный дизайн-инструмент, популярный для создания обложек и социальных медиа.</p>
+<p><strong>Canva</strong> — a universal design tool, popular for creating thumbnails and social media content.</p>
 <ul>
-<li><strong>Обложки (Thumbnails):</strong> Canva предлагает шаблоны и drag-and-drop редактор. TubeForge добавляет AI-генерацию обложек из текстового описания — это уникальная функция, недоступная в Canva.</li>
-<li><strong>Видеоредактор:</strong> Canva имеет базовый видеоредактор, но он не заточен под YouTube. TubeForge предлагает специализированный редактор с пресетами под YouTube-форматы.</li>
-<li><strong>AI-функции:</strong> Canva использует AI для генерации изображений. TubeForge предлагает полный AI-стек: генерация видео, обложек, субтитров, сценариев и метаданных.</li>
-<li><strong>Цена:</strong> Canva Pro — $12.99/мес. TubeForge Pro — сопоставимая цена, но включает VPN, аналитику и YouTube-специфичные инструменты.</li>
+<li><strong>Thumbnails:</strong> Canva offers templates and a drag-and-drop editor. TubeForge adds AI thumbnail generation from text descriptions — a unique feature unavailable in Canva.</li>
+<li><strong>Video editor:</strong> Canva has a basic video editor, but it's not tailored for YouTube. TubeForge offers a specialized editor with presets for YouTube formats.</li>
+<li><strong>AI features:</strong> Canva uses AI for image generation. TubeForge offers a full AI stack: video generation, thumbnails, subtitles, scripts, and metadata.</li>
+<li><strong>Price:</strong> Canva Pro — $12.99/month. TubeForge Pro — comparable price but includes VPN, analytics, and YouTube-specific tools.</li>
 </ul>
-<blockquote>Вердикт: Canva — отличный универсальный инструмент. TubeForge — специализированная платформа для YouTube-креаторов с более глубокой интеграцией AI.</blockquote>
+<blockquote>Verdict: Canva is an excellent universal tool. TubeForge is a specialized platform for YouTube creators with deeper AI integration.</blockquote>
 
 <h2>TubeForge vs CapCut</h2>
-<p><strong>CapCut</strong> — бесплатный видеоредактор от ByteDance (TikTok), ставший стандартом для коротких видео.</p>
+<p><strong>CapCut</strong> — a free video editor from ByteDance (TikTok) that has become the standard for short-form video.</p>
 <ul>
-<li><strong>Видеоредактирование:</strong> CapCut — лидер в редактировании коротких видео. Огромная библиотека эффектов, переходов и шаблонов. TubeForge фокусируется на YouTube-контенте с поддержкой длинных видео.</li>
-<li><strong>Субтитры:</strong> CapCut предлагает автоматические субтитры с трендовыми стилями. TubeForge Subtitle Editor предоставляет более точную транскрибацию на 50+ языках и больше опций экспорта.</li>
-<li><strong>Платформа:</strong> CapCut — десктоп и мобильное приложение. TubeForge — полностью браузерный, работает на любом устройстве без установки.</li>
-<li><strong>Аналитика:</strong> CapCut не имеет аналитики. TubeForge предлагает полноценный аналитический дашборд для YouTube и TikTok.</li>
+<li><strong>Video editing:</strong> CapCut leads in short-form video editing. Huge library of effects, transitions, and templates. TubeForge focuses on YouTube content with support for long-form videos.</li>
+<li><strong>Subtitles:</strong> CapCut offers automatic subtitles with trendy styles. TubeForge Subtitle Editor provides more accurate transcription in 50+ languages and more export options.</li>
+<li><strong>Platform:</strong> CapCut is a desktop and mobile app. TubeForge is fully browser-based, works on any device without installation.</li>
+<li><strong>Analytics:</strong> CapCut has no analytics. TubeForge offers a full analytics dashboard for YouTube and TikTok.</li>
 </ul>
-<blockquote>Вердикт: CapCut — лучший выбор для TikTok-контента. TubeForge — для YouTube-креаторов, которым нужен комплексный инструментарий.</blockquote>
+<blockquote>Verdict: CapCut is the best choice for TikTok content. TubeForge is for YouTube creators who need a comprehensive toolkit.</blockquote>
 
 <h2>TubeForge vs InVideo</h2>
-<p><strong>InVideo</strong> — AI-видеоредактор, популярный для создания маркетингового контента.</p>
+<p><strong>InVideo</strong> — an AI video editor popular for marketing content creation.</p>
 <ul>
-<li><strong>AI-генерация видео:</strong> InVideo предлагает создание видео из текста с использованием стоковых материалов. TubeForge предлагает аналогичную функцию плюс интеграцию с Veo 3 для генерации оригинального AI-видео.</li>
-<li><strong>Шаблоны:</strong> InVideo имеет обширную библиотеку шаблонов для бизнес-видео. TubeForge специализируется на YouTube-шаблонах.</li>
-<li><strong>Дополнительные инструменты:</strong> InVideo — чисто видеоредактор. TubeForge — экосистема: обложки, метаданные, скачивание видео, VPN, аналитика.</li>
-<li><strong>Цена:</strong> InVideo Business — $30/мес. TubeForge Pro — дешевле при более широком функционале для YouTube.</li>
+<li><strong>AI video generation:</strong> InVideo offers text-to-video creation using stock materials. TubeForge offers the same plus integration with Veo 3 for generating original AI video.</li>
+<li><strong>Templates:</strong> InVideo has an extensive library of business video templates. TubeForge specializes in YouTube templates.</li>
+<li><strong>Additional tools:</strong> InVideo is purely a video editor. TubeForge is an ecosystem: thumbnails, metadata, video analysis, VPN, analytics.</li>
+<li><strong>Price:</strong> InVideo Business — $30/month. TubeForge Pro — cheaper with broader YouTube-specific functionality.</li>
 </ul>
-<blockquote>Вердикт: InVideo — хороший выбор для маркетологов. TubeForge — для YouTube-креаторов, которым нужно больше, чем просто видеоредактор.</blockquote>
+<blockquote>Verdict: InVideo is a good choice for marketers. TubeForge is for YouTube creators who need more than just a video editor.</blockquote>
 
 <h2>TubeForge vs Pictory</h2>
-<p><strong>Pictory</strong> — AI-инструмент для автоматического создания видео из текста и блогов.</p>
+<p><strong>Pictory</strong> — an AI tool for automatically creating videos from text and blog posts.</p>
 <ul>
-<li><strong>Текст → видео:</strong> Pictory хорошо конвертирует статьи и скрипты в видео со стоковыми кадрами. TubeForge предлагает аналогичную функцию плюс оригинальную AI-генерацию.</li>
-<li><strong>Автоматическая нарезка:</strong> Pictory может создавать короткие клипы из длинных видео. TubeForge Auto Clip делает то же самое с оптимизацией под YouTube Shorts.</li>
-<li><strong>Экосистема:</strong> Pictory — узкоспециализированный инструмент. TubeForge — полная платформа для YouTube-продакшна.</li>
-<li><strong>Цена:</strong> Pictory Starter — $19/мес за ограниченный функционал. TubeForge — больше инструментов по сопоставимой цене.</li>
+<li><strong>Text to video:</strong> Pictory excels at converting articles and scripts into videos with stock footage. TubeForge offers the same plus original AI generation.</li>
+<li><strong>Automatic clipping:</strong> Pictory can create short clips from long videos. TubeForge Auto Clip does the same with optimization for YouTube Shorts.</li>
+<li><strong>Ecosystem:</strong> Pictory is a narrowly specialized tool. TubeForge is a complete platform for YouTube production.</li>
+<li><strong>Price:</strong> Pictory Starter — $19/month for limited features. TubeForge — more tools at a comparable price.</li>
 </ul>
-<blockquote>Вердикт: Pictory — хорош для конвертации текста в видео. TubeForge — для тех, кому нужен полный цикл производства YouTube-контента.</blockquote>
+<blockquote>Verdict: Pictory is great for converting text to video. TubeForge is for those who need a full YouTube content production cycle.</blockquote>
 
-<h2>Сводная таблица</h2>
-<p>Ключевые различия между платформами:</p>
+<h2>Summary Table</h2>
+<p>Key differences between platforms:</p>
 <ul>
-<li><strong>AI-обложки:</strong> TubeForge — есть, Canva — частично, CapCut — нет, InVideo — нет, Pictory — нет</li>
-<li><strong>AI-видеогенерация:</strong> TubeForge — есть, InVideo — есть, Pictory — есть, Canva — базовая, CapCut — нет</li>
-<li><strong>YouTube-аналитика:</strong> TubeForge — есть, остальные — нет</li>
-<li><strong>VPN для YouTube:</strong> только TubeForge</li>
-<li><strong>Метаданные SEO:</strong> только TubeForge</li>
-<li><strong>Скачивание видео:</strong> только TubeForge</li>
-</ul>
-
-<h2>Когда какой инструмент использовать</h2>
-<ul>
-<li><strong>TubeForge</strong> — если YouTube ваша основная платформа и вам нужен комплексный инструментарий</li>
-<li><strong>Canva</strong> — для дизайна за пределами YouTube (соцсети, презентации)</li>
-<li><strong>CapCut</strong> — для TikTok-first стратегии с акцентом на монтаж</li>
-<li><strong>InVideo</strong> — для маркетинговых видео и коммерческого контента</li>
-<li><strong>Pictory</strong> — для быстрой конвертации текстового контента в видео</li>
+<li><strong>AI thumbnails:</strong> TubeForge — yes, Canva — partial, CapCut — no, InVideo — no, Pictory — no</li>
+<li><strong>AI video generation:</strong> TubeForge — yes, InVideo — yes, Pictory — yes, Canva — basic, CapCut — no</li>
+<li><strong>YouTube analytics:</strong> TubeForge — yes, others — no</li>
+<li><strong>VPN for YouTube:</strong> TubeForge only</li>
+<li><strong>Metadata SEO:</strong> TubeForge only</li>
+<li><strong>Video analysis:</strong> TubeForge only</li>
 </ul>
 
-<h3>Попробуйте сами</h3>
-<p>Лучший способ выбрать инструмент — протестировать его. <a href="/dashboard" style="color: #3a7bfd">Создайте бесплатный аккаунт TubeForge</a> и оцените все возможности платформы на практике.</p>`,
+<h2>When to Use Which Tool</h2>
+<ul>
+<li><strong>TubeForge</strong> — if YouTube is your main platform and you need a comprehensive toolkit</li>
+<li><strong>Canva</strong> — for design beyond YouTube (social media, presentations)</li>
+<li><strong>CapCut</strong> — for a TikTok-first strategy focused on editing</li>
+<li><strong>InVideo</strong> — for marketing videos and commercial content</li>
+<li><strong>Pictory</strong> — for quick conversion of text content into video</li>
+</ul>
+
+<h3>Try It Yourself</h3>
+<p>The best way to choose a tool is to test it. <a href="/dashboard" style="color: #3a7bfd">Create a free TubeForge account</a> and experience all the platform's capabilities firsthand.</p>`,
   },
 ];
 

@@ -1358,7 +1358,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     ? `${(nicheStats.totalViews / 1_000_000_000).toFixed(1)}B`
                     : nicheStats.totalViews >= 1_000_000
                       ? `${(nicheStats.totalViews / 1_000_000).toFixed(1)}M`
-                      : nicheStats.totalViews.toLocaleString('ru-RU')}
+                      : nicheStats.totalViews.toLocaleString('en-US')}
                 </div>
                 <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
                   {nicheStats.count} {t('shorts.videosInSample')}
@@ -1380,7 +1380,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.blue }}>
                   ${nicheStats.estimatedEarnings >= 1000
                     ? `${(nicheStats.estimatedEarnings / 1000).toFixed(1)}K`
-                    : Math.round(nicheStats.estimatedEarnings).toLocaleString('ru-RU')}
+                    : Math.round(nicheStats.estimatedEarnings).toLocaleString('en-US')}
                 </div>
                 <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
                   RPM: ${nicheStats.rpm.toFixed(2)} (Shorts)

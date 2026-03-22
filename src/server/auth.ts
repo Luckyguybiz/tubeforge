@@ -32,8 +32,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: env.AUTH_GOOGLE_ID,
       clientSecret: env.AUTH_GOOGLE_SECRET,
     }),
-    // DEV-ONLY: email-based login without OAuth (only available in development)
-    ...(process.env.NODE_ENV === 'development' ? [
+    // DEV-ONLY: email-based login without OAuth (disabled in production)
+    ...(process.env.NODE_ENV !== 'production' ? [
       Credentials({
         id: 'dev-login',
         name: 'Dev Login',
@@ -165,37 +165,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             });
           } catch {
             // Never block auth flow due to email
-          }
-        }
-
-        // Create a demo project for first-time users (non-blocking)
-        if (isFirstSignIn && user.id) {
-          try {
-            await db.project.create({
-              data: {
-                userId: user.id,
-                title: '[Demo] My First Video',
-                description: 'This is a demo project to help you explore TubeForge. Feel free to edit or delete it!',
-                status: 'DRAFT',
-                tags: ['demo', 'tutorial'],
-                scenes: {
-                  create: [
-                    {
-                      prompt: 'Welcome to TubeForge! This is your first scene. Try editing it or generating a new one with AI.',
-                      duration: 5,
-                      order: 0,
-                    },
-                    {
-                      prompt: 'Add more scenes to build your video. Use AI to generate content automatically.',
-                      duration: 5,
-                      order: 1,
-                    },
-                  ],
-                },
-              },
-            });
-          } catch {
-            // Non-blocking — don't prevent signup
           }
         }
       }

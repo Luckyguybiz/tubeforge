@@ -13,7 +13,7 @@ import { pluralRu, timeAgo } from '@/lib/utils';
 import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { ExportButton } from '@/components/project/ExportButton';
 import { ImportModal } from '@/components/project/ImportModal';
-import { usePlanLimits, getUpgradePrompt } from '@/hooks/usePlanLimits';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trackEvent } from '@/lib/analytics-events';
 import { TEMPLATES, TEMPLATE_CATEGORIES, CATEGORY_INFO, type ProjectTemplate, type TemplateCategory } from '@/lib/templates';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
@@ -546,7 +546,7 @@ function WelcomeSection({
                   fontSize: 10, fontWeight: 700, color: '#fff',
                   background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
                   lineHeight: '16px',
-                }}>{t('billing.pro')}</span>
+                }}>Pro</span>
               </div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>
                 {t('dashboard.autoClipDesc')}
@@ -618,63 +618,6 @@ function WelcomeSection({
             </div>
           </div>
         </div>
-
-        {/* Video Translator */}
-        <div
-          className="tf-dash-featured-card"
-          onClick={() => router.push('/tools/video-translator')}
-          onMouseEnter={() => setHov('ft-2')}
-          onMouseLeave={() => setHov(null)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools/video-translator'); } }}
-          style={{
-            flex: '1 1 260px',
-            minWidth: 0,
-            minHeight: 180,
-            borderRadius: 16,
-            padding: 2,
-            background: 'linear-gradient(135deg, #7c5cfc, #a78bfa, #7c5cfc)',
-            cursor: 'pointer',
-            transition: 'all .15s ease',
-            transform: hov === 'ft-2' ? 'translateY(-1px)' : 'none',
-            boxShadow: hov === 'ft-2' ? '0 8px 24px rgba(124,92,252,.2)' : '0 2px 8px rgba(0,0,0,.05)',
-          }}
-        >
-          <div style={{
-            background: 'linear-gradient(135deg, #6d4ddb, #7c5cfc)',
-            borderRadius: 14,
-            padding: '22px 20px',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.913 17H20.087M3.913 17H11.087"/><circle cx="12" cy="17" r="1"/><path d="M5.5 7H18.5"/><path d="M3 12H21"/><path d="M16 3L8 21"/></svg>
-                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>Video Translator</span>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: '#fff',
-                  background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
-                  lineHeight: '16px',
-                }}>NEW</span>
-              </div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>
-                {'\u041F\u0435\u0440\u0435\u0432\u043E\u0434 \u0432\u0438\u0434\u0435\u043E \u043D\u0430 32 \u044F\u0437\u044B\u043A\u0430 \u0441 \u043A\u043B\u043E\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435\u043C \u0433\u043E\u043B\u043E\u0441\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442 \u044D\u043C\u043E\u0446\u0438\u0438 \u0438 \u0442\u0430\u0439\u043C\u0438\u043D\u0433.'}
-              </div>
-            </div>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: 13, fontWeight: 600, color: '#fff',
-              opacity: hov === 'ft-2' ? 1 : 0.8, transition: 'opacity .15s ease',
-              marginTop: 14,
-            }}>
-              {t('dashboard.tryIt')}
-            </div>
-          </div>
-        </div>
-
       </div>
 
       {/* ── ChannelLens Extension Banner ──────────────────── */}
@@ -747,7 +690,7 @@ function WelcomeSection({
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
           {([
-            { title: t('tools.ytdl.title'), href: '/tools/youtube-downloader', Icon: IconSearch, gradient: 'linear-gradient(135deg, #ff0000, #cc0000)', badge: 'Free', badgeColor: '#10b981' },
+            { title: 'Video Analyzer', href: '/tools/youtube-downloader', Icon: IconSearch, gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', badge: 'Free', badgeColor: '#10b981' },
             { title: t('dashboard.tool.mp3Converter'), href: '/tools/mp3-converter', Icon: IconMusic, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', badge: 'Free', badgeColor: '#10b981' },
             { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)', badge: 'Free', badgeColor: '#10b981' },
             { title: t('dashboard.tool.aiThumbnails'), href: '/thumbnails', Icon: IconImage, gradient: 'linear-gradient(135deg, #ec4899, #f472b6)', badge: 'Pro', badgeColor: '#8b5cf6' },
@@ -2007,130 +1950,6 @@ function PublishHistoryWidget({
   );
 }
 
-
-/* -- Tool History Section ---------------------------------------- */
-
-function ToolHistorySection({ C, t }: { C: any; t: (key: string) => string }) {
-  const history = trpc.toolHistory.list.useQuery({ limit: 10 });
-  const translations = trpc.toolHistory.translations.useQuery({ limit: 5 });
-
-  const toolLabels: Record<string, string> = {
-    'video-translate': '\u041f\u0435\u0440\u0435\u0432\u043e\u0434 \u0432\u0438\u0434\u0435\u043e',
-    'youtube-analyzer': '\u0410\u043d\u0430\u043b\u0438\u0437 YouTube',
-    'tts': '\u041e\u0437\u0432\u0443\u0447\u043a\u0430',
-    'video-compress': '\u0421\u0436\u0430\u0442\u0438\u0435 \u0432\u0438\u0434\u0435\u043e',
-  };
-
-  const toolIcons: Record<string, string> = {
-    'video-translate': '\ud83c\udf10',
-    'youtube-analyzer': '\ud83d\udcca',
-    'tts': '\ud83d\udd0a',
-    'video-compress': '\ud83d\udce6',
-  };
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / 1048576).toFixed(1)} MB`;
-  };
-
-  const hasData = (history.data && history.data.length > 0) || (translations.data && translations.data.length > 0);
-
-  if (history.isLoading || !hasData) return null;
-
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: C.text }}>
-        {'\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432'}
-      </h3>
-
-      {translations.data && translations.data.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 8 }}>
-            {'\u041c\u043e\u0438 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u044b'}
-          </div>
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-            {translations.data.map((asset: any) => {
-              const langMatch = asset.filename?.match(/Translation_([a-z]{2,3})_/);
-              const lang = langMatch?.[1] ?? '?';
-              return (
-                <a
-                  key={asset.id}
-                  href={asset.url}
-                  download
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
-                    padding: '12px 16px', minWidth: 120, textDecoration: 'none',
-                    transition: 'box-shadow .15s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 4px 12px ${C.accent}22`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-                >
-                  <span style={{ fontSize: 24, marginBottom: 4 }}>{'\ud83c\udfac'}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{lang.toUpperCase()}</span>
-                  <span style={{ fontSize: 11, color: C.sub }}>{formatSize(asset.size)}</span>
-                  <span style={{ fontSize: 11, color: C.sub }}>
-                    {new Date(asset.createdAt).toLocaleDateString('ru-RU')}
-                  </span>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {history.data && history.data.length > 0 && (
-        <div style={{
-          background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
-          overflow: 'hidden',
-        }}>
-          {history.data.map((entry: any, i: number) => {
-            const meta = (entry.metadata ?? {}) as Record<string, any>;
-            const tool = meta.tool ?? entry.target ?? 'unknown';
-            const label = toolLabels[tool] ?? tool;
-            const icon = toolIcons[tool] ?? '\ud83d\udd27';
-            return (
-              <div
-                key={entry.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 16px',
-                  borderBottom: i < (history.data?.length ?? 0) - 1 ? `1px solid ${C.border}` : 'none',
-                }}
-              >
-                <span style={{ fontSize: 18, flexShrink: 0 }}>{icon}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</div>
-                  <div style={{ fontSize: 11, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {tool === 'youtube-analyzer' && meta.title
-                      ? meta.title
-                      : tool === 'video-translate' && meta.targetLang
-                      ? `\u2192 ${meta.targetLang?.toUpperCase()}${meta.fileSize ? ` (${formatSize(meta.fileSize)})` : ''}`
-                      : entry.target ?? ''}
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: C.sub, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                  {new Date(entry.createdAt).toLocaleDateString('ru-RU')}
-                </div>
-                {tool === 'youtube-analyzer' && meta.overallScore != null && (
-                  <div style={{
-                    fontSize: 12, fontWeight: 700,
-                    color: meta.overallScore >= 70 ? '#22c55e' : meta.overallScore >= 40 ? '#f59e0b' : '#ef4444',
-                    flexShrink: 0,
-                  }}>
-                    {meta.overallScore}/100
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ── Main Dashboard Component ──────────────────────────── */
 
 export function Dashboard() {
@@ -2410,7 +2229,6 @@ export function Dashboard() {
   /* ── Compute stats ────────────────────────────── */
   const user = profile.data;
   const plan = user?.plan ?? 'FREE';
-  const upgradePrompt = getUpgradePrompt(plan, user?.aiUsage ?? 0, user?._count?.projects ?? 0);
   const stats = useMemo(() => {
     const total = totalProjects.data?.total ?? user?._count?.projects ?? 0;
     // Count statuses from the unfiltered first-page query hint — for accurate stats
@@ -2482,44 +2300,6 @@ export function Dashboard() {
       {/* ── Onboarding Checklist ─────────────────────── */}
       <OnboardingChecklist />
 
-      {/* ── Contextual Upgrade Banner ────────────────── */}
-      {upgradePrompt && (
-        <div
-          style={{
-            marginBottom: 20,
-            padding: '14px 20px',
-            background: `linear-gradient(135deg, ${C.accent}18, ${C.purple}12)`,
-            border: `1px solid ${C.accent}30`,
-            borderRadius: 12,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <span style={{ color: C.text, fontSize: 14, fontWeight: 500 }}>
-            {upgradePrompt.message}
-          </span>
-          <button
-            onClick={() => router.push('/pricing')}
-            style={{
-              background: C.accent,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              padding: '8px 18px',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {t('billing.upgrade') || 'Upgrade'}
-          </button>
-        </div>
-      )}
-
       {/* ── Activity Streak ──────────────────────────── */}
       <div style={{ marginBottom: 20 }}>
         <ActivityStreak />
@@ -2527,9 +2307,6 @@ export function Dashboard() {
 
       {/* ── Usage Milestones (floating toast) ────────── */}
       <UsageMilestones />
-
-      {/* ── Tool History ────────────────────────────── */}
-      <ToolHistorySection C={C} t={t} />
 
       {/* ── Header ──────────────────────────────────── */}
       <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>

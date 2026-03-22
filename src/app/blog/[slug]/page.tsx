@@ -47,11 +47,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /* ── Helpers ───────────────────────────────────────────────────────── */
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Гайды': '#3a7bfd',
-  'Советы': '#2dd4a0',
-  'Продукт': '#8b5cf6',
-  'Монетизация': '#f59e0b',
-  'Сравнения': '#ec4899',
+  'Guides': '#3a7bfd',
+  'Tips': '#2dd4a0',
+  'Product': '#8b5cf6',
+  'Monetization': '#f59e0b',
+  'Comparisons': '#ec4899',
 };
 
 function getCategoryColor(category: string): string {
@@ -60,7 +60,7 @@ function getCategoryColor(category: string): string {
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 /* ── Page ──────────────────────────────────────────────────────────── */
@@ -142,7 +142,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             transition: 'color .15s',
           }}
         >
-          &larr; Все статьи
+          &larr; All articles
         </Link>
 
         {/* Article */}
@@ -221,7 +221,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                   <circle cx="8" cy="8" r="6.5" stroke="#5e5e72" strokeWidth="1.2" />
                   <path d="M8 4V8L10.5 10.5" stroke="#5e5e72" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {post.readingTime} мин чтения
+                {post.readingTime} min read
               </span>
               <span
                 style={{
@@ -288,7 +288,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                   marginBottom: 20,
                 }}
               >
-                Читайте также
+                Related Articles
               </h2>
               <div
                 style={{
@@ -349,7 +349,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                             color: '#5e5e72',
                           }}
                         >
-                          {relPost.readingTime} мин чтения
+                          {relPost.readingTime} min read
                         </span>
                       </div>
                     </Link>
@@ -369,7 +369,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             color: '#5e5e72',
           }}
         >
-          &copy; {new Date().getFullYear()} TubeForge. Все права защищены.
+          &copy; {new Date().getFullYear()} TubeForge. All rights reserved.
         </div>
       </div>
 

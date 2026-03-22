@@ -43,9 +43,6 @@ export default function ProfilePage() {
   const user = data?.pages[0]?.user;
   const allItems = data?.pages.flatMap((p) => p.items) ?? [];
 
-  // Calculate total likes across all public projects
-  const totalLikes = allItems.reduce((sum, p) => sum + p.likesCount, 0);
-
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -63,14 +60,10 @@ export default function ProfilePage() {
   if (error || !user) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-        <div style={{ opacity: 0.3 }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-          </svg>
-        </div>
+        <div style={{ fontSize: 48, opacity: 0.3 }}>👤</div>
         <h1 style={{ color: C.text, fontSize: 24, fontWeight: 700, margin: 0 }}>User not found</h1>
         <Link href="/gallery" style={{ color: C.accent, fontSize: 14, textDecoration: 'none', marginTop: 8 }}>
-          Browse the Gallery
+          Go to gallery
         </Link>
       </div>
     );
@@ -123,22 +116,16 @@ export default function ProfilePage() {
               {(user.name ?? '?')[0]?.toUpperCase()}
             </div>
           )}
-          <div style={{ flex: 1 }}>
+          <div>
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>
               {user.name ?? 'Anonymous'}
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ color: C.sub, fontSize: 13 }}>
-                {allItems.length} public {allItems.length === 1 ? 'project' : 'projects'}
+                {allItems.length} {allItems.length === 1 ? 'public project' : 'public projects'}
               </span>
-              {totalLikes > 0 && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: C.sub, fontSize: 13 }}>
-                  <IconHeart size={12} color="#ef4444" />
-                  {totalLikes} {totalLikes === 1 ? 'like' : 'likes'}
-                </span>
-              )}
               <span style={{ color: C.dim, fontSize: 12 }}>
-                Member since {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                Since {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </span>
             </div>
             <div style={{
@@ -147,7 +134,7 @@ export default function ProfilePage() {
               background: C.accentDim, color: C.accent,
               fontSize: 11, fontWeight: 700,
             }}>
-              Made with TubeForge
+              Created with TubeForge
             </div>
           </div>
         </div>
@@ -159,14 +146,12 @@ export default function ProfilePage() {
             borderRadius: 14, background: C.card,
             border: `1px solid ${C.border}`,
           }}>
-            <div style={{ opacity: 0.3, marginBottom: 12 }}>
-              <IconFilm size={40} color={C.dim} />
-            </div>
+            <div style={{ fontSize: 40, opacity: 0.3, marginBottom: 12 }}>🎬</div>
             <h2 style={{ color: C.text, fontSize: 18, fontWeight: 700, margin: '0 0 6px' }}>
               No public projects
             </h2>
             <p style={{ color: C.sub, fontSize: 14, margin: 0 }}>
-              This user hasn&apos;t published any projects yet.
+              This user has no public projects yet
             </p>
           </div>
         ) : (
@@ -264,7 +249,7 @@ export default function ProfilePage() {
                 opacity: isFetchingNextPage ? 0.6 : 1,
               }}
             >
-              {isFetchingNextPage ? 'Loading...' : 'Load More'}
+              {isFetchingNextPage ? 'Loading...' : 'Show More'}
             </button>
           </div>
         )}

@@ -90,10 +90,10 @@ const T: Record<string, Record<Locale, string>> = {
     es: 'VPN no incluido',
   },
   pro: { ru: 'Pro', en: 'Pro', kk: 'Pro', es: 'Pro' },
-  proPrice: { ru: '990₽/мес', en: '990₽/mo', kk: '990₽/ай', es: '990₽/mes' },
+  proPrice: { ru: '$12/мес', en: '$12/mo', kk: '$12/ай', es: '$12/mes' },
   proDesc: { ru: 'VPN включён', en: 'VPN included', kk: 'VPN кіреді', es: 'VPN incluido' },
   studio: { ru: 'Studio', en: 'Studio', kk: 'Studio', es: 'Studio' },
-  studioPrice: { ru: '2 490₽/мес', en: '2,490₽/mo', kk: '2 490₽/ай', es: '2.490₽/mes' },
+  studioPrice: { ru: '$30/мес', en: '$30/mo', kk: '$30/ай', es: '$30/mes' },
   studioDesc: {
     ru: 'VPN включён + приоритет',
     en: 'VPN included + priority',

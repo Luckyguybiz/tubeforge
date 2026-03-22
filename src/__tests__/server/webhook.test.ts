@@ -127,7 +127,7 @@ async function processWebhookEvent(event: WebhookEvent, db: MockDb, stripeApi: a
           data: {
             plan: user.plan,
             amount: `${amountFormatted} ${invoice.currency?.toUpperCase() ?? 'USD'}`,
-            date: new Date().toLocaleDateString('ru-RU'),
+            date: new Date().toLocaleDateString('en-US'),
             locale: 'ru',
           },
         });

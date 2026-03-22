@@ -28,7 +28,7 @@ export default function HelpPage() {
   }, [search, activeCategory]);
 
   const categories: { key: Category; label: string; icon?: string }[] = [
-    { key: 'all', label: 'Все' },
+    { key: 'all', label: 'All' },
     ...Object.entries(HELP_CATEGORIES).map(([key, val]) => ({
       key: key as HelpArticle['category'],
       label: val.label,
@@ -81,17 +81,17 @@ export default function HelpPage() {
             transition: 'color .2s',
           }}
         >
-          &larr; На главную
+          &larr; Home
         </Link>
       </header>
 
       {/* Hero */}
       <div style={{ textAlign: 'center', padding: '48px 24px 32px' }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-          Центр помощи
+          Help Center
         </h1>
         <p style={{ color: C.sub, fontSize: 16, marginTop: 8, maxWidth: 480, margin: '8px auto 0' }}>
-          Найдите ответы на часто задаваемые вопросы или свяжитесь с нами
+          Find answers to frequently asked questions or get in touch with us
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default function HelpPage() {
           </svg>
           <input
             type="text"
-            placeholder="Поиск по статьям..."
+            placeholder="Search articles..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -146,7 +146,7 @@ export default function HelpPage() {
               gap: 8,
             }}
           >
-            <span style={{ fontSize: 18 }}>&#9733;</span> Популярные статьи
+            <span style={{ fontSize: 18 }}>&#9733;</span> Popular Articles
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
             {HELP_ARTICLES.slice(0, 5).map((article) => {
@@ -229,14 +229,14 @@ export default function HelpPage() {
         {(search.trim() || activeCategory !== 'all') && filtered.length > 0 && (
           <p style={{ fontSize: 13, color: C.dim, marginBottom: 12 }}>
             {filtered.length === 1
-              ? 'Найдена 1 статья'
-              : `Найдено ${filtered.length} ${filtered.length < 5 ? 'статьи' : 'статей'}`}
+              ? '1 article found'
+              : `${filtered.length} articles found`}
           </p>
         )}
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: C.dim }}>
-            <p style={{ fontSize: 18, fontWeight: 600 }}>Ничего не найдено</p>
-            <p style={{ fontSize: 14, marginTop: 8 }}>Попробуйте изменить запрос или категорию</p>
+            <p style={{ fontSize: 18, fontWeight: 600 }}>Nothing found</p>
+            <p style={{ fontSize: 14, marginTop: 8 }}>Try changing your query or category</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -341,9 +341,9 @@ export default function HelpPage() {
             border: `1px solid ${C.border}`,
           }}
         >
-          <p style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Не нашли ответ?</p>
+          <p style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Didn&apos;t find an answer?</p>
           <p style={{ color: C.sub, fontSize: 14, marginTop: 8 }}>
-            Свяжитесь с нашей командой поддержки
+            Get in touch with our support team
           </p>
           <Link
             href="/contact"
@@ -360,7 +360,7 @@ export default function HelpPage() {
               transition: 'opacity .2s',
             }}
           >
-            Написать в поддержку
+            Contact Support
           </Link>
         </div>
       </div>

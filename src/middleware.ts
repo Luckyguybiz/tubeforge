@@ -23,9 +23,9 @@ const rateLimitMap = new Map<string, RateLimitEntry>();
 const authRateLimitMap = new Map<string, RateLimitEntry>();
 
 /** Requests allowed per window per IP */
-const RATE_LIMIT_MAX = 300;
-/** Auth endpoint: stricter limit (30 requests per minute) */
-const AUTH_RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_MAX = 120;
+/** Auth endpoint: stricter limit (10 requests per minute) */
+const AUTH_RATE_LIMIT_MAX = 10;
 /** Window duration in ms (1 minute) */
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** Purge stale entries every N calls to keep the Map bounded */
@@ -206,27 +206,11 @@ export default function middleware(req: NextRequest) {
     '/api/stripe/webhook',
     '/api/webhooks',
     '/api/health',
-    '/api/og',
-    '/api/newsletter',
-    '/api/cron',
     '/privacy',
     '/terms',
-    '/about',
-    '/contact',
-    '/help',
-    '/status',
-    '/blog',
-    '/gallery',
-    '/changelog',
-    '/sla',
     '/dpa',
+    '/sla',
     '/security',
-    '/compare',
-    '/share',
-    '/api-docs',
-    '/oferta',
-    '/vpn',
-    '/profile',
   ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
@@ -265,5 +249,5 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/tools/video-translate).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

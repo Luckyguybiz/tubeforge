@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { useThemeStore } from '@/stores/useThemeStore';
-
-/* ── Inline SVG icons ──────────────────────────── */
 
 function IconHeart({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
@@ -25,43 +23,16 @@ function IconFilm({ size = 14, color = 'currentColor' }: { size?: number; color?
   );
 }
 
-function IconSearch({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
-function IconX({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
-
 type SortOption = 'createdAt' | 'likesCount';
 
 export default function GalleryPage() {
   const C = useThemeStore((s) => s.theme);
   const [sortBy, setSortBy] = useState<SortOption>('createdAt');
-  const [activeTag, setActiveTag] = useState<string | undefined>(undefined);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchInput, setSearchInput] = useState('');
   const [hovCard, setHovCard] = useState<string | null>(null);
-  const [hovTag, setHovTag] = useState<string | null>(null);
-
-  const queryInput = useMemo(() => ({
-    sortBy,
-    limit: 20,
-    ...(activeTag ? { tag: activeTag } : {}),
-    ...(searchQuery ? { search: searchQuery } : {}),
-  }), [sortBy, activeTag, searchQuery]);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     trpc.project.listPublic.useInfiniteQuery(
-      queryInput,
+      { sortBy, limit: 20 },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         initialCursor: undefined,
@@ -69,31 +40,12 @@ export default function GalleryPage() {
     );
 
   const allItems = data?.pages.flatMap((p) => p.items) ?? [];
-  const popularTags = data?.pages[0]?.popularTags ?? [];
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleSearch = useCallback(() => {
-    setSearchQuery(searchInput.trim());
-  }, [searchInput]);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchInput('');
-    setSearchQuery('');
-  }, []);
-
-  const handleTagClick = useCallback((tag: string) => {
-    setActiveTag((prev) => (prev === tag ? undefined : tag));
-  }, []);
-
-  const sortOptions: { label: string; value: SortOption }[] = [
-    { label: 'Newest', value: 'createdAt' },
-    { label: 'Most Liked', value: 'likesCount' },
-  ];
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
@@ -120,13 +72,16 @@ export default function GalleryPage() {
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px' }}>
         {/* Title + sort */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>Community Gallery</h1>
-            <p style={{ color: C.sub, fontSize: 14, margin: '6px 0 0' }}>Public projects created by TubeForge members</p>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>Project Gallery</h1>
+            <p style={{ color: C.sub, fontSize: 14, margin: '6px 0 0' }}>Public projects by TubeForge members</p>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {sortOptions.map((opt) => (
+            {([
+              { label: 'Newest', value: 'createdAt' as SortOption },
+              { label: 'Popular', value: 'likesCount' as SortOption },
+            ]).map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => setSortBy(opt.value)}
@@ -145,117 +100,6 @@ export default function GalleryPage() {
           </div>
         </div>
 
-        {/* Search bar */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <div style={{
-            flex: 1, display: 'flex', alignItems: 'center', gap: 8,
-            padding: '8px 14px', borderRadius: 10,
-            border: `1px solid ${C.border}`, background: C.card,
-          }}>
-            <IconSearch size={16} color={C.dim} />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-              placeholder="Search projects..."
-              style={{
-                flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                color: C.text, fontSize: 14,
-              }}
-            />
-            {searchQuery && (
-              <button
-                onClick={handleClearSearch}
-                style={{
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  padding: 2, display: 'flex', alignItems: 'center',
-                }}
-              >
-                <IconX size={14} color={C.sub} />
-              </button>
-            )}
-          </div>
-          <button
-            onClick={handleSearch}
-            style={{
-              padding: '8px 18px', borderRadius: 10,
-              background: C.accent, color: '#fff', border: 'none',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              transition: 'opacity .15s',
-            }}
-          >
-            Search
-          </button>
-        </div>
-
-        {/* Tag filters */}
-        {popularTags.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
-            {activeTag && (
-              <button
-                onClick={() => setActiveTag(undefined)}
-                style={{
-                  padding: '5px 12px', borderRadius: 8,
-                  border: `1px solid ${C.border}`,
-                  background: 'transparent',
-                  color: C.sub,
-                  fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  transition: 'all .15s',
-                }}
-              >
-                <IconX size={11} color={C.sub} />
-                Clear filter
-              </button>
-            )}
-            {popularTags.map((tag) => (
-              <button
-                key={tag.name}
-                onClick={() => handleTagClick(tag.name)}
-                onMouseEnter={() => setHovTag(tag.name)}
-                onMouseLeave={() => setHovTag(null)}
-                style={{
-                  padding: '5px 12px', borderRadius: 8,
-                  border: `1px solid ${activeTag === tag.name ? C.accent : C.border}`,
-                  background: activeTag === tag.name ? C.accentDim : hovTag === tag.name ? C.card : 'transparent',
-                  color: activeTag === tag.name ? C.accent : C.sub,
-                  fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                  transition: 'all .15s',
-                }}
-              >
-                {tag.name}
-                <span style={{ opacity: 0.6, marginLeft: 4 }}>{tag.count}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Active filters indicator */}
-        {(searchQuery || activeTag) && (
-          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: C.dim, fontSize: 13 }}>Filtered by:</span>
-            {searchQuery && (
-              <span style={{
-                padding: '3px 10px', borderRadius: 6,
-                background: C.card, color: C.text,
-                fontSize: 12, fontWeight: 500,
-              }}>
-                &ldquo;{searchQuery}&rdquo;
-              </span>
-            )}
-            {activeTag && (
-              <span style={{
-                padding: '3px 10px', borderRadius: 6,
-                background: C.accentDim, color: C.accent,
-                fontSize: 12, fontWeight: 500,
-              }}>
-                #{activeTag}
-              </span>
-            )}
-          </div>
-        )}
-
         {/* Loading */}
         {isLoading && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -273,42 +117,24 @@ export default function GalleryPage() {
           <div style={{
             textAlign: 'center', padding: '80px 20px',
           }}>
-            <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }}>
-              <IconFilm size={48} color={C.dim} />
-            </div>
+            <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }}>🎬</div>
             <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>
-              {searchQuery || activeTag ? 'No projects match your filters' : 'No public projects yet'}
+              No public projects yet
             </h2>
             <p style={{ color: C.sub, fontSize: 14, margin: '0 0 20px' }}>
-              {searchQuery || activeTag
-                ? 'Try adjusting your search or clearing filters.'
-                : 'Be the first! Create a project and make it public.'}
+              Be the first! Create a project and make it public.
             </p>
-            {(searchQuery || activeTag) ? (
-              <button
-                onClick={() => { handleClearSearch(); setActiveTag(undefined); }}
-                style={{
-                  display: 'inline-block',
-                  padding: '10px 24px', borderRadius: 10,
-                  background: C.accent, color: '#fff',
-                  fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer',
-                }}
-              >
-                Clear Filters
-              </button>
-            ) : (
-              <Link
-                href="/dashboard"
-                style={{
-                  display: 'inline-block',
-                  padding: '10px 24px', borderRadius: 10,
-                  background: C.accent, color: '#fff',
-                  fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                }}
-              >
-                Create a Project
-              </Link>
-            )}
+            <Link
+              href="/dashboard"
+              style={{
+                display: 'inline-block',
+                padding: '10px 24px', borderRadius: 10,
+                background: C.accent, color: '#fff',
+                fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              }}
+            >
+              Create Project
+            </Link>
           </div>
         )}
 
@@ -382,7 +208,7 @@ export default function GalleryPage() {
                     }}>
                       {project.title}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {/* Author */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         {project.user.image ? (
@@ -405,23 +231,6 @@ export default function GalleryPage() {
                         {project._count.scenes} {project._count.scenes === 1 ? 'scene' : 'scenes'}
                       </span>
                     </div>
-                    {/* Tags */}
-                    {project.tags.length > 0 && (
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
-                        {project.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} style={{
-                            padding: '2px 6px', borderRadius: 4,
-                            background: C.surface, color: C.dim,
-                            fontSize: 11, fontWeight: 500,
-                          }}>
-                            {tag}
-                          </span>
-                        ))}
-                        {project.tags.length > 3 && (
-                          <span style={{ fontSize: 11, color: C.dim }}>+{project.tags.length - 3}</span>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               </Link>
@@ -445,7 +254,7 @@ export default function GalleryPage() {
                 transition: 'all .15s',
               }}
             >
-              {isFetchingNextPage ? 'Loading...' : 'Load More'}
+              {isFetchingNextPage ? 'Loading...' : 'Show More'}
             </button>
           </div>
         )}

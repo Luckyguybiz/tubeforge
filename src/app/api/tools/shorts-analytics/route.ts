@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
             v.snippet?.thumbnails?.default?.url ??
             '',
           views,
-          viewsFormatted: views.toLocaleString('ru-RU').replace(/,/g, ' '),
+          viewsFormatted: views.toLocaleString('en-US').replace(/,/g, ' '),
           uploaded: getRelativeTime(v.snippet?.publishedAt),
           uploadedRaw: v.snippet?.publishedAt,
           channel: v.snippet?.channelTitle ?? '',
