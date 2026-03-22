@@ -53,7 +53,7 @@ vi.mock('@/stores/useLocaleStore', () => ({
     selector({
       t: (key: string) => {
         const translations: Record<string, string> = {
-          'nav.dashboard': 'Dashboard',
+          'nav.dashboard': 'My Works',
           'nav.editor': 'Editor',
           'nav.metadata': 'Metadata',
           'nav.seoOptimizer': 'SEO Optimizer',
@@ -154,8 +154,8 @@ describe('Sidebar', () => {
 
   it('renders navigation items for create section', () => {
     render(<Sidebar />);
-    expect(screen.getByText('Dashboard')).toBeDefined();
     expect(screen.getByText('AI Thumbnails')).toBeDefined();
+    expect(screen.getByText('My Works')).toBeDefined();
     expect(screen.getByText('Editor')).toBeDefined();
     expect(screen.getByText('Preview')).toBeDefined();
   });
@@ -203,7 +203,7 @@ describe('Sidebar', () => {
 
   it('marks the current page as active with aria-current', () => {
     render(<Sidebar />);
-    const dashboardBtn = screen.getByText('Dashboard').closest('button');
+    const dashboardBtn = screen.getByText('My Works').closest('button');
     expect(dashboardBtn?.getAttribute('aria-current')).toBe('page');
   });
 

@@ -250,7 +250,7 @@ export default function middleware(req: NextRequest) {
     const safeCallback =
       pathname.startsWith('/') && !pathname.startsWith('//')
         ? pathname
-        : '/dashboard';
+        : '/ai-thumbnails';
     loginUrl.searchParams.set('callbackUrl', safeCallback);
     return NextResponse.redirect(loginUrl);
   }

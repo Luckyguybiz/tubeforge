@@ -38,7 +38,7 @@ vi.mock('@/stores/useLocaleStore', () => ({
     selector({
       t: (key: string) => {
         const translations: Record<string, string> = {
-          'nav.dashboard': 'Dashboard',
+          'nav.dashboard': 'My Works',
           'nav.editor': 'Editor',
           'nav.settings': 'Settings',
           'nav.admin': 'Admin',

@@ -1,5 +1,5 @@
 {
-  "nav.dashboard": "Басқару тақтасы",
+  "nav.dashboard": "Менің жұмыстарым",
   "nav.editor": "Редактор",
   "nav.metadata": "Метадеректер",
   "nav.thumbnails": "Мұқабалар",
@@ -1330,7 +1330,7 @@
   "welcome.continue": "Жалғастыру",
   "welcome.needHelp": "Көмек керек пе?",
   "welcome.supportDesc": "Бізде Telegram-да қолдау тобы бар, сондай-ақ бізге email жаза аласыз.",
-  "welcome.goToDashboard": "Басқару тақтасына",
+  "welcome.goToDashboard": "Жасауды бастау",
   "referral.activated": "Серіктестік бағдарлама белсендірілді!",
   "referral.activateError": "Белсендіру мүмкін болмады. Қайта көріңіз.",
   "referral.shareText": "TubeForge-ға қосылыңыз — ЖИ-мен бейне жасаудың ең жақсы платформасы! Менің сілтемем арқылы тіркеліңіз:",

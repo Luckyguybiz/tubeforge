@@ -99,11 +99,11 @@ export default function OnboardingPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Check if quiz already done, redirect to dashboard
+  // Check if quiz already done, redirect to AI Thumbnails
   useEffect(() => {
     try {
       if (localStorage.getItem(LS_DONE_KEY) === 'true') {
-        router.replace('/dashboard');
+        router.replace('/ai-thumbnails');
       }
     } catch { /* localStorage unavailable */ }
   }, [router]);
@@ -171,7 +171,7 @@ export default function OnboardingPage() {
     try {
       localStorage.setItem(LS_DONE_KEY, 'true');
     } catch { /* localStorage unavailable */ }
-    router.push('/dashboard');
+    router.push('/ai-thumbnails');
   }, [router]);
 
   const handleClaimOffer = useCallback(() => {
@@ -185,7 +185,7 @@ export default function OnboardingPage() {
     try {
       localStorage.setItem(LS_DONE_KEY, 'true');
     } catch { /* localStorage unavailable */ }
-    router.push('/dashboard');
+    router.push('/ai-thumbnails');
   }, [router]);
 
   /* ── Check if current step has a valid answer ───────────────────── */

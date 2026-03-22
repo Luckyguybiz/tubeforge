@@ -23,7 +23,7 @@ function RegisterContent() {
   const planParam = searchParams.get('plan');
   const validPlans = ['PRO', 'STUDIO'] as const;
   const safePlan = planParam && validPlans.includes(planParam as typeof validPlans[number]) ? planParam : null;
-  const callbackUrl = safePlan ? `/dashboard?initCheckout=${safePlan}` : '/dashboard';
+  const callbackUrl = safePlan ? `/dashboard?initCheckout=${safePlan}` : '/ai-thumbnails';
 
   // Capture referral code from URL to localStorage
   useEffect(() => {

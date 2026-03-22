@@ -223,8 +223,8 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
     {
       label: t('sidebar.create'),
       items: [
-        { id: 'dashboard', label: t('nav.dashboard') },
         { id: 'ai-thumbnails', label: t('nav.aiThumbnails') },
+        { id: 'dashboard', label: t('nav.dashboard') },
         { id: 'editor', label: t('nav.editor') },
         { id: 'preview', label: t('nav.preview') },
       ],

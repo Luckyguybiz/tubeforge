@@ -329,7 +329,7 @@ function WelcomeInner() {
         <button
           type="button"
           style={{ ...primaryBtn, flex: 1 }}
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/ai-thumbnails')}
         >
           {t('welcome.goToDashboard')}
         </button>

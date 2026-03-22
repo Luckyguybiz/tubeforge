@@ -1,5 +1,5 @@
 {
-  "nav.dashboard": "Главная",
+  "nav.dashboard": "Мои работы",
   "nav.editor": "Редактор",
   "nav.metadata": "Метаданные",
   "nav.thumbnails": "Обложки",
@@ -1457,7 +1457,7 @@
   "welcome.continue": "Продолжить",
   "welcome.needHelp": "Нужна помощь?",
   "welcome.supportDesc": "У нас есть команда поддержки в Telegram, а также вы можете написать нам на email.",
-  "welcome.goToDashboard": "Перейти в дашборд",
+  "welcome.goToDashboard": "Начать создавать",
   "referral.activated": "Партнёрская программа активирована!",
   "referral.activateError": "Не удалось активировать. Попробуйте снова.",
   "referral.shareText": "Присоединяйся к TubeForge — лучшей платформе для создания видео с ИИ! Регистрируйся по моей ссылке:",
