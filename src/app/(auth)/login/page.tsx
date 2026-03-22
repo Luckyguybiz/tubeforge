@@ -2,26 +2,26 @@
 
 import { Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
+/* ---------- Google "G" logo (official multi-color) ---------- */
+const GoogleLogo = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+    <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+    <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+  </svg>
+);
+
 function LoginContent() {
-  const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { status } = useSession();
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
-  const [devEmail, setDevEmail] = useState('');
-  const [devLoading, setDevLoading] = useState(false);
-  const handleDevLogin = async () => {
-    setDevLoading(true);
-    await signIn('dev-login', { email: devEmail, callbackUrl: '/dashboard' });
-    setDevLoading(false);
-  };
 
   useEffect(() => {
     if (status === 'authenticated') window.location.href = '/dashboard';
@@ -35,78 +35,211 @@ function LoginContent() {
     } catch { /* localStorage unavailable */ }
   }, [searchParams]);
 
+  const errorMessage = error
+    ? error === 'OAuthAccountNotLinked'
+      ? t('auth.login.errorLinked')
+      : error === 'OAuthSignin'
+        ? t('auth.login.errorSignin')
+        : error === 'OAuthCallback'
+          ? t('auth.login.errorGeneric')
+          : t('auth.login.errorGeneric')
+    : null;
+
   if (status === 'loading' || status === 'authenticated') {
     return (
-      <div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg, color: C.sub, padding: '0 16px', boxSizing: 'border-box' }}>
-        {t('common.loading')}
-      </div>
+      <main style={styles.page}>
+        <div style={styles.spinner} />
+      </main>
     );
   }
 
   return (
-    <main style={{ width: '100%', minHeight: '100dvh', background: C.bg, fontFamily: "'Instrument Sans',sans-serif", color: C.text, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
-      <div style={{ width: '100%', maxWidth: 400, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 40, textAlign: 'center', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 32 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: `linear-gradient(135deg,${C.accent},${C.pink})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff' }}>TF</div>
-          <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em' }}>TubeForge</span>
+    <main style={styles.page}>
+      {/* Logo */}
+      <div style={styles.logoWrap}>
+        <div style={styles.logoIcon}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 5v14l11-7L8 5z" fill="#fff" />
+          </svg>
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>{t('auth.login.title')}</h1>
-        <p style={{ color: C.sub, fontSize: 14, marginBottom: 28 }}>{t('auth.login.subtitle')}</p>
-        {error && (
-          <div style={{ background: '#ef444414', border: '1px solid #ef444433', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#ef4444', fontSize: 13, textAlign: 'left' }}>
-            {error === 'OAuthAccountNotLinked'
-              ? 'Этот email уже используется с другим способом входа.'
-              : error === 'OAuthSignin'
-                ? 'Ошибка авторизации. Попробуйте снова.'
-                : error === 'OAuthCallback'
-                  ? 'Ошибка callback. Попробуйте снова.'
-                  : 'Произошла ошибка при входе.'}
+        <span style={styles.logoText}>TubeForge</span>
+      </div>
+
+      {/* Card */}
+      <div style={styles.card}>
+        <h1 style={styles.heading}>{t('auth.login.title')}</h1>
+        <p style={styles.subtitle}>{t('auth.login.subtitle')}</p>
+
+        {/* Error */}
+        {errorMessage && (
+          <div style={styles.errorBanner}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+              <circle cx="8" cy="8" r="8" fill="#ff3b30" fillOpacity="0.12" />
+              <path d="M8 4.5v4M8 10.5v.5" stroke="#ff3b30" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <span>{errorMessage}</span>
           </div>
         )}
+
+        {/* Google OAuth */}
         <button
           onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-          style={{ width: '100%', padding: '14px 24px', borderRadius: 12, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12, transition: 'border-color .2s, background .2s' }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = C.surface; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card; }}
+          style={styles.googleBtn}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f5f5f7';
+            e.currentTarget.style.borderColor = '#d1d1d6';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#ffffff';
+            e.currentTarget.style.borderColor = '#e5e5ea';
+          }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <GoogleLogo />
           {t('auth.login.google')}
         </button>
-        {process.env.NODE_ENV !== 'production' && (
-        <div style={{ borderTop: `1px solid ${C.border}`, margin: '16px 0', paddingTop: 16 }}>
-          <p style={{ color: C.sub, fontSize: 12, marginBottom: 8 }}>Dev Login (without Google)</p>
-          <input
-            type="email"
-            placeholder="Email"
-            value={devEmail}
-            onChange={(e) => setDevEmail(e.target.value)}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 14, fontFamily: 'inherit', marginBottom: 8, boxSizing: 'border-box' }}
-          />
-          <button
-            onClick={handleDevLogin}
-            disabled={devLoading || !devEmail}
-            style={{ width: '100%', padding: '12px 24px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: devLoading || !devEmail ? 0.5 : 1 }}
-          >
-            {devLoading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </div>
-        )}
-        <p style={{ color: C.sub, fontSize: 13, marginTop: 20 }}>
-          {t('auth.login.noAccount')}{' '}
-          <Link href="/register" style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}>
-            {t('auth.login.register')}
-          </Link>
-        </p>
-        <p style={{ color: C.dim, fontSize: 11, marginTop: 12 }}>{t('auth.login.consent')}</p>
       </div>
+
+      {/* Below-card link */}
+      <p style={styles.switchText}>
+        {t('auth.login.noAccount')}{' '}
+        <Link href="/register" style={styles.switchLink}>
+          {t('auth.login.register')}
+        </Link>
+      </p>
+
+      {/* Legal */}
+      <p style={styles.legal}>{t('auth.login.consent')}</p>
     </main>
   );
 }
 
+/* ---------- Apple-style design tokens ---------- */
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    width: '100%',
+    minHeight: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#f5f5f7',
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Instrument Sans', 'Helvetica Neue', sans-serif",
+    padding: '40px 20px',
+    boxSizing: 'border-box',
+  },
+  spinner: {
+    width: 24,
+    height: 24,
+    border: '2.5px solid #e5e5ea',
+    borderTopColor: '#1d1d1f',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+  },
+  logoWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 32,
+  },
+  logoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    background: '#1d1d1f',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontWeight: 700,
+    fontSize: 20,
+    letterSpacing: '-0.02em',
+    color: '#1d1d1f',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 400,
+    background: '#ffffff',
+    borderRadius: 20,
+    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    padding: 40,
+    boxSizing: 'border-box' as const,
+    textAlign: 'center' as const,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: 600,
+    color: '#1d1d1f',
+    margin: '0 0 6px 0',
+    letterSpacing: '-0.01em',
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#86868b',
+    margin: '0 0 28px 0',
+    lineHeight: 1.5,
+  },
+  errorBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    background: '#fff5f5',
+    border: '1px solid #fed7d7',
+    borderRadius: 12,
+    padding: '12px 16px',
+    marginBottom: 20,
+    color: '#c53030',
+    fontSize: 13,
+    lineHeight: 1.4,
+    textAlign: 'left' as const,
+  },
+  googleBtn: {
+    width: '100%',
+    height: 48,
+    padding: '0 20px',
+    borderRadius: 12,
+    border: '1px solid #e5e5ea',
+    background: '#ffffff',
+    color: '#1d1d1f',
+    fontSize: 15,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    transition: 'background 0.2s, border-color 0.2s',
+    outline: 'none',
+  },
+  switchText: {
+    color: '#86868b',
+    fontSize: 14,
+    marginTop: 24,
+    marginBottom: 0,
+  },
+  switchLink: {
+    color: '#6366f1',
+    textDecoration: 'none',
+    fontWeight: 600,
+  },
+  legal: {
+    color: '#aeaeb2',
+    fontSize: 12,
+    marginTop: 16,
+    textAlign: 'center' as const,
+    maxWidth: 360,
+    lineHeight: 1.5,
+  },
+};
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />}>
-      <LoginContent />
-    </Suspense>
+    <>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f7' }}><div style={styles.spinner} /></div>}>
+        <LoginContent />
+      </Suspense>
+    </>
   );
 }
