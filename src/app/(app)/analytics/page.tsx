@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+// useRouter removed — analytics available for all plans
 import { trpc } from '@/lib/trpc';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { StatCard } from '@/components/analytics/StatCard';
@@ -62,27 +62,17 @@ export default function AnalyticsPage() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
   const { data: session, status } = useSession();
-  const router = useRouter();
-
-  // Gate: only PRO and STUDIO users
+  // Available for all plans
   const plan = session?.user?.plan ?? 'FREE';
-  const isPaidPlan = plan === 'PRO' || plan === 'STUDIO';
-
-  // Redirect FREE users
-  useEffect(() => {
-    if (status === 'authenticated' && !isPaidPlan) {
-      router.replace('/billing');
-    }
-  }, [status, isPaidPlan, router]);
 
   // Fetch server data
   const overview = trpc.analytics.getOverview.useQuery(undefined, {
-    enabled: isPaidPlan && status === 'authenticated',
+    enabled: status === 'authenticated',
     staleTime: 60_000,
   });
 
   const activity = trpc.analytics.getProjectActivity.useQuery(undefined, {
-    enabled: isPaidPlan && status === 'authenticated',
+    enabled: status === 'authenticated',
     staleTime: 60_000,
   });
 
@@ -113,7 +103,7 @@ export default function AnalyticsPage() {
   }, [overview.data?.statusBreakdown, C]);
 
   // Loading state
-  if (status === 'loading' || (status === 'authenticated' && !isPaidPlan)) {
+  if (status === 'loading') {
     return (
       <div
         style={{
