@@ -13,19 +13,19 @@ vi.mock('@/stores/useThemeStore', () => ({
   useThemeStore: (selector: (s: unknown) => unknown) =>
     selector({
       theme: {
-        bg: '#06060b',
-        surface: '#0c0c14',
-        card: '#111119',
-        cardHover: '#17171f',
-        border: '#1e1e2e',
-        text: '#e8e8f0',
-        sub: '#7c7c96',
-        dim: '#44445a',
-        accent: '#ff2d55',
-        green: '#2dd4a0',
-        blue: '#3a7bfd',
+        bg: '#0a0a0a',
+        surface: '#141414',
+        card: '#1a1a1a',
+        cardHover: '#222222',
+        border: 'rgba(255,255,255,0.08)',
+        text: '#ffffff',
+        sub: 'rgba(255,255,255,0.5)',
+        dim: 'rgba(255,255,255,0.2)',
+        accent: '#6366f1',
+        green: '#10b981',
+        blue: '#3b82f6',
         orange: '#f59e0b',
-        overlay: 'rgba(0,0,0,.4)',
+        overlay: 'rgba(0,0,0,0.6)',
       },
       isDark: true,
       mode: 'dark',
@@ -146,7 +146,7 @@ describe('TopBar', () => {
   it('renders the TopBar container with correct height', () => {
     const { container } = render(<TopBar />);
     const topBarDiv = container.firstChild as HTMLElement;
-    expect(topBarDiv.style.height).toBe('52px');
+    expect(topBarDiv.style.height).toBe('56px');
   });
 
   it('renders the hamburger menu button', () => {

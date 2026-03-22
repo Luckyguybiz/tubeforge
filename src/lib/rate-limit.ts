@@ -11,8 +11,16 @@
  * root middleware.ts (edge runtime), which has longer-lived instances than
  * individual serverless functions and therefore provides better coverage.
  *
- * For cross-instance, production-grade rate limiting you need a shared store
- * such as @upstash/ratelimit + @upstash/redis:
+ * CURRENT SETUP (PM2 single instance):
+ * In-memory rate limiting is acceptable for single-instance PM2 fork mode.
+ * The Map is shared across all requests within the same Node.js process.
+ *
+ * REDIS MIGRATION PATH (post-launch):
+ * When scaling to multiple PM2 instances or deploying to serverless:
+ *
+ * 1. Install: npm install @upstash/ratelimit @upstash/redis
+ * 2. Set env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+ * 3. Replace the in-memory store with:
  *
  *   import { Ratelimit } from '@upstash/ratelimit';
  *   import { Redis }     from '@upstash/redis';
@@ -21,6 +29,9 @@
  *     redis: Redis.fromEnv(),
  *     limiter: Ratelimit.slidingWindow(limit, `${window} s`),
  *   });
+ *
+ * 4. Update the rateLimit() function to call ratelimit.limit(identifier)
+ * 5. Remove the in-memory Map, cleanup timer, and LRU eviction logic
  */
 
 interface RateLimitEntry {

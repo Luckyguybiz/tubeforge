@@ -5,6 +5,9 @@ import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { sanitizeUrl, stripTags } from '@/lib/sanitize';
 import { randomBytes, createHmac } from 'crypto';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('webhook');
 
 export const WEBHOOK_EVENTS = ['video.completed', 'project.created'] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
@@ -21,6 +24,18 @@ async function checkRate(userId: string) {
  */
 export function signPayload(secret: string, payload: string): string {
   return createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+/**
+ * Deliver a webhook event to all registered endpoints for a user.
+ *
+ * TODO: Implement actual delivery
+ * 1. Query WebhookEndpoint where userId and events contains event
+ * 2. For each endpoint, POST to url with HMAC-signed payload
+ * 3. Log delivery status
+ */
+export async function deliverWebhook(userId: string, event: string, payload: unknown) {
+  log.info(`[Webhook] Would deliver ${event} to user ${userId}`, { event, userId, payload });
 }
 
 export const webhookRouter = router({

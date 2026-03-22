@@ -23,26 +23,26 @@ vi.mock('@/stores/useThemeStore', () => ({
   useThemeStore: (selector: (s: unknown) => unknown) =>
     selector({
       theme: {
-        bg: '#06060b',
-        surface: '#0c0c14',
-        card: '#111119',
-        cardHover: '#17171f',
-        border: '#1e1e2e',
-        borderActive: '#2e2e44',
-        accent: '#ff2d55',
-        accentDim: 'rgba(255,45,85,.1)',
-        blue: '#3a7bfd',
-        green: '#2dd4a0',
+        bg: '#0a0a0a',
+        surface: '#141414',
+        card: '#1a1a1a',
+        cardHover: '#222222',
+        border: 'rgba(255,255,255,0.08)',
+        borderActive: 'rgba(255,255,255,0.16)',
+        accent: '#6366f1',
+        accentDim: 'rgba(99,102,241,0.1)',
+        blue: '#3b82f6',
+        green: '#10b981',
         purple: '#8b5cf6',
         orange: '#f59e0b',
         cyan: '#06b6d4',
         pink: '#ec4899',
         red: '#ef4444',
-        text: '#e8e8f0',
-        sub: '#7c7c96',
-        dim: '#44445a',
-        overlay: 'rgba(0,0,0,.4)',
-        overlayLight: 'rgba(0,0,0,.5)',
+        text: '#ffffff',
+        sub: 'rgba(255,255,255,0.5)',
+        dim: 'rgba(255,255,255,0.2)',
+        overlay: 'rgba(0,0,0,0.6)',
+        overlayLight: 'rgba(0,0,0,0.8)',
       },
       isDark: true,
     }),
@@ -59,6 +59,8 @@ vi.mock('@/stores/useLocaleStore', () => ({
           'nav.seoOptimizer': 'SEO Optimizer',
           'nav.thumbnails': 'Thumbnails',
           'nav.preview': 'Preview',
+          'nav.publish': 'Publish & Plan',
+          'nav.designStudio': 'Design Studio',
           'nav.team': 'Team',
           'nav.settings': 'Settings',
           'nav.admin': 'Admin',
@@ -163,14 +165,14 @@ describe('Sidebar', () => {
     expect(screen.getByText('AI Thumbnails')).toBeDefined();
     expect(screen.getByText('My Works')).toBeDefined();
     expect(screen.getByText('Editor')).toBeDefined();
-    expect(screen.getByText('Preview')).toBeDefined();
+    expect(screen.getByText('Publish & Plan')).toBeDefined();
   });
 
   it('renders tools section items', () => {
     render(<Sidebar />);
     expect(screen.getByText('All Tools')).toBeDefined();
-    expect(screen.getByText('Thumbnails')).toBeDefined();
-    expect(screen.getByText('SEO Optimizer')).toBeDefined();
+    expect(screen.getByText('Design Studio')).toBeDefined();
+    expect(screen.getByText('Keywords')).toBeDefined();
     expect(screen.getByText('Analytics')).toBeDefined();
   });
 

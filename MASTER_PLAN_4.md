@@ -53,46 +53,46 @@
 ### H2. Register toolHistoryRouter
 - **File:** `src/server/routers/_app.ts`
 - **Fix:** Import and register `toolHistoryRouter` from `./toolHistory`
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H3. VPN promo usage — persist to DB
 - **File:** `src/server/routers/vpn.ts`
 - **Fix:** Track promo usage in Prisma (add PromoUsage model or use existing ProcessedEvent)
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H4. Rate limiting — document Redis migration path
 - **File:** `src/lib/rate-limit.ts`
 - **Fix:** Add TODO comments and document @upstash/ratelimit migration. For now, in-memory is acceptable for single-instance PM2
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H5. Webhook delivery — stub implementation
 - **File:** `src/server/routers/webhook.ts`
 - **Fix:** Add `deliverWebhook()` function that POSTs to registered URLs. Call it from project.create and videoTask completion
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H6. Oferta page — translate to English + USD
 - **File:** `src/app/(legal)/oferta/page.tsx`
 - **Fix:** Translate Russian text, change ruble prices to USD
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H7. 6 referral-link tool pages — clean up Russian
 - **Files:** `AiCreator.tsx`, `AudioBalancer.tsx`, `RedditVideoGenerator.tsx`, `VocalRemover.tsx`, `Brainstormer.tsx`, `Veo3Generator.tsx`
 - **Fix:** Remove `descriptionRu`/`featuresRu`/`pricingRu` fields, use English only
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H8. VideoTranslator — proper coming soon page
 - **File:** `src/views/Tools/VideoTranslator.tsx`
 - **Fix:** Use ToolPageShell with proper "coming soon" UI matching other unavailable tools
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H9. Onboarding — use theme variables
 - **File:** `src/app/(app)/onboarding/page.tsx`
 - **Fix:** Replace hardcoded `#0a0a0a`, `#1a1a1a` with CSS variables or accept dark-only (add comment)
-- **Status:** [ ]
+- **Status:** [x]
 
 ### H10. Initialize Prisma migrations
 - **Fix:** Run `mkdir -p prisma/migrations` and document migration strategy. Keep using `db push` for now but prepare for `prisma migrate`
-- **Status:** [ ]
+- **Status:** [x]
 
 ---
 

@@ -1,3 +1,5 @@
+// This page intentionally uses hardcoded dark colors (not theme store)
+// because it renders without the app layout and should always be dark.
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';

@@ -1,5 +1,6 @@
 'use client';
 
+import { ToolPageShell } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -10,73 +11,43 @@ export function VideoTranslator() {
   const C = useThemeStore((s) => s.theme);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 400,
-        padding: '60px 24px',
-        textAlign: 'center',
-      }}
+    <ToolPageShell
+      title="Video Translator"
+      subtitle="Translate videos to 30+ languages with AI voice cloning"
+      badge="PRO"
+      gradient={['#06b6d4', '#0ea5e9']}
+      comingSoon
     >
-      <div
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: 20,
-          background: `linear-gradient(135deg, #06b6d415, #0ea5e915)`,
-          display: 'flex',
-          alignItems: 'center',
+      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+        <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.7, maxWidth: 500, margin: '0 auto' }}>
+          Preserve the original speaker&apos;s voice, tone, and emotion in any language.
+          Upload a video, choose the target language, and let AI handle the rest.
+        </p>
+        <div style={{
+          marginTop: 24,
+          display: 'inline-flex',
+          flexWrap: 'wrap',
+          gap: 8,
           justifyContent: 'center',
-          fontSize: 36,
-          marginBottom: 24,
-        }}
-      >
-        {'\uD83C\uDF0D'}
+        }}>
+          {['Voice Cloning', 'Lip Sync', '30+ Languages', 'Emotion Preservation', 'Batch Processing'].map((feature) => (
+            <span
+              key={feature}
+              style={{
+                padding: '4px 12px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                background: '#06b6d412',
+                color: '#06b6d4',
+                border: '1px solid #06b6d420',
+              }}
+            >
+              {feature}
+            </span>
+          ))}
+        </div>
       </div>
-      <h1
-        style={{
-          fontSize: 28,
-          fontWeight: 700,
-          letterSpacing: '-.03em',
-          marginBottom: 8,
-          color: C.text,
-        }}
-      >
-        Video Translator
-      </h1>
-      <p
-        style={{
-          color: C.sub,
-          fontSize: 16,
-          lineHeight: 1.6,
-          maxWidth: 480,
-          marginBottom: 12,
-        }}
-      >
-        Translate videos to 30+ languages with AI voice cloning. Preserve the
-        original speaker's voice, tone, and emotion in any language.
-      </p>
-      <span
-        style={{
-          display: 'inline-block',
-          padding: '4px 14px',
-          borderRadius: 8,
-          background: `linear-gradient(135deg, ${C.accent}, ${C.pink ?? C.accent})`,
-          color: '#fff',
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: '.03em',
-          marginBottom: 28,
-        }}
-      >
-        PRO
-      </span>
-      <p style={{ color: C.dim, fontSize: 14, lineHeight: 1.6, maxWidth: 420 }}>
-        This tool is coming soon. Upgrade to Pro to get early access when it launches.
-      </p>
-    </div>
+    </ToolPageShell>
   );
 }
