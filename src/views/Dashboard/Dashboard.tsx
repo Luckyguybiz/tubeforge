@@ -2700,10 +2700,10 @@ export function Dashboard() {
             }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{
-                  background: C.surface,
-                  borderRadius: 14,
-                  border: `1px solid ${C.border}`,
+                  background: C.card,
+                  borderRadius: 16,
                   overflow: 'hidden',
+                  boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
                 }}>
                   <ProjectCardSkeleton />
                 </div>
@@ -2720,7 +2720,7 @@ export function Dashboard() {
                   <div style={{ marginBottom: 16, opacity: 0.6 }}>
                     <IconSearch size={48} color={C.dim} />
                   </div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: C.text }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: C.text }}>
                     {t('dashboard.nothingFound')}
                   </h3>
                   <p style={{ color: C.sub, fontSize: 14, marginBottom: 20, maxWidth: 320, lineHeight: 1.5 }}>
@@ -2981,13 +2981,12 @@ export function Dashboard() {
           left: '50%',
           transform: 'translateX(-50%)',
           background: C.card,
-          border: `1px solid ${C.border}`,
           borderRadius: 14,
           padding: '10px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: 14,
-          boxShadow: '0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06)',
           zIndex: 1000,
           fontFamily: 'inherit',
         }}>
