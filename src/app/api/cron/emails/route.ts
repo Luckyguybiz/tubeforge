@@ -33,9 +33,9 @@ interface SequenceStep {
 }
 
 const SEQUENCE: SequenceStep[] = [
-  { day: 3,  template: 'feature_discovery' },
-  { day: 7,  template: 'social_proof' },
-  { day: 14, template: 'upgrade_nudge', planFilter: 'FREE' },
+  { day: 3,  template: 'day-three' },
+  { day: 7,  template: 'day-seven' },
+  { day: 14, template: 'reengagement-day14', planFilter: 'FREE' },
   // Re-engagement for inactive users (no login in X days)
   { day: 3,  template: 'reengagement-day3', requireInactive: true },
   { day: 7,  template: 'reengagement-day7', requireInactive: true },

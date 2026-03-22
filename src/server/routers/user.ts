@@ -81,7 +81,7 @@ export const userRouter = router({
     return {
       translations: { used: translations, limit: limits.videoTranslations, period: 'month' as const },
       tts: { used: tts, limit: limits.ttsGenerations, period: 'month' as const },
-      analyses: { used: analyses, limit: limits.youtubeAnalyses, period: 'day' as const },
+      analyses: { used: analyses, limit: limits.aiGenerations, period: 'day' as const },
       plan,
     };
   }),

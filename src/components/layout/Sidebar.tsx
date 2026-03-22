@@ -796,7 +796,6 @@ export const Sidebar = memo(function Sidebar() {
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
-        height: '100%',
         minHeight: 0,
         overflow: 'hidden',
         transition: 'width .3s cubic-bezier(.4,0,.2,1)',

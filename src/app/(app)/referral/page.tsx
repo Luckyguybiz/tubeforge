@@ -154,17 +154,10 @@ function ReferralContent() {
   });
 
 
-  const claimRewardsMutation = trpc.referral.claimRewards.useMutation({
+  const claimAllMutation = trpc.referral.claimReward.useMutation({
     onSuccess: (data) => {
       rewards.refetch();
-      stats.refetch();
-      if (data.creditsApplied > 0) {
-        toast.success(t('referral.claimSuccess').replace('{{credits}}', String(data.creditsApplied)));
-      } else if (data.claimed > 0) {
-        toast.success(t('referral.claimSuccessNoCredits'));
-      } else {
-        toast.info(t('referral.noRewardsToClaim'));
-      }
+      toast.success(t('referral.claimSuccess').replace('{credits}', String(data.credits)));
     },
     onError: () => {
       toast.error(t('referral.claimError'));
@@ -1013,30 +1006,6 @@ function ReferralContent() {
                         }}>
                           +{rewards.data.totalBonusCredits} {t('referral.rewardCreditsLabel')}
                         </div>
-                      )}
-                      {(rewards.data.unclaimedCredits ?? 0) > 0 && (
-                        <button
-                          onClick={() => claimRewardsMutation.mutate()}
-                          disabled={claimRewardsMutation.isPending}
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: '#fff',
-                            background: claimRewardsMutation.isPending
-                              ? (isDark ? '#374151' : '#9ca3af')
-                              : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                            padding: '5px 14px',
-                            borderRadius: 6,
-                            border: 'none',
-                            cursor: claimRewardsMutation.isPending ? 'not-allowed' : 'pointer',
-                            transition: 'all .2s ease',
-                          }}
-                        >
-                          {claimRewardsMutation.isPending
-                            ? t('referral.claimingRewards')
-                            : t('referral.claimRewards').replace('{{credits}}', String(rewards.data.unclaimedCredits ?? 0))
-                          }
-                        </button>
                       )}
                     </div>
                   </div>

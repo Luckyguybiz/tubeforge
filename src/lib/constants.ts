@@ -184,27 +184,45 @@ export const Z_INDEX = {
 export const PLAN_LIMITS = {
   FREE: {
     projects: 3,
-    aiGenerations: 5,      // per month
-    scenes: 10,            // per project
-    teamMembers: 0,        // no team on FREE
-    storageMB: 500,        // 500 MB
+    aiGenerations: 5,
+    scenes: 10,
+    teamMembers: 0,
+    storageMB: 500,
     storageBytes: 500 * 1024 * 1024,
+    ttsGenerations: 3,
+    videoTranslations: 1,
+    aiThumbnails: 3,
+    aiThumbnailMultiGen: 1,
+    facesLimit: 3,
+    maxVideoLengthSec: 60,
   },
   PRO: {
     projects: 25,
-    aiGenerations: 100,    // per month
-    scenes: 50,            // per project
-    teamMembers: 0,        // no team on PRO
-    storageMB: 5120,       // 5 GB
+    aiGenerations: 100,
+    scenes: 50,
+    teamMembers: 0,
+    storageMB: 5120,
     storageBytes: 5 * 1024 * 1024 * 1024,
+    ttsGenerations: 50,
+    videoTranslations: 20,
+    aiThumbnails: 100,
+    aiThumbnailMultiGen: 2,
+    facesLimit: 10,
+    maxVideoLengthSec: 600,
   },
   STUDIO: {
     projects: Infinity,
     aiGenerations: Infinity,
-    scenes: 200,           // per project
-    teamMembers: 10,       // 10 team members
-    storageMB: 51200,      // 50 GB
+    scenes: 200,
+    teamMembers: 10,
+    storageMB: 51200,
     storageBytes: 50 * 1024 * 1024 * 1024,
+    ttsGenerations: 200,
+    videoTranslations: 100,
+    aiThumbnails: Infinity,
+    aiThumbnailMultiGen: 3,
+    facesLimit: 20,
+    maxVideoLengthSec: 1800,
   },
 } as const;
 
