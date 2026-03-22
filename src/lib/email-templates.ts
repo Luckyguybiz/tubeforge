@@ -3,7 +3,7 @@
  *
  * All templates use inline CSS for maximum email client compatibility,
  * include dark-mode support via @media (prefers-color-scheme: dark),
- * and support Russian (default) and English locales.
+ * and support English (default) locale with locale-aware fallback.
  */
 
 interface TemplateResult {
@@ -28,7 +28,7 @@ function layout(body: string, locale: string): string {
     : 'You received this email because you have a TubeForge account. If you did not create an account, please ignore this email.';
 
   return `<!DOCTYPE html>
-<html lang="${locale === 'en' ? 'en' : 'ru'}">
+<html lang="${locale || 'en'}">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -94,7 +94,7 @@ function ctaButton(text: string, href: string): string {
 // ---------------------------------------------------------------------------
 
 function welcomeTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const name = String(data.name || '');
 
   if (locale === 'en') {
@@ -154,7 +154,7 @@ function welcomeTemplate(data: TemplateData): TemplateResult {
 }
 
 function paymentReceiptTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const plan = String(data.plan || 'PRO');
   const amount = String(data.amount || '0');
   const date = String(data.date || new Date().toLocaleDateString());
@@ -222,7 +222,7 @@ function paymentReceiptTemplate(data: TemplateData): TemplateResult {
 }
 
 function planChangeTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const oldPlan = String(data.oldPlan || 'FREE');
   const newPlan = String(data.newPlan || 'PRO');
 
@@ -285,7 +285,7 @@ function planChangeTemplate(data: TemplateData): TemplateResult {
 }
 
 function referralCommissionTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const amount = String(data.amount || '0');
   const totalBalance = String(data.totalBalance || '0');
   const referredUser = String(data.referredUser || '');
@@ -348,7 +348,7 @@ function referralCommissionTemplate(data: TemplateData): TemplateResult {
 // ---------------------------------------------------------------------------
 
 function dayThreeTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const name = String(data.name || '');
   const projectCount = Number(data.projectCount || 0);
 
@@ -408,7 +408,7 @@ function dayThreeTemplate(data: TemplateData): TemplateResult {
 }
 
 function daySevenTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const name = String(data.name || '');
   const projectCount = Number(data.projectCount || 0);
   const aiUsed = Number(data.aiUsed || 0);
@@ -471,7 +471,7 @@ function daySevenTemplate(data: TemplateData): TemplateResult {
 // ---------------------------------------------------------------------------
 
 function teamInviteTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const inviterName = String(data.inviterName || '');
   const teamName = String(data.teamName || '');
   const acceptUrl = String(data.acceptUrl || `${APP_URL}/teams`);
@@ -510,7 +510,7 @@ function teamInviteTemplate(data: TemplateData): TemplateResult {
 }
 
 function planChangeConfirmationTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const userName = String(data.userName || '');
   const oldPlan = String(data.oldPlan || 'FREE');
   const newPlan = String(data.newPlan || 'PRO');
@@ -559,7 +559,7 @@ function planChangeConfirmationTemplate(data: TemplateData): TemplateResult {
 }
 
 function commentMentionTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const authorName = String(data.authorName || '');
   const projectName = String(data.projectName || '');
   const commentText = String(data.commentText || '');
@@ -605,7 +605,7 @@ function commentMentionTemplate(data: TemplateData): TemplateResult {
 // ---------------------------------------------------------------------------
 
 function reengagementDay3Template(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const name = String(data.name || '');
 
   if (locale === 'en') {
@@ -625,24 +625,24 @@ function reengagementDay3Template(data: TemplateData): TemplateResult {
     };
   }
 
-  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  const greeting = name ? `Hi, ${name}!` : 'Hi there!';
   return {
-    subject: '\u0412\u0430\u0448 \u043F\u0440\u043E\u0435\u043A\u0442 \u0436\u0434\u0451\u0442 \u0432\u0430\u0441',
+    subject: 'Your project is waiting for you',
     html: layout(`
       <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
       <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
-        \u041C\u044B \u0437\u0430\u043C\u0435\u0442\u0438\u043B\u0438, \u0447\u0442\u043E \u0432\u044B \u043D\u0435 \u0437\u0430\u0445\u043E\u0434\u0438\u043B\u0438 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0434\u043D\u0435\u0439. \u0412\u0430\u0448 \u043F\u0440\u043E\u0435\u043A\u0442 \u0432\u0441\u0451 \u0435\u0449\u0451 \u0437\u0434\u0435\u0441\u044C, \u0433\u043E\u0442\u043E\u0432 \u043A \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u044E.
+        We noticed you haven't been back in a few days. Your project is still here, ready for you to continue.
       </p>
       <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
-        \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u0435 \u0441 \u0442\u043E\u0433\u043E \u043C\u0435\u0441\u0442\u0430, \u0433\u0434\u0435 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0438\u0441\u044C &mdash; \u0432\u0441\u0435 \u0441\u0446\u0435\u043D\u044B, \u043F\u0440\u0430\u0432\u043A\u0438 \u0438 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B.
+        Pick up right where you left off &mdash; your AI-generated scenes, edits, and settings are all saved.
       </p>
-      ${ctaButton('\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443', `${APP_URL}/dashboard`)}
+      ${ctaButton('Continue Your Project', `${APP_URL}/dashboard`)}
     `, locale),
   };
 }
 
 function reengagementDay7Template(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const name = String(data.name || '');
 
   if (locale === 'en') {
@@ -673,35 +673,35 @@ function reengagementDay7Template(data: TemplateData): TemplateResult {
     };
   }
 
-  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  const greeting = name ? `Hi, ${name}!` : 'Hi there!';
   return {
-    subject: '\u041C\u044B \u0434\u043E\u0431\u0430\u0432\u0438\u043B\u0438 \u043D\u043E\u0432\u044B\u0435 \u0444\u0438\u0447\u0438',
+    subject: 'We added new features — check them out',
     html: layout(`
       <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
       <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
-        \u041F\u043E\u043A\u0430 \u0432\u0430\u0441 \u043D\u0435 \u0431\u044B\u043B\u043E, \u043C\u044B \u0443\u043B\u0443\u0447\u0448\u0438\u043B\u0438 TubeForge:
+        While you were away, we've been busy improving TubeForge:
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
         <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
           <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u2728</span>
-          <span class="text-primary" style="color:#333;font-size:15px;">\u0423\u043B\u0443\u0447\u0448\u0435\u043D\u043D\u043E\u0435 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u043E AI \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Improved AI generation quality</span>
         </td></tr>
         <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
           <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\uD83C\uDFA8</span>
-          <span class="text-primary" style="color:#333;font-size:15px;">\u041D\u043E\u0432\u044B\u0435 \u0448\u0430\u0431\u043B\u043E\u043D\u044B \u0438 \u0441\u0442\u0438\u043B\u0438</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">New templates and styles</span>
         </td></tr>
         <tr><td style="padding:12px 0;">
           <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">\u26A1</span>
-          <span class="text-primary" style="color:#333;font-size:15px;">\u0411\u044B\u0441\u0442\u0440\u0435\u0435 \u044D\u043A\u0441\u043F\u043E\u0440\u0442 \u0438 \u0440\u0435\u043D\u0434\u0435\u0440\u0438\u043D\u0433</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Faster export and rendering</span>
         </td></tr>
       </table>
-      ${ctaButton('\u041F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F', `${APP_URL}/dashboard`)}
+      ${ctaButton('Explore Updates', `${APP_URL}/dashboard`)}
     `, locale),
   };
 }
 
 function reengagementDay14Template(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const name = String(data.name || '');
 
   if (locale === 'en') {
@@ -726,23 +726,23 @@ function reengagementDay14Template(data: TemplateData): TemplateResult {
     };
   }
 
-  const greeting = name ? `\u041F\u0440\u0438\u0432\u0435\u0442, ${name}!` : '\u041F\u0440\u0438\u0432\u0435\u0442!';
+  const greeting = name ? `Hi, ${name}!` : 'Hi there!';
   return {
-    subject: '\u0421\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u0430\u044F \u0441\u043A\u0438\u0434\u043A\u0430 20% \u043D\u0430 Pro \u2014 \u0442\u043E\u043B\u044C\u043A\u043E \u0434\u043B\u044F \u0432\u0430\u0441',
+    subject: 'Special 20% discount on Pro — just for you',
     html: layout(`
       <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">${greeting}</h1>
       <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
-        \u041C\u044B \u0441\u043A\u0443\u0447\u0430\u0435\u043C! \u0421\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u0434\u043B\u044F \u0432\u0430\u0441 &mdash; \u044D\u043A\u0441\u043A\u043B\u044E\u0437\u0438\u0432\u043D\u0430\u044F <strong>\u0441\u043A\u0438\u0434\u043A\u0430 20%</strong> \u043D\u0430 TubeForge Pro.
+        We miss you! As a special offer, here's an exclusive <strong>20% discount</strong> on TubeForge Pro.
       </p>
       <div style="text-align:center;margin:24px 0;padding:20px;background:#6c5ce710;border-radius:12px;border:1px solid #6c5ce720;">
-        <span style="font-size:32px;font-weight:800;color:#6c5ce7;letter-spacing:-.02em;">20% \u0421\u041A\u0418\u0414\u041A\u0410</span>
-        <p style="color:#555;font-size:14px;margin:8px 0 0;">\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 \u043A\u043E\u0434 <strong style="color:#6c5ce7;">COMEBACK20</strong> \u043F\u0440\u0438 \u043E\u043F\u043B\u0430\u0442\u0435</p>
+        <span style="font-size:32px;font-weight:800;color:#6c5ce7;letter-spacing:-.02em;">20% OFF</span>
+        <p style="color:#555;font-size:14px;margin:8px 0 0;">Use code <strong style="color:#6c5ce7;">COMEBACK20</strong> at checkout</p>
       </div>
       <p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
-        \u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u0443\u0439\u0442\u0435 \u0431\u0435\u0437\u043B\u0438\u043C\u0438\u0442\u043D\u044B\u0435 \u043F\u0440\u043E\u0435\u043A\u0442\u044B, \u044D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 1080p, \u0431\u0435\u0437 \u0432\u043E\u0434\u044F\u043D\u043E\u0433\u043E \u0437\u043D\u0430\u043A\u0430 \u0438 AI-\u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B.
+        Unlock unlimited projects, 1080p export, no watermark, and AI-powered tools.
       </p>
-      ${ctaButton('\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u0441\u043A\u0438\u0434\u043A\u0443', `${APP_URL}/billing?promo=COMEBACK20`)}
-      <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E 48 \u0447\u0430\u0441\u043E\u0432</p>
+      ${ctaButton('Claim Your Discount', `${APP_URL}/billing?promo=COMEBACK20`)}
+      <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">Offer valid for 48 hours</p>
     `, locale),
   };
 }
@@ -752,7 +752,7 @@ function reengagementDay14Template(data: TemplateData): TemplateResult {
 // ---------------------------------------------------------------------------
 
 function paymentFailedTemplate(data: TemplateData): TemplateResult {
-  const locale = String(data.locale || 'ru');
+  const locale = String(data.locale || 'en');
   const plan = String(data.plan || 'PRO');
   const attempt = Number(data.attempt || 1);
 
@@ -780,23 +780,23 @@ function paymentFailedTemplate(data: TemplateData): TemplateResult {
   }
 
   return {
-    subject: `\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u043F\u043B\u0430\u0442\u044B \u2014 TubeForge ${plan}`,
+    subject: `Payment failed \u2014 TubeForge ${plan}`,
     html: layout(`
-      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u043F\u043B\u0430\u0442\u044B</h1>
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">Payment Failed</h1>
       <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 20px;">
-        \u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C \u043F\u043B\u0430\u0442\u0451\u0436 \u0437\u0430 TubeForge <strong>${plan}</strong> (\u043F\u043E\u043F\u044B\u0442\u043A\u0430 ${attempt}).
-        \u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0441\u043F\u043E\u0441\u043E\u0431 \u043E\u043F\u043B\u0430\u0442\u044B, \u0447\u0442\u043E\u0431\u044B \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443.
+        We were unable to process your payment for TubeForge <strong>${plan}</strong> (attempt ${attempt}).
+        Please update your payment method to keep your subscription active.
       </p>
       ${attempt >= 3
         ? `<p style="color:#e74c3c;font-size:15px;line-height:1.6;margin:0 0 20px;font-weight:600;">
-            \u042D\u0442\u043E \u0431\u044B\u043B\u0430 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u043E\u043F\u044B\u0442\u043A\u0430. \u0412\u0430\u0448 \u0430\u043A\u043A\u0430\u0443\u043D\u0442 \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0451\u043D \u043D\u0430 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D.
-            \u041E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0441\u043F\u043E\u0441\u043E\u0431 \u043E\u043F\u043B\u0430\u0442\u044B \u0438 \u043E\u0444\u043E\u0440\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443 \u0437\u0430\u043D\u043E\u0432\u043E.
+            This was the final retry. Your account has been downgraded to the Free plan.
+            Update your payment method and resubscribe to restore access.
           </p>`
         : `<p class="text-primary" style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
-            \u041C\u044B \u043F\u043E\u0432\u0442\u043E\u0440\u0438\u043C \u043F\u043E\u043F\u044B\u0442\u043A\u0443 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438, \u043D\u043E \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0443\u0435\u043C \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435 \u043E\u043F\u043B\u0430\u0442\u044B \u0441\u0435\u0439\u0447\u0430\u0441.
+            We will retry automatically, but we recommend updating your payment details now.
           </p>`
       }
-      ${ctaButton('\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u043F\u043E\u0441\u043E\u0431 \u043E\u043F\u043B\u0430\u0442\u044B', `${APP_URL}/settings/billing`)}
+      ${ctaButton('Update Payment Method', `${APP_URL}/settings/billing`)}
     `, locale),
   };
 }
@@ -892,55 +892,55 @@ export function getTemplate(template: EmailTemplate, data: TemplateData): Templa
 /**
  * Convenience function for day-3 drip email.
  */
-export function getDayThreeEmail(userName: string, projectCount: number, locale = 'ru'): TemplateResult {
+export function getDayThreeEmail(userName: string, projectCount: number, locale = 'en'): TemplateResult {
   return getTemplate('day-three', { name: userName, projectCount, locale });
 }
 
 /**
  * Convenience function for day-7 drip email.
  */
-export function getDaySevenEmail(userName: string, usage: { projectCount: number; aiUsed: number }, locale = 'ru'): TemplateResult {
+export function getDaySevenEmail(userName: string, usage: { projectCount: number; aiUsed: number }, locale = 'en'): TemplateResult {
   return getTemplate('day-seven', { name: userName, projectCount: usage.projectCount, aiUsed: usage.aiUsed, locale });
 }
 
 /**
  * Re-engagement email: Day 3 — "Your project awaits"
  */
-export function getReengagementDay3(userName: string, locale = 'ru'): TemplateResult {
+export function getReengagementDay3(userName: string, locale = 'en'): TemplateResult {
   return getTemplate('reengagement-day3', { name: userName, locale });
 }
 
 /**
  * Re-engagement email: Day 7 — "We added new features"
  */
-export function getReengagementDay7(userName: string, locale = 'ru'): TemplateResult {
+export function getReengagementDay7(userName: string, locale = 'en'): TemplateResult {
   return getTemplate('reengagement-day7', { name: userName, locale });
 }
 
 /**
  * Re-engagement email: Day 14 — "Special 20% discount on Pro"
  */
-export function getReengagementDay14(userName: string, locale = 'ru'): TemplateResult {
+export function getReengagementDay14(userName: string, locale = 'en'): TemplateResult {
   return getTemplate('reengagement-day14', { name: userName, locale });
 }
 
 /**
  * Team invite email — "{inviterName} invited you to team {teamName}"
  */
-export function getTeamInviteEmail(inviterName: string, teamName: string, acceptUrl: string, locale = 'ru'): TemplateResult {
+export function getTeamInviteEmail(inviterName: string, teamName: string, acceptUrl: string, locale = 'en'): TemplateResult {
   return getTemplate('team-invite', { inviterName, teamName, acceptUrl, locale });
 }
 
 /**
  * Plan change confirmation — "Your plan was changed from {oldPlan} to {newPlan}"
  */
-export function getPlanChangeEmail(userName: string, oldPlan: string, newPlan: string, locale = 'ru'): TemplateResult {
+export function getPlanChangeEmail(userName: string, oldPlan: string, newPlan: string, locale = 'en'): TemplateResult {
   return getTemplate('plan-change-confirmation', { userName, oldPlan, newPlan, locale });
 }
 
 /**
  * Comment mention email — "You were mentioned in a comment on {projectName}"
  */
-export function getCommentMentionEmail(authorName: string, projectName: string, commentText: string, locale = 'ru'): TemplateResult {
+export function getCommentMentionEmail(authorName: string, projectName: string, commentText: string, locale = 'en'): TemplateResult {
   return getTemplate('comment-mention', { authorName, projectName, commentText, locale });
 }

@@ -179,6 +179,7 @@ export const billingRouter = router({
         client_reference_id: ctx.session.user.id,
         metadata: { userId: ctx.session.user.id, plan: input.plan },
         mode: 'subscription',
+        allow_promotion_codes: true,
         line_items: [{ price: resolvedPriceId, quantity: 1 }],
         success_url: `${appUrl}/billing?success=true`,
         cancel_url: `${appUrl}/billing`,

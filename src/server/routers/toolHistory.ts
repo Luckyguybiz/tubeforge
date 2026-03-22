@@ -1,57 +1,50 @@
-import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
+import { z } from 'zod';
 
+/**
+ * Tool History Router
+ *
+ * Tracks which tools a user has recently used for quick-access suggestions.
+ * Reads from AuditLog entries with action 'tool-usage' created by the
+ * analytics.syncToolUsage procedure.
+ */
 export const toolHistoryRouter = router({
-  /** Fetch recent tool usage for the logged-in user */
-  list: protectedProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(50),
-        tool: z.string().optional(),
-      }).optional(),
-    )
+  /** Get the user's recent tool usage history from audit logs */
+  getRecent: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).default(10) }).optional())
     .query(async ({ ctx, input }) => {
-      const limit = input?.limit ?? 50;
-      const tool = input?.tool;
+      const limit = input?.limit ?? 10;
+      const userId = ctx.session.user.id;
 
-      return ctx.db.auditLog.findMany({
-        where: {
-          userId: ctx.session.user.id,
-          action: 'TOOL_USAGE',
-          ...(tool
-            ? { metadata: { path: ['tool'], equals: tool } }
-            : {}),
-        },
+      // Query recent tool-usage audit log entries
+      const recentLogs = await ctx.db.auditLog.findMany({
+        where: { userId, action: 'tool-usage' },
         orderBy: { createdAt: 'desc' },
         take: limit,
-      });
-    }),
-
-  /** Fetch recent translations (Assets of type video with Translation_ prefix) */
-  translations: protectedProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(50).default(20),
-      }).optional(),
-    )
-    .query(async ({ ctx, input }) => {
-      const limit = input?.limit ?? 20;
-
-      return ctx.db.asset.findMany({
-        where: {
-          userId: ctx.session.user.id,
-          type: 'video',
-          filename: { startsWith: 'Translation_' },
-        },
         select: {
-          id: true,
-          url: true,
-          filename: true,
-          size: true,
+          metadata: true,
           createdAt: true,
         },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
       });
+
+      // Extract tool IDs from the counters metadata
+      const toolSet = new Map<string, { toolId: string; lastUsed: Date; usageCount: number }>();
+      for (const log of recentLogs) {
+        const meta = log.metadata as { counters?: Record<string, number> } | null;
+        if (meta?.counters) {
+          for (const [toolId, count] of Object.entries(meta.counters)) {
+            const existing = toolSet.get(toolId);
+            if (existing) {
+              existing.usageCount += count;
+            } else {
+              toolSet.set(toolId, { toolId, lastUsed: log.createdAt, usageCount: count });
+            }
+          }
+        }
+      }
+
+      return Array.from(toolSet.values())
+        .sort((a, b) => b.lastUsed.getTime() - a.lastUsed.getTime())
+        .slice(0, limit);
     }),
 });

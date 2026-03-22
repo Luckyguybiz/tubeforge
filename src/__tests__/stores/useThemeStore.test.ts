@@ -12,7 +12,7 @@ describe('useThemeStore', () => {
     const state = useThemeStore.getState();
     expect(state.mode).toBe('dark');
     expect(state.isDark).toBe(true);
-    expect(state.theme.bg).toBe('#06060b');
+    expect(state.theme.bg).toBe('#0a0a0a');
   });
 
   it('should toggle from dark to light', () => {
@@ -53,8 +53,8 @@ describe('useThemeStore', () => {
     const state = useThemeStore.getState();
     expect(state.mode).toBe('dark');
     expect(state.isDark).toBe(true);
-    expect(state.theme.bg).toBe('#06060b');
-    expect(state.theme.text).toBe('#e8e8f0');
+    expect(state.theme.bg).toBe('#0a0a0a');
+    expect(state.theme.text).toBe('#ffffff');
   });
 
   it('system mode should resolve based on matchMedia', () => {

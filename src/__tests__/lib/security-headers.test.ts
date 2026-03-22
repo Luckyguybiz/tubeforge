@@ -71,11 +71,11 @@ describe('security-headers', () => {
     expect(rp!.value).toBe('strict-origin-when-cross-origin');
   });
 
-  it('should include Permissions-Policy that disables camera and microphone', () => {
+  it('should include Permissions-Policy that disables camera and allows microphone for self', () => {
     const pp = securityHeaders.find((h) => h.key === 'Permissions-Policy');
     expect(pp).toBeDefined();
     expect(pp!.value).toContain('camera=()');
-    expect(pp!.value).toContain('microphone=()');
+    expect(pp!.value).toContain('microphone=(self)');
   });
 
   it('should have unique header keys', () => {

@@ -245,11 +245,24 @@ export const analyticsRouter = router({
         }
       }
 
-      // In a full implementation, these counters would be stored in a
-      // ToolUsage table keyed by (userId, toolId, month). For now we
-      // acknowledge receipt successfully.
+      // Persist tool usage to AuditLog for server-side aggregation
+      const syncedCount = Object.keys(validCounters).length;
+      if (syncedCount > 0) {
+        await ctx.db.auditLog.create({
+          data: {
+            userId: ctx.session.user.id,
+            action: 'tool-usage',
+            target: 'analytics-sync',
+            metadata: {
+              counters: validCounters,
+              timestamp: input.timestamp ?? new Date().toISOString(),
+            },
+          },
+        });
+      }
+
       return {
-        synced: Object.keys(validCounters).length,
+        synced: syncedCount,
         rejected: invalidTools.length,
       };
     }),

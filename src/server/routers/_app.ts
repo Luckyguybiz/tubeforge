@@ -21,6 +21,7 @@ import { brandRouter } from './brand';
 import { commentRouter } from './comment';
 import { aiThumbnailsRouter } from './aiThumbnails';
 import { keywordsRouter } from './keywords';
+import { toolHistoryRouter } from './toolHistory';
 
 export const appRouter = router({
   user: userRouter,
@@ -45,6 +46,7 @@ export const appRouter = router({
   comment: commentRouter,
   aiThumbnails: aiThumbnailsRouter,
   keywords: keywordsRouter,
+  toolHistory: toolHistoryRouter,
 });
 
 export type AppRouter = typeof appRouter;

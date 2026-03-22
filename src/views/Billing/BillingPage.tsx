@@ -264,6 +264,8 @@ export function BillingPage() {
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  // TODO: Annual billing requires Stripe yearly price IDs (STRIPE_PRICE_PRO_ANNUAL, STRIPE_PRICE_STUDIO_ANNUAL)
+  // Create them in Stripe dashboard, add to .env, then pass correct priceId based on isAnnual toggle
   const [isAnnual, setIsAnnual] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);

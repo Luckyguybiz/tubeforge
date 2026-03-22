@@ -3,8 +3,19 @@
  *
  * Email sending is completely non-blocking: if RESEND_API_KEY is not set,
  * calls are silently skipped. Errors are logged but never thrown to callers.
+ *
+ * Setup instructions:
+ *  1. Sign up at https://resend.com and verify your domain (tubeforge.co)
+ *  2. Create an API key at https://resend.com/api-keys
+ *  3. Set RESEND_API_KEY in your .env file
+ *  4. Ensure DNS records (SPF, DKIM) are configured per Resend's instructions
  */
 import type { EmailTemplate } from '@/lib/email-templates';
+
+// Log once at startup if RESEND_API_KEY is not configured
+if (!process.env.RESEND_API_KEY) {
+  console.warn('[EMAIL] RESEND_API_KEY not set — emails will be skipped. Set it in .env to enable transactional emails.');
+}
 
 /** Lazy-loaded Resend client — avoids throwing at import time if key is missing */
 let _resend: import('resend').Resend | null = null;

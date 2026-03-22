@@ -266,10 +266,14 @@ export const referralRouter = router({
         });
 
         // Grant AI credits by decrementing aiUsage (lower usage = more credits remaining)
+        // and increment referralEarnings to track total rewards earned
         if (credits > 0) {
           await tx.user.update({
             where: { id: userId },
-            data: { aiUsage: { decrement: credits } },
+            data: {
+              aiUsage: { decrement: credits },
+              referralEarnings: { increment: credits },
+            },
           });
         }
       });

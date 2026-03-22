@@ -20,330 +20,318 @@ export default function OfertaPage() {
           marginBottom: 8,
         }}
       >
-        Публичная оферта
+        Public Offer Agreement
       </h1>
       <p style={{ fontSize: 13, color: C.dim, marginBottom: 40 }}>
-        Дата вступления в силу: 20 марта 2026
+        Effective date: March 20, 2026
       </p>
 
       {/* 1 */}
       <div style={sectionStyle}>
-        <h2 id="obshchie-polozheniya" style={headingStyle}>1. Общие положения</h2>
+        <h2 id="general-provisions" style={headingStyle}>1. General Provisions</h2>
         <p style={paraStyle}>
-          Настоящий документ является официальной публичной офертой [НАЗВАНИЕ КОМПАНИИ]
-          (далее — «Исполнитель»), адресованной любому физическому или юридическому лицу
-          (далее — «Заказчик»), и содержит все существенные условия предоставления доступа
-          к SaaS-платформе TubeForge, расположенной по адресу{' '}
+          This document constitutes an official public offer from TubeForge
+          (hereinafter referred to as the &quot;Provider&quot;), addressed to any individual or legal entity
+          (hereinafter referred to as the &quot;Customer&quot;), and contains all essential terms for granting access
+          to the TubeForge SaaS platform located at{' '}
           <a href="https://tubeforge.co" style={{ color: C.accent }}>tubeforge.co</a>{' '}
-          (далее — «Сервис»).
+          (hereinafter referred to as the &quot;Service&quot;).
         </p>
         <p style={paraStyle}>
-          В соответствии со статьёй 437 Гражданского кодекса Российской Федерации настоящий
-          документ является публичной офертой. Акцептом (принятием) настоящей оферты является
-          регистрация на Сервисе и/или оплата любого тарифного плана. С момента акцепта Заказчик
-          считается заключившим договор на условиях, изложенных в настоящей оферте.
+          Acceptance of this offer is achieved by registering on the Service and/or paying for any subscription plan.
+          Upon acceptance, the Customer is considered to have entered into an agreement under the terms set forth in this offer.
         </p>
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Определения:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Definitions:</p>
         <ul style={listStyle}>
-          <li><strong style={{ color: C.text }}>Сервис</strong> — SaaS-платформа TubeForge, доступная по адресу tubeforge.co</li>
-          <li><strong style={{ color: C.text }}>Исполнитель</strong> — [НАЗВАНИЕ КОМПАНИИ], владелец и оператор Сервиса</li>
-          <li><strong style={{ color: C.text }}>Заказчик</strong> — физическое или юридическое лицо, принявшее условия настоящей оферты</li>
-          <li><strong style={{ color: C.text }}>Подписка</strong> — оплаченный доступ к функциям Сервиса на определённый период</li>
-          <li><strong style={{ color: C.text }}>Личный кабинет</strong> — персональный раздел Заказчика на Сервисе</li>
-          <li><strong style={{ color: C.text }}>Контент</strong> — любые материалы, создаваемые или загружаемые Заказчиком</li>
+          <li><strong style={{ color: C.text }}>Service</strong> — the TubeForge SaaS platform available at tubeforge.co</li>
+          <li><strong style={{ color: C.text }}>Provider</strong> — TubeForge, the owner and operator of the Service</li>
+          <li><strong style={{ color: C.text }}>Customer</strong> — an individual or legal entity that has accepted the terms of this offer</li>
+          <li><strong style={{ color: C.text }}>Subscription</strong> — paid access to the Service features for a defined period</li>
+          <li><strong style={{ color: C.text }}>Account</strong> — the Customer&apos;s personal section on the Service</li>
+          <li><strong style={{ color: C.text }}>Content</strong> — any materials created or uploaded by the Customer</li>
         </ul>
       </div>
 
       {/* 2 */}
       <div style={sectionStyle}>
-        <h2 id="predmet-oferty" style={headingStyle}>2. Предмет оферты</h2>
+        <h2 id="subject" style={headingStyle}>2. Subject of the Offer</h2>
         <p style={paraStyle}>
-          Исполнитель обязуется предоставить Заказчику доступ к SaaS-платформе TubeForge —
-          ИИ-платформе для создателей контента на YouTube, а Заказчик обязуется оплачивать
-          услуги в соответствии с выбранным тарифным планом (при выборе платного тарифа).
+          The Provider agrees to grant the Customer access to the TubeForge SaaS platform —
+          an AI-powered platform for YouTube content creators — and the Customer agrees to pay for
+          services according to the selected plan (if a paid plan is chosen).
         </p>
         <p style={paraStyle}>
-          Платформа предоставляет набор инструментов для создания, оптимизации и продвижения
-          видеоконтента с использованием технологий искусственного интеллекта.
+          The platform provides a suite of tools for creating, optimizing, and promoting
+          video content using artificial intelligence technologies.
         </p>
       </div>
 
       {/* 3 */}
       <div style={sectionStyle}>
-        <h2 id="opisanie-uslug" style={headingStyle}>3. Описание услуг</h2>
+        <h2 id="service-description" style={headingStyle}>3. Service Description</h2>
         <p style={paraStyle}>
-          В рамках настоящей оферты Исполнитель предоставляет Заказчику доступ к следующим
-          инструментам и функциям Сервиса (перечень может варьироваться в зависимости от тарифного плана):
+          Under this offer, the Provider grants the Customer access to the following
+          tools and features (availability may vary by plan):
         </p>
         <ul style={listStyle}>
-          <li>Анализ видео и аналитика канала YouTube</li>
-          <li>Перевод и озвучивание видео с помощью ИИ (поддержка нескольких языков)</li>
-          <li>Сжатие видеофайлов без потери качества</li>
-          <li>Конвертация видео в различные форматы</li>
-          <li>ИИ-генерация обложек (thumbnails) для видео</li>
-          <li>ИИ-генерация заголовков, описаний и тегов для видео</li>
-          <li>ИИ-генерация сценариев и идей для контента</li>
-          <li>Оптимизация метаданных видео для SEO</li>
-          <li>Видеоредактор с базовыми функциями монтажа</li>
-          <li>Извлечение субтитров и транскрипция видео</li>
-          <li>Мониторинг статистики и аналитики каналов</li>
-          <li>Интеграция с YouTube Data API для управления контентом</li>
+          <li>Video analysis and YouTube channel analytics</li>
+          <li>AI-powered video translation and dubbing (multi-language support)</li>
+          <li>Video file compression without quality loss</li>
+          <li>Video format conversion</li>
+          <li>AI thumbnail generation for videos</li>
+          <li>AI generation of titles, descriptions, and tags</li>
+          <li>AI scriptwriting and content ideation</li>
+          <li>Video metadata SEO optimization</li>
+          <li>Video editor with basic editing features</li>
+          <li>Subtitle extraction and video transcription</li>
+          <li>Channel statistics and analytics monitoring</li>
+          <li>YouTube Data API integration for content management</li>
         </ul>
         <p style={paraStyle}>
-          Исполнитель оставляет за собой право добавлять, изменять или удалять отдельные
-          функции Сервиса без предварительного уведомления, при условии сохранения основного
-          функционала выбранного тарифного плана.
+          The Provider reserves the right to add, modify, or remove individual
+          features of the Service without prior notice, provided the core functionality
+          of the selected plan is maintained.
         </p>
       </div>
 
       {/* 4 */}
       <div style={sectionStyle}>
-        <h2 id="tarifnye-plany" style={headingStyle}>4. Тарифные планы</h2>
+        <h2 id="pricing-plans" style={headingStyle}>4. Pricing Plans</h2>
         <p style={paraStyle}>
-          Сервис предоставляется на основе следующих тарифных планов:
+          The Service is provided under the following pricing plans:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Free (бесплатно):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Free ($0/month):</p>
         <ul style={listStyle}>
-          <li>Ограниченный доступ к базовым инструментам</li>
-          <li>До 3 генераций обложек в день</li>
-          <li>До 5 генераций текстов (заголовки, описания) в день</li>
-          <li>Сжатие и конвертация видео — до 3 файлов в день</li>
-          <li>Базовая аналитика канала</li>
-          <li>Водяной знак TubeForge на сгенерированных обложках</li>
+          <li>Limited access to basic tools</li>
+          <li>Up to 3 thumbnail generations per day</li>
+          <li>Up to 5 text generations (titles, descriptions) per day</li>
+          <li>Video compression and conversion — up to 3 files per day</li>
+          <li>Basic channel analytics</li>
+          <li>TubeForge watermark on generated thumbnails</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Pro (990 {'\u20BD'}/мес):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Pro ($12/month):</p>
         <ul style={listStyle}>
-          <li>Расширенный доступ ко всем инструментам</li>
-          <li>До 50 генераций обложек в день</li>
-          <li>Неограниченная генерация текстов</li>
-          <li>Перевод и озвучивание видео — до 10 видео в месяц</li>
-          <li>Неограниченное сжатие и конвертация видео</li>
-          <li>Расширенная аналитика и SEO-рекомендации</li>
-          <li>Без водяного знака</li>
-          <li>Приоритетная обработка запросов</li>
+          <li>Extended access to all tools</li>
+          <li>Up to 50 thumbnail generations per day</li>
+          <li>Unlimited text generation</li>
+          <li>Video translation and dubbing — up to 10 videos per month</li>
+          <li>Unlimited video compression and conversion</li>
+          <li>Advanced analytics and SEO recommendations</li>
+          <li>No watermark</li>
+          <li>Priority request processing</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Studio (2 490 {'\u20BD'}/мес):</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Studio ($30/month):</p>
         <ul style={listStyle}>
-          <li>Полный доступ ко всем инструментам без ограничений</li>
-          <li>Неограниченная генерация обложек</li>
-          <li>Перевод и озвучивание видео — до 50 видео в месяц</li>
-          <li>Командный доступ — до 5 участников</li>
-          <li>API-доступ для интеграции с внешними сервисами</li>
-          <li>Персональный менеджер поддержки</li>
-          <li>Ранний доступ к новым функциям</li>
-          <li>Приоритетная техническая поддержка</li>
+          <li>Full unrestricted access to all tools</li>
+          <li>Unlimited thumbnail generation</li>
+          <li>Video translation and dubbing — up to 50 videos per month</li>
+          <li>Team access — up to 5 members</li>
+          <li>API access for integration with external services</li>
+          <li>Dedicated support manager</li>
+          <li>Early access to new features</li>
+          <li>Priority technical support</li>
         </ul>
       </div>
 
       {/* 5 */}
       <div style={sectionStyle}>
-        <h2 id="poryadok-oplaty" style={headingStyle}>5. Порядок оплаты</h2>
+        <h2 id="payment-terms" style={headingStyle}>5. Payment Terms</h2>
         <p style={paraStyle}>
-          Оплата платных тарифных планов осуществляется в рублях (RUB) через платёжную систему,
-          интегрированную в Сервис. Принимаются банковские карты Visa, MasterCard, МИР и другие
-          способы оплаты, доступные через платёжного провайдера.
+          Payment for paid plans is processed in US Dollars (USD) through the payment system
+          integrated into the Service. We accept Visa, MasterCard, and other payment methods
+          available through our payment provider (Stripe).
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Автоматическое продление:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Automatic Renewal:</p>
         <p style={paraStyle}>
-          Подписка продлевается автоматически по истечении каждого расчётного периода (1 месяц).
-          Оплата списывается автоматически с привязанного платёжного средства в начале каждого
-          нового расчётного периода. Заказчик получает уведомление о предстоящем списании
-          на электронную почту, указанную при регистрации.
+          The subscription renews automatically at the end of each billing period (1 month).
+          Payment is charged automatically from the linked payment method at the beginning of each
+          new billing period. The Customer receives a notification about the upcoming charge
+          via the email address provided at registration.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Отмена подписки:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Subscription Cancellation:</p>
         <p style={paraStyle}>
-          Заказчик вправе отменить подписку в любое время через раздел «Биллинг» в Личном кабинете.
-          После отмены доступ к платным функциям сохраняется до конца текущего оплаченного периода.
-          Автоматическое продление прекращается с момента отмены.
+          The Customer may cancel the subscription at any time through the &quot;Billing&quot; section in the Account.
+          After cancellation, access to paid features is retained until the end of the current paid period.
+          Automatic renewal ceases from the moment of cancellation.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Изменение тарифа:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Plan Changes:</p>
         <p style={paraStyle}>
-          Заказчик может изменить тарифный план в любое время. При переходе на более дорогой тариф
-          разница в стоимости рассчитывается пропорционально оставшемуся сроку текущего периода.
-          При переходе на более дешёвый тариф изменения вступают в силу с начала следующего
-          расчётного периода.
+          The Customer may change the subscription plan at any time. When upgrading to a more expensive plan,
+          the price difference is calculated proportionally to the remaining time in the current period.
+          When downgrading, changes take effect at the beginning of the next billing period.
         </p>
       </div>
 
       {/* 6 */}
       <div style={sectionStyle}>
-        <h2 id="vozvrat-sredstv" style={headingStyle}>6. Возврат средств</h2>
+        <h2 id="refund-policy" style={headingStyle}>6. Refund Policy</h2>
         <p style={paraStyle}>
-          Исполнитель предоставляет <strong style={{ color: C.text }}>14-дневную гарантию возврата средств</strong> с
-          момента первой оплаты подписки. В течение данного периода Заказчик вправе запросить
-          полный возврат уплаченных средств без объяснения причин.
+          The Provider offers a <strong style={{ color: C.text }}>14-day money-back guarantee</strong> from
+          the date of the first subscription payment. During this period, the Customer may request
+          a full refund without providing a reason.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Порядок обращения за возвратом:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>How to request a refund:</p>
         <ul style={listStyle}>
-          <li>Направить запрос на возврат по адресу{' '}
+          <li>Send a refund request to{' '}
             <a href="mailto:support@tubeforge.co" style={{ color: C.accent }}>support@tubeforge.co</a>{' '}
-            с указанием email аккаунта и причины обращения
+            with the account email and reason for the request
           </li>
-          <li>Запрос обрабатывается в течение 5 рабочих дней</li>
-          <li>Возврат осуществляется на платёжное средство, с которого была произведена оплата</li>
-          <li>Срок зачисления возврата — до 10 рабочих дней в зависимости от банка</li>
+          <li>Requests are processed within 5 business days</li>
+          <li>Refunds are issued to the original payment method</li>
+          <li>Refund processing time is up to 10 business days depending on the bank</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Случаи, когда возврат не производится:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Cases where refunds are not provided:</p>
         <ul style={listStyle}>
-          <li>По истечении 14 дней с момента оплаты</li>
-          <li>При нарушении Заказчиком условий настоящей оферты</li>
-          <li>При блокировке аккаунта за нарушение правил использования</li>
+          <li>After 14 days from the date of payment</li>
+          <li>If the Customer has violated the terms of this offer</li>
+          <li>If the account has been blocked for terms of service violations</li>
         </ul>
       </div>
 
       {/* 7 */}
       <div style={sectionStyle}>
-        <h2 id="prava-i-obyazannosti" style={headingStyle}>7. Права и обязанности сторон</h2>
+        <h2 id="rights-and-obligations" style={headingStyle}>7. Rights and Obligations</h2>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Исполнитель обязуется:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Provider obligations:</p>
         <ul style={listStyle}>
-          <li>Обеспечивать работоспособность Сервиса не менее 99,5% времени в месяц</li>
-          <li>Обеспечивать защиту персональных данных Заказчика в соответствии с законодательством</li>
-          <li>Своевременно информировать Заказчика о плановых технических работах</li>
-          <li>Обрабатывать обращения Заказчика в разумные сроки</li>
-          <li>Предоставлять доступ к функционалу в соответствии с выбранным тарифным планом</li>
+          <li>Ensure Service availability of at least 99.5% per month</li>
+          <li>Protect the Customer&apos;s personal data in accordance with applicable law</li>
+          <li>Notify the Customer in advance of planned maintenance</li>
+          <li>Process Customer inquiries within a reasonable timeframe</li>
+          <li>Provide access to functionality in accordance with the selected plan</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Исполнитель имеет право:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Provider rights:</p>
         <ul style={listStyle}>
-          <li>Приостановить доступ к Сервису для проведения технических работ с предварительным уведомлением</li>
-          <li>Заблокировать аккаунт Заказчика при нарушении условий оферты</li>
-          <li>Изменять тарифные планы и стоимость услуг с уведомлением не менее чем за 30 дней</li>
-          <li>Привлекать третьих лиц для исполнения обязательств по настоящей оферте</li>
+          <li>Suspend access to the Service for maintenance with prior notice</li>
+          <li>Block the Customer&apos;s account for violations of this offer</li>
+          <li>Modify plans and pricing with at least 30 days&apos; notice</li>
+          <li>Engage third parties to fulfill obligations under this offer</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Заказчик обязуется:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Customer obligations:</p>
         <ul style={listStyle}>
-          <li>Предоставлять достоверные данные при регистрации</li>
-          <li>Обеспечивать безопасность своего аккаунта и не передавать доступ третьим лицам</li>
-          <li>Своевременно оплачивать выбранный тарифный план</li>
-          <li>Не использовать Сервис для создания незаконного контента</li>
-          <li>Соблюдать условия настоящей оферты и применимое законодательство</li>
+          <li>Provide accurate information during registration</li>
+          <li>Maintain account security and not share access with third parties</li>
+          <li>Pay for the selected plan on time</li>
+          <li>Not use the Service to create illegal content</li>
+          <li>Comply with the terms of this offer and applicable law</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Заказчик имеет право:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Customer rights:</p>
         <ul style={listStyle}>
-          <li>Использовать все функции Сервиса в рамках выбранного тарифного плана</li>
-          <li>Обращаться в службу поддержки по вопросам работы Сервиса</li>
-          <li>Отменить подписку и запросить возврат средств в установленном порядке</li>
-          <li>Запросить удаление своего аккаунта и персональных данных</li>
+          <li>Use all Service features within the selected plan</li>
+          <li>Contact support regarding Service-related issues</li>
+          <li>Cancel the subscription and request a refund as described herein</li>
+          <li>Request deletion of their account and personal data</li>
         </ul>
       </div>
 
       {/* 8 */}
       <div style={sectionStyle}>
-        <h2 id="ogranichenie-otvetstvennosti" style={headingStyle}>8. Ограничение ответственности</h2>
+        <h2 id="limitation-of-liability" style={headingStyle}>8. Limitation of Liability</h2>
         <p style={paraStyle}>
-          Сервис предоставляется на условиях «как есть» (as is). Исполнитель не гарантирует:
+          The Service is provided on an &quot;as is&quot; basis. The Provider does not guarantee:
         </p>
         <ul style={listStyle}>
-          <li>Бесперебойную и безошибочную работу Сервиса</li>
-          <li>Достижение конкретных результатов от использования ИИ-инструментов</li>
-          <li>Рост показателей или монетизацию YouTube-канала Заказчика</li>
-          <li>Совместимость с любым оборудованием и программным обеспечением</li>
+          <li>Uninterrupted and error-free operation of the Service</li>
+          <li>Achievement of specific results from using AI tools</li>
+          <li>Growth of metrics or monetization of the Customer&apos;s YouTube channel</li>
+          <li>Compatibility with all hardware and software</li>
         </ul>
         <p style={paraStyle}>
-          Максимальная совокупная ответственность Исполнителя перед Заказчиком ограничена суммой,
-          фактически уплаченной Заказчиком за последние 12 месяцев использования Сервиса.
+          The Provider&apos;s maximum aggregate liability to the Customer is limited to the amount
+          actually paid by the Customer over the last 12 months of using the Service.
         </p>
         <p style={paraStyle}>
-          Исполнитель не несёт ответственности за косвенные, случайные, особые или штрафные убытки,
-          включая упущенную выгоду, потерю данных, прерывание деятельности или иные убытки,
-          возникшие в связи с использованием или невозможностью использования Сервиса.
+          The Provider is not liable for indirect, incidental, special, or punitive damages,
+          including lost profits, data loss, business interruption, or other damages
+          arising from the use or inability to use the Service.
         </p>
         <p style={paraStyle}>
-          Исполнитель не несёт ответственности за действия третьих лиц (платёжных систем,
-          хостинг-провайдеров, API-сервисов), влияющих на работу Сервиса.
+          The Provider is not liable for the actions of third parties (payment systems,
+          hosting providers, API services) affecting the operation of the Service.
         </p>
       </div>
 
       {/* 9 */}
       <div style={sectionStyle}>
-        <h2 id="intellektualnaya-sobstvennost" style={headingStyle}>9. Интеллектуальная собственность</h2>
+        <h2 id="intellectual-property" style={headingStyle}>9. Intellectual Property</h2>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Контент Заказчика:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Customer Content:</p>
         <p style={paraStyle}>
-          Все права на контент, созданный Заказчиком с использованием инструментов Сервиса
-          (обложки, тексты, метаданные, сценарии и иные материалы), принадлежат Заказчику.
-          Исполнитель не претендует на права интеллектуальной собственности на пользовательский контент.
+          All rights to content created by the Customer using the Service tools
+          (thumbnails, texts, metadata, scripts, and other materials) belong to the Customer.
+          The Provider does not claim intellectual property rights over user content.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Платформа Исполнителя:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Provider Platform:</p>
         <p style={paraStyle}>
-          Платформа TubeForge, включая её дизайн, программный код, логотипы, торговые марки,
-          документацию и иные элементы, является интеллектуальной собственностью Исполнителя
-          и защищена законодательством об авторском праве. Копирование, модификация или
-          распространение любой части платформы без письменного согласия Исполнителя запрещено.
+          The TubeForge platform, including its design, source code, logos, trademarks,
+          documentation, and other elements, is the intellectual property of the Provider
+          and is protected by copyright law. Copying, modification, or distribution
+          of any part of the platform without written consent from the Provider is prohibited.
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Лицензия на использование:</p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>License to Use:</p>
         <p style={paraStyle}>
-          Заказчик предоставляет Исполнителю ограниченную, неисключительную лицензию на хранение
-          и обработку контента Заказчика исключительно в целях предоставления функциональности
-          Сервиса. Данная лицензия прекращается при удалении аккаунта Заказчика.
+          The Customer grants the Provider a limited, non-exclusive license to store
+          and process Customer content solely for the purpose of providing Service functionality.
+          This license terminates upon deletion of the Customer&apos;s account.
         </p>
       </div>
 
       {/* 10 */}
       <div style={sectionStyle}>
-        <h2 id="izmenenie-oferty" style={headingStyle}>10. Порядок изменения оферты</h2>
+        <h2 id="amendments" style={headingStyle}>10. Amendments to the Offer</h2>
         <p style={paraStyle}>
-          Исполнитель оставляет за собой право вносить изменения в настоящую оферту.
-          О существенных изменениях Исполнитель уведомляет Заказчика{' '}
-          <strong style={{ color: C.text }}>не менее чем за 30 дней</strong> до вступления
-          изменений в силу одним из следующих способов:
+          The Provider reserves the right to make changes to this offer.
+          The Customer will be notified of material changes{' '}
+          <strong style={{ color: C.text }}>at least 30 days</strong> before the changes
+          take effect through one of the following methods:
         </p>
         <ul style={listStyle}>
-          <li>По электронной почте, указанной в аккаунте Заказчика</li>
-          <li>Через уведомление в Личном кабинете</li>
-          <li>Через обновление даты на данной странице</li>
+          <li>Via email registered with the Customer&apos;s account</li>
+          <li>Through a notification in the Account dashboard</li>
+          <li>By updating the date on this page</li>
         </ul>
         <p style={paraStyle}>
-          Продолжение использования Сервиса после вступления изменений в силу означает согласие
-          Заказчика с обновлёнными условиями. Если Заказчик не согласен с изменениями, он вправе
-          отказаться от использования Сервиса и запросить удаление аккаунта до вступления новых
-          условий в силу.
+          Continued use of the Service after changes take effect constitutes the Customer&apos;s
+          agreement to the updated terms. If the Customer does not agree with the changes,
+          they may discontinue use of the Service and request account deletion before the new
+          terms take effect.
         </p>
         <p style={paraStyle}>
-          Действующая редакция оферты всегда доступна по адресу{' '}
+          The current version of this offer is always available at{' '}
           <a href="https://tubeforge.co/oferta" style={{ color: C.accent }}>tubeforge.co/oferta</a>.
         </p>
       </div>
 
       {/* 11 */}
       <div style={sectionStyle}>
-        <h2 id="kontaktnaya-informatsiya" style={headingStyle}>11. Контактная информация</h2>
+        <h2 id="contact-information" style={headingStyle}>11. Contact Information</h2>
         <p style={paraStyle}>
-          По всем вопросам, связанным с настоящей офертой и работой Сервиса, обращайтесь:
+          For all questions related to this offer and the Service, please contact:
         </p>
         <p style={paraStyle}>
-          Поддержка:{' '}
+          Support:{' '}
           <a href="mailto:support@tubeforge.co" style={{ color: C.accent }}>
             support@tubeforge.co
           </a>
         </p>
         <p style={paraStyle}>
-          Юридические вопросы:{' '}
+          Legal inquiries:{' '}
           <a href="mailto:legal@tubeforge.co" style={{ color: C.accent }}>
             legal@tubeforge.co
           </a>
-        </p>
-        <p style={paraStyle}>
-          Адрес: [ЮРИДИЧЕСКИЙ АДРЕС КОМПАНИИ]
-        </p>
-        <p style={paraStyle}>
-          ИНН: [ИНН КОМПАНИИ]
-        </p>
-        <p style={paraStyle}>
-          ОГРН/ОГРНИП: [ОГРН/ОГРНИП КОМПАНИИ]
         </p>
       </div>
     </div>
