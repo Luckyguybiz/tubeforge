@@ -177,7 +177,7 @@ export function YoutubeDownloader() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingTop: 8 }}>
         <button
-          onClick={() => router.push('/tools')}
+          onClick={() => { if (window.history.length > 1) { router.back(); } else { router.push('/tools'); } }}
           style={{
             width: 36, height: 36, borderRadius: 10,
             border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',

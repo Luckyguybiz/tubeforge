@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { WaitingGame } from '@/components/ui/WaitingGame';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 
@@ -162,7 +163,7 @@ export function VideoTranslator() {
     <div style={{ width: '100%', padding: '0 0 48px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingTop: 8 }}>
-        <button onClick={() => router.push('/tools')} style={{
+        <button onClick={() => { if (window.history.length > 1) { router.back(); } else { router.push('/tools'); } }} style={{
           width: 36, height: 36, borderRadius: 10,
           border: `1px solid ${C?.border ?? '#eee'}`, background: C?.surface ?? '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -371,6 +372,7 @@ export function VideoTranslator() {
             </div>
           )}
           <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes uploadPulse{0%{transform:translateX(-100%)}50%{transform:translateX(250%)}100%{transform:translateX(-100%)}}`}</style>
+          <WaitingGame />
         </div>
       )}
 

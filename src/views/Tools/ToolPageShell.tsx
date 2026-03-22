@@ -33,7 +33,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
         flexWrap: 'wrap',
       }}>
         <button
-          onClick={() => router.push('/tools')}
+          onClick={() => { if (window.history.length > 1) { router.back(); } else { router.push('/tools'); } }}
           aria-label="Back to tools"
           style={{
             width: 36, height: 36, borderRadius: 10,

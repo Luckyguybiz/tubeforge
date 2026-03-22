@@ -426,10 +426,35 @@ export const projectRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
-      return ctx.db.project.delete({
-        where: { id: input.id, userId: ctx.session.user.id },
+
+      // Verify ownership or team membership before deleting
+      const existing = await ctx.db.project.findFirst({
+        where: {
+          id: input.id,
+          OR: [
+            { userId: ctx.session.user.id },
+            { team: { members: { some: { userId: ctx.session.user.id } } } },
+          ],
+        },
         select: { id: true },
       });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Project not found.' });
+      }
+
+      try {
+        await ctx.db.project.delete({
+          where: { id: existing.id },
+          select: { id: true },
+        });
+        return { id: existing.id };
+      } catch (error) {
+        console.error('Project deletion failed:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete project. Please try again.',
+        });
+      }
     }),
 
   /** Export a project as JSON (only the owner can export) */

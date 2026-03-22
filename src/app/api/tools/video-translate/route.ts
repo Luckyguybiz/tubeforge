@@ -4,8 +4,10 @@ import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import { createLogger } from '@/lib/logger';
 import { db } from '@/server/db';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, stat } from 'fs/promises';
+import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
+import { Readable } from 'stream';
 
 const log = createLogger('video-translate');
 
@@ -25,6 +27,105 @@ const SUPPORTED_LANGUAGES: Record<string, string> = {
   fi: 'Suomi', no: 'Norsk', bg: 'Български', hr: 'Hrvatski',
   sk: 'Slovenčina', ta: 'தமிழ்',
 };
+
+/**
+ * Background-save the dubbed file from ElevenLabs to local disk + create Asset record.
+ * This runs async (fire-and-forget) so it doesn't block the response.
+ */
+async function backgroundSaveTranslation(
+  dubbingId: string,
+  targetLang: string,
+  userId: string,
+  apiKey: string,
+  sourceLang: string | null,
+): Promise<void> {
+  try {
+    const relDir = `uploads/translations/${userId}`;
+    const absDir = join(process.cwd(), 'public', relDir);
+    const filename = `${dubbingId}_${targetLang}.mp4`;
+    const absPath = join(absDir, filename);
+
+    // Skip if already saved
+    if (existsSync(absPath)) {
+      log.info('Translation already saved on disk', { dubbingId, targetLang });
+      return;
+    }
+
+    await mkdir(absDir, { recursive: true });
+
+    const downloadUrl = `${ELEVENLABS_API}/dubbing/${dubbingId}/audio/${targetLang}`;
+    const res = await fetch(downloadUrl, {
+      headers: { 'xi-api-key': apiKey },
+    });
+
+    if (!res.ok || !res.body) {
+      log.error('Background save: download failed', { dubbingId, status: res.status });
+      return;
+    }
+
+    // Stream to disk using chunks
+    const chunks: Uint8Array[] = [];
+    const reader = res.body.getReader();
+    let totalSize = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      totalSize += value.byteLength;
+    }
+
+    const buffer = Buffer.concat(chunks);
+    await writeFile(absPath, buffer);
+
+    const relPath = `/${relDir}/${filename}`;
+
+    // Check if asset already exists for this dubbing
+    const existing = await db.asset.findFirst({
+      where: {
+        userId,
+        url: relPath,
+      },
+    });
+
+    if (!existing) {
+      await db.asset.create({
+        data: {
+          url: relPath,
+          filename: `Translation_${targetLang}_${new Date().toISOString().slice(0, 10)}.mp4`,
+          type: 'video',
+          size: totalSize,
+          userId,
+        },
+      });
+
+      await db.auditLog.create({
+        data: {
+          userId,
+          action: 'TOOL_USAGE',
+          target: 'video-translate',
+          metadata: {
+            tool: 'video-translate',
+            dubbingId,
+            targetLang,
+            sourceLang,
+            fileSize: totalSize,
+            savedPath: relPath,
+          },
+        },
+      });
+
+      log.info('Translation saved to cabinet (background)', { userId, path: relPath, size: totalSize });
+    }
+  } catch (err) {
+    log.error('Background save failed', {
+      dubbingId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    // Non-blocking – don't rethrow
+  }
+}
 
 /* ── POST: Start dubbing ──────────────────────────────────────── */
 
@@ -173,6 +274,20 @@ export async function GET(req: NextRequest) {
 
     const statusData = await statusRes.json();
 
+    // When dubbing is complete, proactively save in the background
+    if (statusData.status === 'dubbed' && targetLang && session.user.id) {
+      // Fire-and-forget: save the file to disk + create Asset record
+      backgroundSaveTranslation(
+        dubbingId,
+        targetLang,
+        session.user.id,
+        apiKey,
+        statusData.source_language ?? null,
+      ).catch(() => {
+        // Already logged inside the function
+      });
+    }
+
     if (!download || statusData.status !== 'dubbed') {
       return NextResponse.json({
         dubbing_id: dubbingId,
@@ -185,78 +300,74 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Download dubbed file
+    // ── Download dubbed file ──────────────────────────────────────
     if (!targetLang) {
       return NextResponse.json({ error: 'target_lang required for download' }, { status: 400 });
     }
 
-    const audioRes = await fetch(
-      `${ELEVENLABS_API}/dubbing/${dubbingId}/audio/${targetLang}`,
-      { headers: { 'xi-api-key': apiKey } },
-    );
+    // Try to serve from local disk first (if background save already completed)
+    if (session.user.id) {
+      const relDir = `uploads/translations/${session.user.id}`;
+      const absDir = join(process.cwd(), 'public', relDir);
+      const filename = `${dubbingId}_${targetLang}.mp4`;
+      const absPath = join(absDir, filename);
 
-    if (!audioRes.ok) {
-      return NextResponse.json({ error: `Download failed: ${audioRes.status}` }, { status: 502 });
-    }
+      if (existsSync(absPath)) {
+        try {
+          const fileStat = await stat(absPath);
+          const nodeStream = createReadStream(absPath);
+          const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
-    const audioBuffer = await audioRes.arrayBuffer();
-    const contentTypeHeader = audioRes.headers.get('content-type') ?? 'video/mp4';
+          const headers = new Headers();
+          headers.set('Content-Type', 'video/mp4');
+          headers.set('Content-Disposition', `attachment; filename="translation_${targetLang}_${dubbingId}.mp4"`);
+          headers.set('Content-Length', String(fileStat.size));
 
-    // ── Save translation result to user cabinet ──────────────────
-    if (session?.user?.id) {
-      try {
-        const userId = session.user.id;
-        const ts = Date.now();
-        const relDir = `uploads/translations/${userId}`;
-        const absDir = join(process.cwd(), 'public', relDir);
-        await mkdir(absDir, { recursive: true });
-        const filename = `dubbed_${targetLang}_${ts}.mp4`;
-        const relPath = `/${relDir}/${filename}`;
-        await writeFile(join(absDir, filename), Buffer.from(audioBuffer));
-
-        await db.asset.create({
-          data: {
-            url: relPath,
-            filename: `Translation_${targetLang}_${new Date().toISOString().slice(0, 10)}.mp4`,
-            type: 'video',
-            size: audioBuffer.byteLength,
-            userId,
-          },
-        });
-
-        await db.auditLog.create({
-          data: {
-            userId,
-            action: 'TOOL_USAGE',
-            target: 'video-translate',
-            metadata: {
-              tool: 'video-translate',
-              dubbingId,
-              targetLang,
-              sourceLang: statusData.source_language ?? null,
-              fileSize: audioBuffer.byteLength,
-              savedPath: relPath,
-            },
-          },
-        });
-
-        log.info('Translation saved to cabinet', { userId, path: relPath });
-      } catch (saveErr) {
-        log.error('Failed to save translation to cabinet', {
-          error: saveErr instanceof Error ? saveErr.message : String(saveErr),
-        });
-        // Non-blocking: still return the file to the user
+          log.info('Serving translation from local disk', { dubbingId, targetLang, size: fileStat.size });
+          return new Response(webStream, { headers });
+        } catch (fsErr) {
+          log.error('Failed to read local file, falling back to ElevenLabs stream', {
+            error: fsErr instanceof Error ? fsErr.message : String(fsErr),
+          });
+          // Fall through to stream from ElevenLabs
+        }
       }
     }
 
-    return new NextResponse(audioBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': contentTypeHeader,
-        'Content-Disposition': `attachment; filename="dubbed_${targetLang}.mp4"`,
-        'Content-Length': String(audioBuffer.byteLength),
-      },
+    // Stream directly from ElevenLabs (no buffering in memory)
+    const downloadUrl = `${ELEVENLABS_API}/dubbing/${dubbingId}/audio/${targetLang}`;
+    const dubbedRes = await fetch(downloadUrl, {
+      headers: { 'xi-api-key': apiKey },
     });
+
+    if (!dubbedRes.ok || !dubbedRes.body) {
+      return NextResponse.json(
+        { error: `Download failed: ${dubbedRes.status}` },
+        { status: 502 },
+      );
+    }
+
+    const headers = new Headers();
+    headers.set('Content-Type', 'video/mp4');
+    headers.set('Content-Disposition', `attachment; filename="translation_${targetLang}_${dubbingId}.mp4"`);
+    if (dubbedRes.headers.get('content-length')) {
+      headers.set('Content-Length', dubbedRes.headers.get('content-length')!);
+    }
+
+    log.info('Streaming translation from ElevenLabs', { dubbingId, targetLang });
+
+    // Also trigger background save for future downloads / history
+    if (session.user.id) {
+      backgroundSaveTranslation(
+        dubbingId,
+        targetLang,
+        session.user.id,
+        apiKey,
+        statusData.source_language ?? null,
+      ).catch(() => {});
+    }
+
+    return new Response(dubbedRes.body, { headers });
   } catch (err) {
     log.error('Status/download error', { error: err instanceof Error ? err.message : String(err) });
     Sentry.captureException(err instanceof Error ? err : new Error(String(err)), { tags: { component: 'video-translate' } });
