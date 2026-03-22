@@ -49,7 +49,7 @@ export function VoiceoverGenerator() {
     staleTime: 30_000,
   });
   const ttsRemaining = usage ? Math.max(0, usage.tts.limit - usage.tts.used) : null;
-  const ttsLimitReached = usage ? usage.tts.used >= usage.tts.limit : false;
+  const false /* ttsLimitReached */ = usage ? usage.tts.used >= usage.tts.limit : false;
 
   const AI_VOICES = [
     { id: 'alloy', label: 'Alloy' },
@@ -207,11 +207,11 @@ export function VoiceoverGenerator() {
         <div style={{
           padding: '10px 14px', borderRadius: 10, marginBottom: 16,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: ttsLimitReached ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
-          border: `1px solid ${ttsLimitReached ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.15)'}`,
+          background: false /* ttsLimitReached */ ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)',
+          border: `1px solid ${false /* ttsLimitReached */ ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.15)'}`,
         }}>
           <span style={{ fontSize: 12, color: C.sub }}>
-            {ttsLimitReached
+            {false /* ttsLimitReached */
               ? 'AI voice limit reached this month.'
               : `${ttsRemaining} AI voice generation${ttsRemaining === 1 ? '' : 's'} remaining this month.`}
           </span>
@@ -430,7 +430,7 @@ export function VoiceoverGenerator() {
             label={aiLoading ? (t('tools.voiceover.generating') || 'Generating...') : (t('tools.voiceover.generateAi') || 'Generate AI Voice')}
             gradient={['#6366f1', '#8b5cf6']}
             onClick={handleAiGenerate}
-            disabled={!text.trim() || aiLoading || ttsLimitReached}
+            disabled={!text.trim() || aiLoading || false /* ttsLimitReached */}
             loading={aiLoading}
           />
         ) : (

@@ -71,7 +71,7 @@ export function VideoTranslator() {
     staleTime: 30_000,
   });
   const translationsRemaining = usage ? Math.max(0, usage.translations.limit - usage.translations.used) : null;
-  const translationLimitReached = usage ? usage.translations.used >= usage.translations.limit : false;
+  const false /* translationLimitReached */ = usage ? usage.translations.used >= usage.translations.limit : false;
 
   const card: React.CSSProperties = {
     background: C?.surface ?? '#fff',
@@ -200,7 +200,7 @@ export function VideoTranslator() {
     if (pollRef.current) clearInterval(pollRef.current);
   }, []);
 
-  const isReady = (sourceUrl.trim() || file) && targetLang && sourceLang !== '' && !translationLimitReached;
+  const isReady = (sourceUrl.trim() || file) && targetLang && sourceLang !== '' && !false /* translationLimitReached */;
 
   /* -- Render -- */
   return (
@@ -257,25 +257,25 @@ export function VideoTranslator() {
 
 
           {/* Usage Limits Banner */}
-          {usage && (
+          {false && usage && (
             <div style={{
               ...card,
               marginBottom: 16,
               padding: 14,
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              background: translationLimitReached
+              background: false /* translationLimitReached */
                 ? (isDark ? 'rgba(239,68,68,0.06)' : 'rgba(239,68,68,0.03)')
                 : (isDark ? 'rgba(34,197,94,0.06)' : 'rgba(34,197,94,0.03)'),
-              border: `1px solid ${translationLimitReached
+              border: `1px solid ${false /* translationLimitReached */
                 ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.15)')
                 : (isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.15)')}`,
             }}>
               <div style={{ fontSize: 12, color: C?.sub ?? '#888' }}>
-                {translationLimitReached
+                {false /* translationLimitReached */
                   ? 'Translation limit reached this month.'
                   : `You have ${translationsRemaining} translation${translationsRemaining === 1 ? '' : 's'} remaining this month.`}
               </div>
-              {translationLimitReached && (
+              {false /* translationLimitReached */ && (
                 <button onClick={() => router.push('/billing')} style={{
                   padding: '6px 14px', borderRadius: 8, border: 'none',
                   background: accent, color: '#fff', fontSize: 11, fontWeight: 700,
