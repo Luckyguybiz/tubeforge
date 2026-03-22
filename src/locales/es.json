@@ -412,8 +412,8 @@
   "dashboard.freeTools": "Herramientas gratuitas",
   "dashboard.freeToolsDesc": "Conversor, compresor y más",
   "dashboard.tools": "Herramientas",
-  "dashboard.allTools": "Todas \\u2192",
-  "dashboard.tryIt": "Probar \\u2192",
+  "dashboard.allTools": "Todas →",
+  "dashboard.tryIt": "Probar →",
   "dashboard.autoClipDesc": "Convierte videos largos en clips virales automáticamente",
   "dashboard.cutCropDesc": "Recorta y une videos en un clip",
   "dashboard.copy": "copia",
@@ -1834,5 +1834,8 @@
   "videoTranslator.defaultProcessing": "Procesando...",
   "videoTranslator.mayTakeMinutes": "Esto puede tardar unos minutos",
   "videoTranslator.cloningVoice": "Clonando voz, traduciendo y sincronizando",
-  "videoTranslator.expectedTime": "Tiempo esperado"
+  "videoTranslator.expectedTime": "Tiempo esperado",
+  "streak.daysShort": "días",
+  "streak.daysLong": "días",
+  "streak.inARow": "seguidos!"
 }

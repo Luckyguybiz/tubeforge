@@ -412,8 +412,8 @@
   "dashboard.freeTools": "Тегін құралдар",
   "dashboard.freeToolsDesc": "Конвертер, компрессор және т.б.",
   "dashboard.tools": "Құралдар",
-  "dashboard.allTools": "Барлығы \\u2192",
-  "dashboard.tryIt": "Байқап көру \\u2192",
+  "dashboard.allTools": "Барлығы →",
+  "dashboard.tryIt": "Байқап көру →",
   "dashboard.autoClipDesc": "Ұзын видеоларды вирустық клиптерге автоматты түрде айналдырыңыз",
   "dashboard.cutCropDesc": "Видеоны кесіңіз және бір клипке біріктіріңіз",
   "dashboard.copy": "көшірме",
@@ -1834,5 +1834,8 @@
   "videoTranslator.defaultProcessing": "Өңделуде...",
   "videoTranslator.mayTakeMinutes": "Бірнеше минут алуы мүмкін",
   "videoTranslator.cloningVoice": "Дауыс клондалуда, аударылуда",
-  "videoTranslator.expectedTime": "Күтілетін уақыт"
+  "videoTranslator.expectedTime": "Күтілетін уақыт",
+  "streak.daysShort": "күн",
+  "streak.daysLong": "күн",
+  "streak.inARow": "қатарынан!"
 }

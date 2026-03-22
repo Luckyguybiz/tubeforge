@@ -1834,5 +1834,8 @@
   "videoTranslator.defaultProcessing": "Обрабатываем...",
   "videoTranslator.mayTakeMinutes": "Это может занять несколько минут",
   "videoTranslator.cloningVoice": "Клонируем голос, переводим и синхронизируем",
-  "videoTranslator.expectedTime": "Ожидаемое время"
+  "videoTranslator.expectedTime": "Ожидаемое время",
+  "streak.daysShort": "дня",
+  "streak.daysLong": "дней",
+  "streak.inARow": "подряд!"
 }
