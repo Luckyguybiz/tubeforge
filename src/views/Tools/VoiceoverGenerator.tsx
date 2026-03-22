@@ -138,14 +138,14 @@ export function VoiceoverGenerator() {
             placeholder={t('tools.voiceover.placeholder')}
             rows={6}
             style={{
-              width: '100%', padding: '14px 16px', borderRadius: 12,
-              border: `1px solid ${C.border}`, background: C.surface,
-              color: C.text, fontSize: 14, fontFamily: 'inherit',
+              width: '100%', padding: '14px 16px', borderRadius: 10,
+              border: 'none', background: '#f5f5f7',
+              color: '#1d1d1f', fontSize: 14, fontFamily: 'inherit',
               resize: 'vertical', outline: 'none', lineHeight: 1.6,
               boxSizing: 'border-box',
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+            onFocus={(e) => { e.currentTarget.style.boxShadow = '0 0 0 2px rgba(59,130,246,0.3)'; }}
+            onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
           />
           <div style={{
             position: 'absolute', bottom: 10, right: 14,
@@ -170,10 +170,10 @@ export function VoiceoverGenerator() {
               onMouseEnter={() => setHoveredVoice(v.id)}
               onMouseLeave={() => setHoveredVoice(null)}
               style={{
-                padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                border: selectedVoice === v.id ? '2px solid #3b82f6' : `1px solid ${C.border}`,
-                background: selectedVoice === v.id ? 'rgba(59,130,246,.1)' : hoveredVoice === v.id ? C.surface : C.card,
-                color: selectedVoice === v.id ? '#3b82f6' : C.text,
+                padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: selectedVoice === v.id ? 700 : 500,
+                height: 36, border: 'none',
+                background: selectedVoice === v.id ? 'rgba(59,130,246,.15)' : hoveredVoice === v.id ? '#e8e8ed' : '#f5f5f7',
+                color: selectedVoice === v.id ? '#3b82f6' : '#1d1d1f',
                 cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
               }}
             >
@@ -232,8 +232,8 @@ export function VoiceoverGenerator() {
       {/* ── Audio visualization ── */}
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4,
-        height: 80, padding: '12px 16px', borderRadius: 12,
-        border: `1px solid ${C.border}`, background: C.surface, marginBottom: 20,
+        height: 80, padding: '12px 16px', borderRadius: 16,
+        border: 'none', background: '#f5f5f7', marginBottom: 20,
       }}>
         {barHeights.map((h, i) => (
           <div
@@ -254,9 +254,9 @@ export function VoiceoverGenerator() {
 
       {/* ── Browser TTS notice ── */}
       <div style={{
-        padding: '12px 16px', borderRadius: 12, marginBottom: 20,
-        background: `rgba(59,130,246,.06)`, border: `1px solid rgba(59,130,246,.2)`,
-        fontSize: 13, color: C.sub, lineHeight: 1.6,
+        padding: '12px 16px', borderRadius: 16, marginBottom: 20,
+        background: '#f5f5f7', border: 'none',
+        fontSize: 13, color: '#86868b', lineHeight: 1.6,
       }}>
         {t('tools.voiceover.browserTtsNotice')}
       </div>

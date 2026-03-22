@@ -138,13 +138,13 @@ export function ImageGenerator() {
 
   const pillStyle = useMemo(() => (active: boolean): React.CSSProperties => ({
     padding: '8px 14px',
-    minHeight: 40,
-    borderRadius: 10,
-    border: `1px solid ${active ? GRADIENT[0] : C.border}`,
-    background: active ? `${GRADIENT[0]}22` : C.card,
-    color: active ? GRADIENT[0] : C.sub,
+    height: 36,
+    borderRadius: 20,
+    border: 'none',
+    background: active ? `${GRADIENT[0]}18` : '#ffffff',
+    color: active ? GRADIENT[0] : '#1d1d1f',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: active ? 700 : 500,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     fontFamily: 'inherit',
@@ -152,7 +152,7 @@ export function ImageGenerator() {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-  }), [C.border, C.card, C.sub]);
+  }), []);
 
   const isLoading = generate.isPending;
 
@@ -212,7 +212,7 @@ export function ImageGenerator() {
           {/* Prompt area */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: `1px solid ${C.border}`, background: C.card,
+            border: 'none', background: '#f5f5f7',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{t('imggen.prompt')}</span>
@@ -228,22 +228,22 @@ export function ImageGenerator() {
               placeholder={t('imggen.promptPlaceholder')}
               rows={5}
               style={{
-                width: '100%', minHeight: 120, padding: 14, borderRadius: 12,
-                border: `1px solid ${C.border}`, background: C.surface,
-                color: C.text, fontSize: 14, fontFamily: 'inherit',
+                width: '100%', minHeight: 120, padding: 14, borderRadius: 10,
+                border: 'none', background: '#ffffff',
+                color: '#1d1d1f', fontSize: 14, fontFamily: 'inherit',
                 resize: 'vertical', outline: 'none',
-                transition: 'border-color 0.2s ease',
+                transition: 'box-shadow 0.2s ease',
                 boxSizing: 'border-box',
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+              onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${GRADIENT[0]}44`; }}
+              onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
             />
           </div>
 
           {/* Style selector */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: `1px solid ${C.border}`, background: C.card,
+            border: 'none', background: '#f5f5f7',
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
               {t('imggen.styleLabel')}
@@ -265,7 +265,7 @@ export function ImageGenerator() {
           {/* Size selector */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: `1px solid ${C.border}`, background: C.card,
+            border: 'none', background: '#f5f5f7',
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
               {t('imggen.sizeLabel')}
@@ -299,7 +299,7 @@ export function ImageGenerator() {
           {/* Main image display */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: `1px solid ${C.border}`, background: C.card,
+            border: 'none', background: '#f5f5f7',
             minHeight: 360,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
@@ -367,9 +367,9 @@ export function ImageGenerator() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       flex: 1, minWidth: 120, padding: '10px 16px', borderRadius: 10,
-                      border: `1px solid ${hoveredBtn === 'download' ? GRADIENT[0] : C.border}`,
-                      background: hoveredBtn === 'download' ? `${GRADIENT[0]}10` : C.surface,
-                      color: hoveredBtn === 'download' ? GRADIENT[0] : C.text,
+                      height: 44, border: 'none',
+                      background: hoveredBtn === 'download' ? '#e8e8ed' : '#f5f5f7',
+                      color: '#1d1d1f',
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -389,9 +389,9 @@ export function ImageGenerator() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       flex: 1, minWidth: 120, padding: '10px 16px', borderRadius: 10,
-                      border: `1px solid ${hoveredBtn === 'use' ? GRADIENT[0] : C.border}`,
-                      background: hoveredBtn === 'use' ? `${GRADIENT[0]}10` : C.surface,
-                      color: hoveredBtn === 'use' ? GRADIENT[0] : C.text,
+                      height: 44, border: 'none',
+                      background: hoveredBtn === 'use' ? '#e8e8ed' : '#f5f5f7',
+                      color: '#1d1d1f',
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -410,9 +410,9 @@ export function ImageGenerator() {
                     disabled={isLoading}
                     style={{
                       flex: 1, minWidth: 120, padding: '10px 16px', borderRadius: 10,
-                      border: `1px solid ${hoveredBtn === 'regen' ? GRADIENT[0] : C.border}`,
-                      background: hoveredBtn === 'regen' ? `${GRADIENT[0]}10` : C.surface,
-                      color: hoveredBtn === 'regen' ? GRADIENT[0] : C.text,
+                      height: 44, border: 'none',
+                      background: hoveredBtn === 'regen' ? '#e8e8ed' : '#f5f5f7',
+                      color: '#1d1d1f',
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
