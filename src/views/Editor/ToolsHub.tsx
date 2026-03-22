@@ -656,9 +656,9 @@ const ToolCard = memo(function ToolCard({
         filter: tool.available ? 'none' : 'grayscale(0.6)',
       }}
     >
-      {/* Gradient visual area */}
+      {/* Gradient visual area with animated background */}
       <div style={{
-        height: 100,
+        height: 120,
         background: tool.available
           ? `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`
           : `linear-gradient(135deg, ${C.border}, ${C.surface})`,
@@ -666,18 +666,53 @@ const ToolCard = memo(function ToolCard({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        overflow: 'hidden',
       }}>
-        {/* Centered icon in gradient */}
+        {/* Animated background shapes */}
+        {tool.available && (
+          <>
+            <div style={{
+              position: 'absolute', width: 80, height: 80, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.06)',
+              top: -20, right: -10,
+              animation: hovered ? 'float 3s ease-in-out infinite' : 'none',
+            }} />
+            <div style={{
+              position: 'absolute', width: 40, height: 40, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.04)',
+              bottom: -10, left: '20%',
+              animation: hovered ? 'float 4s ease-in-out infinite reverse' : 'none',
+            }} />
+            <div style={{
+              position: 'absolute', width: 60, height: 60, borderRadius: 12,
+              background: 'rgba(255,255,255,0.03)',
+              top: '30%', left: -15, transform: 'rotate(45deg)',
+              animation: hovered ? 'float 3.5s ease-in-out infinite' : 'none',
+            }} />
+            {/* Scan line on hover */}
+            {hovered && (
+              <div style={{
+                position: 'absolute', top: 0, bottom: 0, width: 2,
+                background: 'rgba(255,255,255,0.4)',
+                boxShadow: '0 0 8px 2px rgba(255,255,255,0.2)',
+                animation: 'scanLine 2s ease-in-out infinite',
+              }} />
+            )}
+          </>
+        )}
+        {/* Centered icon */}
         <div style={{
           width: 48,
           height: 48,
           borderRadius: '50%',
           background: 'rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'transform .2s',
-          transform: hovered && tool.available ? 'scale(1.1)' : 'none',
+          transition: 'transform .3s ease',
+          transform: hovered && tool.available ? 'scale(1.15)' : 'none',
+          zIndex: 1,
         }}>
           {iconFn ? iconFn(tool.available ? '#fff' : C.dim) : null}
         </div>
