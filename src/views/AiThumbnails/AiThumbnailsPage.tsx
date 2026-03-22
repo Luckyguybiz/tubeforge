@@ -1325,95 +1325,89 @@ export function AiThumbnailsPage() {
                   Our AI generates professional YouTube thumbnails that get clicks.
                 </p>
 
-                <div style={{
-                  display: 'flex',
-                  gap: 16,
-                }}>
-                  {/* Step 1 — Describe */}
-                  <div style={{
-                    flex: 1, minWidth: 0,
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 14, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Describe Your Idea
+                {/* 3 large step cards in horizontal row — Higgsfield style */}
+                <div style={{ display: 'flex', gap: 20 }}>
+                  {[
+                    {
+                      title: 'ADD IMAGE',
+                      desc: 'Upload or generate an image to start your thumbnail',
+                      gradient: 'linear-gradient(135deg, #6366f1, #ec4899)',
+                      icon: (
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" />
+                          <path d="M12 8v8M8 12h8" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      title: 'DESCRIBE IDEA',
+                      desc: 'Type what you want to see — AI understands your vision',
+                      gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+                      icon: (
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      title: 'GET THUMBNAIL',
+                      desc: 'Download your AI-generated click-worthy thumbnail!',
+                      gradient: 'linear-gradient(135deg, #22c55e, #06b6d4)',
+                      icon: (
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      ),
+                    },
+                  ].map((step, i) => (
+                    <div key={i} style={{
+                      flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden',
+                      border: `1px solid ${C.border}`,
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      cursor: 'default',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+                    >
+                      {/* Large visual area with gradient + icon */}
+                      <div style={{
+                        height: 180, background: step.gradient,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        position: 'relative',
+                      }}>
+                        <div style={{ opacity: 0.9 }}>{step.icon}</div>
+                        {/* Step number badge */}
+                        <div style={{
+                          position: 'absolute', top: 12, left: 12,
+                          width: 28, height: 28, borderRadius: 8,
+                          background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 13, fontWeight: 700, color: '#fff',
+                        }}>{i + 1}</div>
                       </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Type what you want or let AI suggest viral thumbnail concepts
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 2 — Choose Style */}
-                  <div style={{
-                    flex: 1, minWidth: 0,
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 14, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Choose Style
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Pick from 6 styles: Realistic, Anime, Cinematic, 3D, Minimal, or Pop Art
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3 — Get Thumbnail */}
-                  <div style={{
-                    flex: 1, minWidth: 0,
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 14, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Get Your Thumbnail
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Download, check CTR Score, get title suggestions, or enhance with AI
+                      {/* Text below */}
+                      <div style={{ padding: '16px 18px', background: C.card }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: C.text, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.02em' }}>
+                          {step.title}
+                        </div>
+                        <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
+                          {step.desc}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Video placeholder */}
+                {/* Video tutorial placeholder */}
                 <div style={{
-                  marginTop: 20, padding: 16, borderRadius: 12,
+                  marginTop: 24, padding: 20, borderRadius: 14,
                   background: C.surface, border: `1px solid ${C.border}`,
                   textAlign: 'center',
                 }}>
-                  <span style={{ fontSize: 13, color: C.dim }}>
-                    Video tutorial coming soon
-                  </span>
+                  <span style={{ fontSize: 13, color: C.dim }}>📹 Video tutorial coming soon — watch how creators make viral thumbnails</span>
                 </div>
 
                 {/* Example prompt chips */}
