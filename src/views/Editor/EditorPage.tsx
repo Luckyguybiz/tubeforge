@@ -685,14 +685,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   /* ═══════════════════════════════════════════════════════════════
      LOADING STATE
      ═══════════════════════════════════════════════════════════════ */
-  if (sync.isLoading) {
+  if (projectId && sync.isLoading) {
     return <EditorSkeleton C={C} />;
   }
 
   /* ═══════════════════════════════════════════════════════════════
      ERROR STATE
      ═══════════════════════════════════════════════════════════════ */
-  if (sync.isError) {
+  if (projectId && sync.isError) {
     return (
       <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>

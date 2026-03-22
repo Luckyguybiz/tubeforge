@@ -125,8 +125,8 @@ export function useProjectSync(projectId: string | null) {
   };
 
   return {
-    isLoading: project.isLoading,
-    isError: project.isError,
+    isLoading: !!projectId && project.isLoading,
+    isError: !!projectId && project.isError,
     isSaving: updateSceneMut.isPending || createSceneMut.isPending,
     project: project.data,
 
