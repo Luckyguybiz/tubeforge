@@ -86,12 +86,12 @@ function LoginContent() {
           onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
           style={styles.googleBtn}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#f5f5f7';
-            e.currentTarget.style.borderColor = '#d1d1d6';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#ffffff';
-            e.currentTarget.style.borderColor = '#e5e5ea';
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
           }}
         >
           <GoogleLogo />
@@ -113,7 +113,7 @@ function LoginContent() {
   );
 }
 
-/* ---------- Apple-style design tokens ---------- */
+/* ---------- Dark design tokens ---------- */
 const styles: Record<string, React.CSSProperties> = {
   page: {
     width: '100%',
@@ -122,7 +122,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#f5f5f7',
+    background: '#0a0a0a',
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Instrument Sans', 'Helvetica Neue', sans-serif",
     padding: '40px 20px',
     boxSizing: 'border-box',
@@ -130,8 +130,8 @@ const styles: Record<string, React.CSSProperties> = {
   spinner: {
     width: 24,
     height: 24,
-    border: '2.5px solid #e5e5ea',
-    borderTopColor: '#1d1d1f',
+    border: '2.5px solid rgba(255,255,255,0.1)',
+    borderTopColor: '#ffffff',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
   },
@@ -145,7 +145,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 36,
     height: 36,
     borderRadius: 10,
-    background: '#1d1d1f',
+    background: '#6366f1',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -154,14 +154,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 20,
     letterSpacing: '-0.02em',
-    color: '#1d1d1f',
+    color: '#ffffff',
   },
   card: {
     width: '100%',
     maxWidth: 400,
-    background: '#ffffff',
+    background: '#1a1a1a',
     borderRadius: 20,
-    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
     padding: 40,
     boxSizing: 'border-box' as const,
     textAlign: 'center' as const,
@@ -169,13 +170,13 @@ const styles: Record<string, React.CSSProperties> = {
   heading: {
     fontSize: 24,
     fontWeight: 600,
-    color: '#1d1d1f',
+    color: '#ffffff',
     margin: '0 0 6px 0',
     letterSpacing: '-0.01em',
   },
   subtitle: {
     fontSize: 15,
-    color: '#86868b',
+    color: 'rgba(255,255,255,0.5)',
     margin: '0 0 28px 0',
     lineHeight: 1.5,
   },
@@ -183,12 +184,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
-    background: '#fff5f5',
-    border: '1px solid #fed7d7',
+    background: 'rgba(239,68,68,0.1)',
+    border: '1px solid rgba(239,68,68,0.2)',
     borderRadius: 12,
     padding: '12px 16px',
     marginBottom: 20,
-    color: '#c53030',
+    color: '#f87171',
     fontSize: 13,
     lineHeight: 1.4,
     textAlign: 'left' as const,
@@ -198,9 +199,9 @@ const styles: Record<string, React.CSSProperties> = {
     height: 48,
     padding: '0 20px',
     borderRadius: 12,
-    border: '1px solid #e5e5ea',
-    background: '#ffffff',
-    color: '#1d1d1f',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'transparent',
+    color: '#ffffff',
     fontSize: 15,
     fontWeight: 500,
     cursor: 'pointer',
@@ -213,7 +214,7 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
   },
   switchText: {
-    color: '#86868b',
+    color: 'rgba(255,255,255,0.3)',
     fontSize: 14,
     marginTop: 24,
     marginBottom: 0,
@@ -224,7 +225,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   legal: {
-    color: '#aeaeb2',
+    color: 'rgba(255,255,255,0.2)',
     fontSize: 12,
     marginTop: 16,
     textAlign: 'center' as const,
@@ -237,7 +238,7 @@ export default function LoginPage() {
   return (
     <>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f7' }}><div style={styles.spinner} /></div>}>
+      <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}><div style={styles.spinner} /></div>}>
         <LoginContent />
       </Suspense>
     </>

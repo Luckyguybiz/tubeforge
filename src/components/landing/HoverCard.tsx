@@ -23,7 +23,7 @@ export function HoverCard({
   className,
   style,
   hoverTransform = 'translateY(-4px)',
-  hoverBoxShadow = '0 12px 40px rgba(0,0,0,0.06)',
+  hoverBoxShadow = '0 12px 40px rgba(0,0,0,0.3)',
   hoverBorderColor,
   resetTransform = 'translateY(0)',
   resetBoxShadow = 'none',

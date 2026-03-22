@@ -24,7 +24,7 @@ export function LandingHero() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '160px 24px 100px',
-        background: '#ffffff',
+        background: '#0a0a0a',
       }}
     >
       <div style={{ maxWidth: 780, margin: '0 auto', textAlign: 'center' }}>
@@ -32,11 +32,11 @@ export function LandingHero() {
         <h1
           style={{
             fontSize: 'clamp(40px, 6vw, 56px)',
-            fontWeight: 600,
+            fontWeight: 700,
             lineHeight: 1.08,
             letterSpacing: '-0.025em',
             margin: '0 0 20px',
-            color: '#1d1d1f',
+            color: '#ffffff',
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.8s cubic-bezier(.4,0,.2,1)',
@@ -51,7 +51,7 @@ export function LandingHero() {
         <p
           style={{
             fontSize: 'clamp(17px, 2vw, 21px)',
-            color: '#86868b',
+            color: 'rgba(255,255,255,0.5)',
             lineHeight: 1.5,
             maxWidth: 540,
             margin: '0 auto 40px',
@@ -84,10 +84,10 @@ export function LandingHero() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              background: '#0071e3',
+              background: '#6366f1',
               color: '#fff',
               fontSize: 17,
-              fontWeight: 400,
+              fontWeight: 500,
               padding: '12px 28px',
               borderRadius: 980,
               textDecoration: 'none',
@@ -95,6 +95,7 @@ export function LandingHero() {
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               minHeight: 48,
+              boxShadow: '0 0 30px rgba(99,102,241,0.4)',
             }}
           >
             Start Free
@@ -107,7 +108,7 @@ export function LandingHero() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              color: '#0071e3',
+              color: 'rgba(255,255,255,0.5)',
               fontSize: 17,
               fontWeight: 400,
               padding: '12px 28px',
@@ -140,10 +141,10 @@ export function LandingHero() {
         >
           {['Free to start', 'No credit card required', 'Cancel anytime'].map((label, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#86868b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              <span style={{ fontSize: 13, color: '#86868b', fontWeight: 400 }}>{label}</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{label}</span>
             </div>
           ))}
         </div>

@@ -67,15 +67,17 @@ function RegisterContent() {
           </div>
         )}
 
-        {/* Primary CTA — "Start Free" */}
+        {/* Primary CTA */}
         <button
           onClick={() => signIn('google', { callbackUrl })}
           style={styles.primaryBtn}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4f46e5';
+            e.currentTarget.style.background = '#7c3aed';
+            e.currentTarget.style.boxShadow = '0 0 30px rgba(99,102,241,0.5)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = '#6366f1';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(99,102,241,0.3)';
           }}
         >
           <GoogleLogo />
@@ -109,7 +111,7 @@ function RegisterContent() {
   );
 }
 
-/* ---------- Apple-style design tokens ---------- */
+/* ---------- Dark design tokens ---------- */
 const styles: Record<string, React.CSSProperties> = {
   page: {
     width: '100%',
@@ -118,7 +120,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#f5f5f7',
+    background: '#0a0a0a',
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Instrument Sans', 'Helvetica Neue', sans-serif",
     padding: '40px 20px',
     boxSizing: 'border-box',
@@ -133,7 +135,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 36,
     height: 36,
     borderRadius: 10,
-    background: '#1d1d1f',
+    background: '#6366f1',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -142,14 +144,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 20,
     letterSpacing: '-0.02em',
-    color: '#1d1d1f',
+    color: '#ffffff',
   },
   card: {
     width: '100%',
     maxWidth: 400,
-    background: '#ffffff',
+    background: '#1a1a1a',
     borderRadius: 20,
-    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
     padding: 40,
     boxSizing: 'border-box' as const,
     textAlign: 'center' as const,
@@ -157,13 +160,13 @@ const styles: Record<string, React.CSSProperties> = {
   heading: {
     fontSize: 24,
     fontWeight: 600,
-    color: '#1d1d1f',
+    color: '#ffffff',
     margin: '0 0 6px 0',
     letterSpacing: '-0.01em',
   },
   subtitle: {
     fontSize: 15,
-    color: '#86868b',
+    color: 'rgba(255,255,255,0.5)',
     margin: '0 0 28px 0',
     lineHeight: 1.5,
   },
@@ -171,12 +174,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
-    background: '#fff5f5',
-    border: '1px solid #fed7d7',
+    background: 'rgba(239,68,68,0.1)',
+    border: '1px solid rgba(239,68,68,0.2)',
     borderRadius: 12,
     padding: '12px 16px',
     marginBottom: 20,
-    color: '#c53030',
+    color: '#f87171',
     fontSize: 13,
     lineHeight: 1.4,
     textAlign: 'left' as const,
@@ -197,17 +200,18 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    transition: 'background 0.2s',
+    transition: 'background 0.2s, box-shadow 0.2s',
     outline: 'none',
+    boxShadow: '0 0 20px rgba(99,102,241,0.3)',
   },
   trust: {
-    color: '#86868b',
+    color: 'rgba(255,255,255,0.3)',
     fontSize: 13,
     margin: '16px 0 0 0',
     letterSpacing: '0.01em',
   },
   switchText: {
-    color: '#86868b',
+    color: 'rgba(255,255,255,0.3)',
     fontSize: 14,
     marginTop: 24,
     marginBottom: 0,
@@ -218,7 +222,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   legal: {
-    color: '#aeaeb2',
+    color: 'rgba(255,255,255,0.2)',
     fontSize: 12,
     marginTop: 16,
     textAlign: 'center' as const,
@@ -226,14 +230,14 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.5,
   },
   legalLink: {
-    color: '#aeaeb2',
+    color: 'rgba(255,255,255,0.3)',
     textDecoration: 'underline',
   },
 };
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f7' }} />}>
+    <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }} />}>
       <RegisterContent />
     </Suspense>
   );

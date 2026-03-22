@@ -71,32 +71,32 @@ const FEATURES = [
 
 const FEATURE_ICONS: Record<string, React.JSX.Element> = {
   search: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
     </svg>
   ),
   ai: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
     </svg>
   ),
   shield: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" />
     </svg>
   ),
   image: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
     </svg>
   ),
   chart: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   ),
   users: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0071e3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
@@ -271,11 +271,21 @@ const FAQ_JSON_LD = {
   })),
 };
 
+/* -- Dark color palette ------------------------------------------- */
+const BG_PRIMARY = "#0a0a0a";
+const BG_ALT = "#111111";
+const CARD_BG = "#1a1a1a";
+const TEXT_PRIMARY = "#ffffff";
+const TEXT_MUTED = "rgba(255,255,255,0.5)";
+const TEXT_DIM = "rgba(255,255,255,0.3)";
+const BORDER_SUBTLE = "rgba(255,255,255,0.06)";
+const ACCENT = "#6366f1";
+
 /* -- Page (React Server Component) -------------------------------- */
 
 export default function LandingPage() {
   return (
-    <div style={{ background: "#ffffff", color: "#1d1d1f", minHeight: "100vh", fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif" }}>
+    <div style={{ background: BG_PRIMARY, color: TEXT_PRIMARY, minHeight: "100vh", fontFamily: "var(--font-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif" }}>
       {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
@@ -297,90 +307,25 @@ export default function LandingPage() {
       {/* ===== FEATURES ===== */}
       <section
         id="features"
-        style={{ padding: "100px 24px", background: "#f5f5f7" }}
+        style={{ padding: "100px 24px", background: BG_ALT }}
       >
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
-            <h2
-              style={{
-                fontSize: "clamp(32px, 5vw, 48px)",
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                margin: "0 0 12px",
-                color: "#1d1d1f",
-              }}
-            >
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
               Everything to grow your channel.
             </h2>
-            <p
-              style={{
-                fontSize: 19,
-                color: "#86868b",
-                maxWidth: 480,
-                margin: "0 auto",
-                lineHeight: 1.5,
-                fontWeight: 400,
-              }}
-            >
+            <p style={{ fontSize: 19, color: TEXT_MUTED, maxWidth: 480, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
               Six powerful tools. One platform.
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 20,
-            }}
-            className="features-grid"
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }} className="features-grid">
             {FEATURES.map((feature, i) => (
-              <div
-                key={i}
-                className="tf-reveal tf-feature-card"
-                style={{
-                  background: "#ffffff",
-                  borderRadius: 18,
-                  padding: "36px 28px",
-                  transition: "all 0.3s ease",
-                  cursor: "default",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                }}
-              >
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "50%",
-                    background: "rgba(0,113,227,0.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 20,
-                  }}
-                >
+              <div key={i} className="tf-reveal tf-feature-card" style={{ background: CARD_BG, borderRadius: 14, padding: "36px 28px", transition: "all 0.3s ease", cursor: "default", border: `1px solid ${BORDER_SUBTLE}` }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
                   {FEATURE_ICONS[feature.icon]}
                 </div>
-                <h3
-                  style={{
-                    fontSize: 19,
-                    fontWeight: 600,
-                    color: "#1d1d1f",
-                    margin: "0 0 8px",
-                  }}
-                >
-                  {feature.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: 15,
-                    color: "#86868b",
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  {feature.desc}
-                </p>
+                <h3 style={{ fontSize: 19, fontWeight: 600, color: TEXT_PRIMARY, margin: "0 0 8px" }}>{feature.title}</h3>
+                <p style={{ fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, margin: 0 }}>{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -388,88 +333,22 @@ export default function LandingPage() {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section
-        id="how-it-works"
-        style={{
-          padding: "100px 24px",
-          background: "#ffffff",
-        }}
-      >
+      <section id="how-it-works" style={{ padding: "100px 24px", background: BG_PRIMARY }}>
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
-            <h2
-              style={{
-                fontSize: "clamp(32px, 5vw, 48px)",
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                margin: "0 0 12px",
-                color: "#1d1d1f",
-              }}
-            >
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
               Three simple steps.
             </h2>
-            <p
-              style={{
-                fontSize: 19,
-                color: "#86868b",
-                maxWidth: 420,
-                margin: "0 auto",
-                lineHeight: 1.5,
-                fontWeight: 400,
-              }}
-            >
+            <p style={{ fontSize: 19, color: TEXT_MUTED, maxWidth: 420, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
               From idea to publication in minutes.
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 20,
-            }}
-            className="how-it-works-grid"
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }} className="how-it-works-grid">
             {HOW_IT_WORKS.map((item, i) => (
-              <div
-                key={i}
-                className="tf-reveal"
-                style={{
-                  textAlign: "center",
-                  padding: "32px 24px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 48,
-                    fontWeight: 600,
-                    color: "#0071e3",
-                    marginBottom: 16,
-                    lineHeight: 1,
-                  }}
-                >
-                  {item.step}
-                </div>
-                <h3
-                  style={{
-                    fontSize: 19,
-                    fontWeight: 600,
-                    color: "#1d1d1f",
-                    margin: "0 0 8px",
-                  }}
-                >
-                  {item.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: 15,
-                    color: "#86868b",
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  {item.desc}
-                </p>
+              <div key={i} className="tf-reveal" style={{ textAlign: "center", padding: "32px 24px" }}>
+                <div style={{ fontSize: 48, fontWeight: 600, color: ACCENT, marginBottom: 16, lineHeight: 1 }}>{item.step}</div>
+                <h3 style={{ fontSize: 19, fontWeight: 600, color: TEXT_PRIMARY, margin: "0 0 8px" }}>{item.title}</h3>
+                <p style={{ fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -477,163 +356,32 @@ export default function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section id="pricing" style={{ padding: "100px 24px", background: "#f5f5f7" }}>
+      <section id="pricing" style={{ padding: "100px 24px", background: BG_ALT }}>
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
-            <h2
-              style={{
-                fontSize: "clamp(32px, 5vw, 48px)",
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                margin: "0 0 12px",
-                color: "#1d1d1f",
-              }}
-            >
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
               Simple, transparent pricing.
             </h2>
-            <p
-              style={{
-                fontSize: 19,
-                color: "#86868b",
-                maxWidth: 420,
-                margin: "0 auto",
-                lineHeight: 1.5,
-                fontWeight: 400,
-              }}
-            >
+            <p style={{ fontSize: 19, color: TEXT_MUTED, maxWidth: 420, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
               Start free, scale when you are ready.
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 20,
-              maxWidth: 980,
-              margin: "0 auto",
-            }}
-            className="pricing-grid"
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, maxWidth: 980, margin: "0 auto" }} className="pricing-grid">
             {PLANS.map((plan, i) => (
-              <div
-                key={i}
-                className="tf-reveal tf-pricing-card"
-                style={{
-                  background: "#ffffff",
-                  borderRadius: 18,
-                  padding: "36px 28px",
-                  border: plan.popular ? "2px solid #0071e3" : "1px solid #e5e5ea",
-                  position: "relative",
-                  transition: "all 0.3s ease",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
+              <div key={i} className="tf-reveal tf-pricing-card" style={{ background: CARD_BG, borderRadius: 14, padding: "36px 28px", border: plan.popular ? `2px solid ${ACCENT}` : `1px solid ${BORDER_SUBTLE}`, position: "relative", transition: "all 0.3s ease", display: "flex", flexDirection: "column" }}>
                 {plan.popular && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 16,
-                      right: 16,
-                      background: "#0071e3",
-                      color: "#fff",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: "4px 12px",
-                      borderRadius: 980,
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    Popular
-                  </span>
+                  <span style={{ position: "absolute", top: 16, right: 16, background: ACCENT, color: "#fff", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 980, letterSpacing: "0.02em" }}>Popular</span>
                 )}
-                <div
-                  style={{
-                    fontSize: 19,
-                    fontWeight: 600,
-                    color: "#1d1d1f",
-                    marginBottom: 4,
-                  }}
-                >
-                  {plan.name}
+                <div style={{ fontSize: 19, fontWeight: 600, color: TEXT_PRIMARY, marginBottom: 4 }}>{plan.name}</div>
+                <div style={{ fontSize: 14, color: TEXT_MUTED, marginBottom: 24 }}>{plan.desc}</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 2, marginBottom: 28 }}>
+                  <span style={{ fontSize: 40, fontWeight: 600, color: TEXT_PRIMARY, letterSpacing: "-0.02em", lineHeight: 1 }}>{plan.price}</span>
+                  {plan.period && <span style={{ fontSize: 17, color: TEXT_MUTED, fontWeight: 400 }}>{plan.period}</span>}
                 </div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#86868b",
-                    marginBottom: 24,
-                  }}
-                >
-                  {plan.desc}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 2,
-                    marginBottom: 28,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 40,
-                      fontWeight: 600,
-                      color: "#1d1d1f",
-                      letterSpacing: "-0.02em",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span
-                      style={{
-                        fontSize: 17,
-                        color: "#86868b",
-                        fontWeight: 400,
-                      }}
-                    >
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: "0 0 28px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                    flex: 1,
-                  }}
-                >
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                   {plan.features.map((feat, fi) => (
-                    <li
-                      key={fi}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 8,
-                        fontSize: 14,
-                        color: "#1d1d1f",
-                      }}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#0071e3"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ flexShrink: 0, marginTop: 2 }}
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                    <li key={fi} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><polyline points="20 6 9 17 4 12" /></svg>
                       {feat}
                     </li>
                   ))}
@@ -642,28 +390,10 @@ export default function LandingPage() {
                   href={plan.href}
                   className={plan.popular ? "tf-cta-primary" : "tf-cta-secondary"}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "100%",
-                    padding: "12px 28px",
-                    borderRadius: 12,
-                    fontSize: 17,
-                    fontWeight: 400,
-                    textDecoration: "none",
-                    transition: "all 0.3s ease",
-                    minHeight: 48,
+                    display: "flex", alignItems: "center", justifyContent: "center", width: "100%", padding: "12px 28px", borderRadius: 12, fontSize: 17, fontWeight: 500, textDecoration: "none", transition: "all 0.3s ease", minHeight: 48,
                     ...(plan.popular
-                      ? {
-                          background: "#0071e3",
-                          color: "#fff",
-                          border: "none",
-                        }
-                      : {
-                          background: "transparent",
-                          color: "#0071e3",
-                          border: "1px solid #0071e3",
-                        }),
+                      ? { background: ACCENT, color: "#fff", border: "none", boxShadow: "0 0 20px rgba(99,102,241,0.3)" }
+                      : { background: "transparent", color: ACCENT, border: "1px solid rgba(99,102,241,0.3)" }),
                   }}
                 >
                   Choose {plan.name}
@@ -673,165 +403,40 @@ export default function LandingPage() {
           </div>
 
           {/* Guarantee Badge */}
-          <div
-            className="tf-reveal"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              marginTop: 48,
-              padding: "20px 28px",
-              borderRadius: 12,
-              background: "#ffffff",
-              border: "1px solid #e5e5ea",
-              maxWidth: 420,
-              marginLeft: "auto",
-              marginRight: "auto",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-            }}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#0071e3"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ flexShrink: 0 }}
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              <polyline points="9 12 11 14 15 10" />
+          <div className="tf-reveal" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 48, padding: "20px 28px", borderRadius: 12, background: CARD_BG, border: `1px solid ${BORDER_SUBTLE}`, maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" />
             </svg>
             <div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#1d1d1f",
-                  marginBottom: 2,
-                }}
-              >
-                14-Day Money-Back Guarantee
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#86868b",
-                  lineHeight: 1.4,
-                }}
-              >
-                Not satisfied? Full refund, no questions asked.
-              </div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, marginBottom: 2 }}>14-Day Money-Back Guarantee</div>
+              <div style={{ fontSize: 13, color: TEXT_MUTED, lineHeight: 1.4 }}>Not satisfied? Full refund, no questions asked.</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ===== TESTIMONIALS ===== */}
-      <section
-        style={{
-          padding: "100px 24px",
-          background: "#ffffff",
-        }}
-      >
+      <section style={{ padding: "100px 24px", background: BG_PRIMARY }}>
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
-            <h2
-              style={{
-                fontSize: "clamp(32px, 5vw, 48px)",
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                margin: 0,
-                color: "#1d1d1f",
-              }}
-            >
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0, color: TEXT_PRIMARY }}>
               What creators are saying.
             </h2>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 20,
-            }}
-            className="testimonials-grid"
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }} className="testimonials-grid">
             {TESTIMONIALS.map((testimonial, i) => (
-              <div
-                key={i}
-                className="tf-reveal tf-feature-card"
-                style={{
-                  background: "#ffffff",
-                  borderRadius: 18,
-                  padding: "32px 28px",
-                  transition: "all 0.3s ease",
-                  cursor: "default",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                }}
-              >
+              <div key={i} className="tf-reveal tf-feature-card" style={{ background: CARD_BG, borderRadius: 14, padding: "32px 28px", transition: "all 0.3s ease", cursor: "default", border: `1px solid ${BORDER_SUBTLE}` }}>
                 <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
                   {[...Array(5)].map((_, si) => (
-                    <svg
-                      key={si}
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="#0071e3"
-                    >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
+                    <svg key={si} width="14" height="14" viewBox="0 0 24 24" fill={ACCENT}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                   ))}
                 </div>
-                <p
-                  style={{
-                    fontSize: 15,
-                    color: "#1d1d1f",
-                    lineHeight: 1.6,
-                    margin: "0 0 20px",
-                  }}
-                >
-                  &ldquo;{testimonial.text}&rdquo;
-                </p>
+                <p style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: "0 0 20px" }}>&ldquo;{testimonial.text}&rdquo;</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: "50%",
-                      background: "#f5f5f7",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "#86868b",
-                    }}
-                  >
-                    {testimonial.avatar}
-                  </div>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: BORDER_SUBTLE, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600, color: TEXT_MUTED }}>{testimonial.avatar}</div>
                   <div>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "#1d1d1f",
-                      }}
-                    >
-                      {testimonial.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#86868b",
-                        marginTop: 1,
-                      }}
-                    >
-                      {testimonial.role}
-                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY }}>{testimonial.name}</div>
+                    <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 1 }}>{testimonial.role}</div>
                   </div>
                 </div>
               </div>
@@ -841,31 +446,13 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section id="faq" style={{ padding: "100px 24px", background: "#f5f5f7" }}>
+      <section id="faq" style={{ padding: "100px 24px", background: BG_ALT }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
-            <h2
-              style={{
-                fontSize: "clamp(32px, 5vw, 48px)",
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                margin: "0 0 12px",
-                color: "#1d1d1f",
-              }}
-            >
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
               Frequently asked questions.
             </h2>
-            <p
-              style={{
-                fontSize: 19,
-                color: "#86868b",
-                maxWidth: 420,
-                margin: "0 auto",
-                lineHeight: 1.5,
-                fontWeight: 400,
-              }}
-            >
+            <p style={{ fontSize: 19, color: TEXT_MUTED, maxWidth: 420, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
               Everything you need to know.
             </p>
           </div>
@@ -876,184 +463,39 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FINAL CTA ===== */}
-      <section
-        className="tf-reveal"
-        style={{
-          padding: "100px 24px 120px",
-          textAlign: "center",
-          background: "#ffffff",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 680,
-            margin: "0 auto",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "clamp(32px, 5vw, 48px)",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              color: "#1d1d1f",
-              margin: "0 0 12px",
-              lineHeight: 1.1,
-            }}
-          >
+      <section className="tf-reveal" style={{ padding: "100px 24px 120px", textAlign: "center", background: BG_PRIMARY }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", color: TEXT_PRIMARY, margin: "0 0 12px", lineHeight: 1.1 }}>
             Ready to get started?
           </h2>
-          <p
-            style={{
-              fontSize: 19,
-              color: "#86868b",
-              margin: "0 0 36px",
-              lineHeight: 1.5,
-            }}
-          >
+          <p style={{ fontSize: 19, color: TEXT_MUTED, margin: "0 0 36px", lineHeight: 1.5 }}>
             Join TubeForge and get all the tools you need to grow your channel.
           </p>
-          <Link
-            href="/register"
-            className="tf-cta-primary"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "#0071e3",
-              color: "#fff",
-              fontSize: 17,
-              fontWeight: 400,
-              padding: "12px 28px",
-              borderRadius: 980,
-              textDecoration: "none",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              minHeight: 48,
-            }}
-          >
+          <Link href="/register" className="tf-cta-primary" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ACCENT, color: "#fff", fontSize: 17, fontWeight: 500, padding: "12px 28px", borderRadius: 980, textDecoration: "none", border: "none", cursor: "pointer", transition: "all 0.3s ease", minHeight: 48, boxShadow: "0 0 30px rgba(99,102,241,0.4)" }}>
             Start Free
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
           </Link>
         </div>
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer
-        style={{
-          background: "#f5f5f7",
-          padding: "56px 24px 32px",
-        }}
-      >
+      <footer style={{ background: BG_PRIMARY, padding: "56px 24px 32px", borderTop: `1px solid ${BORDER_SUBTLE}` }}>
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(5, 1fr)",
-              gap: 32,
-              marginBottom: 40,
-            }}
-            className="footer-grid"
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 32, marginBottom: 40 }} className="footer-grid">
             {[
-              {
-                title: "Product",
-                links: [
-                  { label: "Features", href: "#features" },
-                  { label: "Pricing", href: "/pricing" },
-                  { label: "VPN", href: "/vpn" },
-                ],
-              },
-              {
-                title: "Free Tools",
-                links: [
-                  { label: "Title Generator", href: "/free-tools/title-generator" },
-                  { label: "Description Generator", href: "/free-tools/description-generator" },
-                  { label: "Tag Generator", href: "/free-tools/tag-generator" },
-                  { label: "Thumbnail Checker", href: "/free-tools/thumbnail-checker" },
-                ],
-              },
-              {
-                title: "Resources",
-                links: [
-                  { label: "Blog", href: "/blog" },
-                  { label: "About", href: "/about" },
-                  { label: "Help", href: "/help" },
-                  { label: "Contact", href: "/contact" },
-                ],
-              },
-              {
-                title: "Compare",
-                links: [
-                  { label: "vs InVideo", href: "/compare/tubeforge-vs-invideo" },
-                  { label: "vs CapCut", href: "/compare/tubeforge-vs-capcut" },
-                  { label: "vs Pictory", href: "/compare/tubeforge-vs-pictory" },
-                  { label: "vs Synthesia", href: "/compare/tubeforge-vs-synthesia" },
-                  { label: "vs TubeBuddy", href: "/compare/tubeforge-vs-tubebuddy" },
-                  { label: "vs vidIQ", href: "/compare/tubeforge-vs-vidiq" },
-                  { label: "vs VEED", href: "/compare/tubeforge-vs-veed" },
-                  { label: "vs Opus Clip", href: "/compare/tubeforge-vs-opus-clip" },
-                  { label: "vs Descript", href: "/compare/tubeforge-vs-descript" },
-                ],
-              },
-              {
-                title: "Legal",
-                links: [
-                  { label: "Terms of Service", href: "/terms" },
-                  { label: "Privacy Policy", href: "/privacy" },
-                  { label: "DPA", href: "/dpa" },
-                  { label: "SLA", href: "/sla" },
-                  { label: "Security", href: "/security" },
-                ],
-              },
+              { title: "Product", links: [{ label: "Features", href: "#features" }, { label: "Pricing", href: "/pricing" }, { label: "VPN", href: "/vpn" }] },
+              { title: "Free Tools", links: [{ label: "Title Generator", href: "/free-tools/title-generator" }, { label: "Description Generator", href: "/free-tools/description-generator" }, { label: "Tag Generator", href: "/free-tools/tag-generator" }, { label: "Thumbnail Checker", href: "/free-tools/thumbnail-checker" }] },
+              { title: "Resources", links: [{ label: "Blog", href: "/blog" }, { label: "About", href: "/about" }, { label: "Help", href: "/help" }, { label: "Contact", href: "/contact" }] },
+              { title: "Compare", links: [{ label: "vs InVideo", href: "/compare/tubeforge-vs-invideo" }, { label: "vs CapCut", href: "/compare/tubeforge-vs-capcut" }, { label: "vs Pictory", href: "/compare/tubeforge-vs-pictory" }, { label: "vs Synthesia", href: "/compare/tubeforge-vs-synthesia" }] },
+              { title: "Legal", links: [{ label: "Terms of Service", href: "/terms" }, { label: "Privacy Policy", href: "/privacy" }, { label: "DPA", href: "/dpa" }, { label: "SLA", href: "/sla" }, { label: "Security", href: "/security" }] },
             ].map((col, ci) => (
               <div key={ci}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "#1d1d1f",
-                    marginBottom: 12,
-                    letterSpacing: "0.01em",
-                  }}
-                >
-                  {col.title}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                  }}
-                >
+                <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 12, letterSpacing: "0.01em" }}>{col.title}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {col.links.map((link, li) => {
-                    const isExternal =
-                      link.href.startsWith("http") ||
-                      link.href.startsWith("mailto:");
+                    const isExternal = link.href.startsWith("http") || link.href.startsWith("mailto:");
                     return (
-                      <a
-                        key={li}
-                        href={link.href}
-                        target={isExternal ? "_blank" : undefined}
-                        rel={isExternal ? "nofollow noopener noreferrer" : undefined}
-                        style={{
-                          textDecoration: "none",
-                          color: "#86868b",
-                          fontSize: 12,
-                          transition: "color 0.3s ease",
-                        }}
-                      >
+                      <a key={li} href={link.href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "nofollow noopener noreferrer" : undefined} style={{ textDecoration: "none", color: TEXT_DIM, fontSize: 12, transition: "color 0.3s ease" }}>
                         {link.label}
                       </a>
                     );
@@ -1062,171 +504,55 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div
-            style={{
-              borderTop: "1px solid #d2d2d7",
-              paddingTop: 20,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
-          >
-            <span style={{ fontSize: 12, color: "#86868b" }}>
-              {"\u00A9"} 2026 TubeForge. All rights reserved.
-            </span>
+          <div style={{ borderTop: `1px solid ${BORDER_SUBTLE}`, paddingTop: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <span style={{ fontSize: 12, color: TEXT_DIM }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              {/* Social links */}
-              <a
-                href="https://youtube.com/@tubeforge"
-                target="_blank"
-                rel="nofollow noopener noreferrer"
-                aria-label="YouTube"
-                style={{ color: "#86868b", transition: "color 0.3s ease" }}
-              >
+              <a href="https://youtube.com/@tubeforge" target="_blank" rel="nofollow noopener noreferrer" aria-label="YouTube" style={{ color: TEXT_DIM, transition: "color 0.3s ease" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
               </a>
-              <a
-                href="https://t.me/tubeforge"
-                target="_blank"
-                rel="nofollow noopener noreferrer"
-                aria-label="Telegram"
-                style={{ color: "#86868b", transition: "color 0.3s ease" }}
-              >
+              <a href="https://t.me/tubeforge" target="_blank" rel="nofollow noopener noreferrer" aria-label="Telegram" style={{ color: TEXT_DIM, transition: "color 0.3s ease" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 0C5.37 0 0 5.37 0 12s5.37 12 11.99 12S24 18.63 24 12 18.61 0 11.99 0zm5.9 8.17l-1.93 9.12c-.15.67-.54.83-1.1.52l-3.02-2.23-1.46 1.4c-.16.16-.3.3-.61.3l.22-3.07 5.56-5.02c.24-.22-.05-.34-.38-.13L8.6 13.85l-2.97-.93c-.65-.2-.66-.65.13-.96l11.6-4.47c.54-.2 1.01.13.83.96l-.3-.28z"/></svg>
               </a>
-              <a
-                href="https://twitter.com/tubeforge"
-                target="_blank"
-                rel="nofollow noopener noreferrer"
-                aria-label="Twitter"
-                style={{ color: "#86868b", transition: "color 0.3s ease" }}
-              >
+              <a href="https://twitter.com/tubeforge" target="_blank" rel="nofollow noopener noreferrer" aria-label="Twitter" style={{ color: TEXT_DIM, transition: "color 0.3s ease" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </a>
-              <span style={{ width: 1, height: 12, background: "#d2d2d7" }} />
-              {/* Legal links */}
-              <a
-                href="/terms"
-                style={{
-                  textDecoration: "none",
-                  color: "#86868b",
-                  fontSize: 12,
-                  transition: "color 0.3s ease",
-                }}
-              >
-                Terms
-              </a>
-              <a
-                href="/privacy"
-                style={{
-                  textDecoration: "none",
-                  color: "#86868b",
-                  fontSize: 12,
-                  transition: "color 0.3s ease",
-                }}
-              >
-                Privacy
-              </a>
+              <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.1)" }} />
+              <a href="/terms" style={{ textDecoration: "none", color: TEXT_DIM, fontSize: 12, transition: "color 0.3s ease" }}>Terms</a>
+              <a href="/privacy" style={{ textDecoration: "none", color: TEXT_DIM, fontSize: 12, transition: "color 0.3s ease" }}>Privacy</a>
             </div>
           </div>
         </div>
       </footer>
 
       <ClientCookieConsent />
-
-      {/* Sticky Mobile CTA */}
       <StickyMobileCTA />
 
       {/* ===== GLOBAL STYLES ===== */}
       <style>{`
-        .tf-reveal {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1);
-        }
-        .tf-reveal.tf-visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        /* Feature card hover */
-        .tf-feature-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.08) !important;
-        }
-
-        /* Pricing card hover */
-        .tf-pricing-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.08) !important;
-        }
-
-        /* CTA hover states */
-        .tf-cta-primary:hover {
-          background: #0077ED !important;
-          transform: scale(1.02);
-        }
-        .tf-cta-secondary:hover {
-          color: #0077ED !important;
-        }
-
-        /* Footer link hovers */
-        footer a:hover {
-          color: #1d1d1f !important;
-        }
-
-        /* Responsive grids */
+        .tf-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1); }
+        .tf-reveal.tf-visible { opacity: 1; transform: translateY(0); }
+        .tf-feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 40px rgba(0,0,0,0.3) !important; border-color: rgba(255,255,255,0.1) !important; }
+        .tf-pricing-card:hover { transform: translateY(-4px); box-shadow: 0 8px 40px rgba(0,0,0,0.3) !important; }
+        .tf-cta-primary:hover { background: #7c3aed !important; transform: scale(1.02); box-shadow: 0 0 40px rgba(99,102,241,0.5) !important; }
+        .tf-cta-secondary:hover { color: #818cf8 !important; border-color: rgba(99,102,241,0.5) !important; }
+        footer a:hover { color: rgba(255,255,255,0.7) !important; }
         @media (max-width: 768px) {
-          .features-grid,
-          .how-it-works-grid,
-          .pricing-grid,
-          .testimonials-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .features-grid, .how-it-works-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr !important; }
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: block !important; }
           .footer-grid { grid-template-columns: 1fr 1fr !important; }
           .sticky-mobile-cta { display: block !important; }
         }
-        @media (min-width: 769px) and (max-width: 1024px) {
-          .features-grid,
-          .testimonials-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        @media (max-width: 480px) {
-          .footer-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (min-width: 769px) {
-          .mobile-menu-dropdown { display: none !important; }
-        }
-
-        /* Focus styles */
-        a:focus-visible, button:focus-visible {
-          outline: 2px solid #0071e3;
-          outline-offset: 2px;
-          border-radius: 4px;
-        }
-
-        /* Selection */
-        ::selection {
-          background: rgba(0,113,227,0.15);
-          color: #1d1d1f;
-        }
-
-        /* Scrollbar */
+        @media (min-width: 769px) and (max-width: 1024px) { .features-grid, .testimonials-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr !important; } }
+        @media (min-width: 769px) { .mobile-menu-dropdown { display: none !important; } }
+        a:focus-visible, button:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; border-radius: 4px; }
+        ::selection { background: rgba(99,102,241,0.3); color: #ffffff; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #86868b; }
-
-        /* Reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-          .tf-reveal { opacity: 1; transform: none; transition: none; }
-          * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-        }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        @media (prefers-reduced-motion: reduce) { .tf-reveal { opacity: 1; transform: none; transition: none; } * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
       `}</style>
     </div>
   );

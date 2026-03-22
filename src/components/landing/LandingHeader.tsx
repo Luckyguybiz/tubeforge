@@ -4,13 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 
-const GRAY_100 = '#f3f4f6';
-const GRAY_600 = '#4b5563';
-const GRAY_700 = '#374151';
-const GRAY_900 = '#111827';
 const WHITE = '#ffffff';
-const INDIGO_600 = '#4f46e5';
-const INDIGO_500 = '#6366f1';
 
 const primaryBtnStyle: CSSProperties = {
   display: 'inline-flex',
@@ -19,11 +13,11 @@ const primaryBtnStyle: CSSProperties = {
   textDecoration: 'none',
   color: WHITE,
   fontSize: 17,
-  fontWeight: 700,
+  fontWeight: 500,
   padding: '14px 36px',
   borderRadius: 50,
-  background: `linear-gradient(135deg, ${INDIGO_600}, ${INDIGO_500})`,
-  boxShadow: '0 4px 24px rgba(79,70,229,0.35)',
+  background: '#6366f1',
+  boxShadow: '0 0 24px rgba(99,102,241,0.35)',
   transition: 'transform 0.2s, box-shadow 0.2s',
   border: 'none',
   cursor: 'pointer',
@@ -32,11 +26,11 @@ const primaryBtnStyle: CSSProperties = {
 
 const primaryHoverIn = (e: React.MouseEvent<HTMLElement>) => {
   e.currentTarget.style.transform = 'translateY(-2px)';
-  e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,70,229,0.5)';
+  e.currentTarget.style.boxShadow = '0 0 32px rgba(99,102,241,0.5)';
 };
 const primaryHoverOut = (e: React.MouseEvent<HTMLElement>) => {
   e.currentTarget.style.transform = 'translateY(0)';
-  e.currentTarget.style.boxShadow = '0 4px 24px rgba(79,70,229,0.35)';
+  e.currentTarget.style.boxShadow = '0 0 24px rgba(99,102,241,0.35)';
 };
 
 interface NavLink {
@@ -67,10 +61,10 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
         left: 0,
         right: 0,
         zIndex: 100,
-        background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',
+        background: scrolled ? 'rgba(10,10,10,0.85)' : 'transparent',
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
         transition: 'all 0.3s ease',
       }}
     >
@@ -90,11 +84,11 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+              background: '#fff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: WHITE,
+              color: '#0a0a0a',
               fontWeight: 800,
               fontSize: 14,
               letterSpacing: -0.5,
@@ -102,7 +96,7 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
           >
             TF
           </div>
-          <span style={{ fontSize: 20, fontWeight: 700, color: GRAY_900, letterSpacing: -0.5 }}>TubeForge</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: WHITE, letterSpacing: -0.5 }}>TubeForge</span>
         </Link>
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="desktop-nav">
@@ -110,9 +104,9 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
             <a
               key={link.href}
               href={link.href}
-              style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, transition: 'color 0.2s' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = GRAY_900; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = GRAY_600; }}
+              style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 15, fontWeight: 500, transition: 'color 0.2s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = WHITE; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
             >
               {link.label}
             </a>
@@ -120,7 +114,7 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
         </nav>
 
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/login" style={{ textDecoration: 'none', color: GRAY_600, fontSize: 15, fontWeight: 500, padding: '8px 16px', transition: 'color 0.2s' }}>
+          <Link href="/login" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 15, fontWeight: 500, padding: '8px 16px', transition: 'color 0.2s' }}>
             Log In
           </Link>
           <Link
@@ -139,7 +133,7 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
           aria-label="Open menu"
           style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GRAY_700} strokeWidth="2" strokeLinecap="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round">
             {mobileMenuOpen ? (
               <>
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -157,14 +151,14 @@ export function LandingHeader({ navLinks, lightningIcon }: LandingHeaderProps) {
       </div>
 
       {mobileMenuOpen && (
-        <div className="mobile-menu-dropdown" style={{ background: WHITE, borderTop: `1px solid ${GRAY_100}`, padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="mobile-menu-dropdown" style={{ background: 'rgba(10,10,10,0.98)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>
+            <a key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: 500, padding: '8px 0' }}>
               {link.label}
             </a>
           ))}
-          <div style={{ borderTop: `1px solid ${GRAY_100}`, paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link href="/login" style={{ textDecoration: 'none', color: GRAY_700, fontSize: 16, fontWeight: 500, padding: '8px 0' }}>Log In</Link>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Link href="/login" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 16, fontWeight: 500, padding: '8px 0' }}>Log In</Link>
             <Link href="/register" style={{ ...primaryBtnStyle, fontSize: 16, padding: '12px 24px', justifyContent: 'center' }}>
               {lightningIcon} Start Free
             </Link>

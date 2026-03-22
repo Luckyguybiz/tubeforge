@@ -30,10 +30,10 @@ export function StickyMobileCTA() {
         right: 0,
         zIndex: 999,
         padding: "12px 16px",
-        background: "rgba(255,255,255,0.92)",
+        background: "rgba(10,10,10,0.92)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1px solid #e5e5ea",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
         transform: visible ? "translateY(0)" : "translateY(100%)",
         transition: "transform 0.3s cubic-bezier(.4,0,.2,1)",
         display: "none", // hidden by default (desktop)
@@ -50,12 +50,13 @@ export function StickyMobileCTA() {
           width: "100%",
           padding: "14px 24px",
           borderRadius: 12,
-          background: "#0071e3",
+          background: "#6366f1",
           color: "#fff",
           fontSize: 17,
-          fontWeight: 400,
+          fontWeight: 500,
           textDecoration: "none",
           border: "none",
+          boxShadow: "0 0 20px rgba(99,102,241,0.3)",
         }}
       >
         Start Free
