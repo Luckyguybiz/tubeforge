@@ -1328,18 +1328,27 @@ export function Dashboard() {
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg> },
           ] as const).map((product) => (
             <Link key={product.href} href={product.href} className="tf-dash-showcase-card" style={{
-              width: 180, flexShrink: 0, scrollSnapAlign: 'start',
+              width: 240, flexShrink: 0, scrollSnapAlign: 'start',
               background: C.card, border: `1px solid ${C.border}`,
               borderRadius: 14, overflow: 'hidden',
               textDecoration: 'none', transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               display: 'flex', flexDirection: 'column',
             }}>
               <div style={{
-                height: 140, background: `linear-gradient(135deg, ${product.gradientFrom}, ${product.gradientTo})`,
+                height: 180, background: `linear-gradient(135deg, ${product.gradientFrom}, ${product.gradientTo})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 position: 'relative',
               }}>
                 {product.icon}
+                {/* Video placeholder — replace with real video later */}
+                <div style={{
+                  position: 'absolute', bottom: 10, right: 10,
+                  width: 28, height: 28, borderRadius: 8,
+                  background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+                </div>
                 {product.badge && (
                   <span style={{
                     position: 'absolute', top: 8, right: 8,
