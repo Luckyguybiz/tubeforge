@@ -209,6 +209,8 @@ export default function middleware(req: NextRequest) {
     '/help',
     '/compare',
     '/vpn',
+    '/free-tools',
+    '/api/free-tools',
     '/api/auth',
     '/api/stripe/webhook',
     '/api/webhooks',
