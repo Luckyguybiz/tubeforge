@@ -208,6 +208,9 @@ export default function middleware(req: NextRequest) {
     '/api/health',
     '/privacy',
     '/terms',
+    '/dpa',
+    '/sla',
+    '/security',
   ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),

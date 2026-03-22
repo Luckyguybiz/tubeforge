@@ -78,6 +78,36 @@ export default function PrivacyPage() {
         </ul>
       </div>
 
+      {/* 2a. YouTube API Services */}
+      <div style={sectionStyle}>
+        <h2 id="youtube-api" style={headingStyle}>2a. YouTube API Services</h2>
+        <p style={paraStyle}>
+          TubeForge uses YouTube API Services. By using TubeForge, you agree to the{' '}
+          <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            YouTube Terms of Service
+          </a>.
+        </p>
+        <p style={paraStyle}>
+          Your use of YouTube data through TubeForge is also subject to the{' '}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            Google Privacy Policy
+          </a>.
+        </p>
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>YouTube data we collect and process:</p>
+        <ul style={listStyle}>
+          <li>Channel name and profile information</li>
+          <li>Subscriber count</li>
+          <li>Video statistics (views, likes, comments)</li>
+          <li>Upload capabilities and channel status</li>
+        </ul>
+        <p style={paraStyle}>
+          You may revoke TubeForge&apos;s access to your YouTube data at any time via the{' '}
+          <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>
+            Google security settings page
+          </a>.
+        </p>
+      </div>
+
       {/* 3. Как мы используем данные */}
       <div style={sectionStyle}>
         <h2 id="ispolzovanie-dannyh" style={headingStyle}>3. Как мы используем данные</h2>
@@ -273,6 +303,41 @@ export default function PrivacyPage() {
         <p style={paraStyle}>
           Вы также можете экспортировать свои данные через настройки аккаунта в разделе
           «Настройки» → «Данные и конфиденциальность».
+        </p>
+      </div>
+
+      {/* 7a. Your California Privacy Rights (CCPA/CPRA) */}
+      <div style={sectionStyle}>
+        <h2 id="ccpa" style={headingStyle}>7a. Your California Privacy Rights (CCPA/CPRA)</h2>
+        <p style={paraStyle}>
+          If you are a California resident, you have additional rights under the California Consumer
+          Privacy Act (CCPA) and the California Privacy Rights Act (CPRA):
+        </p>
+
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Categories of personal information we collect:</p>
+        <ul style={listStyle}>
+          <li>Identifiers (name, email address, account ID)</li>
+          <li>Commercial information (subscription plan, payment history)</li>
+          <li>Internet or electronic network activity (usage data, IP address, browser type)</li>
+          <li>Professional information (YouTube channel data when connected)</li>
+        </ul>
+
+        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Your rights:</p>
+        <ul style={listStyle}>
+          <li><strong style={{ color: C.text }}>Right to Know</strong> — request what personal information we have collected about you</li>
+          <li><strong style={{ color: C.text }}>Right to Delete</strong> — request deletion of your personal information</li>
+          <li><strong style={{ color: C.text }}>Right to Opt-Out</strong> — opt out of the sale or sharing of your personal information</li>
+          <li><strong style={{ color: C.text }}>Right to Non-Discrimination</strong> — exercise your rights without receiving discriminatory treatment</li>
+        </ul>
+
+        <p style={paraStyle}>
+          <strong style={{ color: C.text }}>We do not sell your personal information.</strong> We do not share your
+          personal information for cross-context behavioral advertising.
+        </p>
+        <p style={paraStyle}>
+          To exercise your California privacy rights, contact us at{' '}
+          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>privacy@tubeforge.co</a>.
+          We will respond to verifiable consumer requests within 45 days.
         </p>
       </div>
 

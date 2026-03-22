@@ -38,9 +38,9 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    icon: "download",
-    title: "Video Downloader",
-    desc: "YouTube, TikTok, Instagram — download in any quality up to 4K. Convert to MP3 and compress videos.",
+    icon: "search",
+    title: "Video Analyzer",
+    desc: "Analyze any YouTube video — SEO scores, engagement metrics, title optimization, and actionable suggestions.",
   },
   {
     icon: "ai",
@@ -70,9 +70,9 @@ const FEATURES = [
 ];
 
 const FEATURE_ICONS: Record<string, React.JSX.Element> = {
-  download: (
+  search: (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
     </svg>
   ),
   ai: (
@@ -103,7 +103,7 @@ const FEATURE_ICONS: Record<string, React.JSX.Element> = {
 };
 
 const TOOLS = [
-  { title: "YouTube Downloader", desc: "Download YouTube videos in any quality" },
+  { title: "YouTube Video Analyzer", desc: "SEO scores, engagement metrics & optimization tips" },
   { title: "MP3 Converter", desc: "Extract audio from any video" },
   { title: "Video Compressor", desc: "Compress without losing quality" },
   { title: "AI Text Editor", desc: "Generate descriptions and scripts" },
@@ -235,7 +235,7 @@ const PLANS = [
     period: "",
     desc: "Get started with the platform",
     features: [
-      "3 downloads per day",
+      "3 video analyses per day",
       "Basic AI editor",
       "Thumbnail generation",
       "SEO optimization",
@@ -250,7 +250,7 @@ const PLANS = [
     period: "/mo",
     desc: "For active creators",
     features: [
-      "Unlimited downloads",
+      "Unlimited video analyses",
       "All AI tools",
       "VPN for YouTube",
       "Unlimited thumbnails",
@@ -283,15 +283,15 @@ const PLANS = [
 const FAQ_ITEMS = [
   {
     q: "What is TubeForge?",
-    a: "TubeForge is an AI-powered platform for YouTube creators that combines video downloading, AI tools, VPN, thumbnail editor, SEO optimization, and a referral program \u2014 all in one place.",
+    a: "TubeForge is an AI-powered platform for YouTube creators that combines video analysis, AI tools, VPN, thumbnail editor, SEO optimization, and a referral program \u2014 all in one place.",
   },
   {
     q: "Do I need to pay?",
-    a: "No, there is a free plan with 3 downloads per day, a basic AI editor, thumbnail generation, and SEO optimization. No credit card required. The Pro plan unlocks unlimited access and advanced features.",
+    a: "No, there is a free plan with 3 video analyses per day, a basic AI editor, thumbnail generation, and SEO optimization. No credit card required. The Pro plan unlocks unlimited access and advanced features.",
   },
   {
     q: "What video formats are supported?",
-    a: "Download and export in MP4 with multiple resolutions \u2014 from 360p to 4K. MP3 conversion is also available for audio extraction.",
+    a: "Export in MP4 with multiple resolutions \u2014 from 360p to 4K. MP3 conversion is also available for audio extraction. The Video Analyzer helps you optimize titles and metadata.",
   },
   {
     q: "How does AI generation work?",
@@ -1691,6 +1691,9 @@ export default function LandingPage() {
                 links: [
                   { label: "Terms of Service", href: "/terms" },
                   { label: "Privacy Policy", href: "/privacy" },
+                  { label: "DPA", href: "/dpa" },
+                  { label: "SLA", href: "/sla" },
+                  { label: "Security", href: "/security" },
                   {
                     label: "Refund Policy",
                     href: "mailto:support@tubeforge.co",

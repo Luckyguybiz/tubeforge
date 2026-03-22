@@ -32,21 +32,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: env.AUTH_GOOGLE_ID,
       clientSecret: env.AUTH_GOOGLE_SECRET,
     }),
-    // DEV-ONLY: email-based login without OAuth (remove before production)
-    Credentials({
-      id: 'dev-login',
-      name: 'Dev Login',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-      },
-      async authorize(credentials) {
-        const email = credentials?.email as string;
-        if (!email) return null;
-        const user = await db.user.findUnique({ where: { email } });
-        if (!user) return null;
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
-      },
-    }),
+    // DEV-ONLY: email-based login without OAuth (disabled in production)
+    ...(process.env.NODE_ENV !== 'production' ? [
+      Credentials({
+        id: 'dev-login',
+        name: 'Dev Login',
+        credentials: {
+          email: { label: 'Email', type: 'email' },
+        },
+        async authorize(credentials) {
+          const email = credentials?.email as string;
+          if (!email) return null;
+          const user = await db.user.findUnique({ where: { email } });
+          if (!user) return null;
+          return { id: user.id, email: user.email, name: user.name, image: user.image };
+        },
+      }),
+    ] : []),
   ],
   logger: {
     error(error: Error) {
