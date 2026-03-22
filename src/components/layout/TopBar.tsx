@@ -17,6 +17,7 @@ const PAGE_LABEL_KEYS: Record<string, string> = {
   team: 'nav.team',
   referral: 'nav.referral',
   blog: 'nav.blog',
+  'ai-thumbnails': 'nav.aiThumbnails',
 };
 
 const NOTIF_ICONS: Record<Notification['type'], string> = {
