@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
@@ -99,28 +98,6 @@ export const aiRouter = router({
         // ── Flux via fal.ai ──
         fal.config({ credentials: env.FAL_KEY });
 
-<<<<<<< HEAD
-      let res: Response;
-      try {
-        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_IMAGES, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: thumbnailPrompt.slice(0, 4000),
-            n: 1,
-            size: '1792x1024',
-            quality: 'hd',
-          }),
-        });
-      } catch (e) {
-        await decrementAIUsage(ctx.session.user.id, ctx.db);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
-=======
         const fluxPrompt = `Professional YouTube thumbnail photo. ${input.prompt}.
 
 Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
@@ -189,7 +166,6 @@ Professional YouTube thumbnail that would get millions of clicks.
 
         const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse DALL-E API response' }); });
         return { images: data.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [] };
->>>>>>> origin/claude/great-curie
       }
     }),
 
@@ -247,7 +223,6 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -271,29 +246,6 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
       };
       const fullPrompt = `Create a YouTube thumbnail with this EXACT layout: ${description}. Style: ${styleMap[input.style] ?? input.style}. Requirements: follow the described spatial positioning precisely, 16:9 aspect ratio, professional quality, eye-catching. Ultra photorealistic, 8K, hyper-detailed. Do NOT add text/watermarks unless specified in the layout.`;
 
-<<<<<<< HEAD
-      let dalleRes: Response;
-      try {
-        dalleRes = await fetchWithTimeout(API_ENDPOINTS.OPENAI_IMAGES, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: fullPrompt.slice(0, 4000),
-            n: 1,
-            size: '1792x1024',
-            quality: 'hd',
-          }),
-        });
-      } catch (e) {
-        // Vision succeeded (1 credit consumed), refund only the DALL-E credit
-        await decrementAIUsage(ctx.session.user.id, ctx.db);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
-=======
       const useFal = !!env.FAL_KEY;
 
       if (useFal) {
@@ -357,7 +309,6 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
           description,
           images: dalleData.data?.map((d: { url: string; revised_prompt?: string }) => ({ url: d.url, revisedPrompt: d.revised_prompt })) ?? [],
         };
->>>>>>> origin/claude/great-curie
       }
     }),
 
@@ -395,7 +346,6 @@ Return ONLY valid JSON, no markdown.`,
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -456,7 +406,6 @@ Return ONLY valid JSON, no markdown.`,
         });
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -544,7 +493,6 @@ Make the scenes visually diverse and engaging.`,
         }, 60000);
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db, 2);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error. Please try again later.' });
       }
 
@@ -651,7 +599,6 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
         }, 60000);
       } catch (e) {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
 
@@ -712,33 +659,9 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
         cinematic: 'cinematic movie poster style, dramatic lighting, epic composition',
       };
 
-<<<<<<< HEAD
-      let res: Response;
-      try {
-        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_IMAGES, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: `${input.prompt}. Style: ${styleMap[input.style] ?? input.style}. High quality, detailed.`,
-            n: 1,
-            size: input.size,
-            quality: 'hd',
-          }),
-        });
-      } catch (e) {
-        await decrementAIUsage(ctx.session.user.id, ctx.db);
-        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), { tags: { component: 'ai-generation' } });
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
-      }
-=======
       if (useFal) {
         // ── Flux via fal.ai ──
         fal.config({ credentials: env.FAL_KEY });
->>>>>>> origin/claude/great-curie
 
         // Map DALL-E size strings to Flux dimensions
         const sizeMap: Record<string, { width: number; height: number }> = {
