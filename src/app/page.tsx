@@ -960,7 +960,7 @@ export default function LandingPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              gridTemplateColumns: "repeat(5, 1fr)",
               gap: 32,
               marginBottom: 40,
             }}
@@ -973,6 +973,15 @@ export default function LandingPage() {
                   { label: "Features", href: "#features" },
                   { label: "Pricing", href: "/pricing" },
                   { label: "VPN", href: "/vpn" },
+                ],
+              },
+              {
+                title: "Free Tools",
+                links: [
+                  { label: "Title Generator", href: "/free-tools/title-generator" },
+                  { label: "Description Generator", href: "/free-tools/description-generator" },
+                  { label: "Tag Generator", href: "/free-tools/tag-generator" },
+                  { label: "Thumbnail Checker", href: "/free-tools/thumbnail-checker" },
                 ],
               },
               {

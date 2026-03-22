@@ -16,6 +16,7 @@ export function LandingNav() {
   const navLinks = [
     { label: 'Features', href: '#features' },
     { label: 'Pricing', href: '/pricing' },
+    { label: 'Free Tools', href: '/free-tools' },
     { label: 'Blog', href: '/blog' },
     { label: 'FAQ', href: '#faq' },
   ];
