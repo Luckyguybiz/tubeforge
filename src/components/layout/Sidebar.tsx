@@ -795,6 +795,8 @@ export const Sidebar = memo(function Sidebar() {
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
+        height: '100%',
+        minHeight: 0,
         overflow: 'hidden',
         transition: 'width .3s cubic-bezier(.4,0,.2,1)',
         position: 'relative',
@@ -1042,13 +1044,17 @@ export const Sidebar = memo(function Sidebar() {
 
       {/* ── Navigation Groups ────────────────────────────── */}
       <div
+        className="tf-sidebar-nav"
         style={{
           flex: 1,
+          minHeight: 0,
           padding: collapsed ? '4px 8px' : '0 10px',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
           zIndex: 1,
+          scrollbarWidth: 'thin',
+          scrollbarColor: `${isDark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'} transparent`,
         }}
       >
         {visibleGroups.map((group, gIndex) => (
