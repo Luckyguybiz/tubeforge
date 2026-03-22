@@ -71,6 +71,7 @@ model User {
   referralEarnings   Float        @default(0)
   claimedMilestones  String[]     @default([])
   payouts          Payout[]
+  thumbnailGenerations ThumbnailGeneration[]
   vpnPeer          VpnPeer?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -294,6 +295,25 @@ model VpnPeer {
 
   @@index([userId])
   @@index([active])
+}
+
+model ThumbnailGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt      String   @db.Text
+  style       String   @default("realistic")
+  format      String   @default("16:9")
+  imageUrl    String
+  parentId    String?
+  parent      ThumbnailGeneration?  @relation("ThumbnailVersions", fields: [parentId], references: [id])
+  children    ThumbnailGeneration[] @relation("ThumbnailVersions")
+  youtubeUrl  String?
+  photoUrl    String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, parentId])
 }
 
 model AuditLog {
