@@ -813,7 +813,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             }}
           >
             {/* Style Preview Card */}
-            <div style={{
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setRightPanelTab('styles')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRightPanelTab('styles'); } }}
+              style={{
               borderRadius: 12,
               background: `linear-gradient(135deg, ${selectedStyle.gradient[0]}, ${selectedStyle.gradient[1]})`,
               padding: '16px 14px 14px',
@@ -822,22 +827,22 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
+              cursor: 'pointer',
+              transition: 'filter .15s',
             }}>
-              <button
-                onClick={() => setRightPanelTab('styles')}
+              <span
                 style={{
                   position: 'absolute', top: 8, right: 8,
                   fontSize: 9, fontWeight: 600, color: '#ffffffcc',
-                  background: 'rgba(0,0,0,.3)', border: 'none',
+                  background: 'rgba(0,0,0,.3)',
                   borderRadius: 6, padding: '4px 8px',
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  fontFamily: 'inherit',
                   backdropFilter: 'blur(4px)', transition: 'background .15s',
+                  pointerEvents: 'none',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.5)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,.3)'; }}
               >
                 Change
-              </button>
+              </span>
               <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.04em', textShadow: '0 1px 4px rgba(0,0,0,.3)' }}>
                 {selectedStyle.name}
               </span>
