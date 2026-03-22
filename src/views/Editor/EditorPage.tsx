@@ -293,28 +293,31 @@ function FrameSlot({ label, value, C, accentCol, onChange }: FrameSlotProps) {
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Top bar skeleton */}
+      <div style={{ height: 44, background: C.card, borderBottom: `1px solid ${C.border}`, padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Skeleton width={160} height={20} style={{ borderRadius: 8 }} />
+        <Skeleton width={6} height={6} rounded />
+      </div>
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel skeleton */}
-        <div style={{ width: 176, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: '14px 10px' }}>
-          <Skeleton width="60%" height={14} />
-          <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} width="100%" height={56} style={{ borderRadius: 12 }} />
+        <div style={{ width: 320, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: '16px 16px' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 14 }}>
+            <Skeleton width={112} height={72} style={{ borderRadius: 12 }} />
+            <Skeleton width={112} height={72} style={{ borderRadius: 12 }} />
+          </div>
+          <Skeleton width="100%" height={80} style={{ borderRadius: 10, marginBottom: 14 }} />
+          <Skeleton width="100%" height={40} style={{ borderRadius: 10, marginBottom: 14 }} />
+          <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} width="25%" height={36} style={{ borderRadius: 8 }} />
             ))}
           </div>
+          <Skeleton width="100%" height={48} style={{ borderRadius: 12 }} />
         </div>
-        {/* Center skeleton */}
+        {/* Right preview skeleton */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.bg, padding: 24 }}>
           <Skeleton width="80%" height={0} style={{ borderRadius: 16, aspectRatio: '16/9', maxWidth: 640, paddingBottom: '45%' }} />
-          <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
-            <Skeleton width={36} height={36} rounded />
-            <Skeleton width={100} height={36} style={{ borderRadius: 10 }} />
-          </div>
         </div>
-      </div>
-      {/* Timeline skeleton */}
-      <div style={{ height: 56, background: C.bg, borderTop: `1px solid ${C.border}`, padding: '6px 14px' }}>
-        <Skeleton width="100%" height={45} style={{ borderRadius: 8 }} />
       </div>
     </div>
   );
@@ -824,11 +827,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const [titleDraft, setTitleDraft] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [modPick, setModPick] = useState(false);
-  const [scenePanelOpen, setScenePanelOpen] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
-  );
+  const [scenePanelOpen, setScenePanelOpen] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [musicDropOpen, setMusicDropOpen] = useState(false);
+  const [leftModelsOpen, setLeftModelsOpen] = useState(false);
+  const leftModDropRef = useRef<HTMLDivElement>(null);
 
   // Z1: AI Script Generator
   const [showScriptModal, setShowScriptModal] = useState(false);
@@ -944,6 +948,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [musicDropOpen]);
+
+  // Close left model dropdown on outside click
+  useEffect(() => {
+    if (!leftModelsOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (leftModDropRef.current && !leftModDropRef.current.contains(e.target as Node)) setLeftModelsOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [leftModelsOpen]);
 
   // Focus title input when editing starts
   useEffect(() => {
@@ -1198,23 +1212,23 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
      ═══════════════════════════════════════════════════════════════ */
   const selCol = sel ? gc(sel.ck) : C.accent;
 
+  const selMod = sel ? (MODELS.find((m) => m.id === sel.model) || MODELS[1]) : MODELS[1];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: C.bg }}>
 
-      {/* ── Top bar ── */}
+      {/* ── Simplified Top Bar ── */}
       <div
         className="tf-editor-topbar"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          padding: '8px 16px',
+          padding: '6px 16px',
           background: C.card,
           borderBottom: `1px solid ${C.border}`,
           flexShrink: 0,
-          minHeight: 48,
-          overflowX: 'auto',
-          overflowY: 'hidden',
+          minHeight: 44,
         }}
       >
         {/* Project title */}
@@ -1230,7 +1244,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               if (e.key === 'Escape') setEditingTitle(false);
             }}
             style={{
-              padding: '5px 10px',
+              padding: '4px 10px',
               borderRadius: 8,
               border: `1.5px solid ${C.accent}55`,
               background: C.surface,
@@ -1241,7 +1255,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               fontFamily: 'inherit',
               boxSizing: 'border-box',
               width: 220,
-              transition: 'border-color .2s ease-out',
             }}
           />
         ) : (
@@ -1253,14 +1266,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               fontWeight: 600,
               color: C.text,
               cursor: 'pointer',
-              padding: '5px 10px',
+              padding: '4px 10px',
               borderRadius: 8,
-              transition: 'background .2s ease-out',
+              transition: 'background .15s',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               maxWidth: 220,
-              letterSpacing: '-0.01em',
             }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -1278,154 +1290,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           <span style={{ width: 6, height: 6, borderRadius: '50%', border: '1.5px solid transparent', borderTopColor: C.dim, animation: 'spin .8s linear infinite', display: 'inline-block', flexShrink: 0 }} />
         ) : null}
 
-        {/* Scene panel toggle */}
-        <button
-          onClick={() => setScenePanelOpen((v) => !v)}
-          title={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
-          aria-label={scenePanelOpen ? t('editor.hideScenes') : t('editor.showScenes')}
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 8,
-            border: `1px solid ${C.border}`,
-            background: 'transparent',
-            color: C.sub,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'inherit',
-            transition: 'all .2s ease-out',
-            flexShrink: 0,
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            {scenePanelOpen
-              ? <><line x1="3" y1="3" x2="3" y2="21" /><line x1="9" y1="3" x2="9" y2="21" /><polyline points="15 8 19 12 15 16" /></>
-              : <><line x1="3" y1="3" x2="3" y2="21" /><line x1="9" y1="3" x2="9" y2="21" /><polyline points="19 8 15 12 19 16" /></>}
-          </svg>
-        </button>
-
-        {/* Divider */}
-        <div style={{ width: 1, height: 16, background: C.border }} />
-
-        {/* Scene count + total duration */}
-        <span style={{ fontSize: 10, color: C.dim, fontWeight: 500, fontFamily: "'JetBrains Mono', monospace" }}>
-          {scenes.length} scenes · {fmtDur(totalDur)}
-        </span>
-
-        {/* Background music dropdown */}
-        <div ref={musicDropRef} style={{ position: 'relative' }}>
-          <button
-            onClick={() => setMusicDropOpen(!musicDropOpen)}
-            style={{
-              fontSize: 11,
-              padding: '5px 10px',
-              borderRadius: 8,
-              border: `1px solid ${C.border}`,
-              background: musicTrackId ? C.accent + '10' : 'transparent',
-              color: musicTrackId ? C.accent : C.sub,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontWeight: 500,
-              transition: 'all .2s ease-out',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ fontSize: 12 }}>&#9835;</span>
-            {musicTrackId ? MUSIC_TRACKS.find((tr) => tr.id === musicTrackId)?.name ?? t('editor.music.label') : t('editor.music.label')}
-          </button>
-          {musicDropOpen && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: 6,
-              background: C.card,
-              border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              padding: 4,
-              zIndex: 60,
-              boxShadow: '0 4px 20px rgba(0,0,0,.4)',
-              minWidth: 190,
-            }}>
-              {/* None option */}
-              <div
-                onClick={() => { useEditorStore.getState().setMusicTrack(null); setMusicDropOpen(false); }}
-                style={{
-                  padding: '6px 10px',
-                  fontSize: 10,
-                  fontWeight: !musicTrackId ? 600 : 400,
-                  color: !musicTrackId ? C.accent : C.text,
-                  cursor: 'pointer',
-                  borderRadius: 5,
-                  background: !musicTrackId ? C.accent + '10' : 'transparent',
-                  transition: 'background .1s',
-                }}
-                onMouseEnter={(e) => { if (musicTrackId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = !musicTrackId ? C.accent + '10' : 'transparent'; }}
-              >
-                {t('editor.music.none')}
-              </div>
-              {MUSIC_TRACKS.map((tr) => (
-                <div
-                  key={tr.id}
-                  onClick={() => { useEditorStore.getState().setMusicTrack(tr.id); setMusicDropOpen(false); }}
-                  style={{
-                    padding: '6px 10px',
-                    fontSize: 10,
-                    fontWeight: musicTrackId === tr.id ? 600 : 400,
-                    color: musicTrackId === tr.id ? C.accent : C.text,
-                    cursor: 'pointer',
-                    borderRadius: 5,
-                    background: musicTrackId === tr.id ? C.accent + '10' : 'transparent',
-                    transition: 'background .1s',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                  onMouseEnter={(e) => { if (musicTrackId !== tr.id) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = musicTrackId === tr.id ? C.accent + '10' : 'transparent'; }}
-                >
-                  <span>{tr.name}</span>
-                  <span style={{ fontSize: 8, color: C.dim }}>{tr.category}</span>
-                </div>
-              ))}
-              {/* Volume slider */}
-              {musicTrackId && (
-                <div style={{ padding: '6px 10px 4px', borderTop: `1px solid ${C.border}`, marginTop: 4 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                    <span style={{ fontSize: 8, color: C.sub, fontWeight: 600 }}>{t('editor.music.volume')}</span>
-                    <span style={{ fontSize: 8, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{musicVolume}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={musicVolume}
-                    onChange={(e) => useEditorStore.getState().setMusicVolume(Number(e.target.value))}
-                    style={{ width: '100%', accentColor: C.accent, cursor: 'pointer', height: 3 }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Save error */}
+        {saveStatus === 'error' && (
+          <span role="status" aria-live="polite" style={{ fontSize: 9, color: C.accent, fontWeight: 500 }}>{t('editor.saveError')}</span>
+        )}
 
         <div style={{ flex: 1 }} />
 
         {/* Online collaborators */}
         <OnlineUsers />
 
-        {/* Save error indicator (only show on error) */}
-        {saveStatus === 'error' && (
-          <span role="status" aria-live="polite" style={{ fontSize: 9, color: C.accent, fontWeight: 500 }}>{t('editor.saveError')}</span>
-        )}
-
-        {/* Undo / Redo */}
+        {/* Undo / Redo — subtle */}
         <div style={{ display: 'flex', gap: 2 }}>
           <button
             className={historyLen > 0 ? 'ed-action-btn' : undefined}
@@ -1434,21 +1309,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title={`${t('editor.toolbar.undo')} (Ctrl+Z)`}
             aria-label={`${t('editor.toolbar.undo')}${historyLen > 0 ? ` (${historyLen})` : ''}`}
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 8,
-              border: `1px solid ${C.border}`,
-              background: 'transparent',
-              color: historyLen === 0 ? C.dim : C.sub,
-              fontSize: 13,
+              width: 32, height: 32, borderRadius: 8,
+              border: `1px solid ${C.border}`, background: 'transparent',
+              color: historyLen === 0 ? C.dim : C.sub, fontSize: 13,
               cursor: historyLen === 0 ? 'default' : 'pointer',
-              fontFamily: 'inherit',
-              opacity: historyLen === 0 ? 0.3 : 1,
-              transition: 'all .2s ease-out',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 0,
+              fontFamily: 'inherit', opacity: historyLen === 0 ? 0.3 : 1,
+              transition: 'all .15s', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', padding: 0,
             }}
           >
             &#8617;
@@ -1460,269 +1327,610 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             title={`${t('editor.toolbar.redo')} (Ctrl+Shift+Z)`}
             aria-label={`${t('editor.toolbar.redo')}${futureLen > 0 ? ` (${futureLen})` : ''}`}
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 8,
-              border: `1px solid ${C.border}`,
-              background: 'transparent',
-              color: futureLen === 0 ? C.dim : C.sub,
-              fontSize: 13,
+              width: 32, height: 32, borderRadius: 8,
+              border: `1px solid ${C.border}`, background: 'transparent',
+              color: futureLen === 0 ? C.dim : C.sub, fontSize: 13,
               cursor: futureLen === 0 ? 'default' : 'pointer',
-              fontFamily: 'inherit',
-              opacity: futureLen === 0 ? 0.3 : 1,
-              transition: 'all .2s ease-out',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 0,
+              fontFamily: 'inherit', opacity: futureLen === 0 ? 0.3 : 1,
+              transition: 'all .15s', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', padding: 0,
             }}
           >
             &#8618;
           </button>
         </div>
-
-        {/* Z1: AI Script Generator button */}
-        <button
-          onClick={() => setShowScriptModal(true)}
-          title={t('editor.script.generateBtnTitle')}
-          aria-label={t('editor.toolbar.generateScript')}
-          style={{
-            padding: '6px 14px',
-            borderRadius: 20,
-            border: `1px solid ${C.border}`,
-            background: 'transparent',
-            color: C.purple,
-            fontSize: 11,
-            fontWeight: 500,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-            transition: 'all .2s ease-out',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '14'; (e.currentTarget as HTMLElement).style.borderColor = C.purple + '40'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          {t('editor.script.generateBtn')}
-        </button>
-
-        {/* Z5: Create Shorts button (3+ scenes) */}
-        {scenes.length >= 3 && (
-          <button
-            onClick={() => setShowShortsModal(true)}
-            title={t('editor.shorts.createTitle')}
-            aria-label={t('editor.toolbar.createShorts')}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 20,
-              border: `1px solid ${C.border}`,
-              background: 'transparent',
-              color: C.cyan,
-              fontSize: 11,
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              transition: 'all .2s ease-out',
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '14'; (e.currentTarget as HTMLElement).style.borderColor = C.cyan + '40'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="7" y="2" width="10" height="20" rx="2"/>
-              <line x1="12" y1="18" x2="12" y2="18"/>
-            </svg>
-            {t('editor.shorts.createBtn')}
-          </button>
-        )}
-
-        {/* Settings gear */}
-        <button
-          className="ed-action-btn"
-          onClick={() => { if (sel) setShowSettings(!showSettings); }}
-          title={t('editor.sceneSettings')}
-          aria-label={t('editor.sceneSettings')}
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 8,
-            border: `1px solid ${C.border}`,
-            background: 'transparent',
-            color: C.sub,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'inherit',
-            transition: 'all .2s ease-out',
-            flexShrink: 0,
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-          </svg>
-        </button>
       </div>
 
-      {/* ── Main content area: Left scenes + Center preview ── */}
+      {/* ── Main content: Left controls + Right preview ── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
         {/* ════════════════════════════════════════════════
-            LEFT PANEL — Scene thumbnails (~160px), collapsible on mobile
+            LEFT PANEL — Controls (~320px), Higgsfield-style
             ════════════════════════════════════════════════ */}
         <ErrorBoundary>
         <div
-          className="tf-editor-scene-panel"
+          className="tf-editor-left-panel"
           style={{
-            width: scenePanelOpen ? 176 : 0,
-            maxWidth: scenePanelOpen ? 176 : 0,
+            width: 320,
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
             background: C.card,
-            borderRight: scenePanelOpen ? `1px solid ${C.border}` : 'none',
+            borderRight: `1px solid ${C.border}`,
             overflow: 'hidden',
-            position: 'relative',
-            transition: 'width .2s ease-out, max-width .2s ease-out',
           }}
         >
-          {/* Scene list header */}
-          <div style={{ padding: '14px 12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {t('editor.scenes')}
-            </span>
-            <button
-              onClick={() => addScene()}
-              title={t('editor.addScene')}
-              aria-label={t('editor.addScene')}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                border: `1px solid ${C.border}`,
-                background: 'transparent',
-                color: C.sub,
-                fontSize: 16,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: 'inherit',
-                lineHeight: 1,
-                transition: 'all .2s ease-out',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = C.accent + '14';
-                (e.currentTarget as HTMLElement).style.color = C.accent;
-                (e.currentTarget as HTMLElement).style.borderColor = C.accent + '40';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'transparent';
-                (e.currentTarget as HTMLElement).style.color = C.sub;
-                (e.currentTarget as HTMLElement).style.borderColor = C.border;
-              }}
-            >
-              +
-            </button>
-          </div>
-
-          {/* Scrollable scene list */}
+          {/* Scrollable controls area */}
           <div
-            ref={sceneListRef}
             className="ed-scene-list"
             style={{
               flex: 1,
               minHeight: 0,
               overflowY: 'auto',
               overflowX: 'hidden',
-              padding: '0 8px 8px',
+              padding: '16px 16px 12px',
               display: 'flex',
               flexDirection: 'column',
-              gap: 6,
-              scrollBehavior: 'smooth',
+              gap: 14,
             }}
           >
-            {scenes.length === 0 ? (
+            {/* ── Frame upload row (compact) ── */}
+            {sel && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+                <FrameSlot
+                  label={t('editor.frame.startFrame')}
+                  value={sel.sf}
+                  C={C}
+                  accentCol={selCol}
+                  onChange={(v) => updScene(sel.id, { sf: v })}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '10px 0 0' }}>
+                  <span style={{ fontSize: 14, color: C.dim, lineHeight: 1 }}>&#8594;</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: selCol, fontFamily: "'JetBrains Mono', monospace" }}>
+                    {sel?.duration || 5}{t('editor.sec')}
+                  </span>
+                </div>
+                <FrameSlot
+                  label={t('editor.frame.endFrame')}
+                  value={sel.ef}
+                  C={C}
+                  accentCol={selCol}
+                  onChange={(v) => updScene(sel.id, { ef: v })}
+                />
+              </div>
+            )}
+
+            {/* ── Prompt textarea — main focus ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 10, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {t('editor.promptPlaceholder').split('\n')[0] || 'Describe your video'}
+              </label>
               <div
-                onClick={() => addScene()}
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '40px 12px',
-                  gap: 10,
-                  cursor: 'pointer',
+                  position: 'relative',
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
                   borderRadius: 10,
-                  transition: 'background .2s ease-out',
+                  padding: '10px 12px',
+                  transition: 'border-color .2s, box-shadow .2s',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                onFocus={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = selCol + '55';
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 2px ${selCol}18`;
+                }}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    (e.currentTarget as HTMLElement).style.borderColor = C.border;
+                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                  }
+                }}
               >
-                <div
+                <textarea
+                  ref={promptRef}
+                  value={sel?.prompt || ''}
+                  rows={1}
+                  onChange={(e) => {
+                    if (!sel) return;
+                    updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
+                    autoResize(e.target);
+                    useEditorStore.getState().pushHistoryDebounced();
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                  placeholder={t('editor.promptPlaceholder')}
+                  maxLength={2000}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
+                    width: '100%',
                     background: 'transparent',
-                    border: `1px solid ${C.border}`,
+                    border: 'none',
+                    outline: 'none',
+                    color: C.text,
+                    fontSize: 13,
+                    lineHeight: '20px',
+                    resize: 'none',
+                    fontFamily: 'inherit',
+                    minHeight: 80,
+                    maxHeight: 140,
+                    overflow: 'hidden',
+                    padding: 0,
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                  <span style={{ fontSize: 9, color: (sel?.prompt?.length || 0) > 1800 ? '#ef4444' : C.dim, fontFamily: "'JetBrains Mono', monospace" }}>
+                    {sel?.prompt?.length || 0}/2000
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Model selector (compact) ── */}
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, display: 'block' }}>
+                {t('editor.settingsModel')}
+              </label>
+              <div style={{ position: 'relative' }} ref={leftModDropRef}>
+                <button
+                  onClick={() => setLeftModelsOpen(!leftModelsOpen)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    border: `1px solid ${leftModelsOpen ? C.accent + '55' : C.border}`,
+                    background: C.surface,
+                    color: C.text,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 16,
-                    color: C.sub,
-                    transition: 'all .2s ease-out',
+                    gap: 8,
+                    fontFamily: 'inherit',
+                    textAlign: 'left',
+                    boxSizing: 'border-box',
+                    transition: 'border-color .15s',
+                    height: 40,
                   }}
                 >
-                  +
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 500, color: C.dim, textAlign: 'center' }}>
-                  {t('editor.clickToAddScene')}
-                </span>
+                  <span style={{ fontSize: 14 }}>{selMod.icon}</span>
+                  <span style={{ flex: 1 }}>{selMod.name}</span>
+                  <span style={{ fontSize: 8, color: C.dim, transform: leftModelsOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>&#9660;</span>
+                </button>
+                {leftModelsOpen && (
+                  <div
+                    role="listbox"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0, right: 0,
+                      marginTop: 4,
+                      background: C.card,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                      padding: 4,
+                      zIndex: 60,
+                      boxShadow: '0 4px 20px rgba(0,0,0,.4)',
+                    }}
+                  >
+                    {MODELS.map((m) => (
+                      <div
+                        key={m.id}
+                        role="option"
+                        tabIndex={0}
+                        aria-selected={m.id === sel?.model}
+                        onClick={() => { if (sel) updScene(sel.id, { model: m.id }); setLeftModelsOpen(false); }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (sel) updScene(sel.id, { model: m.id }); setLeftModelsOpen(false); }
+                        }}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          background: m.id === sel?.model ? C.accent + '10' : 'transparent',
+                          transition: 'background .1s',
+                        }}
+                        onMouseEnter={(e) => { if (m.id !== sel?.model) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = m.id === sel?.model ? C.accent + '10' : 'transparent'; }}
+                      >
+                        <span style={{ fontSize: 14 }}>{m.icon}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: m.id === sel?.model ? C.accent : C.text }}>{m.name}</div>
+                          <div style={{ fontSize: 9, color: C.sub }}>{m.desc} · {m.speed}</div>
+                        </div>
+                        {m.id === sel?.model && (
+                          <span style={{ fontSize: 10, color: C.accent, fontWeight: 700 }}>&#10003;</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              scenes.map((sc, idx) => (
-                <React.Fragment key={sc.id}>
-                  <SceneThumb
-                    scene={sc}
-                    idx={idx}
-                    C={C}
-                    isSel={sc.id === selId}
-                    isDragOver={sc.id === dragOv}
-                    isDragging={dragId === sc.id}
-                    onSelect={handleSceneSelect}
-                    onDragStart={handleSceneDragStart}
-                    onDragEnter={handleSceneDragEnter}
-                    onDragEnd={handleSceneDragEnd}
-                  />
-                  {/* Transition picker between scenes */}
-                  {idx < scenes.length - 1 && (
-                    <TransitionPicker
-                      sceneId={sc.id}
-                      current={sc.transition ?? 'none'}
-                      C={C}
-                      onChange={handleTransitionChange}
-                    />
+            </div>
+
+            {/* ── Duration + Aspect ratio row (compact pills) ── */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              {/* Duration */}
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 10, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, display: 'block' }}>
+                  {t('editor.settingsDuration')}
+                </label>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[5, 10, 15, 30].map((dur) => (
+                    <button
+                      key={dur}
+                      onClick={() => { if (sel) updScene(sel.id, { duration: dur }); }}
+                      style={{
+                        flex: 1,
+                        height: 36,
+                        borderRadius: 8,
+                        border: `1px solid ${sel?.duration === dur ? selCol + '55' : C.border}`,
+                        background: sel?.duration === dur ? selCol + '12' : C.surface,
+                        color: sel?.duration === dur ? selCol : C.sub,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        transition: 'all .15s',
+                        padding: 0,
+                      }}
+                    >
+                      {dur}s
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Generate button — full width, accent gradient, glow ── */}
+            <button
+              className="ed-gen-btn"
+              onClick={handleGenerate}
+              disabled={!sel?.prompt?.trim() || isGenerating}
+              style={{
+                width: '100%',
+                height: 48,
+                borderRadius: 12,
+                border: 'none',
+                background: (!sel?.prompt?.trim() || isGenerating)
+                  ? C.border
+                  : `linear-gradient(135deg, ${C.accent}, ${C.blue})`,
+                color: (!sel?.prompt?.trim() || isGenerating) ? C.dim : '#fff',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: (!sel?.prompt?.trim() || isGenerating) ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                letterSpacing: '-0.01em',
+                transition: 'all .2s ease-out',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: (!sel?.prompt?.trim() || isGenerating)
+                  ? 'none'
+                  : `0 4px 24px ${C.accent}44, 0 0 48px ${C.accent}12`,
+                flexShrink: 0,
+              }}
+            >
+              {isGenerating ? (
+                <>
+                  <span style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${C.dim}`, borderTopColor: '#fff', animation: 'spin .8s linear infinite', flexShrink: 0 }} />
+                  {t('editor.generating')}
+                </>
+              ) : (
+                <>{'Generate '}</>
+              )}
+            </button>
+
+            {/* ── Collapsible: Scenes list ── */}
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+              <button
+                onClick={() => setScenePanelOpen((v) => !v)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  color: C.sub,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  padding: '4px 0',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {t('editor.scenes')}
+                  <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: C.dim }}>{scenes.length} · {fmtDur(totalDur)}</span>
+                </span>
+                <span style={{ fontSize: 8, transform: scenePanelOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>&#9660;</span>
+              </button>
+
+              {scenePanelOpen && (
+                <div
+                  ref={sceneListRef}
+                  style={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    maxHeight: 240,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                  }}
+                >
+                  {scenes.length === 0 ? (
+                    <div
+                      onClick={() => addScene()}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '20px 12px', gap: 8, cursor: 'pointer', borderRadius: 8,
+                        border: `1px dashed ${C.border}`, transition: 'background .15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: 14, color: C.dim }}>+</span>
+                      <span style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>{t('editor.clickToAddScene')}</span>
+                    </div>
+                  ) : (
+                    scenes.map((sc, idx) => (
+                      <React.Fragment key={sc.id}>
+                        <SceneThumb
+                          scene={sc}
+                          idx={idx}
+                          C={C}
+                          isSel={sc.id === selId}
+                          isDragOver={sc.id === dragOv}
+                          isDragging={dragId === sc.id}
+                          onSelect={handleSceneSelect}
+                          onDragStart={handleSceneDragStart}
+                          onDragEnter={handleSceneDragEnter}
+                          onDragEnd={handleSceneDragEnd}
+                        />
+                        {idx < scenes.length - 1 && (
+                          <TransitionPicker sceneId={sc.id} current={sc.transition ?? 'none'} C={C} onChange={handleTransitionChange} />
+                        )}
+                      </React.Fragment>
+                    ))
                   )}
-                </React.Fragment>
-              ))
-            )}
+
+                  {/* Add scene button */}
+                  {scenes.length > 0 && (
+                    <button
+                      onClick={() => addScene()}
+                      style={{
+                        width: '100%', padding: '6px 0', borderRadius: 8,
+                        border: `1px dashed ${C.border}`, background: 'transparent',
+                        color: C.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all .15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55'; (e.currentTarget as HTMLElement).style.color = C.accent; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.dim; }}
+                    >
+                      + {t('editor.addScene')}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Collapsible: Advanced (music, voiceover, subtitles, AI tools) ── */}
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+              <button
+                onClick={() => setTimelineOpen((v) => !v)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  width: '100%', background: 'transparent', border: 'none',
+                  color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: 'inherit', padding: '4px 0', textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                <span>Advanced</span>
+                <span style={{ fontSize: 8, transform: timelineOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>&#9660;</span>
+              </button>
+
+              {timelineOpen && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Scene actions */}
+                  {sel && (
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <button className="ed-action-btn" onClick={() => dupScene(sel.id)} title={t('editor.duplicateScene')} style={tinyBtnStyle(C, false)}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                      </button>
+                      <button className="ed-action-btn" onClick={() => addScene(sel.id)} title={t('editor.addSceneAfter')} style={tinyBtnStyle(C, false)}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                      <button className="ed-action-btn" onClick={() => setShowSettings(!showSettings)} title={t('editor.sceneSettings')} style={tinyBtnStyle(C, showSettings)}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                      </button>
+                      <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+                      <button
+                        className={scenes.length > 1 && !isGenerating ? 'ed-action-btn' : undefined}
+                        onClick={() => { if (scenes.length > 1 && !isGenerating) handleSceneRequestDelete(sel.id); }}
+                        disabled={scenes.length <= 1 || isGenerating}
+                        title={scenes.length <= 1 ? t('editor.cannotDeleteOnly') : isGenerating ? t('editor.cannotDeleteGenerating') : t('editor.deleteScene')}
+                        style={{ ...tinyBtnStyle(C, false), color: (scenes.length <= 1 || isGenerating) ? C.dim : C.accent, opacity: (scenes.length <= 1 || isGenerating) ? 0.3 : 1, cursor: (scenes.length <= 1 || isGenerating) ? 'not-allowed' : 'pointer' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Music */}
+                  <div ref={musicDropRef} style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => setMusicDropOpen(!musicDropOpen)}
+                      style={{
+                        width: '100%', fontSize: 11, padding: '8px 12px', borderRadius: 8,
+                        border: `1px solid ${C.border}`, height: 36,
+                        background: musicTrackId ? C.accent + '08' : C.surface,
+                        color: musicTrackId ? C.accent : C.sub,
+                        cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
+                        transition: 'all .15s', display: 'flex', alignItems: 'center', gap: 6,
+                        textAlign: 'left', boxSizing: 'border-box',
+                      }}
+                    >
+                      <span style={{ fontSize: 12 }}>&#9835;</span>
+                      <span style={{ flex: 1 }}>{musicTrackId ? MUSIC_TRACKS.find((tr) => tr.id === musicTrackId)?.name ?? t('editor.music.label') : t('editor.music.label')}</span>
+                      <span style={{ fontSize: 8, color: C.dim }}>&#9660;</span>
+                    </button>
+                    {musicDropOpen && (
+                      <div style={{
+                        position: 'absolute', bottom: '100%', left: 0, right: 0,
+                        marginBottom: 4, background: C.card, border: `1px solid ${C.border}`,
+                        borderRadius: 12, padding: 4, zIndex: 60,
+                        boxShadow: '0 4px 20px rgba(0,0,0,.4)',
+                      }}>
+                        <div
+                          onClick={() => { useEditorStore.getState().setMusicTrack(null); setMusicDropOpen(false); }}
+                          style={{ padding: '6px 10px', fontSize: 10, fontWeight: !musicTrackId ? 600 : 400, color: !musicTrackId ? C.accent : C.text, cursor: 'pointer', borderRadius: 5, background: !musicTrackId ? C.accent + '10' : 'transparent', transition: 'background .1s' }}
+                          onMouseEnter={(e) => { if (musicTrackId) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = !musicTrackId ? C.accent + '10' : 'transparent'; }}
+                        >
+                          {t('editor.music.none')}
+                        </div>
+                        {MUSIC_TRACKS.map((tr) => (
+                          <div key={tr.id}
+                            onClick={() => { useEditorStore.getState().setMusicTrack(tr.id); setMusicDropOpen(false); }}
+                            style={{ padding: '6px 10px', fontSize: 10, fontWeight: musicTrackId === tr.id ? 600 : 400, color: musicTrackId === tr.id ? C.accent : C.text, cursor: 'pointer', borderRadius: 5, background: musicTrackId === tr.id ? C.accent + '10' : 'transparent', transition: 'background .1s', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                            onMouseEnter={(e) => { if (musicTrackId !== tr.id) (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = musicTrackId === tr.id ? C.accent + '10' : 'transparent'; }}
+                          >
+                            <span>{tr.name}</span>
+                            <span style={{ fontSize: 8, color: C.dim }}>{tr.category}</span>
+                          </div>
+                        ))}
+                        {musicTrackId && (
+                          <div style={{ padding: '6px 10px 4px', borderTop: `1px solid ${C.border}`, marginTop: 4 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                              <span style={{ fontSize: 8, color: C.sub, fontWeight: 600 }}>{t('editor.music.volume')}</span>
+                              <span style={{ fontSize: 8, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{musicVolume}%</span>
+                            </div>
+                            <input type="range" min={0} max={100} value={musicVolume}
+                              onChange={(e) => useEditorStore.getState().setMusicVolume(Number(e.target.value))}
+                              style={{ width: '100%', accentColor: C.accent, cursor: 'pointer', height: 3 }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Voiceover + Subtitles row */}
+                  {sel && (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className={sel.voiceoverStatus !== 'generating' ? 'ed-action-btn' : undefined}
+                        onClick={() => { useNotificationStore.getState().addToast('info', t('editor.voiceover.soon'), 2000); }}
+                        disabled={sel.voiceoverStatus === 'generating'}
+                        title={t('editor.voiceover.btn')}
+                        style={{
+                          flex: 1, height: 36, borderRadius: 8, border: `1px solid ${C.border}`,
+                          background: sel.voiceoverStatus === 'done' ? C.green + '10' : C.surface,
+                          color: sel.voiceoverStatus === 'done' ? C.green : C.sub,
+                          fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                          transition: 'all .15s',
+                        }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                          <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        {t('editor.voiceover.btn')}
+                      </button>
+                      <button
+                        className={!generateCaptions.isPending ? 'ed-action-btn' : undefined}
+                        onClick={() => {
+                          if (generateCaptions.isPending) return;
+                          const scenesData = scenes.filter(s => s.prompt.trim()).map(s => ({ text: s.prompt, duration: s.duration }));
+                          if (scenesData.length === 0) { toast.info(t('editor.captions.addTextHint')); return; }
+                          generateCaptions.mutate({ scenes: scenesData });
+                        }}
+                        disabled={generateCaptions.isPending}
+                        title={t('editor.captions.generateTitle')}
+                        style={{
+                          flex: 1, height: 36, borderRadius: 8, border: `1px solid ${C.border}`,
+                          background: captionsSrt ? C.green + '10' : C.surface,
+                          color: generateCaptions.isPending ? C.orange : captionsSrt ? C.green : C.sub,
+                          fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                          transition: 'all .15s',
+                        }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h4m-4-3h10"/>
+                        </svg>
+                        {generateCaptions.isPending ? t('editor.captions.generating') : t('editor.captions.label')}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Voiceover audio player */}
+                  {sel?.voiceoverUrl && (
+                    <audio controls src={sel.voiceoverUrl} style={{ height: 24, width: '100%' }} />
+                  )}
+
+                  {/* AI Script + Shorts buttons */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => setShowScriptModal(true)}
+                      title={t('editor.script.generateBtnTitle')}
+                      style={{
+                        flex: 1, height: 36, borderRadius: 8,
+                        border: `1px solid ${C.border}`, background: C.surface,
+                        color: C.purple, fontSize: 10, fontWeight: 500, cursor: 'pointer',
+                        fontFamily: 'inherit', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 4, transition: 'all .15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.purple + '10'; (e.currentTarget as HTMLElement).style.borderColor = C.purple + '40'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                      {t('editor.script.generateBtn')}
+                    </button>
+                    {scenes.length >= 3 && (
+                      <button
+                        onClick={() => setShowShortsModal(true)}
+                        title={t('editor.shorts.createTitle')}
+                        style={{
+                          flex: 1, height: 36, borderRadius: 8,
+                          border: `1px solid ${C.border}`, background: C.surface,
+                          color: C.cyan, fontSize: 10, fontWeight: 500, cursor: 'pointer',
+                          fontFamily: 'inherit', display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', gap: 4, transition: 'all .15s',
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cyan + '10'; (e.currentTarget as HTMLElement).style.borderColor = C.cyan + '40'; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/>
+                        </svg>
+                        {t('editor.shorts.createBtn')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Scene actions moved to bottom bar */}
-
-          {/* Settings popover — positioned next to left panel */}
+          {/* Settings popover */}
           {showSettings && sel && (
             <SceneSettingsPopover
               scene={sel}
@@ -1738,46 +1946,22 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           {confirmDel && (
             <div
               style={{
-                position: 'absolute',
-                inset: 0,
-                background: C.overlay,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                position: 'absolute', inset: 0, background: C.overlay,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 zIndex: 40,
-                borderRadius: 0,
               }}
             >
-              <div
-                style={{
-                  background: C.card,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 16,
-                  padding: '20px 24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 10,
-                  boxShadow: '0 4px 24px rgba(0,0,0,.4)',
-                }}
-              >
+              <div style={{
+                background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+                padding: '20px 24px', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,.4)',
+              }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.deleteSceneConfirm')}</span>
                 <span style={{ fontSize: 10, color: C.sub }}>{t('editor.deleteIrreversible')}</span>
                 <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                   <button
                     onClick={() => handleSceneConfirmDelete(confirmDel)}
-                    style={{
-                      padding: '7px 22px',
-                      borderRadius: 10,
-                      border: 'none',
-                      background: C.red,
-                      color: C.text,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      transition: 'all .2s ease',
-                    }}
+                    style={{ padding: '7px 22px', borderRadius: 10, border: 'none', background: C.red, color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s ease' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                   >
@@ -1785,18 +1969,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </button>
                   <button
                     onClick={handleSceneCancelDelete}
-                    style={{
-                      padding: '7px 22px',
-                      borderRadius: 10,
-                      border: `1px solid ${C.border}`,
-                      background: C.surface,
-                      color: C.text,
-                      fontSize: 12,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      transition: 'all .2s ease',
-                    }}
+                    style={{ padding: '7px 22px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s ease' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.bg; }}
                   >
@@ -1810,7 +1983,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         </ErrorBoundary>
 
         {/* ════════════════════════════════════════════════
-            CENTER — Video Preview + Prompt Input
+            RIGHT PANEL — Preview area (spacious, dark)
             ════════════════════════════════════════════════ */}
         <ErrorBoundary>
         <div
@@ -1831,7 +2004,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '16px 24px 8px',
+                  padding: 24,
                   minHeight: 0,
                 }}
               >
@@ -1840,10 +2013,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     width: '100%',
                     maxWidth: 860,
                     aspectRatio: '16/9',
-                    borderRadius: 12,
-                    background: sel.status === 'ready'
-                      ? '#000'
-                      : C.card,
+                    borderRadius: 16,
+                    background: sel.status === 'ready' ? '#000' : C.card,
                     border: `1px solid ${C.border}`,
                     position: 'relative',
                     display: 'flex',
@@ -1853,91 +2024,46 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     overflow: 'hidden',
                   }}
                 >
-                  {/* Video content states */}
                   {sel.status === 'ready' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                       {sel.videoUrl ? (
-                        <video
-                          src={sel.videoUrl}
-                          controls={isPlaying}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                            borderRadius: 12,
-                          }}
+                        <video src={sel.videoUrl} controls={isPlaying}
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', borderRadius: 16 }}
                         />
                       ) : null}
                       {!isPlaying && (
-                        <div
-                          onClick={() => setIsPlaying(true)}
+                        <div onClick={() => setIsPlaying(true)}
                           style={{
-                            width: 56,
-                            height: 56,
-                            borderRadius: '50%',
-                            background: `${C.green}22`,
-                            border: `2px solid ${C.green}55`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            transition: 'transform .15s, background .15s',
-                            zIndex: 2,
+                            width: 64, height: 64, borderRadius: '50%',
+                            background: `${C.green}22`, border: `2px solid ${C.green}55`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', transition: 'transform .15s, background .15s', zIndex: 2,
                           }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.08)'; (e.currentTarget as HTMLElement).style.background = C.green + '33'; }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLElement).style.background = C.green + '22'; }}
                         >
-                          <span style={{ fontSize: 20, color: C.green, marginLeft: 3 }}>&#9654;</span>
+                          <span style={{ fontSize: 24, color: C.green, marginLeft: 3 }}>&#9654;</span>
                         </div>
                       )}
                       {!isPlaying && (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: C.green, zIndex: 2 }}>
-                          {t('editor.videoReady')}
-                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: C.green, zIndex: 2 }}>{t('editor.videoReady')}</span>
                       )}
                     </div>
                   ) : sel.status === 'generating' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: '50%',
-                          border: `3px solid ${selCol}22`,
-                          borderTopColor: selCol,
-                          animation: 'spin 1s linear infinite',
-                          boxShadow: `0 0 20px ${selCol}12`,
-                        }}
-                      />
-                      <span style={{ fontSize: 12, fontWeight: 600, color: selCol }}>
-                        {t('editor.generatingVideo')}
-                      </span>
-                      {/* Progress bar */}
-                      <div style={{ width: 180 }}>
-                        <div
-                          style={{
-                            height: 3,
-                            borderRadius: 2,
-                            background: C.card,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div
-                            style={{
-                              height: '100%',
-                              borderRadius: 2,
-                              background: `linear-gradient(90deg, ${selCol}, ${selCol}cc)`,
-                              width: progress != null ? `${Math.min(progress, 100)}%` : '30%',
-                              transition: progress != null ? 'width .5s ease' : 'none',
-                              animation: progress == null ? 'shimmer 1.8s linear infinite' : 'none',
-                              backgroundSize: progress == null ? '200% 100%' : 'auto',
-                              backgroundImage: progress == null
-                                ? `linear-gradient(90deg, ${selCol}44, ${selCol}, ${selCol}44)`
-                                : `linear-gradient(90deg, ${selCol}, ${selCol}cc)`,
-                            }}
-                          />
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${selCol}22`, borderTopColor: selCol, animation: 'spin 1s linear infinite', boxShadow: `0 0 20px ${selCol}12` }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: selCol }}>{t('editor.generatingVideo')}</span>
+                      <div style={{ width: 200 }}>
+                        <div style={{ height: 3, borderRadius: 2, background: C.card, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%', borderRadius: 2,
+                            background: `linear-gradient(90deg, ${selCol}, ${selCol}cc)`,
+                            width: progress != null ? `${Math.min(progress, 100)}%` : '30%',
+                            transition: progress != null ? 'width .5s ease' : 'none',
+                            animation: progress == null ? 'shimmer 1.8s linear infinite' : 'none',
+                            backgroundSize: progress == null ? '200% 100%' : 'auto',
+                            backgroundImage: progress == null ? `linear-gradient(90deg, ${selCol}44, ${selCol}, ${selCol}44)` : `linear-gradient(90deg, ${selCol}, ${selCol}cc)`,
+                          }} />
                         </div>
                         <div style={{ textAlign: 'center', fontSize: 9, color: C.dim, marginTop: 5, fontFamily: "'JetBrains Mono', monospace" }}>
                           {progress != null ? `${Math.round(progress)}%` : t('editor.pleaseWait')}
@@ -1946,170 +2072,85 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     </div>
                   ) : sel.status === 'error' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: '50%',
-                          background: C.accent + '12',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 20,
-                          color: C.accent,
-                        }}
-                      >
-                        !
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>
-                        {t('editor.generationError')}
-                      </span>
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: C.accent + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: C.accent }}>!</div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.accent }}>{t('editor.generationError')}</span>
                       {lastError && (
-                        <span style={{ fontSize: 10, color: C.sub, textAlign: 'center', maxWidth: 260, lineHeight: 1.4 }}>
-                          {lastError}
-                        </span>
+                        <span style={{ fontSize: 11, color: C.sub, textAlign: 'center', maxWidth: 300, lineHeight: 1.4 }}>{lastError}</span>
                       )}
-                      <button
-                        onClick={handleGenerate}
-                        disabled={!sel.prompt.trim()}
+                      <button onClick={handleGenerate} disabled={!sel.prompt.trim()}
                         style={{
-                          marginTop: 4,
-                          padding: '7px 18px',
-                          borderRadius: 8,
-                          border: 'none',
-                          background: sel.prompt.trim() ? C.accent : C.dim,
-                          color: C.text,
-                          fontSize: 12,
-                          fontWeight: 600,
+                          marginTop: 4, padding: '8px 20px', borderRadius: 10, border: 'none',
+                          background: sel.prompt.trim() ? C.accent : C.dim, color: C.text,
+                          fontSize: 12, fontWeight: 600,
                           cursor: sel.prompt.trim() ? 'pointer' : 'not-allowed',
-                          fontFamily: 'inherit',
-                          transition: 'all .15s',
+                          fontFamily: 'inherit', transition: 'all .15s',
                           opacity: sel.prompt.trim() ? 1 : 0.5,
                         }}
                       >
                         {t('editor.retryGeneration')}
                       </button>
-                      <span style={{ fontSize: 10, color: C.dim }}>
-                        {t('editor.changePromptRetry')}
-                      </span>
                     </div>
                   ) : (
-                    /* ── Empty / editing state: show frame upload slots ── */
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '16px 12px', width: '100%', boxSizing: 'border-box' as const }}>
-                      {/* Frame upload row */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <FrameSlot
-                          label={t('editor.frame.startFrame')}
-                          value={sel.sf}
-                          C={C}
-                          accentCol={selCol}
-                          onChange={(v) => updScene(sel.id, { sf: v })}
-                        />
-                        {/* Arrow + duration between frames */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '12px 0 0' }}>
-                          <span style={{ fontSize: 16, color: C.dim, letterSpacing: 2, lineHeight: 1 }}>
-                            &#8594;&#8594;&#8594;
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: selCol,
-                              fontFamily: "'JetBrains Mono', monospace",
-                            }}
-                          >
-                            {sel.duration} {t('editor.sec')}
-                          </span>
-                        </div>
-                        <FrameSlot
-                          label={t('editor.frame.endFrame')}
-                          value={sel.ef}
-                          C={C}
-                          accentCol={selCol}
-                          onChange={(v) => updScene(sel.id, { ef: v })}
-                        />
+                    /* ── Empty / editing state ── */
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 24 }}>
+                      <div style={{ width: 56, height: 56, borderRadius: 16, background: C.surface, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="2" width="20" height="20" rx="3" />
+                          <path d="M10 8l6 4-6 4V8z" />
+                        </svg>
                       </div>
-
-                      {/* Hint text */}
-                      <span style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>
-                        {!sel.prompt.trim()
-                          ? t('editor.enterPromptBelow')
-                          : t('editor.clickGenerate')}
+                      <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                        {!sel.prompt.trim() ? t('editor.enterPromptBelow') : t('editor.clickGenerate')}
+                      </span>
+                      <span style={{ fontSize: 11, color: C.dim, textAlign: 'center', maxWidth: 320, lineHeight: 1.5 }}>
+                        {t('editor.promptPlaceholder')}
                       </span>
                     </div>
                   )}
 
                   {/* Top-left scene label overlay */}
-                  <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 5, alignItems: 'center' }}>
-                    <span
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: 8,
-                        background: 'rgba(0,0,0,.55)',
-                        color: C.text,
-                        fontSize: 10,
-                        fontWeight: 500,
-                        border: `1px solid ${C.border}`,
-                        backdropFilter: 'blur(12px)',
-                      }}
-                    >
+                  <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 5, alignItems: 'center' }}>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: 8, background: 'rgba(0,0,0,.55)',
+                      color: C.text, fontSize: 10, fontWeight: 500, border: `1px solid ${C.border}`,
+                      backdropFilter: 'blur(12px)',
+                    }}>
                       {sel.label}
                     </span>
                     <StatusDot status={sel.status} C={C} size={6} />
                   </div>
 
-                  {/* Top-right duration overlay */}
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      padding: '3px 8px',
-                      borderRadius: 8,
-                      background: 'rgba(0,0,0,.55)',
-                      color: C.text,
-                      fontSize: 10,
-                      fontWeight: 500,
-                      fontFamily: "'JetBrains Mono', monospace",
-                      border: `1px solid ${C.border}`,
+                  {/* Top-right model + duration overlay */}
+                  <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span style={{
+                      padding: '3px 8px', borderRadius: 8, background: 'rgba(0,0,0,.55)',
+                      color: C.text, fontSize: 10, fontWeight: 500, border: `1px solid ${C.border}`,
                       backdropFilter: 'blur(12px)',
-                    }}
-                  >
-                    {fmtDur(sel.duration)}
-                  </span>
+                    }}>
+                      {selMod.icon} {selMod.name}
+                    </span>
+                    <span style={{
+                      padding: '3px 8px', borderRadius: 8, background: 'rgba(0,0,0,.55)',
+                      color: C.text, fontSize: 10, fontWeight: 500,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      border: `1px solid ${C.border}`, backdropFilter: 'blur(12px)',
+                    }}>
+                      {fmtDur(sel.duration)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* ── Playback controls / info bar ── */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 12,
-                  padding: '0 12px 8px',
-                  flexShrink: 0,
-                  flexWrap: 'wrap',
-                }}
-              >
+              {/* ── Playback controls ── */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '0 24px 12px', flexShrink: 0 }}>
                 {sel.status === 'ready' ? (
-                  <button
-                    className="ed-action-btn"
-                    onClick={() => setIsPlaying(!isPlaying)}
+                  <button className="ed-action-btn" onClick={() => setIsPlaying(!isPlaying)}
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      border: `1px solid ${C.border}`,
-                      background: C.surface,
-                      color: C.text,
-                      fontSize: 12,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontFamily: 'inherit',
-                      transition: 'all .15s',
+                      width: 36, height: 36, borderRadius: 10,
+                      border: `1px solid ${C.border}`, background: C.surface,
+                      color: C.text, fontSize: 14, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'inherit', transition: 'all .15s',
                     }}
                     title={isPlaying ? t('editor.pause') : t('editor.play')}
                   >
@@ -2121,67 +2162,35 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.sub, fontWeight: 500 }}>
                   {sel.status === 'ready' ? `00:00 / ${fmtDur(sel.duration)}` : t(STATUS_CFG[sel.status]?.labelKey || 'editor.status.empty')}
                 </span>
-                <div style={{ flex: 1 }} />
-                {/* Model badge */}
-                <span style={{ fontSize: 9, color: C.dim, fontWeight: 500 }}>
-                  {(MODELS.find((m) => m.id === sel.model) || MODELS[1]).icon}{' '}
-                  {(MODELS.find((m) => m.id === sel.model) || MODELS[1]).name}
-                </span>
               </div>
-
-              {/* Prompt moved to bottom bar */}
             </>
           ) : (
-            /* ── No scene selected ── */
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 14,
-              }}
-            >
-              <div
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 20,
-                  background: C.card,
-                  border: `1px solid ${C.border}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 24,
-                  color: C.dim,
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            /* ── No scene selected — "How it works" empty state ── */
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: 40 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 20, background: C.card, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="3" />
                   <path d="M10 8l6 4-6 4V8z" />
                 </svg>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 500, color: C.sub, letterSpacing: '-0.01em' }}>
-                {scenes.length === 0 ? t('editor.addFirstScene') : t('editor.selectSceneLeft')}
-              </span>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+                  {scenes.length === 0 ? t('editor.addFirstScene') : t('editor.selectSceneLeft')}
+                </div>
+                <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6, maxWidth: 400 }}>
+                  {t('editor.promptPlaceholder')}
+                </div>
+              </div>
               {scenes.length === 0 && (
                 <button
                   className="ed-gen-btn"
                   onClick={() => addScene()}
                   style={{
-                    marginTop: 4,
-                    padding: '10px 28px',
-                    borderRadius: 20,
-                    border: 'none',
-                    background: C.accent,
-                    color: C.text,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'all .2s ease',
-                    boxShadow: `0 2px 12px ${C.accent}30`,
+                    marginTop: 8, padding: '12px 32px', borderRadius: 12, border: 'none',
+                    background: `linear-gradient(135deg, ${C.accent}, ${C.blue})`,
+                    color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all .2s ease',
+                    boxShadow: `0 4px 20px ${C.accent}30`,
                   }}
                 >
                   {t('editor.addSceneBtn')}
@@ -2191,452 +2200,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           )}
         </div>
         </ErrorBoundary>
-      </div>
-
-      {/* ════════════════════════════════════════════════
-          BOTTOM AREA: Scene actions + prompt row, then timeline
-          ════════════════════════════════════════════════ */}
-      <div
-        style={{
-          flexShrink: 0,
-          background: C.card,
-          borderTop: `1px solid ${C.border}`,
-          position: 'relative',
-        }}
-      >
-        {/* ── Row 1: Scene actions + prompt ── */}
-        {sel && (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              padding: '10px 16px',
-              borderBottom: `1px solid ${C.border}`,
-            }}
-          >
-            {/* Scene action buttons */}
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-              <button className="ed-action-btn" onClick={() => dupScene(sel.id)} title={t('editor.duplicateScene')} style={tinyBtnStyle(C, false)}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              </button>
-              <button className="ed-action-btn" onClick={() => addScene(sel.id)} title={t('editor.addSceneAfter')} style={tinyBtnStyle(C, false)}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-              <button className="ed-action-btn" onClick={() => setShowSettings(!showSettings)} title={t('editor.sceneSettings')} style={tinyBtnStyle(C, showSettings)}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-              </button>
-              <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-              <button
-                className={scenes.length > 1 && !isGenerating ? 'ed-action-btn' : undefined}
-                onClick={() => { if (scenes.length > 1 && !isGenerating) handleSceneRequestDelete(sel.id); }}
-                disabled={scenes.length <= 1 || isGenerating}
-                title={scenes.length <= 1 ? t('editor.cannotDeleteOnly') : isGenerating ? t('editor.cannotDeleteGenerating') : t('editor.deleteScene')}
-                style={{ ...tinyBtnStyle(C, false), color: (scenes.length <= 1 || isGenerating) ? C.dim : C.accent, opacity: (scenes.length <= 1 || isGenerating) ? 0.3 : 1, cursor: (scenes.length <= 1 || isGenerating) ? 'not-allowed' : 'pointer' }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-              </button>
-
-              {/* Voiceover (TTS) button */}
-              <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-              <button
-                className={sel.voiceoverStatus !== 'generating' ? 'ed-action-btn' : undefined}
-                onClick={() => {
-                  // TTS not yet configured — show "soon" tooltip
-                  useNotificationStore.getState().addToast('info', t('editor.voiceover.soon'), 2000);
-                }}
-                disabled={sel.voiceoverStatus === 'generating'}
-                title={!sel.prompt.trim() ? t('editor.voiceover.noText') : t('editor.voiceover.btn')}
-                style={{
-                  ...tinyBtnStyle(C, sel.voiceoverStatus === 'done'),
-                  minWidth: 'auto',
-                  width: 'auto',
-                  padding: '0 6px',
-                  gap: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                  fontSize: 9,
-                  fontWeight: 500,
-                  color: sel.voiceoverStatus === 'done' ? C.green : sel.voiceoverStatus === 'generating' ? C.orange : C.sub,
-                }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                  <line x1="12" y1="19" x2="12" y2="23"/>
-                  <line x1="8" y1="23" x2="16" y2="23"/>
-                </svg>
-                {sel.voiceoverStatus === 'generating' ? t('editor.voiceover.generating') : sel.voiceoverStatus === 'done' ? t('editor.voiceover.done') : t('editor.voiceover.btn')}
-              </button>
-
-              {/* Voiceover audio player (when available) */}
-              {sel.voiceoverUrl && (
-                <audio controls src={sel.voiceoverUrl} style={{ height: 24, maxWidth: 120, flexShrink: 0 }} />
-              )}
-
-              {/* Z2: Subtitles button */}
-              <button
-                className={!generateCaptions.isPending ? 'ed-action-btn' : undefined}
-                onClick={() => {
-                  if (generateCaptions.isPending) return;
-                  const scenesData = scenes.filter(s => s.prompt.trim()).map(s => ({
-                    text: s.prompt,
-                    duration: s.duration,
-                  }));
-                  if (scenesData.length === 0) {
-                    toast.info(t('editor.captions.addTextHint'));
-                    return;
-                  }
-                  generateCaptions.mutate({ scenes: scenesData });
-                }}
-                disabled={generateCaptions.isPending}
-                title={t('editor.captions.generateTitle')}
-                style={{
-                  ...tinyBtnStyle(C, false),
-                  minWidth: 'auto',
-                  width: 'auto',
-                  padding: '0 6px',
-                  gap: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                  fontSize: 9,
-                  fontWeight: 500,
-                  color: generateCaptions.isPending ? C.orange : captionsSrt ? C.green : C.sub,
-                }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2"/>
-                  <path d="M7 15h4m-4-3h10"/>
-                </svg>
-                {generateCaptions.isPending ? t('editor.captions.generating') : t('editor.captions.label')}
-              </button>
-
-              {/* Scene duration inline control */}
-              <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                <span style={{ fontSize: 8, color: C.sub, fontWeight: 500 }}>{t('editor.sceneDuration')}:</span>
-                <input
-                  type="range"
-                  min={3}
-                  max={30}
-                  value={sel.duration}
-                  onChange={(e) => updScene(sel.id, { duration: Number(e.target.value) })}
-                  style={{ width: 60, accentColor: selCol, cursor: 'pointer', height: 3 }}
-                />
-                <span style={{ fontSize: 9, fontWeight: 600, color: selCol, fontFamily: "'JetBrains Mono', monospace", minWidth: 20, textAlign: 'center' }}>
-                  {sel.duration}{t('editor.sec')}
-                </span>
-              </div>
-            </div>
-
-            {/* Prompt area — focus of the editor */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, width: '100%' }}>
-              {/* Action buttons row: small icons */}
-              <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                <button
-                  className="ed-action-btn"
-                  title={t('editor.richText.bold')}
-                  onClick={() => {
-                    if (!promptRef.current) return;
-                    const ta = promptRef.current;
-                    const start = ta.selectionStart;
-                    const end = ta.selectionEnd;
-                    const text = sel.prompt;
-                    if (start === end) return;
-                    const selected = text.slice(start, end);
-                    // Toggle bold: wrap or unwrap **...**
-                    const isBold = selected.startsWith('**') && selected.endsWith('**');
-                    const newText = isBold
-                      ? text.slice(0, start) + selected.slice(2, -2) + text.slice(end)
-                      : text.slice(0, start) + '**' + selected + '**' + text.slice(end);
-                    updScene(sel.id, { prompt: newText });
-                    useEditorStore.getState().pushHistoryDebounced();
-                  }}
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 4,
-                    border: `1px solid ${C.border}`,
-                    background: 'transparent',
-                    color: C.sub,
-                    fontSize: 11,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'inherit',
-                    padding: 0,
-                    transition: 'all .15s',
-                  }}
-                >
-                  B
-                </button>
-                <button
-                  className="ed-action-btn"
-                  title={t('editor.richText.italic')}
-                  onClick={() => {
-                    if (!promptRef.current) return;
-                    const ta = promptRef.current;
-                    const start = ta.selectionStart;
-                    const end = ta.selectionEnd;
-                    const text = sel.prompt;
-                    if (start === end) return;
-                    const selected = text.slice(start, end);
-                    // Toggle italic: wrap or unwrap *...*
-                    const isItalic = selected.startsWith('*') && selected.endsWith('*') && !selected.startsWith('**');
-                    const newText = isItalic
-                      ? text.slice(0, start) + selected.slice(1, -1) + text.slice(end)
-                      : text.slice(0, start) + '*' + selected + '*' + text.slice(end);
-                    updScene(sel.id, { prompt: newText });
-                    useEditorStore.getState().pushHistoryDebounced();
-                  }}
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 4,
-                    border: `1px solid ${C.border}`,
-                    background: 'transparent',
-                    color: C.sub,
-                    fontSize: 11,
-                    fontWeight: 400,
-                    fontStyle: 'italic',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'serif',
-                    padding: 0,
-                    transition: 'all .15s',
-                  }}
-                >
-                  I
-                </button>
-              </div>
-
-            {/* Prompt textarea */}
-            <div
-              style={{
-                position: 'relative',
-                background: C.surface,
-                border: `1px solid ${C.border}`,
-                borderRadius: 10,
-                padding: '10px 14px',
-                transition: 'border-color .2s ease-out, box-shadow .2s ease-out',
-                width: '100%',
-              }}
-              onFocus={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = selCol + '55';
-                (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 2px ${selCol}18`;
-              }}
-              onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  (e.currentTarget as HTMLElement).style.borderColor = C.border;
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'none';
-                }
-              }}
-            >
-              <textarea
-                ref={promptRef}
-                value={sel.prompt}
-                rows={1}
-                onChange={(e) => {
-                  updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
-                  autoResize(e.target);
-                  useEditorStore.getState().pushHistoryDebounced();
-                }}
-                onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    handleGenerate();
-                  }
-                }}
-                placeholder={t('editor.promptPlaceholder')}
-                maxLength={2000}
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  color: C.text,
-                  fontSize: 13,
-                  lineHeight: '22px',
-                  resize: 'none',
-                  fontFamily: 'inherit',
-                  minHeight: 100,
-                  maxHeight: 160,
-                  overflow: 'hidden',
-                  padding: 0,
-                  boxSizing: 'border-box',
-                }}
-              />
-              {/* Character counter — bottom-right */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                <span style={{ fontSize: 9, color: sel.prompt.length > 1800 ? '#ef4444' : sel.prompt.length > 1500 ? '#eab308' : C.dim, fontFamily: "'JetBrains Mono', monospace", fontWeight: sel.prompt.length > 1500 ? 600 : 400 }}>
-                  {sel.prompt.length}/2000
-                </span>
-              </div>
-            </div>
-
-            {/* Generate button — full width, 48px, accent gradient with glow */}
-            <button
-              className="ed-gen-btn"
-              onClick={handleGenerate}
-              disabled={!sel.prompt.trim() || isGenerating}
-              style={{
-                width: '100%',
-                height: 48,
-                borderRadius: 10,
-                border: 'none',
-                background: (!sel.prompt.trim() || isGenerating)
-                  ? C.border
-                  : `linear-gradient(135deg, ${C.accent}, ${C.blue})`,
-                color: (!sel.prompt.trim() || isGenerating) ? C.dim : '#fff',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: (!sel.prompt.trim() || isGenerating) ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit',
-                letterSpacing: '-0.01em',
-                transition: 'all .2s ease-out',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                boxShadow: (!sel.prompt.trim() || isGenerating)
-                  ? 'none'
-                  : `0 4px 20px ${C.accent}44, 0 0 40px ${C.accent}12`,
-              }}
-            >
-              {isGenerating ? (
-                <>
-                  <span
-                    style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: '50%',
-                      border: `2px solid ${C.dim}`,
-                      borderTopColor: '#fff',
-                      animation: 'spin .8s linear infinite',
-                      flexShrink: 0,
-                    }}
-                  />
-                  {t('editor.generating')}
-                </>
-              ) : (
-                <>
-                  {'✨ '}{t('editor.generateVideo')}
-                </>
-              )}
-            </button>
-
-            </div>{/* close prompt area wrapper */}
-          </div>
-        )}
-
-        {/* ── Row 2: Timeline — horizontal scroll, small thumbnails ── */}
-        <div
-          className="ed-timeline-scroll"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            minHeight: 56,
-            padding: '6px 14px',
-            background: C.bg,
-          }}
-        >
-          {scenes.map((sc, idx) => {
-            const col = gc(sc.ck);
-            const isSelScene = sc.id === selId;
-
-            return (
-              <div
-                key={sc.id}
-                className="ed-timeline-tab"
-                draggable
-                onDragStart={() => handleSceneDragStart(sc.id)}
-                onDragEnter={() => handleSceneDragEnter(sc.id)}
-                onDragEnd={handleSceneDragEnd}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => setSelId(sc.id)}
-                style={{
-                  flex: `0 0 80px`,
-                  height: 45,
-                  background: (sc.sf || sc.videoUrl)
-                    ? `url(${sc.sf || sc.videoUrl}) center/cover no-repeat`
-                    : C.card,
-                  borderRadius: 8,
-                  border: `1.5px solid ${sc.id === dragOv ? col + '66' : isSelScene ? col : sc.status === 'error' ? C.accent + '50' : C.border}`,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 1,
-                  transition: 'all .2s ease-out',
-                  overflow: 'hidden',
-                  opacity: dragId === sc.id ? 0.35 : 1,
-                }}
-                title={`${sc.label} — ${fmtDur(sc.duration)}`}
-              >
-                {/* Drop indicator line for timeline */}
-                {sc.id === dragOv && (
-                  <div style={{ position: 'absolute', left: -2, top: 4, bottom: 4, width: 3, borderRadius: 2, background: col, zIndex: 5 }} />
-                )}
-                <span style={{ fontSize: 9, fontWeight: 700, color: isSelScene ? col : C.sub, fontFamily: "'JetBrains Mono', monospace", textShadow: (sc.sf || sc.videoUrl) ? '0 1px 3px rgba(0,0,0,.6)' : 'none' }}>
-                  {String(idx + 1).padStart(2, '0')}
-                </span>
-                <span style={{ fontSize: 7, color: C.dim, fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, textShadow: (sc.sf || sc.videoUrl) ? '0 1px 3px rgba(0,0,0,.6)' : 'none' }}>
-                  {fmtDur(sc.duration)}
-                </span>
-              </div>
-            );
-          })}
-
-          {/* Add scene "+" at end of timeline */}
-          <div
-            onClick={() => addScene()}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addScene(); } }}
-            role="button"
-            tabIndex={0}
-            aria-label={t('editor.addScene')}
-            style={{
-              flex: '0 0 45px',
-              height: 45,
-              borderRadius: 8,
-              border: `1.5px dashed ${C.border}`,
-              background: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all .2s ease-out',
-              color: C.dim,
-              fontSize: 16,
-            }}
-            title={t('editor.addScene')}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55';
-              (e.currentTarget as HTMLElement).style.color = C.accent;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = C.border;
-              (e.currentTarget as HTMLElement).style.color = C.dim;
-            }}
-          >
-            +
-          </div>
-
-          <div style={{ flex: 1 }} />
-
-          {/* Total duration */}
-          <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, flexShrink: 0, paddingLeft: 8 }}>
-            {fmtDur(totalDur)}
-          </span>
-        </div>
       </div>
 
       {/* ═══ Z1: Script Generator Modal ═══ */}
@@ -2979,14 +2542,18 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           outline-offset: 2px;
         }
 
+        /* ── Left panel ── */
+        .tf-editor-left-panel {
+          position: relative;
+        }
+
         /* ── Mobile editor optimizations ── */
         @media (max-width: 768px) {
-          .tf-editor-scene-panel {
+          .tf-editor-left-panel {
             position: fixed !important;
             top: 0; left: 0; bottom: 0;
             z-index: 900;
-            width: 180px !important;
-            max-width: 180px !important;
+            width: 300px !important;
             box-shadow: 0 0 40px rgba(0,0,0,.5);
           }
           .tf-editor-topbar {
@@ -3001,10 +2568,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           .ed-action-btn {
             min-width: 44px !important;
             min-height: 44px !important;
-          }
-          .ed-timeline-tab {
-            min-height: 45px !important;
-            height: 45px !important;
           }
           .ed-gen-btn {
             min-height: 48px !important;
