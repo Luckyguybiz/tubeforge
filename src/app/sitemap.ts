@@ -33,6 +33,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/compare/tubeforge-vs-pictory', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/compare/tubeforge-vs-synthesia', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/compare/tubeforge-vs-fliki', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    // Tools hub + individual tool pages
+    { path: '/tools', lastModified: '2026-03-22', changeFrequency: 'weekly', priority: 0.9 },
+    { path: '/tools/image-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/subtitle-editor', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/video-compressor', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/mp3-converter', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/youtube-downloader', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/voiceover-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/background-remover', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/content-planner', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/cut-crop', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/ai-video-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/video-translator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/ai-thumbnails', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    // Free SEO tools
+    { path: '/free-tools', lastModified: '2026-03-22', changeFrequency: 'weekly', priority: 0.9 },
+    { path: '/free-tools/title-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/description-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/tag-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/free-tools/thumbnail-checker', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   const staticEntries: MetadataRoute.Sitemap = staticPages.map((page) => ({
