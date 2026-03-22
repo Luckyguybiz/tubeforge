@@ -6,12 +6,12 @@ import { TagGenTool } from "./TagGenTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Tag & Hashtag Generator — Find Trending Tags | TubeForge",
+  title: "Free YouTube Tag & Hashtag Generator — Find Trending Tags",
   description:
     "Generate 20-30 relevant YouTube tags and 5-10 hashtags for any video topic. AI-powered tag generator with Copy All button. Free — no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Tag & Hashtag Generator — Find Trending Tags | TubeForge",
+    title: "Free YouTube Tag & Hashtag Generator — Find Trending Tags",
     description:
       "Get the perfect YouTube tags and hashtags for your videos with AI. 25+ optimized tags per generation — free, no login needed.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/tools/youtube-tag-generator" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Tag & Hashtag Generator | TubeForge",
+    title: "Free YouTube Tag & Hashtag Generator",
     description: "Generate 25+ relevant YouTube tags and hashtags for any video topic. Free AI tool, no signup required.",
     images: ["/api/og"],
   },

@@ -6,12 +6,12 @@ import { ScriptGeneratorTool } from "./ScriptGeneratorTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free AI YouTube Script Generator — Write Video Scripts Fast | TubeForge",
+  title: "Free AI YouTube Script Generator — Write Video Scripts Fast",
   description:
     "Generate full YouTube video scripts with AI. Choose your format (tutorial, review, vlog, listicle) and duration — get a complete script with hook, body, CTA, and outro. Free, no signup.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free AI YouTube Script Generator | TubeForge",
+    title: "Free AI YouTube Script Generator",
     description:
       "Write complete YouTube video scripts in seconds. Choose format and duration — AI generates hook, intro, body, CTA, and outro.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/script-generator" },
   twitter: {
     card: "summary_large_image",
-    title: "Free AI YouTube Script Generator | TubeForge",
+    title: "Free AI YouTube Script Generator",
     description: "Generate full YouTube video scripts with AI. Hook, body, CTA, and outro in seconds. Free tool, no signup.",
     images: ["/api/og"],
   },

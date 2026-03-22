@@ -6,12 +6,12 @@ import { ThumbnailCheckerTool } from "./ThumbnailCheckerTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Thumbnail Checker — Text & Contrast Analysis | TubeForge",
+  title: "Free YouTube Thumbnail Checker — Text & Contrast Analysis",
   description:
     "Upload your YouTube thumbnail and get instant analysis of text readability, color contrast, brightness, and composition. Free tool, no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Thumbnail Checker | TubeForge",
+    title: "Free YouTube Thumbnail Checker",
     description:
       "Analyze your YouTube thumbnails for readability, contrast, and composition. Free instant analysis — no login needed.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/thumbnail-checker" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Thumbnail Checker | TubeForge",
+    title: "Free YouTube Thumbnail Checker",
     description: "Upload a thumbnail and get instant readability, contrast, and composition analysis. Free, no signup.",
     images: ["/api/og"],
   },

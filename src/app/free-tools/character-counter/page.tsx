@@ -6,12 +6,12 @@ import { CharacterCounterTool } from "./CharacterCounterTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "YouTube Character Counter — Title, Description & Tag Limits | TubeForge",
+  title: "YouTube Character Counter — Title, Description & Tag Limits",
   description:
     "Free YouTube character counter for titles (100), descriptions (5000), and tags (500). Real-time counting with color indicators and optimal length tips. No signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "YouTube Character Counter — Title, Description & Tag Limits | TubeForge",
+    title: "YouTube Character Counter — Title, Description & Tag Limits",
     description:
       "Check your YouTube title, description, and tag character counts in real time. Color-coded indicators show when you hit optimal length.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/character-counter" },
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Character Counter | TubeForge",
+    title: "YouTube Character Counter",
     description: "Real-time character counter for YouTube titles (100), descriptions (5000), and tags (500). Free, no signup.",
     images: ["/api/og"],
   },

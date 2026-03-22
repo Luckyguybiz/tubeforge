@@ -6,12 +6,12 @@ import { DescGenTool } from "./DescGenTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free AI YouTube Description Generator — SEO-Optimized | TubeForge",
+  title: "Free AI YouTube Description Generator — SEO-Optimized",
   description:
     "Generate SEO-optimized YouTube descriptions with timestamps, hashtags, and CTAs. AI-powered, free — no signup required. Boost your video rankings today.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free AI YouTube Description Generator — SEO-Optimized | TubeForge",
+    title: "Free AI YouTube Description Generator — SEO-Optimized",
     description:
       "Create perfect YouTube descriptions in seconds with AI. Includes timestamps, hashtags, and CTA sections — free, no login needed.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/tools/youtube-description-generator" },
   twitter: {
     card: "summary_large_image",
-    title: "Free AI YouTube Description Generator — SEO-Optimized | TubeForge",
+    title: "Free AI YouTube Description Generator — SEO-Optimized",
     description: "Generate SEO-optimized YouTube descriptions with timestamps and hashtags. Free, no signup required.",
     images: ["/api/og"],
   },

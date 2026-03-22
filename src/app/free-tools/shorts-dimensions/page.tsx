@@ -6,12 +6,12 @@ import { ShortsDimensionsTool } from "./ShortsDimensionsTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "YouTube Shorts Size & Dimensions Guide 2026 — Resolution, Length | TubeForge",
+  title: "YouTube Shorts Size & Dimensions Guide 2026 — Resolution, Length",
   description:
     "Complete YouTube Shorts dimensions guide: 1080x1920 pixels, 9:16 aspect ratio, max 60 seconds. Upload an image to preview how it looks as a Short. Free tool.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "YouTube Shorts Size & Dimensions Guide 2026 | TubeForge",
+    title: "YouTube Shorts Size & Dimensions Guide 2026",
     description:
       "Everything you need to know about YouTube Shorts dimensions: resolution, aspect ratio, file size, and length. Interactive preview tool included.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/shorts-dimensions" },
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Shorts Dimensions Guide 2026 | TubeForge",
+    title: "YouTube Shorts Dimensions Guide 2026",
     description: "1080x1920, 9:16 aspect ratio, max 60 seconds. Full guide + interactive preview tool.",
     images: ["/api/og"],
   },

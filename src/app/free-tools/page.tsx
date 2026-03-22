@@ -5,12 +5,12 @@ import { LandingNav } from "@/components/landing";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Tools — Title Generator, SEO, Analytics | TubeForge",
+  title: "Free YouTube Tools — Title Generator, SEO, Analytics",
   description:
     "9 free AI-powered YouTube tools: title generator, description generator, tag generator, script writer, channel name generator, character counter, video ideas, thumbnail checker, and Shorts guide. No signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Tools — Title Generator, SEO, Analytics | TubeForge",
+    title: "Free YouTube Tools — Title Generator, SEO, Analytics",
     description:
       "9 free AI-powered YouTube tools. Generate titles, descriptions, tags, scripts, channel names, video ideas, and more — no login required.",
     type: "website",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Tools — Title Generator, SEO, Analytics | TubeForge",
+    title: "Free YouTube Tools — Title Generator, SEO, Analytics",
     description: "9 free AI tools for YouTube creators. Generate titles, descriptions, tags, scripts, channel names, video ideas, and more.",
     images: ["/api/og"],
   },

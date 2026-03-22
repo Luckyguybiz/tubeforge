@@ -6,12 +6,12 @@ import { ChannelNameGeneratorTool } from "./ChannelNameGeneratorTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Channel Name Generator — AI-Powered Ideas | TubeForge",
+  title: "Free YouTube Channel Name Generator — AI-Powered Ideas",
   description:
     "Generate 20 creative, brandable YouTube channel name ideas for any niche using AI. Free channel name generator — no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Channel Name Generator — AI-Powered | TubeForge",
+    title: "Free YouTube Channel Name Generator — AI-Powered",
     description:
       "Get 20 unique channel name ideas for your YouTube niche. AI-powered, free, no login needed.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/channel-name-generator" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Channel Name Generator | TubeForge",
+    title: "Free YouTube Channel Name Generator",
     description: "Generate 20 creative YouTube channel name ideas for any niche. Free AI tool, no signup required.",
     images: ["/api/og"],
   },

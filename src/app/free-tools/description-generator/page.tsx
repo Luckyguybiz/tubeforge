@@ -6,12 +6,12 @@ import { DescriptionGeneratorTool } from "./DescriptionGeneratorTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Description Generator — AI-Powered | TubeForge",
+  title: "Free YouTube Description Generator — AI-Powered",
   description:
     "Generate SEO-optimized YouTube descriptions with timestamps, hashtags, and links. Free AI-powered description generator — no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Description Generator — AI-Powered | TubeForge",
+    title: "Free YouTube Description Generator — AI-Powered",
     description:
       "Create perfect YouTube descriptions in seconds with AI. Includes timestamps, hashtags, and links — free, no login needed.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/description-generator" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Description Generator — AI-Powered | TubeForge",
+    title: "Free YouTube Description Generator — AI-Powered",
     description: "Generate SEO-optimized YouTube descriptions with timestamps and hashtags. Free, no signup required.",
     images: ["/api/og"],
   },

@@ -6,12 +6,12 @@ import { TitleGeneratorTool } from "./TitleGeneratorTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Title Generator — AI-Powered | TubeForge",
+  title: "Free YouTube Title Generator — AI-Powered",
   description:
     "Generate 10 click-worthy, SEO-optimized YouTube title ideas for any topic in seconds. Free AI-powered title generator — no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Title Generator — AI-Powered | TubeForge",
+    title: "Free YouTube Title Generator — AI-Powered",
     description:
       "Generate catchy YouTube titles instantly with AI. 10 optimized variations per topic — free, no login needed.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/title-generator" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Title Generator — AI-Powered | TubeForge",
+    title: "Free YouTube Title Generator — AI-Powered",
     description: "Generate 10 catchy YouTube title ideas for any topic. Free AI tool, no signup required.",
     images: ["/api/og"],
   },

@@ -6,12 +6,12 @@ import { ThumbnailSizeTool } from "./ThumbnailSizeTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "YouTube Thumbnail Size Guide 2026 — Dimensions, Resolution & Tips | TubeForge",
+  title: "YouTube Thumbnail Size Guide 2026 — Dimensions, Resolution & Tips",
   description:
     "YouTube thumbnail size is 1280x720 pixels (16:9 aspect ratio). Upload your image to preview how it looks in YouTube search, feed, and mobile. Complete 2026 size guide included.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "YouTube Thumbnail Size Guide 2026 — Dimensions, Resolution & Tips | TubeForge",
+    title: "YouTube Thumbnail Size Guide 2026 — Dimensions, Resolution & Tips",
     description:
       "YouTube thumbnail dimensions: 1280x720px, 16:9 ratio, max 2MB. Upload your thumbnail to check dimensions and preview it in YouTube layouts.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/tools/youtube-thumbnail-size" },
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Thumbnail Size Guide 2026 | TubeForge",
+    title: "YouTube Thumbnail Size Guide 2026",
     description: "YouTube thumbnail: 1280x720px, 16:9, max 2MB. Free checker tool to preview your thumbnail in YouTube layouts.",
     images: ["/api/og"],
   },

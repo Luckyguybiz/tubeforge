@@ -6,12 +6,12 @@ import { MoneyCalcTool } from "./MoneyCalcTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "YouTube Money Calculator — Estimate Channel Earnings | TubeForge",
+  title: "YouTube Money Calculator — Estimate Channel Earnings",
   description:
     "Estimate YouTube channel earnings based on daily views and CPM. Calculate daily, monthly, and yearly revenue. Free tool with animated results — no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "YouTube Money Calculator — Estimate Channel Earnings | TubeForge",
+    title: "YouTube Money Calculator — Estimate Channel Earnings",
     description:
       "How much money can you make on YouTube? Estimate earnings based on views and CPM. Free calculator with daily, monthly, and yearly breakdowns.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/tools/youtube-money-calculator" },
   twitter: {
     card: "summary_large_image",
-    title: "YouTube Money Calculator | TubeForge",
+    title: "YouTube Money Calculator",
     description: "Estimate YouTube channel earnings. Calculate daily, monthly, and yearly revenue based on views and CPM. Free tool.",
     images: ["/api/og"],
   },

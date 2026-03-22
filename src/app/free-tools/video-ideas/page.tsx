@@ -6,12 +6,12 @@ import { VideoIdeasTool } from "./VideoIdeasTool";
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "Free YouTube Video Ideas Generator — Get Trending Topics | TubeForge",
+  title: "Free YouTube Video Ideas Generator — Get Trending Topics",
   description:
     "Generate 50+ YouTube video ideas categorized by trending, evergreen, Shorts, and series concepts. AI-powered for any niche. Free, no signup required.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Free YouTube Video Ideas Generator | TubeForge",
+    title: "Free YouTube Video Ideas Generator",
     description:
       "Get 50+ video ideas for your YouTube channel — trending, evergreen, Shorts, and series concepts. AI-powered, free.",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://tubeforge.co/free-tools/video-ideas" },
   twitter: {
     card: "summary_large_image",
-    title: "Free YouTube Video Ideas Generator | TubeForge",
+    title: "Free YouTube Video Ideas Generator",
     description: "Generate 50+ YouTube video ideas categorized by type. AI-powered, free, no signup required.",
     images: ["/api/og"],
   },
