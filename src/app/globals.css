@@ -6,9 +6,39 @@
   padding: 0;
 }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.15);
+  color: inherit;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { border-radius: 3px; background: var(--border); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+a { transition: color 0.2s ease, opacity 0.2s ease; }
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+button:active { transform: scale(0.97); }
+
+input, textarea, select {
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -50,15 +80,16 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Focus-visible for keyboard accessibility */
-*:focus-visible {
-  outline: 2px solid #3a7bfd;
+/* Focus-visible for keyboard accessibility — Apple-style focus ring */
+:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.5);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 textarea:focus, input:focus { outline: none; }
 textarea:focus-visible, input:focus-visible {
-  outline: 2px solid #3a7bfd;
+  outline: 3px solid rgba(99, 102, 241, 0.5);
   outline-offset: 1px;
 }
 

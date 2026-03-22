@@ -16,7 +16,7 @@ export function ToastProvider() {
     <>
       <style>{`
         @keyframes toastSlideIn {
-          from { transform: translateX(100%); opacity: 0; }
+          from { transform: translateX(40px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
         @media (max-width: 640px) {
