@@ -722,7 +722,7 @@ export function SettingsPage() {
                     {ch.title}
                   </div>
                   <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-                    {(ch.subscribers ?? 0).toLocaleString('ru-RU')} {t('settings.subscribers')}
+                    {(ch.subscribers ?? 0).toLocaleString('en-US')} {t('settings.subscribers')}
                   </div>
                 </div>
                 <div style={{

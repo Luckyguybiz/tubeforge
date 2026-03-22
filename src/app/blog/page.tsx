@@ -38,11 +38,11 @@ export const metadata: Metadata = {
 /* ── Category Colors ───────────────────────────────────────────────── */
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Гайды': '#3a7bfd',
-  'Советы': '#2dd4a0',
-  'Продукт': '#8b5cf6',
-  'Монетизация': '#f59e0b',
-  'Сравнения': '#ec4899',
+  'Guides': '#3a7bfd',
+  'Tips': '#2dd4a0',
+  'Product': '#8b5cf6',
+  'Monetization': '#f59e0b',
+  'Comparisons': '#ec4899',
 };
 
 function getCategoryColor(category: string): string {
@@ -53,7 +53,7 @@ function getCategoryColor(category: string): string {
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 /* ── Category Pills (client interactive via CSS) ───────────────────── */
@@ -88,7 +88,7 @@ export default function BlogIndexPage() {
             transition: 'color .15s',
           }}
         >
-          &larr; На главную
+          &larr; Home
         </Link>
 
         {/* Header */}
@@ -102,7 +102,7 @@ export default function BlogIndexPage() {
               margin: '0 0 8px',
             }}
           >
-            Блог TubeForge
+            TubeForge Blog
           </h1>
           <p
             style={{
@@ -112,7 +112,7 @@ export default function BlogIndexPage() {
               fontWeight: 450,
             }}
           >
-            Гайды, советы и инструменты для YouTube-креаторов
+            Guides, tips, and tools for YouTube creators
           </p>
         </div>
 
@@ -256,7 +256,7 @@ export default function BlogIndexPage() {
                           <circle cx="8" cy="8" r="6.5" stroke="#5e5e72" strokeWidth="1.2" />
                           <path d="M8 4V8L10.5 10.5" stroke="#5e5e72" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        {post.readingTime} мин
+                        {post.readingTime} min
                       </span>
                     </div>
                     <span
@@ -269,7 +269,7 @@ export default function BlogIndexPage() {
                         color: '#8b8b9e',
                       }}
                     >
-                      Читать
+                      Read
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="#8b8b9e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -290,7 +290,7 @@ export default function BlogIndexPage() {
             color: '#5e5e72',
           }}
         >
-          &copy; {new Date().getFullYear()} TubeForge. Все права защищены.
+          &copy; {new Date().getFullYear()} TubeForge. All rights reserved.
         </div>
       </div>
 

@@ -41,7 +41,7 @@ function IconPlay({ size = 32, color = 'currentColor' }: { size?: number; color?
   );
 }
 
-const SHARE_TEXT = encodeURIComponent('Посмотрите видео, созданное с TubeForge!');
+const SHARE_TEXT = encodeURIComponent('Check out this video created with TubeForge!');
 
 export default function SharePage() {
   const params = useParams();
@@ -88,7 +88,7 @@ export default function SharePage() {
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: C.sub, fontSize: 16 }}>Загрузка...</div>
+        <div style={{ color: C.sub, fontSize: 16 }}>Loading...</div>
       </div>
     );
   }
@@ -97,10 +97,10 @@ export default function SharePage() {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: 48, opacity: 0.3 }}>🔒</div>
-        <h1 style={{ color: C.text, fontSize: 24, fontWeight: 700, margin: 0 }}>Этот проект приватный</h1>
-        <p style={{ color: C.sub, fontSize: 15, margin: 0 }}>Проект не найден или является приватным</p>
+        <h1 style={{ color: C.text, fontSize: 24, fontWeight: 700, margin: 0 }}>This project is private</h1>
+        <p style={{ color: C.sub, fontSize: 15, margin: 0 }}>Project not found or is private</p>
         <Link href="/" style={{ color: C.accent, fontSize: 14, textDecoration: 'none', marginTop: 8 }}>
-          Вернуться на главную
+          Back to home
         </Link>
       </div>
     );
@@ -130,7 +130,7 @@ export default function SharePage() {
             transition: 'all .15s',
           }}
         >
-          Галерея
+          Gallery
         </Link>
       </header>
 
@@ -160,10 +160,10 @@ export default function SharePage() {
                   {(project.user.name ?? '?')[0]?.toUpperCase()}
                 </div>
               )}
-              <span style={{ fontSize: 14, fontWeight: 600 }}>{project.user.name ?? 'Аноним'}</span>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>{project.user.name ?? 'Anonymous'}</span>
             </Link>
             <span style={{ color: C.dim, fontSize: 13 }}>
-              {new Date(project.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+              {new Date(project.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
             {project.tags.length > 0 && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -201,7 +201,7 @@ export default function SharePage() {
         {project.scenes.length > 0 && (
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>
-              Сцены ({project.scenes.length})
+              Scenes ({project.scenes.length})
             </h2>
             <div style={{
               display: 'grid',
@@ -241,14 +241,14 @@ export default function SharePage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       color: C.dim, fontSize: 12,
                     }}>
-                      Нет видео
+                      No video
                     </div>
                   )}
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                    {scene.label || `Сцена ${scene.order + 1}`}
+                    {scene.label || `Scene ${scene.order + 1}`}
                   </div>
                   <div style={{ fontSize: 12, color: C.sub }}>
-                    {scene.duration}с
+                    {scene.duration}s
                   </div>
                 </div>
               ))}
@@ -297,7 +297,7 @@ export default function SharePage() {
             }}
           >
             <IconCopy size={15} color={copied ? C.green : C.sub} />
-            {copied ? 'Скопировано!' : 'Копировать ссылку'}
+            {copied ? 'Copied!' : 'Copy link'}
           </button>
 
           {/* Twitter/X */}
@@ -365,7 +365,7 @@ export default function SharePage() {
           textAlign: 'center',
         }}>
           <p style={{ color: C.sub, fontSize: 14, margin: '0 0 12px' }}>
-            Создано с помощью TubeForge — ИИ-студия для YouTube
+            Created with TubeForge — AI studio for YouTube
           </p>
           <Link
             href="/"
@@ -378,7 +378,7 @@ export default function SharePage() {
               transition: 'opacity .15s',
             }}
           >
-            Попробовать бесплатно
+            Try Free
           </Link>
         </div>
       </div>

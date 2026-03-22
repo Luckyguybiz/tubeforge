@@ -20,7 +20,7 @@ function formatBytes(bytes: number): string {
 
 function formatDate(dateStr: string | Date): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function MediaLibrary() {

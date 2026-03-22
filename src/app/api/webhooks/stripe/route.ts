@@ -419,8 +419,8 @@ export async function POST(req: NextRequest) {
           if (paymentUser?.email) {
             const amountFormatted = (invoice.amount_paid / 100).toFixed(2);
             const paidDate = invoice.status_transitions?.paid_at
-              ? new Date((invoice.status_transitions as { paid_at?: number }).paid_at! * 1000).toLocaleDateString('ru-RU')
-              : new Date().toLocaleDateString('ru-RU');
+              ? new Date((invoice.status_transitions as { paid_at?: number }).paid_at! * 1000).toLocaleDateString('en-US')
+              : new Date().toLocaleDateString('en-US');
             sendEmail({
               to: paymentUser.email,
               template: 'payment-receipt',

@@ -24,98 +24,98 @@ interface ComparisonData {
 const COMPARISONS: Record<string, ComparisonData> = {
   'tubeforge-vs-invideo': {
     name: 'InVideo',
-    description: '\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 TubeForge \u0438 InVideo \u2014 \u0434\u0432\u0443\u0445 \u043F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0445 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0432\u0438\u0434\u0435\u043E \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u0418\u0418.',
+    description: 'Comparison of TubeForge and InVideo — two popular AI-powered video creation platforms.',
     features: [
-      { name: 'AI-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0446\u0435\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u2705 \u0414\u0430' },
-      { name: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u044F\u0437\u044B\u043A', tubeforge: '\u2705 \u041F\u043E\u043B\u043D\u0430\u044F \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430', competitor: '\u26A0\uFE0F \u0427\u0430\u0441\u0442\u0438\u0447\u043D\u043E' },
-      { name: 'YouTube \u0438\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044F', tubeforge: '\u2705 \u041F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u044F + \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430', competitor: '\u26A0\uFE0F \u0422\u043E\u043B\u044C\u043A\u043E \u044D\u043A\u0441\u043F\u043E\u0440\u0442' },
-      { name: 'SEO-\u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u044F', tubeforge: '\u2705 AI SEO \u0432\u0441\u0442\u0440\u043E\u0435\u043D', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B', tubeforge: '\u2705 6+ \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u043E\u0432', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430', tubeforge: '\u2705 Studio \u043F\u043B\u0430\u043D', competitor: '\u2705 Business \u043F\u043B\u0430\u043D' },
-      { name: 'API \u0434\u043E\u0441\u0442\u0443\u043F', tubeforge: '\u2705 Studio', competitor: '\u274C \u041D\u0435\u0442' },
+      { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u2705 Yes' },
+      { name: 'Multi-language support', tubeforge: '\u2705 Full support', competitor: '\u26A0\uFE0F Partial' },
+      { name: 'YouTube integration', tubeforge: '\u2705 Publishing + analytics', competitor: '\u26A0\uFE0F Export only' },
+      { name: 'SEO optimization', tubeforge: '\u2705 Built-in AI SEO', competitor: '\u274C No' },
+      { name: 'Free tools', tubeforge: '\u2705 6+ tools', competitor: '\u274C No' },
+      { name: 'Team collaboration', tubeforge: '\u2705 Studio plan', competitor: '\u2705 Business plan' },
+      { name: 'API access', tubeforge: '\u2705 Studio', competitor: '\u274C No' },
     ],
-    pricing: { tubeforge: '\u043E\u0442 $0/\u043C\u0435\u0441 (Free)', competitor: '\u043E\u0442 $25/\u043C\u0435\u0441' },
+    pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $25/mo' },
     advantages: [
-      '\u041F\u043E\u043B\u043D\u0430\u044F \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u0440\u0443\u0441\u0441\u043A\u043E\u0433\u043E \u044F\u0437\u044B\u043A\u0430 \u0432 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435 \u0438 AI',
-      '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B: \u0441\u043A\u0430\u0447\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E, \u043A\u043E\u043D\u0432\u0435\u0440\u0442\u0435\u0440, \u0441\u0436\u0430\u0442\u0438\u0435',
-      '\u0412\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0439 AI SEO \u0434\u043B\u044F \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u0435\u0442\u0430\u0434\u0430\u043D\u043D\u044B\u0445',
-      '\u0411\u043E\u043B\u0435\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0446\u0435\u043D\u044B \u0441 \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u043C \u043F\u043B\u0430\u043D\u043E\u043C',
+      'Full multi-language support in the interface and AI',
+      'Free tools: video downloads, converter, compression',
+      'Built-in AI SEO for metadata optimization',
+      'More affordable pricing with a free plan',
     ],
   },
   'tubeforge-vs-capcut': {
     name: 'CapCut',
-    description: '\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 TubeForge \u0438 CapCut \u2014 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0432\u0438\u0434\u0435\u043E\u043A\u043E\u043D\u0442\u0435\u043D\u0442\u0430.',
+    description: 'Comparison of TubeForge and CapCut — platforms for video content creation.',
     features: [
-      { name: 'AI-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0446\u0435\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u26A0\uFE0F \u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u043D\u043E' },
-      { name: 'YouTube \u043E\u043F\u0442\u0438\u043C\u0438\u0437\u0430\u0446\u0438\u044F', tubeforge: '\u2705 SEO + \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u041E\u0431\u043B\u0430\u0447\u043D\u044B\u0439 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440', tubeforge: '\u2705 \u0412\u0435\u0431-\u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435', competitor: '\u2705 \u0412\u0435\u0431 + \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u043E\u0435' },
-      { name: '\u0421\u043A\u0430\u0447\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E', tubeforge: '\u2705 YouTube, TikTok \u0438 \u0434\u0440.', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: 'AI \u043E\u0431\u043B\u043E\u0436\u043A\u0438', tubeforge: '\u2705 \u0414\u0430', competitor: '\u26A0\uFE0F \u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u043D\u043E' },
-      { name: '\u0420\u0435\u0444\u0435\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430', tubeforge: '\u2705 30% \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F', competitor: '\u274C \u041D\u0435\u0442' },
+      { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u26A0\uFE0F Limited' },
+      { name: 'YouTube optimization', tubeforge: '\u2705 SEO + analytics', competitor: '\u274C No' },
+      { name: 'Cloud editor', tubeforge: '\u2705 Web app', competitor: '\u2705 Web + mobile' },
+      { name: 'Video downloads', tubeforge: '\u2705 YouTube, TikTok, etc.', competitor: '\u274C No' },
+      { name: 'AI thumbnails', tubeforge: '\u2705 Yes', competitor: '\u26A0\uFE0F Limited' },
+      { name: 'Referral program', tubeforge: '\u2705 30% commission', competitor: '\u274C No' },
     ],
-    pricing: { tubeforge: '\u043E\u0442 $0/\u043C\u0435\u0441 (Free)', competitor: '\u043E\u0442 $0/\u043C\u0435\u0441 (Free)' },
+    pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $0/mo (Free)' },
     advantages: [
-      '\u0421\u043F\u0435\u0446\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F \u043D\u0430 YouTube \u2014 SEO, \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430, \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u044F',
-      'AI-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u043F\u043E\u043B\u043D\u044B\u0445 \u0432\u0438\u0434\u0435\u043E \u043F\u043E \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u044E',
-      '\u0412\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0439 \u0441\u043A\u0430\u0447\u0438\u0432\u0430\u0442\u0435\u043B\u044C \u0432\u0438\u0434\u0435\u043E',
-      '\u0420\u0435\u0444\u0435\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0441 30% \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0435\u0439',
+      'YouTube specialization — SEO, analytics, publishing',
+      'AI generation of full videos from descriptions',
+      'Built-in video downloader',
+      'Referral program with 30% commission',
     ],
   },
   'tubeforge-vs-pictory': {
     name: 'Pictory',
-    description: '\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 TubeForge \u0438 Pictory \u2014 AI-\u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B \u0434\u043B\u044F \u0432\u0438\u0434\u0435\u043E\u043F\u0440\u043E\u0438\u0437\u0432\u043E\u0434\u0441\u0442\u0432\u0430.',
+    description: 'Comparison of TubeForge and Pictory — AI platforms for video production.',
     features: [
-      { name: 'AI-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0446\u0435\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u2705 \u0414\u0430' },
-      { name: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u044F\u0437\u044B\u043A', tubeforge: '\u2705 \u041F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E', competitor: '\u274C \u0422\u043E\u043B\u044C\u043A\u043E \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u0438\u0439' },
-      { name: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: 'YouTube SEO', tubeforge: '\u2705 \u0412\u0441\u0442\u0440\u043E\u0435\u043D', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0421\u043A\u0430\u0447\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E', tubeforge: '\u2705 \u0414\u0430', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u041A\u043E\u043C\u0430\u043D\u0434\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430', tubeforge: '\u2705 Studio', competitor: '\u2705 Teams' },
+      { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u2705 Yes' },
+      { name: 'Multi-language support', tubeforge: '\u2705 Full', competitor: '\u274C English only' },
+      { name: 'Free plan', tubeforge: '\u2705 Yes', competitor: '\u274C No' },
+      { name: 'YouTube SEO', tubeforge: '\u2705 Built-in', competitor: '\u274C No' },
+      { name: 'Video downloads', tubeforge: '\u2705 Yes', competitor: '\u274C No' },
+      { name: 'Team collaboration', tubeforge: '\u2705 Studio', competitor: '\u2705 Teams' },
     ],
-    pricing: { tubeforge: '\u043E\u0442 $0/\u043C\u0435\u0441 (Free)', competitor: '\u043E\u0442 $23/\u043C\u0435\u0441' },
+    pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $23/mo' },
     advantages: [
-      '\u041F\u043E\u043B\u043D\u0430\u044F \u043B\u043E\u043A\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F \u043D\u0430 \u0440\u0443\u0441\u0441\u043A\u0438\u0439 \u044F\u0437\u044B\u043A',
-      '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D \u0434\u043B\u044F \u043D\u0430\u0447\u0430\u043B\u0430 \u0440\u0430\u0431\u043E\u0442\u044B',
-      '\u0411\u043E\u043B\u044C\u0448\u0435 \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0445 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u043E\u0432 \u0434\u043B\u044F YouTube',
-      '\u041D\u0438\u0436\u0435 \u0446\u0435\u043D\u044B \u043D\u0430 \u043F\u043B\u0430\u0442\u043D\u044B\u0435 \u043F\u043B\u0430\u043D\u044B',
+      'Full multi-language localization',
+      'Free plan to get started',
+      'More built-in YouTube tools',
+      'Lower prices on paid plans',
     ],
   },
   'tubeforge-vs-synthesia': {
     name: 'Synthesia',
-    description: '\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 TubeForge \u0438 Synthesia \u2014 \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B \u0434\u043B\u044F AI-\u0432\u0438\u0434\u0435\u043E.',
+    description: 'Comparison of TubeForge and Synthesia — AI video platforms.',
     features: [
-      { name: 'AI-\u0430\u0432\u0430\u0442\u0430\u0440\u044B', tubeforge: '\u274C \u041D\u0435\u0442', competitor: '\u2705 \u0414\u0430' },
-      { name: 'AI-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0446\u0435\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u26A0\uFE0F \u0427\u0430\u0441\u0442\u0438\u0447\u043D\u043E' },
-      { name: 'YouTube-\u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B', tubeforge: '\u2705 \u041F\u043E\u043B\u043D\u044B\u0439 \u043D\u0430\u0431\u043E\u0440', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0421\u043A\u0430\u0447\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E', tubeforge: '\u2705 \u0414\u0430', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441', tubeforge: '\u2705 \u0414\u0430', competitor: '\u274C \u0422\u043E\u043B\u044C\u043A\u043E EN' },
+      { name: 'AI avatars', tubeforge: '\u274C No', competitor: '\u2705 Yes' },
+      { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u26A0\uFE0F Partial' },
+      { name: 'YouTube tools', tubeforge: '\u2705 Full suite', competitor: '\u274C No' },
+      { name: 'Free plan', tubeforge: '\u2705 Yes', competitor: '\u274C No' },
+      { name: 'Video downloads', tubeforge: '\u2705 Yes', competitor: '\u274C No' },
+      { name: 'Multi-language interface', tubeforge: '\u2705 Yes', competitor: '\u274C English only' },
     ],
-    pricing: { tubeforge: '\u043E\u0442 $0/\u043C\u0435\u0441 (Free)', competitor: '\u043E\u0442 $22/\u043C\u0435\u0441' },
+    pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $22/mo' },
     advantages: [
-      '\u0424\u043E\u043A\u0443\u0441 \u043D\u0430 YouTube-\u043A\u0440\u0435\u0430\u0442\u043E\u0440\u0430\u0445, \u0430 \u043D\u0435 \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0445 \u0432\u0438\u0434\u0435\u043E',
-      '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D \u0434\u043B\u044F \u0441\u0442\u0430\u0440\u0442\u0430',
-      '\u0412\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0435 SEO \u0438 \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0430',
-      '\u0417\u043D\u0430\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0434\u0435\u0448\u0435\u0432\u043B\u0435 \u0434\u043B\u044F \u0438\u043D\u0434\u0438\u0432\u0438\u0434\u0443\u0430\u043B\u044C\u043D\u044B\u0445 \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u043E\u0432',
+      'Focus on YouTube creators, not corporate videos',
+      'Free plan to get started',
+      'Built-in SEO and analytics',
+      'Significantly cheaper for individual creators',
     ],
   },
   'tubeforge-vs-fliki': {
     name: 'Fliki',
-    description: '\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 TubeForge \u0438 Fliki \u2014 AI-\u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0432\u0438\u0434\u0435\u043E.',
+    description: 'Comparison of TubeForge and Fliki — AI platforms for video creation.',
     features: [
-      { name: 'AI-\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0446\u0435\u043D', tubeforge: '\u2705 \u0414\u0430', competitor: '\u2705 \u0414\u0430' },
-      { name: '\u041E\u0437\u0432\u0443\u0447\u043A\u0430 (TTS)', tubeforge: '\u26A0\uFE0F \u0412 \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u043A\u0435', competitor: '\u2705 \u0414\u0430' },
-      { name: 'YouTube SEO', tubeforge: '\u2705 \u0412\u0441\u0442\u0440\u043E\u0435\u043D', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0421\u043A\u0430\u0447\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0438\u0434\u0435\u043E', tubeforge: '\u2705 \u0414\u0430', competitor: '\u274C \u041D\u0435\u0442' },
-      { name: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441', tubeforge: '\u2705 \u041F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E', competitor: '\u274C \u0422\u043E\u043B\u044C\u043A\u043E EN' },
-      { name: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0435 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B', tubeforge: '\u2705 6+ \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u043E\u0432', competitor: '\u274C \u041D\u0435\u0442' },
+      { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u2705 Yes' },
+      { name: 'Text-to-speech (TTS)', tubeforge: '\u26A0\uFE0F In development', competitor: '\u2705 Yes' },
+      { name: 'YouTube SEO', tubeforge: '\u2705 Built-in', competitor: '\u274C No' },
+      { name: 'Video downloads', tubeforge: '\u2705 Yes', competitor: '\u274C No' },
+      { name: 'Multi-language interface', tubeforge: '\u2705 Full', competitor: '\u274C English only' },
+      { name: 'Free tools', tubeforge: '\u2705 6+ tools', competitor: '\u274C No' },
     ],
-    pricing: { tubeforge: '\u043E\u0442 $0/\u043C\u0435\u0441 (Free)', competitor: '\u043E\u0442 $28/\u043C\u0435\u0441' },
+    pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $28/mo' },
     advantages: [
-      '\u041F\u043E\u043B\u043D\u044B\u0439 \u043D\u0430\u0431\u043E\u0440 YouTube-\u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u043E\u0432',
-      '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0435 \u0443\u0442\u0438\u043B\u0438\u0442\u044B \u0434\u043B\u044F \u043A\u0440\u0435\u0430\u0442\u043E\u0440\u043E\u0432',
-      '\u041F\u043E\u043B\u043D\u0430\u044F \u0440\u0443\u0441\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u044F',
-      '\u0411\u043E\u043B\u0435\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0446\u0435\u043D\u044B',
+      'Full suite of YouTube tools',
+      'Free utilities for creators',
+      'Full multi-language support',
+      'More affordable pricing',
     ],
   },
 };
@@ -139,7 +139,7 @@ export async function generateMetadata({
   const data = COMPARISONS[slug];
   if (!data) return { title: 'Not Found' };
 
-  const title = `TubeForge vs ${data.name} \u2014 \u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 2026`;
+  const title = `TubeForge vs ${data.name} — Comparison 2026`;
   const description = data.description;
 
   return {
@@ -190,12 +190,12 @@ export default async function ComparePage({
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: `TubeForge vs ${data.name} \u2014 \u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435`,
+    name: `TubeForge vs ${data.name} — Comparison`,
     description: data.description,
     url: `https://tubeforge.co/compare/${slug}`,
     mainEntity: {
       '@type': 'Table',
-      about: `\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 \u0444\u0443\u043D\u043A\u0446\u0438\u0439 TubeForge \u0438 ${data.name}`,
+      about: `Feature comparison of TubeForge and ${data.name}`,
     },
   };
 
@@ -229,7 +229,7 @@ export default async function ComparePage({
           }}
         >
           <span style={{ fontSize: 18 }}>{'\u2190'}</span>
-          {'\u041D\u0430 \u0433\u043B\u0430\u0432\u043D\u0443\u044E'}
+          Home
         </Link>
 
         {/* Hero */}
@@ -284,14 +284,14 @@ export default async function ComparePage({
             background: '#fafafa',
           }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
-              {'\u0421\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u0435 \u0444\u0443\u043D\u043A\u0446\u0438\u0439'}
+              Feature Comparison
             </h2>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#fafafa' }}>
                 <th style={{ ...tableCell, fontWeight: 600, textAlign: 'left', width: '40%' }}>
-                  {'\u0424\u0443\u043D\u043A\u0446\u0438\u044F'}
+                  Feature
                 </th>
                 <th style={{ ...tableCell, fontWeight: 700, textAlign: 'center', color: accentColor }}>
                   TubeForge
@@ -361,7 +361,7 @@ export default async function ComparePage({
             letterSpacing: '-.02em',
             color: '#18181b',
           }}>
-            {'\u041F\u043E\u0447\u0435\u043C\u0443 TubeForge \u043B\u0443\u0447\u0448\u0435'}
+            Why TubeForge Is Better
           </h2>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {data.advantages.map((adv, i) => (
@@ -403,13 +403,13 @@ export default async function ComparePage({
             marginBottom: 16,
             letterSpacing: '-.02em',
           }}>
-            {'\u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 TubeForge \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E'}
+            Try TubeForge for Free
           </h2>
           <p style={{ color: '#71717a', fontSize: 15, marginBottom: 24, lineHeight: 1.6 }}>
-            {'\u0421\u043E\u0437\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u0432\u0438\u0434\u0435\u043E \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u0418\u0418 \u0443\u0436\u0435 \u0441\u0435\u0433\u043E\u0434\u043D\u044F. \u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E, \u0431\u0435\u0437 \u043A\u0440\u0435\u0434\u0438\u0442\u043D\u043E\u0439 \u043A\u0430\u0440\u0442\u044B.'}
+            Start creating videos with AI today. Free, no credit card required.
           </p>
           <Link
-            href="/dashboard"
+            href="/register"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -425,7 +425,7 @@ export default async function ComparePage({
               transition: 'all .2s',
             }}
           >
-            {'\u041D\u0430\u0447\u0430\u0442\u044C \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E'}
+            Get Started Free
           </Link>
         </div>
 
@@ -441,7 +441,7 @@ export default async function ComparePage({
             marginBottom: 16,
             color: '#71717a',
           }}>
-            {'\u0414\u0440\u0443\u0433\u0438\u0435 \u0441\u0440\u0430\u0432\u043D\u0435\u043D\u0438\u044F'}
+            Other Comparisons
           </h3>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {VALID_SLUGS.filter((s) => s !== slug).map((s) => (

@@ -52,7 +52,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: C.sub, fontSize: 16 }}>Загрузка...</div>
+        <div style={{ color: C.sub, fontSize: 16 }}>Loading...</div>
       </div>
     );
   }
@@ -61,9 +61,9 @@ export default function ProfilePage() {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: 48, opacity: 0.3 }}>👤</div>
-        <h1 style={{ color: C.text, fontSize: 24, fontWeight: 700, margin: 0 }}>Пользователь не найден</h1>
+        <h1 style={{ color: C.text, fontSize: 24, fontWeight: 700, margin: 0 }}>User not found</h1>
         <Link href="/gallery" style={{ color: C.accent, fontSize: 14, textDecoration: 'none', marginTop: 8 }}>
-          Перейти в галерею
+          Go to gallery
         </Link>
       </div>
     );
@@ -88,7 +88,7 @@ export default function ProfilePage() {
             border: `1px solid ${C.border}`,
           }}
         >
-          Галерея
+          Gallery
         </Link>
       </header>
 
@@ -118,14 +118,14 @@ export default function ProfilePage() {
           )}
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>
-              {user.name ?? 'Аноним'}
+              {user.name ?? 'Anonymous'}
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ color: C.sub, fontSize: 13 }}>
-                {allItems.length} {allItems.length === 1 ? 'публичный проект' : allItems.length < 5 ? 'публичных проекта' : 'публичных проектов'}
+                {allItems.length} {allItems.length === 1 ? 'public project' : 'public projects'}
               </span>
               <span style={{ color: C.dim, fontSize: 12 }}>
-                С {new Date(user.createdAt).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                Since {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </span>
             </div>
             <div style={{
@@ -134,7 +134,7 @@ export default function ProfilePage() {
               background: C.accentDim, color: C.accent,
               fontSize: 11, fontWeight: 700,
             }}>
-              Создано с TubeForge
+              Created with TubeForge
             </div>
           </div>
         </div>
@@ -148,15 +148,15 @@ export default function ProfilePage() {
           }}>
             <div style={{ fontSize: 40, opacity: 0.3, marginBottom: 12 }}>🎬</div>
             <h2 style={{ color: C.text, fontSize: 18, fontWeight: 700, margin: '0 0 6px' }}>
-              Нет публичных проектов
+              No public projects
             </h2>
             <p style={{ color: C.sub, fontSize: 14, margin: 0 }}>
-              У этого пользователя пока нет публичных проектов
+              This user has no public projects yet
             </p>
           </div>
         ) : (
           <>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px' }}>Проекты</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px' }}>Projects</h2>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                         {project.title}
                       </h3>
                       <span style={{ fontSize: 12, color: C.dim }}>
-                        {project._count.scenes} {project._count.scenes === 1 ? 'сцена' : project._count.scenes < 5 ? 'сцены' : 'сцен'}
+                        {project._count.scenes} {project._count.scenes === 1 ? 'scene' : 'scenes'}
                       </span>
                     </div>
                   </div>
@@ -249,7 +249,7 @@ export default function ProfilePage() {
                 opacity: isFetchingNextPage ? 0.6 : 1,
               }}
             >
-              {isFetchingNextPage ? 'Загрузка...' : 'Показать ещё'}
+              {isFetchingNextPage ? 'Loading...' : 'Show More'}
             </button>
           </div>
         )}

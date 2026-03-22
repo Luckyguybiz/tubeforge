@@ -66,7 +66,7 @@ export default function GalleryPage() {
             border: `1px solid ${C.border}`,
           }}
         >
-          Мои проекты
+          My Projects
         </Link>
       </header>
 
@@ -74,13 +74,13 @@ export default function GalleryPage() {
         {/* Title + sort */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>Галерея проектов</h1>
-            <p style={{ color: C.sub, fontSize: 14, margin: '6px 0 0' }}>Публичные проекты участников TubeForge</p>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>Project Gallery</h1>
+            <p style={{ color: C.sub, fontSize: 14, margin: '6px 0 0' }}>Public projects by TubeForge members</p>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {([
-              { label: 'Новые', value: 'createdAt' as SortOption },
-              { label: 'Популярные', value: 'likesCount' as SortOption },
+              { label: 'Newest', value: 'createdAt' as SortOption },
+              { label: 'Popular', value: 'likesCount' as SortOption },
             ]).map((opt) => (
               <button
                 key={opt.value}
@@ -119,10 +119,10 @@ export default function GalleryPage() {
           }}>
             <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }}>🎬</div>
             <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>
-              Пока нет публичных проектов
+              No public projects yet
             </h2>
             <p style={{ color: C.sub, fontSize: 14, margin: '0 0 20px' }}>
-              Станьте первым! Создайте проект и сделайте его публичным.
+              Be the first! Create a project and make it public.
             </p>
             <Link
               href="/dashboard"
@@ -133,7 +133,7 @@ export default function GalleryPage() {
                 fontSize: 14, fontWeight: 700, textDecoration: 'none',
               }}
             >
-              Создать проект
+              Create Project
             </Link>
           </div>
         )}
@@ -224,11 +224,11 @@ export default function GalleryPage() {
                           </div>
                         )}
                         <span style={{ fontSize: 12, color: C.sub, fontWeight: 500 }}>
-                          {project.user.name ?? 'Аноним'}
+                          {project.user.name ?? 'Anonymous'}
                         </span>
                       </div>
                       <span style={{ fontSize: 11, color: C.dim }}>
-                        {project._count.scenes} {project._count.scenes === 1 ? 'сцена' : project._count.scenes < 5 ? 'сцены' : 'сцен'}
+                        {project._count.scenes} {project._count.scenes === 1 ? 'scene' : 'scenes'}
                       </span>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export default function GalleryPage() {
                 transition: 'all .15s',
               }}
             >
-              {isFetchingNextPage ? 'Загрузка...' : 'Показать ещё'}
+              {isFetchingNextPage ? 'Loading...' : 'Show More'}
             </button>
           </div>
         )}

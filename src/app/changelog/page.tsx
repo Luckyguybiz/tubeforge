@@ -5,14 +5,14 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { CHANGELOG, type ChangelogEntry } from '@/lib/changelog';
 
 const TYPE_CONFIG: Record<ChangelogEntry['type'], { label: string; color: string }> = {
-  feature: { label: 'Новое', color: '#2dd4a0' },
-  fix: { label: 'Исправление', color: '#ef4444' },
-  improvement: { label: 'Улучшение', color: '#3a7bfd' },
+  feature: { label: 'New', color: '#2dd4a0' },
+  fix: { label: 'Fix', color: '#ef4444' },
+  improvement: { label: 'Improvement', color: '#3a7bfd' },
 };
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export default function ChangelogPage() {
@@ -62,7 +62,7 @@ export default function ChangelogPage() {
             fontWeight: 500,
           }}
         >
-          &larr; На главную
+          &larr; Home
         </Link>
       </header>
 
@@ -72,7 +72,7 @@ export default function ChangelogPage() {
           Changelog
         </h1>
         <p style={{ color: C.sub, fontSize: 16, marginTop: 8 }}>
-          Последние обновления и улучшения TubeForge
+          Latest updates and improvements to TubeForge
         </p>
       </div>
 
