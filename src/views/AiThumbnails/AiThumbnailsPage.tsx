@@ -787,19 +787,7 @@ export function AiThumbnailsPage() {
           <div style={{ height: 1, background: C.border }} />
 
           {/* ── 4. Settings ────────────────────────────────── */}
-          {/* Style selector */}
-          <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-              {t('aithumbs.section.style')}
-            </span>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {STYLES.map((s) => (
-                <button key={s.id} onClick={() => setStyle(s.id)} style={styleChip(style === s.id)}>
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Style removed — user describes everything in prompt */}
 
           {/* Count & Format row */}
           <div style={{ display: 'flex', gap: 16 }}>
