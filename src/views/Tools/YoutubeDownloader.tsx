@@ -6,6 +6,8 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import type { Theme } from '@/lib/types';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
+/* ── Types ─────────────────────────────────────────────────────────── */
+
 interface VideoInfo {
   videoId: string;
   title: string;
@@ -17,7 +19,54 @@ interface VideoInfo {
   watchUrl: string;
 }
 
-interface AnalysisResult {
+/** Full analysis result from YouTube Data API v3 */
+interface FullAnalysisResult {
+  videoId: string;
+  title: string;
+  channel: string;
+  channelUrl: string;
+  thumbnail: string;
+  watchUrl: string;
+  publishedAt: string;
+  duration: string;
+  durationFormatted: string;
+  definition: string;
+  hasCaptions: boolean;
+  category: string;
+  language: string;
+  statistics: { views: number; likes: number; comments: number };
+  description: string;
+  tags: string[];
+  isShorts: boolean;
+  scores: {
+    overall: number;
+    title: number;
+    description: number;
+    tags: number;
+    thumbnail: number;
+    engagement: number;
+    seo: number;
+  };
+  metrics: {
+    likeRate: number;
+    commentRate: number;
+    viewsPerDay: number;
+    estimatedCTR: 'high' | 'medium' | 'low';
+    benchmarkComparison: 'above_average' | 'average' | 'below_average';
+  };
+  suggestions: string[];
+  structure: {
+    hasTimestamps: boolean;
+    hasLinks: boolean;
+    hasHashtags: boolean;
+    hasCTA: boolean;
+    descriptionLength: number;
+  };
+  apiSource: 'youtube-data-api-v3';
+}
+
+/** Fallback oEmbed-only result */
+interface FallbackAnalysisResult {
   videoId: string;
   title: string;
   channel: string;
@@ -29,15 +78,24 @@ interface AnalysisResult {
     titleOptimization: number;
     keywordUsage: number;
     engagementPotential: number;
-    channelName: string;
     titleLength: number;
     suggestions: string[];
   };
+  apiSource: 'oembed-fallback';
+  note: string;
+}
+
+type AnalysisResult = FullAnalysisResult | FallbackAnalysisResult;
+
+function isFullAnalysis(r: AnalysisResult): r is FullAnalysisResult {
+  return r.apiSource === 'youtube-data-api-v3';
 }
 
 function isValidYoutubeUrl(url: string): boolean {
   return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?.*v=|shorts\/|embed\/|live\/)|youtu\.be\/)[\w-]+/.test(url.trim());
 }
+
+/* ── Helpers ───────────────────────────────────────────────────────── */
 
 function scoreColor(score: number): string {
   if (score >= 80) return '#22c55e';
@@ -45,6 +103,78 @@ function scoreColor(score: number): string {
   if (score >= 40) return '#f97316';
   return '#ef4444';
 }
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
+
+function formatDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch {
+    return iso;
+  }
+}
+
+/* ── Circular Score Gauge ──────────────────────────────────────────── */
+
+function CircularGauge({ score, label, size = 90 }: { score: number; label: string; size?: number }) {
+  const radius = (size - 10) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = scoreColor(score);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <div style={{ position: 'relative', width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth={5}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={5}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          />
+        </svg>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: size > 80 ? 22 : 18,
+            fontWeight: 800,
+            color,
+          }}
+        >
+          {score}
+        </div>
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 600, color: '#86868b', textAlign: 'center', lineHeight: 1.2 }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* ── Score Bar (used in fallback view) ─────────────────────────────── */
 
 function ScoreBar({ label, score, C }: { label: string; score: number; C: Theme }) {
   return (
@@ -67,6 +197,134 @@ function ScoreBar({ label, score, C }: { label: string; score: number; C: Theme 
     </div>
   );
 }
+
+/* ── Stat Card ─────────────────────────────────────────────────────── */
+
+function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+  return (
+    <div
+      style={{
+        flex: '1 1 140px',
+        padding: '14px 16px',
+        borderRadius: 14,
+        background: '#ffffff',
+        border: '1px solid rgba(0,0,0,0.06)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: '#f5f5f7',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f' }}>{value}</div>
+        <div style={{ fontSize: 11, color: '#86868b', fontWeight: 500 }}>{label}</div>
+        {sub && <div style={{ fontSize: 10, color: '#a1a1aa', fontWeight: 500, marginTop: 1 }}>{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Structure Check Item ──────────────────────────────────────────── */
+
+function CheckItem({ checked, label }: { checked: boolean; label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
+      <div
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: 6,
+          background: checked ? '#22c55e' : '#e5e7eb',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {checked ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ) : (
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        )}
+      </div>
+      <span style={{ fontSize: 13, color: checked ? '#1d1d1f' : '#86868b', fontWeight: 500 }}>{label}</span>
+    </div>
+  );
+}
+
+/* ── Loading Skeleton ──────────────────────────────────────────────── */
+
+function AnalysisSkeleton() {
+  const bar = (w: string, h: number, delay: string) => (
+    <div
+      style={{
+        width: w,
+        height: h,
+        borderRadius: h > 10 ? 12 : 6,
+        background: '#e5e7eb',
+        animation: 'pulse 1.5s ease-in-out infinite',
+        animationDelay: delay,
+      }}
+    />
+  );
+
+  return (
+    <div style={{ padding: 20, borderRadius: 16, background: '#f5f5f7', marginBottom: 24 }}>
+      {/* Gauge skeleton */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 24, flexWrap: 'wrap' }}>
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                background: '#e5e7eb',
+                animation: 'pulse 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.1}s`,
+              }}
+            />
+            {bar('60px', 10, `${i * 0.1}s`)}
+          </div>
+        ))}
+      </div>
+      {/* Stat cards skeleton */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} style={{ flex: '1 1 140px', padding: 14, borderRadius: 14, background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }}>
+            {bar('60%', 18, `${i * 0.15}s`)}
+            <div style={{ marginTop: 6 }}>{bar('40%', 10, `${i * 0.15}s`)}</div>
+          </div>
+        ))}
+      </div>
+      {/* Suggestions skeleton */}
+      {[0, 1, 2].map((i) => (
+        <div key={i} style={{ marginBottom: 8 }}>{bar('100%', 40, `${i * 0.1}s`)}</div>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * Main Component
+ * ══════════════════════════════════════════════════════════════════════ */
 
 export function YoutubeDownloader() {
   const C = useThemeStore((s) => s.theme);
@@ -255,6 +513,28 @@ export function YoutubeDownloader() {
     }
   };
 
+  /* ── SVG icon helpers ──────────────────────────────────────────── */
+  const viewsIcon = (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+  const likesIcon = (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 9V5a3 3 0 00-6 0v4" /><path d="M3 15a2 2 0 002 2h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 001.414-.293L14 17h4a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  );
+  const commentsIcon = (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+    </svg>
+  );
+  const rateIcon = (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+
   return (
     <ToolPageShell
       title={t('tools.ytdl.title')}
@@ -356,22 +636,8 @@ export function YoutubeDownloader() {
               viewBox="0 0 16 16"
               style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}
             >
-              <circle
-                cx="8"
-                cy="8"
-                r="6"
-                stroke={C.dim}
-                strokeWidth="2"
-                fill="none"
-                opacity={0.3}
-              />
-              <path
-                d="M8 2a6 6 0 014.47 2"
-                stroke={C.text}
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
-              />
+              <circle cx="8" cy="8" r="6" stroke={C.dim} strokeWidth="2" fill="none" opacity={0.3} />
+              <path d="M8 2a6 6 0 014.47 2" stroke={C.text} strokeWidth="2" strokeLinecap="round" fill="none" />
             </svg>
           )}
           {url && !fetchingInfo && (
@@ -389,18 +655,8 @@ export function YoutubeDownloader() {
                 justifyContent: 'center',
               }}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           )}
@@ -427,16 +683,7 @@ export function YoutubeDownloader() {
             flexShrink: 0,
           }}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" />
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
           </svg>
@@ -458,9 +705,7 @@ export function YoutubeDownloader() {
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {urlError}
         </div>
@@ -479,9 +724,7 @@ export function YoutubeDownloader() {
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {fetchError}
         </div>
@@ -518,11 +761,7 @@ export function YoutubeDownloader() {
               title={videoInfo.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-              }}
+              style={{ width: '100%', height: '100%', border: 'none' }}
             />
           </div>
           <div
@@ -555,20 +794,113 @@ export function YoutubeDownloader() {
               href={videoInfo.channelUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                fontSize: 12,
-                color: C.sub,
-                textDecoration: 'none',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.textDecoration = 'underline';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.textDecoration = 'none';
-              }}
+              style={{ fontSize: 12, color: C.sub, textDecoration: 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
             >
               {videoInfo.channel}
             </a>
+
+            {/* Show extra metadata when analysis is available */}
+            {analysis && isFullAnalysis(analysis) && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    background: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#86868b',
+                  }}
+                >
+                  {analysis.durationFormatted}
+                </span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    background: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#86868b',
+                  }}
+                >
+                  {formatDate(analysis.publishedAt)}
+                </span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    background: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#86868b',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {analysis.definition}
+                </span>
+                {analysis.hasCaptions && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '3px 8px',
+                      borderRadius: 6,
+                      background: '#ffffff',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: '#22c55e',
+                    }}
+                  >
+                    CC
+                  </span>
+                )}
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    background: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#86868b',
+                  }}
+                >
+                  {analysis.category}
+                </span>
+                {analysis.isShorts && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '3px 8px',
+                      borderRadius: 6,
+                      background: '#ef444415',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#ef4444',
+                    }}
+                  >
+                    Shorts
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -598,40 +930,208 @@ export function YoutubeDownloader() {
               animation: 'pulse 1.5s ease-in-out infinite',
             }}
           />
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                width: '80%',
-                height: 16,
-                borderRadius: 4,
-                background: C.surface,
-                animation: 'pulse 1.5s ease-in-out infinite',
-              }}
-            />
-            <div
-              style={{
-                width: '40%',
-                height: 12,
-                borderRadius: 4,
-                background: C.surface,
-                animation: 'pulse 1.5s ease-in-out infinite',
-                animationDelay: '0.2s',
-              }}
-            />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+            <div style={{ width: '80%', height: 16, borderRadius: 4, background: C.surface, animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div style={{ width: '40%', height: 12, borderRadius: 4, background: C.surface, animation: 'pulse 1.5s ease-in-out infinite', animationDelay: '0.2s' }} />
           </div>
         </div>
       )}
 
-      {/* Analysis Results */}
-      {analysis && (
+      {/* Loading Skeleton while analyzing */}
+      {loading && <AnalysisSkeleton />}
+
+      {/* ── Full Analysis Results (YouTube Data API v3) ─────────── */}
+      {analysis && isFullAnalysis(analysis) && (
+        <>
+          {/* Score Gauges */}
+          <div
+            style={{
+              padding: 24,
+              borderRadius: 16,
+              background: '#f5f5f7',
+              marginBottom: 16,
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 20, textAlign: 'center' }}>
+              {t('tools.ytdl.overallScore')}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 20,
+                flexWrap: 'wrap',
+                marginBottom: 8,
+              }}
+            >
+              <CircularGauge score={analysis.scores.overall} label="Overall" size={100} />
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 16,
+                flexWrap: 'wrap',
+                marginTop: 20,
+              }}
+            >
+              <CircularGauge score={analysis.scores.title} label={t('tools.ytdl.titleOptimization')} size={80} />
+              <CircularGauge score={analysis.scores.description} label="Description" size={80} />
+              <CircularGauge score={analysis.scores.tags} label="Tags" size={80} />
+              <CircularGauge score={analysis.scores.thumbnail} label="Thumbnail" size={80} />
+              <CircularGauge score={analysis.scores.engagement} label={t('tools.ytdl.engagementPotential')} size={80} />
+              <CircularGauge score={analysis.scores.seo} label="SEO" size={80} />
+            </div>
+          </div>
+
+          {/* Statistics Cards */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+            <StatCard
+              icon={viewsIcon}
+              label="Views"
+              value={formatNumber(analysis.statistics.views)}
+              sub={`${formatNumber(analysis.metrics.viewsPerDay)}/day`}
+            />
+            <StatCard
+              icon={likesIcon}
+              label="Likes"
+              value={formatNumber(analysis.statistics.likes)}
+              sub={`${analysis.metrics.likeRate}% rate`}
+            />
+            <StatCard
+              icon={commentsIcon}
+              label="Comments"
+              value={formatNumber(analysis.statistics.comments)}
+              sub={`${analysis.metrics.commentRate}% rate`}
+            />
+            <StatCard
+              icon={rateIcon}
+              label="Benchmark"
+              value={
+                analysis.metrics.benchmarkComparison === 'above_average'
+                  ? 'Above Avg'
+                  : analysis.metrics.benchmarkComparison === 'average'
+                    ? 'Average'
+                    : 'Below Avg'
+              }
+              sub={`CTR: ${analysis.metrics.estimatedCTR}`}
+            />
+          </div>
+
+          {/* Description Analysis */}
+          <div
+            style={{
+              padding: 20,
+              borderRadius: 16,
+              background: '#f5f5f7',
+              marginBottom: 16,
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>
+              Description Analysis
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, color: '#86868b' }}>Length</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1d1d1f' }}>{analysis.structure.descriptionLength} chars</span>
+            </div>
+            <CheckItem checked={analysis.structure.hasTimestamps} label="Has timestamps" />
+            <CheckItem checked={analysis.structure.hasLinks} label="Has links" />
+            <CheckItem checked={analysis.structure.hasHashtags} label="Has hashtags" />
+            <CheckItem checked={analysis.structure.hasCTA} label="Has call-to-action" />
+          </div>
+
+          {/* Tags */}
+          {analysis.tags.length > 0 && (
+            <div
+              style={{
+                padding: 20,
+                borderRadius: 16,
+                background: '#f5f5f7',
+                marginBottom: 16,
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>
+                Tags ({analysis.tags.length})
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {analysis.tags.slice(0, 20).map((tag, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 8,
+                      background: '#ffffff',
+                      border: '1px solid rgba(0,0,0,0.06)',
+                      fontSize: 12,
+                      color: '#6366f1',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {analysis.tags.length > 20 && (
+                  <span style={{ padding: '4px 10px', fontSize: 12, color: '#86868b', fontWeight: 500 }}>
+                    +{analysis.tags.length - 20} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Suggestions */}
+          {analysis.suggestions.length > 0 && (
+            <div
+              style={{
+                padding: 20,
+                borderRadius: 16,
+                background: '#f5f5f7',
+                marginBottom: 24,
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>
+                {t('tools.ytdl.suggestions')}
+              </div>
+              {analysis.suggestions.map((s, i) => {
+                // Positive suggestions (contains "excellent", "great", "above")
+                const isPositive = /excellent|great|above|well-optimized/i.test(s);
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '10px 14px',
+                      borderRadius: 10,
+                      background: '#ffffff',
+                      marginBottom: 6,
+                      fontSize: 13,
+                      color: '#1d1d1f',
+                      lineHeight: 1.5,
+                      border: '1px solid rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    {isPositive ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                      </svg>
+                    )}
+                    {s}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Fallback Analysis Results (oEmbed only) ───────────── */}
+      {analysis && !isFullAnalysis(analysis) && (
         <div
           style={{
             padding: 20,
@@ -641,6 +1141,29 @@ export function YoutubeDownloader() {
             marginBottom: 24,
           }}
         >
+          {/* Note about limited analysis */}
+          {'note' in analysis && (
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                background: '#fef3c7',
+                marginBottom: 16,
+                fontSize: 12,
+                color: '#92400e',
+                lineHeight: 1.5,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 8,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              {analysis.note}
+            </div>
+          )}
+
           {/* Overall Score */}
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 8 }}>
@@ -698,9 +1221,7 @@ export function YoutubeDownloader() {
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="16" x2="12" y2="12" />
-                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
                   </svg>
                   {s}
                 </div>
