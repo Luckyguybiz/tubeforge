@@ -33,6 +33,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/compare/tubeforge-vs-pictory', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/compare/tubeforge-vs-synthesia', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/compare/tubeforge-vs-fliki', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/compare/tubeforge-vs-tubebuddy', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/compare/tubeforge-vs-vidiq', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/compare/tubeforge-vs-veed', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/compare/tubeforge-vs-opus-clip', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/compare/tubeforge-vs-descript', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     // Tools hub + individual tool pages
     { path: '/tools', lastModified: '2026-03-22', changeFrequency: 'weekly', priority: 0.9 },
     { path: '/tools/image-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
@@ -47,6 +52,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/tools/ai-video-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/tools/video-translator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/ai-thumbnails', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    // Public SEO tool pages
+    { path: '/tools/youtube-title-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/youtube-description-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/youtube-tag-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/youtube-thumbnail-size', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/tools/youtube-money-calculator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },
     // Free SEO tools
     { path: '/free-tools', lastModified: '2026-03-22', changeFrequency: 'weekly', priority: 0.9 },
     { path: '/free-tools/title-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },

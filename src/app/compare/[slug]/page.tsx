@@ -10,6 +10,11 @@ interface Feature {
   competitor: string;
 }
 
+interface FaqItem {
+  q: string;
+  a: string;
+}
+
 interface ComparisonData {
   name: string;
   description: string;
@@ -19,6 +24,7 @@ interface ComparisonData {
     competitor: string;
   };
   advantages: string[];
+  faq: FaqItem[];
 }
 
 const COMPARISONS: Record<string, ComparisonData> = {
@@ -41,6 +47,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Built-in AI SEO for metadata optimization',
       'More affordable pricing with a free plan',
     ],
+    faq: [
+      { q: 'Is TubeForge better than InVideo for YouTube?', a: 'TubeForge is purpose-built for YouTube creators with native SEO tools, YouTube analytics, and direct publishing. InVideo is a general video creation platform without YouTube-specific optimizations.' },
+      { q: 'Does TubeForge have a free plan?', a: 'Yes, TubeForge offers a free plan with 3 projects, 5 AI generations per month, and 500 MB storage. InVideo starts at $25/mo for full features.' },
+      { q: 'Can I switch from InVideo to TubeForge?', a: 'Yes. TubeForge supports importing your existing video projects and provides free tools to help you optimize your YouTube content during the transition.' },
+    ],
   },
   'tubeforge-vs-capcut': {
     name: 'CapCut',
@@ -59,6 +70,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI generation of full videos from descriptions',
       'Built-in video downloader',
       'Referral program with 20% commission',
+    ],
+    faq: [
+      { q: 'Is TubeForge better than CapCut for YouTube?', a: 'TubeForge is specifically designed for YouTube with built-in SEO, analytics, and publishing tools. CapCut is a general video editor that works well for short-form content but lacks YouTube-specific features.' },
+      { q: 'Does CapCut have YouTube SEO tools?', a: 'No. CapCut focuses on video editing only. TubeForge includes AI-powered SEO optimization for titles, descriptions, tags, and thumbnails to help your videos rank higher.' },
+      { q: 'Which is better for YouTube Shorts — TubeForge or CapCut?', a: 'Both platforms can create Shorts, but TubeForge adds YouTube-specific analytics and SEO tools that help your Shorts get discovered, while CapCut focuses purely on the editing experience.' },
     ],
   },
   'tubeforge-vs-pictory': {
@@ -79,6 +95,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'More built-in YouTube tools',
       'Lower prices on paid plans',
     ],
+    faq: [
+      { q: 'Is TubeForge cheaper than Pictory?', a: 'Yes. TubeForge starts free with a generous plan, while Pictory starts at $23/mo. Even TubeForge Pro at $12/mo is significantly cheaper with more YouTube-specific features.' },
+      { q: 'Does Pictory support multiple languages?', a: 'No, Pictory is English-only. TubeForge supports 4 languages (English, Spanish, Russian, Kazakh) in both the interface and AI tools.' },
+      { q: 'Can Pictory optimize YouTube SEO?', a: 'No. Pictory focuses on video creation from text and blog posts. TubeForge includes built-in AI SEO for titles, descriptions, tags, and thumbnails.' },
+    ],
   },
   'tubeforge-vs-synthesia': {
     name: 'Synthesia',
@@ -98,6 +119,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Built-in SEO and analytics',
       'Significantly cheaper for individual creators',
     ],
+    faq: [
+      { q: 'Is TubeForge better than Synthesia?', a: 'They serve different purposes. Synthesia specializes in AI avatar-based videos for corporate training. TubeForge is built for YouTube creators with SEO, analytics, and publishing tools.' },
+      { q: 'Does TubeForge have AI avatars like Synthesia?', a: 'No. TubeForge focuses on AI video generation from text prompts, scene-based editing, and YouTube-specific tools rather than avatar-based presentations.' },
+      { q: 'Which is more affordable — TubeForge or Synthesia?', a: 'TubeForge is significantly cheaper. It starts free and Pro is $12/mo, while Synthesia starts at $22/mo with no free plan available.' },
+    ],
   },
   'tubeforge-vs-fliki': {
     name: 'Fliki',
@@ -116,6 +142,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Free utilities for creators',
       'Full multi-language support',
       'More affordable pricing',
+    ],
+    faq: [
+      { q: 'Is TubeForge better than Fliki?', a: 'TubeForge offers a broader YouTube-focused toolkit including SEO, analytics, and free tools, while Fliki specializes in text-to-speech video creation. TubeForge is also more affordable with a free plan.' },
+      { q: 'Does Fliki have YouTube SEO tools?', a: 'No. Fliki focuses on text-to-video and text-to-speech. TubeForge includes built-in AI SEO tools for titles, descriptions, tags, and thumbnails.' },
+      { q: 'Which has better multi-language support?', a: 'TubeForge supports 4 languages in both its interface and AI tools. Fliki is English-only for its interface, though it supports multiple languages for text-to-speech.' },
     ],
   },
   'tubeforge-vs-tubebuddy': {
@@ -140,6 +171,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'All-in-one platform — no extension required',
       'Multi-language interface and AI support',
     ],
+    faq: [
+      { q: 'Is TubeForge a TubeBuddy alternative?', a: 'Yes. TubeForge includes keyword research and SEO optimization like TubeBuddy, plus full AI video creation, thumbnail generation, and editing tools that TubeBuddy does not offer.' },
+      { q: 'Does TubeForge require a browser extension?', a: 'No. TubeForge is a web application that works in any browser without installing extensions. TubeBuddy requires a Chrome extension to function.' },
+      { q: 'Can TubeForge do keyword research like TubeBuddy?', a: 'Yes. TubeForge has AI-powered keyword research built into its SEO tools, along with title, description, and tag generators that TubeBuddy does not offer.' },
+    ],
   },
   'tubeforge-vs-vidiq': {
     name: 'vidIQ',
@@ -163,6 +199,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Free tools for titles, descriptions, and tags',
       'Multi-language support for global creators',
     ],
+    faq: [
+      { q: 'Is TubeForge better than vidIQ?', a: 'TubeForge offers video creation plus SEO tools, while vidIQ focuses solely on YouTube analytics and keyword research. If you need both content creation and optimization, TubeForge is the better all-in-one choice.' },
+      { q: 'Does vidIQ offer AI video creation?', a: 'No. vidIQ is an analytics and SEO tool only. TubeForge combines AI video creation, thumbnail generation, and editing with YouTube SEO tools in one platform.' },
+      { q: 'Can I use TubeForge and vidIQ together?', a: 'Yes, they can complement each other. However, TubeForge already includes AI-powered SEO tools that cover most of vidIQ\'s core features, so you may not need both.' },
+    ],
   },
   'tubeforge-vs-veed': {
     name: 'VEED',
@@ -184,6 +225,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI thumbnail generation not available in VEED',
       'Generous free plan without watermarks',
       'Purpose-built for YouTube creators, not generic video editing',
+    ],
+    faq: [
+      { q: 'Is TubeForge better than VEED for YouTube?', a: 'TubeForge is purpose-built for YouTube with SEO, analytics, and AI thumbnails. VEED is a general-purpose online video editor without YouTube-specific optimization tools.' },
+      { q: 'Does VEED have YouTube SEO tools?', a: 'No. VEED focuses on video editing, subtitles, and screen recording. TubeForge includes built-in AI SEO for titles, descriptions, tags, and thumbnails.' },
+      { q: 'Which has a better free plan — TubeForge or VEED?', a: 'TubeForge offers a more generous free plan without watermarks, while VEED\'s free tier adds a watermark to all exported videos.' },
     ],
   },
   'tubeforge-vs-opus-clip': {
@@ -208,6 +254,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI thumbnail generation for better click-through rates',
       'Free plan with no credit card required',
     ],
+    faq: [
+      { q: 'Is TubeForge better than Opus Clip?', a: 'They serve different purposes. Opus Clip excels at extracting short clips from long videos. TubeForge is a full video creation platform with AI editing, SEO, analytics, and thumbnail generation.' },
+      { q: 'Can TubeForge extract clips like Opus Clip?', a: 'TubeForge focuses on AI video creation from scratch rather than clip extraction. If you need both creation and clipping, TubeForge covers the creation side with its full editing suite.' },
+      { q: 'Which is better for growing a YouTube channel?', a: 'TubeForge offers a more complete growth toolkit with SEO optimization, analytics, thumbnail generation, and content creation. Opus Clip helps with repurposing existing content into Shorts.' },
+    ],
   },
   'tubeforge-vs-descript': {
     name: 'Descript',
@@ -230,6 +281,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI thumbnail generation for higher click-through rates',
       'Free tools suite for titles, descriptions, and tags',
       'Generous free plan — Descript starts at $24/mo for full features',
+    ],
+    faq: [
+      { q: 'Is TubeForge better than Descript?', a: 'They serve different audiences. Descript excels at text-based editing and podcast production. TubeForge is built for YouTube creators with AI video generation, SEO tools, and analytics.' },
+      { q: 'Does Descript have YouTube SEO tools?', a: 'No. Descript focuses on video/audio editing and transcription. TubeForge includes built-in AI SEO for titles, descriptions, tags, and thumbnails.' },
+      { q: 'Which is more affordable — TubeForge or Descript?', a: 'TubeForge starts free and Pro is $12/mo. Descript starts at $24/mo for full features, making TubeForge significantly more affordable for YouTube creators.' },
     ],
   },
 };
@@ -323,6 +379,21 @@ export default async function ComparePage({
     ],
   };
 
+  const faqJsonLd = data.faq.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: data.faq.map((item) => ({
+          '@type': 'Question',
+          name: item.q,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: item.a,
+          },
+        })),
+      }
+    : null;
+
   return (
     <main
       style={{
@@ -340,6 +411,12 @@ export default async function ComparePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '40px 24px 80px' }}>
         {/* Back link */}
@@ -388,6 +465,9 @@ export default async function ComparePage({
               color: '#ffffff',
             }}>
               {data.name}
+            </span>
+            <span style={{ display: 'block', fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>
+              Full Comparison 2026
             </span>
           </h1>
           <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
@@ -519,6 +599,49 @@ export default async function ComparePage({
             ))}
           </ul>
         </div>
+
+        {/* FAQ */}
+        {data.faq.length > 0 && (
+          <div style={{
+            background: '#1a1a1a',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 16,
+            padding: '32px',
+            marginBottom: 32,
+          }}>
+            <h2 style={{
+              fontSize: 22,
+              fontWeight: 800,
+              margin: '0 0 20px',
+              letterSpacing: '-.02em',
+              color: '#ffffff',
+            }}>
+              Frequently Asked Questions
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {data.faq.map((item, i) => (
+                <div key={i}>
+                  <h3 style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    margin: '0 0 6px',
+                  }}>
+                    {item.q}
+                  </h3>
+                  <p style={{
+                    fontSize: 14,
+                    color: 'rgba(255,255,255,0.5)',
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}>
+                    {item.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* CTA */}
         <div style={{ textAlign: 'center', padding: '24px 0' }}>
