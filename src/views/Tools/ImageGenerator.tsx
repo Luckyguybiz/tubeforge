@@ -141,8 +141,8 @@ export function ImageGenerator() {
     height: 36,
     borderRadius: 20,
     border: 'none',
-    background: active ? `${GRADIENT[0]}25` : 'rgba(255,255,255,0.04)',
-    color: active ? GRADIENT[0] : 'rgba(255,255,255,0.7)',
+    background: active ? `${GRADIENT[0]}25` : C.surface,
+    color: active ? GRADIENT[0] : C.sub,
     fontSize: 13,
     fontWeight: active ? 700 : 500,
     cursor: 'pointer',
@@ -194,7 +194,7 @@ export function ImageGenerator() {
               padding: '6px 14px',
               borderRadius: 10,
               background: `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})`,
-              color: '#fff',
+              color: C.text,
               fontSize: 12,
               fontWeight: 700,
               textDecoration: 'none',
@@ -212,7 +212,7 @@ export function ImageGenerator() {
           {/* Prompt area */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${C.border}`, background: C.surface,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{t('imggen.prompt')}</span>
@@ -229,8 +229,8 @@ export function ImageGenerator() {
               rows={5}
               style={{
                 width: '100%', minHeight: 120, padding: 14, borderRadius: 10,
-                border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)',
-                color: '#ffffff', fontSize: 14, fontFamily: 'inherit',
+                border: `1px solid ${C.border}`, background: C.surface,
+                color: C.text, fontSize: 14, fontFamily: 'inherit',
                 resize: 'vertical', outline: 'none',
                 transition: 'box-shadow 0.2s ease',
                 boxSizing: 'border-box',
@@ -243,7 +243,7 @@ export function ImageGenerator() {
           {/* Style selector */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${C.border}`, background: C.surface,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
               {t('imggen.styleLabel')}
@@ -265,7 +265,7 @@ export function ImageGenerator() {
           {/* Size selector */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${C.border}`, background: C.surface,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
               {t('imggen.sizeLabel')}
@@ -299,7 +299,7 @@ export function ImageGenerator() {
           {/* Main image display */}
           <div style={{
             padding: 16, borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${C.border}`, background: C.surface,
             minHeight: 360,
           }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
@@ -368,8 +368,8 @@ export function ImageGenerator() {
                     style={{
                       flex: 1, minWidth: 120, padding: '10px 16px', borderRadius: 10,
                       height: 44, border: 'none',
-                      background: hoveredBtn === 'download' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                      color: '#ffffff',
+                      background: hoveredBtn === 'download' ? C.border : C.surface,
+                      color: C.text,
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -390,8 +390,8 @@ export function ImageGenerator() {
                     style={{
                       flex: 1, minWidth: 120, padding: '10px 16px', borderRadius: 10,
                       height: 44, border: 'none',
-                      background: hoveredBtn === 'use' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                      color: '#ffffff',
+                      background: hoveredBtn === 'use' ? C.border : C.surface,
+                      color: C.text,
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -411,8 +411,8 @@ export function ImageGenerator() {
                     style={{
                       flex: 1, minWidth: 120, padding: '10px 16px', borderRadius: 10,
                       height: 44, border: 'none',
-                      background: hoveredBtn === 'regen' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                      color: '#ffffff',
+                      background: hoveredBtn === 'regen' ? C.border : C.surface,
+                      color: C.text,
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s ease', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

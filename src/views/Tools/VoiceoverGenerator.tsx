@@ -246,8 +246,8 @@ export function VoiceoverGenerator() {
                 height: 36, border: 'none',
                 background: engine === eng
                   ? 'rgba(59,130,246,.15)'
-                  : hoveredEngine === eng ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                color: engine === eng ? '#3b82f6' : 'rgba(255,255,255,0.7)',
+                  : hoveredEngine === eng ? C.border : C.surface,
+                color: engine === eng ? '#3b82f6' : C.sub,
                 cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
               }}
             >
@@ -272,8 +272,8 @@ export function VoiceoverGenerator() {
             rows={6}
             style={{
               width: '100%', padding: '14px 16px', borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)',
-              color: '#ffffff', fontSize: 14, fontFamily: 'inherit',
+              border: `1px solid ${C.border}`, background: C.surface,
+              color: C.text, fontSize: 14, fontFamily: 'inherit',
               resize: 'vertical', outline: 'none', lineHeight: 1.6,
               boxSizing: 'border-box',
             }}
@@ -305,8 +305,8 @@ export function VoiceoverGenerator() {
               style={{
                 padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: selectedVoice === v.id ? 700 : 500,
                 height: 36, border: 'none',
-                background: selectedVoice === v.id ? 'rgba(59,130,246,.2)' : hoveredVoice === v.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                color: selectedVoice === v.id ? '#3b82f6' : 'rgba(255,255,255,0.7)',
+                background: selectedVoice === v.id ? 'rgba(59,130,246,.2)' : hoveredVoice === v.id ? C.border : C.surface,
+                color: selectedVoice === v.id ? '#3b82f6' : C.sub,
                 cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'inherit',
               }}
             >
@@ -368,7 +368,7 @@ export function VoiceoverGenerator() {
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4,
         height: 80, padding: '12px 16px', borderRadius: 16,
-        border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)', marginBottom: 20,
+        border: `1px solid ${C.border}`, background: C.surface, marginBottom: 20,
       }}>
         {barHeights.map((h, i) => (
           <div
@@ -390,9 +390,9 @@ export function VoiceoverGenerator() {
       {/* ── Engine badge ── */}
       <div style={{
         padding: '12px 16px', borderRadius: 16, marginBottom: 20,
-        background: engine === 'elevenlabs' ? 'rgba(59,130,246,.1)' : 'rgba(255,255,255,0.03)',
-        border: engine === 'elevenlabs' ? '1px solid rgba(59,130,246,.2)' : '1px solid rgba(255,255,255,0.06)',
-        fontSize: 13, color: engine === 'elevenlabs' ? '#3b82f6' : 'rgba(255,255,255,0.45)', lineHeight: 1.6,
+        background: engine === 'elevenlabs' ? 'rgba(59,130,246,.1)' : C.surface,
+        border: engine === 'elevenlabs' ? '1px solid rgba(59,130,246,.2)' : `1px solid ${C.border}`,
+        fontSize: 13, color: engine === 'elevenlabs' ? '#3b82f6' : C.sub, lineHeight: 1.6,
         display: 'flex', alignItems: 'center', gap: 8,
       }}>
         {engine === 'elevenlabs' ? (

@@ -268,7 +268,7 @@ export function BillingPage() {
       ? 'linear-gradient(135deg, #8b5cf6, #6366f1)'
       : userPlan === 'PRO'
         ? 'linear-gradient(135deg, #6366f1, #818cf8)'
-        : 'rgba(255,255,255,0.08)';
+        : C.border;
 
   const planBadgeColor = userPlan === 'FREE' ? C.sub : '#fff';
 
@@ -330,7 +330,7 @@ export function BillingPage() {
               borderRadius: 10,
               border: 'none',
               background: hoveredBtn === 'back'
-                ? 'rgba(255,255,255,0.08)'
+                ? C.border
                 : secondaryBtnBg,
               color: textSecondary,
               fontSize: 13,
@@ -452,7 +452,7 @@ export function BillingPage() {
                     borderRadius: 10,
                     border: 'none',
                     background: hoveredBtn === 'manage'
-                      ? 'rgba(255,255,255,0.08)'
+                      ? C.border
                       : secondaryBtnBg,
                     color: textPrimary,
                     fontSize: 13,
@@ -494,7 +494,7 @@ export function BillingPage() {
                           borderRadius: 10,
                           border: 'none',
                           background: C.accent,
-                          color: '#fff',
+                          color: C.text,
                           fontSize: 14,
                           fontWeight: 600,
                           cursor: reactivateSubscription.isPending ? 'wait' : 'pointer',
@@ -571,7 +571,7 @@ export function BillingPage() {
                     label: t('billing.planFree'),
                     queue: t('billing.standardQueue'),
                     color: C.dim,
-                    bg: 'rgba(255,255,255,0.04)',
+                    bg: C.surface,
                     borderColor: cardBorder,
                   },
                   {
@@ -660,7 +660,7 @@ export function BillingPage() {
                   gap: 0,
                   padding: '3px',
                   borderRadius: 10,
-                  background: 'rgba(255,255,255,0.04)',
+                  background: C.surface,
                 }}>
                   <button
                     onClick={() => setIsAnnual(false)}
@@ -668,7 +668,7 @@ export function BillingPage() {
                       padding: '7px 18px',
                       borderRadius: 8,
                       border: 'none',
-                      background: !isAnnual ? ('rgba(255,255,255,0.1)') : 'transparent',
+                      background: !isAnnual ? (C.border) : 'transparent',
                       color: !isAnnual ? textPrimary : textSecondary,
                       fontSize: 13,
                       fontWeight: 600,
@@ -686,7 +686,7 @@ export function BillingPage() {
                       padding: '7px 18px',
                       borderRadius: 8,
                       border: 'none',
-                      background: isAnnual ? ('rgba(255,255,255,0.1)') : 'transparent',
+                      background: isAnnual ? (C.border) : 'transparent',
                       color: isAnnual ? textPrimary : textSecondary,
                       fontSize: 13,
                       fontWeight: 600,
@@ -764,7 +764,7 @@ export function BillingPage() {
                             padding: '4px 12px',
                             borderRadius: 50,
                             background: C.accent,
-                            color: '#fff',
+                            color: C.text,
                             fontSize: 11,
                             fontWeight: 600,
                           }}
@@ -791,7 +791,7 @@ export function BillingPage() {
                           style={{
                             fontSize: 36,
                             fontWeight: 700,
-                            color: '#ffffff',
+                            color: C.text,
                             letterSpacing: '-.02em',
                             lineHeight: 1.1,
                           }}
@@ -883,7 +883,7 @@ export function BillingPage() {
                             borderRadius: 10,
                             border: 'none',
                             background: 'linear-gradient(135deg, #6366f1, #818cf8)',
-                            color: '#fff',
+                            color: C.text,
                             fontSize: 14,
                             fontWeight: 600,
                             cursor: 'pointer',
@@ -976,7 +976,7 @@ export function BillingPage() {
                             borderRadius: 6,
                             border: isSelected
                               ? '2px solid #6366f1'
-                              : `2px solid ${'rgba(255,255,255,0.15)'}`,
+                              : `2px solid ${C.borderActive}`,
                             background: isSelected
                               ? 'linear-gradient(135deg, #6366f1, #818cf8)'
                               : 'transparent',
@@ -1016,7 +1016,7 @@ export function BillingPage() {
                                   style={{
                                     padding: '4px 10px',
                                     borderRadius: 50,
-                                    background: 'rgba(255,255,255,0.06)',
+                                    background: C.border,
                                     fontSize: 11,
                                     fontWeight: 600,
                                     color: C.sub,
@@ -1105,7 +1105,7 @@ export function BillingPage() {
                       style={{
                         padding: '6px 14px',
                         background: C.accent,
-                        color: '#fff',
+                        color: C.text,
                         border: 'none',
                         borderRadius: 8,
                         cursor: 'pointer',
@@ -1139,7 +1139,7 @@ export function BillingPage() {
                           gap: 12,
                           padding: '14px 20px',
                           borderBottom: idx < invoicesQuery.data.length - 1 ? `1px solid ${cardBorder}` : 'none',
-                          background: idx % 2 === 1 ? 'rgba(255,255,255,0.04)' : 'transparent',
+                          background: idx % 2 === 1 ? C.surface : 'transparent',
                           flexWrap: 'wrap',
                         }}
                       >
@@ -1280,7 +1280,7 @@ export function BillingPage() {
                       minHeight: 44,
                       borderRadius: 10,
                       border: `1px solid ${promoApplied ? C.green : cardBorder}`,
-                      background: 'rgba(255,255,255,0.04)',
+                      background: C.surface,
                       color: textPrimary,
                       fontSize: 13,
                       fontFamily: 'inherit',
