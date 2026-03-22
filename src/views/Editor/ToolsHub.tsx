@@ -709,34 +709,44 @@ const ToolCard = memo(function ToolCard({
         </div>
       )}
 
-      {/* Icon + content area */}
+      {/* Gradient visual area — like Dashboard cards */}
       <div style={{
-        padding: '20px 16px 14px',
+        height: 120,
+        background: tool.available
+          ? `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`
+          : C.surface,
         display: 'flex',
-        alignItems: 'flex-start',
-        gap: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        transition: 'all .3s ease',
       }}>
-        {/* Icon container — 48x48 accent-tinted circle */}
         <div style={{
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          background: tool.available
-            ? `${tool.gradient[0]}20`
-            : C.border,
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          transition: 'all .2s',
-          transform: hovered && tool.available ? 'scale(1.05)' : 'none',
+          opacity: tool.available ? 0.9 : 0.3,
+          transform: hovered && tool.available ? 'scale(1.1)' : 'scale(1)',
+          transition: 'transform .3s ease',
         }}>
-          {iconFn ? iconFn(tool.available ? tool.gradient[0] : C.dim) : null}
+          {iconFn ? iconFn('#ffffff') : null}
         </div>
+        {/* Scan animation on hover */}
+        {hovered && tool.available && (
+          <div style={{
+            position: 'absolute', inset: 0, overflow: 'hidden',
+            pointerEvents: 'none',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, bottom: 0, width: 2,
+              background: 'rgba(255,255,255,0.6)',
+              boxShadow: '0 0 12px 4px rgba(255,255,255,0.3)',
+              animation: 'scanLine 2s ease-in-out infinite',
+            }} />
+          </div>
+        )}
+      </div>
 
-        {/* Name + subtitle */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+      {/* Name + subtitle */}
+      <div style={{ padding: '14px 16px 0' }}>
+        <div style={{ minWidth: 0 }}>
           <div style={{
             fontSize: 15,
             fontWeight: 600,

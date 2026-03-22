@@ -44,6 +44,10 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+@keyframes scanLine {
+  0% { left: -2px; }
+  100% { left: 100%; }
+}
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
