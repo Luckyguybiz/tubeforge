@@ -9,19 +9,19 @@ import { toast } from '@/stores/useNotificationStore';
 /* ── Design tokens (YGen-inspired dark theme — always dark) ────────── */
 
 const D = {
-  bgDeep: '#060609',
-  bgCard: '#0e0e14',
-  bgInput: '#0a0a10',
-  border: '#1a1a24',
-  borderActive: '#2a2a38',
+  bgDeep: '#06060b',
+  bgCard: '#0c0c14',
+  bgInput: '#09090f',
+  border: '#1e1e2e',
+  borderActive: '#2e2e44',
   text: '#e8e8f0',
-  sub: '#8888a0',
-  dim: '#555566',
-  accent: '#c8ff00',
-  accentDim: 'rgba(200,255,0,0.08)',
-  accentHover: '#d4ff20',
-  proBadgeBg: 'rgba(200,255,0,0.12)',
-  proBadgeText: '#c8ff00',
+  sub: '#8d8da6',
+  dim: '#44445a',
+  accent: '#6366f1',
+  accentDim: 'rgba(99,102,241,0.1)',
+  accentHover: '#818cf8',
+  proBadgeBg: 'rgba(99,102,241,0.15)',
+  proBadgeText: '#818cf8',
   danger: '#ef4444',
 };
 
@@ -421,7 +421,7 @@ export function AiThumbnailsPage() {
             padding: '5px 12px',
             borderRadius: 20,
             background: canUseAI ? D.accentDim : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${canUseAI ? 'rgba(200,255,0,0.15)' : 'rgba(239,68,68,0.2)'}`,
+            border: `1px solid ${canUseAI ? 'rgba(99,102,241,0.15)' : 'rgba(239,68,68,0.2)'}`,
           }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? D.accent : D.danger} strokeWidth="2.5" strokeLinecap="round">
@@ -708,7 +708,7 @@ export function AiThumbnailsPage() {
                 padding: '8px 12px',
                 borderRadius: 10,
                 background: D.accentDim,
-                border: `1px solid rgba(200,255,0,0.12)`,
+                border: `1px solid rgba(99,102,241,0.12)`,
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={D.accent} strokeWidth="2" strokeLinecap="round">
@@ -957,10 +957,10 @@ export function AiThumbnailsPage() {
             disabled={disabled}
             aria-busy={isLoading || undefined}
             onMouseEnter={(e) => {
-              if (!disabled) e.currentTarget.style.boxShadow = '0 6px 28px rgba(200,255,0,0.3)';
+              if (!disabled) e.currentTarget.style.boxShadow = '0 6px 28px rgba(99,102,241,0.3)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = disabled ? 'none' : '0 4px 20px rgba(200,255,0,0.2)';
+              e.currentTarget.style.boxShadow = disabled ? 'none' : '0 4px 20px rgba(99,102,241,0.2)';
             }}
             style={{
               width: '100%',
@@ -968,8 +968,8 @@ export function AiThumbnailsPage() {
               borderRadius: 12,
               background: disabled
                 ? D.border
-                : 'linear-gradient(135deg, #c8ff00, #a8e600)',
-              color: disabled ? D.dim : '#0a0a0f',
+                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: disabled ? D.dim : '#ffffff',
               fontSize: 15,
               fontWeight: 700,
               border: 'none',
@@ -978,7 +978,7 @@ export function AiThumbnailsPage() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              boxShadow: disabled ? 'none' : '0 4px 20px rgba(200,255,0,0.2)',
+              boxShadow: disabled ? 'none' : '0 4px 20px rgba(99,102,241,0.2)',
               transition: 'all 0.2s ease',
               fontFamily: 'inherit',
               outline: 'none',
@@ -993,7 +993,7 @@ export function AiThumbnailsPage() {
                 style={{ animation: 'spin 1s linear infinite' }}
               >
                 <circle cx="9" cy="9" r="7" stroke="rgba(10,10,15,.2)" strokeWidth="2" fill="none" />
-                <path d="M9 2a7 7 0 015.2 2.33" stroke="#0a0a0f" strokeWidth="2" strokeLinecap="round" fill="none" />
+                <path d="M9 2a7 7 0 015.2 2.33" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" fill="none" />
               </svg>
             )}
             {isLoading ? t('aithumbs.generating') : t('aithumbs.generateBtn')}
@@ -1011,7 +1011,7 @@ export function AiThumbnailsPage() {
                 padding: '10px 16px',
                 borderRadius: 12,
                 background: D.accentDim,
-                border: `1px solid rgba(200,255,0,0.15)`,
+                border: `1px solid rgba(99,102,241,0.15)`,
                 color: D.accent,
                 fontSize: 13,
                 fontWeight: 600,
@@ -1049,7 +1049,7 @@ export function AiThumbnailsPage() {
                 padding: '5px 14px',
                 borderRadius: 20,
                 background: D.accentDim,
-                border: `1px solid rgba(200,255,0,0.1)`,
+                border: `1px solid rgba(99,102,241,0.1)`,
                 fontSize: 11,
                 fontWeight: 700,
                 color: D.accent,
@@ -1239,8 +1239,8 @@ export function AiThumbnailsPage() {
                             background:
                               !editPrompt.trim() || isEditLoading
                                 ? D.border
-                                : 'linear-gradient(135deg, #c8ff00, #a8e600)',
-                            color: !editPrompt.trim() || isEditLoading ? D.dim : '#0a0a0f',
+                                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            color: !editPrompt.trim() || isEditLoading ? D.dim : '#ffffff',
                             fontSize: 13,
                             fontWeight: 600,
                             cursor:
@@ -1261,7 +1261,7 @@ export function AiThumbnailsPage() {
                               style={{ animation: 'spin 1s linear infinite' }}
                             >
                               <circle cx="7" cy="7" r="5" stroke="rgba(10,10,15,.2)" strokeWidth="1.5" fill="none" />
-                              <path d="M7 2a5 5 0 013.54 1.46" stroke="#0a0a0f" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                              <path d="M7 2a5 5 0 013.54 1.46" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" fill="none" />
                             </svg>
                           )}
                           {t('aithumbs.edit.apply')}
