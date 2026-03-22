@@ -4,14 +4,20 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { STICKY_NOTE_COLOR } from '@/lib/constants';
+import { uid } from '@/lib/utils';
 import {
   SHAPE_PRESETS,
   LINE_PRESETS,
   STICKER_PRESETS,
   TABLE_PRESETS,
   ICON_PRESETS,
+  GRADIENT_SHAPE_PRESETS,
+  TEXT_STYLE_PRESETS,
+  THUMBNAIL_TEMPLATES,
   type ElementPreset,
+  type ThumbnailTemplate,
 } from '@/lib/element-presets';
+import type { CanvasElement } from '@/lib/types';
 
 interface SectionProps {
   title: string;
@@ -77,6 +83,7 @@ function PresetSection({ title, presets, onAdd, cols = 3 }: SectionProps) {
 }
 
 export function ElementsPanel() {
+  const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   // Only actions needed — use getState() to avoid subscribing to store changes
   const getStore = () => useThumbnailStore.getState();
@@ -182,8 +189,56 @@ export function ElementsPanel() {
     }
   };
 
+  const applyTemplate = (tmpl: ThumbnailTemplate) => {
+    const store = getStore();
+    store.pushHistory();
+    store.setCanvasSize(tmpl.canvasW, tmpl.canvasH);
+    store.setCanvasBg(tmpl.canvasBg);
+    // Add all template elements
+    tmpl.elements.forEach((el) => {
+      const id = uid();
+      const newEl: CanvasElement = {
+        id,
+        type: el.type as CanvasElement['type'],
+        x: (el.props.x as number) ?? 100,
+        y: (el.props.y as number) ?? 100,
+        w: (el.props.w as number) ?? 200,
+        h: (el.props.h as number) ?? 100,
+        opacity: 1,
+        rot: 0,
+        ...el.props,
+      } as CanvasElement;
+      store.updEl('__noop__', {}); // no-op
+      useThumbnailStore.setState((s) => ({ els: [...s.els, newEl] }));
+    });
+  };
+
   return (
     <div>
+      {/* Templates section */}
+      <div style={{ marginBottom: 18 }}>
+        <h4 style={{ fontSize: 11, fontWeight: 700, color: C.sub, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>
+          Templates
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+          {THUMBNAIL_TEMPLATES.map((tmpl, i) => (
+            <div key={i} role="button" tabIndex={0} onClick={() => applyTemplate(tmpl)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyTemplate(tmpl); } }}
+              style={{
+                padding: 0, borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface,
+                cursor: 'pointer', transition: 'all .12s', overflow: 'hidden',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+            >
+              <div style={{ width: '100%', height: 56, background: tmpl.thumbnail, borderRadius: '7px 7px 0 0' }} />
+              <div style={{ padding: '6px 8px', fontSize: 9, fontWeight: 600, color: C.sub, textAlign: 'center' }}>{tmpl.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <PresetSection title="Text Styles" presets={TEXT_STYLE_PRESETS} onAdd={addPreset} cols={2} />
+      <PresetSection title="Gradient Shapes" presets={GRADIENT_SHAPE_PRESETS} onAdd={addPreset} cols={3} />
       <PresetSection title={t('thumbs.elements.shapes')} presets={SHAPE_PRESETS} onAdd={addPreset} />
       <PresetSection title={t('thumbs.elements.linesArrows')} presets={LINE_PRESETS} onAdd={addPreset} />
       <PresetSection title={t('thumbs.elements.iconsEmoji')} presets={ICON_PRESETS} onAdd={addPreset} cols={4} />

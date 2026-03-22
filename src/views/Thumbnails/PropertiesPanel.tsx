@@ -181,6 +181,28 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               );
             })}
           </div></div>
+          {/* Advanced Typography */}
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 8, marginTop: 4 }}>
+            <div style={{ ...labelStyle, fontSize: 10, opacity: 0.7 }}>Advanced Typography</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+              <div><div style={{ ...labelStyle, fontSize: 9 }}>Letter Spacing</div><input type="number" value={sel.letterSpacing ?? 0} onChange={(e) => updEl(sel.id, { letterSpacing: +e.target.value })} min={-5} max={20} step={0.5} style={inputStyle} /></div>
+              <div><div style={{ ...labelStyle, fontSize: 9 }}>Line Height</div><input type="number" value={sel.lineHeight ?? 1.4} onChange={(e) => updEl(sel.id, { lineHeight: +e.target.value })} min={0.8} max={3} step={0.1} style={inputStyle} /></div>
+            </div>
+            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
+              {(['none', 'uppercase', 'capitalize'] as const).map((tt) => (
+                <button key={tt} onClick={() => updEl(sel.id, { textTransform: tt })} style={{ ...btnSmall, flex: 1, background: (sel.textTransform ?? 'none') === tt ? C.blue + '14' : 'transparent', color: (sel.textTransform ?? 'none') === tt ? C.blue : C.sub, border: `1px solid ${(sel.textTransform ?? 'none') === tt ? C.blue + '55' : C.border}` }}>{tt === 'none' ? 'Aa' : tt === 'uppercase' ? 'AA' : 'Ab'}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
+              <button onClick={() => updEl(sel.id, { textDecoration: sel.textDecoration === 'underline' ? 'none' : 'underline' })} style={{ ...btnSmall, flex: 1, textDecoration: 'underline', background: sel.textDecoration === 'underline' ? C.blue + '14' : 'transparent', color: sel.textDecoration === 'underline' ? C.blue : C.sub }}>U</button>
+              <button onClick={() => updEl(sel.id, { textDecoration: sel.textDecoration === 'line-through' ? 'none' : 'line-through' })} style={{ ...btnSmall, flex: 1, textDecoration: 'line-through', background: sel.textDecoration === 'line-through' ? C.blue + '14' : 'transparent', color: sel.textDecoration === 'line-through' ? C.blue : C.sub }}>S</button>
+              <button onClick={() => updEl(sel.id, { textOutline: sel.textOutline ? undefined : '1px #000000' })} style={{ ...btnSmall, flex: 1, WebkitTextStroke: '1px', background: sel.textOutline ? C.blue + '14' : 'transparent', color: sel.textOutline ? C.blue : C.sub }}>O</button>
+            </div>
+          </div>
+          {/* Filters */}
+          <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Flip & Blend */}
+          <FlipAndBlendPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} btnSmall={btnSmall} />
           {/* C1: Position */}
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* C2: Rotation */}
@@ -193,8 +215,14 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          {/* Gradient Fill */}
+          <GradientPicker C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR}</span></div></div>}
+          {/* Filters */}
+          <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Flip & Blend */}
+          <FlipAndBlendPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} btnSmall={btnSmall} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -207,6 +235,10 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR}</span></div></div>
+          {/* Filters — especially useful for images */}
+          <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Flip & Blend */}
+          <FlipAndBlendPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} btnSmall={btnSmall} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -620,6 +652,145 @@ const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChang
         }
       </button>
       <div style={{ flex: 1 }}><div style={labelStyle}>{t('thumbs.props.height')}</div><input type="number" value={Math.round(h)} onChange={(e) => handleH(+e.target.value)} style={inputStyle} /></div>
+    </div>
+  );
+});
+
+/* ── Gradient Picker ───────────────────────────────────────── */
+
+const GRADIENT_PRESETS = [
+  { label: 'Sunset', stops: [{ offset: 0, color: '#f97316' }, { offset: 1, color: '#ec4899' }] },
+  { label: 'Ocean', stops: [{ offset: 0, color: '#06b6d4' }, { offset: 1, color: '#3b82f6' }] },
+  { label: 'Forest', stops: [{ offset: 0, color: '#22c55e' }, { offset: 1, color: '#0ea5e9' }] },
+  { label: 'Neon', stops: [{ offset: 0, color: '#a855f7' }, { offset: 1, color: '#ec4899' }] },
+  { label: 'Fire', stops: [{ offset: 0, color: '#ef4444' }, { offset: 1, color: '#f59e0b' }] },
+  { label: 'Night', stops: [{ offset: 0, color: '#1e293b' }, { offset: 1, color: '#7c3aed' }] },
+  { label: 'Gold', stops: [{ offset: 0, color: '#f59e0b' }, { offset: 1, color: '#eab308' }] },
+  { label: 'Ice', stops: [{ offset: 0, color: '#67e8f9' }, { offset: 1, color: '#a78bfa' }] },
+];
+
+const GradientPicker = memo(function GradientPicker({ C, sel, updEl, labelStyle, inputStyle }: {
+  C: Theme; sel: CanvasElement; updEl: (id: string, p: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties;
+}) {
+  const hasGradient = !!sel.gradient;
+  return (
+    <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ ...labelStyle, marginBottom: 0 }}>Gradient Fill</div>
+        <button
+          onClick={() => {
+            if (hasGradient) {
+              updEl(sel.id, { gradient: undefined });
+            } else {
+              updEl(sel.id, { gradient: { type: 'linear', angle: 135, stops: [{ offset: 0, color: sel.color ?? '#ff2d55' }, { offset: 1, color: '#3b82f6' }] } });
+            }
+          }}
+          style={{ padding: '2px 8px', borderRadius: 4, border: `1px solid ${hasGradient ? '#3b82f655' : C.border}`, background: hasGradient ? '#3b82f614' : 'transparent', color: hasGradient ? '#3b82f6' : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}
+        >{hasGradient ? 'ON' : 'OFF'}</button>
+      </div>
+      {hasGradient && sel.gradient && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* Presets */}
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {GRADIENT_PRESETS.map((p) => (
+              <div key={p.label} title={p.label} onClick={() => updEl(sel.id, { gradient: { type: 'linear', angle: sel.gradient?.angle ?? 135, stops: p.stops } })}
+                style={{ width: 22, height: 22, borderRadius: 4, background: `linear-gradient(135deg, ${p.stops[0].color}, ${p.stops[1].color})`, cursor: 'pointer', border: `1px solid ${C.border}` }} />
+            ))}
+          </div>
+          {/* Angle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 9, color: C.dim, minWidth: 32 }}>Angle</span>
+            <input type="range" min={0} max={360} value={sel.gradient.angle ?? 135} onChange={(e) => updEl(sel.id, { gradient: { ...sel.gradient!, angle: +e.target.value } })} style={{ flex: 1, accentColor: '#888' }} />
+            <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.gradient.angle ?? 135}°</span>
+          </div>
+          {/* Stop colors */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: C.dim }}>Start</div>
+              <input type="color" value={sel.gradient.stops[0]?.color ?? '#ff2d55'} onChange={(e) => { const stops = [...(sel.gradient?.stops ?? [])]; stops[0] = { ...stops[0], color: e.target.value }; updEl(sel.id, { gradient: { ...sel.gradient!, stops } }); }} style={{ width: '100%', height: 24, border: 'none', cursor: 'pointer', borderRadius: 3 }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: C.dim }}>End</div>
+              <input type="color" value={sel.gradient.stops[1]?.color ?? '#3b82f6'} onChange={(e) => { const stops = [...(sel.gradient?.stops ?? [])]; stops[1] = { ...stops[1], color: e.target.value }; updEl(sel.id, { gradient: { ...sel.gradient!, stops } }); }} style={{ width: '100%', height: 24, border: 'none', cursor: 'pointer', borderRadius: 3 }} />
+            </div>
+          </div>
+          {/* Type toggle */}
+          <div style={{ display: 'flex', gap: 3 }}>
+            <button onClick={() => updEl(sel.id, { gradient: { ...sel.gradient!, type: 'linear' } })} style={{ flex: 1, padding: '3px', borderRadius: 4, border: `1px solid ${sel.gradient.type === 'linear' ? '#3b82f655' : C.border}`, background: sel.gradient.type === 'linear' ? '#3b82f614' : 'transparent', color: sel.gradient.type === 'linear' ? '#3b82f6' : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>Linear</button>
+            <button onClick={() => updEl(sel.id, { gradient: { ...sel.gradient!, type: 'radial' } })} style={{ flex: 1, padding: '3px', borderRadius: 4, border: `1px solid ${sel.gradient.type === 'radial' ? '#3b82f655' : C.border}`, background: sel.gradient.type === 'radial' ? '#3b82f614' : 'transparent', color: sel.gradient.type === 'radial' ? '#3b82f6' : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>Radial</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+/* ── Filters Panel ────────────────────────────────────────── */
+
+const FiltersPanel = memo(function FiltersPanel({ C, sel, updEl, labelStyle }: {
+  C: Theme; sel: CanvasElement; updEl: (id: string, p: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties;
+}) {
+  const [open, setOpen] = useState(false);
+  const f = sel.filters ?? {};
+  const hasFilters = Object.values(f).some((v) => v !== undefined && v !== 0 && v !== 100);
+
+  const updateFilter = (key: string, value: number) => {
+    updEl(sel.id, { filters: { ...f, [key]: value } });
+  };
+
+  return (
+    <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setOpen(!open)}>
+        <div style={{ ...labelStyle, marginBottom: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+          Filters {hasFilters && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }} />}
+        </div>
+        <span style={{ fontSize: 10, color: C.dim }}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {([
+            { key: 'blur', label: 'Blur', min: 0, max: 20, def: 0, unit: 'px' },
+            { key: 'brightness', label: 'Brightness', min: 0, max: 200, def: 100, unit: '%' },
+            { key: 'contrast', label: 'Contrast', min: 0, max: 200, def: 100, unit: '%' },
+            { key: 'saturate', label: 'Saturate', min: 0, max: 200, def: 100, unit: '%' },
+            { key: 'grayscale', label: 'Grayscale', min: 0, max: 100, def: 0, unit: '%' },
+            { key: 'sepia', label: 'Sepia', min: 0, max: 100, def: 0, unit: '%' },
+            { key: 'hueRotate', label: 'Hue Rotate', min: 0, max: 360, def: 0, unit: '°' },
+          ] as const).map(({ key, label, min, max, def, unit }) => (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 52 }}>{label}</span>
+              <input type="range" min={min} max={max} value={(f as Record<string, number>)[key] ?? def} onChange={(e) => updateFilter(key, +e.target.value)} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 28, textAlign: 'right' }}>{(f as Record<string, number>)[key] ?? def}{unit}</span>
+            </div>
+          ))}
+          <button onClick={() => updEl(sel.id, { filters: undefined })} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'flex-start' }}>Reset All</button>
+        </div>
+      )}
+    </div>
+  );
+});
+
+/* ── Flip & Blend Mode Panel ──────────────────────────────── */
+
+const BLEND_MODES = ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion'];
+
+const FlipAndBlendPanel = memo(function FlipAndBlendPanel({ C, sel, updEl, labelStyle, inputStyle, btnSmall }: {
+  C: Theme; sel: CanvasElement; updEl: (id: string, p: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties; btnSmall: React.CSSProperties;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {/* Flip controls */}
+      <div style={{ display: 'flex', gap: 3 }}>
+        <button onClick={() => updEl(sel.id, { flipX: !sel.flipX })} style={{ ...btnSmall, flex: 1, background: sel.flipX ? '#3b82f614' : 'transparent', color: sel.flipX ? '#3b82f6' : C.sub, border: `1px solid ${sel.flipX ? '#3b82f655' : C.border}` }} title="Flip Horizontal">↔ Flip H</button>
+        <button onClick={() => updEl(sel.id, { flipY: !sel.flipY })} style={{ ...btnSmall, flex: 1, background: sel.flipY ? '#3b82f614' : 'transparent', color: sel.flipY ? '#3b82f6' : C.sub, border: `1px solid ${sel.flipY ? '#3b82f655' : C.border}` }} title="Flip Vertical">↕ Flip V</button>
+      </div>
+      {/* Blend mode */}
+      <div>
+        <div style={{ ...labelStyle, fontSize: 9 }}>Blend Mode</div>
+        <select value={sel.blendMode ?? 'normal'} onChange={(e) => updEl(sel.id, { blendMode: e.target.value })} style={{ ...inputStyle, fontSize: 9 }}>
+          {BLEND_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
     </div>
   );
 });

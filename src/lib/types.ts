@@ -87,6 +87,33 @@ export interface Character {
   desc: string;
 }
 
+/** Gradient definition for element fills */
+export interface GradientDef {
+  type: 'linear' | 'radial';
+  angle?: number; // linear gradient angle in degrees
+  stops: { offset: number; color: string }[];
+}
+
+/** Filter/effect definition for elements */
+export interface ElementFilters {
+  blur?: number;       // px (0-20)
+  brightness?: number; // 0-200 (100 = normal)
+  contrast?: number;   // 0-200 (100 = normal)
+  saturate?: number;   // 0-200 (100 = normal)
+  grayscale?: number;  // 0-100
+  sepia?: number;      // 0-100
+  hueRotate?: number;  // 0-360 degrees
+}
+
+/** Box shadow definition */
+export interface ShadowDef {
+  x: number;
+  y: number;
+  blur: number;
+  spread: number;
+  color: string;
+}
+
 export interface CanvasElement {
   id: string;
   type: 'text' | 'rect' | 'circle' | 'triangle' | 'star' | 'image' | 'path' | 'line' | 'arrow' | 'stickyNote' | 'table';
@@ -135,6 +162,24 @@ export interface CanvasElement {
   groupId?: string;
   visible?: boolean;
   proportionLocked?: boolean;
+  // ── Design Studio enhancements ──
+  // Gradient fill (overrides solid color when set)
+  gradient?: GradientDef;
+  // Advanced typography
+  letterSpacing?: number;   // px (-5 to 20)
+  lineHeight?: number;      // multiplier (0.8 to 3.0)
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  textOutline?: string;     // e.g. "2px #000000"
+  textDecoration?: 'none' | 'underline' | 'line-through';
+  // Filters/effects
+  filters?: ElementFilters;
+  // Box shadow (advanced)
+  boxShadow?: ShadowDef;
+  // Blend mode
+  blendMode?: string;       // CSS mix-blend-mode values
+  // Flip
+  flipX?: boolean;
+  flipY?: boolean;
 }
 
 export interface AIResult {

@@ -407,6 +407,58 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     });
   };
 
+  // ===== Design Studio helpers =====
+
+  /** Build CSS gradient string from GradientDef */
+  const gradientCSS = (g: CanvasElement['gradient']): string | undefined => {
+    if (!g || !g.stops || g.stops.length < 2) return undefined;
+    const stops = g.stops.map((s) => `${s.color} ${s.offset * 100}%`).join(', ');
+    if (g.type === 'radial') return `radial-gradient(circle, ${stops})`;
+    return `linear-gradient(${g.angle ?? 135}deg, ${stops})`;
+  };
+
+  /** Build CSS filter string from ElementFilters */
+  const filterCSS = (f: CanvasElement['filters']): string | undefined => {
+    if (!f) return undefined;
+    const parts: string[] = [];
+    if (f.blur) parts.push(`blur(${f.blur}px)`);
+    if (f.brightness !== undefined && f.brightness !== 100) parts.push(`brightness(${f.brightness}%)`);
+    if (f.contrast !== undefined && f.contrast !== 100) parts.push(`contrast(${f.contrast}%)`);
+    if (f.saturate !== undefined && f.saturate !== 100) parts.push(`saturate(${f.saturate}%)`);
+    if (f.grayscale) parts.push(`grayscale(${f.grayscale}%)`);
+    if (f.sepia) parts.push(`sepia(${f.sepia}%)`);
+    if (f.hueRotate) parts.push(`hue-rotate(${f.hueRotate}deg)`);
+    return parts.length > 0 ? parts.join(' ') : undefined;
+  };
+
+  /** Build CSS box-shadow from ShadowDef */
+  const boxShadowCSS = (s: CanvasElement['boxShadow']): string | undefined => {
+    if (!s) return undefined;
+    return `${s.x}px ${s.y}px ${s.blur}px ${s.spread}px ${s.color}`;
+  };
+
+  /** Build CSS transform string combining rotation and flip */
+  const transformCSS = (el: CanvasElement): string | undefined => {
+    const parts: string[] = [];
+    if (el.rot) parts.push(`rotate(${el.rot}deg)`);
+    if (el.flipX) parts.push('scaleX(-1)');
+    if (el.flipY) parts.push('scaleY(-1)');
+    return parts.length > 0 ? parts.join(' ') : undefined;
+  };
+
+  /** Get background for element — gradient takes priority over solid color */
+  const elBackground = (el: CanvasElement): string | undefined => {
+    return gradientCSS(el.gradient) ?? el.color;
+  };
+
+  /** Common enhanced styles for elements */
+  const enhancedStyles = (el: CanvasElement): React.CSSProperties => ({
+    filter: filterCSS(el.filters),
+    boxShadow: boxShadowCSS(el.boxShadow),
+    mixBlendMode: el.blendMode as React.CSSProperties['mixBlendMode'],
+    transform: transformCSS(el),
+  });
+
   // ===== Render element =====
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
@@ -432,7 +484,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     };
 
     if (el.type === 'text') return (
-      <div key={el.id} data-text-el={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left', textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} data-text-el={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left', textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: gradientCSS(el.gradient) ?? el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined, lineHeight: el.lineHeight ?? undefined, textTransform: el.textTransform ?? undefined, textDecoration: el.textDecoration ?? undefined, WebkitTextStroke: el.textOutline ?? undefined, ...enhancedStyles(el) }}
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
         onMouseDown={(e) => {
@@ -450,17 +502,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     );
 
     if (el.type === 'rect') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: elBackground(el), opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: elBackground(el), opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'image') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
         onMouseDown={elDrag}>
         <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
         {resizeHandle}{deleteHandle}
