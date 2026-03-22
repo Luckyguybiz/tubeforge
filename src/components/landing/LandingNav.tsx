@@ -15,8 +15,8 @@ export function LandingNav() {
 
   const navLinks = [
     { label: 'Features', href: '#features' },
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'Blog', href: '/blog' },
     { label: 'FAQ', href: '#faq' },
   ];
 
@@ -71,24 +71,28 @@ export function LandingNav() {
 
         {/* Desktop nav — centered */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: 28 }} className="desktop-nav">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              style={{
-                textDecoration: 'none',
-                color: '#1d1d1f',
-                fontSize: 12,
-                fontWeight: 400,
-                transition: 'color 0.3s ease',
-                letterSpacing: '0.01em',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#0071e3'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#1d1d1f'; }}
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isPage = link.href.startsWith('/');
+            const Tag = isPage ? Link : 'a';
+            return (
+              <Tag
+                key={link.href}
+                href={link.href}
+                style={{
+                  textDecoration: 'none',
+                  color: '#1d1d1f',
+                  fontSize: 12,
+                  fontWeight: 400,
+                  transition: 'color 0.3s ease',
+                  letterSpacing: '0.01em',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#0071e3'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#1d1d1f'; }}
+              >
+                {link.label}
+              </Tag>
+            );
+          })}
         </nav>
 
         {/* Desktop auth */}
@@ -160,16 +164,20 @@ export function LandingNav() {
             gap: 4,
           }}
         >
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              style={{ textDecoration: 'none', color: '#1d1d1f', fontSize: 17, fontWeight: 400, padding: '12px 0', borderBottom: '1px solid #e5e5ea' }}
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isPage = link.href.startsWith('/');
+            const Tag = isPage ? Link : 'a';
+            return (
+              <Tag
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                style={{ textDecoration: 'none', color: '#1d1d1f', fontSize: 17, fontWeight: 400, padding: '12px 0', borderBottom: '1px solid #e5e5ea' }}
+              >
+                {link.label}
+              </Tag>
+            );
+          })}
           <div style={{ paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: '#0071e3', fontSize: 17, fontWeight: 400, padding: '10px 0' }}>Log In</Link>
             <Link

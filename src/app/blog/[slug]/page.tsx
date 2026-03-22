@@ -123,6 +123,34 @@ export default async function BlogPostPage({ params }: PageProps) {
     timeRequired: `PT${post.readingTime}M`,
   };
 
+  // HowTo JSON-LD for guide articles
+  const isGuide = post.category === 'Guides' || post.slug.includes('how-to');
+  const howToJsonLd = isGuide
+    ? (() => {
+        // Extract steps from H2 headings that start with "Step"
+        const stepRegex = /<h2>(Step \d+[^<]*)<\/h2>\s*<p>([^<]+)/g;
+        const steps: { name: string; text: string }[] = [];
+        let match;
+        while ((match = stepRegex.exec(post.content)) !== null) {
+          steps.push({ name: match[1], text: match[2] });
+        }
+        if (steps.length === 0) return null;
+        return {
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: post.title,
+          description: post.excerpt,
+          totalTime: `PT${post.readingTime}M`,
+          step: steps.map((s, i) => ({
+            '@type': 'HowToStep',
+            position: i + 1,
+            name: s.name,
+            text: s.text,
+          })),
+        };
+      })()
+    : null;
+
   return (
     <main
       style={{
@@ -140,6 +168,12 @@ export default async function BlogPostPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {howToJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        />
+      )}
 
       <div style={{ maxWidth: 980, margin: '0 auto', padding: '48px 24px 96px' }}>
         {/* Back to blog */}

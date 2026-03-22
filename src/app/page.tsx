@@ -234,12 +234,28 @@ const PAGE_JSON_LD = {
   operatingSystem: "Web",
   url: "https://tubeforge.co",
   offers: {
-    "@type": "Offer",
-    price: "0",
+    "@type": "AggregateOffer",
+    lowPrice: "0",
+    highPrice: "30",
     priceCurrency: "USD",
+    offerCount: "3",
   },
   description:
     "AI-powered video creation platform for YouTube creators",
+};
+
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "TubeForge",
+  url: "https://tubeforge.co",
+  logo: "https://tubeforge.co/icon-512.png",
+  sameAs: [
+    "https://youtube.com/@tubeforge",
+    "https://t.me/tubeforge",
+    "https://twitter.com/tubeforge",
+  ],
+  description: "AI-powered video creation platform for YouTube creators",
 };
 
 const FAQ_JSON_LD = {
@@ -264,6 +280,10 @@ export default function LandingPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGE_JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
       />
       <script
         type="application/ld+json"
@@ -951,7 +971,7 @@ export default function LandingPage() {
                 title: "Product",
                 links: [
                   { label: "Features", href: "#features" },
-                  { label: "Pricing", href: "#pricing" },
+                  { label: "Pricing", href: "/pricing" },
                   { label: "VPN", href: "/vpn" },
                 ],
               },
