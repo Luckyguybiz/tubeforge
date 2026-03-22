@@ -170,7 +170,7 @@ export function SettingsPage() {
   const textSecondary = C.sub;
   const cardBg = C.card;
   const cardBorder = C.border;
-  const inputBg = 'rgba(255,255,255,0.04)';
+  const inputBg = C.surface;
   const secondaryBtnBg = C.surface;
 
   /* ── Shared styles ──────────────────────────── */
@@ -213,8 +213,8 @@ export function SettingsPage() {
     padding: '12px 16px',
     minHeight: 44,
     borderRadius: 10,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
+    border: `1px solid ${C.border}`,
+    background: C.surface,
     color: textPrimary,
     fontSize: 14,
     fontFamily: 'inherit',
@@ -649,7 +649,7 @@ export function SettingsPage() {
                   style={{
                     ...btnBase,
                     background: plan === 'FREE' ? C.blue : C.purple,
-                    color: '#fff',
+                    color: C.text,
                     ...(createCheckout.isPending ? { opacity: 0.6, cursor: 'not-allowed' } : {}),
                   }}
                 >
@@ -900,7 +900,7 @@ export function SettingsPage() {
                     alignItems: 'center',
                     gap: 8,
                     background: C.blue,
-                    color: '#fff',
+                    color: C.text,
                     textDecoration: 'none',
                   }}
                 >
@@ -936,7 +936,7 @@ export function SettingsPage() {
                     style={{
                       ...btnBase,
                       background: C.blue,
-                      color: '#fff',
+                      color: C.text,
                       padding: '10px 18px',
                       opacity: vpnPromo.isPending || !promoCode.trim() ? 0.6 : 1,
                       cursor: vpnPromo.isPending || !promoCode.trim() ? 'not-allowed' : 'pointer',
@@ -1188,7 +1188,7 @@ export function SettingsPage() {
               style={{
                 ...btnBase,
                 background: C.blue,
-                color: '#fff',
+                color: C.text,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
@@ -1217,7 +1217,7 @@ export function SettingsPage() {
               style={{
                 ...btnBase,
                 background: C.blue,
-                color: '#fff',
+                color: C.text,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
@@ -1280,7 +1280,7 @@ export function SettingsPage() {
           gap: 0,
           padding: '3px',
           borderRadius: 10,
-          background: 'rgba(255,255,255,0.04)',
+          background: C.surface,
         }}>
           <button
             onClick={() => setThemeMode('dark')}
@@ -1290,7 +1290,7 @@ export function SettingsPage() {
               minHeight: 44,
               borderRadius: 8,
               border: 'none',
-              background: themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'transparent',
+              background: themeMode === 'dark' ? C.border : 'transparent',
               color: themeMode === 'dark' ? textPrimary : textSecondary,
               fontSize: 14,
               fontWeight: 600,
@@ -1317,7 +1317,7 @@ export function SettingsPage() {
               minHeight: 44,
               borderRadius: 8,
               border: 'none',
-              background: themeMode === 'light' ? 'rgba(255,255,255,0.1)' : 'transparent',
+              background: themeMode === 'light' ? C.border : 'transparent',
               color: themeMode === 'light' ? textPrimary : textSecondary,
               fontSize: 14,
               fontWeight: 600,
@@ -1352,7 +1352,7 @@ export function SettingsPage() {
               minHeight: 44,
               borderRadius: 8,
               border: 'none',
-              background: themeMode === 'system' ? 'rgba(255,255,255,0.1)' : 'transparent',
+              background: themeMode === 'system' ? C.border : 'transparent',
               color: themeMode === 'system' ? textPrimary : textSecondary,
               fontSize: 14,
               fontWeight: 600,
@@ -1391,7 +1391,7 @@ export function SettingsPage() {
           gap: 0,
           padding: '3px',
           borderRadius: 10,
-          background: 'rgba(255,255,255,0.04)',
+          background: C.surface,
           flexWrap: 'wrap',
         }}>
           {([
@@ -2410,7 +2410,7 @@ function PushNotificationSection({
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
-              background: isEnabled ? '#6366f1' : 'rgba(255,255,255,0.1)',
+              background: isEnabled ? '#6366f1' : C.border,
               transition: 'background .2s',
               padding: 0,
               flexShrink: 0,
@@ -2511,7 +2511,7 @@ function EmailNotificationSection({
                 borderRadius: 12,
                 border: 'none',
                 cursor: key === 'security' ? 'not-allowed' : 'pointer',
-                background: prefs[key] ? '#6366f1' : 'rgba(255,255,255,0.1)',
+                background: prefs[key] ? '#6366f1' : C.border,
                 transition: 'background .2s',
                 padding: 0,
                 flexShrink: 0,
@@ -2632,7 +2632,7 @@ function WrappedSection({
           <div
             key={item.label}
             style={{
-              background: 'rgba(255,255,255,0.04)',
+              background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: 14,
               padding: '20px 16px',
@@ -2843,7 +2843,7 @@ function ApiKeysSection({
           style={{
             ...btnBase,
             background: C.blue,
-            color: '#fff',
+            color: C.text,
             display: 'flex',
             alignItems: 'center',
             gap: 8,

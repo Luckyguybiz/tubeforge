@@ -643,8 +643,8 @@ const ToolCard = memo(function ToolCard({
         flexDirection: 'column',
         padding: 0,
         borderRadius: 14,
-        border: '1px solid rgba(255,255,255,0.06)',
-        background: '#1a1a1a',
+        border: `1px solid ${C.border}`,
+        background: C.card,
         cursor: tool.available ? 'pointer' : 'default',
         transition: 'all .25s ease',
         transform: hovered && tool.available ? 'translateY(-2px)' : 'none',
@@ -666,14 +666,14 @@ const ToolCard = memo(function ToolCard({
           background: tool.badge === 'NEW'
             ? `${tool.gradient[0]}25`
             : tool.badge === 'Beta'
-              ? 'rgba(255,255,255,0.08)'
+              ? C.border
               : tool.badge === 'Free'
                 ? '#22c55e25'
                 : `${tool.gradient[0]}25`,
           color: tool.badge === 'NEW'
             ? tool.gradient[0]
             : tool.badge === 'Beta'
-              ? 'rgba(255,255,255,0.5)'
+              ? C.sub
               : tool.badge === 'Free'
                 ? '#22c55e'
                 : tool.gradient[0],
@@ -697,14 +697,14 @@ const ToolCard = memo(function ToolCard({
           gap: 4,
           padding: '3px 10px',
           borderRadius: 20,
-          background: 'rgba(255,255,255,0.06)',
+          background: C.border,
           border: 'none',
-          color: 'rgba(255,255,255,0.35)',
+          color: C.dim,
           fontSize: 10,
           fontWeight: 600,
           zIndex: 2,
         }}>
-          <LockIcon size={10} color="rgba(255,255,255,0.35)" />
+          <LockIcon size={10} color={C.dim} />
           {t('toolshub.comingSoonLabel')}
         </div>
       )}
@@ -723,7 +723,7 @@ const ToolCard = memo(function ToolCard({
           borderRadius: '50%',
           background: tool.available
             ? `${tool.gradient[0]}20`
-            : 'rgba(255,255,255,0.06)',
+            : C.border,
           border: 'none',
           display: 'flex',
           alignItems: 'center',
@@ -732,7 +732,7 @@ const ToolCard = memo(function ToolCard({
           transition: 'all .2s',
           transform: hovered && tool.available ? 'scale(1.05)' : 'none',
         }}>
-          {iconFn ? iconFn(tool.available ? tool.gradient[0] : 'rgba(255,255,255,0.35)') : null}
+          {iconFn ? iconFn(tool.available ? tool.gradient[0] : C.dim) : null}
         </div>
 
         {/* Name + subtitle */}
@@ -740,7 +740,7 @@ const ToolCard = memo(function ToolCard({
           <div style={{
             fontSize: 15,
             fontWeight: 600,
-            color: tool.available ? '#ffffff' : 'rgba(255,255,255,0.35)',
+            color: tool.available ? '#ffffff' : C.dim,
             marginBottom: 2,
             display: 'flex',
             alignItems: 'center',
@@ -751,7 +751,7 @@ const ToolCard = memo(function ToolCard({
           </div>
           <div style={{
             fontSize: 11,
-            color: 'rgba(255,255,255,0.4)',
+            color: C.sub,
             fontWeight: 500,
           }}>
             {tool.subtitle}
@@ -772,7 +772,7 @@ const ToolCard = memo(function ToolCard({
             flexShrink: 0,
             marginTop: 2,
           }}>
-            <ArrowIcon size={14} color={hovered ? tool.gradient[0] : 'rgba(255,255,255,0.3)'} />
+            <ArrowIcon size={14} color={hovered ? tool.gradient[0] : C.dim} />
           </div>
         )}
       </div>
@@ -782,7 +782,7 @@ const ToolCard = memo(function ToolCard({
         padding: '0 16px 16px',
         fontSize: 13,
         lineHeight: 1.5,
-        color: 'rgba(255,255,255,0.5)',
+        color: C.sub,
         wordBreak: 'break-word',
         overflow: 'hidden',
         display: '-webkit-box',
@@ -796,7 +796,7 @@ const ToolCard = memo(function ToolCard({
       {tool.available && (
         <div style={{
           padding: '10px 16px',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -832,7 +832,7 @@ const ToolCard = memo(function ToolCard({
             style={{
               fontSize: 11,
               fontWeight: 600,
-              color: hovered ? tool.gradient[0] : 'rgba(255,255,255,0.35)',
+              color: hovered ? tool.gradient[0] : C.dim,
               cursor: 'pointer',
               transition: 'color .2s',
             }}
@@ -846,7 +846,7 @@ const ToolCard = memo(function ToolCard({
       {!tool.available && (
         <div style={{
           padding: '10px 16px',
-          borderTop: '1px solid rgba(255,255,255,0.04)',
+          borderTop: '1px solid ${C.surface}',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -854,10 +854,10 @@ const ToolCard = memo(function ToolCard({
           <span style={{
             fontSize: 11,
             fontWeight: 600,
-            color: 'rgba(255,255,255,0.3)',
+            color: C.dim,
             padding: '2px 8px',
             borderRadius: 20,
-            background: 'rgba(255,255,255,0.04)',
+            background: C.surface,
           }}>
             {t('toolshub.comingSoonSoon')}
           </span>
@@ -895,11 +895,11 @@ const CategoryTab = memo(function CategoryTab({
         padding: '8px 18px',
         minHeight: 36,
         borderRadius: 20,
-        border: active ? 'none' : '1px solid rgba(255,255,255,0.08)',
+        border: active ? 'none' : `1px solid ${C.border}`,
         background: active
           ? `${C.accent}`
-          : hovered ? 'rgba(255,255,255,0.06)' : 'transparent',
-        color: active ? '#fff' : 'rgba(255,255,255,0.6)',
+          : hovered ? C.border : 'transparent',
+        color: active ? '#fff' : C.sub,
         fontSize: 13,
         fontWeight: active ? 700 : 500,
         cursor: 'pointer',
@@ -979,7 +979,7 @@ export function ToolsHub() {
         <h1 className="tf-tools-hero-title" style={{
           fontSize: 28,
           fontWeight: 700,
-          color: '#ffffff',
+          color: C.text,
           margin: 0,
           lineHeight: 1.2,
           letterSpacing: '-0.02em',
@@ -988,7 +988,7 @@ export function ToolsHub() {
         </h1>
         <p style={{
           fontSize: 16,
-          color: 'rgba(255,255,255,0.5)',
+          color: C.sub,
           margin: '12px 0 0',
           lineHeight: 1.5,
         }}>
@@ -1012,7 +1012,7 @@ export function ToolsHub() {
           alignItems: 'center',
           pointerEvents: 'none',
         }}>
-          <SearchIcon size={18} color="rgba(255,255,255,0.35)" />
+          <SearchIcon size={18} color={C.dim} />
         </div>
         <input
           ref={searchRef}
@@ -1026,8 +1026,8 @@ export function ToolsHub() {
             padding: '0 16px 0 48px',
             borderRadius: 22,
             border: 'none',
-            background: 'rgba(255,255,255,0.04)',
-            color: '#ffffff',
+            background: C.surface,
+            color: C.text,
             fontSize: 14,
             fontFamily: 'inherit',
             outline: 'none',
@@ -1053,8 +1053,8 @@ export function ToolsHub() {
               height: 24,
               borderRadius: 12,
               border: 'none',
-              background: 'rgba(255,255,255,0.15)',
-              color: '#ffffff',
+              background: C.borderActive,
+              color: C.text,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -1073,7 +1073,7 @@ export function ToolsHub() {
         textAlign: 'center',
         marginBottom: 20,
         fontSize: 13,
-        color: 'rgba(255,255,255,0.4)',
+        color: C.sub,
         fontWeight: 500,
       }}>
         {availableCount} {t('toolshub.available')} &bull; {comingSoonCount} {t('toolshub.comingSoon')}

@@ -281,7 +281,7 @@ const ProjectCard = memo(function ProjectCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: '#1a1a1a',
+        background: C.card,
         borderRadius: 14,
         overflow: 'hidden',
         cursor: 'pointer',
@@ -290,7 +290,7 @@ const ProjectCard = memo(function ProjectCard({
         boxShadow: isHovered
           ? '0 8px 24px rgba(0,0,0,.4)'
           : 'none',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: `1px solid ${C.border}`,
         opacity: deleteIsPending && isDeleting ? 0.4 : 1,
         position: 'relative',
       }}
@@ -306,8 +306,8 @@ const ProjectCard = memo(function ProjectCard({
           style={{
             position: 'absolute', top: 10, left: 10, zIndex: 3,
             width: 24, height: 24, borderRadius: 6,
-            background: selected ? C.accent : 'rgba(255,255,255,0.08)',
-            border: `2px solid ${selected ? C.accent : 'rgba(255,255,255,0.15)'}`,
+            background: selected ? C.accent : C.border,
+            border: `2px solid ${selected ? C.accent : C.borderActive}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', transition: 'all .15s ease',
             boxShadow: '0 1px 4px rgba(0,0,0,.3)',
@@ -324,7 +324,7 @@ const ProjectCard = memo(function ProjectCard({
       {/* Thumbnail area */}
       <div style={{
         height: 140,
-        background: '#111',
+        background: C.surface,
         borderRadius: 10,
         position: 'relative',
         overflow: 'hidden',
@@ -352,12 +352,12 @@ const ProjectCard = memo(function ProjectCard({
           }}>
             <div style={{
               width: 48, height: 48, borderRadius: 12,
-              background: 'rgba(255,255,255,0.04)',
+              background: C.surface,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'transform .3s ease',
               transform: isHovered ? 'scale(1.1)' : 'scale(1)',
             }}>
-              <IconFilm size={24} color="rgba(255,255,255,0.2)" />
+              <IconFilm size={24} color={C.dim} />
             </div>
           </div>
         )}
@@ -437,14 +437,14 @@ const ProjectCard = memo(function ProjectCard({
               fontSize: 14, fontWeight: 600,
               border: `1.5px solid ${C.accent}`,
               borderRadius: 8, padding: '5px 8px',
-              background: '#1a1a1a', color: '#fff',
+              background: C.card, color: C.text,
               fontFamily: 'inherit', width: '100%',
               marginBottom: 8,
             }}
           />
         ) : (
           <div style={{
-            fontSize: 14, fontWeight: 600, marginBottom: 8, color: '#fff',
+            fontSize: 14, fontWeight: 600, marginBottom: 8, color: C.text,
             lineHeight: 1.4, letterSpacing: '-.01em',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
@@ -456,7 +456,7 @@ const ProjectCard = memo(function ProjectCard({
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>
+          <span style={{ fontSize: 12, color: C.sub, fontWeight: 400 }}>
             {timeAgo(p.updatedAt)}
           </span>
 
@@ -469,7 +469,7 @@ const ProjectCard = memo(function ProjectCard({
             {isDeleting ? (
               <>
                 <span style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500,
+                  fontSize: 11, color: C.sub, fontWeight: 500,
                   maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   marginRight: 4,
                 }}>
@@ -480,7 +480,7 @@ const ProjectCard = memo(function ProjectCard({
                   disabled={deleteIsPending}
                   style={{
                     padding: '6px 12px', borderRadius: 7, border: 'none',
-                    background: C.red, color: '#fff', fontSize: 12, fontWeight: 600,
+                    background: C.red, color: C.text, fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                     minHeight: 32,
                   }}
@@ -491,8 +491,8 @@ const ProjectCard = memo(function ProjectCard({
                   onClick={() => onCancelDelete()}
                   style={{
                     padding: '6px 12px', borderRadius: 7,
-                    border: '1px solid rgba(255,255,255,0.1)', background: 'transparent',
-                    color: 'rgba(255,255,255,0.5)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                    border: `1px solid ${C.border}`, background: 'transparent',
+                    color: C.sub, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     minHeight: 32,
                   }}
@@ -513,15 +513,15 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `rename-${p.id}` ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
-                    background: hovBtn === `rename-${p.id}` ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                    border: `1px solid ${hovBtn === `rename-${p.id}` ? C.borderActive : C.border}`,
+                    background: hovBtn === `rename-${p.id}` ? C.border : 'transparent',
+                    color: C.sub, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                     position: 'relative',
                   }}
                 >
-                  <IconEdit size={14} color="rgba(255,255,255,0.5)" />
+                  <IconEdit size={14} color={C.sub} />
                 </button>
                 <button
                   onClick={(e) => {
@@ -534,14 +534,14 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `dup-${p.id}` ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
-                    background: hovBtn === `dup-${p.id}` ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                    border: `1px solid ${hovBtn === `dup-${p.id}` ? C.borderActive : C.border}`,
+                    background: hovBtn === `dup-${p.id}` ? C.border : 'transparent',
+                    color: C.sub, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconPlus size={14} color="rgba(255,255,255,0.5)" />
+                  <IconPlus size={14} color={C.sub} />
                 </button>
                 <button
                   onClick={(e) => {
@@ -554,14 +554,14 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `share-${p.id}` ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
-                    background: hovBtn === `share-${p.id}` ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                    border: `1px solid ${hovBtn === `share-${p.id}` ? C.borderActive : C.border}`,
+                    background: hovBtn === `share-${p.id}` ? C.border : 'transparent',
+                    color: C.sub, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconShareLink size={14} color="rgba(255,255,255,0.5)" />
+                  <IconShareLink size={14} color={C.sub} />
                 </button>
                 <ExportButton projectId={p.id} projectTitle={p.title} />
                 <button
@@ -575,15 +575,15 @@ const ProjectCard = memo(function ProjectCard({
                   onMouseLeave={() => setHovBtn(null)}
                   style={{
                     width: 32, height: 32, borderRadius: 8,
-                    border: `1px solid ${hovBtn === `delete-${p.id}` ? `${C.red}40` : 'rgba(255,255,255,0.06)'}`,
+                    border: `1px solid ${hovBtn === `delete-${p.id}` ? `${C.red}40` : C.border}`,
                     background: hovBtn === `delete-${p.id}` ? `${C.red}12` : 'transparent',
-                    color: hovBtn === `delete-${p.id}` ? C.red : 'rgba(255,255,255,0.5)',
+                    color: hovBtn === `delete-${p.id}` ? C.red : C.sub,
                     cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all .15s ease',
                   }}
                 >
-                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? C.red : 'rgba(255,255,255,0.5)'} />
+                  <IconTrash size={14} color={hovBtn === `delete-${p.id}` ? C.red : C.sub} />
                 </button>
               </>
             )}
@@ -698,9 +698,9 @@ function TemplatePickerModal({
         position: 'fixed',
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: '#1a1a1a',
+        background: C.card,
         borderRadius: 14,
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: `1px solid ${C.border}`,
         width: '92%', maxWidth: 720,
         maxHeight: '88dvh',
         overflow: 'hidden',
@@ -716,7 +716,7 @@ function TemplatePickerModal({
           padding: '18px 22px 0',
           flexShrink: 0,
         }}>
-          <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: '#fff' }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>
             {t('dashboard.newProject')}
           </h2>
           <button
@@ -724,18 +724,18 @@ function TemplatePickerModal({
             disabled={isCreating}
             style={{
               background: 'none', border: 'none',
-              color: 'rgba(255,255,255,0.5)', cursor: isCreating ? 'not-allowed' : 'pointer',
+              color: C.sub, cursor: isCreating ? 'not-allowed' : 'pointer',
               padding: 4, display: 'flex', borderRadius: 6,
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
 
         <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '0 0 14px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: C.sub, margin: '0 0 14px', lineHeight: 1.5 }}>
             {t('dashboard.templatePickerDesc')}
           </p>
 
@@ -750,8 +750,8 @@ function TemplatePickerModal({
             style={{
               padding: '14px 16px',
               borderRadius: 14,
-              border: `1px solid ${hov === 'blank' ? C.accent : 'rgba(255,255,255,0.06)'}`,
-              background: hov === 'blank' ? `${C.accent}06` : '#111',
+              border: `1px solid ${hov === 'blank' ? C.accent : C.border}`,
+              background: hov === 'blank' ? `${C.accent}06` : C.surface,
               cursor: isCreating ? 'wait' : 'pointer',
               transition: 'all .15s ease',
               marginBottom: 10,
@@ -770,10 +770,10 @@ function TemplatePickerModal({
               <IconPlus size={22} color={C.accent} />
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>
                 {t('dashboard.blankProject')}
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+              <div style={{ fontSize: 12, color: C.sub }}>
                 {t('dashboard.blankProjectDesc')}
               </div>
             </div>
@@ -784,11 +784,11 @@ function TemplatePickerModal({
             display: 'flex', alignItems: 'center', gap: 12,
             margin: '14px 0',
           }}>
-            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <span style={{ fontSize: 11, color: C.dim, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
               {t('dashboard.orTemplate')}
             </span>
-            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <div style={{ flex: 1, height: 1, background: C.border }} />
           </div>
 
           {/* Category filter pills */}
@@ -799,8 +799,8 @@ function TemplatePickerModal({
                 padding: '5px 14px',
                 borderRadius: 20,
                 border: 'none',
-                background: !categoryFilter ? `${C.accent}12` : '#111',
-                color: !categoryFilter ? C.accent : 'rgba(255,255,255,0.5)',
+                background: !categoryFilter ? `${C.accent}12` : C.surface,
+                color: !categoryFilter ? C.accent : C.sub,
                 fontSize: 12,
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -822,8 +822,8 @@ function TemplatePickerModal({
                     padding: '5px 14px',
                     borderRadius: 20,
                     border: 'none',
-                    background: isActive ? `${info.color}12` : '#111',
-                    color: isActive ? info.color : 'rgba(255,255,255,0.5)',
+                    background: isActive ? `${info.color}12` : C.surface,
+                    color: isActive ? info.color : C.sub,
                     fontSize: 12,
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -860,8 +860,8 @@ function TemplatePickerModal({
                   style={{
                     padding: '14px 16px',
                     borderRadius: 14,
-                    border: `1px solid ${hov === tpl.id ? C.accent : 'rgba(255,255,255,0.06)'}`,
-                    background: hov === tpl.id ? `${C.accent}04` : '#111',
+                    border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
+                    background: hov === tpl.id ? `${C.accent}04` : C.surface,
                     cursor: isCreating ? 'wait' : 'pointer',
                     transition: 'all .2s cubic-bezier(.4,0,.2,1)',
                     transform: hov === tpl.id ? 'translateY(-1px)' : 'none',
@@ -877,21 +877,21 @@ function TemplatePickerModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 12,
-                      background: '#1a1a1a',
+                      background: C.card,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0, fontSize: 18,
                     }}>
                       {tpl.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, lineHeight: 1.3 }}>
                         {isRu ? tpl.name : tpl.nameEn}
                       </div>
                     </div>
                   </div>
 
                   <div style={{
-                    fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5,
+                    fontSize: 12, color: C.sub, lineHeight: 1.5,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical' as const,
@@ -913,7 +913,7 @@ function TemplatePickerModal({
                       {isRu ? catInfo.name : catInfo.nameEn}
                     </span>
                     <span style={{
-                      fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)',
+                      fontSize: 11, fontWeight: 600, color: C.dim,
                       whiteSpace: 'nowrap',
                     }}>
                       {tpl.sceneCount} {isRu
@@ -929,7 +929,7 @@ function TemplatePickerModal({
           {filteredTemplates.length === 0 && (
             <div style={{
               textAlign: 'center', padding: '24px 0',
-              color: 'rgba(255,255,255,0.3)', fontSize: 13,
+              color: C.dim, fontSize: 13,
             }}>
               {t('dashboard.noTemplates')}
             </div>
@@ -1266,14 +1266,14 @@ export function Dashboard() {
       <div style={{ marginBottom: 24 }}>
         <h1 className="tf-dash-heading" style={{
           fontSize: 26, fontWeight: 600, margin: '0 0 4px',
-          letterSpacing: '-.02em', lineHeight: 1.2, color: '#fff',
+          letterSpacing: '-.02em', lineHeight: 1.2, color: C.text,
         }}>
           {profile.isLoading
             ? <Skeleton width={260} height={34} />
             : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}`
           }
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, margin: 0, lineHeight: 1.5, fontWeight: 400 }}>
+        <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5, fontWeight: 400 }}>
           {profile.isLoading
             ? <Skeleton width={160} height={16} style={{ marginTop: 4 }} />
             : t('dashboard.manageProjects')
@@ -1292,9 +1292,9 @@ export function Dashboard() {
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            background: '#1a1a1a',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: C.card,
+            color: C.text,
+            border: `1px solid ${C.border}`,
             borderRadius: 10,
             padding: '0 20px', height: 44, fontSize: 14, fontWeight: 600,
             cursor: createProject.isPending ? 'wait' : 'pointer',
@@ -1316,9 +1316,9 @@ export function Dashboard() {
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            background: '#1a1a1a',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: C.card,
+            color: C.text,
+            border: `1px solid ${C.border}`,
             borderRadius: 10,
             padding: '0 20px', height: 44, fontSize: 14, fontWeight: 500,
             cursor: 'pointer',
@@ -1329,7 +1329,7 @@ export function Dashboard() {
             flexShrink: 0,
           }}
         >
-          <IconLayout size={16} color="rgba(255,255,255,0.5)" />
+          <IconLayout size={16} color={C.sub} />
           {t('dashboard.fromTemplate')}
         </button>
         <button
@@ -1339,9 +1339,9 @@ export function Dashboard() {
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            background: '#1a1a1a',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: C.card,
+            color: C.text,
+            border: `1px solid ${C.border}`,
             borderRadius: 10,
             padding: '0 20px', height: 44, fontSize: 14, fontWeight: 500,
             cursor: 'pointer',
@@ -1352,7 +1352,7 @@ export function Dashboard() {
             flexShrink: 0,
           }}
         >
-          <IconUploadSmall size={16} color="rgba(255,255,255,0.5)" />
+          <IconUploadSmall size={16} color={C.sub} />
           {t('dashboard.importProject')}
         </button>
       </div>
@@ -1372,21 +1372,21 @@ export function Dashboard() {
                 className="tf-stat-card"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
-                  background: '#1a1a1a',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: C.card,
+                  border: `1px solid ${C.border}`,
                   borderRadius: 10,
                   padding: '8px 14px',
                   cursor: 'default',
                 }}
               >
                 <span style={{
-                  fontSize: 14, fontWeight: 700, color: '#fff',
+                  fontSize: 14, fontWeight: 700, color: C.text,
                   letterSpacing: '-.01em',
                 }}>
                   {s.value}
                 </span>
                 <span style={{
-                  fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 400,
+                  fontSize: 12, color: C.sub, fontWeight: 400,
                 }}>
                   {s.label}
                 </span>
@@ -1423,20 +1423,20 @@ export function Dashboard() {
 
       {/* ── Projects section ────────────────────────── */}
       <div style={{
-        background: '#1a1a1a',
+        background: C.card,
         borderRadius: 14,
         overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: `1px solid ${C.border}`,
       }}>
         {/* Toolbar */}
         <div className="tf-dash-toolbar" style={{
           padding: '18px 22px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: `1px solid ${C.border}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           flexWrap: 'wrap', gap: 12,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: '#fff' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>
               {t('dashboard.myProjects')}
             </h2>
             {projects.isRefetching && (
@@ -1447,8 +1447,8 @@ export function Dashboard() {
             )}
             {projects.data && !projects.isLoading && (
               <span style={{
-                fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500,
-                background: 'rgba(255,255,255,0.04)', padding: '2px 8px', borderRadius: 6,
+                fontSize: 12, color: C.sub, fontWeight: 500,
+                background: C.surface, padding: '2px 8px', borderRadius: 6,
               }}>
                 {'total' in projects.data ? String(projects.data.total ?? '') : ''}
               </span>
@@ -1462,7 +1462,7 @@ export function Dashboard() {
                 position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
                 pointerEvents: 'none', display: 'flex', alignItems: 'center',
               }}>
-                <IconSearch size={15} color="rgba(255,255,255,0.3)" />
+                <IconSearch size={15} color={C.dim} />
               </div>
               <input
                 className="tf-dash-search-input"
@@ -1474,10 +1474,10 @@ export function Dashboard() {
                 style={{
                   padding: '0 14px 0 32px',
                   height: 44,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
                   borderRadius: 10,
-                  color: '#fff',
+                  color: C.text,
                   fontSize: 13,
                   fontFamily: 'inherit',
                   width: '100%',
@@ -1496,10 +1496,10 @@ export function Dashboard() {
                 aria-label={t('dashboard.sortProjects')}
                 style={{
                   padding: '8px 10px',
-                  background: '#111',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
                   borderRadius: 10,
-                  color: '#fff',
+                  color: C.text,
                   fontSize: 13,
                   fontFamily: 'inherit',
                   cursor: 'pointer',
@@ -1517,17 +1517,17 @@ export function Dashboard() {
                 onMouseLeave={() => setHoveredBtn(null)}
                 style={{
                   width: 36, height: 36, borderRadius: 10,
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  background: hoveredBtn === 'sort-dir' ? 'rgba(255,255,255,0.06)' : 'transparent',
-                  color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                  border: `1px solid ${C.border}`,
+                  background: hoveredBtn === 'sort-dir' ? C.border : 'transparent',
+                  color: C.sub, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: 'inherit', transition: 'all .15s ease',
                   flexShrink: 0,
                 }}
               >
                 {sortOrder === 'desc'
-                  ? <IconSortDesc size={15} color="rgba(255,255,255,0.5)" />
-                  : <IconSortAsc size={15} color="rgba(255,255,255,0.5)" />
+                  ? <IconSortDesc size={15} color={C.sub} />
+                  : <IconSortAsc size={15} color={C.sub} />
                 }
               </button>
             </div>
@@ -1552,8 +1552,8 @@ export function Dashboard() {
                       cursor: 'pointer',
                       fontFamily: 'inherit',
                       transition: 'all .2s ease',
-                      background: isActive ? `${C.accent}12` : 'rgba(255,255,255,0.04)',
-                      color: isActive ? C.accent : 'rgba(255,255,255,0.5)',
+                      background: isActive ? `${C.accent}12` : C.surface,
+                      color: isActive ? C.accent : C.sub,
                       whiteSpace: 'nowrap',
                       minHeight: 34,
                     }}
@@ -1577,10 +1577,10 @@ export function Dashboard() {
             }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{
-                  background: '#1a1a1a',
+                  background: C.card,
                   borderRadius: 14,
                   overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  border: `1px solid ${C.border}`,
                 }}>
                   <ProjectCardSkeleton />
                 </div>
@@ -1595,12 +1595,12 @@ export function Dashboard() {
               {hasFilters ? (
                 <>
                   <div style={{ marginBottom: 16, opacity: 0.6 }}>
-                    <IconSearch size={48} color="rgba(255,255,255,0.2)" />
+                    <IconSearch size={48} color={C.dim} />
                   </div>
-                  <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#fff' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: C.text }}>
                     {t('dashboard.nothingFound')}
                   </h3>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 20, maxWidth: 320, lineHeight: 1.5 }}>
+                  <p style={{ color: C.sub, fontSize: 14, marginBottom: 20, maxWidth: 320, lineHeight: 1.5 }}>
                     {t('dashboard.tryChangingSearch')}
                   </p>
                   <button
@@ -1610,9 +1610,9 @@ export function Dashboard() {
                     style={{
                       padding: '11px 28px',
                       borderRadius: 10,
-                      background: hoveredBtn === 'reset' ? 'rgba(255,255,255,0.06)' : 'transparent',
-                      color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.06)',
+                      background: hoveredBtn === 'reset' ? C.border : 'transparent',
+                      color: C.text,
+                      border: `1px solid ${C.border}`,
                       fontSize: 14,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -1626,12 +1626,12 @@ export function Dashboard() {
               ) : (
                 <>
                   <div style={{ marginBottom: 20 }}>
-                    <EmptyIllustration color={C.accent} dimColor="rgba(255,255,255,0.2)" label={t('dashboard.studioAwaits')} />
+                    <EmptyIllustration color={C.accent} dimColor={C.dim} label={t('dashboard.studioAwaits')} />
                   </div>
-                  <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', color: '#fff', letterSpacing: '-.02em' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', color: C.text, letterSpacing: '-.02em' }}>
                     {t('dashboard.createFirstProject')}
                   </h3>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6, fontWeight: 400 }}>
+                  <p style={{ color: C.sub, fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6, fontWeight: 400 }}>
                     {t('dashboard.createFirstDesc')}
                   </p>
                   <button
@@ -1644,7 +1644,7 @@ export function Dashboard() {
                       padding: '11px 28px',
                       borderRadius: 10,
                       background: C.accent,
-                      color: '#fff',
+                      color: C.text,
                       border: 'none',
                       fontSize: 14,
                       fontWeight: 600,
@@ -1662,7 +1662,7 @@ export function Dashboard() {
 
                   {/* ── Template suggestions ── */}
                   <div style={{ marginTop: 32, width: '100%', maxWidth: 640 }}>
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 500, marginBottom: 14 }}>
+                    <p style={{ color: C.sub, fontSize: 13, fontWeight: 500, marginBottom: 14 }}>
                       {t('dashboard.emptyTemplateSuggestions')}
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
@@ -1678,8 +1678,8 @@ export function Dashboard() {
                             style={{
                               padding: '14px 16px',
                               borderRadius: 14,
-                              border: '1px solid rgba(255,255,255,0.06)',
-                              background: hoveredBtn === `tpl-${tpl.id}` ? '#111' : '#1a1a1a',
+                              border: `1px solid ${C.border}`,
+                              background: hoveredBtn === `tpl-${tpl.id}` ? C.surface : C.card,
                               cursor: 'pointer',
                               transition: 'all .2s cubic-bezier(.4,0,.2,1)',
                               transform: hoveredBtn === `tpl-${tpl.id}` ? 'translateY(-1px)' : 'none',
@@ -1688,10 +1688,10 @@ export function Dashboard() {
                             }}
                           >
                             <div style={{ fontSize: 20, marginBottom: 6 }}>{tpl.icon}</div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
                               {isRuLocale ? tpl.name : tpl.nameEn}
                             </div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>
+                            <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.4 }}>
                               {tpl.sceneCount} {t('dashboard.scene.many')}
                             </div>
                           </div>
@@ -1775,16 +1775,16 @@ export function Dashboard() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      background: hoveredBtn === 'page-prev' && page > 1 ? 'rgba(255,255,255,0.06)' : 'transparent',
-                      color: page <= 1 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)',
+                      border: `1px solid ${C.border}`,
+                      background: hoveredBtn === 'page-prev' && page > 1 ? C.border : 'transparent',
+                      color: page <= 1 ? C.dim : C.sub,
                       cursor: page <= 1 ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'inherit', transition: 'all .15s ease',
                       opacity: page <= 1 ? 0.4 : 1,
                     }}
                   >
-                    <IconChevronLeft size={16} color={page <= 1 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)'} />
+                    <IconChevronLeft size={16} color={page <= 1 ? C.dim : C.sub} />
                   </button>
 
                   {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
@@ -1809,12 +1809,12 @@ export function Dashboard() {
                         onMouseLeave={() => setHoveredBtn(null)}
                         style={{
                           width: 36, height: 36, borderRadius: 10,
-                          border: `1px solid ${isCurrent ? C.accent : 'rgba(255,255,255,0.06)'}`,
+                          border: `1px solid ${isCurrent ? C.accent : C.border}`,
                           fontSize: 13, fontWeight: 600,
                           cursor: 'pointer', fontFamily: 'inherit',
                           transition: 'all .2s ease',
-                          background: isCurrent ? C.accent : (hoveredBtn === `page-${pageNum}` ? 'rgba(255,255,255,0.06)' : 'transparent'),
-                          color: isCurrent ? '#fff' : 'rgba(255,255,255,0.5)',
+                          background: isCurrent ? C.accent : (hoveredBtn === `page-${pageNum}` ? C.border : 'transparent'),
+                          color: isCurrent ? '#fff' : C.sub,
                         }}
                       >
                         {pageNum}
@@ -1830,16 +1830,16 @@ export function Dashboard() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      background: hoveredBtn === 'page-next' && page < totalPages ? 'rgba(255,255,255,0.06)' : 'transparent',
-                      color: page >= totalPages ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)',
+                      border: `1px solid ${C.border}`,
+                      background: hoveredBtn === 'page-next' && page < totalPages ? C.border : 'transparent',
+                      color: page >= totalPages ? C.dim : C.sub,
                       cursor: page >= totalPages ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'inherit', transition: 'all .15s ease',
                       opacity: page >= totalPages ? 0.4 : 1,
                     }}
                   >
-                    <IconChevronRight size={16} color={page >= totalPages ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)'} />
+                    <IconChevronRight size={16} color={page >= totalPages ? C.dim : C.sub} />
                   </button>
                 </nav>
               )}
@@ -1855,14 +1855,14 @@ export function Dashboard() {
           bottom: 24,
           left: '50%',
           transform: 'translateX(-50%)',
-          background: '#1a1a1a',
+          background: C.card,
           borderRadius: 14,
           padding: '10px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: 14,
           boxShadow: '0 8px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3)',
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: `1px solid ${C.border}`,
           zIndex: 1000,
           fontFamily: 'inherit',
         }}>
@@ -1871,7 +1871,7 @@ export function Dashboard() {
             style={{
               width: 22, height: 22, borderRadius: 5,
               background: selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : 'transparent',
-              border: `2px solid ${selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : 'rgba(255,255,255,0.2)'}`,
+              border: `2px solid ${selectedIds.size === (projects.data?.items ?? []).length && selectedIds.size > 0 ? C.accent : C.dim}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', transition: 'all .15s ease', flexShrink: 0,
             }}
@@ -1884,11 +1884,11 @@ export function Dashboard() {
             )}
           </button>
 
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, whiteSpace: 'nowrap' }}>
             {t('dashboard.selected')}: {selectedIds.size}
           </span>
 
-          <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 24, background: C.border, flexShrink: 0 }} />
 
           <button
             onClick={handleBulkDelete}
@@ -1898,7 +1898,7 @@ export function Dashboard() {
               borderRadius: 8,
               border: 'none',
               background: C.red,
-              color: '#fff',
+              color: C.text,
               fontSize: 13,
               fontWeight: 600,
               cursor: bulkDeleting ? 'wait' : 'pointer',
@@ -1920,9 +1920,9 @@ export function Dashboard() {
             style={{
               padding: '8px 16px',
               borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: `1px solid ${C.border}`,
               background: 'transparent',
-              color: 'rgba(255,255,255,0.5)',
+              color: C.sub,
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',

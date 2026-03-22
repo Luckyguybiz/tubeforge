@@ -312,6 +312,7 @@ const Tooltip = memo(function Tooltip({
   children: React.ReactNode;
   show: boolean;
 }) {
+  const TC = useThemeStore((s) => s.theme);
   if (!show) return <>{children}</>;
   return (
     <div style={{ position: 'relative' }}>
@@ -333,7 +334,7 @@ const Tooltip = memo(function Tooltip({
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
           zIndex: 9999,
-          boxShadow: '0 4px 16px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06)',
+          boxShadow: `0 4px 16px rgba(0,0,0,.3), 0 0 0 1px ${TC.border}`,
           backdropFilter: 'blur(12px)',
           letterSpacing: '-.01em',
         }}
@@ -349,8 +350,8 @@ const Tooltip = memo(function Tooltip({
             width: 8,
             height: 8,
             background: 'rgba(20,20,30,.95)',
-            borderLeft: '1px solid rgba(255,255,255,.06)',
-            borderBottom: '1px solid rgba(255,255,255,.06)',
+            borderLeft: `1px solid ${TC.border}`,
+            borderBottom: `1px solid ${TC.border}`,
           }}
         />
       </div>
@@ -387,7 +388,7 @@ function UsageProgressBar({
       <div style={{
         height: 3,
         borderRadius: 2,
-        background: 'rgba(255,255,255,0.06)',
+        background: C.border,
         overflow: 'hidden',
       }}>
         <div style={{
@@ -423,7 +424,7 @@ function SidebarUsageWidget({
       ? C.purple
       : plan === 'PRO'
         ? C.accent
-        : 'rgba(255,255,255,0.06)';
+        : C.border;
   const planColor = plan === 'FREE' ? C.dim : '#fff';
 
   return (
@@ -431,7 +432,7 @@ function SidebarUsageWidget({
       margin: '0 12px 8px',
       padding: 14,
       borderRadius: 12,
-      background: 'rgba(255,255,255,0.02)',
+      background: C.surface,
       border: `1px solid ${C.border}`,
       position: 'relative',
       zIndex: 1,
@@ -478,7 +479,7 @@ function SidebarUsageWidget({
             borderRadius: 8,
             border: 'none',
             background: C.accent,
-            color: '#fff',
+            color: C.text,
             fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',
@@ -575,7 +576,7 @@ export const Sidebar = memo(function Sidebar() {
       ? C.purple
       : plan === 'PRO'
         ? C.accent
-        : 'rgba(255,255,255,0.06)';
+        : C.border;
   const planBadgeColor = plan === 'FREE' ? C.dim : '#fff';
 
   /* ── Nav button renderer ────────────────────────────── */
@@ -588,8 +589,8 @@ export const Sidebar = memo(function Sidebar() {
     const iconColor = isActive
       ? '#6366f1'
       : isHovered
-        ? 'rgba(255,255,255,0.7)'
-        : 'rgba(255,255,255,0.4)';
+        ? C.sub
+        : C.sub;
 
     // data-tour markers for onboarding spotlight
     const tourId = id === 'tools' ? 'tools-section' : id === 'billing' ? 'billing-section' : undefined;
@@ -616,13 +617,13 @@ export const Sidebar = memo(function Sidebar() {
           background: isActive
             ? 'rgba(99,102,241,0.08)'
             : isHovered
-              ? 'rgba(255,255,255,0.04)'
+              ? C.surface
               : 'transparent',
           color: isActive
             ? '#6366f1'
             : isHovered
-              ? 'rgba(255,255,255,0.7)'
-              : 'rgba(255,255,255,0.4)',
+              ? C.sub
+              : C.sub,
           fontSize: 13.5,
           fontWeight: isActive ? 600 : 450,
           cursor: 'pointer',
@@ -733,7 +734,7 @@ export const Sidebar = memo(function Sidebar() {
           padding: '20px 12px 6px',
           fontSize: 10,
           fontWeight: 600,
-          color: 'rgba(255,255,255,0.25)',
+          color: C.dim,
           textTransform: 'uppercase',
           letterSpacing: '2px',
           userSelect: 'none',
@@ -818,7 +819,7 @@ export const Sidebar = memo(function Sidebar() {
               justifyContent: 'center',
               fontSize: 13,
               fontWeight: 800,
-              color: '#fff',
+              color: C.text,
               flexShrink: 0,
               letterSpacing: '-.02em',
               transition: 'opacity .2s ease',
@@ -860,7 +861,7 @@ export const Sidebar = memo(function Sidebar() {
             title={t('sidebar.collapse')}
             aria-label={t('sidebar.collapseLabel')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+              e.currentTarget.style.background = C.surface;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -893,7 +894,7 @@ export const Sidebar = memo(function Sidebar() {
             title={t('sidebar.expand')}
             aria-label={t('sidebar.expandLabel')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+              e.currentTarget.style.background = C.surface;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -927,7 +928,7 @@ export const Sidebar = memo(function Sidebar() {
               gap: 8,
               padding: '8px 12px',
               borderRadius: 10,
-              background: 'rgba(255,255,255,0.03)',
+              background: C.surface,
               border: `1px solid ${C.border}`,
               cursor: 'pointer',
               transition: 'all .2s ease',
@@ -946,11 +947,11 @@ export const Sidebar = memo(function Sidebar() {
               }
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+              e.currentTarget.style.background = C.border;
               e.currentTarget.style.borderColor = C.borderActive;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              e.currentTarget.style.background = C.surface;
               e.currentTarget.style.borderColor = C.border;
             }}
           >
@@ -972,7 +973,7 @@ export const Sidebar = memo(function Sidebar() {
                 color: C.dim,
                 padding: '2px 6px',
                 borderRadius: 5,
-                background: 'rgba(255,255,255,0.04)',
+                background: C.surface,
                 border: `1px solid ${C.border}`,
                 fontFamily: 'inherit',
                 lineHeight: 1.2,
@@ -996,7 +997,7 @@ export const Sidebar = memo(function Sidebar() {
           position: 'relative',
           zIndex: 1,
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.08) transparent',
+          scrollbarColor: `${C.border} transparent`,
         }}
       >
         {visibleGroups.map((group, gIndex) => (
@@ -1096,7 +1097,7 @@ export const Sidebar = memo(function Sidebar() {
               justifyContent: 'center',
               fontSize: 12,
               fontWeight: 700,
-              color: '#fff',
+              color: C.text,
               letterSpacing: '-.01em',
               flexShrink: 0,
             }}
@@ -1173,7 +1174,7 @@ export const Sidebar = memo(function Sidebar() {
               title={t('sidebar.settingsLabel')}
               aria-label={t('sidebar.settingsLabel')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                e.currentTarget.style.background = C.border;
                 e.currentTarget.style.transform = 'rotate(30deg)';
               }}
               onMouseLeave={(e) => {

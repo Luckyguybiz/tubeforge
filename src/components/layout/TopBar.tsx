@@ -169,10 +169,10 @@ export const TopBar = memo(function TopBar() {
   const navItem = NAV.find((n) => n.id === current);
   const pageLabel = pageLabelKey ? t(pageLabelKey) : navItem ? t(`nav.${navItem.id}`) : '';
 
-  const btnBase: React.CSSProperties = { width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: 18, border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
+  const btnBase: React.CSSProperties = { width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: 18, border: 'none', background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
 
   const handleBtnHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, entering: boolean) => {
-    (e.currentTarget as HTMLButtonElement).style.background = entering ? 'rgba(255,255,255,0.06)' : 'transparent';
+    (e.currentTarget as HTMLButtonElement).style.background = entering ? C.border : 'transparent';
   }, []);
 
   const handleNotifKeyDown = useCallback((e: React.KeyboardEvent, n: Notification) => {
@@ -215,7 +215,7 @@ export const TopBar = memo(function TopBar() {
         </svg>
       </button>
       {isEditor && (
-        <button title={t('nav.dashboard')} onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button title={t('nav.dashboard')} onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           {'\u2190'} {t('common.back')}
         </button>
       )}
@@ -237,7 +237,7 @@ export const TopBar = memo(function TopBar() {
               tabIndex={0}
               onClick={() => router.push('/dashboard')}
               onKeyDown={(e) => { if (e.key === 'Enter') router.push('/dashboard'); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, color: segments.length > 1 ? 'rgba(255,255,255,0.3)' : C.text, fontWeight: segments.length > 1 ? 400 : 500, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, color: segments.length > 1 ? C.dim : C.text, fontWeight: segments.length > 1 ? 400 : 500, cursor: segments.length > 1 ? 'pointer' : 'default', transition: 'color 0.15s' }}
             >
               <span style={{ width: 22, height: 22, borderRadius: 6, background: C.accent, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#fff', flexShrink: 0 }}>TF</span>
               {segments.length > 1 ? t('nav.dashboard') : ''}
@@ -249,13 +249,13 @@ export const TopBar = memo(function TopBar() {
               const label = t(labelKey) !== labelKey ? t(labelKey) : seg.charAt(0).toUpperCase() + seg.slice(1);
               return (
                 <span key={seg + i} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 6px', fontSize: 11 }}>/</span>
+                  <span style={{ color: C.borderActive, margin: '0 6px', fontSize: 11 }}>/</span>
                   <span
                     role="link"
                     tabIndex={0}
                     onClick={() => { if (!isLast) router.push(href); }}
                     onKeyDown={(e) => { if (!isLast && e.key === 'Enter') router.push(href); }}
-                    style={{ color: isLast ? C.text : 'rgba(255,255,255,0.3)', fontWeight: isLast ? 600 : 500, cursor: isLast ? 'default' : 'pointer', transition: 'color 0.15s' }}
+                    style={{ color: isLast ? C.text : C.dim, fontWeight: isLast ? 600 : 500, cursor: isLast ? 'default' : 'pointer', transition: 'color 0.15s' }}
                   >
                     {label}
                   </span>
@@ -321,7 +321,7 @@ export const TopBar = memo(function TopBar() {
           onMouseLeave={(e) => handleBtnHover(e, false)}
           style={btnBase}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
         </button>
@@ -388,7 +388,7 @@ export const TopBar = memo(function TopBar() {
           onMouseLeave={(e) => handleBtnHover(e, false)}
           style={btnBase}
         >
-          <BellIcon size={14} color="rgba(255,255,255,0.4)" />
+          <BellIcon size={14} color={C.sub} />
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16,
@@ -477,9 +477,9 @@ export const TopBar = memo(function TopBar() {
         onMouseLeave={(e) => handleBtnHover(e, false)}
         style={btnBase}
       >
-        {themeMode === 'dark' && <MoonIcon size={14} color="rgba(255,255,255,0.4)" />}
-        {themeMode === 'light' && <SunIcon size={14} color="rgba(255,255,255,0.4)" />}
-        {themeMode === 'system' && <MonitorIcon size={14} color="rgba(255,255,255,0.4)" />}
+        {themeMode === 'dark' && <MoonIcon size={14} color={C.sub} />}
+        {themeMode === 'light' && <SunIcon size={14} color={C.sub} />}
+        {themeMode === 'system' && <MonitorIcon size={14} color={C.sub} />}
       </button>
 
       {/* Keyboard shortcuts modal is now rendered by ShortcutsModal in AppShell */}
