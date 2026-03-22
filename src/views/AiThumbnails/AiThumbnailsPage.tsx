@@ -1325,8 +1325,8 @@ export function AiThumbnailsPage() {
                   Our AI generates professional YouTube thumbnails that get clicks.
                 </p>
 
-                {/* 3 large step cards in horizontal row — Higgsfield style */}
-                <div style={{ display: 'flex', gap: 20 }}>
+                {/* 3 large step cards in vertical column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {[
                     {
                       title: 'ADD IMAGE',
@@ -1364,33 +1364,32 @@ export function AiThumbnailsPage() {
                     },
                   ].map((step, i) => (
                     <div key={i} style={{
-                      flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden',
-                      border: `1px solid ${C.border}`,
+                      display: 'flex', borderRadius: 14, overflow: 'hidden',
+                      border: `1px solid ${C.border}`, background: C.card,
                       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                       cursor: 'default',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
                     >
-                      {/* Large visual area with gradient + icon */}
+                      {/* Left: gradient visual with icon */}
                       <div style={{
-                        height: 180, background: step.gradient,
+                        width: 200, minHeight: 120, flexShrink: 0, background: step.gradient,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         position: 'relative',
                       }}>
                         <div style={{ opacity: 0.9 }}>{step.icon}</div>
-                        {/* Step number badge */}
                         <div style={{
-                          position: 'absolute', top: 12, left: 12,
-                          width: 28, height: 28, borderRadius: 8,
+                          position: 'absolute', top: 10, left: 10,
+                          width: 26, height: 26, borderRadius: 7,
                           background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 13, fontWeight: 700, color: '#fff',
+                          fontSize: 12, fontWeight: 700, color: '#fff',
                         }}>{i + 1}</div>
                       </div>
-                      {/* Text below */}
-                      <div style={{ padding: '16px 18px', background: C.card }}>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: C.text, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.02em' }}>
+                      {/* Right: text */}
+                      <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: C.text, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.02em' }}>
                           {step.title}
                         </div>
                         <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
