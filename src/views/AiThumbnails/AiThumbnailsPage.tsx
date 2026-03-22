@@ -2,13 +2,14 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { useThemeStore } from '@/stores/useThemeStore';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
 
-/* ── Design tokens (YGen-inspired dark theme — always dark) ────────── */
+/* ── Design tokens — adapts to user theme ────────── */
 
-const D = {
+const darkTokens = {
   bgDeep: '#06060b',
   bgCard: '#0c0c14',
   bgInput: '#09090f',
@@ -21,7 +22,24 @@ const D = {
   accentDim: 'rgba(99,102,241,0.1)',
   accentHover: '#818cf8',
   proBadgeBg: 'rgba(99,102,241,0.15)',
-  proBadgeText: '#818cf8',
+  proBadgeText: '#6366f1',
+  danger: '#ef4444',
+};
+
+const lightTokens = {
+  bgDeep: '#f5f5f7',
+  bgCard: '#ffffff',
+  bgInput: '#f0f0f5',
+  border: '#e5e5ea',
+  borderActive: '#d1d1d6',
+  text: '#1d1d1f',
+  sub: '#86868b',
+  dim: '#aeaeb2',
+  accent: '#6366f1',
+  accentDim: 'rgba(99,102,241,0.07)',
+  accentHover: '#4f46e5',
+  proBadgeBg: 'rgba(99,102,241,0.1)',
+  proBadgeText: '#6366f1',
   danger: '#ef4444',
 };
 
@@ -97,6 +115,8 @@ function createRecognition(): SpeechRecognitionInstance | null {
 
 export function AiThumbnailsPage() {
   const t = useLocaleStore((s) => s.t);
+  const isDark = useThemeStore((s) => s.isDark);
+  const D = isDark ? darkTokens : lightTokens;
   const { canUseAI, remainingAI, plan } = usePlanLimits();
 
   /* ── State ──────────────────────────────────────── */
@@ -1157,14 +1177,14 @@ export function AiThumbnailsPage() {
                         flexWrap: 'wrap',
                       }}
                     >
-                      <DarkActionBtn
+                      <DarkActionBtn theme={D}
                         icon={<DownloadIcon />}
                         label={t('aithumbs.action.download')}
                         hovered={hoveredBtn === `dl-${img.id}`}
                         onHover={(h) => setHoveredBtn(h ? `dl-${img.id}` : null)}
                         onClick={() => handleDownload(img)}
                       />
-                      <DarkActionBtn
+                      <DarkActionBtn theme={D}
                         icon={<EditIcon />}
                         label={t('aithumbs.action.edit')}
                         hovered={hoveredBtn === `edit-${img.id}`}
@@ -1175,7 +1195,7 @@ export function AiThumbnailsPage() {
                         }}
                         active={editingId === img.id}
                       />
-                      <DarkActionBtn
+                      <DarkActionBtn theme={D}
                         icon={<CanvasIcon />}
                         label={t('aithumbs.action.openCanvas')}
                         hovered={hoveredBtn === `canvas-${img.id}`}
@@ -1184,14 +1204,14 @@ export function AiThumbnailsPage() {
                           window.location.href = '/thumbnails';
                         }}
                       />
-                      <DarkActionBtn
+                      <DarkActionBtn theme={D}
                         icon={<RefreshIcon />}
                         label={t('aithumbs.action.variants')}
                         hovered={hoveredBtn === `var-${img.id}`}
                         onHover={(h) => setHoveredBtn(h ? `var-${img.id}` : null)}
                         onClick={handleMoreVariants}
                       />
-                      <DarkActionBtn
+                      <DarkActionBtn theme={D}
                         icon={<SaveIcon />}
                         label={t('aithumbs.action.save')}
                         hovered={hoveredBtn === `save-${img.id}`}
@@ -1432,6 +1452,7 @@ function DarkActionBtn({
   onHover,
   onClick,
   active,
+  theme: D,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -1439,6 +1460,7 @@ function DarkActionBtn({
   onHover: (h: boolean) => void;
   onClick: () => void;
   active?: boolean;
+  theme: typeof darkTokens;
 }) {
   return (
     <button
@@ -1453,7 +1475,7 @@ function DarkActionBtn({
         height: 34,
         borderRadius: 8,
         border: `1px solid ${active ? D.accent + '40' : hovered ? D.borderActive : D.border}`,
-        background: active ? D.accentDim : hovered ? 'rgba(255,255,255,0.03)' : 'transparent',
+        background: active ? D.accentDim : hovered ? (D.bgDeep === '#06060b' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)') : 'transparent',
         color: active ? D.accent : D.text,
         fontSize: 12,
         fontWeight: 600,
