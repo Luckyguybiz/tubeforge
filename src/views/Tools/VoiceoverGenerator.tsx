@@ -49,7 +49,7 @@ export function VoiceoverGenerator() {
     staleTime: 30_000,
   });
   const ttsRemaining = usage ? Math.max(0, usage.tts.limit - usage.tts.used) : null;
-  const false /* ttsLimitReached */ = usage ? usage.tts.used >= usage.tts.limit : false;
+  const ttsLimitReached = false; // LIMITS PAUSED
 
   const AI_VOICES = [
     { id: 'alloy', label: 'Alloy' },

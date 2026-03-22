@@ -71,7 +71,7 @@ export function VideoTranslator() {
     staleTime: 30_000,
   });
   const translationsRemaining = usage ? Math.max(0, usage.translations.limit - usage.translations.used) : null;
-  const false /* translationLimitReached */ = usage ? usage.translations.used >= usage.translations.limit : false;
+  const translationLimitReached = false; // LIMITS PAUSED
 
   const card: React.CSSProperties = {
     background: C?.surface ?? '#fff',
