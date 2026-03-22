@@ -320,12 +320,12 @@ function RecentActivityFeed({
     return (
       <div style={{
         background: C.card,
-        border: `1px solid ${C.border}`,
         borderRadius: 16,
         padding: '20px 22px',
         marginBottom: 20,
+        boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
       }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 12px', color: C.text }}>
+        <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 12px', color: C.text }}>
           {t('dashboard.recentActivityTitle')}
         </h3>
         <p style={{ color: C.sub, fontSize: 13, margin: 0 }}>
@@ -338,12 +338,12 @@ function RecentActivityFeed({
   return (
     <div style={{
       background: C.card,
-      border: `1px solid ${C.border}`,
       borderRadius: 16,
       padding: '20px 22px',
       marginBottom: 20,
+      boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
     }}>
-      <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 14px', color: C.text }}>
+      <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 14px', color: C.text }}>
         {t('dashboard.recentActivityTitle')}
       </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -396,7 +396,7 @@ function WelcomeSection({
     <div style={{ marginBottom: 28 }}>
 
       {/* ── Row 1: Three action cards (compact, horizontal) ── */}
-      <div className="tf-dash-welcome-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div className="tf-dash-welcome-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         {/* Card 1: Video Editor */}
         <div
           className="tf-dash-welcome-card"
@@ -409,25 +409,35 @@ function WelcomeSection({
           style={{
             flex: '1 1 220px',
             minWidth: 200,
-            height: 72,
-            background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
-            borderRadius: 14,
-            padding: '0 16px',
+            height: 76,
+            background: C.card,
+            borderRadius: 16,
+            padding: '0 20px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            transition: 'all .15s ease',
-            transform: hov === 'ac-0' ? 'translateY(-1px)' : 'none',
-            boxShadow: hov === 'ac-0' ? '0 6px 20px rgba(79,70,229,.3)' : '0 2px 8px rgba(0,0,0,.08)',
+            gap: 14,
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hov === 'ac-0' ? 'translateY(-2px)' : 'none',
+            boxShadow: hov === 'ac-0'
+              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+            borderLeft: `3px solid ${C.accent}`,
           }}
         >
-          <IconPlay size={18} color="#fff" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('dashboard.videoEditor')}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.videoEditorDesc')}</div>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: `${C.accent}10`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <IconPlay size={18} color={C.accent} />
           </div>
-          <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.videoEditor')}</div>
+            <div style={{ fontSize: 12, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.videoEditorDesc')}</div>
+          </div>
+          <IconArrowRight size={14} color={C.dim} />
         </div>
 
         {/* Card 2: AI Generation */}
@@ -442,25 +452,35 @@ function WelcomeSection({
           style={{
             flex: '1 1 220px',
             minWidth: 200,
-            height: 72,
-            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-            borderRadius: 14,
-            padding: '0 16px',
+            height: 76,
+            background: C.card,
+            borderRadius: 16,
+            padding: '0 20px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            transition: 'all .15s ease',
-            transform: hov === 'ac-1' ? 'translateY(-1px)' : 'none',
-            boxShadow: hov === 'ac-1' ? '0 6px 20px rgba(124,58,237,.3)' : '0 2px 8px rgba(0,0,0,.08)',
+            gap: 14,
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hov === 'ac-1' ? 'translateY(-2px)' : 'none',
+            boxShadow: hov === 'ac-1'
+              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+            borderLeft: `3px solid ${C.purple}`,
           }}
         >
-          <IconSparkles size={18} color="#fff" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>{t('dashboard.aiGeneration')}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.aiGenerationDesc')}</div>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: `${C.purple}10`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <IconSparkles size={18} color={C.purple} />
           </div>
-          <IconArrowRight size={14} color="rgba(255,255,255,.6)" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.aiGeneration')}</div>
+            <div style={{ fontSize: 12, color: C.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('dashboard.aiGenerationDesc')}</div>
+          </div>
+          <IconArrowRight size={14} color={C.dim} />
         </div>
 
         {/* Card 3: Free tools */}
@@ -475,27 +495,36 @@ function WelcomeSection({
           style={{
             flex: '1 1 220px',
             minWidth: 200,
-            height: 72,
+            height: 76,
             background: C.card,
-            border: `1px solid ${C.border}`,
-            borderRadius: 14,
-            padding: '0 16px',
+            borderRadius: 16,
+            padding: '0 20px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            transition: 'all .15s ease',
-            transform: hov === 'ac-2' ? 'translateY(-1px)' : 'none',
-            boxShadow: hov === 'ac-2' ? '0 6px 20px rgba(0,0,0,.08)' : '0 1px 4px rgba(0,0,0,.04)',
+            gap: 14,
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hov === 'ac-2' ? 'translateY(-2px)' : 'none',
+            boxShadow: hov === 'ac-2'
+              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
+            borderLeft: `3px solid ${C.green}`,
           }}
         >
-          <IconWrench size={18} color={C.text} />
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: `${C.green}10`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <IconWrench size={18} color={C.green} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.freeTools')}</span>
+              <span style={{ fontSize: 15, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>{t('dashboard.freeTools')}</span>
               <span style={{
-                fontSize: 10, fontWeight: 700, color: '#fff',
-                background: '#10b981', borderRadius: 4, padding: '1px 5px',
+                fontSize: 10, fontWeight: 600, color: C.green,
+                background: `${C.green}12`, borderRadius: 10, padding: '1px 7px',
                 lineHeight: '16px', letterSpacing: '.02em',
               }}>FREE</span>
             </div>
@@ -506,7 +535,7 @@ function WelcomeSection({
       </div>
 
       {/* ── Row 2: Two featured tool cards ────────────────── */}
-      <div className="tf-dash-featured-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div className="tf-dash-featured-row" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 20 }}>
         {/* AutoClip */}
         <div
           className="tf-dash-featured-card"
@@ -519,47 +548,50 @@ function WelcomeSection({
           style={{
             flex: '1 1 260px',
             minWidth: 0,
-            minHeight: 180,
+            minHeight: 170,
             borderRadius: 16,
-            padding: 2,
-            background: 'linear-gradient(135deg, #8b5cf6, #c084fc, #8b5cf6)',
+            background: C.card,
+            borderLeft: `3px solid ${C.purple}`,
             cursor: 'pointer',
-            transition: 'all .15s ease',
-            transform: hov === 'ft-0' ? 'translateY(-1px)' : 'none',
-            boxShadow: hov === 'ft-0' ? '0 8px 24px rgba(139,92,246,.2)' : '0 2px 8px rgba(0,0,0,.05)',
-          }}
-        >
-          <div style={{
-            background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-            borderRadius: 14,
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hov === 'ft-0' ? 'translateY(-2px)' : 'none',
+            boxShadow: hov === 'ft-0'
+              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
             padding: '22px 20px',
-            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: `${C.purple}10`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <IconScissors size={18} color={C.purple} />
+              </div>
+              <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>AutoClip</span>
+              <span style={{
+                fontSize: 10, fontWeight: 600, color: C.purple,
+                background: `${C.purple}12`, borderRadius: 10, padding: '1px 8px',
+                lineHeight: '16px',
+              }}>Pro</span>
+            </div>
+            <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
+              {t('dashboard.autoClipDesc')}
+            </div>
+          </div>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 13, fontWeight: 600, color: C.accent,
+            opacity: hov === 'ft-0' ? 1 : 0.7, transition: 'opacity .15s ease',
+            marginTop: 14,
           }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <IconScissors size={20} color="#fff" />
-                <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-.01em' }}>AutoClip</span>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: '#fff',
-                  background: 'rgba(255,255,255,.2)', borderRadius: 4, padding: '1px 6px',
-                  lineHeight: '16px',
-                }}>Pro</span>
-              </div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>
-                {t('dashboard.autoClipDesc')}
-              </div>
-            </div>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: 13, fontWeight: 600, color: '#fff',
-              opacity: hov === 'ft-0' ? 1 : 0.8, transition: 'opacity .15s ease',
-              marginTop: 14,
-            }}>
-              {t('dashboard.tryIt')}
-            </div>
+            {t('dashboard.tryIt')} <IconArrowRight size={13} color={C.accent} />
           </div>
         </div>
 
@@ -575,47 +607,50 @@ function WelcomeSection({
           style={{
             flex: '1 1 260px',
             minWidth: 0,
-            minHeight: 180,
+            minHeight: 170,
             borderRadius: 16,
-            padding: 2,
-            background: `linear-gradient(135deg, ${C.border}, ${C.dim}40, ${C.border})`,
-            cursor: 'pointer',
-            transition: 'all .15s ease',
-            transform: hov === 'ft-1' ? 'translateY(-1px)' : 'none',
-            boxShadow: hov === 'ft-1' ? '0 8px 24px rgba(0,0,0,.1)' : '0 2px 8px rgba(0,0,0,.05)',
-          }}
-        >
-          <div style={{
             background: C.card,
-            borderRadius: 14,
+            borderLeft: `3px solid ${C.green}`,
+            cursor: 'pointer',
+            transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+            transform: hov === 'ft-1' ? 'translateY(-2px)' : 'none',
+            boxShadow: hov === 'ft-1'
+              ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+              : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
             padding: '22px 20px',
-            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: `${C.green}10`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <IconScissors size={18} color={C.green} />
+              </div>
+              <span style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>Cut & Crop</span>
+              <span style={{
+                fontSize: 10, fontWeight: 600, color: C.green,
+                background: `${C.green}12`, borderRadius: 10, padding: '1px 8px',
+                lineHeight: '16px',
+              }}>{t('common.free')}</span>
+            </div>
+            <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
+              {t('dashboard.cutCropDesc')}
+            </div>
+          </div>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 13, fontWeight: 600, color: C.accent,
+            opacity: hov === 'ft-1' ? 1 : 0.7, transition: 'opacity .15s ease',
+            marginTop: 14,
           }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <IconScissors size={20} color={C.text} />
-                <span style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>Cut & Crop</span>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: '#fff',
-                  background: '#10b981', borderRadius: 4, padding: '1px 6px',
-                  lineHeight: '16px',
-                }}>{t('common.free')}</span>
-              </div>
-              <div style={{ fontSize: 14, color: C.sub, lineHeight: 1.5 }}>
-                {t('dashboard.cutCropDesc')}
-              </div>
-            </div>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: 13, fontWeight: 600, color: C.text,
-              opacity: hov === 'ft-1' ? 1 : 0.7, transition: 'opacity .15s ease',
-              marginTop: 14,
-            }}>
-              {t('dashboard.tryIt')}
-            </div>
+            {t('dashboard.tryIt')} <IconArrowRight size={13} color={C.accent} />
           </div>
         </div>
       </div>
@@ -630,40 +665,45 @@ function WelcomeSection({
           display: 'flex',
           alignItems: 'center',
           gap: 16,
-          padding: '14px 18px',
+          padding: '16px 20px',
           marginBottom: 20,
-          borderRadius: 14,
-          background: 'linear-gradient(135deg, #0a84ff, #bf5af2)',
+          borderRadius: 16,
+          background: C.card,
+          borderLeft: `3px solid ${C.blue}`,
           cursor: 'pointer',
-          transition: 'all .15s ease',
-          transform: hov === 'cl-ext' ? 'translateY(-1px)' : 'none',
-          boxShadow: hov === 'cl-ext' ? '0 8px 24px rgba(10,132,255,.3)' : '0 2px 8px rgba(0,0,0,.08)',
+          transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+          transform: hov === 'cl-ext' ? 'translateY(-2px)' : 'none',
+          boxShadow: hov === 'cl-ext'
+            ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+            : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
           textDecoration: 'none',
-          color: '#fff',
+          color: C.text,
         }}
       >
         <div style={{
           width: 44, height: 44, borderRadius: 12,
-          background: 'rgba(255,255,255,0.2)',
+          background: `${C.blue}10`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             <path d="M8 11h6" strokeWidth="1.5"/><path d="M11 8v6" strokeWidth="1.5"/>
           </svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-.01em' }}>ChannelLens</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginTop: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-.01em', color: C.text }}>ChannelLens</div>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 1 }}>
             Chrome extension — analyze any YouTube channel's revenue & competitors
           </div>
         </div>
         <div style={{
-          padding: '6px 14px', borderRadius: 8,
-          background: 'rgba(255,255,255,0.2)',
-          fontSize: 12, fontWeight: 700,
+          padding: '6px 14px', borderRadius: 10,
+          background: C.bg,
+          border: `1px solid ${C.border}`,
+          fontSize: 12, fontWeight: 600,
           whiteSpace: 'nowrap',
+          color: C.text,
         }}>
           Download
         </div>
@@ -672,7 +712,7 @@ function WelcomeSection({
       {/* ── Row 3: Quick tools strip ─────────────────────── */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>{t('dashboard.tools')}</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>{t('dashboard.tools')}</h2>
           <span
             onClick={() => router.push('/tools')}
             onMouseEnter={() => setHov('all-tools')}
@@ -681,8 +721,8 @@ function WelcomeSection({
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/tools'); } }}
             style={{
-              fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              opacity: hov === 'all-tools' ? 1 : 0.5, transition: 'opacity .15s ease',
+              fontSize: 13, fontWeight: 500, cursor: 'pointer', color: C.accent,
+              opacity: hov === 'all-tools' ? 1 : 0.8, transition: 'opacity .15s ease',
             }}
           >
             {t('dashboard.allTools')}
@@ -690,12 +730,12 @@ function WelcomeSection({
         </div>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
           {([
-            { title: 'Video Analyzer', href: '/tools/youtube-downloader', Icon: IconSearch, gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', badge: 'Free', badgeColor: '#10b981' },
-            { title: t('dashboard.tool.mp3Converter'), href: '/tools/mp3-converter', Icon: IconMusic, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', badge: 'Free', badgeColor: '#10b981' },
-            { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, gradient: 'linear-gradient(135deg, #06b6d4, #22d3ee)', badge: 'Free', badgeColor: '#10b981' },
-            { title: t('dashboard.tool.aiThumbnails'), href: '/thumbnails', Icon: IconImage, gradient: 'linear-gradient(135deg, #ec4899, #f472b6)', badge: 'Pro', badgeColor: '#8b5cf6' },
-            { title: 'AI SEO', href: '/metadata', Icon: IconSearch, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', badge: 'Pro', badgeColor: '#8b5cf6' },
-            { title: t('dashboard.tool.shortsAnalytics'), href: '/shorts-analytics', Icon: IconChart, gradient: 'linear-gradient(135deg, #10b981, #34d399)', badge: 'Free', badgeColor: '#10b981' },
+            { title: 'Video Analyzer', href: '/tools/youtube-downloader', Icon: IconSearch, iconColor: C.accent, badge: 'Free', badgeColor: C.green },
+            { title: t('dashboard.tool.mp3Converter'), href: '/tools/mp3-converter', Icon: IconMusic, iconColor: C.orange, badge: 'Free', badgeColor: C.green },
+            { title: 'Video Compressor', href: '/tools/video-compressor', Icon: IconCompress, iconColor: C.cyan, badge: 'Free', badgeColor: C.green },
+            { title: t('dashboard.tool.aiThumbnails'), href: '/thumbnails', Icon: IconImage, iconColor: C.pink, badge: 'Pro', badgeColor: C.purple },
+            { title: 'AI SEO', href: '/metadata', Icon: IconSearch, iconColor: C.purple, badge: 'Pro', badgeColor: C.purple },
+            { title: t('dashboard.tool.shortsAnalytics'), href: '/shorts-analytics', Icon: IconChart, iconColor: C.green, badge: 'Free', badgeColor: C.green },
           ] as const).map((tool) => (
             <div
               key={tool.href}
@@ -715,33 +755,33 @@ function WelcomeSection({
                 padding: '10px 4px',
                 borderRadius: 12,
                 cursor: 'pointer',
-                transition: 'all .15s ease',
-                transform: hov === `qt-${tool.href}` ? 'translateY(-1px)' : 'none',
-                background: hov === `qt-${tool.href}` ? `${C.surface}` : 'transparent',
+                transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+                transform: hov === `qt-${tool.href}` ? 'translateY(-2px)' : 'none',
+                background: hov === `qt-${tool.href}` ? C.bg : 'transparent',
                 flexShrink: 0,
               }}
             >
               <div style={{ position: 'relative' }}>
                 <div style={{
                   width: 48, height: 48, borderRadius: 14,
-                  background: tool.gradient,
+                  background: `${tool.iconColor}10`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: hov === `qt-${tool.href}` ? '0 4px 12px rgba(0,0,0,.12)' : '0 1px 4px rgba(0,0,0,.06)',
-                  transition: 'box-shadow .15s ease',
+                  boxShadow: 'none',
+                  transition: 'all .15s ease',
                 }}>
-                  <tool.Icon size={20} color="#fff" />
+                  <tool.Icon size={20} color={tool.iconColor} />
                 </div>
                 <span style={{
                   position: 'absolute', top: -4, right: -8,
-                  fontSize: 9, fontWeight: 700, color: '#fff',
-                  background: tool.badgeColor, borderRadius: 4, padding: '0px 4px',
+                  fontSize: 9, fontWeight: 600, color: tool.badgeColor,
+                  background: `${tool.badgeColor}12`, borderRadius: 10, padding: '0px 5px',
                   lineHeight: '15px', letterSpacing: '.02em',
                 }}>
                   {tool.badge}
                 </span>
               </div>
               <span style={{
-                fontSize: 11, fontWeight: 600, textAlign: 'center',
+                fontSize: 11, fontWeight: 500, textAlign: 'center',
                 lineHeight: 1.2, color: C.sub,
               }}>
                 {tool.title}
@@ -878,16 +918,15 @@ const ProjectCard = memo(function ProjectCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: C.surface,
-        border: `1px solid ${isHovered ? C.borderActive : C.border}`,
-        borderRadius: 14,
+        background: C.card,
+        borderRadius: 16,
         overflow: 'hidden',
         cursor: 'pointer',
         transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-        transform: isHovered ? 'translateY(-3px)' : 'none',
+        transform: isHovered ? 'translateY(-2px)' : 'none',
         boxShadow: isHovered
-          ? '0 8px 30px rgba(0,0,0,.15), 0 2px 8px rgba(0,0,0,.08)'
-          : '0 1px 3px rgba(0,0,0,.04)',
+          ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+          : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
         opacity: deleteIsPending && isDeleting ? 0.4 : 1,
         position: 'relative',
       }}
@@ -920,11 +959,13 @@ const ProjectCard = memo(function ProjectCard({
 
       {/* Thumbnail area */}
       <div style={{
-        width: '100%',
         height: 140,
-        background: `linear-gradient(135deg, ${C.card}, ${C.bg})`,
+        background: C.bg,
+        borderRadius: 12,
         position: 'relative',
         overflow: 'hidden',
+        margin: '8px 8px 0',
+        width: 'calc(100% - 16px)',
       }}>
         {p.thumbnailUrl && !imgError ? (
           <Image
@@ -961,15 +1002,14 @@ const ProjectCard = memo(function ProjectCard({
         <div style={{
           position: 'absolute', top: 10, right: 10,
           padding: '4px 10px',
-          borderRadius: 8,
+          borderRadius: 20,
           fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '.02em',
-          background: `${statusColor}20`,
+          fontWeight: 500,
+          letterSpacing: '.01em',
+          background: `${statusColor}14`,
           color: statusColor,
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
-          border: `1px solid ${statusColor}30`,
         }}>
           {statusLabel}
         </div>
@@ -1040,7 +1080,7 @@ const ProjectCard = memo(function ProjectCard({
           />
         ) : (
           <div style={{
-            fontSize: 14, fontWeight: 600, marginBottom: 8,
+            fontSize: 14, fontWeight: 600, marginBottom: 8, color: C.text,
             lineHeight: 1.4, letterSpacing: '-.01em',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
@@ -1233,13 +1273,15 @@ function ReferralWidget({
     <div
       style={{
         marginBottom: 28,
-        padding: 2,
         borderRadius: 16,
-        background: 'linear-gradient(135deg, #6366f1, #a855f7, #6366f1)',
+        background: C.card,
+        borderLeft: `3px solid ${C.accent}`,
         cursor: 'pointer',
-        transition: 'all .15s ease',
-        transform: hov ? 'translateY(-1px)' : 'none',
-        boxShadow: hov ? '0 8px 24px rgba(99,102,241,.2)' : '0 2px 8px rgba(0,0,0,.05)',
+        transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov
+          ? '0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)'
+          : '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -1249,7 +1291,7 @@ function ReferralWidget({
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/referral'); } }}
     >
       <div style={{
-        background: C.card,
+        background: 'transparent',
         borderRadius: 14,
         padding: '18px 22px',
         display: 'flex',
@@ -1263,22 +1305,22 @@ function ReferralWidget({
             width: 40,
             height: 40,
             borderRadius: 10,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: `${C.accent}10`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="8" width="16" height="10" rx="2" stroke="#fff" strokeWidth="1.5" />
-              <path d="M10 8V18" stroke="#fff" strokeWidth="1.5" />
-              <path d="M2 11H18" stroke="#fff" strokeWidth="1.5" />
-              <path d="M10 8C10 8 10 4 7 4C5.5 4 4 5 5 6.5C6 8 10 8 10 8Z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M10 8C10 8 10 4 13 4C14.5 4 16 5 15 6.5C14 8 10 8 10 8Z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+              <rect x="2" y="8" width="16" height="10" rx="2" stroke={C.accent} strokeWidth="1.5" />
+              <path d="M10 8V18" stroke={C.accent} strokeWidth="1.5" />
+              <path d="M2 11H18" stroke={C.accent} strokeWidth="1.5" />
+              <path d="M10 8C10 8 10 4 7 4C5.5 4 4 5 5 6.5C6 8 10 8 10 8Z" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 8C10 8 10 4 13 4C14.5 4 16 5 15 6.5C14 8 10 8 10 8Z" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: '-.01em' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: '-.01em' }}>
               {t('dashboard.referralWidget.title')}
             </div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
@@ -1294,12 +1336,10 @@ function ReferralWidget({
               style={{
                 height: 36,
                 padding: '0 14px',
-                borderRadius: 8,
-                border: 'none',
-                background: copied
-                  ? 'linear-gradient(135deg, #16a34a, #22c55e)'
-                  : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                color: '#fff',
+                borderRadius: 10,
+                border: `1px solid ${copied ? C.green : C.accent}`,
+                background: copied ? `${C.green}10` : `${C.accent}10`,
+                color: copied ? C.green : C.accent,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -1317,9 +1357,10 @@ function ReferralWidget({
             <span style={{
               height: 36,
               padding: '0 14px',
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              color: '#fff',
+              borderRadius: 10,
+              background: `${C.accent}10`,
+              border: `1px solid ${C.accent}`,
+              color: C.accent,
               fontSize: 12,
               fontWeight: 600,
               display: 'flex',
@@ -1417,21 +1458,21 @@ function PlanUsageWidget({
   return (
     <div style={{
       background: C.card,
-      border: `1px solid ${C.border}`,
       borderRadius: 16,
       padding: '20px 22px',
       marginBottom: 20,
+      boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('dashboard.yourPlan')}</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('dashboard.yourPlan')}</span>
           <span style={{
             fontSize: 11,
-            fontWeight: 700,
-            color: planColor,
+            fontWeight: 600,
+            color: plan === 'FREE' ? C.sub : C.accent,
             padding: '3px 10px',
-            borderRadius: 50,
-            background: planGradient,
+            borderRadius: 20,
+            background: plan === 'FREE' ? C.bg : `${C.accent}10`,
             letterSpacing: '.02em',
           }}>
             {planLabel}
@@ -1443,15 +1484,15 @@ function PlanUsageWidget({
             style={{
               padding: '8px 18px',
               borderRadius: 10,
-              border: 'none',
-              background: 'linear-gradient(135deg, #6366f1, #818cf8)',
-              color: '#fff',
+              border: `1px solid ${C.accent}`,
+              background: `${C.accent}10`,
+              color: C.accent,
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .2s ease',
-              boxShadow: '0 2px 10px rgba(99,102,241,.25)',
+              boxShadow: 'none',
             }}
           >
             {t('dashboard.upgradeCta')}
@@ -1572,9 +1613,9 @@ function TemplatePickerModal({
         onClick={() => { if (!isCreating) onClose(); }}
         style={{
           position: 'fixed', inset: 0,
-          background: C.overlay,
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
+          background: 'rgba(0,0,0,.3)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           zIndex: 999,
         }}
       />
@@ -1584,8 +1625,7 @@ function TemplatePickerModal({
         position: 'fixed',
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: C.surface,
-        border: `1px solid ${C.border}`,
+        background: C.card,
         borderRadius: 16,
         width: '92%', maxWidth: 720,
         maxHeight: '88dvh',
@@ -1593,7 +1633,7 @@ function TemplatePickerModal({
         display: 'flex',
         flexDirection: 'column',
         zIndex: 1000,
-        boxShadow: '0 24px 80px rgba(0,0,0,.3)',
+        boxShadow: '0 24px 80px rgba(0,0,0,.15), 0 8px 24px rgba(0,0,0,.08)',
         fontFamily: 'var(--font-sans), sans-serif',
       }}>
         {/* Header */}
@@ -1602,7 +1642,7 @@ function TemplatePickerModal({
           padding: '18px 22px 0',
           flexShrink: 0,
         }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
+          <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>
             {t('dashboard.newProject')}
           </h2>
           <button
@@ -1635,9 +1675,9 @@ function TemplatePickerModal({
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectBlank(); } }}
             style={{
               padding: '14px 16px',
-              borderRadius: 12,
-              border: `2px solid ${hov === 'blank' ? C.accent : C.border}`,
-              background: hov === 'blank' ? `${C.accent}08` : C.card,
+              borderRadius: 14,
+              border: `1px solid ${hov === 'blank' ? C.accent : C.border}`,
+              background: hov === 'blank' ? `${C.accent}06` : C.bg,
               cursor: isCreating ? 'wait' : 'pointer',
               transition: 'all .15s ease',
               marginBottom: 10,
@@ -1684,11 +1724,11 @@ function TemplatePickerModal({
               style={{
                 padding: '5px 14px',
                 borderRadius: 20,
-                border: `1px solid ${!categoryFilter ? C.accent : C.border}`,
-                background: !categoryFilter ? `${C.accent}14` : 'transparent',
+                border: 'none',
+                background: !categoryFilter ? `${C.accent}12` : C.bg,
                 color: !categoryFilter ? C.accent : C.sub,
                 fontSize: 12,
-                fontWeight: 600,
+                fontWeight: 500,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'all .15s ease',
@@ -1707,11 +1747,11 @@ function TemplatePickerModal({
                   style={{
                     padding: '5px 14px',
                     borderRadius: 20,
-                    border: `1px solid ${isActive ? info.color : C.border}`,
-                    background: isActive ? `${info.color}14` : 'transparent',
+                    border: 'none',
+                    background: isActive ? `${info.color}12` : C.bg,
                     color: isActive ? info.color : C.sub,
                     fontSize: 12,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     cursor: 'pointer',
                     fontFamily: 'inherit',
                     transition: 'all .15s ease',
@@ -1745,11 +1785,15 @@ function TemplatePickerModal({
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectTemplate(tpl); } }}
                   style={{
                     padding: '14px 16px',
-                    borderRadius: 12,
+                    borderRadius: 14,
                     border: `1px solid ${hov === tpl.id ? C.accent : C.border}`,
-                    background: hov === tpl.id ? `${C.accent}06` : C.card,
+                    background: hov === tpl.id ? `${C.accent}04` : C.bg,
                     cursor: isCreating ? 'wait' : 'pointer',
-                    transition: 'all .15s ease',
+                    transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+                    transform: hov === tpl.id ? 'translateY(-1px)' : 'none',
+                    boxShadow: hov === tpl.id
+                      ? '0 4px 12px rgba(0,0,0,.06)'
+                      : 'none',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 10,
@@ -1759,16 +1803,15 @@ function TemplatePickerModal({
                   {/* Top row: icon + name + category badge */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
-                      width: 40, height: 40, borderRadius: 10,
-                      background: C.surface,
-                      border: `1px solid ${C.border}`,
+                      width: 40, height: 40, borderRadius: 12,
+                      background: C.card,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0, fontSize: 18,
                     }}>
                       {tpl.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, lineHeight: 1.3 }}>
                         {isRu ? tpl.name : tpl.nameEn}
                       </div>
                     </div>
@@ -1860,16 +1903,16 @@ function PublishHistoryWidget({
   return (
     <div style={{
       background: C.card,
-      border: `1px solid ${C.border}`,
       borderRadius: 16,
       padding: '20px 22px',
       marginBottom: 20,
+      boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         </svg>
-        <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('dashboard.recentlyPublished')}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{t('dashboard.recentlyPublished')}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {entries.map((entry, i) => {
@@ -2311,10 +2354,10 @@ export function Dashboard() {
       {/* ── Header ──────────────────────────────────── */}
       <div className="tf-dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div style={{ minWidth: 0 }}>
-          <h1 className="tf-dash-heading" style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-.03em', lineHeight: 1.2 }}>
+          <h1 className="tf-dash-heading" style={{ fontSize: 26, fontWeight: 600, margin: '0 0 4px', letterSpacing: '-.02em', lineHeight: 1.2, color: C.text }}>
             {profile.isLoading ? <Skeleton width={260} height={34} /> : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}!`}
           </h1>
-          <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+          <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5, fontWeight: 400 }}>
             {profile.isLoading ? (
               <Skeleton width={160} height={16} style={{ marginTop: 4 }} />
             ) : (
@@ -2332,21 +2375,19 @@ export function Dashboard() {
             onMouseLeave={() => setHoveredBtn(null)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: hoveredBtn === 'create-main' ? C.accent : C.accent,
-              color: '#fff', border: 'none', borderRadius: 12,
-              padding: '12px 24px', minHeight: 44, fontSize: 15, fontWeight: 700,
+              background: C.accent,
+              color: '#fff', border: 'none', borderRadius: 10,
+              padding: '10px 22px', minHeight: 40, fontSize: 14, fontWeight: 600,
               cursor: createProject.isPending ? 'wait' : 'pointer',
               fontFamily: 'inherit', opacity: createProject.isPending ? 0.6 : 1,
-              boxShadow: hoveredBtn === 'create-main'
-                ? `0 6px 24px ${C.accent}44, 0 0 0 3px ${C.accent}20`
-                : `0 4px 16px ${C.accent}33`,
-              transition: 'all .25s cubic-bezier(.4,0,.2,1)',
+              boxShadow: 'none',
+              transition: 'all .2s cubic-bezier(.4,0,.2,1)',
               transform: hoveredBtn === 'create-main' ? 'translateY(-1px)' : 'none',
               letterSpacing: '-.01em',
               flexShrink: 0,
             }}
           >
-            <IconPlus size={18} color="#fff" />
+            <IconPlus size={16} color="#fff" />
             {createProject.isPending ? t('dashboard.creating') : t('dashboard.newProject')}
           </button>
           <button
@@ -2356,13 +2397,13 @@ export function Dashboard() {
             onMouseLeave={() => setHoveredBtn(null)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: 'transparent',
-              color: C.text, border: `1px solid ${C.border}`, borderRadius: 12,
-              padding: '12px 20px', minHeight: 44, fontSize: 14, fontWeight: 600,
+              background: C.card,
+              color: C.text, border: `1px solid ${C.border}`, borderRadius: 10,
+              padding: '10px 18px', minHeight: 40, fontSize: 14, fontWeight: 500,
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .2s ease',
-              boxShadow: hoveredBtn === 'import-main' ? `0 2px 8px rgba(0,0,0,.08)` : 'none',
+              boxShadow: 'none',
               flexShrink: 0,
             }}
           >
@@ -2375,7 +2416,7 @@ export function Dashboard() {
 
       {/* ── Quick Actions Bar ────────────────────────── */}
       <div style={{
-        display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap',
+        display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap',
       }}>
         <button
           onClick={() => createProject.mutate({ title: t('dashboard.newProject') })}
@@ -2384,16 +2425,16 @@ export function Dashboard() {
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 12,
+            padding: '9px 18px', borderRadius: 10,
             border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-new' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 600,
+            background: hoveredBtn === 'qa-new' ? C.bg : C.card,
+            color: C.text, fontSize: 13, fontWeight: 500,
             cursor: createProject.isPending ? 'wait' : 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
             opacity: createProject.isPending ? 0.6 : 1,
           }}
         >
-          <IconPlus size={16} color={C.accent} />
+          <IconPlus size={15} color={C.sub} />
           {t('dashboard.newProject')}
         </button>
         <button
@@ -2402,15 +2443,15 @@ export function Dashboard() {
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 12,
+            padding: '9px 18px', borderRadius: 10,
             border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-import' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 600,
+            background: hoveredBtn === 'qa-import' ? C.bg : C.card,
+            color: C.text, fontSize: 13, fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
           }}
         >
-          <IconUploadSmall size={16} color={C.sub} />
+          <IconUploadSmall size={15} color={C.sub} />
           {t('dashboard.importProject')}
         </button>
         <button
@@ -2419,15 +2460,15 @@ export function Dashboard() {
           onMouseLeave={() => setHoveredBtn(null)}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 12,
+            padding: '9px 18px', borderRadius: 10,
             border: `1px solid ${C.border}`,
-            background: hoveredBtn === 'qa-template' ? C.surface : C.card,
-            color: C.text, fontSize: 13, fontWeight: 600,
+            background: hoveredBtn === 'qa-template' ? C.bg : C.card,
+            color: C.text, fontSize: 13, fontWeight: 500,
             cursor: 'pointer',
             fontFamily: 'inherit', transition: 'all .15s ease',
           }}
         >
-          <IconLayout size={16} color={C.sub} />
+          <IconLayout size={15} color={C.sub} />
           {t('dashboard.fromTemplate')}
         </button>
       </div>
@@ -2449,29 +2490,23 @@ export function Dashboard() {
                   className="tf-stat-card"
                   style={{
                     background: C.card,
-                    border: `1px solid ${C.border}`,
                     borderRadius: 14,
-                    padding: '16px',
+                    padding: '18px 16px',
                     position: 'relative',
                     overflow: 'hidden',
                     cursor: 'default',
-                    transition: 'box-shadow .25s ease, transform .25s ease, border-color .25s ease',
+                    transition: 'box-shadow .25s ease, transform .25s ease',
                     minWidth: 0,
+                    boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
                   }}
                 >
-                  {/* Gradient accent stripe */}
-                  <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                    background: `linear-gradient(90deg, ${s.iconColor}, transparent)`,
-                    opacity: 0.6,
-                  }} />
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 10,
+                    marginBottom: 12,
                   }}>
                     <div style={{
-                      width: 38, height: 38, borderRadius: 10,
-                      background: s.gradient,
+                      width: 40, height: 40, borderRadius: '50%',
+                      background: `${s.iconColor}10`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}>
@@ -2479,19 +2514,18 @@ export function Dashboard() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'center', minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 11, color: C.sub, marginBottom: 4, fontWeight: 500,
-                      letterSpacing: '.02em', textTransform: 'uppercase',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {s.label}
-                    </div>
                     <div className="tf-dash-stat-value" style={{
-                      fontSize: 20, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.2,
-                      color: C.text,
+                      fontSize: 22, fontWeight: 600, letterSpacing: '-.02em', lineHeight: 1.2,
+                      color: C.text, marginBottom: 4,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {s.value}
+                    </div>
+                    <div style={{
+                      fontSize: 12, color: C.sub, fontWeight: 400,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {s.label}
                     </div>
                   </div>
                 </div>
@@ -2514,9 +2548,9 @@ export function Dashboard() {
       {/* ── Projects section ────────────────────────── */}
       <div style={{
         background: C.card,
-        border: `1px solid ${C.border}`,
         borderRadius: 16,
         overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.02)',
       }}>
         {/* Toolbar */}
         <div className="tf-dash-toolbar" style={{
@@ -2526,7 +2560,7 @@ export function Dashboard() {
           flexWrap: 'wrap', gap: 12,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: '-.01em', color: C.text }}>
               {t('dashboard.myProjects')}
             </h2>
             {projects.isRefetching && (
@@ -2563,7 +2597,7 @@ export function Dashboard() {
                 aria-label={t('dashboard.searchProjects')}
                 style={{
                   padding: '9px 14px 9px 32px',
-                  background: C.surface,
+                  background: C.bg,
                   border: `1px solid ${C.border}`,
                   borderRadius: 10,
                   color: C.text,
@@ -2585,7 +2619,7 @@ export function Dashboard() {
                 aria-label={t('dashboard.sortProjects')}
                 style={{
                   padding: '8px 10px',
-                  background: C.surface,
+                  background: C.bg,
                   border: `1px solid ${C.border}`,
                   borderRadius: 10,
                   color: C.text,
@@ -2633,18 +2667,18 @@ export function Dashboard() {
                     onMouseEnter={() => setHoveredBtn(`filter-${f.label}`)}
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
-                      padding: '8px 16px',
-                      borderRadius: 9999,
-                      border: `1px solid ${isActive ? C.accent : C.border}`,
+                      padding: '7px 16px',
+                      borderRadius: 20,
+                      border: 'none',
                       fontSize: 12,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
                       transition: 'all .2s ease',
-                      background: isActive ? C.accentDim : (hoveredBtn === `filter-${f.label}` ? C.surface : 'transparent'),
+                      background: isActive ? `${C.accent}12` : (hoveredBtn === `filter-${f.label}` ? C.bg : C.bg),
                       color: isActive ? C.accent : C.sub,
                       whiteSpace: 'nowrap',
-                      minHeight: 36,
+                      minHeight: 34,
                     }}
                   >
                     {f.label}
@@ -2717,10 +2751,10 @@ export function Dashboard() {
                   <div style={{ marginBottom: 20 }}>
                     <EmptyIllustration color={C.accent} dimColor={C.dim} label={t('dashboard.studioAwaits')} />
                   </div>
-                  <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 8px', color: C.text, letterSpacing: '-.02em' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', color: C.text, letterSpacing: '-.02em' }}>
                     {t('dashboard.createFirstProject')}
                   </h3>
-                  <p style={{ color: C.sub, fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6 }}>
+                  <p style={{ color: C.sub, fontSize: 14, marginBottom: 24, maxWidth: 360, lineHeight: 1.6, fontWeight: 400 }}>
                     {t('dashboard.createFirstDesc')}
                   </p>
                   <button
@@ -2730,20 +2764,18 @@ export function Dashboard() {
                     onMouseLeave={() => setHoveredBtn(null)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '13px 32px',
-                      borderRadius: 12,
+                      padding: '11px 28px',
+                      borderRadius: 10,
                       background: C.accent,
                       color: '#fff',
                       border: 'none',
-                      fontSize: 15,
-                      fontWeight: 700,
+                      fontSize: 14,
+                      fontWeight: 600,
                       cursor: createProject.isPending ? 'wait' : 'pointer',
                       fontFamily: 'inherit',
-                      boxShadow: hoveredBtn === 'create-empty'
-                        ? `0 8px 28px ${C.accent}44`
-                        : `0 4px 16px ${C.accent}33`,
-                      transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-                      transform: hoveredBtn === 'create-empty' ? 'translateY(-2px)' : 'none',
+                      boxShadow: 'none',
+                      transition: 'all .2s cubic-bezier(.4,0,.2,1)',
+                      transform: hoveredBtn === 'create-empty' ? 'translateY(-1px)' : 'none',
                       opacity: createProject.isPending ? 0.6 : 1,
                     }}
                   >
