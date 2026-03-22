@@ -246,7 +246,7 @@ export default function FreeToolsPage() {
                 overflow: "hidden",
               }}
             >
-              {/* Gradient visual area */}
+              {/* Gradient visual area with animated shapes */}
               <div
                 style={{
                   height: 120,
@@ -254,9 +254,13 @@ export default function FreeToolsPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
-                {tool.icon}
+                <div style={{ position: "absolute", width: 60, height: 60, borderRadius: "50%", background: "rgba(255,255,255,0.06)", top: -15, right: -5 }} className="tf-float-shape" />
+                <div style={{ position: "absolute", width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.04)", bottom: -8, left: "20%" }} className="tf-float-shape-rev" />
+                <div style={{ position: "relative", zIndex: 1 }}>{tool.icon}</div>
               </div>
               {/* Text content */}
               <div style={{ padding: "16px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
