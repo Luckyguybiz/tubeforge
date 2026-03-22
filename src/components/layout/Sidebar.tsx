@@ -102,6 +102,19 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M10.5 10.5L14 14" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   ),
+  'ai-thumbnails': (c, a) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <defs>
+        <linearGradient id="aithumbs-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={a ?? c} />
+          <stop offset="1" stopColor={c} />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="3" width="16" height="11" rx="2.5" fill={a ? 'url(#aithumbs-g)' : c} opacity=".25" />
+      <rect x="3" y="4" width="14" height="9" rx="1.5" fill={c} opacity=".85" />
+      <path d="M10 6.5L11.2 9.3L14 9.8L12 11.6L12.4 14.5L10 13.1L7.6 14.5L8 11.6L6 9.8L8.8 9.3L10 6.5Z" fill={c} opacity=".4" />
+    </svg>
+  ),
   tools: (c) => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="2" y="2" width="7" height="7" rx="2" fill={c} opacity=".85" />
@@ -248,6 +261,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
       label: t('sidebar.tools'),
       items: [
         { id: 'tools', label: t('nav.tools') },
+        { id: 'ai-thumbnails', label: t('nav.aiThumbnails') },
         { id: 'thumbnails', label: t('nav.thumbnails') },
         { id: 'preview', label: t('nav.preview') },
         { id: 'media', label: t('nav.media') },
@@ -284,6 +298,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   editor: ['blue', 'cyan'],
   metadata: ['purple', 'blue'],
   tools: ['accent', 'purple'],
+  'ai-thumbnails': ['accent', 'purple'],
   thumbnails: ['orange', 'pink'],
   preview: ['green', 'cyan'],
   team: ['purple', 'pink'],
