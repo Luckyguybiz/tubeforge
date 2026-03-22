@@ -10,78 +10,97 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
 import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
 
-/* ── Tool definitions ─────────────────────────────────── */
+/* ── Top Choice tool definitions ──────────────────────── */
 
-const TOOLS = [
+const TOP_TOOLS = [
   {
     title: 'AI Thumbnails',
     desc: 'Create viral YouTube thumbnails with AI',
     href: '/ai-thumbnails',
-    gradient: ['#6366f1', '#8b5cf6'] as const,
+    from: '#6366f1',
+    to: '#8b5cf6',
     badge: 'NEW' as const,
     icon: (
-      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" />
       </svg>
     ),
   },
   {
     title: 'Video Editor',
-    desc: 'AI-powered video creation for YouTube',
+    desc: 'AI-powered video creation',
     href: '/editor',
-    gradient: ['#3b82f6', '#06b6d4'] as const,
+    from: '#3b82f6',
+    to: '#06b6d4',
     badge: null,
     icon: (
-      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="5,3 19,12 5,21" />
       </svg>
     ),
   },
   {
     title: 'Design Studio',
-    desc: 'Canvas editor for thumbnails and graphics',
+    desc: 'Canvas editor for graphics',
     href: '/thumbnails',
-    gradient: ['#f59e0b', '#f97316'] as const,
+    from: '#f59e0b',
+    to: '#f97316',
     badge: null,
     icon: (
-      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
       </svg>
     ),
   },
   {
     title: 'SEO Optimizer',
-    desc: 'Optimize titles, descriptions and tags',
+    desc: 'Optimize titles and tags',
     href: '/preview?tab=seo',
-    gradient: ['#10b981', '#34d399'] as const,
+    from: '#10b981',
+    to: '#34d399',
     badge: null,
     icon: (
-      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round">
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round">
         <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
     ),
   },
   {
     title: 'Video Analyzer',
-    desc: 'Analyze any YouTube video for free',
+    desc: 'Analyze any YouTube video',
     href: '/tools/youtube-downloader',
-    gradient: ['#14b8a6', '#22d3ee'] as const,
+    from: '#14b8a6',
+    to: '#22d3ee',
     badge: 'FREE' as const,
     icon: (
-      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     ),
   },
   {
     title: 'Analytics',
-    desc: 'YouTube Shorts and TikTok analytics',
+    desc: 'YouTube & TikTok analytics',
     href: '/analytics',
-    gradient: ['#8b5cf6', '#ec4899'] as const,
+    from: '#8b5cf6',
+    to: '#ec4899',
     badge: null,
     icon: (
-      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 12a9 9 0 11-6.2-8.6" /><path d="M21 3v6h-6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Content Planner',
+    desc: 'Plan your content calendar',
+    href: '/preview?tab=planner',
+    from: '#f97316',
+    to: '#ef4444',
+    badge: null,
+    icon: (
+      <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
       </svg>
     ),
   },
@@ -156,13 +175,14 @@ function timeAgoShort(ts: number): string {
   return `${Math.floor(days / 30)}mo ago`;
 }
 
-/* ── ToolCard component ───────────────────────────────── */
+/* ── TopChoiceCard component ──────────────────────────── */
 
-function ToolCard({
+function TopChoiceCard({
   title,
   desc,
   href,
-  gradient,
+  from,
+  to,
   badge,
   icon,
   C,
@@ -170,83 +190,66 @@ function ToolCard({
   title: string;
   desc: string;
   href: string;
-  gradient: readonly [string, string];
+  from: string;
+  to: string;
   badge: string | null;
   icon: React.ReactNode;
   C: ReturnType<typeof useThemeStore.getState>['theme'];
 }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
     <Link
       href={href}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="tf-tool-card"
+      className="tf-top-choice-card"
       style={{
-        background: C.card,
-        borderRadius: 16,
+        width: 220,
+        flexShrink: 0,
+        borderRadius: 14,
         overflow: 'hidden',
-        border: `1px solid ${C.border}`,
         textDecoration: 'none',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        scrollSnapAlign: 'start',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'all .25s cubic-bezier(.4,0,.2,1)',
-        transform: hovered ? 'translateY(-4px)' : 'none',
-        boxShadow: hovered ? '0 12px 32px rgba(0,0,0,.25)' : 'none',
       }}
     >
-      {/* Gradient visual area */}
+      {/* Visual area — gradient with icon */}
       <div style={{
         height: 160,
-        background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+        background: `linear-gradient(135deg, ${from}, ${to})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        borderRadius: '14px 14px 0 0',
       }}>
-        <div style={{
-          transition: 'transform .3s ease',
-          transform: hovered ? 'scale(1.1)' : 'scale(1)',
-        }}>
-          {icon}
-        </div>
+        {icon}
         {badge && (
           <span style={{
             position: 'absolute',
-            top: 12,
-            right: 12,
-            background: badge === 'FREE' ? '#22c55e' : '#84cc16',
-            color: '#000',
+            top: 10,
+            right: 10,
+            background: badge === 'PRO' ? '#6366f1' : badge === 'NEW' ? '#84cc16' : '#22c55e',
+            color: badge === 'PRO' ? '#fff' : '#000',
             fontSize: 10,
             fontWeight: 700,
-            padding: '3px 10px',
+            padding: '3px 8px',
             borderRadius: 6,
-            letterSpacing: '.04em',
           }}>
             {badge}
           </span>
         )}
       </div>
-
-      {/* Text area */}
-      <div style={{ padding: '16px 18px 20px' }}>
+      {/* Title + description */}
+      <div style={{ padding: '12px 14px', background: C.card }}>
         <div style={{
-          fontSize: 16,
-          fontWeight: 700,
-          color: C.text,
-          marginBottom: 6,
-          letterSpacing: '-.01em',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}>
-          {title}
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{title}</span>
+          <span style={{ color: C.dim }}>&rarr;</span>
         </div>
-        <div style={{
-          fontSize: 13,
-          color: C.sub,
-          lineHeight: 1.5,
-        }}>
-          {desc}
-        </div>
+        <div style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>{desc}</div>
       </div>
     </Link>
   );
@@ -476,26 +479,70 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* ── Our Tools — 3 column grid ─────────────── */}
+      {/* ── Top Choice — horizontal scroll ────────── */}
       <div style={{ marginBottom: 40 }}>
-        <h2 style={{
-          fontSize: 22, fontWeight: 700, color: C.text,
-          margin: '0 0 20px', letterSpacing: '-.02em',
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
         }}>
-          Our Tools
-        </h2>
-        <div className="tf-tools-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 16,
-        }}>
-          {TOOLS.map((tool) => (
-            <ToolCard
+          <div>
+            <h2 style={{
+              fontSize: 22,
+              fontWeight: 800,
+              color: C.text,
+              margin: 0,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.02em',
+            }}>
+              Top Choice
+            </h2>
+            <p style={{
+              fontSize: 13,
+              color: C.sub,
+              margin: '4px 0 0',
+            }}>
+              Creator-recommended tools tailored for you
+            </p>
+          </div>
+          <Link href="/tools" style={{
+            fontSize: 13,
+            color: C.sub,
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+          }}>
+            See all <span>&rsaquo;</span>
+          </Link>
+        </div>
+        <div
+          onWheel={(e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+              e.currentTarget.scrollLeft += e.deltaY;
+              e.preventDefault();
+            }
+          }}
+          style={{
+            display: 'flex',
+            gap: 16,
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            paddingBottom: 4,
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
+          className="tf-top-choice-scroll"
+        >
+          {TOP_TOOLS.map((tool) => (
+            <TopChoiceCard
               key={tool.href}
               title={tool.title}
               desc={tool.desc}
               href={tool.href}
-              gradient={tool.gradient}
+              from={tool.from}
+              to={tool.to}
               badge={tool.badge}
               icon={tool.icon}
               C={C}

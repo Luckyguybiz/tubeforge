@@ -17,7 +17,28 @@ const Metadata = dynamic(
   { loading: () => <Skeleton width="100%" height="80vh" />, ssr: false },
 );
 
-type TabId = 'preview' | 'seo';
+const ContentPlanner = dynamic(
+  () => import('@/views/Tools/ContentPlanner').then((m) => ({ default: m.ContentPlanner })),
+  { loading: () => <Skeleton width="100%" height="80vh" />, ssr: false },
+);
+
+type TabId = 'preview' | 'seo' | 'planner';
+
+const TABS: { id: TabId; icon: string }[] = [
+  { id: 'preview', icon: '\uD83C\uDFAC' },
+  { id: 'seo', icon: '\uD83D\uDD0D' },
+  { id: 'planner', icon: '\uD83D\uDCC5' },
+];
+
+const TAB_LABEL_KEYS: Record<TabId, string> = {
+  preview: 'publish.tabPreview',
+  seo: 'publish.tabSeo',
+  planner: 'publish.tabPlanner',
+};
+
+function isValidTab(val: string | null): val is TabId {
+  return val === 'preview' || val === 'seo' || val === 'planner';
+}
 
 function PublishContent() {
   const searchParams = useSearchParams();
@@ -27,7 +48,7 @@ function PublishContent() {
   const projectId = searchParams.get('projectId');
   const tabParam = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<TabId>(tabParam === 'seo' ? 'seo' : 'preview');
+  const [activeTab, setActiveTab] = useState<TabId>(isValidTab(tabParam) ? tabParam : 'preview');
 
   const switchTab = useCallback((tab: TabId) => {
     setActiveTab(tab);
@@ -35,11 +56,6 @@ function PublishContent() {
     params.set('tab', tab);
     router.replace(`/preview?${params.toString()}`, { scroll: false });
   }, [searchParams, router]);
-
-  const tabs: { id: TabId; label: string }[] = [
-    { id: 'preview', label: t('publish.tabPreview') },
-    { id: 'seo', label: t('publish.tabSeo') },
-  ];
 
   return (
     <div>
@@ -56,7 +72,7 @@ function PublishContent() {
           width: 'fit-content',
         }}
       >
-        {tabs.map((tab) => {
+        {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
@@ -76,7 +92,7 @@ function PublishContent() {
                 letterSpacing: '-.01em',
               }}
             >
-              {tab.label}
+              {tab.icon} {t(TAB_LABEL_KEYS[tab.id])}
             </button>
           );
         })}
@@ -85,6 +101,7 @@ function PublishContent() {
       {/* Tab content */}
       {activeTab === 'preview' && <PreviewSave projectId={projectId} />}
       {activeTab === 'seo' && <Metadata projectId={projectId} />}
+      {activeTab === 'planner' && <ContentPlanner />}
     </div>
   );
 }

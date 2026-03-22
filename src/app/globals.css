@@ -187,6 +187,14 @@ html { overflow-x: hidden; }
 }
 .tf-free-tools-scroll::-webkit-scrollbar { display: none; }
 
+/* ── Top Choice cards ──────────────────────────────── */
+
+.tf-top-choice-scroll::-webkit-scrollbar { display: none; }
+.tf-top-choice-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.3);
+}
+
 /* ── Dashboard responsive overrides ──────────────────── */
 
 @media (max-width: 768px) {
@@ -202,18 +210,11 @@ html { overflow-x: hidden; }
   .tf-dash-showcase-left h2 {
     font-size: 22px !important;
   }
-  .tf-tools-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
 }
 
 @media (max-width: 640px) {
   .tf-dash-heading {
     font-size: 22px !important;
-  }
-  .tf-tools-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
   }
   .tf-history-grid {
     grid-template-columns: 1fr !important;
