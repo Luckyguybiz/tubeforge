@@ -1000,6 +1000,11 @@ export default function LandingPage() {
                   { label: "vs CapCut", href: "/compare/tubeforge-vs-capcut" },
                   { label: "vs Pictory", href: "/compare/tubeforge-vs-pictory" },
                   { label: "vs Synthesia", href: "/compare/tubeforge-vs-synthesia" },
+                  { label: "vs TubeBuddy", href: "/compare/tubeforge-vs-tubebuddy" },
+                  { label: "vs vidIQ", href: "/compare/tubeforge-vs-vidiq" },
+                  { label: "vs VEED", href: "/compare/tubeforge-vs-veed" },
+                  { label: "vs Opus Clip", href: "/compare/tubeforge-vs-opus-clip" },
+                  { label: "vs Descript", href: "/compare/tubeforge-vs-descript" },
                 ],
               },
               {
