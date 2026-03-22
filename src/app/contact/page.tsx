@@ -24,24 +24,60 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [message, setMessage] = useState('');
+  const [website, setWebsite] = useState(''); // honeypot
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !message.trim()) {
       addToast('warning', 'Please fill in all required fields');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      addToast('warning', 'Please enter a valid email address');
+      return;
+    }
+    if (message.trim().length < 10) {
+      addToast('warning', 'Message must be at least 10 characters');
+      return;
+    }
     setSubmitting(true);
-    console.info('[Contact Form]', { name, email, subject, message });
-    setTimeout(() => {
-      addToast('success', 'Thank you! We will respond within 24 hours');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          subject,
+          message: message.trim(),
+          website,
+        }),
+      });
+      if (res.status === 429) {
+        addToast('warning', 'Too many submissions. Please try again later.');
+        return;
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Something went wrong' }));
+        addToast('error', data.error || 'Failed to send message');
+        return;
+      }
+      setSubmittedEmail(email.trim());
+      setSubmitted(true);
       setName('');
       setEmail('');
       setSubject(SUBJECTS[0]);
       setMessage('');
+      setWebsite('');
+    } catch {
+      addToast('error', 'Network error. Please try again.');
+    } finally {
       setSubmitting(false);
-    }, 600);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -155,7 +191,61 @@ export default function ContactPage() {
           }}
           className="tf-contact-grid"
         >
-          {/* Form */}
+          {/* Form / Success state */}
+          {submitted ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 20,
+                maxWidth: 560,
+                padding: '48px 24px',
+                textAlign: 'center',
+              }}
+            >
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  background: '#f0fdf4',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0, color: '#1d1d1f' }}>
+                Message Sent
+              </h2>
+              <p style={{ fontSize: 16, color: '#86868b', margin: 0, lineHeight: 1.6, maxWidth: 400 }}>
+                Thank you for reaching out. We&apos;ll respond within 24 hours.
+                Check your inbox at <strong style={{ color: '#1d1d1f' }}>{submittedEmail}</strong> for our reply.
+              </p>
+              <button
+                onClick={() => setSubmitted(false)}
+                style={{
+                  marginTop: 8,
+                  padding: '12px 28px',
+                  background: '#f5f5f7',
+                  color: '#1d1d1f',
+                  border: 'none',
+                  borderRadius: 12,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background .2s',
+                }}
+              >
+                Send Another Message
+              </button>
+            </div>
+          ) : (
           <form
             onSubmit={handleSubmit}
             style={{
@@ -174,6 +264,7 @@ export default function ContactPage() {
                 placeholder="Your name"
                 style={inputStyle}
                 required
+                maxLength={200}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = '#6366f1';
                   e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,.08)';
@@ -193,6 +284,7 @@ export default function ContactPage() {
                 placeholder="you@example.com"
                 style={inputStyle}
                 required
+                maxLength={320}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = '#6366f1';
                   e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,.08)';
@@ -230,6 +322,7 @@ export default function ContactPage() {
                 rows={6}
                 style={{ ...inputStyle, resize: 'vertical', height: 'auto' }}
                 required
+                maxLength={5000}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = '#6366f1';
                   e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,.08)';
@@ -238,6 +331,19 @@ export default function ContactPage() {
                   e.currentTarget.style.borderColor = 'transparent';
                   e.currentTarget.style.boxShadow = 'none';
                 }}
+              />
+            </div>
+            {/* Honeypot field -- hidden from real users, bots tend to fill it */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+              <label htmlFor="tf-website">Website</label>
+              <input
+                type="text"
+                id="tf-website"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
               />
             </div>
             <button
@@ -261,6 +367,7 @@ export default function ContactPage() {
               {submitting ? 'Sending...' : 'Send Message'}
             </button>
           </form>
+          )}
 
           {/* Info sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

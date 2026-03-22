@@ -802,10 +802,67 @@ function paymentFailedTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Contact form submission — notification to support
+// ---------------------------------------------------------------------------
+
+function contactFormTemplate(data: TemplateData): TemplateResult {
+  const senderName = String(data.name || 'Unknown');
+  const senderEmail = String(data.email || 'Unknown');
+  const subjectLine = String(data.subject || 'General');
+  const msg = String(data.message || '');
+  const senderIp = String(data.ip || 'Unknown');
+  const submittedAt = String(data.submittedAt || new Date().toISOString());
+
+  return {
+    subject: `[Contact Form] ${subjectLine} — from ${senderName}`,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;">New Contact Form Submission</h1>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eee;">
+            <strong style="color:#555;font-size:14px;display:inline-block;width:100px;">Name:</strong>
+            <span class="text-primary" style="color:#333;font-size:15px;">${senderName}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eee;">
+            <strong style="color:#555;font-size:14px;display:inline-block;width:100px;">Email:</strong>
+            <a href="mailto:${senderEmail}" style="color:#6c5ce7;font-size:15px;text-decoration:none;">${senderEmail}</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eee;">
+            <strong style="color:#555;font-size:14px;display:inline-block;width:100px;">Subject:</strong>
+            <span class="text-primary" style="color:#333;font-size:15px;">${subjectLine}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eee;">
+            <strong style="color:#555;font-size:14px;display:inline-block;width:100px;">IP Address:</strong>
+            <span class="text-secondary" style="color:#888;font-size:13px;">${senderIp}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eee;">
+            <strong style="color:#555;font-size:14px;display:inline-block;width:100px;">Submitted:</strong>
+            <span class="text-secondary" style="color:#888;font-size:13px;">${submittedAt}</span>
+          </td>
+        </tr>
+      </table>
+      <div style="background:#f8f9fa;border-radius:8px;padding:16px 20px;margin:16px 0;">
+        <strong style="color:#555;font-size:14px;display:block;margin-bottom:8px;">Message:</strong>
+        <p class="text-primary" style="color:#333;font-size:15px;line-height:1.6;margin:0;white-space:pre-wrap;">${msg}</p>
+      </div>
+      <p class="text-secondary" style="color:#888;font-size:13px;margin:20px 0 0;">Reply directly to the sender at <a href="mailto:${senderEmail}" style="color:#6c5ce7;">${senderEmail}</a></p>
+    `, 'en'),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed' | 'contact-form';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -821,6 +878,7 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'plan-change-confirmation': planChangeConfirmationTemplate,
   'comment-mention': commentMentionTemplate,
   'payment-failed': paymentFailedTemplate,
+  'contact-form': contactFormTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {
