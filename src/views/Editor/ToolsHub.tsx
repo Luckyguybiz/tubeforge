@@ -647,149 +647,119 @@ const ToolCard = memo(function ToolCard({
         background: C.card,
         cursor: tool.available ? 'pointer' : 'default',
         transition: 'all .25s ease',
-        transform: hovered && tool.available ? 'translateY(-2px)' : 'none',
+        transform: hovered && tool.available ? 'translateY(-3px)' : 'none',
         boxShadow: hovered && tool.available
-          ? '0 8px 30px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)'
+          ? `0 8px 24px ${tool.gradient[0]}20, 0 4px 12px rgba(0,0,0,0.2)`
           : 'none',
         overflow: 'hidden',
-        opacity: tool.available ? 1 : 0.55,
+        opacity: tool.available ? 1 : 0.5,
+        filter: tool.available ? 'none' : 'grayscale(0.6)',
       }}
     >
-      {/* Badge */}
-      {tool.badge && tool.available && (
-        <div style={{
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          padding: '3px 10px',
-          borderRadius: 20,
-          background: tool.badge === 'NEW'
-            ? `${tool.gradient[0]}25`
-            : tool.badge === 'Beta'
-              ? C.border
-              : tool.badge === 'Free'
-                ? '#22c55e25'
-                : `${tool.gradient[0]}25`,
-          color: tool.badge === 'NEW'
-            ? tool.gradient[0]
-            : tool.badge === 'Beta'
-              ? C.sub
-              : tool.badge === 'Free'
-                ? '#22c55e'
-                : tool.gradient[0],
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: '.02em',
-          zIndex: 2,
-        }}>
-          {tool.badge}
-        </div>
-      )}
-
-      {/* Coming soon badge */}
-      {!tool.available && (
-        <div style={{
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '3px 10px',
-          borderRadius: 20,
-          background: C.border,
-          border: 'none',
-          color: C.dim,
-          fontSize: 10,
-          fontWeight: 600,
-          zIndex: 2,
-        }}>
-          <LockIcon size={10} color={C.dim} />
-          {t('toolshub.comingSoonLabel')}
-        </div>
-      )}
-
-      {/* Gradient visual area — like Dashboard cards */}
+      {/* Gradient visual area */}
       <div style={{
-        height: 120,
+        height: 100,
         background: tool.available
           ? `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`
-          : C.surface,
+          : `linear-gradient(135deg, ${C.border}, ${C.surface})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        transition: 'all .3s ease',
       }}>
+        {/* Centered icon in gradient */}
         <div style={{
-          opacity: tool.available ? 0.9 : 0.3,
-          transform: hovered && tool.available ? 'scale(1.1)' : 'scale(1)',
-          transition: 'transform .3s ease',
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform .2s',
+          transform: hovered && tool.available ? 'scale(1.1)' : 'none',
         }}>
-          {iconFn ? iconFn('#ffffff') : null}
+          {iconFn ? iconFn(tool.available ? '#fff' : C.dim) : null}
         </div>
-        {/* Scan animation on hover */}
-        {hovered && tool.available && (
+
+        {/* Badge */}
+        {tool.badge && tool.available && (
           <div style={{
-            position: 'absolute', inset: 0, overflow: 'hidden',
-            pointerEvents: 'none',
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            padding: '3px 10px',
+            borderRadius: 6,
+            background: tool.badge === 'NEW'
+              ? '#84cc16'
+              : tool.badge === 'Beta'
+                ? 'rgba(255,255,255,0.2)'
+                : tool.badge === 'Free'
+                  ? '#22c55e'
+                  : '#84cc16',
+            color: tool.badge === 'Beta' ? '#fff' : '#000',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '.03em',
           }}>
-            <div style={{
-              position: 'absolute', top: 0, bottom: 0, width: 2,
-              background: 'rgba(255,255,255,0.6)',
-              boxShadow: '0 0 12px 4px rgba(255,255,255,0.3)',
-              animation: 'scanLine 2s ease-in-out infinite',
-            }} />
+            {tool.badge}
+          </div>
+        )}
+
+        {/* Coming soon badge */}
+        {!tool.available && (
+          <div style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '3px 10px',
+            borderRadius: 6,
+            background: 'rgba(0,0,0,0.4)',
+            color: 'rgba(255,255,255,0.6)',
+            fontSize: 10,
+            fontWeight: 600,
+          }}>
+            <LockIcon size={10} color="rgba(255,255,255,0.6)" />
+            {t('toolshub.comingSoonLabel')}
           </div>
         )}
       </div>
 
-      {/* Name + subtitle */}
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{
-            fontSize: 15,
-            fontWeight: 600,
-            color: tool.available ? '#ffffff' : C.dim,
-            marginBottom: 2,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            wordBreak: 'break-word',
-          }}>
-            {tool.name}
-          </div>
-          <div style={{
-            fontSize: 11,
-            color: C.sub,
-            fontWeight: 500,
-          }}>
-            {tool.subtitle}
-          </div>
-        </div>
-
-        {/* Arrow */}
-        {tool.available && (
-          <div style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            background: hovered ? tool.gradient[0] + '20' : 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all .2s',
-            flexShrink: 0,
-            marginTop: 2,
-          }}>
+      {/* Title + subtitle */}
+      <div style={{
+        padding: '14px 16px 6px',
+      }}>
+        <div style={{
+          fontSize: 15,
+          fontWeight: 600,
+          color: tool.available ? C.text : C.dim,
+          marginBottom: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 6,
+          wordBreak: 'break-word',
+        }}>
+          {tool.name}
+          {tool.available && (
             <ArrowIcon size={14} color={hovered ? tool.gradient[0] : C.dim} />
-          </div>
-        )}
+          )}
+        </div>
+        <div style={{
+          fontSize: 11,
+          color: C.sub,
+          fontWeight: 500,
+        }}>
+          {tool.subtitle}
+        </div>
       </div>
 
       {/* Description — 2 lines max */}
       <div style={{
-        padding: '0 16px 16px',
+        padding: '0 16px 14px',
         fontSize: 13,
         lineHeight: 1.5,
         color: C.sub,
@@ -798,6 +768,7 @@ const ToolCard = memo(function ToolCard({
         display: '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
+        flex: 1,
       }}>
         {tool.description}
       </div>
@@ -856,7 +827,7 @@ const ToolCard = memo(function ToolCard({
       {!tool.available && (
         <div style={{
           padding: '10px 16px',
-          borderTop: '1px solid ${C.surface}',
+          borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
