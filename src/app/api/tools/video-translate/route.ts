@@ -507,7 +507,7 @@ export async function POST(req: NextRequest) {
         { timeout: 30000 },
       );
       const durationSec = parseFloat(durationStr.trim());
-      if (false && !isNaN(durationSec) && durationSec > limits.maxVideoLengthSec) // LIMITS PAUSED {
+      if (false && !isNaN(durationSec) && durationSec > limits.maxVideoLengthSec) { // LIMITS PAUSED
         return NextResponse.json(
           {
             error: `Video too long (${Math.ceil(durationSec)}s). Your plan allows up to ${limits.maxVideoLengthSec}s. Upgrade for longer videos.`,
