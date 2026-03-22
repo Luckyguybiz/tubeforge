@@ -22,7 +22,7 @@ describe('useLocaleStore', () => {
   describe('t() translation function', () => {
     it('should translate known Russian keys', () => {
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Мои работы');
+      expect(t('nav.dashboard')).toBe('Обзор');
     });
 
     it('should return the key when translation is not found', () => {
@@ -50,7 +50,7 @@ describe('useLocaleStore', () => {
       await loadLocale('en');
       useLocaleStore.getState().setLocale('en');
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('My Works');
+      expect(t('nav.dashboard')).toBe('Explore');
     });
 
     it('should switch to Kazakh locale', async () => {
@@ -83,7 +83,7 @@ describe('useLocaleStore', () => {
       useLocaleStore.getState().setLocale('en');
       useLocaleStore.getState().setLocale('ru');
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Мои работы');
+      expect(t('nav.dashboard')).toBe('Обзор');
     });
   });
 

@@ -39,22 +39,23 @@ export default function SlaPage() {
           marginBottom: 8,
         }}
       >
-        {'\u0421\u043E\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 \u043E\u0431 \u0443\u0440\u043E\u0432\u043D\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u044F (SLA)'}
+        Service Level Agreement (SLA)
       </h1>
       <p style={{ fontSize: 13, color: C.dim, marginBottom: 16 }}>
-        {'\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435: 20 \u043C\u0430\u0440\u0442\u0430 2026'}
+        Last updated: March 20, 2026
       </p>
       <p style={{ fontSize: 15, lineHeight: 1.7, color: C.sub, marginBottom: 40 }}>
-        {'\u041D\u0430\u0441\u0442\u043E\u044F\u0449\u0435\u0435 \u0421\u043E\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 \u043E\u0431 \u0443\u0440\u043E\u0432\u043D\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u044F (Service Level Agreement, SLA) \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u044F\u0435\u0442 \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u0438 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u0438 \u0441\u0435\u0440\u0432\u0438\u0441\u0430 TubeForge \u0438 \u043A\u043E\u043C\u043F\u0435\u043D\u0441\u0430\u0446\u0438\u0438 \u0432 \u0441\u043B\u0443\u0447\u0430\u0435 \u0438\u0445 \u043D\u0430\u0440\u0443\u0448\u0435\u043D\u0438\u044F.'}
+        This Service Level Agreement (SLA) defines the availability guarantees for the
+        TubeForge service and compensation in the event of their violation.
       </p>
 
-      {/* 1. Гарантии доступности по планам */}
+      {/* 1. Availability Guarantees by Plan */}
       <div style={sectionStyle}>
         <h2 id="uptime" style={headingStyle}>
-          {'1. \u0413\u0430\u0440\u0430\u043D\u0442\u0438\u0438 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u0438'}
+          1. Availability Guarantees
         </h2>
         <p style={paraStyle}>
-          {'TubeForge \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u0440\u0443\u0435\u0442 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0435 \u0443\u0440\u043E\u0432\u043D\u0438 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u0438 \u0432 \u0437\u0430\u0432\u0438\u0441\u0438\u043C\u043E\u0441\u0442\u0438 \u043E\u0442 \u0432\u0430\u0448\u0435\u0433\u043E \u043F\u043B\u0430\u043D\u0430 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0438:'}
+          TubeForge guarantees the following availability levels depending on your subscription plan:
         </p>
 
         <div style={{
@@ -73,10 +74,10 @@ export default function SlaPage() {
               99.9%
             </div>
             <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
-              {'Uptime \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u044F'}
+              Uptime guarantee
             </div>
             <div style={{ fontSize: 12, color: C.dim, marginTop: 8 }}>
-              {'\u2248 8.76 \u0447\u0430\u0441\u043E\u0432 \u043F\u0440\u043E\u0441\u0442\u043E\u044F / \u0433\u043E\u0434'}
+              ~8.76 hours downtime / year
             </div>
           </div>
 
@@ -90,10 +91,10 @@ export default function SlaPage() {
               99.95%
             </div>
             <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
-              {'Uptime \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u044F'}
+              Uptime guarantee
             </div>
             <div style={{ fontSize: 12, color: C.dim, marginTop: 8 }}>
-              {'\u2248 4.38 \u0447\u0430\u0441\u043E\u0432 \u043F\u0440\u043E\u0441\u0442\u043E\u044F / \u0433\u043E\u0434'}
+              ~4.38 hours downtime / year
             </div>
           </div>
 
@@ -107,43 +108,43 @@ export default function SlaPage() {
               99.99%
             </div>
             <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.6 }}>
-              {'Uptime \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u044F + \u0432\u044B\u0434\u0435\u043B\u0435\u043D\u043D\u0430\u044F \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430'}
+              Uptime guarantee + dedicated support
             </div>
             <div style={{ fontSize: 12, color: C.dim, marginTop: 8 }}>
-              {'\u2248 52.6 \u043C\u0438\u043D\u0443\u0442 \u043F\u0440\u043E\u0441\u0442\u043E\u044F / \u0433\u043E\u0434'}
+              ~52.6 minutes downtime / year
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Определения */}
+      {/* 2. Definitions */}
       <div style={sectionStyle}>
         <h2 id="definitions" style={headingStyle}>
-          {'2. \u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u044F'}
+          2. Definitions
         </h2>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: C.text }}>{'\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u044C (Uptime)'}</strong>
-            {' \u2014 \u043F\u0440\u043E\u0446\u0435\u043D\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u0432 \u0442\u0435\u0447\u0435\u043D\u0438\u0435 \u043A\u0430\u043B\u0435\u043D\u0434\u0430\u0440\u043D\u043E\u0433\u043E \u043C\u0435\u0441\u044F\u0446\u0430, \u043A\u043E\u0433\u0434\u0430 \u0441\u0435\u0440\u0432\u0438\u0441 TubeForge \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D \u0438 \u0444\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0438\u0440\u0443\u0435\u0442 \u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u043E.'}
+            <strong style={{ color: C.text }}>Uptime</strong>
+            {' — the percentage of time during a calendar month when the TubeForge service is available and functioning correctly.'}
           </li>
           <li>
-            <strong style={{ color: C.text }}>{'\u041F\u0440\u043E\u0441\u0442\u043E\u0439 (Downtime)'}</strong>
-            {' \u2014 \u043F\u0435\u0440\u0438\u043E\u0434, \u043A\u043E\u0433\u0434\u0430 \u043E\u0441\u043D\u043E\u0432\u043D\u044B\u0435 \u0444\u0443\u043D\u043A\u0446\u0438\u0438 \u0441\u0435\u0440\u0432\u0438\u0441\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B. \u041D\u0435 \u0432\u043A\u043B\u044E\u0447\u0430\u0435\u0442 \u043F\u043B\u0430\u043D\u043E\u0432\u043E\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435.'}
+            <strong style={{ color: C.text }}>Downtime</strong>
+            {' — a period when the core service functions are unavailable. Does not include scheduled maintenance.'}
           </li>
           <li>
-            <strong style={{ color: C.text }}>{'\u041F\u043B\u0430\u043D\u043E\u0432\u043E\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435'}</strong>
-            {' \u2014 \u0437\u0430\u0440\u0430\u043D\u0435\u0435 \u043E\u0431\u044A\u044F\u0432\u043B\u0435\u043D\u043D\u044B\u0435 \u043F\u0435\u0440\u0438\u043E\u0434\u044B \u0442\u0435\u0445\u043D\u0438\u0447\u0435\u0441\u043A\u043E\u0433\u043E \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u044F (\u043C\u0438\u043D\u0438\u043C\u0443\u043C 48 \u0447\u0430\u0441\u043E\u0432 \u0434\u043E \u043D\u0430\u0447\u0430\u043B\u0430).'}
+            <strong style={{ color: C.text }}>Scheduled Maintenance</strong>
+            {' — pre-announced periods of technical maintenance (minimum 48 hours prior notice).'}
           </li>
         </ul>
       </div>
 
-      {/* 3. Кредитная система */}
+      {/* 3. Credit System */}
       <div style={sectionStyle}>
         <h2 id="credits" style={headingStyle}>
-          {'3. \u041A\u043E\u043C\u043F\u0435\u043D\u0441\u0430\u0446\u0438\u044F (SLA \u043A\u0440\u0435\u0434\u0438\u0442\u044B)'}
+          3. Compensation (SLA Credits)
         </h2>
         <p style={paraStyle}>
-          {'\u0415\u0441\u043B\u0438 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u044C \u0441\u0435\u0440\u0432\u0438\u0441\u0430 \u043E\u043F\u0443\u0441\u043A\u0430\u0435\u0442\u0441\u044F \u043D\u0438\u0436\u0435 \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E \u0443\u0440\u043E\u0432\u043D\u044F, \u0432\u044B \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442\u0435 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u043A\u0440\u0435\u0434\u0438\u0442 \u043D\u0430 \u0441\u0447\u0451\u0442:'}
+          If service availability drops below the guaranteed level, you will receive an automatic credit to your account:
         </p>
 
         <div style={{
@@ -165,13 +166,13 @@ export default function SlaPage() {
             textTransform: 'uppercase',
             letterSpacing: '.05em',
           }}>
-            <div>{'\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u044C \u0437\u0430 \u043C\u0435\u0441\u044F\u0446'}</div>
-            <div>{'\u041A\u0440\u0435\u0434\u0438\u0442'}</div>
+            <div>Monthly Availability</div>
+            <div>Credit</div>
           </div>
           {[
-            { uptime: '99.0% \u2013 99.9%', credit: '10% \u043E\u0442 \u043C\u0435\u0441\u044F\u0447\u043D\u043E\u0439 \u043E\u043F\u043B\u0430\u0442\u044B' },
-            { uptime: '95.0% \u2013 99.0%', credit: '25% \u043E\u0442 \u043C\u0435\u0441\u044F\u0447\u043D\u043E\u0439 \u043E\u043F\u043B\u0430\u0442\u044B' },
-            { uptime: '\u041D\u0438\u0436\u0435 95.0%', credit: '50% \u043E\u0442 \u043C\u0435\u0441\u044F\u0447\u043D\u043E\u0439 \u043E\u043F\u043B\u0430\u0442\u044B' },
+            { uptime: '99.0% \u2013 99.9%', credit: '10% of monthly payment' },
+            { uptime: '95.0% \u2013 99.0%', credit: '25% of monthly payment' },
+            { uptime: 'Below 95.0%', credit: '50% of monthly payment' },
           ].map((row, idx) => (
             <div key={idx} style={{
               display: 'grid',
@@ -188,38 +189,38 @@ export default function SlaPage() {
         </div>
 
         <p style={paraStyle}>
-          {'\u041A\u0440\u0435\u0434\u0438\u0442\u044B \u043D\u0430\u0447\u0438\u0441\u043B\u044F\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438 \u0432 \u0442\u0435\u0447\u0435\u043D\u0438\u0435 5 \u0440\u0430\u0431\u043E\u0447\u0438\u0445 \u0434\u043D\u0435\u0439 \u043F\u043E\u0441\u043B\u0435 \u043E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u044F \u043A\u0430\u043B\u0435\u043D\u0434\u0430\u0440\u043D\u043E\u0433\u043E \u043C\u0435\u0441\u044F\u0446\u0430 \u0438 \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u044E\u0442\u0441\u044F \u043A \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u043C\u0443 \u043F\u043B\u0430\u0442\u0435\u0436\u0443. \u041C\u0430\u043A\u0441\u0438\u043C\u0430\u043B\u044C\u043D\u044B\u0439 \u043A\u0440\u0435\u0434\u0438\u0442 \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u043F\u0440\u0435\u0432\u044B\u0448\u0430\u0442\u044C 50% \u043C\u0435\u0441\u044F\u0447\u043D\u043E\u0439 \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u0438 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0438.'}
+          Credits are applied automatically within 5 business days after the end of the calendar month and are applied to the next payment. The maximum credit cannot exceed 50% of the monthly subscription cost.
         </p>
       </div>
 
-      {/* 4. Коммуникация об инцидентах */}
+      {/* 4. Incident Communication */}
       <div style={sectionStyle}>
         <h2 id="incidents" style={headingStyle}>
-          {'4. \u041A\u043E\u043C\u043C\u0443\u043D\u0438\u043A\u0430\u0446\u0438\u044F \u043E\u0431 \u0438\u043D\u0446\u0438\u0434\u0435\u043D\u0442\u0430\u0445'}
+          4. Incident Communication
         </h2>
         <p style={paraStyle}>
-          {'\u0412 \u0441\u043B\u0443\u0447\u0430\u0435 \u0438\u043D\u0446\u0438\u0434\u0435\u043D\u0442\u0430, \u0432\u043B\u0438\u044F\u044E\u0449\u0435\u0433\u043E \u043D\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u044C \u0441\u0435\u0440\u0432\u0438\u0441\u0430, \u043C\u044B \u043E\u0431\u044F\u0437\u0443\u0435\u043C\u0441\u044F:'}
+          In the event of an incident affecting service availability, we commit to:
         </p>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: C.text }}>{'\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435:'}</strong>
-            {' \u043E\u043F\u043E\u0432\u0435\u0449\u0435\u043D\u0438\u0435 \u043F\u043E email \u0432 \u0442\u0435\u0447\u0435\u043D\u0438\u0435 30 \u043C\u0438\u043D\u0443\u0442 \u043F\u043E\u0441\u043B\u0435 \u043E\u0431\u043D\u0430\u0440\u0443\u0436\u0435\u043D\u0438\u044F \u0438\u043D\u0446\u0438\u0434\u0435\u043D\u0442\u0430'}
+            <strong style={{ color: C.text }}>Notification:</strong>
+            {' email notification within 30 minutes of incident detection'}
           </li>
           <li>
-            <strong style={{ color: C.text }}>{'\u0421\u0442\u0430\u0442\u0443\u0441-\u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0430:'}</strong>
-            {' \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u043D\u0430 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0435 \u0441\u0442\u0430\u0442\u0443\u0441\u0430 \u043A\u0430\u0436\u0434\u044B\u0435 30 \u043C\u0438\u043D\u0443\u0442 \u0434\u043E \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u044F'}
+            <strong style={{ color: C.text }}>Status page:</strong>
+            {' updates on the status page every 30 minutes until resolution'}
           </li>
           <li>
-            <strong style={{ color: C.text }}>{'Post-mortem:'}</strong>
-            {' \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u044B\u0439 \u043E\u0442\u0447\u0451\u0442 \u043E \u043F\u0440\u0438\u0447\u0438\u043D\u0430\u0445 \u0438 \u043C\u0435\u0440\u0430\u0445 \u043F\u0440\u0435\u0434\u043E\u0442\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0432 \u0442\u0435\u0447\u0435\u043D\u0438\u0435 5 \u0440\u0430\u0431\u043E\u0447\u0438\u0445 \u0434\u043D\u0435\u0439'}
+            <strong style={{ color: C.text }}>Post-mortem:</strong>
+            {' detailed report on causes and preventive measures within 5 business days'}
           </li>
         </ul>
       </div>
 
-      {/* 5. Время реакции на поддержку */}
+      {/* 5. Support Response Time */}
       <div style={sectionStyle}>
         <h2 id="response" style={headingStyle}>
-          {'5. \u0412\u0440\u0435\u043C\u044F \u0440\u0435\u0430\u043A\u0446\u0438\u0438 \u043D\u0430 \u043E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F'}
+          5. Support Response Time
         </h2>
 
         <div style={{
@@ -241,15 +242,15 @@ export default function SlaPage() {
             textTransform: 'uppercase',
             letterSpacing: '.05em',
           }}>
-            <div>{'\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442'}</div>
+            <div>Priority</div>
             <div>Pro / Studio</div>
             <div>Enterprise</div>
           </div>
           {[
-            { priority: '\u041A\u0440\u0438\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439 (P1)', proStudio: '< 1 \u0447\u0430\u0441\u0430', enterprise: '< 15 \u043C\u0438\u043D\u0443\u0442' },
-            { priority: '\u0412\u044B\u0441\u043E\u043A\u0438\u0439 (P2)', proStudio: '< 4 \u0447\u0430\u0441\u043E\u0432', enterprise: '< 1 \u0447\u0430\u0441\u0430' },
-            { priority: '\u0421\u0440\u0435\u0434\u043D\u0438\u0439 (P3)', proStudio: '< 24 \u0447\u0430\u0441\u043E\u0432', enterprise: '< 4 \u0447\u0430\u0441\u043E\u0432' },
-            { priority: '\u041D\u0438\u0437\u043A\u0438\u0439 (P4)', proStudio: '< 72 \u0447\u0430\u0441\u043E\u0432', enterprise: '< 24 \u0447\u0430\u0441\u043E\u0432' },
+            { priority: 'Critical (P1)', proStudio: '< 1 hour', enterprise: '< 15 minutes' },
+            { priority: 'High (P2)', proStudio: '< 4 hours', enterprise: '< 1 hour' },
+            { priority: 'Medium (P3)', proStudio: '< 24 hours', enterprise: '< 4 hours' },
+            { priority: 'Low (P4)', proStudio: '< 72 hours', enterprise: '< 24 hours' },
           ].map((row, idx) => (
             <div key={idx} style={{
               display: 'grid',
@@ -267,30 +268,30 @@ export default function SlaPage() {
         </div>
       </div>
 
-      {/* 6. Исключения */}
+      {/* 6. Exclusions */}
       <div style={sectionStyle}>
         <h2 id="exclusions" style={headingStyle}>
-          {'6. \u0418\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F'}
+          6. Exclusions
         </h2>
         <p style={paraStyle}>
-          {'SLA \u043D\u0435 \u0440\u0430\u0441\u043F\u0440\u043E\u0441\u0442\u0440\u0430\u043D\u044F\u0435\u0442\u0441\u044F \u043D\u0430 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0435 \u0441\u043B\u0443\u0447\u0430\u0438:'}
+          The SLA does not apply to the following cases:
         </p>
         <ul style={listStyle}>
-          <li>{'\u041F\u043B\u0430\u043D\u043E\u0432\u043E\u0435 \u0442\u0435\u0445\u043D\u0438\u0447\u0435\u0441\u043A\u043E\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435 (\u0441 \u043F\u0440\u0435\u0434\u0432\u0430\u0440\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u043C \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435\u043C \u0437\u0430 48\u0447)'}</li>
-          <li>{'\u041E\u0431\u0441\u0442\u043E\u044F\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u0430 \u043D\u0435\u043F\u0440\u0435\u043E\u0434\u043E\u043B\u0438\u043C\u043E\u0439 \u0441\u0438\u043B\u044B (force majeure)'}</li>
-          <li>{'\u041F\u0440\u043E\u0431\u043B\u0435\u043C\u044B \u043D\u0430 \u0441\u0442\u043E\u0440\u043E\u043D\u0435 \u043A\u043B\u0438\u0435\u043D\u0442\u0430 (\u0441\u0435\u0442\u044C, \u0431\u0440\u0430\u0443\u0437\u0435\u0440, \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E)'}</li>
-          <li>{'\u041D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0441\u0442\u044C \u0441\u0442\u043E\u0440\u043E\u043D\u043D\u0438\u0445 \u0441\u0435\u0440\u0432\u0438\u0441\u043E\u0432 (YouTube API, Stripe \u0438 \u0434\u0440.)'}</li>
-          <li>{'\u0417\u043B\u043E\u0443\u043F\u043E\u0442\u0440\u0435\u0431\u043B\u0435\u043D\u0438\u0435 \u0441\u0435\u0440\u0432\u0438\u0441\u043E\u043C \u0438\u043B\u0438 \u043D\u0430\u0440\u0443\u0448\u0435\u043D\u0438\u0435 \u0443\u0441\u043B\u043E\u0432\u0438\u0439 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044F'}</li>
+          <li>Scheduled technical maintenance (with 48h prior notice)</li>
+          <li>Force majeure circumstances</li>
+          <li>Client-side issues (network, browser, device)</li>
+          <li>Third-party service unavailability (YouTube API, Stripe, etc.)</li>
+          <li>Service abuse or violation of terms of use</li>
         </ul>
       </div>
 
-      {/* 7. Контакты */}
+      {/* 7. Contact */}
       <div style={sectionStyle}>
         <h2 id="contact" style={headingStyle}>
-          {'7. \u041A\u043E\u043D\u0442\u0430\u043A\u0442\u044B'}
+          7. Contact
         </h2>
         <p style={paraStyle}>
-          {'\u041F\u043E \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C, \u0441\u0432\u044F\u0437\u0430\u043D\u043D\u044B\u043C \u0441 SLA, \u043E\u0431\u0440\u0430\u0449\u0430\u0439\u0442\u0435\u0441\u044C:'}
+          For SLA-related questions, please contact:
         </p>
         <p style={paraStyle}>
           Email:{' '}
@@ -299,7 +300,7 @@ export default function SlaPage() {
           </a>
         </p>
         <p style={{ ...paraStyle, fontStyle: 'italic', marginTop: 24 }}>
-          {'\u041D\u0430\u0441\u0442\u043E\u044F\u0449\u0435\u0435 \u0441\u043E\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 \u044F\u0432\u043B\u044F\u0435\u0442\u0441\u044F \u0447\u0430\u0441\u0442\u044C\u044E \u041E\u0431\u0449\u0438\u0445 \u0443\u0441\u043B\u043E\u0432\u0438\u0439 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u044F \u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u0434\u043B\u044F \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u0439 \u0441 \u043F\u043B\u0430\u0442\u043D\u044B\u043C\u0438 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0430\u043C\u0438 (Pro, Studio, Enterprise).'}
+          This agreement is part of the General Terms of Service and applies to users with paid subscriptions (Pro, Studio, Enterprise).
         </p>
       </div>
     </div>

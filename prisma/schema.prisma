@@ -77,6 +77,7 @@ model User {
   apiKeys          ApiKey[]
   webhookEndpoints  WebhookEndpoint[]
   pushSubscriptions PushSubscription[]
+  auditLogs        AuditLog[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -110,6 +111,7 @@ model Project {
   isPublic      Boolean       @default(false)
   likesCount    Int           @default(0)
   scenes        Scene[]
+  comments      Comment[]
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   teamId        String?
@@ -310,7 +312,7 @@ model ThumbnailGeneration {
   format      String   @default("16:9")
   imageUrl    String
   parentId    String?
-  parent      ThumbnailGeneration?  @relation("ThumbnailVersions", fields: [parentId], references: [id])
+  parent      ThumbnailGeneration?  @relation("ThumbnailVersions", fields: [parentId], references: [id], onDelete: SetNull)
   children    ThumbnailGeneration[] @relation("ThumbnailVersions")
   youtubeUrl  String?
   photoUrl    String?
@@ -323,6 +325,7 @@ model ThumbnailGeneration {
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String
   target    String?
   metadata  Json?
@@ -355,6 +358,7 @@ model ContactSubmission {
 model Comment {
   id        String   @id @default(cuid())
   projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   text      String

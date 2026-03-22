@@ -265,7 +265,7 @@ export function WaitingGame() {
   return (
     <div style={{ textAlign: 'center', margin: '20px 0' }}>
       <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>
-        Пока ждёте — поиграйте! Нажмите пробел или тапните
+        Play while you wait! Press space or tap
       </div>
       <canvas
         ref={canvasRef}
@@ -284,7 +284,7 @@ export function WaitingGame() {
       />
       {score > 0 && (
         <div style={{ fontSize: 12, color: '#6366f1', marginTop: 4, fontWeight: 600 }}>
-          Очки: {score}
+          Score: {score}
         </div>
       )}
     </div>

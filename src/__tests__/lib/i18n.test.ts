@@ -48,7 +48,7 @@ describe('Locale files structure', () => {
 
 describe('Russian locale content', () => {
   it('nav section should have all navigation items', () => {
-    expect(ruT['nav.dashboard']).toBe('Мои работы');
+    expect(ruT['nav.dashboard']).toBe('Обзор');
     expect(ruT['nav.editor']).toBe('Редактор');
     expect(ruT['nav.metadata']).toBe('Метаданные');
     expect(ruT['nav.thumbnails']).toBe('Обложки');
@@ -58,7 +58,7 @@ describe('Russian locale content', () => {
 
 describe('English locale content', () => {
   it('nav section should have all navigation items', () => {
-    expect(enT['nav.dashboard']).toBe('My Works');
+    expect(enT['nav.dashboard']).toBe('Explore');
     expect(enT['nav.editor']).toBe('Editor');
     expect(enT['nav.metadata']).toBe('Metadata');
     expect(enT['nav.thumbnails']).toBe('Thumbnails');

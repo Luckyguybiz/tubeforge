@@ -35,14 +35,14 @@ export default function SecurityPage() {
           marginBottom: 8,
         }}
       >
-        Безопасность
+        Security
       </h1>
       <p style={{ fontSize: 13, color: C.dim, marginBottom: 16 }}>
-        Последнее обновление: 20 марта 2026
+        Last updated: March 20, 2026
       </p>
       <p style={{ fontSize: 15, lineHeight: 1.7, color: C.sub, marginBottom: 40 }}>
-        Защита ваших данных — наш приоритет. Мы применяем многоуровневый подход к безопасности,
-        используя лучшие отраслевые практики и стандарты.
+        Protecting your data is our priority. We apply a multi-layered approach to security,
+        using industry best practices and standards.
       </p>
 
       {/* Security badges */}
@@ -61,87 +61,87 @@ export default function SecurityPage() {
         </div>
       </div>
 
-      {/* 1. Шифрование */}
+      {/* 1. Encryption */}
       <div style={sectionStyle}>
-        <h2 id="shifrovanie" style={headingStyle}>1. Шифрование данных</h2>
+        <h2 id="encryption" style={headingStyle}>1. Data Encryption</h2>
         <p style={paraStyle}>
-          Все данные защищены шифрованием на каждом уровне:
+          All data is protected by encryption at every level:
         </p>
         <ul style={listStyle}>
           <li>
-            <strong style={{ color: C.text }}>При передаче (in transit):</strong> весь трафик между вашим
-            браузером и серверами TubeForge шифруется с использованием TLS 1.3. Мы применяем HTTPS
-            на всех страницах и API без исключения.
+            <strong style={{ color: C.text }}>In transit:</strong> all traffic between your
+            browser and TubeForge servers is encrypted using TLS 1.3. We enforce HTTPS
+            on all pages and APIs without exception.
           </li>
           <li>
-            <strong style={{ color: C.text }}>При хранении (at rest):</strong> все данные в базе данных
-            и файловом хранилище зашифрованы с использованием AES-256. Резервные копии также
-            хранятся в зашифрованном виде.
+            <strong style={{ color: C.text }}>At rest:</strong> all data in the database
+            and file storage is encrypted using AES-256. Backups are also
+            stored in encrypted form.
           </li>
         </ul>
       </div>
 
-      {/* 2. Аутентификация */}
+      {/* 2. Authentication */}
       <div style={sectionStyle}>
-        <h2 id="autentifikatsiya" style={headingStyle}>2. Аутентификация</h2>
+        <h2 id="authentication" style={headingStyle}>2. Authentication</h2>
         <p style={paraStyle}>
-          TubeForge использует Google OAuth 2.0 для аутентификации пользователей. Это означает:
+          TubeForge uses Google OAuth 2.0 for user authentication. This means:
         </p>
         <ul style={listStyle}>
-          <li>Мы <strong style={{ color: C.text }}>не храним паролей</strong> — аутентификация делегирована Google</li>
-          <li>Используется стандартный протокол OAuth 2.0 с PKCE</li>
-          <li>Сессионные токены хранятся в httpOnly cookies с флагами Secure и SameSite</li>
-          <li>Защита от CSRF-атак через токены csrf</li>
-          <li>Автоматический выход из неактивных сессий</li>
+          <li>We <strong style={{ color: C.text }}>do not store passwords</strong> — authentication is delegated to Google</li>
+          <li>Standard OAuth 2.0 protocol with PKCE is used</li>
+          <li>Session tokens are stored in httpOnly cookies with Secure and SameSite flags</li>
+          <li>CSRF protection via csrf tokens</li>
+          <li>Automatic logout for inactive sessions</li>
         </ul>
       </div>
 
-      {/* 3. Платежи */}
+      {/* 3. Payments */}
       <div style={sectionStyle}>
-        <h2 id="platezhi" style={headingStyle}>3. Безопасность платежей</h2>
+        <h2 id="payments" style={headingStyle}>3. Payment Security</h2>
         <p style={paraStyle}>
-          Обработка платежей полностью делегирована <strong style={{ color: C.text }}>Stripe</strong> —
-          ведущей мировой платёжной платформе с сертификацией{' '}
-          <strong style={{ color: C.text }}>PCI-DSS Level 1</strong> (наивысший уровень безопасности
-          в индустрии платежей).
+          Payment processing is fully delegated to <strong style={{ color: C.text }}>Stripe</strong> —
+          a world-leading payment platform with{' '}
+          <strong style={{ color: C.text }}>PCI-DSS Level 1</strong> certification (the highest level of security
+          in the payments industry).
         </p>
         <ul style={listStyle}>
-          <li>Номера банковских карт никогда не проходят через наши серверы</li>
-          <li>Платёжные формы отображаются через защищённые iframe Stripe</li>
-          <li>Мы храним только ID клиента и ID подписки Stripe для управления аккаунтом</li>
-          <li>Stripe обеспечивает защиту от мошенничества через Stripe Radar</li>
+          <li>Credit card numbers never pass through our servers</li>
+          <li>Payment forms are rendered via secure Stripe iframes</li>
+          <li>We only store the Stripe Customer ID and Subscription ID for account management</li>
+          <li>Stripe provides fraud protection through Stripe Radar</li>
         </ul>
       </div>
 
-      {/* 4. Размещение данных */}
+      {/* 4. Data Residency */}
       <div style={sectionStyle}>
-        <h2 id="razmeshchenie" style={headingStyle}>4. Размещение данных (EU)</h2>
+        <h2 id="data-residency" style={headingStyle}>4. Data Residency (EU)</h2>
         <p style={paraStyle}>
-          Все данные TubeForge хранятся на серверах, физически расположенных в Европейском Союзе:
+          All TubeForge data is stored on servers physically located in the European Union:
         </p>
         <ul style={listStyle}>
-          <li>Основные серверы приложений — EU (OVH, Франция)</li>
-          <li>База данных — EU</li>
-          <li>Резервные копии — EU</li>
-          <li>Файловое хранилище — EU</li>
+          <li>Primary application servers — EU (OVH, France)</li>
+          <li>Database — EU</li>
+          <li>Backups — EU</li>
+          <li>File storage — EU</li>
         </ul>
         <p style={paraStyle}>
-          Размещение данных в EU обеспечивает соответствие требованиям GDPR и других
-          европейских регуляций по защите данных.
+          EU data residency ensures compliance with GDPR and other
+          European data protection regulations.
         </p>
       </div>
 
-      {/* 5. Аудиты безопасности */}
+      {/* 5. Security Audits */}
       <div style={sectionStyle}>
-        <h2 id="audity" style={headingStyle}>5. Аудиты безопасности</h2>
+        <h2 id="audits" style={headingStyle}>5. Security Audits</h2>
         <p style={paraStyle}>
-          Мы проводим регулярные проверки безопасности:
+          We conduct regular security assessments:
         </p>
         <ul style={listStyle}>
-          <li>Регулярное сканирование уязвимостей (автоматическое и ручное)</li>
-          <li>Аудит зависимостей и библиотек на предмет известных уязвимостей</li>
-          <li>Мониторинг безопасности инфраструктуры 24/7</li>
-          <li>Автоматическое обновление security patches</li>
+          <li>Regular vulnerability scanning (automated and manual)</li>
+          <li>Dependency and library audits for known vulnerabilities</li>
+          <li>24/7 infrastructure security monitoring</li>
+          <li>Automated security patch updates</li>
         </ul>
       </div>
 
@@ -149,40 +149,40 @@ export default function SecurityPage() {
       <div style={sectionStyle}>
         <h2 id="soc2" style={headingStyle}>6. SOC 2 Type II</h2>
         <p style={paraStyle}>
-          TubeForge находится в процессе подготовки к сертификации SOC 2 Type II, которая
-          подтверждает соответствие следующим принципам:
+          TubeForge is in the process of preparing for SOC 2 Type II certification, which
+          verifies compliance with the following principles:
         </p>
         <ul style={listStyle}>
-          <li><strong style={{ color: C.text }}>Security</strong> — защита от несанкционированного доступа</li>
-          <li><strong style={{ color: C.text }}>Availability</strong> — доступность сервиса</li>
-          <li><strong style={{ color: C.text }}>Confidentiality</strong> — конфиденциальность данных</li>
-          <li><strong style={{ color: C.text }}>Processing Integrity</strong> — целостность обработки</li>
-          <li><strong style={{ color: C.text }}>Privacy</strong> — защита персональных данных</li>
+          <li><strong style={{ color: C.text }}>Security</strong> — protection against unauthorized access</li>
+          <li><strong style={{ color: C.text }}>Availability</strong> — service availability</li>
+          <li><strong style={{ color: C.text }}>Confidentiality</strong> — data confidentiality</li>
+          <li><strong style={{ color: C.text }}>Processing Integrity</strong> — processing integrity</li>
+          <li><strong style={{ color: C.text }}>Privacy</strong> — personal data protection</li>
         </ul>
         <p style={{ ...paraStyle, fontStyle: 'italic' }}>
-          Статус: подготовка к сертификации (в процессе).
+          Status: certification preparation (in progress).
         </p>
       </div>
 
-      {/* 7. Инфраструктура */}
+      {/* 7. Infrastructure */}
       <div style={sectionStyle}>
-        <h2 id="infrastruktura" style={headingStyle}>7. Инфраструктурная безопасность</h2>
+        <h2 id="infrastructure" style={headingStyle}>7. Infrastructure Security</h2>
         <ul style={listStyle}>
-          <li>Файрвол и ограничение доступа по IP</li>
-          <li>SSH-аутентификация только по ключам (пароли отключены)</li>
-          <li>VPN для внутренних коммуникаций между сервисами (WireGuard)</li>
-          <li>Автоматическое резервное копирование базы данных</li>
-          <li>Rate limiting на API для защиты от DDoS</li>
+          <li>Firewall and IP-based access restrictions</li>
+          <li>SSH authentication by keys only (passwords disabled)</li>
+          <li>VPN for internal service communications (WireGuard)</li>
+          <li>Automated database backups</li>
+          <li>API rate limiting for DDoS protection</li>
           <li>HTTP security headers (HSTS, CSP, X-Frame-Options)</li>
         </ul>
       </div>
 
       {/* 8. Responsible Disclosure */}
       <div style={sectionStyle}>
-        <h2 id="disclosure" style={headingStyle}>8. Ответственное раскрытие уязвимостей</h2>
+        <h2 id="disclosure" style={headingStyle}>8. Responsible Vulnerability Disclosure</h2>
         <p style={paraStyle}>
-          Мы ценим помощь сообщества в обеспечении безопасности TubeForge. Если вы обнаружили
-          уязвимость в безопасности, сообщите нам:
+          We value the community&apos;s help in ensuring TubeForge&apos;s security. If you discover
+          a security vulnerability, please report it to us:
         </p>
         <p style={paraStyle}>
           Email:{' '}
@@ -191,16 +191,16 @@ export default function SecurityPage() {
           </a>
         </p>
         <p style={paraStyle}>
-          Мы просим:
+          We ask that you:
         </p>
         <ul style={listStyle}>
-          <li>Не разглашать уязвимость публично до устранения</li>
-          <li>Не использовать уязвимость для доступа к чужим данным</li>
-          <li>Предоставить достаточно информации для воспроизведения проблемы</li>
+          <li>Do not publicly disclose the vulnerability until it is resolved</li>
+          <li>Do not exploit the vulnerability to access other users&apos; data</li>
+          <li>Provide sufficient information to reproduce the issue</li>
         </ul>
         <p style={paraStyle}>
-          Мы обязуемся подтвердить получение вашего отчёта в течение 48 часов и предоставить
-          обновление о статусе в течение 7 рабочих дней.
+          We commit to acknowledging receipt of your report within 48 hours and providing
+          a status update within 7 business days.
         </p>
       </div>
     </div>
