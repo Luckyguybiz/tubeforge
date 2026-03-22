@@ -107,6 +107,8 @@ export function AiThumbnailsPage() {
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [rightTab, setRightTab] = useState<'howto' | 'history'>('howto');
+  const [showResult, setShowResult] = useState(false);
 
   /* AI Ideas */
   const [aiIdeas, setAiIdeas] = useState<string[]>([]);
@@ -179,6 +181,7 @@ export function AiThumbnailsPage() {
       setSelectedImage(imgs[0] || null);
       setHistory((prev) => [...imgs, ...prev].slice(0, 20));
       setCtrAnalysis(null);
+      setShowResult(true);
       toast.success(t('aithumbs.toast.success'));
 
       // Trigger blur-to-clear reveal after a tiny delay
@@ -238,6 +241,7 @@ export function AiThumbnailsPage() {
       setSelectedImage(img);
       setHistory((prev) => [img, ...prev].slice(0, 20));
       setCtrAnalysis(null);
+      setShowResult(true);
       toast.success('Image enhanced successfully!');
 
       setTimeout(() => setImageRevealed(true), 100);
@@ -925,49 +929,105 @@ export function AiThumbnailsPage() {
             overflow: 'hidden', padding: 20,
           }}
         >
-          {/* ── Header: Preview pill + actions ────────────── */}
+          {/* ── Header: Tab switcher / Preview pill + actions ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
-            <span
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '5px 14px', borderRadius: 20,
-                background: C.accentDim, border: `1px solid ${C.accent}1a`,
-                fontSize: 11, fontWeight: 700, color: C.accent,
-                textTransform: 'uppercase', letterSpacing: 1,
-              }}
-            >
-              PREVIEW {format}
-            </span>
+            {isGenerating || (selectedImage && showResult) ? (
+              <>
+                {/* Back button to return to tabs */}
+                {selectedImage && showResult && !isGenerating && (
+                  <button
+                    onClick={() => setShowResult(false)}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '5px 12px', borderRadius: 8,
+                      border: `1px solid ${C.border}`, background: 'transparent',
+                      color: C.sub, fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                      outline: 'none',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    Back
+                  </button>
+                )}
+                <span
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '5px 14px', borderRadius: 20,
+                    background: C.accentDim, border: `1px solid ${C.accent}1a`,
+                    fontSize: 11, fontWeight: 700, color: C.accent,
+                    textTransform: 'uppercase', letterSpacing: 1,
+                  }}
+                >
+                  PREVIEW {format}
+                </span>
 
-            <div style={{ flex: 1 }} />
+                <div style={{ flex: 1 }} />
 
-            {selectedImage && !isLoading && (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <ActionPill
-                  C={C}
-                  label="Enhance"
-                  icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg>}
-                  onClick={handleEnhance}
-                  loading={editMutation.isPending}
-                />
-                <ActionPill
-                  C={C}
-                  label="Regenerate"
-                  icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>}
-                  onClick={handleRegenerate}
-                />
-                <ActionPill
-                  C={C}
-                  label="Download"
-                  icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
-                  onClick={() => selectedImage && handleDownload(selectedImage)}
-                  accent
-                />
-              </div>
+                {selectedImage && !isLoading && (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <ActionPill
+                      C={C}
+                      label="Enhance"
+                      icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg>}
+                      onClick={handleEnhance}
+                      loading={editMutation.isPending}
+                    />
+                    <ActionPill
+                      C={C}
+                      label="Regenerate"
+                      icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>}
+                      onClick={handleRegenerate}
+                    />
+                    <ActionPill
+                      C={C}
+                      label="Download"
+                      icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
+                      onClick={() => selectedImage && handleDownload(selectedImage)}
+                      accent
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Tab switcher for How it works / History */
+              <>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {([
+                    { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
+                    { id: 'history' as const, label: `History${history.length > 0 ? ` (${history.length})` : ''}`, icon: '\uD83D\uDCC1' },
+                  ] as const).map((t2) => (
+                    <button
+                      key={t2.id}
+                      onClick={() => setRightTab(t2.id)}
+                      onMouseEnter={(e) => { if (rightTab !== t2.id) e.currentTarget.style.borderColor = C.borderActive; }}
+                      onMouseLeave={(e) => { if (rightTab !== t2.id) e.currentTarget.style.borderColor = C.border; }}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '6px 14px', borderRadius: 8,
+                        border: `1px solid ${rightTab === t2.id ? C.accent : C.border}`,
+                        background: rightTab === t2.id ? C.accentDim : 'transparent',
+                        color: rightTab === t2.id ? C.accent : C.sub,
+                        fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+                        outline: 'none',
+                      }}
+                    >
+                      <span style={{ fontSize: 14, lineHeight: 1 }}>{t2.icon}</span>
+                      {t2.label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ flex: 1 }} />
+              </>
             )}
           </div>
 
-          {/* ── Preview area ──────────────────────────────── */}
+          {/* ── Preview / Content area ────────────────────── */}
           <div
             style={{
               flex: 1, borderRadius: 12, background: C.card,
@@ -1011,7 +1071,7 @@ export function AiThumbnailsPage() {
                     : 'Almost there, finalizing details...'}
                 </div>
               </div>
-            ) : selectedImage ? (
+            ) : selectedImage && showResult ? (
               /* ── Generated result with blur reveal ──── */
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {/* Main image */}
@@ -1246,6 +1306,7 @@ export function AiThumbnailsPage() {
                             key={img.id}
                             onClick={() => {
                               setSelectedImage(img);
+                              setShowResult(true);
                               setImageRevealed(true);
                               setCtrAnalysis(null);
                               analyzeMutation.mutate({ imageUrl: img.url, prompt: img.prompt });
@@ -1266,49 +1327,192 @@ export function AiThumbnailsPage() {
                   </div>
                 )}
               </div>
-            ) : (
-              /* ── Empty state ────────────────────────────── */
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 40 }}>
-                {/* Sparkle / wand icon */}
-                <div style={{ width: 80, height: 80, borderRadius: 20, background: C.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                  </svg>
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0 }}>
-                  Create Your Thumbnail
-                </h3>
-                <p style={{ fontSize: 14, color: C.sub, maxWidth: 340, textAlign: 'center', margin: 0, lineHeight: 1.6 }}>
-                  Describe your idea and AI will generate a click-worthy YouTube thumbnail
+            ) : rightTab === 'howto' ? (
+              /* ── How it works tab ────────────────────────── */
+              <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
+                <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
+                  CREATE THUMBNAILS IN 3 STEPS
+                </h2>
+                <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
+                  Our AI generates professional YouTube thumbnails that get clicks.
                 </p>
 
-                {/* Example prompt chips */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8, maxWidth: 400, width: '100%' }}>
-                  {EXAMPLE_PROMPTS.map((ep, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPrompt(ep)}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                      style={{
-                        width: '100%', padding: '10px 14px',
-                        borderRadius: 10,
-                        border: `1px solid ${C.border}`,
-                        background: 'transparent',
-                        color: C.sub,
-                        fontSize: 13,
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        transition: 'all 0.15s ease',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {ep}
-                    </button>
-                  ))}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                  gap: 16,
+                }}>
+                  {/* Step 1 — Describe */}
+                  <div style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 14, overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Describe Your Idea
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Type what you want or let AI suggest viral thumbnail concepts
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 2 — Choose Style */}
+                  <div style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 14, overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Choose Style
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Pick from 6 styles: Realistic, Anime, Cinematic, 3D, Minimal, or Pop Art
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3 — Get Thumbnail */}
+                  <div style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 14, overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Get Your Thumbnail
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Download, check CTR Score, get title suggestions, or enhance with AI
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Video placeholder */}
+                <div style={{
+                  marginTop: 20, padding: 16, borderRadius: 12,
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  textAlign: 'center',
+                }}>
+                  <span style={{ fontSize: 13, color: C.dim }}>
+                    Video tutorial coming soon
+                  </span>
+                </div>
+
+                {/* Example prompt chips */}
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                    Try an example
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {EXAMPLE_PROMPTS.map((ep, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPrompt(ep)}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                        style={{
+                          width: '100%', padding: '10px 14px',
+                          borderRadius: 10,
+                          border: `1px solid ${C.border}`,
+                          background: 'transparent',
+                          color: C.sub,
+                          fontSize: 13,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          outline: 'none',
+                          transition: 'all 0.15s ease',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {ep}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ── History tab ─────────────────────────────── */
+              <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
+                {history.length === 0 ? (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 40, minHeight: 300 }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 16, background: C.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                      </svg>
+                    </div>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
+                      No thumbnails yet
+                    </h3>
+                    <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                      Generate your first thumbnail and it will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+                      Generated thumbnails ({history.length})
+                    </div>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                      gap: 12,
+                    }}>
+                      {history.map((img) => {
+                        const isActive = selectedImage?.id === img.id;
+                        return (
+                          <button
+                            key={img.id}
+                            onClick={() => {
+                              setSelectedImage(img);
+                              setShowResult(true);
+                              setImageRevealed(true);
+                              setCtrAnalysis(null);
+                              analyzeMutation.mutate({ imageUrl: img.url, prompt: img.prompt });
+                            }}
+                            style={{
+                              padding: 0, width: '100%', aspectRatio: '16/9',
+                              border: isActive ? `2px solid ${C.accent}` : `1px solid ${C.border}`,
+                              borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                              background: C.bg, outline: 'none', transition: 'all 0.2s ease',
+                            }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={img.url} alt={img.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -1351,112 +1555,6 @@ export function AiThumbnailsPage() {
         </div>
       </div>
       </div>{/* end tool area */}
-
-      {/* ── How it works section ──────────────────────── */}
-      <div style={{
-        padding: isMobile ? '36px 16px' : '48px 24px',
-        borderTop: `1px solid ${C.border}`,
-        background: C.surface,
-      }}>
-        <h2 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: C.text, marginBottom: 8 }}>
-          CREATE THUMBNAILS IN 3 STEPS
-        </h2>
-        <p style={{ fontSize: 15, color: C.sub, marginBottom: 32, maxWidth: 600 }}>
-          Our AI generates professional YouTube thumbnails that get clicks. Here&apos;s how it works:
-        </p>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-          gap: 24,
-        }}>
-          {/* Step 1 — Describe */}
-          <div style={{
-            background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 16, overflow: 'hidden',
-          }}>
-            <div style={{
-              aspectRatio: '16/9', background: C.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderBottom: `1px solid ${C.border}`,
-            }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                <path d="M15 5l4 4" />
-              </svg>
-            </div>
-            <div style={{ padding: '16px 20px' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6, textTransform: 'uppercase' }}>
-                Describe Your Idea
-              </h3>
-              <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
-                Type a description of your thumbnail or use AI to generate ideas. Add a reference photo for better results.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 2 — Choose Style */}
-          <div style={{
-            background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 16, overflow: 'hidden',
-          }}>
-            <div style={{
-              aspectRatio: '16/9', background: C.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderBottom: `1px solid ${C.border}`,
-            }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-              </svg>
-            </div>
-            <div style={{ padding: '16px 20px' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6, textTransform: 'uppercase' }}>
-                Choose Style
-              </h3>
-              <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
-                Pick from 6 styles: Realistic, Anime, Cinematic, 3D, Minimalist, or Pop Art. Select format and number of variants.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 3 — Get Your Thumbnail */}
-          <div style={{
-            background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 16, overflow: 'hidden',
-          }}>
-            <div style={{
-              aspectRatio: '16/9', background: C.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderBottom: `1px solid ${C.border}`,
-            }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </div>
-            <div style={{ padding: '16px 20px' }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6, textTransform: 'uppercase' }}>
-                Get Your Thumbnail
-              </h3>
-              <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
-                Download your AI-generated thumbnail, check CTR Score, get title suggestions, or edit with AI prompts.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Video placeholder */}
-        <div style={{
-          marginTop: 32, padding: 24, borderRadius: 16,
-          background: C.card, border: `1px solid ${C.border}`,
-          textAlign: 'center',
-        }}>
-          <p style={{ fontSize: 14, color: C.dim }}>
-            Video tutorial coming soon — watch how creators use TubeForge to make viral thumbnails
-          </p>
-        </div>
-      </div>
 
       {/* CSS animations */}
       <style>{`
