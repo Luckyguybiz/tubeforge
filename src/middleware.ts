@@ -116,21 +116,15 @@ function checkRateLimit(
 /* ------------------------------------------------------------------ */
 /*  Security headers                                                   */
 /* ------------------------------------------------------------------ */
-const securityHeaders: Record<string, string> = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-};
+// NOTE: Security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy,
+// X-Content-Type-Options, Referrer-Policy, etc.) are applied once via
+// next.config.ts `headers()` using src/lib/security-headers.ts.
+// Do NOT duplicate them here — middleware headers stack with config headers,
+// causing browsers to receive each header twice.
 
-/** Create a NextResponse.next() with security headers applied. */
+/** Create a NextResponse.next() — security headers applied by next.config.ts. */
 function nextWithSecurityHeaders() {
-  const response = NextResponse.next();
-  for (const [key, value] of Object.entries(securityHeaders)) {
-    response.headers.set(key, value);
-  }
-  return response;
+  return NextResponse.next();
 }
 
 /* ------------------------------------------------------------------ */
