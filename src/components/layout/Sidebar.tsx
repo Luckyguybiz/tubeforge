@@ -495,7 +495,7 @@ function ProfileDropdown({
   t: (key: string) => string;
   onClose: () => void;
 }) {
-  const { remainingAI } = usePlanLimits();
+  const { remainingAI, projectCount, limits } = usePlanLimits();
 
   const menuItemStyle: React.CSSProperties = {
     width: '100%',
@@ -586,18 +586,16 @@ function ProfileDropdown({
             {planLabel}
           </span>
         </div>
-        {/* Credits remaining */}
-        <div style={{
-          marginTop: 8,
-          fontSize: 11.5,
-          fontWeight: 500,
-          color: C.sub,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-        }}>
-          <span style={{ fontSize: 13 }}>{'\u26A1'}</span>
-          {isFinite(remainingAI) ? `${remainingAI} ${t('sidebar.creditsRemaining')}` : `\u221E ${t('sidebar.creditsRemaining')}`}
+        {/* Stats */}
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 500, color: C.sub, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 13 }}>📁</span>
+            {`${projectCount ?? 0}/${limits.projects === Infinity ? '∞' : limits.projects} Projects`}
+          </div>
+          <div style={{ fontSize: 11.5, fontWeight: 500, color: C.sub, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 13 }}>{'\u26A1'}</span>
+            {isFinite(remainingAI) ? `${remainingAI} AI credits remaining` : `∞ AI credits`}
+          </div>
         </div>
       </div>
 
