@@ -10,6 +10,11 @@ import {
   STICKER_PRESETS,
   TABLE_PRESETS,
   ICON_PRESETS,
+  ARROW_PRESETS,
+  BADGE_PRESETS,
+  EMOJI_PRESETS,
+  DIVIDER_PRESETS,
+  FRAME_PRESETS,
   type ElementPreset,
 } from '@/lib/element-presets';
 
@@ -186,7 +191,12 @@ export function ElementsPanel() {
     <div>
       <PresetSection title={t('thumbs.elements.shapes')} presets={SHAPE_PRESETS} onAdd={addPreset} />
       <PresetSection title={t('thumbs.elements.linesArrows')} presets={LINE_PRESETS} onAdd={addPreset} />
+      <PresetSection title={t('thumbs.elements.arrows')} presets={ARROW_PRESETS} onAdd={addPreset} />
+      <PresetSection title={t('thumbs.elements.badges')} presets={BADGE_PRESETS} onAdd={addPreset} />
+      <PresetSection title={t('thumbs.elements.emojis')} presets={EMOJI_PRESETS} onAdd={addPreset} cols={4} />
       <PresetSection title={t('thumbs.elements.iconsEmoji')} presets={ICON_PRESETS} onAdd={addPreset} cols={4} />
+      <PresetSection title={t('thumbs.elements.dividers')} presets={DIVIDER_PRESETS} onAdd={addPreset} />
+      <PresetSection title={t('thumbs.elements.frames')} presets={FRAME_PRESETS} onAdd={addPreset} />
       <PresetSection title={t('thumbs.elements.stickers')} presets={STICKER_PRESETS} onAdd={addPreset} cols={2} />
       <PresetSection title={t('thumbs.elements.tables')} presets={TABLE_PRESETS} onAdd={addPreset} cols={2} />
     </div>

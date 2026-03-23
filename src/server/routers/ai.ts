@@ -814,4 +814,70 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
       const audioBuffer = Buffer.from(await res.arrayBuffer());
       return { audioBase64: audioBuffer.toString('base64'), format: 'mp3' as const };
     }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     Phase 4: AI Text Suggestions for Thumbnails
+     ═══════════════════════════════════════════════════════════════ */
+  suggestThumbnailText: protectedProcedure
+    .input(z.object({ context: z.string().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-text-suggest', 20);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [{
+              role: 'user',
+              content: `Generate 5 catchy, clickable YouTube thumbnail text options. ${input.context ? `Context: ${input.context}` : 'Make them viral and attention-grabbing.'}
+Return JSON: { "suggestions": ["TEXT 1", "TEXT 2", "TEXT 3", "TEXT 4", "TEXT 5"] }
+Rules: ALL CAPS, max 4 words each, emotionally charged, curiosity-inducing.`,
+            }],
+            response_format: { type: 'json_object' },
+            max_tokens: 200,
+          }),
+        });
+      } catch {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse response' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '{"suggestions":[]}';
+
+      try {
+        const parsed = JSON.parse(text) as { suggestions?: string[] };
+        return { suggestions: parsed.suggestions ?? [] };
+      } catch {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { suggestions?: string[] };
+            return { suggestions: parsed.suggestions ?? [] };
+          } catch {
+            // fall through
+          }
+        }
+        return { suggestions: [] };
+      }
+    }),
 });
