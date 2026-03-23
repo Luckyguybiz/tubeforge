@@ -249,6 +249,7 @@
   "thumbs.editor.imageAlt": "Изображение",
   "thumbs.editor.saving": "Сохраняется...",
   "thumbs.editor.saved": "Сохранено",
+  "thumbs.editor.unsaved": "Не сохранено",
   "thumbs.editor.subtitle": "Создайте обложку как в Canva или перейдите к ИИ-генерации",
   "thumbs.editor.undoTitle": "Отменить (Ctrl+Z)",
   "thumbs.editor.redoTitle": "Повторить (Ctrl+Y)",
