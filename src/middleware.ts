@@ -22,8 +22,8 @@ const rateLimitMap = new Map<string, RateLimitEntry>();
 /** Separate stricter rate limit map for auth endpoints */
 const authRateLimitMap = new Map<string, RateLimitEntry>();
 
-/** Requests allowed per window per IP */
-const RATE_LIMIT_MAX = 120;
+/** Requests allowed per window per IP (page navigations + API calls) */
+const RATE_LIMIT_MAX = 600;
 /** Auth endpoint: stricter limit (10 requests per minute) */
 const AUTH_RATE_LIMIT_MAX = 10;
 /** Window duration in ms (1 minute) */
@@ -155,6 +155,13 @@ export default function middleware(req: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
+    pathname.startsWith('/gen/') ||
+    pathname.startsWith('/icons/') ||
+    pathname.startsWith('/images/') ||
+    pathname === '/sw.js' ||
+    pathname === '/manifest.json' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
     /\.\w{2,5}$/.test(pathname)
   ) {
     return nextWithSecurityHeaders();
