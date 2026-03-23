@@ -813,8 +813,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const menuItem: React.CSSProperties = { padding: '8px 12px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: C.text, transition: 'background .1s' };
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 10 : 16, flexWrap: 'wrap', gap: isMobile ? 8 : 0 }}>
+    <div className="tf-thumb-editor-root">
+      <div className="tf-thumb-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 10 : 16, flexWrap: 'wrap', gap: isMobile ? 8 : 0 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <h2 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: '0' }}>{t('thumbs.editor.title')}</h2>
@@ -872,11 +872,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <button onClick={() => store().setStep('ai')} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.accent}33`, display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>{sparkleIcon} {t('thumbs.editor.aiGeneration')}</button>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: isMobile ? 8 : 12, flexDirection: isMobile ? 'column' : 'row' }}>
+      <div className="tf-thumb-editor" style={{ gap: isMobile ? 8 : 12 }}>
         {/* On mobile: toolbar is horizontal at top */}
         <ToolBar onFileChange={onFileChange} isMobile={isMobile} />
-        {!isMobile && <LeftSidebar />}
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, gap: 0 }}>
+        {!isMobile && <div className="tf-thumb-left"><LeftSidebar /></div>}
+        <div className="tf-thumb-canvas-area" style={{ gap: 0 }}>
         {/* Quick Actions Toolbar */}
         {!isMobile && selIds.length > 0 && (
           <QuickActionsBar C={C} selIds={selIds} />
@@ -1193,7 +1193,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             )}
           </>
         ) : (
-          <PropertiesPanel sel={sel ?? null} />
+          <div className="tf-thumb-right"><PropertiesPanel sel={sel ?? null} /></div>
         )}
         {/* Mobile left sidebar as bottom sheet */}
         {isMobile && <LeftSidebar isMobile={isMobile} />}
