@@ -32,11 +32,14 @@ interface AnimationStyle {
   category: string;
   badge: string | null;
   gradient: [string, string];
+  /** Optional preview GIF/video URLs shown in the "How it works" panel */
+  previews?: string[];
 }
 
 const ANIMATION_STYLES: AnimationStyle[] = [
   { id: 'general', name: 'GENERAL', category: 'all', badge: 'Top Choice', gradient: ['#6366f1', '#8b5cf6'] },
   { id: '3d-cats', name: '3D CATS', category: '3d', badge: 'Trending', gradient: ['#f59e0b', '#ef4444'] },
+  { id: '2d-cats', name: '2D CATS', category: 'cats', badge: 'New', gradient: ['#f472b6', '#ec4899'] },
   { id: 'anime-2d', name: 'ANIME 2D', category: 'anime', badge: 'Top Choice', gradient: ['#ec4899', '#8b5cf6'] },
   { id: 'cartoon-style', name: 'CARTOON', category: 'cartoon', badge: 'New', gradient: ['#22c55e', '#06b6d4'] },
   { id: 'realistic', name: 'REALISTIC', category: 'realistic', badge: 'Top Choice', gradient: ['#3b82f6', '#1d4ed8'] },
@@ -836,13 +839,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             className="tf-editor-left"
             style={{
               width: 380,
+              height: '100%',
               flexShrink: 0,
               background: C.card,
               borderRight: `1px solid ${C.border}`,
               padding: 20,
               display: 'flex', flexDirection: 'column', gap: 14,
               overflowY: 'auto',
-              minHeight: 0,
+              overflowX: 'hidden',
               scrollbarWidth: 'thin',
               scrollbarColor: 'rgba(128,128,128,.2) transparent',
             }}
@@ -1427,7 +1431,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
                 </div>
               ) : rightPanelTab === 'howto' ? (
-                /* ── How it works tab ────────────────────────── */
+                /* ── How it works tab — shows preset preview videos ── */
                 <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                   <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
                     MAKE VIDEOS IN ONE CLICK
@@ -1436,101 +1440,61 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     250+ presets for camera control, framing, and high-quality VFX
                   </p>
 
-                  <div className="tf-editor-steps" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: 16,
-                  }}>
-                    {/* Step 1 — Add Image */}
-                    <div
-                      style={{
-                        background: C.surface, border: `1px solid ${C.border}`,
-                        borderRadius: 14, overflow: 'hidden',
-                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        cursor: 'default',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      <div style={{
-                        aspectRatio: '16/10', background: C.bg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                        </svg>
+                  {/* Preview videos grid — loads from /videos/presets/ */}
+                  {(() => {
+                    const style = selectedStyle;
+                    const previewFiles = style.previews && style.previews.length > 0
+                      ? style.previews
+                      : [`/videos/presets/${style.id}-1.mp4`, `/videos/presets/${style.id}-2.mp4`, `/videos/presets/${style.id}-3.mp4`];
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                        {previewFiles.slice(0, 3).map((src, i) => (
+                          <div key={`${style.id}-${i}`} style={{
+                            borderRadius: 12, overflow: 'hidden',
+                            border: `1px solid ${C.border}`,
+                            background: C.surface,
+                          }}>
+                            <video
+                              src={src}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              style={{
+                                width: '100%', aspectRatio: '9/16',
+                                objectFit: 'cover', display: 'block',
+                                background: C.bg,
+                              }}
+                              onError={(e) => {
+                                // Hide broken video, show placeholder
+                                const el = e.currentTarget;
+                                el.style.display = 'none';
+                                const placeholder = el.nextElementSibling as HTMLElement;
+                                if (placeholder) placeholder.style.display = 'flex';
+                              }}
+                            />
+                            <div style={{
+                              display: 'none', aspectRatio: '9/16',
+                              alignItems: 'center', justifyContent: 'center',
+                              background: `linear-gradient(135deg, ${style.gradient[0]}20, ${style.gradient[1]}20)`,
+                              flexDirection: 'column', gap: 8,
+                            }}>
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
+                                <polygon points="5 3 19 12 5 21 5 3" />
+                              </svg>
+                              <span style={{ fontSize: 10, color: C.dim, fontWeight: 600 }}>
+                                {style.name} #{i + 1}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div style={{ padding: 14 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          Add Image
-                        </div>
-                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          Upload or generate an image to start your animation
-                        </div>
-                      </div>
-                    </div>
+                    );
+                  })()}
 
-                    {/* Step 2 — Choose Preset */}
-                    <div
-                      style={{
-                        background: C.surface, border: `1px solid ${C.border}`,
-                        borderRadius: 14, overflow: 'hidden',
-                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        cursor: 'default',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      <div style={{
-                        aspectRatio: '16/10', background: C.bg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                        </svg>
-                      </div>
-                      <div style={{ padding: 14 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          Choose Preset
-                        </div>
-                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          Pick from 250+ animation presets for camera, framing, and VFX
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Step 3 — Get Video */}
-                    <div
-                      style={{
-                        background: C.surface, border: `1px solid ${C.border}`,
-                        borderRadius: 14, overflow: 'hidden',
-                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        cursor: 'default',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                    >
-                      <div style={{
-                        aspectRatio: '16/10', background: C.bg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
-                      </div>
-                      <div style={{ padding: 14 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          Get Video
-                        </div>
-                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          Click generate and download your high-quality video
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
+                  <p style={{ fontSize: 11, color: C.dim, marginTop: 12, textAlign: 'center' }}>
+                    Select a style on the left to see preview videos
+                  </p>
                 </div>
               ) : rightPanelTab === 'history' ? (
                 /* ── History tab ─────────────────────────────── */
