@@ -46,7 +46,7 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'photos';
 
   // Canvas size
   canvasW: number;
@@ -84,7 +84,7 @@ interface ThumbnailState {
   setAiLoading: (l: boolean) => void;
   setAiStyle: (s: string) => void;
   setAiCount: (n: number) => void;
-  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects') => void;
+  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'photos') => void;
   setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star') => void;
   setAiReferenceImage: (url: string | null) => void;
   setLinePreview: (p: { x1: number; y1: number; x2: number; y2: number } | null) => void;
