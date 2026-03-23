@@ -47,6 +47,22 @@ export function useCanvasKeyboard() {
       // Skip rest if editing text
       if (isEditing) return;
 
+      // Copy Style: Alt+C
+      if (e.altKey && e.key === 'c' && !ctrl) {
+        e.preventDefault();
+        store.copyStyle();
+        useNotificationStore.getState().addToast('info', 'Style copied', 1500);
+        return;
+      }
+
+      // Paste Style: Alt+V
+      if (e.altKey && e.key === 'v' && !ctrl) {
+        e.preventDefault();
+        store.pasteStyle();
+        useNotificationStore.getState().addToast('info', 'Style pasted', 1500);
+        return;
+      }
+
       // Copy: Ctrl+C
       if (ctrl && e.key === 'c') {
         store.copySelected();
