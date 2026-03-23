@@ -537,7 +537,7 @@ export function TeamPage() {
   const pendingCount = pendingInvites.data?.length ?? 0;
 
   return (
-    <div>
+    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px', boxSizing: 'border-box' as const }}>
       {/* -- Header -------------------------------------------- */}
       <div
         className="tf-team-header"

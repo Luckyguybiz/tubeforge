@@ -996,7 +996,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',
-        transition: 'width .3s cubic-bezier(.4,0,.2,1)',
+        transition: 'width 0.2s ease',
         position: 'relative',
       }}
     >

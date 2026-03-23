@@ -146,7 +146,7 @@ export function KeywordsPage() {
   /* ── Render ──────────────────────────────────────────────────────── */
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 4px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
       {/* ── Header ────────────────────────────────────────────────── */}
       <div style={{ marginBottom: 24 }}>
         <h1

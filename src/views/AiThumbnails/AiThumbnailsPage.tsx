@@ -452,7 +452,7 @@ export function AiThumbnailsPage() {
       style={{
         background: C.bg,
         color: C.text,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+        fontFamily: 'inherit',
       }}
     >
       {/* ── Tool area (full viewport height) ──────────── */}

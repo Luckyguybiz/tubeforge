@@ -723,7 +723,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       style={{
         background: C.bg,
         color: C.text,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+        fontFamily: 'inherit',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

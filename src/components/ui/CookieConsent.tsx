@@ -106,6 +106,7 @@ export function CookieConsent() {
 
   return (
     <div
+      className="tf-cookie-consent"
       style={{
         position: 'fixed',
         bottom: 0,

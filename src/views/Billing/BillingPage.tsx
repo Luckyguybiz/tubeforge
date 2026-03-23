@@ -300,7 +300,6 @@ export function BillingPage() {
     <div
       style={{
         flex: 1,
-        minHeight: '100dvh',
         background: pageBg,
         color: C.text,
         fontFamily: 'inherit',

@@ -138,7 +138,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-app-shell{height:100%!important;overflow:visible!important}
           .tf-app-column{overflow:visible!important}
           .tf-topbar{height:48px!important}
-          .tf-topbar-btn{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important}
+          .tf-topbar-btn{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}
           .tf-topbar-whatsnew{display:none!important}
           .tf-topbar-bell{display:none!important}
           .tf-bottom-tabs{
@@ -184,45 +184,41 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Mobile sidebar drawer */}
-          {!isFullBleed && (
-            <>
-              <div
-                className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
-                onClick={handleBackdropClick}
-                aria-hidden="true"
-              />
-              <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
-                {/* Close button */}
-                <button
-                  aria-label="Close menu"
-                  onClick={closeMobileMenu}
-                  style={{
-                    position: 'absolute',
-                    top: 12,
-                    right: 12,
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    border: 'none',
-                    background: 'rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontSize: 18,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                  }}
-                >
-                  &times;
-                </button>
-                <Sidebar />
-              </div>
-            </>
-          )}
+          <div
+            className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
+            onClick={handleBackdropClick}
+            aria-hidden="true"
+          />
+          <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+            {/* Close button */}
+            <button
+              aria-label="Close menu"
+              onClick={closeMobileMenu}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                border: 'none',
+                background: 'rgba(255,255,255,0.1)',
+                color: '#fff',
+                fontSize: 18,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+              }}
+            >
+              &times;
+            </button>
+            <Sidebar />
+          </div>
 
-          {/* Mobile bottom tab bar */}
-          {!isFullBleed && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
+          {/* Mobile bottom tab bar — always rendered, even on full-bleed pages */}
+          <MobileBottomTabs pathname={pathname} C={C} t={t} />
         </>
       )}
 

@@ -593,10 +593,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
-    typeof window !== 'undefined' && window.innerWidth < 768,
-  );
-
   const [data, setData] = useState<ShortItem[]>([]);
   const [isMock, setIsMock] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -696,8 +692,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   /* ── Styles ──────────────────────────────────────────── */
 
-  const sidebarW = sidebarCollapsed ? 0 : 220;
-
   // Free users: show max 10 rows
   const FREE_ROW_LIMIT = 10;
   // Client-side filters: hide Indian content, game sub-filter
@@ -750,7 +744,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   }, [filteredData, filters.gameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       {/* Shimmer animation keyframes */}
       <style>{`
         @keyframes shimmer {
@@ -899,16 +893,16 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
         {/* ── Sidebar ──────────────────────────────────────── */}
         <div
           style={{
-            width: sidebarW,
+            width: 220,
             flexShrink: 0,
-            borderRight: sidebarCollapsed ? 'none' : `1px solid ${C.border}`,
+            borderRight: `1px solid ${C.border}`,
             overflow: 'hidden',
             transition: 'width .25s ease',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          {!sidebarCollapsed && (
+          {(
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
               {/* Period selector */}
               <div style={{ padding: '0 12px', marginBottom: 16 }}>
@@ -1181,42 +1175,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
             </div>
           )}
         </div>
-
-        {/* Sidebar toggle button */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? t('shorts.showFilters') : t('shorts.hideFilters')}
-          style={{
-            position: 'absolute',
-            left: sidebarW - 1,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 20,
-            height: 40,
-            borderRadius: '0 6px 6px 0',
-            border: `1px solid ${C.border}`,
-            borderLeft: 'none',
-            background: C.surface,
-            color: C.dim,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2,
-            transition: 'left .25s ease',
-            padding: 0,
-          }}
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path
-              d={sidebarCollapsed ? 'M3 1L7 5L3 9' : 'M7 1L3 5L7 9'}
-              stroke={C.dim}
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
 
         {/* ── Main table area ──────────────────────────────── */}
         <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
