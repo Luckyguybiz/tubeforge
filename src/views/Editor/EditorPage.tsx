@@ -1457,13 +1457,21 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
                         250+ presets for camera control, framing, and high-quality VFX
                       </p>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: '8px 4px' }}>
                         {[
                           { title: 'Add Image', desc: 'Upload or generate an image to start your animation', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
                           { title: 'Choose Preset', desc: 'Pick from 250+ animation presets for camera, framing, and VFX', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg> },
                           { title: 'Get Video', desc: 'Click generate and download your high-quality video', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
                         ].map((step) => (
-                          <div key={step.title} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+                          <div
+                            key={step.title}
+                            style={{
+                              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14,
+                              overflow: 'hidden', transition: 'transform .2s ease, box-shadow .2s ease',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                          >
                             <div style={{ aspectRatio: '16/10', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{step.icon}</div>
                             <div style={{ padding: 14 }}>
                               <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>{step.title}</div>
