@@ -81,6 +81,13 @@ export const aiRouter = router({
     .mutation(async ({ ctx, input }) => {
       const useFal = !!env.FAL_KEY;
 
+      if (!useFal && !env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Image generation service is temporarily unavailable. Please try again later.',
+        });
+      }
+
       await checkRateLimit(ctx.session.user.id, 'ai-thumbnail', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
@@ -179,6 +186,13 @@ Professional YouTube thumbnail that would get millions of clicks.
       style: z.enum(['realistic', 'anime', 'cinematic', 'minimalist', '3d', 'popart']).default('realistic'),
     }))
     .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'AI service is temporarily unavailable. Please try again later.',
+        });
+      }
+
       await checkRateLimit(ctx.session.user.id, 'ai-from-image', 10);
       // Charge 2 credits: one for GPT-4o Vision analysis, one for DALL-E generation
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
@@ -318,6 +332,13 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
       language: z.enum(['ru', 'en']).default('ru'),
     }))
     .mutation(async ({ ctx, input }) => {
+      if (!env.ANTHROPIC_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Metadata generation service is temporarily unavailable. Please try again later.',
+        });
+      }
+
       await checkRateLimit(ctx.session.user.id, 'ai-metadata', 20);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
@@ -379,6 +400,13 @@ Return ONLY valid JSON, no markdown.`,
       duration: z.number().min(1).max(30).default(5),
     }))
     .mutation(async ({ ctx, input }) => {
+      if (!env.RUNWAY_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Video generation service is temporarily unavailable. Please try again later.',
+        });
+      }
+
       await checkRateLimit(ctx.session.user.id, 'ai-video', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
@@ -645,6 +673,13 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
     .mutation(async ({ ctx, input }) => {
       const useFal = !!env.FAL_KEY;
 
+      if (!useFal && !env.OPENAI_API_KEY) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Image generation service is temporarily unavailable. Please try again later.',
+        });
+      }
+
       await checkRateLimit(ctx.session.user.id, 'ai-image', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
@@ -768,7 +803,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
     .mutation(async ({ ctx, input }) => {
       const apiKey = process.env.ELEVENLABS_API_KEY;
       if (!apiKey) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Speech synthesis service is temporarily unavailable. Please try again later.' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Cloud speech synthesis is unavailable. Use your browser\'s built-in text-to-speech as a fallback.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-tts', 10);

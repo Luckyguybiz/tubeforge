@@ -510,6 +510,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     };
   }, []);
 
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (autoSaveDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [autoSaveDirty]);
+
   useEffect(() => {
     if (!leftModelsOpen) return;
     const handler = (e: MouseEvent) => {
