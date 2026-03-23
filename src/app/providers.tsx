@@ -16,7 +16,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
           // Don't retry on auth, forbidden, or rate-limit errors
           const trpcData = (error as unknown as { data?: { httpStatus?: number; code?: string } })?.data;
           const status = trpcData?.httpStatus;
-          if (status === 401 || status === 403 || status === 429) return false;
+          // Session expired — redirect to login
+          if (status === 401 || trpcData?.code === 'UNAUTHORIZED') {
+            if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+              window.location.href = '/auth/signin';
+            }
+            return false;
+          }
+          if (status === 403 || status === 429) return false;
           if (trpcData?.code === 'TOO_MANY_REQUESTS') return false;
           return failureCount < 2;
         },
@@ -46,8 +53,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          // Auth errors — don't show toast (redirect will handle)
+          // Auth errors — redirect to login
           if (code === 'UNAUTHORIZED' || message.includes('UNAUTHORIZED')) {
+            if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+              window.location.href = '/auth/signin';
+            }
             return;
           }
 
