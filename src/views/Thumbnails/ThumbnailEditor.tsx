@@ -38,7 +38,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const store = useThumbnailStore.getState;
   const SIZE_PRESETS = useMemo(() => getSizePresets(t), [t]);
   useCanvasKeyboard();
-  useUndoHint(historyCount);
+  // useUndoHint removed — toast on page load was disruptive
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const sel = useMemo(() => els.find((e) => e.id === selId), [els, selId]);
   const loadedRef = useRef(false);

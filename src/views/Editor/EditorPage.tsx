@@ -574,7 +574,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Undo / Redo
   const historyLen = useEditorStore((s) => s.historyCount);
   const futureLen = useEditorStore((s) => s.futureCount);
-  useUndoHint(historyLen);
+  // useUndoHint removed — toast on page load was disruptive
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
