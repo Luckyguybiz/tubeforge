@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
-  const isEditor = pathname === '/editor';
+  const isFullBleed = pathname === '/editor' || pathname === '/ai-thumbnails' || pathname === '/thumbnails';
   const isOnboarding = pathname === '/onboarding';
 
   const mobileMenuOpen = useMobileMenuStore((s) => s.open);
@@ -172,10 +172,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <>
           <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
           <div className="tf-app-shell" style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
-            <div className="tf-sidebar"><Sidebar defaultCollapsed={isEditor} /></div>
+            <div className="tf-sidebar"><Sidebar defaultCollapsed={isFullBleed} /></div>
             <div className="tf-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
-              {isEditor ? (
+              {isFullBleed ? (
                 <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
               ) : (
                 <main id="main-content" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
@@ -184,7 +184,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Mobile sidebar drawer */}
-          {!isEditor && (
+          {!isFullBleed && (
             <>
               <div
                 className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
@@ -222,7 +222,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
 
           {/* Mobile bottom tab bar */}
-          {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
+          {!isFullBleed && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
         </>
       )}
 
