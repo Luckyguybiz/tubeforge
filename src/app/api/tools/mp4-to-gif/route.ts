@@ -71,19 +71,12 @@ export async function POST(req: NextRequest) {
     ]);
 
     try {
-      // Step 1: palette
+      // Single-pass with split+palettegen+paletteuse (fast + good quality)
       await runFFmpeg([
         '-y', '-ss', String(startTime), '-t', String(duration),
         '-i', inputPath,
-        '-vf', `fps=${fps},scale=${width}:-1:flags=lanczos,palettegen`,
-        palettePath,
-      ], 60_000);
-
-      // Step 2: convert with palette
-      await runFFmpeg([
-        '-y', '-ss', String(startTime), '-t', String(duration),
-        '-i', inputPath, '-i', palettePath,
-        '-lavfi', `fps=${fps},scale=${width}:-1:flags=lanczos[x];[x][1:v]paletteuse`,
+        '-vf', `fps=${fps},scale=${width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
+        '-loop', '0',
         outputPath,
       ], 120_000);
 

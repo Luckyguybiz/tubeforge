@@ -47,6 +47,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '500mb',
     },
+    middlewareClientMaxBodySize: '100mb',
     optimizePackageImports: [
       'recharts',
       'zod',
