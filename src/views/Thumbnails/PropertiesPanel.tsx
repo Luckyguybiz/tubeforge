@@ -112,6 +112,11 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             </div>
           </div>
 
+          {/* Group / Ungroup */}
+          <div style={{ display: 'flex', gap: 3 }}>
+            <button onClick={() => useThumbnailStore.getState().groupSelected()} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Group (Ctrl+G)</button>
+            <button onClick={() => useThumbnailStore.getState().ungroupSelected()} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Ungroup</button>
+          </div>
           <button onClick={() => { pushHistory(); selIds.forEach((id) => delEl(id)); }} style={{ width: '100%', padding: '5px', borderRadius: 5, border: `1px solid ${C.accent}33`, background: 'transparent', color: C.accent, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: .6 }} aria-label={t('thumbs.props.deleteAllSelected')}>✕ {t('thumbs.props.deleteAll')}</button>
         </div>
 
@@ -234,6 +239,22 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          {/* Frame presets */}
+          <div>
+            <div style={labelStyle}>Frame</div>
+            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              {[
+                { label: 'None', borderR: 0, border: undefined, boxShadow: undefined },
+                { label: 'Round', borderR: 12, border: undefined, boxShadow: undefined },
+                { label: 'Circle', borderR: 999, border: undefined, boxShadow: undefined },
+                { label: 'Border', borderR: 0, border: '4px solid #ffffff', boxShadow: undefined },
+                { label: 'Shadow', borderR: 8, border: undefined, boxShadow: { x: 0, y: 4, blur: 20, spread: 0, color: 'rgba(0,0,0,.5)' } },
+                { label: 'Glow', borderR: 8, border: undefined, boxShadow: { x: 0, y: 0, blur: 30, spread: 4, color: 'rgba(59,130,246,.4)' } },
+              ].map((frame) => (
+                <button key={frame.label} onClick={() => updEl(sel.id, { borderR: frame.borderR, border: frame.border, boxShadow: frame.boxShadow as CanvasElement['boxShadow'] })} style={{ ...btnSmall, flex: '1 0 28%', fontSize: 8, padding: '4px 2px' }}>{frame.label}</button>
+              ))}
+            </div>
+          </div>
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR}</span></div></div>
           {/* Filters — especially useful for images */}
           <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />

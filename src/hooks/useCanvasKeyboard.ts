@@ -109,6 +109,20 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      // Group: Ctrl+G
+      if (ctrl && e.key === 'g' && !e.shiftKey) {
+        e.preventDefault();
+        store.groupSelected();
+        return;
+      }
+
+      // Ungroup: Ctrl+Shift+G
+      if (ctrl && e.key === 'g' && e.shiftKey) {
+        e.preventDefault();
+        store.ungroupSelected();
+        return;
+      }
+
       // Bring to front: Ctrl+] / Send to back: Ctrl+[
       if (ctrl && (e.key === ']' || e.key === '[') && store.selIds.length === 1) {
         e.preventDefault();

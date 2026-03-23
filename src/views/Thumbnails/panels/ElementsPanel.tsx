@@ -13,6 +13,8 @@ import {
   ICON_PRESETS,
   GRADIENT_SHAPE_PRESETS,
   TEXT_STYLE_PRESETS,
+  BADGE_PRESETS,
+  BACKGROUND_PRESETS,
   THUMBNAIL_TEMPLATES,
   type ElementPreset,
   type ThumbnailTemplate,
@@ -237,7 +239,34 @@ export function ElementsPanel() {
           ))}
         </div>
       </div>
+      {/* Background presets */}
+      <div style={{ marginBottom: 18 }}>
+        <h4 style={{ fontSize: 11, fontWeight: 700, color: C.sub, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>
+          Backgrounds
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+          {BACKGROUND_PRESETS.map((bg, i) => (
+            <div key={i} role="button" tabIndex={0} title={bg.label}
+              onClick={() => {
+                const store = getStore();
+                if (bg.value.startsWith('gradient:')) {
+                  const [, angle, c1, c2] = bg.value.split(':');
+                  store.setCanvasBg('#0a0a0a');
+                  // Add gradient rect as background
+                  store.pushHistory();
+                  const id = uid();
+                  const bgEl: CanvasElement = { id, type: 'rect', x: 0, y: 0, w: store.canvasW || 1280, h: store.canvasH || 720, opacity: 1, rot: 0, gradient: { type: 'linear', angle: +angle, stops: [{ offset: 0, color: c1 }, { offset: 1, color: c2 }] } } as CanvasElement;
+                  useThumbnailStore.setState((s) => ({ els: [bgEl, ...s.els] }));
+                } else {
+                  store.setCanvasBg(bg.value);
+                }
+              }}
+              style={{ width: '100%', aspectRatio: '1', borderRadius: 6, background: bg.preview, cursor: 'pointer', border: `1px solid ${C.border}` }} />
+          ))}
+        </div>
+      </div>
       <PresetSection title="Text Styles" presets={TEXT_STYLE_PRESETS} onAdd={addPreset} cols={2} />
+      <PresetSection title="Badges & Labels" presets={BADGE_PRESETS} onAdd={addPreset} cols={4} />
       <PresetSection title="Gradient Shapes" presets={GRADIENT_SHAPE_PRESETS} onAdd={addPreset} cols={3} />
       <PresetSection title={t('thumbs.elements.shapes')} presets={SHAPE_PRESETS} onAdd={addPreset} />
       <PresetSection title={t('thumbs.elements.linesArrows')} presets={LINE_PRESETS} onAdd={addPreset} />

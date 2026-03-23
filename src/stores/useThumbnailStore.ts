@@ -134,6 +134,10 @@ interface ThumbnailState {
   bringFront: (id: string) => void;
   sendBack: (id: string) => void;
 
+  // Grouping
+  groupSelected: () => void;
+  ungroupSelected: () => void;
+
   // Backward-compatible selId setter
   setSelId: (id: string | null) => void;
 
@@ -514,6 +518,29 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       if (!el) return s;
       return { els: [el, ...s.els.filter((e) => e.id !== id)] };
     });
+  },
+
+  // ===== Grouping =====
+  groupSelected: () => {
+    const { selIds } = get();
+    if (selIds.length < 2) return;
+    get().pushHistory();
+    const groupId = uid();
+    set((s) => ({
+      els: s.els.map((e) => selIds.includes(e.id) ? { ...e, groupId } : e),
+    }));
+  },
+
+  ungroupSelected: () => {
+    const { selIds, els } = get();
+    if (selIds.length === 0) return;
+    // Find all group IDs for selected elements
+    const groupIds = new Set(els.filter((e) => selIds.includes(e.id) && e.groupId).map((e) => e.groupId!));
+    if (groupIds.size === 0) return;
+    get().pushHistory();
+    set((s) => ({
+      els: s.els.map((e) => e.groupId && groupIds.has(e.groupId) ? { ...e, groupId: undefined } : e),
+    }));
   },
 
   // ===== Save/Load =====
