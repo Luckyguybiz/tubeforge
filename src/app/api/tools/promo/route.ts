@@ -10,7 +10,11 @@ import { rateLimit } from '@/lib/rate-limit';
  *   PROMO_CODES='{"SHORTS2026":{"hours":24,"label":"24h access"}}'
  *
  * Falls back to built-in defaults when the env var is not set.
- * TODO: migrate promo codes to a database table for runtime management.
+ *
+ * Intentionally simple for MVP: codes are defined via env var / hardcoded
+ * defaults rather than a database table. This keeps the promo flow stateless
+ * and avoids extra DB queries. A DB-backed promo table can be added later
+ * for runtime management, per-user tracking, and expiry enforcement.
  */
 const DEFAULT_PROMO_CODES: Record<string, { hours: number; label: string }> = {
   'SHORTS2026': { hours: 24, label: '24 hours full access' },

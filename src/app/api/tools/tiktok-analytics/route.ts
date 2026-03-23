@@ -67,8 +67,11 @@ function cleanupCache() {
 
 /**
  * Promo codes loaded from env (mirrors the promo route logic).
- * TODO: replace with a DB-backed promo activation table so we can track
- * per-user activation time and expiry server-side.
+ *
+ * Intentionally simple for MVP: codes are validated server-side against the
+ * PROMO_CODES env var (JSON). This avoids an extra DB round-trip on every
+ * analytics request. A DB-backed promo activation table can be added later
+ * to track per-user activation time and expiry if needed.
  */
 const PROMO_CODES: Record<string, { hours: number }> = (() => {
   const raw = process.env.PROMO_CODES;
