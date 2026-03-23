@@ -402,7 +402,7 @@ export function Dashboard() {
       <div style={{
         background: C.surface, borderRadius: 16, padding: 32,
         marginBottom: 32, display: 'flex', gap: 32, alignItems: 'center',
-        overflow: 'hidden', boxSizing: 'border-box',
+        overflow: 'visible', boxSizing: 'border-box',
       }} className="tf-dash-showcase">
         {/* Left: headline + CTA */}
         <div style={{ flexShrink: 0, minWidth: 200 }} className="tf-dash-showcase-left">

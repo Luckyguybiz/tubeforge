@@ -457,7 +457,7 @@ export function AiThumbnailsPage() {
       }}
     >
       {/* ── Tool area (full viewport height) ──────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* ── Top Bar ────────────────────────────────────── */}
       <div
         className="tf-aithumbs-topbar"

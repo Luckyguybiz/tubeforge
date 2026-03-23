@@ -1,0 +1,191 @@
+import type { Metadata } from "next";
+import { LandingNav, FaqAccordion } from "@/components/landing";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Content Planner — Calendar, Ideas & Scheduling",
+  description: "Plan, schedule, and organize content with visual calendar, ideas bank, and multi-platform support.",
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Content Planner — Calendar, Ideas & Scheduling",
+    description: "Plan, schedule, and organize content with visual calendar, ideas bank, and multi-platform support.",
+    type: "website",
+    url: "https://tubeforge.co/features/content-planner",
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
+  },
+  alternates: { canonical: "https://tubeforge.co/features/content-planner" },
+  twitter: {
+    card: "summary_large_image",
+    title: "Content Planner — Calendar, Ideas & Scheduling",
+    description: "Plan, schedule, and organize content with visual calendar, ideas bank, and multi-platform support.",
+  },
+};
+
+const FAQ_ITEMS = [
+  { q: "Is the Content Planner free?", a: "Basic planning with calendar and ideas bank is free. Pro adds templates and team collaboration." },
+  { q: "Can I plan for multiple platforms?", a: "Yes! Plan for YouTube, Shorts, TikTok, Instagram, and more in one calendar." },
+  { q: "Can my team use it?", a: "Studio plan supports up to 10 team members with role-based access." },
+  { q: "Does it integrate with YouTube?", a: "Yes! Connect your channel to schedule and auto-publish." },
+  { q: "Can I import existing plans?", a: "Yes, import from CSV, Google Sheets, or Notion." },
+  { q: "Does AI suggest ideas?", a: "Yes! Based on your niche, past performance, and trends." }
+];
+
+export default function Page() {
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#fff" }}>
+      <LandingNav />
+
+      {/* Hero */}
+      <section style={{ padding: "120px 24px 60px", textAlign: "center" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 980, border: "1px solid rgba(255,255,255,0.1)", marginBottom: 20, fontSize: 12, color: "#6366f1", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366f1" }} />
+            Calendar · Templates
+          </div>
+          <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px" }}>
+            Plan Your Content Like a{" "}
+            <span style={{ background: "linear-gradient(135deg, #6366f1, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Pro Creator</span>
+          </h1>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.55)", maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.6 }}>
+            Visual calendar, ideas bank, templates, and cross-platform scheduling. Never miss a publish date.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#6366f1", color: "#fff", fontSize: 15, fontWeight: 500, padding: "12px 24px", borderRadius: 980, textDecoration: "none" }}>
+              Start Planning Free
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </Link>
+            <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", fontSize: 15, fontWeight: 500, padding: "12px 24px", borderRadius: 980, textDecoration: "none", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}>
+              See How It Works
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem */}
+      <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ maxWidth: 580, margin: "0 auto", textAlign: "center" }}>
+          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", margin: "0 0 12px", color: "#fff" }}>Consistency Is the Hardest Part</h2>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Most creators fail because of inconsistency, not bad content. Our planner makes staying consistent effortless.</p>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section style={{ padding: "60px 24px", background: "#111111" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 8px", color: "#fff" }}>Everything you need</h2>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", textAlign: "center", margin: "0 0 40px" }}>Content Planner</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+            
+              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Visual Calendar</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Drag-and-drop content calendar. See your entire month at a glance. Color-coded by platform.</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Ideas Bank</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Save, organize, and rate content ideas. AI suggests ideas based on trends.</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Templates</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Reusable templates for thumbnails, titles, descriptions, and scripts.</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Production Pipeline</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Track each video: idea → script → film → edit → publish. See bottlenecks.</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Analytics Integration</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>See which planned content performed best. Optimize future schedules.</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Multi-Platform</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Plan for YouTube, Shorts, TikTok, Instagram, and more in one calendar.</p>
+              </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section id="how-it-works" style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 40px", color: "#fff" }}>How it works</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32 }}>
+            
+              <div style={{ textAlign: "center" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#6366f1", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>1</div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Set Your Schedule</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Define publishing frequency and preferred days. Calendar fills with slots.</p>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#6366f1", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>2</div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Fill Your Pipeline</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Add ideas from your bank, assign to slots, track production progress.</p>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#6366f1", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>3</div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Execute & Publish</h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Follow your plan, mark complete, use scheduling to auto-publish.</p>
+              </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section style={{ padding: "60px 24px", background: "#111111" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Results that speak</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            
+              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>3x More</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Consistency</div>
+              </div>
+              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>50+</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Ideas Saved</div>
+              </div>
+              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>5 hrs/week</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Time Saved</div>
+              </div>
+              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>5+</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Platforms</div>
+              </div>
+              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>100+</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Templates</div>
+              </div>
+              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>Up to 10</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Team Members</div>
+              </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Frequently asked questions</h2>
+          <FaqAccordion items={FAQ_ITEMS} />
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{ padding: "80px 24px", textAlign: "center", background: "#111111" }}>
+        <div style={{ maxWidth: 580, margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 600, letterSpacing: "-0.02em", color: "#fff", margin: "0 0 12px" }}>Plan, Create, Publish — Repeat</h2>
+          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", margin: "0 0 28px", lineHeight: 1.6 }}>Your entire content workflow in one place. Start free.</p>
+          <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#6366f1", color: "#fff", fontSize: 16, fontWeight: 500, padding: "12px 28px", borderRadius: 980, textDecoration: "none" }}>
+            Start Free
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+          </Link>
+        </div>
+      </section>
+
+      <footer style={{ background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>&copy; 2026 TubeForge. All rights reserved.</span>
+      </footer>
+    </div>
+  );
+}
