@@ -428,6 +428,7 @@ export function Dashboard() {
           display: 'flex', gap: 14, overflowX: 'auto', flex: 1,
           scrollSnapType: 'x mandatory', paddingBottom: 4,
           msOverflowStyle: 'none', scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch', touchAction: 'pan-x',
         }} className="tf-dash-showcase-scroll">
           {([
             { href: '/ai-thumbnails', title: 'AI Thumbnails', gradientFrom: '#6366f1', gradientTo: '#8b5cf6', badge: 'NEW', badgeColor: '#84cc16',
@@ -532,6 +533,8 @@ export function Dashboard() {
             paddingBottom: 4,
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x',
           }}
           className="tf-top-choice-scroll"
         >
@@ -581,6 +584,8 @@ export function Dashboard() {
             paddingBottom: 4,
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x',
           }}
         >
           {FREE_TOOLS.map((tool) => (

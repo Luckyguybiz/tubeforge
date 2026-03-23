@@ -107,40 +107,6 @@ export const TopBar = memo(function TopBar() {
   /* ── What's New ────────────────────────────────── */
   const [showWhatsNew, setShowWhatsNew] = useState(false);
 
-  /* ── Search ─────────────────────────────────────── */
-  const [searchExpanded, setSearchExpanded] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const openSearch = useCallback(() => {
-    setSearchExpanded(true);
-    setTimeout(() => searchInputRef.current?.focus(), 50);
-  }, []);
-
-  const closeSearch = useCallback(() => {
-    setSearchExpanded(false);
-    setSearchQuery('');
-  }, []);
-
-  // Listen for sidebar search click
-  useEffect(() => {
-    const handler = () => openSearch();
-    window.addEventListener('tubeforge:open-search', handler);
-    return () => window.removeEventListener('tubeforge:open-search', handler);
-  }, [openSearch]);
-
-  // Cmd/Ctrl+K global shortcut
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        openSearch();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [openSearch]);
-
   // Close notification dropdown on outside click
   useEffect(() => {
     if (!bellOpen) return;
@@ -267,66 +233,6 @@ export const TopBar = memo(function TopBar() {
         );
       })()}
       <div style={{ flex: 1 }} />
-
-      {/* Search input */}
-      {searchExpanded && (
-        <div className="tf-topbar-search-wrap" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative', flex: '1 1 auto', maxWidth: 320 }}>
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
-            placeholder={t('sidebar.search')}
-            style={{
-              width: '100%',
-              minWidth: 0,
-              maxWidth: 'calc(100vw - 120px)',
-              height: 36,
-              padding: '0 10px',
-              borderRadius: 7,
-              border: `1px solid ${C.borderActive}`,
-              background: C.bg,
-              color: C.text,
-              fontSize: 12,
-              fontFamily: 'inherit',
-              outline: 'none',
-              transition: 'border-color .15s',
-            }}
-          />
-          <button
-            aria-label={t('sidebar.search') + ' — ' + 'close'}
-            onClick={closeSearch}
-            style={{
-              ...btnBase,
-              width: 44,
-              height: 44,
-              minWidth: 44,
-              minHeight: 44,
-              fontSize: 10,
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Search icon button (always visible, opens search) */}
-      {!searchExpanded && (
-        <button
-          className="tf-topbar-btn"
-          title={t('sidebar.search')}
-          aria-label={t('sidebar.search')}
-          onClick={openSearch}
-          onMouseEnter={(e) => handleBtnHover(e, true)}
-          onMouseLeave={(e) => handleBtnHover(e, false)}
-          style={btnBase}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </button>
-      )}
 
       {/* Referral CTA */}
       <button
@@ -478,9 +384,9 @@ export const TopBar = memo(function TopBar() {
         onMouseLeave={(e) => handleBtnHover(e, false)}
         style={btnBase}
       >
-        {themeMode === 'dark' && <MoonIcon size={14} color={C.sub} />}
-        {themeMode === 'light' && <SunIcon size={14} color={C.sub} />}
-        {themeMode === 'system' && <MonitorIcon size={14} color={C.sub} />}
+        {themeMode === 'dark' && <MoonIcon size={14} color={C.text} />}
+        {themeMode === 'light' && <SunIcon size={14} color={C.text} />}
+        {themeMode === 'system' && <MonitorIcon size={14} color={C.text} />}
       </button>
 
       {/* Keyboard shortcuts modal is now rendered by ShortcutsModal in AppShell */}
