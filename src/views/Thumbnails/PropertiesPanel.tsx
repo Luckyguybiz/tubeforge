@@ -39,7 +39,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
   const { els, selIds } = useThumbnailStore(
     useShallow((s) => ({ els: s.els, selIds: s.selIds }))
   );
-  const { setSelId, updEl, delEl, bringFront, sendBack, pushHistory } = useThumbnailStore.getState();
+  const { setSelId, updEl, delEl, bringFront, sendBack, pushHistory, flipHorizontal, flipVertical } = useThumbnailStore.getState();
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const multiSel = selIds.length > 1;
   const selectedEls = els.filter((e) => selIds.includes(e.id));
@@ -223,6 +223,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
+          {/* Flip */}
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -246,9 +248,12 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <LockAspectToggle C={C} value={sel.lockAspect} onChange={(v) => updEl(sel.id, { lockAspect: v })} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
+          {/* Flip */}
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -262,9 +267,14 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <LockAspectToggle C={C} value={sel.lockAspect ?? true} onChange={(v) => updEl(sel.id, { lockAspect: v })} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
+          {/* Crop */}
+          <CropControl C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
+          {/* Flip */}
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -274,6 +284,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div style={{ fontSize: 10, color: C.sub }}>{t('thumbs.props.drawnElement')}</div>
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -307,6 +318,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           )}
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -330,6 +342,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -361,6 +374,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -1148,6 +1162,126 @@ const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChang
         }
       </button>
       <div style={{ flex: 1 }}><div style={labelStyle}>{t('thumbs.props.height')}</div><input type="number" value={Math.round(h)} onChange={(e) => handleH(+e.target.value)} style={inputStyle} /></div>
+    </div>
+  );
+});
+
+// Flip Horizontal / Vertical buttons
+const FlipButtons = memo(function FlipButtons({ C, id, flipX, flipY, flipHorizontal, flipVertical }: { C: Theme; id: string; flipX?: boolean; flipY?: boolean; flipHorizontal: (id: string) => void; flipVertical: (id: string) => void }) {
+  const flipBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1,
+    padding: '5px',
+    borderRadius: 6,
+    border: `1px solid ${active ? C.blue + '55' : C.border}`,
+    background: active ? C.blue + '14' : 'transparent',
+    color: active ? C.blue : C.sub,
+    fontSize: 9,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    transition: 'all .12s',
+  });
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: C.sub, marginBottom: 4, fontWeight: 600 }}>Flip</div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button onClick={() => flipHorizontal(id)} style={flipBtnStyle(!!flipX)} title="Flip Horizontal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="6 8 2 12 6 16"/><polyline points="18 8 22 12 18 16"/></svg>
+          Horizontal
+        </button>
+        <button onClick={() => flipVertical(id)} style={flipBtnStyle(!!flipY)} title="Flip Vertical">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="8 6 12 2 16 6"/><polyline points="8 18 12 22 16 18"/></svg>
+          Vertical
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// Crop control (slider-based for images)
+function CropControl({ C, sel, updEl, pushHistory }: { C: Theme; sel: CanvasElement; updEl: (id: string, patch: Partial<CanvasElement>) => void; pushHistory: () => void }) {
+  const hasCrop = (sel.cropW !== undefined && sel.cropW < 1) || (sel.cropH !== undefined && sel.cropH < 1) || (sel.cropX !== undefined && sel.cropX > 0) || (sel.cropY !== undefined && sel.cropY > 0);
+  const [expanded, setExpanded] = useState(false);
+  const cropX = sel.cropX ?? 0;
+  const cropY = sel.cropY ?? 0;
+  const cropW = sel.cropW ?? 1;
+  const cropH = sel.cropH ?? 1;
+
+  const handleChange = (patch: Partial<CanvasElement>) => {
+    updEl(sel.id, patch);
+  };
+
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: C.sub, marginBottom: 4, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.13 1L6 16a2 2 0 002 2h15"/><path d="M1 6.13L16 6a2 2 0 012 2v15"/></svg>
+          Crop
+        </span>
+        <button onClick={() => setExpanded(!expanded)} style={{ background: 'none', border: 'none', color: hasCrop ? C.accent : C.dim, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px', display: 'flex', alignItems: 'center', gap: 2 }}>
+          {expanded ? 'HIDE' : hasCrop ? 'ON' : 'OFF'}
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      {expanded && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: 6, background: C.surface, borderRadius: 6, border: `1px solid ${C.border}` }}>
+          <div>
+            <div style={{ fontSize: 9, color: C.dim, marginBottom: 1, display: 'flex', justifyContent: 'space-between' }}><span>Offset X</span><span>{Math.round(cropX * 100)}%</span></div>
+            <input type="range" min={0} max={0.9} step={0.01} value={cropX} onChange={(e) => handleChange({ cropX: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: C.dim, marginBottom: 1, display: 'flex', justifyContent: 'space-between' }}><span>Offset Y</span><span>{Math.round(cropY * 100)}%</span></div>
+            <input type="range" min={0} max={0.9} step={0.01} value={cropY} onChange={(e) => handleChange({ cropY: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: C.dim, marginBottom: 1, display: 'flex', justifyContent: 'space-between' }}><span>Width</span><span>{Math.round(cropW * 100)}%</span></div>
+            <input type="range" min={0.1} max={1} step={0.01} value={cropW} onChange={(e) => handleChange({ cropW: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: C.dim, marginBottom: 1, display: 'flex', justifyContent: 'space-between' }}><span>Height</span><span>{Math.round(cropH * 100)}%</span></div>
+            <input type="range" min={0.1} max={1} step={0.01} value={cropH} onChange={(e) => handleChange({ cropH: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+          </div>
+          {hasCrop && (
+            <button
+              onClick={() => { pushHistory(); updEl(sel.id, { cropX: 0, cropY: 0, cropW: 1, cropH: 1 }); }}
+              style={{ width: '100%', padding: '4px', borderRadius: 4, border: `1px solid ${C.accent}33`, background: 'transparent', color: C.accent, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: 0.7 }}
+            >
+              Reset Crop
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Lock aspect ratio toggle
+const LockAspectToggle = memo(function LockAspectToggle({ C, value, onChange }: { C: Theme; value?: boolean; onChange: (v: boolean) => void }) {
+  const locked = value ?? false;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: -2 }}>
+      <button
+        onClick={() => onChange(!locked)}
+        title={locked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          padding: '3px 8px', borderRadius: 5,
+          border: `1px solid ${locked ? C.blue + '55' : C.border}`,
+          background: locked ? C.blue + '14' : 'transparent',
+          color: locked ? C.blue : C.dim,
+          fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        {locked
+          ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+        }
+        {locked ? 'Aspect locked' : 'Lock aspect'}
+      </button>
     </div>
   );
 });

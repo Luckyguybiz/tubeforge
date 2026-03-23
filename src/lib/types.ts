@@ -153,6 +153,16 @@ export interface CanvasElement {
   hueRotate?: number;   // 0-360
   saturate?: number;    // 0-200, default 100
   invert?: boolean;
+  // flip/mirror
+  flipX?: boolean;
+  flipY?: boolean;
+  // crop (normalized 0-1)
+  cropX?: number;
+  cropY?: number;
+  cropW?: number;
+  cropH?: number;
+  // lock aspect ratio during resize
+  lockAspect?: boolean;
 }
 
 export interface AIResult {
