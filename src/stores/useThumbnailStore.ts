@@ -165,6 +165,10 @@ interface ThumbnailState {
   batchUpdateSelected: (patch: Partial<CanvasElement>) => void;
   batchResizeSelected: (scalePct: number) => void;
 
+  // Flip/Mirror
+  flipHorizontal: (id: string) => void;
+  flipVertical: (id: string) => void;
+
   // Backward-compatible selId setter
   setSelId: (id: string | null) => void;
 
@@ -296,6 +300,21 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   setAiReferenceImage: (url) => set({ aiReferenceImage: url }),
   setLinePreview: (p) => set({ linePreview: p }),
   setContextMenu: (m) => set({ contextMenu: m }),
+
+  // ===== Flip/Mirror =====
+  flipHorizontal: (id) => {
+    get().pushHistory();
+    set((s) => ({
+      els: s.els.map((e) => (e.id === id ? { ...e, flipX: !e.flipX } : e)),
+    }));
+  },
+
+  flipVertical: (id) => {
+    get().pushHistory();
+    set((s) => ({
+      els: s.els.map((e) => (e.id === id ? { ...e, flipY: !e.flipY } : e)),
+    }));
+  },
 
   // ===== Backward-compatible selId setter =====
   setSelId: (id) => set({ selIds: id ? [id] : [] }),

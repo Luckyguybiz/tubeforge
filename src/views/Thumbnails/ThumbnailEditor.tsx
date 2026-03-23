@@ -239,6 +239,18 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       if (!el) return;
       let nw = x - el.x, nh = y - el.y;
       if (nw < 20) nw = 20; if (nh < 20) nh = 20;
+      // Lock aspect ratio: default true for images, false for others
+      const shouldLock = el.lockAspect ?? (el.type === 'image');
+      if (shouldLock && el.w > 0 && el.h > 0) {
+        const ratio = el.w / el.h;
+        // Use the dominant axis (larger delta) to drive the other
+        const dw = Math.abs(nw - el.w);
+        const dh = Math.abs(nh - el.h);
+        if (dw >= dh) { nh = Math.round(nw / ratio); }
+        else { nw = Math.round(nh * ratio); }
+        if (nw < 20) { nw = 20; nh = Math.round(20 / ratio); }
+        if (nh < 20) { nh = 20; nw = Math.round(20 * ratio); }
+      }
       store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
       return;
     }
@@ -353,6 +365,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       if (!el) return;
       let nw = x - el.x, nh = y - el.y;
       if (nw < 20) nw = 20; if (nh < 20) nh = 20;
+      const shouldLock = el.lockAspect ?? (el.type === 'image');
+      if (shouldLock && el.w > 0 && el.h > 0) {
+        const ratio = el.w / el.h;
+        const dw = Math.abs(nw - el.w);
+        const dh = Math.abs(nh - el.h);
+        if (dw >= dh) { nh = Math.round(nw / ratio); }
+        else { nw = Math.round(nh * ratio); }
+        if (nw < 20) { nw = 20; nh = Math.round(20 / ratio); }
+        if (nh < 20) { nh = 20; nw = Math.round(20 * ratio); }
+      }
       store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
       return;
     }
@@ -458,7 +480,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (el.visible === false) continue;
         ctx.globalAlpha = el.opacity ?? 1;
         const rot = el.rot ?? 0;
-        if (rot !== 0) { const cx = el.x + el.w / 2, cy = el.y + el.h / 2; ctx.save(); ctx.translate(cx, cy); ctx.rotate((rot * Math.PI) / 180); ctx.translate(-cx, -cy); }
+        const needsTransform = rot !== 0 || el.flipX || el.flipY;
+        if (needsTransform) {
+          const cx = el.x + el.w / 2, cy = el.y + el.h / 2;
+          ctx.save();
+          ctx.translate(cx, cy);
+          if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
+          if (el.flipX || el.flipY) ctx.scale(el.flipX ? -1 : 1, el.flipY ? -1 : 1);
+          ctx.translate(-cx, -cy);
+        }
         if (el.glow) { ctx.shadowColor = el.glow.color; ctx.shadowBlur = el.glow.blur; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
         const filterParts: string[] = [];
         if (el.blur && el.blur > 0) filterParts.push(`blur(${el.blur}px)`);
@@ -510,7 +540,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         } else if (el.type === 'path') {
           ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
         } else if (el.type === 'image') {
-          const img = imgCache.get(el.id); if (img) { ctx.drawImage(img, el.x, el.y, el.w, el.h); }
+          const img = imgCache.get(el.id);
+          if (img) {
+            const hasCrop = (el.cropW !== undefined && el.cropW < 1) || (el.cropH !== undefined && el.cropH < 1) || (el.cropX !== undefined && el.cropX > 0) || (el.cropY !== undefined && el.cropY > 0);
+            if (hasCrop) {
+              const sx = (el.cropX ?? 0) * img.naturalWidth;
+              const sy = (el.cropY ?? 0) * img.naturalHeight;
+              const sw = (el.cropW ?? 1) * img.naturalWidth;
+              const sh = (el.cropH ?? 1) * img.naturalHeight;
+              ctx.drawImage(img, sx, sy, sw, sh, el.x, el.y, el.w, el.h);
+            } else {
+              ctx.drawImage(img, el.x, el.y, el.w, el.h);
+            }
+          }
         } else if (el.type === 'line' || el.type === 'arrow') {
           ctx.strokeStyle = el.strokeColor ?? '#fff'; ctx.lineWidth = el.lineWidth ?? 2; ctx.lineCap = 'round';
           ctx.setLineDash(el.dashStyle === 'dashed' ? [8, 4] : el.dashStyle === 'dotted' ? [2, 4] : []);
@@ -537,7 +579,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
         }
         ctx.filter = 'none'; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-        if (rot !== 0) { ctx.restore(); }
+        if (needsTransform) { ctx.restore(); }
         ctx.globalAlpha = 1;
       }
       return canvas;
@@ -687,6 +729,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     };
   };
 
+  /** Build CSS transform string including rotation and flip */
+  const buildTransform = (el: CanvasElement): string | undefined => {
+    const parts: string[] = [];
+    if (el.rot) parts.push(`rotate(${el.rot}deg)`);
+    if (el.flipX) parts.push('scaleX(-1)');
+    if (el.flipY) parts.push('scaleY(-1)');
+    return parts.length > 0 ? parts.join(' ') : undefined;
+  };
+
   // ===== Render element =====
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
@@ -751,7 +802,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.textGradient ? undefined : el.bg, borderRadius: el.borderR,
         padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: isEditingText ? 'text' : 'move', boxSizing: 'border-box', outline: 'none',
-        transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
+        transform: buildTransform(el),
         letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
         lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
         textTransform: el.textTransform && el.textTransform !== 'none' ? el.textTransform : undefined,
@@ -790,7 +841,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'rect') {
       const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : (el.border ?? 'none'));
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
           onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
       );
     }
@@ -798,17 +849,32 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'circle') {
       const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : 'none');
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
           onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
       );
     }
 
     if (el.type === 'image') {
       const imgEffects = getEffectStyles(el);
+      const hasCrop = (el.cropW !== undefined && el.cropW < 1) || (el.cropH !== undefined && el.cropH < 1) || (el.cropX !== undefined && el.cropX > 0) || (el.cropY !== undefined && el.cropY > 0);
+      const cropX = el.cropX ?? 0;
+      const cropY = el.cropY ?? 0;
+      const cropW = el.cropW ?? 1;
+      const cropH = el.cropH ?? 1;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : undefined }}
           onMouseDown={elDrag}>
-          <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none', ...imgEffects }} />
+          <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{
+            width: hasCrop ? `${100 / cropW}%` : '100%',
+            height: hasCrop ? `${100 / cropH}%` : '100%',
+            objectFit: 'cover',
+            opacity: el.opacity,
+            borderRadius: el.borderR,
+            pointerEvents: 'none',
+            marginLeft: hasCrop ? `${-cropX / cropW * 100}%` : undefined,
+            marginTop: hasCrop ? `${-cropY / cropH * 100}%` : undefined,
+            ...imgEffects,
+          }} />
           {resizeHandles}{deleteHandle}
         </div>
       );
@@ -850,7 +916,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     );
 
     if (el.type === 'stickyNote') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: buildTransform(el) }}
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
@@ -862,7 +928,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'table') {
       const rows = el.rows ?? 3, cols = el.cols ?? 3;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : el.strokeColor ?? 'rgba(255,255,255,.2)'}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : el.strokeColor ?? 'rgba(255,255,255,.2)'}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el) }}
           onMouseDown={elDrag}>
           {Array.from({ length: rows * cols }, (_, i) => {
             const r = Math.floor(i / cols), c = i % cols;
