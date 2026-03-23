@@ -93,6 +93,7 @@ export interface CanvasElement {
   size?: number;
   bold?: boolean;
   italic?: boolean;
+  underline?: boolean;
   textAlign?: 'left' | 'center' | 'right';
   color?: string;
   shadow?: string;
@@ -117,6 +118,8 @@ export interface CanvasElement {
   strokeW?: number;
   // rect border
   border?: string;
+  borderColor?: string;
+  borderWidth?: number;
   // line / arrow
   x2?: number;
   y2?: number;

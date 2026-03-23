@@ -152,6 +152,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div style={{ display: 'flex', gap: 4 }}>
             <button onClick={() => updEl(sel.id, { bold: !sel.bold })} title={t('thumbs.props.bold')} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${sel.bold ? C.blue + '55' : C.border}`, background: sel.bold ? C.blue + '14' : 'transparent', color: sel.bold ? C.blue : C.sub, fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'serif' }}>B</button>
             <button onClick={() => updEl(sel.id, { italic: !sel.italic })} title={t('thumbs.props.italic')} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${sel.italic ? C.blue + '55' : C.border}`, background: sel.italic ? C.blue + '14' : 'transparent', color: sel.italic ? C.blue : C.sub, fontSize: 11, fontStyle: 'italic', cursor: 'pointer', fontFamily: 'serif' }}>I</button>
+            <button onClick={() => updEl(sel.id, { underline: !sel.underline })} title="Underline" style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${sel.underline ? C.blue + '55' : C.border}`, background: sel.underline ? C.blue + '14' : 'transparent', color: sel.underline ? C.blue : C.sub, fontSize: 11, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'serif' }}>U</button>
           </div>
           {/* Text alignment */}
           <div>
@@ -232,6 +233,15 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={50} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}px</span></div></div>}
+          {/* Border color + width */}
+          <div>
+            <div style={labelStyle}>Border</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="color" value={sel.borderColor ?? '#ffffff'} onChange={(e) => updEl(sel.id, { borderColor: e.target.value })} style={{ width: 28, height: 24, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+              <input type="range" min={0} max={12} step={1} value={sel.borderWidth ?? 0} onChange={(e) => updEl(sel.id, { borderWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderWidth ?? 0}px</span>
+            </div>
+          </div>
           {/* Shape Shadow */}
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
@@ -247,7 +257,9 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
-          <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR}</span></div></div>
+          <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}</span></div></div>
+          {/* Image Shadow */}
+          <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />

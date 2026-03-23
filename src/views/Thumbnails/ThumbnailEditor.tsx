@@ -64,6 +64,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [thumbnailStatus, setThumbnailStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [selRect, setSelRect] = useState<{ x: number; y: number; x2: number; y2: number } | null>(null);
 
   // Responsive check
   useEffect(() => {
@@ -105,7 +106,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0), ''),
     [els],
   );
   useEffect(() => {
@@ -191,13 +192,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       e.shiftKey ? store().addToSelection(clicked.id) : store().setSelId(clicked.id);
       store().pushHistoryDebounced(); // batch drag into one undo step
       store().setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
-    } else { store().setSelId(null); }
+    } else {
+      // Start selection rectangle on empty canvas
+      store().setSelId(null);
+      setSelRect({ x, y, x2: x, y2: y });
+    }
   };
 
   const onCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { x, y } = getCanvasCoords(e);
     if (drawing && tool === 'draw') { store().setDrawPts((p) => [...p, { x, y }]); return; }
     if (linePreview && (tool === 'line' || tool === 'arrow')) { store().setLinePreview({ ...linePreview, x2: x, y2: y }); return; }
+    // Update selection rectangle
+    if (selRect && tool === 'select') { setSelRect({ ...selRect, x2: x, y2: y }); return; }
     const curResize = store().resize;
     if (curResize) {
       const el = els.find((e) => e.id === curResize.id);
@@ -259,6 +266,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           : store().addArrow(linePreview.x1, linePreview.y1, linePreview.x2, linePreview.y2);
       }
       store().setLinePreview(null);
+    }
+    // Finalize selection rectangle -- select all elements within bounds
+    if (selRect) {
+      const rx = Math.min(selRect.x, selRect.x2);
+      const ry = Math.min(selRect.y, selRect.y2);
+      const rw = Math.abs(selRect.x2 - selRect.x);
+      const rh = Math.abs(selRect.y2 - selRect.y);
+      if (rw > 3 || rh > 3) {
+        const insideIds = els.filter((el) => {
+          if (el.visible === false || el.locked) return false;
+          return el.x + el.w > rx && el.x < rx + rw && el.y + el.h > ry && el.y < ry + rh;
+        }).map((el) => el.id);
+        if (insideIds.length > 0) store().setSelIds(insideIds);
+      }
+      setSelRect(null);
     }
     store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] });
   };
@@ -387,16 +409,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (el.brightness !== undefined && el.brightness !== 100) filterParts.push(`brightness(${el.brightness / 100})`);
         if (el.contrast !== undefined && el.contrast !== 100) filterParts.push(`contrast(${el.contrast / 100})`);
         if (filterParts.length > 0) ctx.filter = filterParts.join(' ');
-        if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle')) {
+        if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle' || el.type === 'image')) {
           try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
         }
         if (el.type === 'rect') {
           ctx.fillStyle = el.color ?? '#fff';
           if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
           else { ctx.fillRect(el.x, el.y, el.w, el.h); }
+          // Border stroke
+          if ((el.borderWidth ?? 0) > 0) { ctx.strokeStyle = el.borderColor ?? '#fff'; ctx.lineWidth = el.borderWidth!; if ((el.borderR ?? 0) > 0) { ctx.stroke(); } else { ctx.strokeRect(el.x, el.y, el.w, el.h); } }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'circle') {
           ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+          if ((el.borderWidth ?? 0) > 0) { ctx.strokeStyle = el.borderColor ?? '#fff'; ctx.lineWidth = el.borderWidth!; ctx.stroke(); }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'text') {
           let displayText = el.text ?? '';
@@ -413,6 +438,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             const ls = el.letterSpacing ?? 0; let curX = textX;
             for (const ch of displayText) { ctx.fillText(ch, curX, el.y + (el.size ?? 32)); curX += ctx.measureText(ch).width + ls; }
           } else { ctx.fillText(displayText, textX, el.y + (el.size ?? 32)); }
+          // Underline
+          if (el.underline) {
+            const tw = ctx.measureText(displayText).width;
+            const underlineY = el.y + (el.size ?? 32) + 3;
+            const ulStartX = el.textAlign === 'center' ? textX - tw / 2 : el.textAlign === 'right' ? textX - tw : textX;
+            ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = Math.max(1, (el.size ?? 32) / 20); ctx.beginPath(); ctx.moveTo(ulStartX, underlineY); ctx.lineTo(ulStartX + tw, underlineY); ctx.stroke();
+          }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
         } else if (el.type === 'path') {
           ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
@@ -523,6 +555,29 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
   }, [projectId, canvasW, canvasH, renderToCanvas, setProjectThumbnail]);
 
+  // ===== Rotation handler =====
+  const startRotation = (el: CanvasElement, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    store().pushHistoryDebounced();
+    const canvasEl = canvasAreaRef.current;
+    if (!canvasEl) return;
+    const rect = canvasEl.getBoundingClientRect();
+    const sx = canvasW / rect.width;
+    const sy = canvasH / rect.height;
+    const cx = el.x + el.w / 2;
+    const cy = el.y + el.h / 2;
+    const onMove = (ev: MouseEvent) => {
+      const mx = (ev.clientX - rect.left) * sx;
+      const my = (ev.clientY - rect.top) * sy;
+      const angle = Math.atan2(my - cy, mx - cx) * 180 / Math.PI + 90;
+      store().updEl(el.id, { rot: Math.round(((angle % 360) + 360) % 360) });
+    };
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
   // ===== Effects helper =====
   const getEffectStyles = (el: CanvasElement): React.CSSProperties => {
     const styles: React.CSSProperties = {};
@@ -559,9 +614,37 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
     const isSel = selIds.includes(el.id);
-    const resizeHandle = isSel && (
-      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
-        style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, background: C.accent, borderRadius: 2, cursor: 'nwse-resize', zIndex: 5 }} />
+    // 8-dot resize handles + rotation handle
+    const handleDotStyle = (cursor: string, pos: React.CSSProperties): React.CSSProperties => ({
+      position: 'absolute', width: 8, height: 8, background: '#fff', border: `1.5px solid ${C.accent}`, borderRadius: '50%', cursor, zIndex: 5, ...pos,
+    });
+    const resizeHandles = isSel && (
+      <>
+        {/* Rotation handle */}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startRotation(el, e); }}
+          style={{ position: 'absolute', top: -28, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, background: '#fff', border: `1.5px solid ${C.accent}`, borderRadius: '50%', cursor: 'grab', zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        </div>
+        {/* Rotation connector line */}
+        <div style={{ position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50%)', width: 1, height: 16, background: C.accent, opacity: 0.5, zIndex: 4, pointerEvents: 'none' }} />
+        {/* 8 resize dots */}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('nwse-resize', { bottom: -4, right: -4 })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('nw-resize', { top: -4, left: -4 })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('ne-resize', { top: -4, right: -4 })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('sw-resize', { bottom: -4, left: -4 })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('n-resize', { top: -4, left: '50%', transform: 'translateX(-50%)' })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('s-resize', { bottom: -4, left: '50%', transform: 'translateX(-50%)' })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('w-resize', { top: '50%', left: -4, transform: 'translateY(-50%)' })} />
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+          style={handleDotStyle('e-resize', { top: '50%', right: -4, transform: 'translateY(-50%)' })} />
+      </>
     );
     const deleteHandle = isSel && (
       <div
@@ -582,13 +665,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'text') {
       const effectStyles = getEffectStyles(el);
       const gradientStyles = getTextGradientStyles(el);
+      const isEditingText = isSel && document.activeElement?.getAttribute('data-text-el') === el.id;
       const textStyle: React.CSSProperties = {
         position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
         fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
         fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.textGradient ? undefined : el.color, textAlign: el.textAlign ?? 'left',
+        textDecoration: el.underline ? 'underline' : 'none',
         textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.textGradient ? undefined : el.bg, borderRadius: el.borderR,
         padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-        border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none',
+        border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: isEditingText ? 'text' : 'move', boxSizing: 'border-box', outline: 'none',
         transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
         letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
         lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
@@ -599,35 +684,55 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       };
       return (
         <div key={el.id} data-text-el={el.id} style={textStyle}
-          contentEditable={isSel} suppressContentEditableWarning
+          contentEditable={false} suppressContentEditableWarning
           onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
           onMouseDown={(e) => {
+            // If already in edit mode (contentEditable=true), let cursor work
+            if ((e.currentTarget as HTMLElement).contentEditable === 'true') return;
             if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
             elDrag(e);
           }}
-          onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
-          {el.text}{resizeHandle}{deleteHandle}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            const target = e.currentTarget as HTMLElement;
+            target.contentEditable = 'true';
+            target.focus();
+            // Place cursor at end
+            const range = document.createRange();
+            const selection = window.getSelection();
+            range.selectNodeContents(target);
+            range.collapse(false);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }}>
+          {el.text}{resizeHandles}{deleteHandle}
         </div>
       );
     }
 
-    if (el.type === 'rect') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
-        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
-    );
+    if (el.type === 'rect') {
+      const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : (el.border ?? 'none'));
+      return (
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
+          onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
+      );
+    }
 
-    if (el.type === 'circle') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
-        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
-    );
+    if (el.type === 'circle') {
+      const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : 'none');
+      return (
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
+          onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
+      );
+    }
 
     if (el.type === 'image') {
       const imgEffects = getEffectStyles(el);
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
           onMouseDown={elDrag}>
           <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none', ...imgEffects }} />
-          {resizeHandle}{deleteHandle}
+          {resizeHandles}{deleteHandle}
         </div>
       );
     }
@@ -673,7 +778,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
         onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
-        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandle}{deleteHandle}
+        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandles}{deleteHandle}
       </div>
     );
 
@@ -697,7 +802,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             );
           })}
-          {resizeHandle}{deleteHandle}
+          {resizeHandles}{deleteHandle}
         </div>
       );
     }
@@ -911,6 +1016,14 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             )}
             {guides.x.map((gx, i) => <div key={`gx-${i}`} style={{ position: 'absolute', left: gx / canvasW * 100 + '%', top: 0, bottom: 0, width: 1.5, background: C.accent, opacity: 0.7, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
             {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1.5, background: C.accent, opacity: 0.7, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
+            {/* Selection rectangle */}
+            {selRect && (() => {
+              const rx = Math.min(selRect.x, selRect.x2);
+              const ry = Math.min(selRect.y, selRect.y2);
+              const rw = Math.abs(selRect.x2 - selRect.x);
+              const rh = Math.abs(selRect.y2 - selRect.y);
+              return <div style={{ position: 'absolute', left: rx / canvasW * 100 + '%', top: ry / canvasH * 100 + '%', width: rw / canvasW * 100 + '%', height: rh / canvasH * 100 + '%', border: `1.5px dashed ${C.accent}`, background: C.accent + '10', pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />;
+            })()}
           </div>
           </div>
           {/* Floating zoom controls */}
