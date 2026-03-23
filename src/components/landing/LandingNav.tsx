@@ -14,8 +14,9 @@ export function LandingNav() {
   }, []);
 
   // On non-landing pages, anchor links must point to /#section
-  const isLanding = typeof window !== 'undefined' && window.location.pathname === '/';
-  const anchor = (hash: string) => isLanding ? hash : `/${hash}`;
+  const [pathname, setPathname] = useState('/');
+  useEffect(() => { setPathname(window.location.pathname); }, []);
+  const anchor = (hash: string) => pathname === '/' ? hash : `/${hash}`;
 
   const navLinks = [
     { label: 'Features', href: anchor('#features') },

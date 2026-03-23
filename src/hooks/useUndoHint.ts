@@ -10,8 +10,14 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
  */
 export function useUndoHint(historyCount: number) {
   const shownRef = useRef(false);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
+    // Skip first render to avoid toast on page load
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
     if (historyCount === 1 && !shownRef.current) {
       shownRef.current = true;
       const t = useLocaleStore.getState().t;

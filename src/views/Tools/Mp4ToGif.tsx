@@ -87,10 +87,14 @@ export function Mp4ToGif() {
       formData.append('start', String(startTime));
       formData.append('duration', String(duration));
 
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 180_000); // 3 min timeout
       const res = await fetch('/api/tools/mp4-to-gif', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: t('tools.gif.conversionFailed') }));
@@ -111,7 +115,11 @@ export function Mp4ToGif() {
       setResultSize(blob.size);
       setResultUrl(URL.createObjectURL(blob));
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('tools.gif.conversionFailed'));
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        setError('Conversion timed out. Try a shorter duration or smaller file.');
+      } else {
+        setError(err instanceof Error ? err.message : t('tools.gif.conversionFailed'));
+      }
     } finally {
       setConverting(false);
     }

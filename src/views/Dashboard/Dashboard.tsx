@@ -131,17 +131,20 @@ function TopChoiceCard({
         width: 220,
         flexShrink: 0,
         borderRadius: 14,
-        overflow: 'hidden',
+        overflow: 'visible',
         textDecoration: 'none',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         scrollSnapAlign: 'start',
         display: 'flex',
         flexDirection: 'column',
+        border: `1px solid ${C.border}`,
       }}
     >
       {/* Visual area — gradient with icon */}
       <div style={{
         height: 160,
+        borderRadius: '14px 14px 0 0',
+        overflow: 'hidden',
         background: `linear-gradient(135deg, ${from}, ${to})`,
         display: 'flex',
         alignItems: 'center',
