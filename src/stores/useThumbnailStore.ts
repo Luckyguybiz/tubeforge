@@ -151,6 +151,10 @@ interface ThumbnailState {
   groupSelected: () => void;
   ungroupSelected: () => void;
 
+  // Batch operations (multi-select)
+  batchUpdateSelected: (patch: Partial<CanvasElement>) => void;
+  batchResizeSelected: (scalePct: number) => void;
+
   // Backward-compatible selId setter
   setSelId: (id: string | null) => void;
 
@@ -646,6 +650,43 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     get().pushHistory();
     set((s) => ({
       els: s.els.map((e) => groupIds.has(e.groupId ?? '') ? { ...e, groupId: undefined } : e),
+    }));
+  },
+
+  // ===== Batch operations (multi-select) =====
+  batchUpdateSelected: (patch) => {
+    const { selIds } = get();
+    if (selIds.length === 0) return;
+    get().pushHistory();
+    const idSet = new Set(selIds);
+    set((s) => ({
+      els: s.els.map((e) => idSet.has(e.id) ? { ...e, ...patch } : e),
+    }));
+  },
+
+  batchResizeSelected: (scalePct) => {
+    const { selIds, els } = get();
+    if (selIds.length === 0) return;
+    get().pushHistory();
+    const scale = scalePct / 100;
+    const selected = els.filter((e) => selIds.includes(e.id));
+    // Calculate selection bounding box center for scale-from-center
+    const minX = Math.min(...selected.map((e) => e.x));
+    const minY = Math.min(...selected.map((e) => e.y));
+    const maxX = Math.max(...selected.map((e) => e.x + e.w));
+    const maxY = Math.max(...selected.map((e) => e.y + e.h));
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const idSet = new Set(selIds);
+    set((s) => ({
+      els: s.els.map((e) => {
+        if (!idSet.has(e.id)) return e;
+        const newW = Math.round(e.w * scale);
+        const newH = Math.round(e.h * scale);
+        const newX = Math.round(cx + (e.x - cx) * scale);
+        const newY = Math.round(cy + (e.y - cy) * scale);
+        return { ...e, x: newX, y: newY, w: newW, h: newH };
+      }),
     }));
   },
 

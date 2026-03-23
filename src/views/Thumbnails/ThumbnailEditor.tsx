@@ -65,6 +65,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [thumbnailStatus, setThumbnailStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const [selRect, setSelRect] = useState<{ x: number; y: number; x2: number; y2: number } | null>(null);
+  const [showYouTubePreview, setShowYouTubePreview] = useState(false);
+  const [youtubePreviewUrl, setYoutubePreviewUrl] = useState<string | null>(null);
 
   // Responsive check
   useEffect(() => {
@@ -964,6 +966,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Export button */}
           <button onClick={() => { setShowExportModal(true); setShowSizeMenu(false); setShowDownloadMenu(false); }} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px' }}>{downloadIcon} {t('thumbs.export.title')}</button>
+          {/* YouTube Preview button */}
+          <button onClick={() => { renderToCanvas(canvasW, canvasH).then((cvs) => { setYoutubePreviewUrl(cvs.toDataURL('image/png')); setShowYouTubePreview(true); }).catch(() => { const fallback = captureCanvas(); if (fallback) { setYoutubePreviewUrl(fallback); setShowYouTubePreview(true); } }); }} title="Preview on YouTube" style={{ ...headerBtn, padding: '7px 12px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Preview
+          </button>
           {/* History panel toggle */}
           {historyCount > 0 && (
             <button onClick={() => setShowHistoryPanel(!showHistoryPanel)} title={t('thumbs.export.history')} style={{ ...headerBtn, padding: '7px 8px' }}>
@@ -1243,6 +1250,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
         )}
 
+        {/* ===== YouTube Preview Overlay ===== */}
+        {showYouTubePreview && youtubePreviewUrl && (
+          <YouTubePreviewOverlay thumbnailDataUrl={youtubePreviewUrl} onClose={() => { setShowYouTubePreview(false); setYoutubePreviewUrl(null); }} />
+        )}
+
         {/* On mobile: collapsible properties drawer */}
         {isMobile ? (
           <>
@@ -1351,6 +1363,8 @@ function hitTestElement(els: CanvasElement[], x: number, y: number): CanvasEleme
 function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.getState>['theme']; selIds: string[] }) {
   const store = useThumbnailStore.getState;
   const hasGroup = selIds.length > 1;
+  const [batchColor, setBatchColor] = useState('#ffffff');
+  const [batchOpacity, setBatchOpacity] = useState(100);
   const btnStyle: React.CSSProperties = { height: 30, padding: '0 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, transition: 'all .12s', whiteSpace: 'nowrap' };
   const sepStyle: React.CSSProperties = { width: 1, height: 20, background: C.border, margin: '0 2px', flexShrink: 0 };
   const hover = (e: React.MouseEvent, on: boolean) => {
@@ -1370,6 +1384,32 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
         Delete
       </button>
       <div style={sepStyle} />
+      {/* Batch operations — shown when multiple elements selected */}
+      {hasGroup && (
+        <>
+          {/* Batch color */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>Color</label>
+            <input type="color" value={batchColor} onChange={(e) => { setBatchColor(e.target.value); store().batchUpdateSelected({ color: e.target.value }); }} title="Batch color change" style={{ width: 24, height: 24, border: `1px solid ${C.border}`, borderRadius: 4, padding: 0, cursor: 'pointer', background: 'transparent' }} />
+          </div>
+          {/* Batch opacity */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>Opacity</label>
+            <input type="range" min={0} max={100} value={batchOpacity} onChange={(e) => { const v = Number(e.target.value); setBatchOpacity(v); store().batchUpdateSelected({ opacity: v / 100 }); }} title="Batch opacity" style={{ width: 60, height: 4, accentColor: C.accent, cursor: 'pointer' }} />
+            <span style={{ fontSize: 9, color: C.dim, minWidth: 24 }}>{batchOpacity}%</span>
+          </div>
+          {/* Batch resize */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600, marginRight: 2 }}>Scale</label>
+            {[50, 100, 150, 200].map((pct) => (
+              <button key={pct} onClick={() => store().batchResizeSelected(pct)} title={`Scale to ${pct}%`} style={{ ...btnStyle, padding: '0 5px', fontSize: 9 }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+                {pct}%
+              </button>
+            ))}
+          </div>
+          <div style={sepStyle} />
+        </>
+      )}
       {/* Group / Ungroup */}
       {hasGroup && (
         <>
@@ -1415,6 +1455,71 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+/** YouTube Preview Overlay — shows thumbnail in YouTube search/suggested mockup */
+function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl: string; onClose: () => void }) {
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 800, width: '90%', cursor: 'default' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>YouTube Preview</div>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit' }}>&times;</button>
+        </div>
+
+        {/* YouTube search result mockup */}
+        <div style={{ marginBottom: 12, padding: 4, background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>Search Result</div>
+          <div style={{ display: 'flex', gap: 12, padding: 12, background: '#0f0f0f', borderRadius: 12 }}>
+            <img src={thumbnailDataUrl} alt="Thumbnail preview" style={{ width: 360, height: 202, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 4, lineHeight: 1.3 }}>Your Video Title Here</div>
+              <div style={{ fontSize: 12, color: '#aaa', marginBottom: 8 }}>Your Channel &bull; 1.2K views &bull; 2 hours ago</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <div style={{ width: 24, height: 24, borderRadius: 12, background: '#333' }} />
+                <span style={{ fontSize: 11, color: '#888' }}>Your Channel</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#777', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>This is a sample video description that would appear in YouTube search results. Your thumbnail is shown at the left.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* YouTube suggested video sidebar mockup */}
+        <div style={{ marginBottom: 12, padding: 4, background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>Suggested Video (Sidebar)</div>
+          <div style={{ display: 'flex', gap: 8, padding: 12, background: '#0f0f0f', borderRadius: 12 }}>
+            <img src={thumbnailDataUrl} alt="Thumbnail preview" style={{ width: 168, height: 94, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#fff', lineHeight: 1.3, marginBottom: 4 }}>Your Video Title</div>
+              <div style={{ fontSize: 11, color: '#aaa' }}>Channel &bull; 500 views</div>
+            </div>
+          </div>
+        </div>
+
+        {/* YouTube home feed card mockup */}
+        <div style={{ padding: 4, background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>Home Feed Card</div>
+          <div style={{ maxWidth: 360, padding: 12, background: '#0f0f0f', borderRadius: 12 }}>
+            <img src={thumbnailDataUrl} alt="Thumbnail preview" style={{ width: '100%', aspectRatio: '16/9', borderRadius: 8, objectFit: 'cover', marginBottom: 10 }} />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 18, background: '#333', flexShrink: 0 }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#fff', lineHeight: 1.3, marginBottom: 4 }}>Your Video Title Here</div>
+                <div style={{ fontSize: 12, color: '#aaa' }}>Your Channel</div>
+                <div style={{ fontSize: 12, color: '#aaa' }}>1.2K views &bull; 2 hours ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button onClick={onClose} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 8, background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'background .15s' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#444'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#333'; }}
+        >Close Preview</button>
+      </div>
     </div>
   );
 }
