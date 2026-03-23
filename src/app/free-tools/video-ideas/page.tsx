@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LandingNav } from "@/components/landing";
+import { LandingNav, FaqAccordion } from "@/components/landing";
 import Link from "next/link";
 import { VideoIdeasTool } from "./VideoIdeasTool";
 
@@ -28,6 +28,31 @@ export const metadata: Metadata = {
   },
 };
 
+/* -- FAQ ---------------------------------------------------------- */
+
+const FAQ_ITEMS = [
+  {
+    q: "How does the YouTube video ideas generator work?",
+    a: "Select your niche or enter a custom topic, and our AI generates 50+ video ideas categorized into trending topics, evergreen content, Shorts ideas, and series concepts. Each idea is tailored to your specific niche and current audience interests.",
+  },
+  {
+    q: "What types of video ideas does the generator provide?",
+    a: "The generator produces four categories: trending topics (timely content that capitalizes on current interest), evergreen content (videos that stay relevant long-term), Shorts ideas (quick vertical video concepts), and series concepts (multi-part content to build audience retention).",
+  },
+  {
+    q: "How do I choose which video ideas to pursue?",
+    a: "Focus on ideas that match your expertise and audience interests. Prioritize a mix of trending topics for quick growth and evergreen content for sustained views. Check YouTube search suggestions to validate demand before committing to a topic.",
+  },
+  {
+    q: "Can I generate ideas for any YouTube niche?",
+    a: "Yes, the generator works for any niche including gaming, tech, cooking, fitness, finance, education, beauty, travel, and more. You can also enter a custom topic if your niche is not listed in the preset options.",
+  },
+  {
+    q: "Is the video ideas generator free?",
+    a: "Yes, you get 3 free generations per day without signing up. Create a free TubeForge account for unlimited generations and access to additional AI tools for titles, descriptions, scripts, and thumbnails.",
+  },
+];
+
 /* -- JSON-LD ------------------------------------------------------ */
 
 const JSON_LD = {
@@ -50,6 +75,19 @@ const JSON_LD = {
   },
 };
 
+const FAQ_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+};
+
 /* -- Page --------------------------------------------------------- */
 
 export default function VideoIdeasPage() {
@@ -58,6 +96,10 @@ export default function VideoIdeasPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
       />
       <LandingNav />
 
@@ -116,8 +158,40 @@ export default function VideoIdeasPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section style={{ padding: "80px 24px", background: "#111111" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              margin: "0 0 12px",
+              color: "#ffffff",
+              textAlign: "center",
+            }}
+          >
+            Frequently asked questions.
+          </h2>
+          <p
+            style={{
+              fontSize: 19,
+              color: "rgba(255,255,255,0.5)",
+              textAlign: "center",
+              margin: "0 auto 48px",
+              maxWidth: 420,
+              lineHeight: 1.5,
+            }}
+          >
+            Everything about the video ideas generator.
+          </p>
+          <FaqAccordion items={FAQ_ITEMS} />
+        </div>
+      </section>
+
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#111111" }}>
+      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#0a0a0a" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{

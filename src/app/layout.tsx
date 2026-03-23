@@ -35,6 +35,13 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://tubeforge.co',
+    languages: {
+      'en': 'https://tubeforge.co',
+      'ru': 'https://tubeforge.co',
+      'es': 'https://tubeforge.co',
+      'kk': 'https://tubeforge.co',
+      'x-default': 'https://tubeforge.co',
+    },
   },
   twitter: {
     card: 'summary_large_image',

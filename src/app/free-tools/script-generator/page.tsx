@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LandingNav } from "@/components/landing";
+import { LandingNav, FaqAccordion } from "@/components/landing";
 import Link from "next/link";
 import { ScriptGeneratorTool } from "./ScriptGeneratorTool";
 
@@ -28,6 +28,31 @@ export const metadata: Metadata = {
   },
 };
 
+/* -- FAQ ---------------------------------------------------------- */
+
+const FAQ_ITEMS = [
+  {
+    q: "How does the AI YouTube script generator work?",
+    a: "Enter your video topic, choose a format (tutorial, review, vlog, or listicle), and select a target duration. Our AI generates a complete script with a hook, introduction, structured body sections, a call to action, and an outro.",
+  },
+  {
+    q: "What video formats can the script generator create?",
+    a: "The generator supports four popular YouTube formats: tutorials (step-by-step guides), reviews (product or service evaluations), vlogs (personal storytelling), and listicles (numbered lists like 'Top 10' videos). Each format follows proven structures for that content type.",
+  },
+  {
+    q: "Can I edit the generated script?",
+    a: "Absolutely. The generated script is a starting point that you should customize with your personal voice, specific examples, and unique insights. Use the copy button to grab the script, then refine it in your preferred text editor.",
+  },
+  {
+    q: "How long should a YouTube video script be?",
+    a: "A general rule is about 150 words per minute of video. A 10-minute video needs roughly 1,500 words. Our generator adjusts script length based on your selected duration to give you the right amount of content.",
+  },
+  {
+    q: "Is the script generator free to use?",
+    a: "Yes, you get 3 free script generations per day without signing up. Create a free TubeForge account for unlimited generations and access to additional AI tools like title, description, and tag generators.",
+  },
+];
+
 /* -- JSON-LD ------------------------------------------------------ */
 
 const JSON_LD = {
@@ -50,6 +75,19 @@ const JSON_LD = {
   },
 };
 
+const FAQ_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+};
+
 /* -- Page --------------------------------------------------------- */
 
 export default function ScriptGeneratorPage() {
@@ -58,6 +96,10 @@ export default function ScriptGeneratorPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
       />
       <LandingNav />
 
@@ -116,8 +158,40 @@ export default function ScriptGeneratorPage() {
         </div>
       </section>
 
-      {/* Tips Section */}
+      {/* FAQ */}
       <section style={{ padding: "80px 24px", background: "#111111" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 40px)",
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              margin: "0 0 12px",
+              color: "#ffffff",
+              textAlign: "center",
+            }}
+          >
+            Frequently asked questions.
+          </h2>
+          <p
+            style={{
+              fontSize: 19,
+              color: "rgba(255,255,255,0.5)",
+              textAlign: "center",
+              margin: "0 auto 48px",
+              maxWidth: 420,
+              lineHeight: 1.5,
+            }}
+          >
+            Everything about the script generator.
+          </p>
+          <FaqAccordion items={FAQ_ITEMS} />
+        </div>
+      </section>
+
+      {/* Tips Section */}
+      <section style={{ padding: "80px 24px", background: "#0a0a0a" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
@@ -155,7 +229,7 @@ export default function ScriptGeneratorPage() {
                 key={tip.title}
                 style={{
                   padding: "20px 24px",
-                  background: "#0a0a0a",
+                  background: "#111111",
                   borderRadius: 14,
                   border: "1px solid rgba(255,255,255,0.06)",
                 }}

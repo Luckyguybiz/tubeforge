@@ -584,8 +584,8 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 32, marginBottom: 40 }} className="footer-grid">
             {[
-              { title: "Product", links: [{ label: "Features", href: "#features" }, { label: "Pricing", href: "/pricing" }, { label: "AI Thumbnails", href: "/ai-thumbnails" }] },
-              { title: "Free Tools", links: [{ label: "Title Generator", href: "/free-tools/title-generator" }, { label: "Description Generator", href: "/free-tools/description-generator" }, { label: "Tag Generator", href: "/free-tools/tag-generator" }, { label: "Thumbnail Checker", href: "/free-tools/thumbnail-checker" }] },
+              { title: "Product", links: [{ label: "Features", href: "#features" }, { label: "Pricing", href: "/pricing" }, { label: "AI Thumbnails", href: "/ai-thumbnails" }, { label: "All Tools", href: "/tools" }] },
+              { title: "Free Tools", links: [{ label: "All Free Tools", href: "/free-tools" }, { label: "Title Generator", href: "/free-tools/title-generator" }, { label: "Description Generator", href: "/free-tools/description-generator" }, { label: "Tag Generator", href: "/free-tools/tag-generator" }, { label: "Thumbnail Checker", href: "/free-tools/thumbnail-checker" }] },
               { title: "Compare", links: [{ label: "vs InVideo", href: "/compare/tubeforge-vs-invideo" }, { label: "vs CapCut", href: "/compare/tubeforge-vs-capcut" }, { label: "vs Pictory", href: "/compare/tubeforge-vs-pictory" }, { label: "vs Synthesia", href: "/compare/tubeforge-vs-synthesia" }] },
               { title: "Resources", links: [{ label: "Blog", href: "/blog" }, { label: "Help", href: "/help" }, { label: "Contact", href: "/contact" }, { label: "About", href: "/about" }] },
               { title: "Legal", links: [{ label: "Terms of Service", href: "/terms" }, { label: "Privacy Policy", href: "/privacy" }, { label: "DPA", href: "/dpa" }, { label: "SLA", href: "/sla" }, { label: "Security", href: "/security" }] },
