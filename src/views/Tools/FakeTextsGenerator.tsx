@@ -1329,7 +1329,7 @@ export function FakeTextsGenerator() {
             label={
               loading
                 ? `Generating... ${progress}%`
-                : 'Generate Video'
+                : t('tools.fakeTexts.generate')
             }
             gradient={GRADIENT}
             onClick={handleGenerate}

@@ -1198,7 +1198,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   {t('editor.generating')}
                 </>
               ) : (
-                <>{'Generate \u26A1 1'}</>
+                <>{`${t('editor.generateBtn')} \u26A1 1`}</>
               )}
             </button>
 
