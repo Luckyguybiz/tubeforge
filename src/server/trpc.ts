@@ -2,6 +2,9 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { auth } from './auth';
 import { db } from './db';
+import { createLogger, recordRequest } from '@/lib/logger';
+
+const log = createLogger('trpc');
 
 export const createTRPCContext = async () => {
   const session = await auth();
@@ -10,7 +13,12 @@ export const createTRPCContext = async () => {
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter({ shape, error }) {
+  errorFormatter({ shape, error, path }) {
+    // Log all internal server errors for debugging
+    if (shape.data.code === 'INTERNAL_SERVER_ERROR') {
+      log.error('tRPC internal error', { path, error: error.message });
+    }
+
     return {
       ...shape,
       message:
@@ -27,9 +35,27 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   },
 });
 
+/* ── Logging middleware — tracks duration + records metrics ────── */
+
+const loggerMiddleware = t.middleware(async ({ path, type, next }) => {
+  const start = Date.now();
+  const result = await next();
+  const duration = Date.now() - start;
+
+  // Record metrics for every request
+  recordRequest(`trpc.${path}`, duration, !result.ok);
+
+  // Log slow queries (>1s)
+  if (duration > 1000) {
+    log.warn('Slow tRPC call', { path, type, duration });
+  }
+
+  return result;
+});
+
 export const router = t.router;
-export const publicProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+export const publicProcedure = t.procedure.use(loggerMiddleware);
+export const protectedProcedure = t.procedure.use(loggerMiddleware).use(({ ctx, next }) => {
   if (!ctx.session?.user?.id) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }

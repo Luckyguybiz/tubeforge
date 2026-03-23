@@ -189,6 +189,18 @@ export default function middleware(req: NextRequest) {
     }
   }
 
+  // Log API requests (not static assets) — structured JSON for log aggregation
+  if (pathname.startsWith('/api/')) {
+    console.log(JSON.stringify({
+      type: 'request',
+      method: req.method,
+      path: pathname,
+      ip: ip,
+      ua: req.headers.get('user-agent')?.substring(0, 50),
+      ts: new Date().toISOString(),
+    }));
+  }
+
   // Public routes that don't require auth
   const publicPaths = [
     '/',
