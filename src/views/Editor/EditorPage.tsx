@@ -170,7 +170,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
   }, [onChange]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minWidth: 0, position: 'relative' }}>
       <span style={{ fontSize: 9, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '.03em' }}>
         {label}
       </span>
@@ -200,12 +200,17 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
             (e.currentTarget as HTMLElement).style.borderColor = accentCol + '55';
             (e.currentTarget as HTMLElement).style.background = accentCol + '06';
           }
+          // Show full preview popup
+          const preview = (e.currentTarget as HTMLElement).querySelector('.tf-frame-preview') as HTMLElement;
+          if (preview) preview.style.opacity = '1';
         }}
         onMouseLeave={(e) => {
           if (!value) {
             (e.currentTarget as HTMLElement).style.borderColor = C.border;
             (e.currentTarget as HTMLElement).style.background = C.bg;
           }
+          const preview = (e.currentTarget as HTMLElement).querySelector('.tf-frame-preview') as HTMLElement;
+          if (preview) preview.style.opacity = '0';
         }}
       >
         {isLoading ? (
@@ -222,6 +227,15 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
         ) : value ? (
           <>
             <img src={value} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+            {/* Full preview on hover */}
+            <div className="tf-frame-preview" style={{
+              position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+              marginBottom: 6, pointerEvents: 'none', opacity: 0, transition: 'opacity .15s',
+              zIndex: 100, padding: 4, background: C.card, borderRadius: 8,
+              border: `1px solid ${C.border}`, boxShadow: '0 4px 20px rgba(0,0,0,.4)',
+            }}>
+              <img src={value} alt={label} style={{ maxWidth: 200, maxHeight: 280, borderRadius: 6, display: 'block' }} />
+            </div>
             <button
               onClick={(e) => { e.stopPropagation(); onChange(null); setError(null); }}
               style={{
@@ -828,7 +842,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               padding: 20,
               display: 'flex', flexDirection: 'column', gap: 14,
               overflowY: 'auto',
-              maxHeight: '100%',
+              minHeight: 0,
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(128,128,128,.2) transparent',
             }}
           >
             {/* ── 1. Style Preview Card (clickable to open styles) ── */}
