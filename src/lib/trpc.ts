@@ -12,6 +12,13 @@ export function getTRPCClient() {
       httpBatchLink({
         url: '/api/trpc',
         transformer: superjson,
+        fetch(url, options) {
+          const timeout = AbortSignal.timeout(120_000);
+          const signal = options?.signal
+            ? AbortSignal.any([options.signal, timeout])
+            : timeout;
+          return fetch(url, { ...options, signal });
+        },
       }),
     ],
   });
