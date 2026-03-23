@@ -36,17 +36,17 @@ export default function Page() {
       <LandingNav />
 
       {/* Hero */}
-      <section style={{ padding: "120px 24px 60px", textAlign: "center" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      <section style={{ padding: "80px 24px 48px", textAlign: "center" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 980, border: "1px solid rgba(255,255,255,0.1)", marginBottom: 20, fontSize: 12, color: "#6366f1", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366f1" }} />
             Calendar · Templates
           </div>
-          <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px" }}>
+          <h1 style={{ fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px" }}>
             Plan Your Content Like a{" "}
             <span style={{ background: "linear-gradient(135deg, #6366f1, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Pro Creator</span>
           </h1>
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.55)", maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.7)", maxWidth: 600, margin: "0 auto 28px", lineHeight: 1.6 }}>
             Visual calendar, ideas bank, templates, and cross-platform scheduling. Never miss a publish date.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -165,7 +165,7 @@ export default function Page() {
 
       {/* FAQ */}
       <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Frequently asked questions</h2>
           <FaqAccordion items={FAQ_ITEMS} />
         </div>
