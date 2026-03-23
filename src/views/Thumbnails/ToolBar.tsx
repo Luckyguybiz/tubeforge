@@ -84,6 +84,11 @@ const SHAPE_OPTIONS = [
   { id: 'circle', icon: SUB_ICONS.circle, labelKey: 'thumbs.shape.circle' },
   { id: 'triangle', icon: SUB_ICONS.triangle, labelKey: 'thumbs.shape.triangle' },
   { id: 'star', icon: SUB_ICONS.star, labelKey: 'thumbs.shape.star' },
+  { id: 'pentagon', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l10 7.5-4 11.5H6L2 9.5z"/></svg>, labelKey: 'thumbs.shape.pentagon' },
+  { id: 'hexagon', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l9 5v10l-9 5-9-5V7z"/></svg>, labelKey: 'thumbs.shape.hexagon' },
+  { id: 'arrowShape', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8h12V4l8 8-8 8v-4H2z"/></svg>, labelKey: 'thumbs.shape.arrowShape' },
+  { id: 'speechBubble', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>, labelKey: 'thumbs.shape.speechBubble' },
+  { id: 'heart', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>, labelKey: 'thumbs.shape.heart' },
 ];
 
 const LINE_OPTIONS = [
@@ -130,7 +135,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   }, [closeAllSubmenus, addText, setTool]);
 
   const handleShapeClick = useCallback((shapeId: string) => {
-    setShapeSub(shapeId as 'rect' | 'circle' | 'triangle' | 'star');
+    setShapeSub(shapeId as 'rect' | 'circle' | 'triangle' | 'star' | 'pentagon' | 'hexagon' | 'arrowShape' | 'speechBubble' | 'heart');
     addShape(shapeId);
     closeAllSubmenus();
   }, [closeAllSubmenus, setShapeSub, addShape]);

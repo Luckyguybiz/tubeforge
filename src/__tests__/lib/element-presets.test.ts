@@ -6,6 +6,7 @@ import {
   TABLE_PRESETS,
   ICON_PRESETS,
   COLOR_PRESETS,
+  SHAPE_PATHS,
 } from '@/lib/element-presets';
 import type { ElementPreset } from '@/lib/element-presets';
 
@@ -32,7 +33,7 @@ describe('Shape presets', () => {
   });
 
   it('shape types should be valid canvas types', () => {
-    const validTypes = ['rect', 'circle', 'triangle', 'star', 'path'];
+    const validTypes = ['rect', 'circle', 'triangle', 'star', 'pentagon', 'hexagon', 'arrowShape', 'speechBubble', 'heart'];
     for (const preset of SHAPE_PRESETS) {
       expect(validTypes).toContain(preset.type);
     }
@@ -136,6 +137,28 @@ describe('Icon presets', () => {
     for (const preset of ICON_PRESETS) {
       expect(Number(preset.props.size)).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('Shape paths', () => {
+  it('should have at least 5 shape paths', () => {
+    expect(Object.keys(SHAPE_PATHS).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('all shape paths should be non-empty SVG path strings', () => {
+    for (const [key, path] of Object.entries(SHAPE_PATHS)) {
+      expect(typeof path).toBe('string');
+      expect(path.length).toBeGreaterThan(0);
+      expect(path).toMatch(/^M/); // SVG paths start with M (moveto)
+    }
+  });
+
+  it('should include pentagon, hexagon, arrow, speechBubble, heart', () => {
+    expect(SHAPE_PATHS).toHaveProperty('pentagon');
+    expect(SHAPE_PATHS).toHaveProperty('hexagon');
+    expect(SHAPE_PATHS).toHaveProperty('arrow');
+    expect(SHAPE_PATHS).toHaveProperty('speechBubble');
+    expect(SHAPE_PATHS).toHaveProperty('heart');
   });
 });
 
