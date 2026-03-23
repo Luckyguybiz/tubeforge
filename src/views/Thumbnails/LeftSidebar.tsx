@@ -47,8 +47,8 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         overflow: 'hidden',
         maxHeight: 260,
       } : {
-        width: 280,
-        maxWidth: 280,
+        width: '100%',
+        height: '100%',
         flexShrink: 0,
         background: C.card,
         border: `1px solid ${C.border}`,
@@ -56,6 +56,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        boxSizing: 'border-box' as const,
       }}>
       {/* Header */}
       <div style={{

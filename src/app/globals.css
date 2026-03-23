@@ -1598,3 +1598,72 @@ img {
     margin-bottom: 32px !important;
   }
 }
+
+/* ── Design Studio: Sticky canvas + scrollable panels ────── */
+
+.tf-thumb-editor-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tf-thumb-header {
+  flex-shrink: 0;
+}
+
+.tf-thumb-editor {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tf-thumb-left {
+  width: 280px;
+  max-width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+.tf-thumb-canvas-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tf-thumb-right {
+  width: 280px;
+  max-width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 768px) {
+  .tf-thumb-editor {
+    flex-direction: column;
+  }
+  .tf-thumb-canvas-area {
+    height: 50vh;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .tf-thumb-left,
+  .tf-thumb-right {
+    width: 100%;
+    max-width: 100%;
+    max-height: 50vh;
+  }
+}
