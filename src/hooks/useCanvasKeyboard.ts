@@ -42,24 +42,27 @@ export function useCanvasKeyboard() {
       // Skip rest if editing text
       if (isEditing) return;
 
-      // Toggle rulers: Shift+R (if store supports it)
+      // Toggle rulers: Shift+R
       if (e.shiftKey && e.key === 'R' && 'setShowRulers' in store) {
         e.preventDefault();
-        (store as Record<string, unknown> & typeof store).setShowRulers!(!(store as Record<string, unknown>).showRulers);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (store as any).setShowRulers(!(store as any).showRulers);
         return;
       }
 
       // Copy style: Alt+C
-      if (e.altKey && e.key === 'c') {
+      if (e.altKey && e.key === 'c' && 'copyStyle' in store) {
         e.preventDefault();
-        store.copyStyle();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (store as any).copyStyle();
         return;
       }
 
       // Paste style: Alt+V
-      if (e.altKey && e.key === 'v') {
+      if (e.altKey && e.key === 'v' && 'pasteStyle' in store) {
         e.preventDefault();
-        store.pasteStyle();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (store as any).pasteStyle();
         return;
       }
 

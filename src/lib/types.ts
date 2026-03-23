@@ -175,10 +175,7 @@ export interface CanvasElement {
   // ── Design Studio enhancements ──
   // Gradient fill (overrides solid color when set)
   gradient?: GradientDef;
-  // Advanced typography
-  letterSpacing?: number;   // px (-5 to 20)
-  lineHeight?: number;      // multiplier (0.8 to 3.0)
-  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  // Advanced typography (extends fields above)
   textOutline?: string;     // e.g. "2px #000000"
   textDecoration?: 'none' | 'underline' | 'line-through';
   // Filters/effects
