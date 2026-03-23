@@ -49,7 +49,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255,255,255,0.3)"
+                stroke="rgba(255,255,255,0.5)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"

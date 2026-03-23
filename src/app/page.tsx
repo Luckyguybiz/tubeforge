@@ -277,7 +277,7 @@ const BG_ALT = "#111111";
 const CARD_BG = "#1a1a1a";
 const TEXT_PRIMARY = "#ffffff";
 const TEXT_MUTED = "rgba(255,255,255,0.5)";
-const TEXT_DIM = "rgba(255,255,255,0.3)";
+const TEXT_DIM = "rgba(255,255,255,0.45)";
 const BORDER_SUBTLE = "rgba(255,255,255,0.06)";
 const ACCENT = "#6366f1";
 

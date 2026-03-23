@@ -257,8 +257,9 @@ export default function ContactPage() {
             }}
           >
             <div>
-              <label style={labelStyle}>Name *</label>
+              <label htmlFor="contact-name" style={labelStyle}>Name *</label>
               <input
+                id="contact-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -277,8 +278,9 @@ export default function ContactPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Email *</label>
+              <label htmlFor="contact-email" style={labelStyle}>Email *</label>
               <input
+                id="contact-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -297,8 +299,9 @@ export default function ContactPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Subject</label>
+              <label htmlFor="contact-subject" style={labelStyle}>Subject</label>
               <select
+                id="contact-subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 style={{
@@ -315,8 +318,9 @@ export default function ContactPage() {
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Message *</label>
+              <label htmlFor="contact-message" style={labelStyle}>Message *</label>
               <textarea
+                id="contact-message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Describe your question..."

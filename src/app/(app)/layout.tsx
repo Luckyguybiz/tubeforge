@@ -170,9 +170,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
               {isEditor ? (
-                <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
+                <main id="main-content" role="main" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
               ) : (
-                <main id="main-content" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
+                <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
               )}
             </div>
           </div>
