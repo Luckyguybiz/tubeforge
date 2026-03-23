@@ -1564,6 +1564,24 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
         Delete
       </button>
       <div style={sepStyle} />
+      {/* Layer ordering */}
+      {selIds.length === 1 && (
+        <>
+          <button onClick={() => store().moveUp(selIds[0])} title="Move Up (Ctrl+])" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button onClick={() => store().moveDown(selIds[0])} title="Move Down (Ctrl+[)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button onClick={() => store().bringFront(selIds[0])} title="Move to Top" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+          </button>
+          <button onClick={() => store().sendBack(selIds[0])} title="Move to Bottom" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+          </button>
+          <div style={sepStyle} />
+        </>
+      )}
       {/* Batch operations — shown when multiple elements selected */}
       {hasGroup && (
         <>

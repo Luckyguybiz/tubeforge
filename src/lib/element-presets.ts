@@ -14,6 +14,11 @@ export const SHAPE_PRESETS: ElementPreset[] = [
   { label: 'Rounded', type: 'rect', icon: '▢', props: { w: 180, h: 100, color: '#2dd4a0', borderR: 24, opacity: 0.8 } },
   { label: 'Triangle', type: 'triangle', icon: '△', props: { color: '#8b5cf6' } },
   { label: 'Star', type: 'star', icon: '☆', props: { color: '#f59e0b' } },
+  { label: 'Pentagon', type: 'pentagon', icon: '⬠', props: { color: '#06b6d4' } },
+  { label: 'Hexagon', type: 'hexagon', icon: '⬡', props: { color: '#ec4899' } },
+  { label: 'Arrow', type: 'arrowShape', icon: '➧', props: { color: '#3a7bfd' } },
+  { label: 'Speech', type: 'speechBubble', icon: '💬', props: { color: '#2dd4a0' } },
+  { label: 'Heart', type: 'heart', icon: '♥', props: { color: '#ff2d55' } },
 ];
 
 export const LINE_PRESETS: ElementPreset[] = [
@@ -102,6 +107,15 @@ export const FRAME_PRESETS: ElementPreset[] = [
   { label: 'Square', type: 'rect', icon: '◻', props: { w: 200, h: 200, color: 'transparent', opacity: 1, borderR: 0, border: '3px solid #f59e0b' } },
   { label: 'Neon', type: 'rect', icon: '✨', props: { w: 200, h: 200, color: 'transparent', opacity: 1, borderR: 12, border: '3px solid #00ff88' } },
 ];
+
+// ===== Shape SVG path definitions (normalized to 0-100 viewBox) =====
+export const SHAPE_PATHS: Record<string, string> = {
+  pentagon: 'M50,0 L100,38 L81,100 L19,100 L0,38 Z',
+  hexagon: 'M50,0 L93,25 L93,75 L50,100 L7,75 L7,25 Z',
+  arrow: 'M0,30 L60,30 L60,0 L100,50 L60,100 L60,70 L0,70 Z',
+  speechBubble: 'M10,0 L90,0 Q100,0 100,10 L100,70 Q100,80 90,80 L30,80 L15,100 L20,80 L10,80 Q0,80 0,70 L0,10 Q0,0 10,0 Z',
+  heart: 'M50,90 L10,50 Q0,35 15,20 Q30,5 50,25 Q70,5 85,20 Q100,35 90,50 Z',
+};
 
 export const COLOR_PRESETS = [
   '#ff0000', '#ff2d55', '#3a7bfd', '#ffff00', '#2dd4a0', '#8b5cf6',

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { uid } from '@/lib/utils';
 import { HistoryManager } from '@/lib/history';
 import { CANVAS_W, CANVAS_H, CANVAS_DEFAULT_BG, CANVAS_DEFAULT_DRAW_COLOR, CANVAS_DEFAULT_DRAW_SIZE, CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } from '@/lib/constants';
+import { SHAPE_PATHS } from '@/lib/element-presets';
 import type { CanvasElement, AIResult } from '@/lib/types';
 
 /* ------------------------------------------------------------------ */
@@ -66,7 +67,7 @@ interface ThumbnailState {
   snapToGrid: boolean;
 
   // Shape sub-tool
-  shapeSub: 'rect' | 'circle' | 'triangle' | 'star';
+  shapeSub: 'rect' | 'circle' | 'triangle' | 'star' | 'pentagon' | 'hexagon' | 'arrowShape' | 'speechBubble' | 'heart';
 
   // AI reference image
   aiReferenceImage: string | null;
@@ -98,7 +99,7 @@ interface ThumbnailState {
   setSnapToGrid: (v: boolean) => void;
   setCanvasBgImage: (url: string | null) => void;
   setCanvasBgGradient: (g: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null) => void;
-  setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star') => void;
+  setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star' | 'pentagon' | 'hexagon' | 'arrowShape' | 'speechBubble' | 'heart') => void;
   setAiReferenceImage: (url: string | null) => void;
   setLinePreview: (p: { x1: number; y1: number; x2: number; y2: number } | null) => void;
   setContextMenu: (m: { x: number; y: number; elId: string | null } | null) => void;
@@ -152,6 +153,8 @@ interface ThumbnailState {
   delSelected: () => void;
   bringFront: (id: string) => void;
   sendBack: (id: string) => void;
+  moveUp: (id: string) => void;
+  moveDown: (id: string) => void;
   moveLayer: (id: string, newIndex: number) => void;
   renameElement: (id: string, name: string) => void;
 
@@ -598,6 +601,31 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
         path, color: '#f59e0b', opacity: 0.8, rot: 0,
       };
       set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));
+    } else {
+      // Generic shape from SHAPE_PATHS (pentagon, hexagon, arrow, speechBubble, heart)
+      const pathKey = shapeType === 'arrowShape' ? 'arrow' : shapeType;
+      const templatePath = SHAPE_PATHS[pathKey];
+      if (templatePath) {
+        const w = 160, h = 140;
+        // Convert normalized 0-100 path to absolute coordinates
+        const absPath = templatePath.replace(/(\d+\.?\d*)/g, (match, _num, offset) => {
+          // Determine if this is an x or y coordinate by counting preceding numbers
+          const before = templatePath.slice(0, offset);
+          const numsBefore = before.match(/\d+\.?\d*/g)?.length ?? 0;
+          // Even index = x coord, odd = y coord (within each command pair)
+          const isY = numsBefore % 2 === 1;
+          const val = parseFloat(match);
+          return isY ? (baseY + (val / 100) * h).toFixed(1) : (baseX + (val / 100) * w).toFixed(1);
+        });
+        const colorMap: Record<string, string> = {
+          pentagon: '#06b6d4', hexagon: '#ec4899', arrowShape: '#3a7bfd', speechBubble: '#2dd4a0', heart: '#ff2d55',
+        };
+        const ne: CanvasElement = {
+          id: uid(), type: 'path', x: baseX, y: baseY, w, h,
+          path: absPath, color: colorMap[shapeType] ?? '#ffffff', opacity: 0.8, rot: 0,
+        };
+        set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));
+      }
     }
   },
 
@@ -634,6 +662,28 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       const el = s.els.find((e) => e.id === id);
       if (!el) return s;
       return { els: [el, ...s.els.filter((e) => e.id !== id)] };
+    });
+  },
+
+  moveUp: (id) => {
+    get().pushHistory();
+    set((s) => {
+      const arr = [...s.els];
+      const idx = arr.findIndex((e) => e.id === id);
+      if (idx === -1 || idx >= arr.length - 1) return s;
+      [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+      return { els: arr };
+    });
+  },
+
+  moveDown: (id) => {
+    get().pushHistory();
+    set((s) => {
+      const arr = [...s.els];
+      const idx = arr.findIndex((e) => e.id === id);
+      if (idx <= 0) return s;
+      [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]];
+      return { els: arr };
     });
   },
 

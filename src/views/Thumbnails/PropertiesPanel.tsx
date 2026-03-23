@@ -39,7 +39,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
   const { els, selIds } = useThumbnailStore(
     useShallow((s) => ({ els: s.els, selIds: s.selIds }))
   );
-  const { setSelId, updEl, delEl, bringFront, sendBack, pushHistory, flipHorizontal, flipVertical } = useThumbnailStore.getState();
+  const { setSelId, updEl, delEl, bringFront, sendBack, moveUp, moveDown, pushHistory, flipHorizontal, flipVertical } = useThumbnailStore.getState();
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const multiSel = selIds.length > 1;
   const selectedEls = els.filter((e) => selIds.includes(e.id));
@@ -217,15 +217,16 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               );
             })}
           </div></div>
-          {/* Position */}
+          {/* Position & Size */}
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* Rotation */}
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           {/* Flip */}
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
@@ -254,7 +255,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           {/* Flip */}
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
@@ -275,17 +276,21 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <CropControl C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           {/* Flip */}
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
       {sel && sel.type === 'path' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ fontSize: 10, color: C.sub }}>{t('thumbs.props.drawnElement')}</div>
+          <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
+          <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
@@ -318,8 +323,10 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           )}
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
@@ -343,7 +350,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
@@ -375,7 +382,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
-          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
+          <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
         </div>
       )}
 
@@ -1286,23 +1293,24 @@ const LockAspectToggle = memo(function LockAspectToggle({ C, value, onChange }: 
   );
 });
 
-const OrderButtons = memo(function OrderButtons({ C, id, bringFront, sendBack, delEl }: { C: Theme; id: string; bringFront: (id: string) => void; sendBack: (id: string) => void; delEl: (id: string) => void }) {
+const OrderButtons = memo(function OrderButtons({ C, id, bringFront, sendBack, moveUp, moveDown, delEl }: { C: Theme; id: string; bringFront: (id: string) => void; sendBack: (id: string) => void; moveUp: (id: string) => void; moveDown: (id: string) => void; delEl: (id: string) => void }) {
   const t = useLocaleStore((s) => s.t);
   const orderBtnStyle: React.CSSProperties = { flex: 1, padding: '5px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all .12s' };
+  const orderSmallBtnStyle: React.CSSProperties = { ...orderBtnStyle, fontSize: 9, padding: '4px' };
   const upIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>;
   const downIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+  const doubleUpIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>;
+  const doubleDownIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>;
   const trashIcon = <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>;
+  const hoverOn = (e: React.MouseEvent) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '44'; };
+  const hoverOff = (e: React.MouseEvent) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; };
   return (
     <>
       <div style={{ display: 'flex', gap: 4, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
-        <button onClick={() => bringFront(id)} style={orderBtnStyle}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '44'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
-        >{upIcon} {t('thumbs.props.forward')}</button>
-        <button onClick={() => sendBack(id)} style={orderBtnStyle}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '44'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
-        >{downIcon} {t('thumbs.props.backward')}</button>
+        <button onClick={() => moveUp(id)} title="Move Up (Ctrl+])" style={orderSmallBtnStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>{upIcon}</button>
+        <button onClick={() => moveDown(id)} title="Move Down (Ctrl+[)" style={orderSmallBtnStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>{downIcon}</button>
+        <button onClick={() => bringFront(id)} title="Move to Top" style={orderSmallBtnStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>{doubleUpIcon}</button>
+        <button onClick={() => sendBack(id)} title="Move to Bottom" style={orderSmallBtnStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>{doubleDownIcon}</button>
       </div>
       <button onClick={() => delEl(id)} style={{ width: '100%', padding: '6px', borderRadius: 6, border: `1px solid ${C.accent}22`, background: 'transparent', color: C.accent, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: .65, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all .12s' }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; }}
