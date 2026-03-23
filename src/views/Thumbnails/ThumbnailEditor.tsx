@@ -947,9 +947,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         <path d={el.path} fill="transparent" stroke="transparent" strokeWidth={Math.max(sw + 10, 14)} strokeLinecap="round" strokeLinejoin="round"
           style={{ pointerEvents: isShapePath ? 'fill' : 'stroke', cursor: isSel ? 'move' : 'pointer' }}
           onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
-        {isSel && deleteHandle && (
-          <foreignObject x={el.x + el.w - 10} y={el.y - 10} width={20} height={20}>
-            {deleteHandle}
+        {isSel && (
+          <foreignObject x={el.x + el.w - 10} y={el.y - 10} width={24} height={24}>
+            <div
+              title={t('thumbs.editor.deleteTitle')}
+              onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().delEl(el.id); }}
+              style={{ width: 20, height: 20, background: '#e53935', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,.3)' }}
+            >&times;</div>
           </foreignObject>
         )}
       </svg>
