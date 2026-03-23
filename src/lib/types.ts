@@ -134,6 +134,16 @@ export interface CanvasElement {
   bg?: string;
   borderR?: number;
   rot?: number;
+  // text — advanced typography
+  letterSpacing?: number;
+  lineHeight?: number;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  textStroke?: string;
+  textStrokeWidth?: number;
+  // shape shadow
+  shapeShadow?: string;
+  // element name for layers panel
+  name?: string;
   // image
   src?: string;
   // path

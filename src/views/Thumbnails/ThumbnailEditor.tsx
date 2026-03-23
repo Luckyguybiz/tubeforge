@@ -24,28 +24,24 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount, showRulers, showGrid, gridSize, marquee, resizeDir, userGuides } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
       drag: s.drag, historyCount: s.historyCount, futureCount: s.futureCount,
-      showRulers: s.showRulers, showGrid: s.showGrid, gridSize: s.gridSize,
-      marquee: s.marquee, resizeDir: s.resizeDir, userGuides: s.userGuides,
     }))
   );
   const store = useThumbnailStore.getState;
   const SIZE_PRESETS = useMemo(() => getSizePresets(t), [t]);
   useCanvasKeyboard();
-  // useUndoHint removed — toast on page load was disruptive
+  useUndoHint(historyCount);
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const sel = useMemo(() => els.find((e) => e.id === selId), [els, selId]);
   const loadedRef = useRef(false);
   const isPanning = useRef(false);
-  const isSpacebarPan = useRef(false);
   const panStart = useRef({ x: 0, y: 0, px: 0, py: 0 });
-  const marqueeStart = useRef({ x: 0, y: 0 });
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -53,7 +49,6 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
-  const [spaceHeld, setSpaceHeld] = useState(false);
 
   // Responsive check
   useEffect(() => {
@@ -95,7 +90,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? ''), ''),
     [els],
   );
   useEffect(() => {
@@ -106,22 +101,6 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }, CANVAS_SAVE_DEBOUNCE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [elsFingerprint, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Spacebar pan (Phase 1)
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !e.repeat && !(document.activeElement as HTMLElement)?.isContentEditable && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        setSpaceHeld(true);
-      }
-    };
-    const up = (e: KeyboardEvent) => {
-      if (e.code === 'Space') { setSpaceHeld(false); isSpacebarPan.current = false; }
-    };
-    window.addEventListener('keydown', down);
-    window.addEventListener('keyup', up);
-    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
-  }, []);
 
   // Ctrl+Scroll zoom
   const onWheelZoom = useCallback((e: WheelEvent) => {
@@ -182,13 +161,6 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   const onCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Spacebar pan mode
-    if (spaceHeld) {
-      isSpacebarPan.current = true;
-      const s = store();
-      panStart.current = { x: e.clientX, y: e.clientY, px: s.panX, py: s.panY };
-      return;
-    }
     const { x, y } = getCanvasCoords(e);
     if (tool === 'draw') { store().setDrawing(true); store().setDrawPts([{ x, y }]); return; }
     if (tool === 'line' || tool === 'arrow') { store().setLinePreview({ x1: x, y1: y, x2: x, y2: y }); return; }
@@ -201,50 +173,23 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (tool !== 'select') return;
     const clicked = hitTestElement(els, x, y);
     if (clicked) {
-      if (clicked.locked) return; // Locked elements can't be selected/moved
       e.shiftKey ? store().addToSelection(clicked.id) : store().setSelId(clicked.id);
-      store().pushHistoryDebounced();
+      store().pushHistoryDebounced(); // batch drag into one undo step
       store().setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
-    } else {
-      // Start marquee selection
-      store().setSelId(null);
-      marqueeStart.current = { x, y };
-      store().setMarquee({ x, y, w: 0, h: 0 });
-    }
+    } else { store().setSelId(null); }
   };
 
   const onCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Spacebar pan
-    if (isSpacebarPan.current) {
-      const dx = e.clientX - panStart.current.x;
-      const dy = e.clientY - panStart.current.y;
-      store().setPan(panStart.current.px + dx, panStart.current.py + dy);
-      return;
-    }
     const { x, y } = getCanvasCoords(e);
-    // Marquee selection
-    const curMarquee = store().marquee;
-    if (curMarquee !== null && !store().drag && !store().resize) {
-      const mx = Math.min(marqueeStart.current.x, x);
-      const my = Math.min(marqueeStart.current.y, y);
-      const mw = Math.abs(x - marqueeStart.current.x);
-      const mh = Math.abs(y - marqueeStart.current.y);
-      store().setMarquee({ x: mx, y: my, w: mw, h: mh });
-      return;
-    }
     if (drawing && tool === 'draw') { store().setDrawPts((p) => [...p, { x, y }]); return; }
     if (linePreview && (tool === 'line' || tool === 'arrow')) { store().setLinePreview({ ...linePreview, x2: x, y2: y }); return; }
     const curResize = store().resize;
     if (curResize) {
       const el = els.find((e) => e.id === curResize.id);
       if (!el) return;
-      const dir = store().resizeDir || 'se';
-      let nx = el.x, ny = el.y, nw = el.w, nh = el.h;
-      if (dir.includes('e')) nw = Math.max(20, x - el.x);
-      if (dir.includes('s')) nh = Math.max(20, y - el.y);
-      if (dir.includes('w')) { nw = Math.max(20, el.x + el.w - x); nx = Math.min(x, el.x + el.w - 20); }
-      if (dir.includes('n')) { nh = Math.max(20, el.y + el.h - y); ny = Math.min(y, el.y + el.h - 20); }
-      store().updEl(curResize.id, { x: Math.round(nx), y: Math.round(ny), w: Math.round(nw), h: Math.round(nh) });
+      let nw = x - el.x, nh = y - el.y;
+      if (nw < 20) nw = 20; if (nh < 20) nh = 20;
+      store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
       return;
     }
     const curDrag = store().drag;
@@ -288,19 +233,6 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   const onCanvasMouseUp = () => {
-    // Spacebar pan end
-    if (isSpacebarPan.current) { isSpacebarPan.current = false; return; }
-    // Marquee selection end
-    const curMarquee = store().marquee;
-    if (curMarquee && (curMarquee.w > 5 || curMarquee.h > 5)) {
-      const selected = els.filter((el) => {
-        if (el.visible === false || el.locked) return false;
-        return el.x < curMarquee.x + curMarquee.w && el.x + el.w > curMarquee.x &&
-               el.y < curMarquee.y + curMarquee.h && el.y + el.h > curMarquee.y;
-      });
-      if (selected.length > 0) store().setSelIds(selected.map((e) => e.id));
-    }
-    store().setMarquee(null);
     if (drawing && drawPts.length > 1) {
       const path = drawPts.map((p, i) => i === 0 ? ('M' + p.x + ' ' + p.y) : ('L' + p.x + ' ' + p.y)).join(' ');
       store().addPath(path, drawColor, drawSize);
@@ -313,7 +245,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       }
       store().setLinePreview(null);
     }
-    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setResizeDir(null); store().setGuides({ x: [], y: [] });
+    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] });
   };
 
   // ===== Touch event handlers for mobile support =====
@@ -364,37 +296,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   // ===== Download =====
-  const downloadCanvas = (format: 'png' | 'jpg' | 'pdf' | 'svg' | 'clipboard' = 'png') => {
-    // SVG export (Phase 7)
-    if (format === 'svg') {
-      import('@/lib/export-svg').then(({ exportToSVG }) => {
-        const svg = exportToSVG(els, canvasBg, canvasW, canvasH);
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const link = document.createElement('a');
-        link.download = 'thumbnail.svg';
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        URL.revokeObjectURL(link.href);
-      });
-      return;
-    }
-    // Clipboard copy (Phase 7)
-    if (format === 'clipboard') {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = canvasW; tempCanvas.height = canvasH;
-      const tempCtx = tempCanvas.getContext('2d');
-      if (tempCtx) {
-        tempCtx.fillStyle = canvasBg; tempCtx.fillRect(0, 0, canvasW, canvasH);
-        tempCanvas.toBlob((blob) => {
-          if (blob) {
-            navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => {
-              import('@/stores/useNotificationStore').then(({ toast }) => toast.info('Copied to clipboard'));
-            }).catch(() => {});
-          }
-        }, 'image/png');
-      }
-      return;
-    }
+  const downloadCanvas = (format: 'png' | 'jpg' | 'pdf' = 'png') => {
     const canvas = document.createElement('canvas');
     canvas.width = canvasW; canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
@@ -429,18 +331,40 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.rotate((rot * Math.PI) / 180);
           ctx.translate(-cx, -cy);
         }
+        // Apply shape shadow for rect/circle/triangle/star
+        if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle')) {
+          try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
+        }
         if (el.type === 'rect') {
           ctx.fillStyle = el.color ?? '#fff';
           if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
           else { ctx.fillRect(el.x, el.y, el.w, el.h); }
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'circle') {
           ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'text') {
-          ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          // Apply text transform
+          let displayText = el.text ?? '';
+          if (el.textTransform === 'uppercase') displayText = displayText.toUpperCase();
+          else if (el.textTransform === 'lowercase') displayText = displayText.toLowerCase();
+          else if (el.textTransform === 'capitalize') displayText = displayText.replace(/\b\w/g, (c) => c.toUpperCase());
+          ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
           ctx.textAlign = el.textAlign ?? 'left';
           if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
           const textX = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
-          ctx.fillText(el.text ?? '', textX, el.y + (el.size ?? 32)); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
+          // Text stroke
+          if ((el.textStrokeWidth ?? 0) > 0) { ctx.strokeStyle = el.textStroke ?? '#000'; ctx.lineWidth = el.textStrokeWidth ?? 0; ctx.strokeText(displayText, textX, el.y + (el.size ?? 32)); }
+          ctx.fillStyle = el.color ?? '#fff';
+          // Letter spacing (canvas API doesn't support it natively, so we do it character by character for small texts)
+          if ((el.letterSpacing ?? 0) !== 0 && displayText.length < 100) {
+            const ls = el.letterSpacing ?? 0;
+            let curX = textX;
+            for (const ch of displayText) { ctx.fillText(ch, curX, el.y + (el.size ?? 32)); curX += ctx.measureText(ch).width + ls; }
+          } else {
+            ctx.fillText(displayText, textX, el.y + (el.size ?? 32));
+          }
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
         } else if (el.type === 'path') {
           ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
         } else if (el.type === 'image') {
@@ -505,86 +429,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     });
   };
 
-  // ===== Design Studio helpers =====
-
-  /** Build CSS gradient string from GradientDef */
-  const gradientCSS = (g: CanvasElement['gradient']): string | undefined => {
-    if (!g || !g.stops || g.stops.length < 2) return undefined;
-    const stops = g.stops.map((s) => `${s.color} ${s.offset * 100}%`).join(', ');
-    if (g.type === 'radial') return `radial-gradient(circle, ${stops})`;
-    return `linear-gradient(${g.angle ?? 135}deg, ${stops})`;
-  };
-
-  /** Build CSS filter string from ElementFilters */
-  const filterCSS = (f: CanvasElement['filters']): string | undefined => {
-    if (!f) return undefined;
-    const parts: string[] = [];
-    if (f.blur) parts.push(`blur(${f.blur}px)`);
-    if (f.brightness !== undefined && f.brightness !== 100) parts.push(`brightness(${f.brightness}%)`);
-    if (f.contrast !== undefined && f.contrast !== 100) parts.push(`contrast(${f.contrast}%)`);
-    if (f.saturate !== undefined && f.saturate !== 100) parts.push(`saturate(${f.saturate}%)`);
-    if (f.grayscale) parts.push(`grayscale(${f.grayscale}%)`);
-    if (f.sepia) parts.push(`sepia(${f.sepia}%)`);
-    if (f.hueRotate) parts.push(`hue-rotate(${f.hueRotate}deg)`);
-    return parts.length > 0 ? parts.join(' ') : undefined;
-  };
-
-  /** Build CSS box-shadow from ShadowDef */
-  const boxShadowCSS = (s: CanvasElement['boxShadow']): string | undefined => {
-    if (!s) return undefined;
-    return `${s.x}px ${s.y}px ${s.blur}px ${s.spread}px ${s.color}`;
-  };
-
-  /** Build CSS transform string combining rotation and flip */
-  const transformCSS = (el: CanvasElement): string | undefined => {
-    const parts: string[] = [];
-    if (el.rot) parts.push(`rotate(${el.rot}deg)`);
-    if (el.flipX) parts.push('scaleX(-1)');
-    if (el.flipY) parts.push('scaleY(-1)');
-    return parts.length > 0 ? parts.join(' ') : undefined;
-  };
-
-  /** Get background for element — gradient takes priority over solid color */
-  const elBackground = (el: CanvasElement): string | undefined => {
-    return gradientCSS(el.gradient) ?? el.color;
-  };
-
-  /** Common enhanced styles for elements */
-  const enhancedStyles = (el: CanvasElement): React.CSSProperties => ({
-    filter: filterCSS(el.filters),
-    boxShadow: boxShadowCSS(el.boxShadow),
-    mixBlendMode: el.blendMode as React.CSSProperties['mixBlendMode'],
-    transform: transformCSS(el),
-  });
-
   // ===== Render element =====
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
     const isSel = selIds.includes(el.id);
-    const handleStyle = (cursor: string, pos: React.CSSProperties): React.CSSProperties => ({
-      position: 'absolute', width: 10, height: 10, background: '#fff', border: `2px solid ${C.accent}`, borderRadius: 2, cursor, zIndex: 5, ...pos,
-    });
-    const startResize = (dir: string) => (e: React.MouseEvent) => {
-      e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); store().setResizeDir(dir);
-    };
-    const resizeHandles = isSel && !el.locked && (
-      <>
-        <div onMouseDown={startResize('nw')} style={handleStyle('nwse-resize', { top: -5, left: -5 })} />
-        <div onMouseDown={startResize('n')} style={handleStyle('ns-resize', { top: -5, left: '50%', marginLeft: -5 })} />
-        <div onMouseDown={startResize('ne')} style={handleStyle('nesw-resize', { top: -5, right: -5 })} />
-        <div onMouseDown={startResize('w')} style={handleStyle('ew-resize', { top: '50%', left: -5, marginTop: -5 })} />
-        <div onMouseDown={startResize('e')} style={handleStyle('ew-resize', { top: '50%', right: -5, marginTop: -5 })} />
-        <div onMouseDown={startResize('sw')} style={handleStyle('nesw-resize', { bottom: -5, left: -5 })} />
-        <div onMouseDown={startResize('s')} style={handleStyle('ns-resize', { bottom: -5, left: '50%', marginLeft: -5 })} />
-        <div onMouseDown={startResize('se')} style={handleStyle('nwse-resize', { bottom: -5, right: -5 })} />
-      </>
+    const resizeHandle = isSel && (
+      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, background: C.accent, borderRadius: 2, cursor: 'nwse-resize', zIndex: 5 }} />
     );
-    // Rotation handle
-    const rotationHandle = isSel && !el.locked && (
-      <div onMouseDown={(e) => { e.stopPropagation(); /* rotation handled separately */ }}
-        style={{ position: 'absolute', top: -28, left: '50%', marginLeft: -6, width: 12, height: 12, borderRadius: '50%', background: C.accent, border: '2px solid #fff', cursor: 'grab', zIndex: 6 }} />
-    );
-    const deleteHandle = isSel && !el.locked && (
+    const deleteHandle = isSel && (
       <div
         title={t('thumbs.editor.deleteTitle')}
         onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().delEl(el.id); }}
@@ -600,39 +453,49 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       store().setDrag({ id: el.id, ox: (e.clientX - rect.left) * sx - el.x, oy: (e.clientY - rect.top) * sy - el.y });
     };
 
-    if (el.type === 'text') return (
-      <div key={el.id} data-text-el={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left', textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: gradientCSS(el.gradient) ?? el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined, lineHeight: el.lineHeight ?? undefined, textTransform: el.textTransform ?? undefined, textDecoration: el.textDecoration ?? undefined, WebkitTextStroke: el.textOutline ?? undefined, ...enhancedStyles(el) }}
-        contentEditable={isSel} suppressContentEditableWarning
-        onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
-        onMouseDown={(e) => {
-          if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
-          // When already selected, set up drag (single-click moves, double-click edits text)
-          elDrag(e);
-        }}
-        onDoubleClick={(e) => {
-          // Focus the contentEditable on double-click for text editing
-          e.stopPropagation();
-          (e.currentTarget as HTMLElement).focus();
-        }}>
-        {el.text}{resizeHandles}{rotationHandle}{deleteHandle}
-      </div>
-    );
+    if (el.type === 'text') {
+      const textStyle: React.CSSProperties = {
+        position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
+        fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
+        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left',
+        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR,
+        padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none',
+        transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
+        letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
+        lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
+        textTransform: el.textTransform && el.textTransform !== 'none' ? el.textTransform : undefined,
+        WebkitTextStroke: (el.textStrokeWidth ?? 0) > 0 ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+      };
+      return (
+        <div key={el.id} data-text-el={el.id} style={textStyle}
+          contentEditable={isSel} suppressContentEditableWarning
+          onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
+          onMouseDown={(e) => {
+            if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
+            elDrag(e);
+          }}
+          onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
+          {el.text}{resizeHandle}{deleteHandle}
+        </div>
+      );
+    }
 
     if (el.type === 'rect') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: elBackground(el), opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
-        onMouseDown={elDrag}>{resizeHandles}{rotationHandle}{deleteHandle}</div>
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: elBackground(el), opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
-        onMouseDown={elDrag}>{resizeHandles}{rotationHandle}{deleteHandle}</div>
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'image') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
         onMouseDown={elDrag}>
         <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
-        {resizeHandles}{rotationHandle}{deleteHandle}
+        {resizeHandle}{deleteHandle}
       </div>
     );
 
@@ -677,7 +540,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
         onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
-        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandles}{rotationHandle}{deleteHandle}
+        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandle}{deleteHandle}
       </div>
     );
 
@@ -701,7 +564,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             );
           })}
-          {resizeHandles}{rotationHandle}{deleteHandle}
+          {resizeHandle}{deleteHandle}
         </div>
       );
     }
@@ -866,13 +729,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} disabled={isDownloading} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px', opacity: isDownloading ? 0.5 : 1, cursor: isDownloading ? 'wait' : 'pointer' }}>{downloadIcon} {isDownloading ? t('thumbs.editor.downloading') : t('thumbs.editor.download')} {chevronIcon}</button>
             {showDownloadMenu && (
               <div style={{ ...dropdownPanel, minWidth: 140 }}>
-                {[
-                  { label: 'PNG', format: 'png' as const, desc: t('thumbs.editor.lossless') },
-                  { label: 'JPG', format: 'jpg' as const, desc: t('thumbs.editor.compressed') },
-                  { label: 'PDF', format: 'pdf' as const, desc: t('thumbs.editor.documentFormat') },
-                  { label: 'SVG', format: 'svg' as const, desc: 'Vector' },
-                  { label: 'Copy', format: 'clipboard' as const, desc: 'Clipboard' },
-                ].map((opt) => (
+                {[{ label: 'PNG', format: 'png' as const, desc: t('thumbs.editor.lossless') }, { label: 'JPG', format: 'jpg' as const, desc: t('thumbs.editor.compressed') }, { label: 'PDF', format: 'pdf' as const, desc: t('thumbs.editor.documentFormat') }].map((opt) => (
                   <div key={opt.format} role="menuitem" tabIndex={0} aria-label={`${t('thumbs.editor.downloadFormat')} ${opt.label}`} onClick={() => { downloadCanvas(opt.format); setShowDownloadMenu(false); }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); downloadCanvas(opt.format); setShowDownloadMenu(false); } }}
                     style={menuItem}
@@ -895,30 +752,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         {/* On mobile: toolbar is horizontal at top */}
         <ToolBar onFileChange={onFileChange} isMobile={isMobile} />
         {!isMobile && <LeftSidebar />}
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, gap: 0 }}>
+        {/* Quick Actions Toolbar */}
+        {!isMobile && selIds.length > 0 && (
+          <QuickActionsBar C={C} selIds={selIds} />
+        )}
         <ErrorBoundary>
         <div ref={canvasWrapperRef} style={{ flex: 1, position: 'relative', minWidth: 0, overflow: 'hidden', borderRadius: isMobile ? 8 : 12, border: `1px solid ${C.border}`, background: C.bg, width: '100%', maxWidth: '100%' }}
           onMouseDown={onMiddleDown} onMouseMove={onMiddleMove} onMouseUp={onMiddleUp} onMouseLeave={onMiddleUp}>
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
-              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: spaceHeld ? (isSpacebarPan.current ? 'grabbing' : 'grab') : tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
-            {/* Grid overlay (Phase 1) */}
-            {showGrid && (
-              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
-                <defs><pattern id="grid" width={gridSize} height={gridSize} patternUnits="userSpaceOnUse"><path d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="0.5" /></pattern></defs>
-                <rect width={canvasW} height={canvasH} fill="url(#grid)" />
-              </svg>
-            )}
+              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
             {els.map(renderElement)}
-            {/* User guides (Phase 1) */}
-            {userGuides.map((g, i) => g.axis === 'x'
-              ? <div key={`ug-${i}`} style={{ position: 'absolute', left: g.pos / canvasW * 100 + '%', top: 0, bottom: 0, width: 1, background: '#3b82f6', opacity: 0.6, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />
-              : <div key={`ug-${i}`} style={{ position: 'absolute', top: g.pos / canvasH * 100 + '%', left: 0, right: 0, height: 1, background: '#3b82f6', opacity: 0.6, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />
-            )}
-            {/* Marquee selection (Phase 2) */}
-            {marquee && marquee.w > 2 && marquee.h > 2 && (
-              <div style={{ position: 'absolute', left: marquee.x / canvasW * 100 + '%', top: marquee.y / canvasH * 100 + '%', width: marquee.w / canvasW * 100 + '%', height: marquee.h / canvasH * 100 + '%', border: `1.5px dashed ${C.accent}`, background: `${C.accent}10`, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />
-            )}
             {/* Collaboration cursors overlay */}
             <CollaborationCursors canvasW={canvasW} canvasH={canvasH} containerW={canvasAreaRef.current?.clientWidth ?? canvasW} containerH={canvasAreaRef.current?.clientHeight ?? canvasH} />
             {drawing && drawPts.length > 1 && (
@@ -939,24 +785,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1.5, background: C.accent, opacity: 0.7, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
           </div>
           </div>
-          {/* Floating zoom controls + View settings */}
-          <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
+          {/* Floating zoom controls */}
+          <div title={t('thumbs.editor.zoomHint')} style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
             <button onClick={() => store().zoomOut()} title={t('thumbs.editor.zoomOut')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
-            {/* Zoom presets dropdown */}
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => {
-                const presets = [25, 50, 75, 100, 150, 200, 300];
-                const current = Math.round(zoom * 100);
-                const next = presets.find((p) => p > current) ?? presets[0];
-                store().setZoom(next / 100);
-              }} style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px', borderRadius: 4 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-              >{Math.round(zoom * 100)}%</button>
-            </div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
             <button onClick={() => store().zoomIn()} title={t('thumbs.editor.zoomIn')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
@@ -966,30 +801,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{fitIcon} {t('thumbs.editor.fitLabel')}</button>
-            <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-            {/* View settings toggle buttons */}
-            <button onClick={() => store().setShowGrid(!showGrid)} title="Toggle Grid" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: showGrid ? C.accentDim : 'transparent', color: showGrid ? C.accent : C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, transition: 'all .12s' }}>#</button>
-            <button onClick={() => store().setShowRulers(!showRulers)} title="Toggle Rulers (Shift+R)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: showRulers ? C.accentDim : 'transparent', color: showRulers ? C.accent : C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, transition: 'all .12s' }}>R</button>
           </div>
-          {/* Rulers (Phase 1) */}
-          {showRulers && (
-            <>
-              {/* Horizontal ruler */}
-              <div style={{ position: 'absolute', top: 0, left: 20, right: 0, height: 20, background: C.card, borderBottom: `1px solid ${C.border}`, zIndex: Z_INDEX.ZOOM_CONTROLS + 1, overflow: 'hidden', fontSize: 8, color: C.dim, userSelect: 'none' }}>
-                {Array.from({ length: Math.ceil(canvasW / 100) + 1 }, (_, i) => (
-                  <span key={i} style={{ position: 'absolute', left: `${(i * 100) / canvasW * 100}%`, top: 6, transform: 'translateX(-50%)' }}>{i * 100}</span>
-                ))}
-              </div>
-              {/* Vertical ruler */}
-              <div style={{ position: 'absolute', top: 20, left: 0, bottom: 0, width: 20, background: C.card, borderRight: `1px solid ${C.border}`, zIndex: Z_INDEX.ZOOM_CONTROLS + 1, overflow: 'hidden', fontSize: 8, color: C.dim, userSelect: 'none' }}>
-                {Array.from({ length: Math.ceil(canvasH / 100) + 1 }, (_, i) => (
-                  <span key={i} style={{ position: 'absolute', top: `${(i * 100) / canvasH * 100}%`, left: 2, transform: 'translateY(-50%)', writingMode: 'vertical-lr' }}>{i * 100}</span>
-                ))}
-              </div>
-            </>
-          )}
         </div>
         </ErrorBoundary>
+        </div>
         {/* D8: Context menu */}
         {contextMenu && (
           <div
@@ -1024,20 +839,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   }
                 }}>
                   {[
-                    { label: 'Copy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+C', action: () => store().copySelected() },
-                    { label: 'Cut', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>, shortcut: 'Ctrl+X', action: () => store().cutSelected() },
                     { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
-                    { label: 'Copy Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>, shortcut: 'Alt+C', action: () => store().copyStyle() },
-                    { label: 'Paste Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>, shortcut: 'Alt+V', action: () => store().pasteStyle() },
-                    null, // separator
                     { label: t('thumbs.editor.bringForward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => { const id = store().contextMenu?.elId; if (id) store().bringFront(id); } },
                     { label: t('thumbs.editor.sendBackward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => { const id = store().contextMenu?.elId; if (id) store().sendBack(id); } },
-                    { label: (() => { const el = els.find((e) => e.id === contextMenu.elId); return el?.locked ? 'Unlock' : 'Lock'; })(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>, shortcut: '', action: () => { const id = store().contextMenu?.elId; if (id) store().toggleLock(id); } },
-                    null, // separator
                     { label: t('thumbs.editor.delete'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { const id = store().contextMenu?.elId; if (id) store().delEl(id); }, danger: true },
-                  ].filter(Boolean).map((item, i) => item === null ? (
-                    <div key={`sep-${i}`} style={{ height: 1, background: C.border, margin: '3px 8px' }} />
-                  ) : (
+                  ].map((item, i) => (
                     <div
                       key={item.label}
                       role="menuitem"
@@ -1061,9 +867,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                       onFocus={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
                       onBlur={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                     >
-                      <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{(item as { icon: React.ReactElement }).icon}</span>
-                      <span style={{ flex: 1 }}>{(item as { label: string }).label}</span>
-                      <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{(item as { shortcut: string }).shortcut}</span>
+                      <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
+                      <span style={{ flex: 1 }}>{item.label}</span>
+                      <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{item.shortcut}</span>
                     </div>
                   ))}
                 </div>
@@ -1148,11 +954,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 function getSizePresets(t: (key: string) => string) {
   return [
     { label: t('thumbs.editor.sizeYoutube'), w: 1280, h: 720 },
+    { label: 'YouTube Shorts', w: 1080, h: 1920 },
     { label: t('thumbs.editor.sizeInstagramPost'), w: 1080, h: 1080 },
     { label: t('thumbs.editor.sizeInstagramStory'), w: 1080, h: 1920 },
-    { label: t('thumbs.editor.sizeFacebookCover'), w: 820, h: 312 },
+    { label: 'Twitter Post', w: 1200, h: 675 },
     { label: t('thumbs.editor.sizeTwitterBanner'), w: 1500, h: 500 },
-    { label: 'HD 1920×1080', w: 1920, h: 1080 },
+    { label: t('thumbs.editor.sizeFacebookCover'), w: 820, h: 312 },
+    { label: 'HD 1920x1080', w: 1920, h: 1080 },
   ];
 }
 
@@ -1173,4 +981,76 @@ function hitTestElement(els: CanvasElement[], x: number, y: number): CanvasEleme
     if (el.type !== 'line' && el.type !== 'arrow' && x >= el.x && x <= el.x + el.w && y >= el.y && y <= el.y + el.h) return el;
   }
   return null;
+}
+
+/** Quick Actions Toolbar — shown when elements are selected */
+function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.getState>['theme']; selIds: string[] }) {
+  const store = useThumbnailStore.getState;
+  const hasGroup = selIds.length > 1;
+  const btnStyle: React.CSSProperties = { height: 30, padding: '0 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, transition: 'all .12s', whiteSpace: 'nowrap' };
+  const sepStyle: React.CSSProperties = { width: 1, height: 20, background: C.border, margin: '0 2px', flexShrink: 0 };
+  const hover = (e: React.MouseEvent, on: boolean) => {
+    (e.currentTarget as HTMLElement).style.background = on ? C.surface : 'transparent';
+    (e.currentTarget as HTMLElement).style.color = on ? C.text : C.sub;
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 8px', background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+      {/* Duplicate */}
+      <button onClick={() => store().duplicateSelected()} title="Duplicate (Ctrl+D)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Duplicate
+      </button>
+      {/* Delete */}
+      <button onClick={() => store().delSelected()} title="Delete" style={{ ...btnStyle, color: C.accent + 'aa' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; (e.currentTarget as HTMLElement).style.color = C.accent; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.accent + 'aa'; }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Delete
+      </button>
+      <div style={sepStyle} />
+      {/* Group / Ungroup */}
+      {hasGroup && (
+        <>
+          <button onClick={() => store().groupSelected()} title="Group (Ctrl+G)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M10 6h4m-4 12h4M6 10v4m12-4v4"/></svg>
+            Group
+          </button>
+          <button onClick={() => store().ungroupSelected()} title="Ungroup" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            Ungroup
+          </button>
+          <div style={sepStyle} />
+        </>
+      )}
+      {/* Align */}
+      <button onClick={() => store().alignSelected('left')} title="Align Left" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="3" y2="21"/><rect x="7" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('centerX')} title="Align Center H" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="3" x2="12" y2="21"/><rect x="5" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('right')} title="Align Right" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="21" y1="3" x2="21" y2="21"/><rect x="3" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('top')} title="Align Top" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="21" y2="3"/><rect x="6" y="7" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('centerY')} title="Align Center V" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12"/><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('bottom')} title="Align Bottom" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="21" x2="21" y2="21"/><rect x="6" y="3" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></svg>
+      </button>
+      {hasGroup && (
+        <>
+          <div style={sepStyle} />
+          <button onClick={() => store().distributeSelected('horizontal')} title="Distribute Horizontal" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="3" y2="21"/><line x1="21" y1="3" x2="21" y2="21"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            H
+          </button>
+          <button onClick={() => store().distributeSelected('vertical')} title="Distribute Vertical" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="21" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            V
+          </button>
+        </>
+      )}
+    </div>
+  );
 }

@@ -9,7 +9,6 @@ import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import type { CanvasElement, Theme } from '@/lib/types';
 import { COLOR_PRESETS } from '@/lib/element-presets';
 import { FONT_LIBRARY, FONT_CATEGORIES, loadGoogleFont, preloadPopularFonts } from '@/lib/fonts';
-import { TextEffectsPanel } from './panels/TextEffectsPanel';
 
 const FONT_SIZE_PRESETS = [16, 24, 32, 48, 64, 80, 96, 120];
 
@@ -113,11 +112,6 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             </div>
           </div>
 
-          {/* Group / Ungroup */}
-          <div style={{ display: 'flex', gap: 3 }}>
-            <button onClick={() => useThumbnailStore.getState().groupSelected()} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Group (Ctrl+G)</button>
-            <button onClick={() => useThumbnailStore.getState().ungroupSelected()} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Ungroup</button>
-          </div>
           <button onClick={() => { pushHistory(); selIds.forEach((id) => delEl(id)); }} style={{ width: '100%', padding: '5px', borderRadius: 5, border: `1px solid ${C.accent}33`, background: 'transparent', color: C.accent, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: .6 }} aria-label={t('thumbs.props.deleteAllSelected')}>✕ {t('thumbs.props.deleteAll')}</button>
         </div>
 
@@ -141,18 +135,18 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div><div style={labelStyle}>{t('thumbs.props.textLabel')}</div><input value={sel.text ?? ''} onChange={(e) => updEl(sel.id, { text: e.target.value })} style={inputStyle} /></div>
           <FontPicker C={C} value={sel.font ?? 'Inter'} onChange={(f) => updEl(sel.id, { font: f })} inputStyle={inputStyle} labelStyle={labelStyle} />
-          {/* C6: Size with presets */}
+          {/* Font size slider + presets */}
           <div>
             <div style={labelStyle}>{t('thumbs.props.size')}</div>
-            <div style={{ display: 'flex', gap: 3 }}>
-              <input type="number" value={sel.size} onChange={(e) => updEl(sel.id, { size: +e.target.value })} min={8} max={200} style={{ ...inputStyle, flex: 1 }} />
-              <select value={FONT_SIZE_PRESETS.includes(sel.size ?? 0) ? sel.size : ''} onChange={(e) => { if (e.target.value) updEl(sel.id, { size: +e.target.value }); }} style={{ ...inputStyle, width: 'auto', minWidth: 44, padding: '5px 2px' }}>
-                <option value="" disabled>—</option>
-                {FONT_SIZE_PRESETS.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="range" min={12} max={200} value={sel.size ?? 32} onChange={(e) => updEl(sel.id, { size: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+              <input type="number" value={sel.size ?? 32} onChange={(e) => updEl(sel.id, { size: +e.target.value })} min={8} max={200} style={{ ...inputStyle, width: 48 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 2, marginTop: 4, flexWrap: 'wrap' }}>
+              {FONT_SIZE_PRESETS.map((s) => <button key={s} onClick={() => updEl(sel.id, { size: s })} style={{ padding: '2px 5px', borderRadius: 4, border: `1px solid ${sel.size === s ? C.blue + '55' : C.border}`, background: sel.size === s ? C.blue + '14' : 'transparent', color: sel.size === s ? C.blue : C.dim, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>)}
             </div>
           </div>
-          {/* C3: Color with HEX */}
+          {/* Color with HEX + presets */}
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           <div style={{ display: 'flex', gap: 4 }}>
@@ -175,10 +169,45 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               })}
             </div>
           </div>
-          {/* C4: Shadow with custom option */}
+          {/* Text Transform */}
+          <div>
+            <div style={labelStyle}>Transform</div>
+            <div style={{ display: 'flex', gap: 3 }}>
+              {([{ val: 'none' as const, label: 'Aa' }, { val: 'uppercase' as const, label: 'AA' }, { val: 'lowercase' as const, label: 'aa' }, { val: 'capitalize' as const, label: 'Aa.' }]).map((tt) => {
+                const isActive = (sel.textTransform ?? 'none') === tt.val;
+                return <button key={tt.val} onClick={() => updEl(sel.id, { textTransform: tt.val })} title={tt.val} style={{ flex: 1, padding: '4px', borderRadius: 5, border: `1px solid ${isActive ? C.blue + '55' : C.border}`, background: isActive ? C.blue + '14' : 'transparent', color: isActive ? C.blue : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tt.label}</button>;
+              })}
+            </div>
+          </div>
+          {/* Letter Spacing */}
+          <div>
+            <div style={labelStyle}>Letter Spacing</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="range" min={-5} max={20} step={0.5} value={sel.letterSpacing ?? 0} onChange={(e) => updEl(sel.id, { letterSpacing: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.letterSpacing ?? 0}px</span>
+            </div>
+          </div>
+          {/* Line Height */}
+          <div>
+            <div style={labelStyle}>Line Height</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="range" min={0.8} max={3.0} step={0.1} value={sel.lineHeight ?? 1.2} onChange={(e) => updEl(sel.id, { lineHeight: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{(sel.lineHeight ?? 1.2).toFixed(1)}</span>
+            </div>
+          </div>
+          {/* Text Outline/Stroke */}
+          <div>
+            <div style={labelStyle}>Text Stroke</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="color" value={sel.textStroke ?? '#000000'} onChange={(e) => updEl(sel.id, { textStroke: e.target.value })} style={{ width: 28, height: 24, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+              <input type="range" min={0} max={8} step={0.5} value={sel.textStrokeWidth ?? 0} onChange={(e) => updEl(sel.id, { textStrokeWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.textStrokeWidth ?? 0}</span>
+            </div>
+          </div>
+          {/* Shadow with custom option */}
           <ShadowControl C={C} value={sel.shadow} onChange={(v) => updEl(sel.id, { shadow: v })} inputStyle={inputStyle} labelStyle={labelStyle} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
-          {/* C5: Bigger bg swatches with titles */}
+          {/* Text background swatches */}
           <div><div style={labelStyle}>{t('thumbs.props.textBg')}</div><div style={{ display: 'flex', gap: 4 }}>
             {BG_SWATCHES.map((bg) => {
               const bgTitle = t(bg.titleKey);
@@ -187,33 +216,9 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               );
             })}
           </div></div>
-          {/* Advanced Typography */}
-          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 8, marginTop: 4 }}>
-            <div style={{ ...labelStyle, fontSize: 10, opacity: 0.7 }}>Advanced Typography</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-              <div><div style={{ ...labelStyle, fontSize: 9 }}>Letter Spacing</div><input type="number" value={sel.letterSpacing ?? 0} onChange={(e) => updEl(sel.id, { letterSpacing: +e.target.value })} min={-5} max={20} step={0.5} style={inputStyle} /></div>
-              <div><div style={{ ...labelStyle, fontSize: 9 }}>Line Height</div><input type="number" value={sel.lineHeight ?? 1.4} onChange={(e) => updEl(sel.id, { lineHeight: +e.target.value })} min={0.8} max={3} step={0.1} style={inputStyle} /></div>
-            </div>
-            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
-              {(['none', 'uppercase', 'capitalize'] as const).map((tt) => (
-                <button key={tt} onClick={() => updEl(sel.id, { textTransform: tt })} style={{ ...btnSmall, flex: 1, background: (sel.textTransform ?? 'none') === tt ? C.blue + '14' : 'transparent', color: (sel.textTransform ?? 'none') === tt ? C.blue : C.sub, border: `1px solid ${(sel.textTransform ?? 'none') === tt ? C.blue + '55' : C.border}` }}>{tt === 'none' ? 'Aa' : tt === 'uppercase' ? 'AA' : 'Ab'}</button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
-              <button onClick={() => updEl(sel.id, { textDecoration: sel.textDecoration === 'underline' ? 'none' : 'underline' })} style={{ ...btnSmall, flex: 1, textDecoration: 'underline', background: sel.textDecoration === 'underline' ? C.blue + '14' : 'transparent', color: sel.textDecoration === 'underline' ? C.blue : C.sub }}>U</button>
-              <button onClick={() => updEl(sel.id, { textDecoration: sel.textDecoration === 'line-through' ? 'none' : 'line-through' })} style={{ ...btnSmall, flex: 1, textDecoration: 'line-through', background: sel.textDecoration === 'line-through' ? C.blue + '14' : 'transparent', color: sel.textDecoration === 'line-through' ? C.blue : C.sub }}>S</button>
-              <button onClick={() => updEl(sel.id, { textOutline: sel.textOutline ? undefined : '1px #000000' })} style={{ ...btnSmall, flex: 1, WebkitTextStroke: '1px', background: sel.textOutline ? C.blue + '14' : 'transparent', color: sel.textOutline ? C.blue : C.sub }}>O</button>
-            </div>
-          </div>
-          {/* Text Effects (Phase 3) */}
-          <TextEffectsPanel C={C as unknown as Record<string, string>} sel={sel as { id: string; shadow?: string; textOutline?: string; color?: string }} updEl={(id, patch) => updEl(id, patch as Partial<CanvasElement>)} />
-          {/* Filters */}
-          <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
-          {/* Flip & Blend */}
-          <FlipAndBlendPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} btnSmall={btnSmall} />
-          {/* C1: Position */}
+          {/* Position */}
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
-          {/* C2: Rotation */}
+          {/* Rotation */}
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
@@ -223,14 +228,10 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
-          {/* Gradient Fill */}
-          <GradientPicker C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
-          {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR}</span></div></div>}
-          {/* Filters */}
-          <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
-          {/* Flip & Blend */}
-          <FlipAndBlendPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} btnSmall={btnSmall} />
+          {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={50} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}px</span></div></div>}
+          {/* Shape Shadow */}
+          <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -242,27 +243,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
-          {/* Frame presets */}
-          <div>
-            <div style={labelStyle}>Frame</div>
-            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-              {[
-                { label: 'None', borderR: 0, border: undefined, boxShadow: undefined },
-                { label: 'Round', borderR: 12, border: undefined, boxShadow: undefined },
-                { label: 'Circle', borderR: 999, border: undefined, boxShadow: undefined },
-                { label: 'Border', borderR: 0, border: '4px solid #ffffff', boxShadow: undefined },
-                { label: 'Shadow', borderR: 8, border: undefined, boxShadow: { x: 0, y: 4, blur: 20, spread: 0, color: 'rgba(0,0,0,.5)' } },
-                { label: 'Glow', borderR: 8, border: undefined, boxShadow: { x: 0, y: 0, blur: 30, spread: 4, color: 'rgba(59,130,246,.4)' } },
-              ].map((frame) => (
-                <button key={frame.label} onClick={() => updEl(sel.id, { borderR: frame.borderR, border: frame.border, boxShadow: frame.boxShadow as CanvasElement['boxShadow'] })} style={{ ...btnSmall, flex: '1 0 28%', fontSize: 8, padding: '4px 2px' }}>{frame.label}</button>
-              ))}
-            </div>
-          </div>
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR}</span></div></div>
-          {/* Filters — especially useful for images */}
-          <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
-          {/* Flip & Blend */}
-          <FlipAndBlendPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} btnSmall={btnSmall} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -643,6 +624,59 @@ const OpacitySlider = memo(function OpacitySlider({ C, value, onChange }: { C: T
   );
 });
 
+// Shape shadow control (toggle + offset + blur + color)
+function ShapeShadowControl({ C, value, onChange, labelStyle }: { C: Theme; value: string | undefined; onChange: (v: string | undefined) => void; labelStyle: React.CSSProperties }) {
+  const enabled = !!value && value !== 'none';
+  const [offX, setOffX] = useState(4);
+  const [offY, setOffY] = useState(4);
+  const [blur, setBlur] = useState(12);
+  const [color, setColor] = useState('#000000');
+  const [alpha, setAlpha] = useState(0.4);
+
+  useEffect(() => {
+    if (value && value !== 'none') {
+      try {
+        const m = value.match(/([\d.-]+)px\s+([\d.-]+)px\s+([\d.-]+)px\s+rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]*)\)/);
+        if (m) {
+          setOffX(parseFloat(m[1])); setOffY(parseFloat(m[2])); setBlur(parseFloat(m[3]));
+          const r = parseInt(m[4]), g = parseInt(m[5]), b = parseInt(m[6]);
+          setColor(`#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`);
+          setAlpha(m[7] ? parseFloat(m[7]) : 1);
+        }
+      } catch { /* use defaults */ }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const apply = (x: number, y: number, b: number, c: string, a: number) => {
+    const hex = c.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const bv = parseInt(hex.substring(4, 6), 16) || 0;
+    onChange(`${x}px ${y}px ${b}px rgba(${r},${g},${bv},${a})`);
+  };
+
+  return (
+    <div>
+      <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>Shadow</span>
+        <button onClick={() => { if (enabled) onChange(undefined); else { apply(offX, offY, blur, color, alpha); } }} style={{ background: 'none', border: 'none', color: enabled ? C.blue : C.dim, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}>{enabled ? 'ON' : 'OFF'}</button>
+      </div>
+      {enabled && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 6, background: C.surface, borderRadius: 6, border: `1px solid ${C.border}` }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 9, color: C.dim, marginBottom: 1 }}>X</div><input type="range" min={-20} max={20} value={offX} onChange={(e) => { setOffX(+e.target.value); apply(+e.target.value, offY, blur, color, alpha); }} style={{ width: '100%', accentColor: '#888' }} /></div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 9, color: C.dim, marginBottom: 1 }}>Y</div><input type="range" min={-20} max={20} value={offY} onChange={(e) => { setOffY(+e.target.value); apply(offX, +e.target.value, blur, color, alpha); }} style={{ width: '100%', accentColor: '#888' }} /></div>
+          </div>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 9, color: C.dim, marginBottom: 1 }}>Blur</div><input type="range" min={0} max={40} value={blur} onChange={(e) => { setBlur(+e.target.value); apply(offX, offY, +e.target.value, color, alpha); }} style={{ width: '100%', accentColor: '#888' }} /></div>
+            <input type="color" value={color} onChange={(e) => { setColor(e.target.value); apply(offX, offY, blur, e.target.value, alpha); }} style={{ width: 24, height: 24, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // C9: Size inputs with proportion lock
 const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChange, inputStyle, labelStyle }: { C: Theme; w: number; h: number; proportionLocked?: boolean; onChange: (p: Partial<CanvasElement>) => void; inputStyle: React.CSSProperties; labelStyle: React.CSSProperties }) {
   const t = useLocaleStore((s) => s.t);
@@ -676,145 +710,6 @@ const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChang
         }
       </button>
       <div style={{ flex: 1 }}><div style={labelStyle}>{t('thumbs.props.height')}</div><input type="number" value={Math.round(h)} onChange={(e) => handleH(+e.target.value)} style={inputStyle} /></div>
-    </div>
-  );
-});
-
-/* ── Gradient Picker ───────────────────────────────────────── */
-
-const GRADIENT_PRESETS = [
-  { label: 'Sunset', stops: [{ offset: 0, color: '#f97316' }, { offset: 1, color: '#ec4899' }] },
-  { label: 'Ocean', stops: [{ offset: 0, color: '#06b6d4' }, { offset: 1, color: '#3b82f6' }] },
-  { label: 'Forest', stops: [{ offset: 0, color: '#22c55e' }, { offset: 1, color: '#0ea5e9' }] },
-  { label: 'Neon', stops: [{ offset: 0, color: '#a855f7' }, { offset: 1, color: '#ec4899' }] },
-  { label: 'Fire', stops: [{ offset: 0, color: '#ef4444' }, { offset: 1, color: '#f59e0b' }] },
-  { label: 'Night', stops: [{ offset: 0, color: '#1e293b' }, { offset: 1, color: '#7c3aed' }] },
-  { label: 'Gold', stops: [{ offset: 0, color: '#f59e0b' }, { offset: 1, color: '#eab308' }] },
-  { label: 'Ice', stops: [{ offset: 0, color: '#67e8f9' }, { offset: 1, color: '#a78bfa' }] },
-];
-
-const GradientPicker = memo(function GradientPicker({ C, sel, updEl, labelStyle, inputStyle }: {
-  C: Theme; sel: CanvasElement; updEl: (id: string, p: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties;
-}) {
-  const hasGradient = !!sel.gradient;
-  return (
-    <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ ...labelStyle, marginBottom: 0 }}>Gradient Fill</div>
-        <button
-          onClick={() => {
-            if (hasGradient) {
-              updEl(sel.id, { gradient: undefined });
-            } else {
-              updEl(sel.id, { gradient: { type: 'linear', angle: 135, stops: [{ offset: 0, color: sel.color ?? '#ff2d55' }, { offset: 1, color: '#3b82f6' }] } });
-            }
-          }}
-          style={{ padding: '2px 8px', borderRadius: 4, border: `1px solid ${hasGradient ? '#3b82f655' : C.border}`, background: hasGradient ? '#3b82f614' : 'transparent', color: hasGradient ? '#3b82f6' : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}
-        >{hasGradient ? 'ON' : 'OFF'}</button>
-      </div>
-      {hasGradient && sel.gradient && (
-        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {/* Presets */}
-          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-            {GRADIENT_PRESETS.map((p) => (
-              <div key={p.label} title={p.label} onClick={() => updEl(sel.id, { gradient: { type: 'linear', angle: sel.gradient?.angle ?? 135, stops: p.stops } })}
-                style={{ width: 22, height: 22, borderRadius: 4, background: `linear-gradient(135deg, ${p.stops[0].color}, ${p.stops[1].color})`, cursor: 'pointer', border: `1px solid ${C.border}` }} />
-            ))}
-          </div>
-          {/* Angle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 9, color: C.dim, minWidth: 32 }}>Angle</span>
-            <input type="range" min={0} max={360} value={sel.gradient.angle ?? 135} onChange={(e) => updEl(sel.id, { gradient: { ...sel.gradient!, angle: +e.target.value } })} style={{ flex: 1, accentColor: '#888' }} />
-            <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.gradient.angle ?? 135}°</span>
-          </div>
-          {/* Stop colors */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: C.dim }}>Start</div>
-              <input type="color" value={sel.gradient.stops[0]?.color ?? '#ff2d55'} onChange={(e) => { const stops = [...(sel.gradient?.stops ?? [])]; stops[0] = { ...stops[0], color: e.target.value }; updEl(sel.id, { gradient: { ...sel.gradient!, stops } }); }} style={{ width: '100%', height: 24, border: 'none', cursor: 'pointer', borderRadius: 3 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: C.dim }}>End</div>
-              <input type="color" value={sel.gradient.stops[1]?.color ?? '#3b82f6'} onChange={(e) => { const stops = [...(sel.gradient?.stops ?? [])]; stops[1] = { ...stops[1], color: e.target.value }; updEl(sel.id, { gradient: { ...sel.gradient!, stops } }); }} style={{ width: '100%', height: 24, border: 'none', cursor: 'pointer', borderRadius: 3 }} />
-            </div>
-          </div>
-          {/* Type toggle */}
-          <div style={{ display: 'flex', gap: 3 }}>
-            <button onClick={() => updEl(sel.id, { gradient: { ...sel.gradient!, type: 'linear' } })} style={{ flex: 1, padding: '3px', borderRadius: 4, border: `1px solid ${sel.gradient.type === 'linear' ? '#3b82f655' : C.border}`, background: sel.gradient.type === 'linear' ? '#3b82f614' : 'transparent', color: sel.gradient.type === 'linear' ? '#3b82f6' : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>Linear</button>
-            <button onClick={() => updEl(sel.id, { gradient: { ...sel.gradient!, type: 'radial' } })} style={{ flex: 1, padding: '3px', borderRadius: 4, border: `1px solid ${sel.gradient.type === 'radial' ? '#3b82f655' : C.border}`, background: sel.gradient.type === 'radial' ? '#3b82f614' : 'transparent', color: sel.gradient.type === 'radial' ? '#3b82f6' : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>Radial</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-
-/* ── Filters Panel ────────────────────────────────────────── */
-
-const FiltersPanel = memo(function FiltersPanel({ C, sel, updEl, labelStyle }: {
-  C: Theme; sel: CanvasElement; updEl: (id: string, p: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties;
-}) {
-  const [open, setOpen] = useState(false);
-  const f = sel.filters ?? {};
-  const hasFilters = Object.values(f).some((v) => v !== undefined && v !== 0 && v !== 100);
-
-  const updateFilter = (key: string, value: number) => {
-    updEl(sel.id, { filters: { ...f, [key]: value } });
-  };
-
-  return (
-    <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setOpen(!open)}>
-        <div style={{ ...labelStyle, marginBottom: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-          Filters {hasFilters && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }} />}
-        </div>
-        <span style={{ fontSize: 10, color: C.dim }}>{open ? '▲' : '▼'}</span>
-      </div>
-      {open && (
-        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {([
-            { key: 'blur', label: 'Blur', min: 0, max: 20, def: 0, unit: 'px' },
-            { key: 'brightness', label: 'Brightness', min: 0, max: 200, def: 100, unit: '%' },
-            { key: 'contrast', label: 'Contrast', min: 0, max: 200, def: 100, unit: '%' },
-            { key: 'saturate', label: 'Saturate', min: 0, max: 200, def: 100, unit: '%' },
-            { key: 'grayscale', label: 'Grayscale', min: 0, max: 100, def: 0, unit: '%' },
-            { key: 'sepia', label: 'Sepia', min: 0, max: 100, def: 0, unit: '%' },
-            { key: 'hueRotate', label: 'Hue Rotate', min: 0, max: 360, def: 0, unit: '°' },
-          ] as const).map(({ key, label, min, max, def, unit }) => (
-            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 9, color: C.dim, minWidth: 52 }}>{label}</span>
-              <input type="range" min={min} max={max} value={(f as Record<string, number>)[key] ?? def} onChange={(e) => updateFilter(key, +e.target.value)} style={{ flex: 1, accentColor: '#888' }} />
-              <span style={{ fontSize: 9, color: C.dim, minWidth: 28, textAlign: 'right' }}>{(f as Record<string, number>)[key] ?? def}{unit}</span>
-            </div>
-          ))}
-          <button onClick={() => updEl(sel.id, { filters: undefined })} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'flex-start' }}>Reset All</button>
-        </div>
-      )}
-    </div>
-  );
-});
-
-/* ── Flip & Blend Mode Panel ──────────────────────────────── */
-
-const BLEND_MODES = ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion'];
-
-const FlipAndBlendPanel = memo(function FlipAndBlendPanel({ C, sel, updEl, labelStyle, inputStyle, btnSmall }: {
-  C: Theme; sel: CanvasElement; updEl: (id: string, p: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties; btnSmall: React.CSSProperties;
-}) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {/* Flip controls */}
-      <div style={{ display: 'flex', gap: 3 }}>
-        <button onClick={() => updEl(sel.id, { flipX: !sel.flipX })} style={{ ...btnSmall, flex: 1, background: sel.flipX ? '#3b82f614' : 'transparent', color: sel.flipX ? '#3b82f6' : C.sub, border: `1px solid ${sel.flipX ? '#3b82f655' : C.border}` }} title="Flip Horizontal">↔ Flip H</button>
-        <button onClick={() => updEl(sel.id, { flipY: !sel.flipY })} style={{ ...btnSmall, flex: 1, background: sel.flipY ? '#3b82f614' : 'transparent', color: sel.flipY ? '#3b82f6' : C.sub, border: `1px solid ${sel.flipY ? '#3b82f655' : C.border}` }} title="Flip Vertical">↕ Flip V</button>
-      </div>
-      {/* Blend mode */}
-      <div>
-        <div style={{ ...labelStyle, fontSize: 9 }}>Blend Mode</div>
-        <select value={sel.blendMode ?? 'normal'} onChange={(e) => updEl(sel.id, { blendMode: e.target.value })} style={{ ...inputStyle, fontSize: 9 }}>
-          {BLEND_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-      </div>
     </div>
   );
 });
@@ -887,9 +782,22 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
   C: Theme;
 }) {
   const t = useLocaleStore((s) => s.t);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState('');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const { moveLayer } = useThumbnailStore.getState();
+
   const nameMap: Record<string, string> = {
     text: '', rect: t('thumbs.layers.nameRect'), circle: t('thumbs.layers.nameCircle'), triangle: t('thumbs.layers.nameTriangle'), star: t('thumbs.layers.nameStar'), image: t('thumbs.layers.nameImage'), path: t('thumbs.layers.namePath'),
     line: t('thumbs.layers.nameLine'), arrow: t('thumbs.layers.nameArrow'), stickyNote: t('thumbs.layers.nameNote'), table: t('thumbs.layers.nameTable'),
+  };
+
+  const getDisplayName = (el: CanvasElement) => {
+    if (el.name) return el.name;
+    if (el.type === 'text') return (el.text ?? '').slice(0, 18) || t('thumbs.layers.nameText');
+    if (el.type === 'stickyNote') return (el.noteText ?? '').slice(0, 18);
+    return nameMap[el.type] ?? el.type;
   };
 
   const actionBtn: React.CSSProperties = {
@@ -907,26 +815,52 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
     transition: 'all .12s',
   };
 
+  const reversedEls = [...els].reverse();
+
   return (
     <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 12, paddingTop: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: C.sub }}>{t('thumbs.layers.title')}</span>
         <span style={{ fontSize: 10, color: C.dim, fontWeight: 600, background: C.surface, padding: '1px 6px', borderRadius: 4 }}>{els.length}</span>
       </div>
-      {[...els].reverse().map((el) => {
+      {reversedEls.map((el) => {
         const isSel = selIds.includes(el.id);
+        const isRenaming = renamingId === el.id;
+        const isDragOver = dragOverId === el.id && dragId !== el.id;
         return (
-          <div key={el.id} role="button" tabIndex={0} aria-label={t('thumbs.layers.layerLabel') + (nameMap[el.type] ?? el.type)} aria-pressed={isSel} onClick={() => setSelId(el.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelId(el.id); } }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px', borderRadius: 8, marginBottom: 2, background: isSel ? C.accentDim : 'transparent', border: `1px solid ${isSel ? C.accent + '33' : 'transparent'}`, cursor: 'pointer', transition: 'all .12s' }}
-            onMouseEnter={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = C.surface; }}
+          <div key={el.id}
+            draggable={!isRenaming}
+            onDragStart={(e) => { setDragId(el.id); e.dataTransfer.effectAllowed = 'move'; }}
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverId(el.id); }}
+            onDragLeave={() => { if (dragOverId === el.id) setDragOverId(null); }}
+            onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== el.id) { const newIdx = els.length - 1 - reversedEls.indexOf(el); moveLayer(dragId, newIdx); } setDragId(null); setDragOverId(null); }}
+            onDragEnd={() => { setDragId(null); setDragOverId(null); }}
+            role="button" tabIndex={0} aria-label={t('thumbs.layers.layerLabel') + getDisplayName(el)} aria-pressed={isSel}
+            onClick={() => { if (!isRenaming) setSelId(el.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelId(el.id); } }}
+            onDoubleClick={(e) => { e.stopPropagation(); setRenamingId(el.id); setRenameVal(el.name || getDisplayName(el)); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px', borderRadius: 8, marginBottom: 2, background: isSel ? C.accentDim : 'transparent', border: `1px solid ${isDragOver ? C.accent : isSel ? C.accent + '33' : 'transparent'}`, cursor: isRenaming ? 'text' : 'pointer', transition: 'all .12s', opacity: dragId === el.id ? 0.4 : 1 }}
+            onMouseEnter={(e) => { if (!isSel && !dragId) (e.currentTarget as HTMLElement).style.background = C.surface; }}
             onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, flexShrink: 0, color: isSel ? C.accent : C.dim, background: isSel ? C.accent + '14' : C.surface, borderRadius: 5 }}>
               {LAYER_ICONS[el.type] ?? LAYER_ICONS.rect}
             </span>
-            <span style={{ flex: 1, fontSize: 11, fontWeight: isSel ? 600 : 500, color: isSel ? C.text : C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {el.type === 'text' ? (el.text ?? '').slice(0, 18) || t('thumbs.layers.nameText') : el.type === 'stickyNote' ? (el.noteText ?? '').slice(0, 18) : nameMap[el.type] ?? el.type}
-            </span>
+            {isRenaming ? (
+              <input
+                autoFocus
+                value={renameVal}
+                onChange={(e) => setRenameVal(e.target.value)}
+                onBlur={() => { updEl(el.id, { name: renameVal || undefined }); setRenamingId(null); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { updEl(el.id, { name: renameVal || undefined }); setRenamingId(null); } if (e.key === 'Escape') setRenamingId(null); }}
+                onClick={(e) => e.stopPropagation()}
+                style={{ flex: 1, fontSize: 11, fontWeight: 500, color: C.text, background: C.surface, border: `1px solid ${C.blue}`, borderRadius: 4, padding: '1px 4px', outline: 'none', fontFamily: 'inherit', minWidth: 0 }}
+              />
+            ) : (
+              <span style={{ flex: 1, fontSize: 11, fontWeight: isSel ? 600 : 500, color: isSel ? C.text : C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {getDisplayName(el)}
+              </span>
+            )}
             {/* Visibility toggle */}
             <button onClick={(e) => { e.stopPropagation(); updEl(el.id, { visible: el.visible === false ? true : false }); }}
               style={{ ...actionBtn, color: el.visible === false ? C.dim : C.sub, opacity: el.visible === false ? 0.4 : 0.7 }}

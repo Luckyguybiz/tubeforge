@@ -46,7 +46,7 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'photos';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects';
 
   // Canvas size
   canvasW: number;
@@ -66,48 +66,6 @@ interface ThumbnailState {
 
   // Context menu
   contextMenu: { x: number; y: number; elId: string | null } | null;
-
-  // View settings (Phase 1)
-  showRulers: boolean;
-  showGrid: boolean;
-  gridSize: number;
-  snapToGrid: boolean;
-  snapToElements: boolean;
-  userGuides: { axis: 'x' | 'y'; pos: number }[];
-
-  // Marquee selection (Phase 2)
-  marquee: { x: number; y: number; w: number; h: number } | null;
-
-  // Resize handle direction (Phase 2)
-  resizeDir: string | null;
-
-  // Copy/paste style (Phase 8)
-  styleClipboard: Partial<CanvasElement> | null;
-
-  // Phase 1-10 setters
-  setShowRulers: (v: boolean) => void;
-  setShowGrid: (v: boolean) => void;
-  setGridSize: (v: number) => void;
-  setSnapToGrid: (v: boolean) => void;
-  setSnapToElements: (v: boolean) => void;
-  addUserGuide: (axis: 'x' | 'y', pos: number) => void;
-  removeUserGuide: (idx: number) => void;
-  setMarquee: (m: { x: number; y: number; w: number; h: number } | null) => void;
-  setResizeDir: (d: string | null) => void;
-
-  // Lock/visibility (Phase 2)
-  toggleLock: (id: string) => void;
-  toggleVisible: (id: string) => void;
-
-  // Copy/paste style (Phase 8)
-  copyStyle: () => void;
-  pasteStyle: () => void;
-
-  // Move layer (Phase 2)
-  moveLayer: (id: string, direction: 'up' | 'down') => void;
-
-  // Magic resize (Phase 10)
-  magicResize: (newW: number, newH: number) => void;
 
   // Basic setters
   setStep: (s: string) => void;
@@ -173,10 +131,15 @@ interface ThumbnailState {
   // Element operations
   updEl: (id: string, patch: Partial<CanvasElement>) => void;
   delEl: (id: string) => void;
+  delSelected: () => void;
   bringFront: (id: string) => void;
   sendBack: (id: string) => void;
+  moveLayer: (id: string, newIndex: number) => void;
+  renameElement: (id: string, name: string) => void;
 
-  // Grouping
+  // Alignment helpers (for quick-action toolbar)
+  alignSelected: (alignment: 'left' | 'centerX' | 'right' | 'top' | 'centerY' | 'bottom') => void;
+  distributeSelected: (axis: 'horizontal' | 'vertical') => void;
   groupSelected: () => void;
   ungroupSelected: () => void;
 
@@ -262,21 +225,6 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // Context menu
   contextMenu: null,
-
-  // View settings (Phase 1)
-  showRulers: false,
-  showGrid: false,
-  gridSize: 50,
-  snapToGrid: false,
-  snapToElements: true,
-  userGuides: [],
-
-  // Marquee (Phase 2)
-  marquee: null,
-  resizeDir: null,
-
-  // Style clipboard (Phase 8)
-  styleClipboard: null,
 
   // ===== Basic setters =====
   setStep: (s) => set({ step: s }),
@@ -559,6 +507,14 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set((s) => ({ els: s.els.filter((e) => e.id !== id), selIds: s.selIds.filter((sid) => sid !== id) }));
   },
 
+  delSelected: () => {
+    const { selIds, els } = get();
+    if (selIds.length === 0) return;
+    get().pushHistory();
+    const idSet = new Set(selIds);
+    set({ els: els.filter((e) => !idSet.has(e.id)), selIds: [] });
+  },
+
   bringFront: (id) => {
     get().pushHistory();
     set((s) => {
@@ -577,99 +533,89 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     });
   },
 
-  // ===== Grouping =====
+  moveLayer: (id, newIndex) => {
+    get().pushHistory();
+    set((s) => {
+      const arr = [...s.els];
+      const oldIdx = arr.findIndex((e) => e.id === id);
+      if (oldIdx === -1) return s;
+      const [moved] = arr.splice(oldIdx, 1);
+      arr.splice(Math.max(0, Math.min(arr.length, newIndex)), 0, moved);
+      return { els: arr };
+    });
+  },
+
+  renameElement: (id, name) => {
+    set((s) => ({ els: s.els.map((e) => (e.id === id ? { ...e, name } : e)) }));
+  },
+
+  alignSelected: (alignment) => {
+    const { selIds, els, canvasW, canvasH } = get();
+    const selected = els.filter((e) => selIds.includes(e.id));
+    if (selected.length === 0) return;
+    get().pushHistory();
+    if (selected.length === 1) {
+      // Align to canvas
+      const el = selected[0];
+      const patch: Partial<CanvasElement> = {};
+      if (alignment === 'left') patch.x = 0;
+      else if (alignment === 'centerX') patch.x = (canvasW - el.w) / 2;
+      else if (alignment === 'right') patch.x = canvasW - el.w;
+      else if (alignment === 'top') patch.y = 0;
+      else if (alignment === 'centerY') patch.y = (canvasH - el.h) / 2;
+      else if (alignment === 'bottom') patch.y = canvasH - el.h;
+      get().updEl(el.id, patch);
+    } else {
+      // Align to selection bounds
+      if (alignment === 'left') { const minX = Math.min(...selected.map((e) => e.x)); selIds.forEach((id) => get().updEl(id, { x: minX })); }
+      else if (alignment === 'centerX') { const avgX = selected.reduce((s, e) => s + e.x + e.w / 2, 0) / selected.length; selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { x: avgX - el.w / 2 }); }); }
+      else if (alignment === 'right') { const maxR = Math.max(...selected.map((e) => e.x + e.w)); selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { x: maxR - el.w }); }); }
+      else if (alignment === 'top') { const minY = Math.min(...selected.map((e) => e.y)); selIds.forEach((id) => get().updEl(id, { y: minY })); }
+      else if (alignment === 'centerY') { const avgY = selected.reduce((s, e) => s + e.y + e.h / 2, 0) / selected.length; selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { y: avgY - el.h / 2 }); }); }
+      else if (alignment === 'bottom') { const maxB = Math.max(...selected.map((e) => e.y + e.h)); selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { y: maxB - el.h }); }); }
+    }
+  },
+
+  distributeSelected: (axis) => {
+    const { selIds, els } = get();
+    const selected = els.filter((e) => selIds.includes(e.id));
+    if (selected.length < 3) return;
+    get().pushHistory();
+    if (axis === 'horizontal') {
+      const sorted = [...selected].sort((a, b) => a.x - b.x);
+      const totalW = sorted.reduce((s, e) => s + e.w, 0);
+      const span = sorted[sorted.length - 1].x + sorted[sorted.length - 1].w - sorted[0].x;
+      const gap = (span - totalW) / (sorted.length - 1);
+      let cx = sorted[0].x;
+      sorted.forEach((el) => { get().updEl(el.id, { x: Math.round(cx) }); cx += el.w + gap; });
+    } else {
+      const sorted = [...selected].sort((a, b) => a.y - b.y);
+      const totalH = sorted.reduce((s, e) => s + e.h, 0);
+      const span = sorted[sorted.length - 1].y + sorted[sorted.length - 1].h - sorted[0].y;
+      const gap = (span - totalH) / (sorted.length - 1);
+      let cy = sorted[0].y;
+      sorted.forEach((el) => { get().updEl(el.id, { y: Math.round(cy) }); cy += el.h + gap; });
+    }
+  },
+
   groupSelected: () => {
     const { selIds } = get();
     if (selIds.length < 2) return;
     get().pushHistory();
-    const groupId = uid();
+    const gid = uid();
     set((s) => ({
-      els: s.els.map((e) => selIds.includes(e.id) ? { ...e, groupId } : e),
+      els: s.els.map((e) => selIds.includes(e.id) ? { ...e, groupId: gid } : e),
     }));
   },
 
   ungroupSelected: () => {
     const { selIds, els } = get();
     if (selIds.length === 0) return;
-    // Find all group IDs for selected elements
     const groupIds = new Set(els.filter((e) => selIds.includes(e.id) && e.groupId).map((e) => e.groupId!));
     if (groupIds.size === 0) return;
     get().pushHistory();
     set((s) => ({
-      els: s.els.map((e) => e.groupId && groupIds.has(e.groupId) ? { ...e, groupId: undefined } : e),
-    }));
-  },
-
-  // ===== View settings (Phase 1) =====
-  setShowRulers: (v) => set({ showRulers: v }),
-  setShowGrid: (v) => set({ showGrid: v }),
-  setGridSize: (v) => set({ gridSize: v }),
-  setSnapToGrid: (v) => set({ snapToGrid: v }),
-  setSnapToElements: (v) => set({ snapToElements: v }),
-  addUserGuide: (axis, pos) => set((s) => ({ userGuides: [...s.userGuides, { axis, pos }] })),
-  removeUserGuide: (idx) => set((s) => ({ userGuides: s.userGuides.filter((_, i) => i !== idx) })),
-  setMarquee: (m) => set({ marquee: m }),
-  setResizeDir: (d) => set({ resizeDir: d }),
-
-  // ===== Lock/visibility (Phase 2) =====
-  toggleLock: (id) => {
-    set((s) => ({ els: s.els.map((e) => e.id === id ? { ...e, locked: !e.locked } : e) }));
-  },
-  toggleVisible: (id) => {
-    set((s) => ({ els: s.els.map((e) => e.id === id ? { ...e, visible: e.visible === false ? undefined : false } : e) }));
-  },
-
-  // ===== Move layer (Phase 2) =====
-  moveLayer: (id, direction) => {
-    get().pushHistory();
-    set((s) => {
-      const idx = s.els.findIndex((e) => e.id === id);
-      if (idx === -1) return s;
-      const newIdx = direction === 'up' ? idx + 1 : idx - 1;
-      if (newIdx < 0 || newIdx >= s.els.length) return s;
-      const arr = [...s.els];
-      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
-      return { els: arr };
-    });
-  },
-
-  // ===== Copy/paste style (Phase 8) =====
-  copyStyle: () => {
-    const { selIds, els } = get();
-    if (selIds.length !== 1) return;
-    const el = els.find((e) => e.id === selIds[0]);
-    if (!el) return;
-    const { id, type, x, y, w, h, text, src, path, noteText, cellData, ...style } = el;
-    set({ styleClipboard: style as Partial<CanvasElement> });
-  },
-  pasteStyle: () => {
-    const { selIds, styleClipboard } = get();
-    if (!styleClipboard || selIds.length === 0) return;
-    get().pushHistory();
-    set((s) => ({
-      els: s.els.map((e) => selIds.includes(e.id) ? { ...e, ...styleClipboard } : e),
-    }));
-  },
-
-  // ===== Magic resize (Phase 10) =====
-  magicResize: (newW, newH) => {
-    get().pushHistory();
-    const { canvasW, canvasH } = get();
-    const scaleX = newW / canvasW;
-    const scaleY = newH / canvasH;
-    set((s) => ({
-      canvasW: newW,
-      canvasH: newH,
-      els: s.els.map((e) => ({
-        ...e,
-        x: Math.round(e.x * scaleX),
-        y: Math.round(e.y * scaleY),
-        w: Math.round(e.w * scaleX),
-        h: Math.round(e.h * scaleY),
-        size: e.size ? Math.round(e.size * Math.min(scaleX, scaleY)) : e.size,
-        x2: e.x2 ? Math.round(e.x2 * scaleX) : e.x2,
-        y2: e.y2 ? Math.round(e.y2 * scaleY) : e.y2,
-      })),
+      els: s.els.map((e) => groupIds.has(e.groupId ?? '') ? { ...e, groupId: undefined } : e),
     }));
   },
 
