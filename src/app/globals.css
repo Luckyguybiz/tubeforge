@@ -1310,12 +1310,22 @@ img {
     font-size: 18px !important;
   }
   .tf-legal-content article nav {
-    padding: 16px !important;
+    display: none !important;
   }
   .tf-legal-content article p,
   .tf-legal-content article li,
   .tf-legal-content article ul,
   .tf-legal-content article ol {
     font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+  .tf-legal-content article table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    font-size: 13px !important;
+  }
+  .tf-legal-content > a {
+    margin-bottom: 32px !important;
   }
 }
