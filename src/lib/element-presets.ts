@@ -456,8 +456,8 @@ export const ARROW_PRESETS: ElementPreset[] = [
   { label: 'Hand-drawn', type: 'arrow', icon: '➝', props: { strokeColor: '#ff2d55', lineWidth: 3, arrowHead: 'end', dashStyle: 'dashed' } },
 ];
 
-// ===== Phase 4 — Badge presets =====
-export const BADGE_PRESETS: ElementPreset[] = [
+// ===== Phase 4 — Extended badge presets =====
+export const EXTENDED_BADGE_PRESETS: ElementPreset[] = [
   { label: 'NEW', type: 'text', icon: '🆕', props: { text: 'NEW', size: 36, bold: true, color: '#ffffff', bg: '#ff2d55', borderR: 8 } },
   { label: 'FREE', type: 'text', icon: '🆓', props: { text: 'FREE', size: 36, bold: true, color: '#ffffff', bg: '#2dd4a0', borderR: 8 } },
   { label: '#1', type: 'text', icon: '🥇', props: { text: '#1', size: 48, bold: true, color: '#ffffff', bg: '#f59e0b', borderR: 12 } },

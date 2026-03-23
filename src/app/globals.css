@@ -4,7 +4,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  transition-duration: 200ms;
 }
 
 body {
@@ -106,16 +105,16 @@ input:focus, textarea:focus, select:focus {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-/* Focus-visible — two-ring design */
+/* Focus-visible — two-ring design (inherits bg color automatically) */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--focus-bg, #0a0a0a), 0 0 0 4px #6366f1;
+  box-shadow: 0 0 0 2px var(--focus-bg, currentColor), 0 0 0 4px #6366f1;
 }
 
 textarea:focus, input:focus { outline: none; }
 textarea:focus-visible, input:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--focus-bg, #0a0a0a), 0 0 0 4px #6366f1;
+  box-shadow: 0 0 0 2px var(--focus-bg, currentColor), 0 0 0 4px #6366f1;
 }
 
 /* Neon shimmer for interactive buttons */
@@ -173,7 +172,7 @@ textarea:focus-visible, input:focus-visible {
 .tf-theme-ready *,
 .tf-theme-ready *::before,
 .tf-theme-ready *::after {
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease !important;
 }
 
 /* Fix 100vw scrollbar bug */

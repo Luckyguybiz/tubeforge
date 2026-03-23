@@ -40,6 +40,7 @@ const ANIMATION_STYLES: AnimationStyle[] = [
   { id: 'general', name: 'GENERAL', category: 'all', badge: 'Top Choice', gradient: ['#6366f1', '#8b5cf6'] },
   { id: '3d-cats', name: '3D CATS', category: '3d', badge: 'Trending', gradient: ['#f59e0b', '#ef4444'] },
   { id: '2d-cats', name: '2D CATS', category: 'cats', badge: 'New', gradient: ['#f472b6', '#ec4899'], previews: ['/demo/2d-cats.mp4'] },
+  { id: 'kpop-demon', name: 'K-POP DEMON', category: 'effects', badge: 'Trending', gradient: ['#7c3aed', '#dc2626'] },
   { id: 'anime-2d', name: 'ANIME 2D', category: 'anime', badge: 'Top Choice', gradient: ['#ec4899', '#8b5cf6'] },
   { id: 'cartoon-style', name: 'CARTOON', category: 'cartoon', badge: 'New', gradient: ['#22c55e', '#06b6d4'] },
   { id: 'realistic', name: 'REALISTIC', category: 'realistic', badge: 'Top Choice', gradient: ['#3b82f6', '#1d4ed8'] },
