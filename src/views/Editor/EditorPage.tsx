@@ -35,6 +35,7 @@ interface AnimationStyle {
 
 const ANIMATION_STYLES: AnimationStyle[] = [
   { id: 'general', name: 'GENERAL', category: 'all', badge: 'Top Choice', gradient: ['#6366f1', '#8b5cf6'] },
+  { id: '2d-cats', name: '2D CATS', category: 'cats', badge: 'Trending', gradient: ['#ec4899', '#f59e0b'] },
   { id: '3d-cats', name: '3D CATS', category: '3d', badge: 'Trending', gradient: ['#f59e0b', '#ef4444'] },
   { id: 'anime-2d', name: 'ANIME 2D', category: 'anime', badge: 'Top Choice', gradient: ['#ec4899', '#8b5cf6'] },
   { id: 'cartoon-style', name: 'CARTOON', category: 'cartoon', badge: 'New', gradient: ['#22c55e', '#06b6d4'] },
@@ -1390,6 +1391,45 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               ) : rightPanelTab === 'howto' ? (
                 /* ── How it works tab ────────────────────────── */
                 <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+                  {/* Preview videos for styles that have them */}
+                  {(() => {
+                    const STYLE_PREVIEWS: Record<string, { videos: string[]; labels: string[] }> = {
+                      '2d-cats': {
+                        videos: ['/demo/2d-cats.mp4', '/demo/2d-cats-2.mp4', '/demo/2d-cats-3.mp4'],
+                        labels: ['Scene 1', 'Scene 2', 'Scene 3'],
+                      },
+                    };
+                    const preview = STYLE_PREVIEWS[selectedStyleId];
+                    if (preview) {
+                      return (
+                        <>
+                          <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: '0 0 4px', textTransform: 'uppercase' }}>
+                            {selectedStyle.name}
+                          </h2>
+                          <p style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Preview videos</p>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                            {preview.videos.map((src, i) => (
+                              <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#000' }}>
+                                <video
+                                  src={src}
+                                  autoPlay muted loop playsInline
+                                  style={{ width: '100%', display: 'block', aspectRatio: '9/16', objectFit: 'cover' }}
+                                />
+                                <div style={{ padding: '8px 10px', background: C.surface, borderTop: `1px solid ${C.border}` }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{preview.labels[i]}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Default How it works (when no preview videos) */}
+                  {!['2d-cats'].includes(selectedStyleId) && (
+                  <>
                   <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
                     MAKE VIDEOS IN ONE CLICK
                   </h2>
@@ -1406,7 +1446,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     <div
                       style={{
                         background: C.surface, border: `1px solid ${C.border}`,
-                        borderRadius: 14, overflow: 'hidden',
+                        borderRadius: 14, overflow: 'visible',
                         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                         cursor: 'default',
                       }}
@@ -1414,7 +1454,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       <div style={{
-                        aspectRatio: '16/10', background: C.bg,
+                        aspectRatio: '16/10', background: C.bg, borderRadius: '14px 14px 0 0', overflow: 'hidden',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1435,7 +1475,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     <div
                       style={{
                         background: C.surface, border: `1px solid ${C.border}`,
-                        borderRadius: 14, overflow: 'hidden',
+                        borderRadius: 14, overflow: 'visible',
                         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                         cursor: 'default',
                       }}
@@ -1443,7 +1483,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       <div style={{
-                        aspectRatio: '16/10', background: C.bg,
+                        aspectRatio: '16/10', background: C.bg, borderRadius: '14px 14px 0 0', overflow: 'hidden',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1464,7 +1504,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     <div
                       style={{
                         background: C.surface, border: `1px solid ${C.border}`,
-                        borderRadius: 14, overflow: 'hidden',
+                        borderRadius: 14, overflow: 'visible',
                         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                         cursor: 'default',
                       }}
@@ -1472,7 +1512,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       <div style={{
-                        aspectRatio: '16/10', background: C.bg,
+                        aspectRatio: '16/10', background: C.bg, borderRadius: '14px 14px 0 0', overflow: 'hidden',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1491,6 +1531,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       </div>
                     </div>
                   </div>
+                  </>
+                  )}
 
                 </div>
               ) : rightPanelTab === 'history' ? (
