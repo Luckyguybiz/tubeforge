@@ -24,11 +24,17 @@ npx prisma db push --skip-generate
 echo "[deploy] Generating Prisma client..."
 npx prisma generate
 
-echo "[deploy] Building..."
-npm run build
+echo "[deploy] Stopping PM2 before build..."
+pm2 stop tubeforge || true
 
-echo "[deploy] Restarting PM2..."
-pm2 restart tubeforge
+echo "[deploy] Cleaning .next..."
+rm -rf .next
+
+echo "[deploy] Building (Webpack mode — Turbopack has race condition bugs)..."
+NEXT_PRIVATE_LOCAL_WEBPACK=1 node --max-old-space-size=3072 node_modules/.bin/next build
+
+echo "[deploy] Starting PM2..."
+pm2 restart tubeforge --update-env || pm2 start start.js --name tubeforge
 
 echo "[deploy] Waiting for startup..."
 sleep 5
