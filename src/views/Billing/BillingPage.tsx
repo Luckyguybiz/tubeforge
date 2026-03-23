@@ -71,6 +71,8 @@ interface PlanDef {
   name: string;
   price: number;
   priceLabel: string;
+  annualTotal: number;
+  annualMonthly: string;
   badge?: string;
   features: string[];
   buttonLabel: string;
@@ -99,6 +101,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: t('billing.planFree'),
       price: 0,
       priceLabel: '$0',
+      annualTotal: 0,
+      annualMonthly: '$0',
       description: t('billing.freePlanDesc'),
       features: [
         `${PLAN_LIMITS.FREE.projects} ${t('billing.feat.projectsUnit')}`,
@@ -114,6 +118,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: 'Pro',
       price: 12,
       priceLabel: '$12',
+      annualTotal: 115,
+      annualMonthly: '$9.58',
       badge: t('billing.popular'),
       description: t('billing.paidPlanDesc'),
       features: [
@@ -133,7 +139,9 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: 'Studio',
       price: 30,
       priceLabel: '$30',
-      description: t('billing.studioPlanDesc'),
+      annualTotal: 288,
+      annualMonthly: '$24',
+      description: t('billing.studioPlanDesc') || 'For teams and professionals',
       features: [
         t('billing.feat.allPro'),
         t('billing.feat.unlimitedAi'),
@@ -150,46 +158,46 @@ function getPlans(t: (key: string) => string): PlanDef[] {
 
 function getCompareFeatures(t: (key: string) => string): CompareFeature[] {
   return [
-    { name: t('billing.feat.projectsUnit'), free: String(PLAN_LIMITS.FREE.projects), pro: String(PLAN_LIMITS.PRO.projects), studio: t('billing.unlimited') },
-    { name: t('billing.feat.aiUnit'), free: String(PLAN_LIMITS.FREE.aiGenerations), pro: String(PLAN_LIMITS.PRO.aiGenerations), studio: t('billing.unlimited') },
-    { name: t('billing.feat.exportQuality'), free: '720p', pro: '1080p', studio: '4K' },
-    { name: t('billing.feat.storage'), free: '500 MB', pro: '5 GB', studio: '50 GB' },
+    { name: t('billing.feat.projectsUnit'), free: String(PLAN_LIMITS.FREE.projects), pro: String(PLAN_LIMITS.PRO.projects), studio: 'Unlimited' },
+    { name: t('billing.feat.aiUnit'), free: String(PLAN_LIMITS.FREE.aiGenerations), pro: String(PLAN_LIMITS.PRO.aiGenerations), studio: 'Unlimited' },
+    { name: t('billing.feat.exportQuality') || 'Export Quality', free: '720p', pro: '1080p', studio: '4K' },
+    { name: t('billing.feat.storage') || 'Storage', free: '500 MB', pro: '5 GB', studio: '50 GB' },
     { name: t('billing.feat.advancedThumbs'), free: false, pro: true, studio: true },
     { name: t('billing.feat.seo'), free: false, pro: true, studio: true },
     { name: t('billing.feat.noWatermark'), free: false, pro: true, studio: true },
     { name: t('billing.feat.prioritySupport'), free: false, pro: true, studio: true },
-    { name: t('billing.feat.teamUnit'), free: false, pro: false, studio: `${PLAN_LIMITS.STUDIO.teamMembers} ${t('billing.members')}` },
+    { name: t('billing.feat.teamUnit'), free: false, pro: false, studio: `${PLAN_LIMITS.STUDIO.teamMembers} members` },
     { name: t('billing.feat.api'), free: false, pro: false, studio: true },
     { name: t('billing.feat.whiteLabel'), free: false, pro: false, studio: true },
     { name: t('billing.feat.personalManager'), free: false, pro: false, studio: true },
   ];
 }
 
-function getFaqItems(t: (key: string) => string): FaqItem[] {
+function getFaqItems(): FaqItem[] {
   return [
     {
-      question: t('billing.faq.q1'),
-      answer: t('billing.faq.a1'),
+      question: 'Can I cancel anytime?',
+      answer: 'Yes, cancel anytime from your account settings.',
     },
     {
-      question: t('billing.faq.q2'),
-      answer: t('billing.faq.a2'),
+      question: 'What payment methods do you accept?',
+      answer: 'We accept all major credit cards via Stripe.',
     },
     {
-      question: t('billing.faq.q3'),
-      answer: t('billing.faq.a3'),
+      question: 'Is there a free trial?',
+      answer: 'Yes, the Free plan is forever free with basic features.',
     },
     {
-      question: t('billing.faq.q4'),
-      answer: t('billing.faq.a4'),
+      question: 'Can I switch plans?',
+      answer: 'Yes, upgrade or downgrade anytime. Changes take effect immediately.',
     },
     {
-      question: t('billing.faq.q5'),
-      answer: t('billing.faq.a5'),
+      question: 'Do you offer refunds?',
+      answer: 'Yes, 14-day money-back guarantee on all paid plans.',
     },
     {
-      question: t('billing.faq.q6'),
-      answer: t('billing.faq.a6'),
+      question: 'What happens when I reach my limit?',
+      answer: "You'll be prompted to upgrade. Your existing work is never deleted.",
     },
   ];
 }
@@ -260,7 +268,7 @@ export function BillingPage() {
 
   const PLANS = useMemo(() => getPlans(t), [t]);
   const COMPARE = useMemo(() => getCompareFeatures(t), [t]);
-  const FAQ_ITEMS = useMemo(() => getFaqItems(t), [t]);
+  const FAQ_ITEMS = useMemo(() => getFaqItems(), []);
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
@@ -292,7 +300,7 @@ export function BillingPage() {
     <div
       style={{
         flex: 1,
-        minHeight: 0,
+        minHeight: '100dvh',
         background: pageBg,
         color: C.text,
         fontFamily: 'inherit',
@@ -641,8 +649,8 @@ export function BillingPage() {
             const isStudio = plan.id === 'STUDIO';
 
             const displayPrice = isAnnual && plan.price > 0
-              ? Math.round(plan.price * 0.8)
-              : plan.price;
+              ? plan.annualMonthly
+              : `$${plan.price}`;
 
             /* Pro card uses an outer wrapper for the animated gradient border */
             const cardContent = (
@@ -730,7 +738,7 @@ export function BillingPage() {
                         letterSpacing: '-.04em',
                         lineHeight: 1,
                       }}>
-                        ${displayPrice}
+                        {displayPrice}
                       </span>
                       {plan.price > 0 && (
                         <span style={{
@@ -739,7 +747,7 @@ export function BillingPage() {
                           color: C.sub,
                           marginLeft: 2,
                         }}>
-                          {t('billing.perMonth')}
+                          {isAnnual ? t('billing.perMonth') : t('billing.perMonth')}
                         </span>
                       )}
                     </div>
@@ -750,7 +758,15 @@ export function BillingPage() {
                         alignItems: 'center',
                         gap: 8,
                         marginTop: 8,
+                        flexWrap: 'wrap',
                       }}>
+                        <span style={{
+                          fontSize: 13,
+                          color: C.sub,
+                          fontWeight: 600,
+                        }}>
+                          ${plan.annualTotal}/year
+                        </span>
                         <span style={{
                           fontSize: 13,
                           color: C.dim,
@@ -769,7 +785,7 @@ export function BillingPage() {
                           boxShadow: '0 2px 8px rgba(16,185,129,0.25)',
                           letterSpacing: '.02em',
                         }}>
-                          {t('billing.save20')}
+                          Save 20%
                         </span>
                       </div>
                     )}
@@ -861,8 +877,8 @@ export function BillingPage() {
                         if (plan.id === 'STUDIO') {
                           window.location.href = 'mailto:support@tubeforge.co?subject=Studio%20Plan%20Inquiry';
                         } else if (plan.id !== 'FREE') {
-                          trackEvent('upgrade_click', { plan: plan.id });
-                          createCheckout.mutate({ plan: plan.id });
+                          trackEvent('upgrade_click', { plan: plan.id, annual: isAnnual });
+                          createCheckout.mutate({ plan: plan.id, annual: isAnnual });
                         }
                       }}
                       disabled={createCheckout.isPending && plan.id !== 'FREE'}
@@ -1087,7 +1103,7 @@ export function BillingPage() {
               margin: 0,
               letterSpacing: '-.02em',
             }}>
-              {t('billing.faq.heading')}
+              Frequently Asked Questions
             </h2>
             <p style={{
               fontSize: 15,
@@ -1095,7 +1111,7 @@ export function BillingPage() {
               margin: '8px 0 0',
               lineHeight: 1.5,
             }}>
-              {t('billing.faq.subheading')}
+              Everything you need to know about our plans
             </p>
           </div>
 
