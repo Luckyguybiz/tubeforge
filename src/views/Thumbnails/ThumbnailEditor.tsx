@@ -926,12 +926,18 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       );
     }
 
-    if (el.type === 'path') return (
+    if (el.type === 'path') {
+      // Shape paths (pentagon, hexagon, etc.) have fill; freehand paths are stroke-only
+      const isShapePath = el.path?.includes('Z') && !el.strokeW;
+      const fillColor = isShapePath ? (el.color || '#ffffff') : 'none';
+      const strokeColor = isShapePath ? (el.borderColor || 'none') : (el.color || '#ffffff');
+      const sw = isShapePath ? (el.borderWidth || 0) : (el.strokeW || 3);
+      return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
-        <path d={el.path} fill="none" stroke={el.color} strokeWidth={el.strokeW} strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity} />
+        <path d={el.path} fill={fillColor} stroke={strokeColor} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity} />
         {/* Invisible wider hit area for selection */}
-        <path d={el.path} fill="none" stroke="transparent" strokeWidth={Math.max((el.strokeW ?? 3) + 10, 14)} strokeLinecap="round" strokeLinejoin="round"
-          style={{ pointerEvents: 'stroke', cursor: isSel ? 'move' : 'pointer' }}
+        <path d={el.path} fill="transparent" stroke="transparent" strokeWidth={Math.max(sw + 10, 14)} strokeLinecap="round" strokeLinejoin="round"
+          style={{ pointerEvents: isShapePath ? 'fill' : 'stroke', cursor: isSel ? 'move' : 'pointer' }}
           onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
         {isSel && deleteHandle && (
           <foreignObject x={el.x + el.w - 10} y={el.y - 10} width={20} height={20}>
@@ -940,6 +946,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         )}
       </svg>
     );
+    }
 
     if (el.type === 'line' || el.type === 'arrow') return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
