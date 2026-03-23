@@ -1440,16 +1440,25 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 /* ── How it works / Preset preview tab ──────────── */
                 <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                   {selectedStyle.previews && selectedStyle.previews.length > 0 ? (
-                    /* Show video previews when preset has them */
+                    /* Show video previews when preset has them — Higgsfield style */
                     <>
-                      <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
+                      <h2 style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
                         {selectedStyle.name}
                       </h2>
-                      <p style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Preview videos</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                      <p style={{ fontSize: 12, color: C.sub, marginBottom: 14 }}>Preview videos</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                         {selectedStyle.previews.slice(0, 3).map((src, i) => (
-                          <div key={`${selectedStyle.id}-${i}`} style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
-                            <video src={src} autoPlay loop muted playsInline style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', display: 'block', background: C.bg }} />
+                          <div key={`${selectedStyle.id}-${i}`} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}`, position: 'relative' }}>
+                              <video src={src} autoPlay loop muted playsInline style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block', background: C.bg }} />
+                              {/* Scene number badge */}
+                              <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(8px)', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.05em' }}>
+                                Scene {i + 1}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: C.sub, textAlign: 'center' }}>
+                              {selectedStyle.name} #{i + 1}
+                            </div>
                           </div>
                         ))}
                       </div>
