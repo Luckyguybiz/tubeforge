@@ -92,9 +92,9 @@ export default function ProfilePage() {
         </Link>
       </header>
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 20px' }}>
+      <div className="tf-profile-container" style={{ maxWidth: 900, margin: '0 auto', padding: '40px 20px' }}>
         {/* Profile card */}
-        <div style={{
+        <div className="tf-profile-card" style={{
           display: 'flex', alignItems: 'center', gap: 20,
           marginBottom: 36, padding: '24px',
           borderRadius: 16, background: C.card,
@@ -117,10 +117,10 @@ export default function ProfilePage() {
             </div>
           )}
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 4px' }}>
+            <h1 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 800, margin: '0 0 4px' }}>
               {user.name ?? 'Anonymous'}
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="tf-profile-stats" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={{ color: C.sub, fontSize: 13 }}>
                 {allItems.length} {allItems.length === 1 ? 'public project' : 'public projects'}
               </span>
@@ -157,7 +157,7 @@ export default function ProfilePage() {
         ) : (
           <>
             <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 16px' }}>Projects</h2>
-            <div style={{
+            <div className="tf-profile-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
               gap: 16,

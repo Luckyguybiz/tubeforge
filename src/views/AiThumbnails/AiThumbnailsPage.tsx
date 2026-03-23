@@ -527,6 +527,7 @@ export function AiThumbnailsPage() {
 
       {/* ── Main Content ───────────────────────────────── */}
       <div
+        className="tf-aithumbs-layout"
         style={{
           flex: 1, display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
@@ -535,6 +536,7 @@ export function AiThumbnailsPage() {
       >
         {/* LEFT PANEL (380px) */}
         <div
+          className="tf-aithumbs-left"
           style={{
             width: isMobile ? '100%' : 380,
             flexShrink: 0,
@@ -787,7 +789,19 @@ export function AiThumbnailsPage() {
           <div style={{ height: 1, background: C.border }} />
 
           {/* ── 4. Settings ────────────────────────────────── */}
-          {/* Style removed — user describes everything in prompt */}
+          {/* Style selector */}
+          <div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+              {t('aithumbs.section.style')}
+            </span>
+            <div className="tf-aithumbs-styles" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {STYLES.map((s) => (
+                <button key={s.id} onClick={() => setStyle(s.id)} style={styleChip(style === s.id)}>
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Count & Format row */}
           <div style={{ display: 'flex', gap: 16 }}>
@@ -866,6 +880,7 @@ export function AiThumbnailsPage() {
           <div style={{ flex: 1 }} />
 
           {/* ── 5. CTA Button ──────────────────────────────── */}
+          <div className="tf-aithumbs-generate-wrap">
           <button
             onClick={handleGenerate}
             disabled={disabled}
@@ -907,10 +922,12 @@ export function AiThumbnailsPage() {
               {t('aithumbs.upgrade')}
             </a>
           )}
+          </div>
         </div>
 
         {/* RIGHT PANEL (flex) */}
         <div
+          className="tf-aithumbs-right"
           style={{
             flex: 1, minWidth: 0,
             display: 'flex', flexDirection: 'column',
@@ -984,7 +1001,7 @@ export function AiThumbnailsPage() {
             ) : (
               /* Tab switcher for How it works / History */
               <>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div className="tf-aithumbs-tabs" style={{ display: 'flex', gap: 6 }}>
                   {([
                     { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
                     { id: 'history' as const, label: `History${history.length > 0 ? ` (${history.length})` : ''}`, icon: '\uD83D\uDCC1' },
@@ -1065,8 +1082,9 @@ export function AiThumbnailsPage() {
                 {/* Main image */}
                 <div style={{ padding: 16, flex: 1 }}>
                   <div style={{
-                    width: format === '9:16' ? '50%' : '100%',
-                    maxHeight: '65vh',
+                    width: '100%',
+                    aspectRatio: format === '16:9' ? '16/9' : '9/16',
+                    maxHeight: '60vh',
                     position: 'relative', overflow: 'hidden', borderRadius: 12,
                     background: C.bg,
                     boxShadow: `0 0 20px ${C.accent}15, 0 4px 16px rgba(0,0,0,0.3)`,
@@ -1078,7 +1096,7 @@ export function AiThumbnailsPage() {
                       alt={selectedImage.prompt}
                       className="thumbnail-reveal-img"
                       style={{
-                        width: '100%', height: 'auto', maxHeight: '65vh', objectFit: 'contain', display: 'block',
+                        width: '100%', height: '100%', objectFit: 'contain', display: 'block',
                         filter: imageRevealed ? 'blur(0px)' : 'blur(20px)',
                         transform: imageRevealed ? 'scale(1)' : 'scale(1.05)',
                         transition: 'filter 0.8s ease-out, transform 0.8s ease-out',
@@ -1324,100 +1342,127 @@ export function AiThumbnailsPage() {
                   Our AI generates professional YouTube thumbnails that get clicks.
                 </p>
 
-                {/* 3 large step cards — Higgsfield style with UI mockups */}
-                <div style={{ display: 'flex', gap: 20 }}>
-                  {[
-                    {
-                      title: 'ADD IMAGE',
-                      desc: 'Upload or generate an image to start your thumbnail',
-                      mockup: (
-                        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-                          {/* Tilted upload card mockup */}
-                          <div style={{ position: 'absolute', left: '15%', top: '20%', width: '55%', height: '65%', borderRadius: 10, border: '2px dashed rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-6deg)' }}>
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
-                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4, fontWeight: 600, textTransform: 'uppercase' }}>Upload Image</span>
-                          </div>
-                          {/* Overlapping "photo" cards */}
-                          <div style={{ position: 'absolute', right: '10%', bottom: '10%', width: '45%', height: '55%', borderRadius: 8, background: 'linear-gradient(135deg, #f59e0b44, #ef444444)', border: '1px solid rgba(255,255,255,0.1)', transform: 'rotate(8deg)' }} />
-                          <div style={{ position: 'absolute', right: '18%', bottom: '18%', width: '45%', height: '55%', borderRadius: 8, background: 'linear-gradient(135deg, #6366f144, #ec489944)', border: '1px solid rgba(255,255,255,0.15)', transform: 'rotate(3deg)' }} />
-                          {/* Cursor */}
-                          <div style={{ position: 'absolute', right: '25%', bottom: '25%', fontSize: 20 }}>🖱️</div>
-                        </div>
-                      ),
-                    },
-                    {
-                      title: 'DESCRIBE IDEA',
-                      desc: 'Type what you want to see — AI understands your vision',
-                      mockup: (
-                        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {/* Mini UI mockup — prompt + style chips */}
-                          <div style={{ width: '75%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.15)', width: '90%' }} />
-                            <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.1)', width: '70%' }} />
-                            <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.07)', width: '50%' }} />
-                            <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-                              {['Realistic', 'Anime', '3D'].map(s => (
-                                <span key={s} style={{ fontSize: 7, padding: '2px 6px', borderRadius: 6, background: s === 'Realistic' ? C.accent + '30' : 'rgba(255,255,255,0.06)', color: s === 'Realistic' ? C.accent : 'rgba(255,255,255,0.4)', fontWeight: 600, border: `1px solid ${s === 'Realistic' ? C.accent + '40' : 'rgba(255,255,255,0.08)'}` }}>{s}</span>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Sparkle decorations */}
-                          <div style={{ position: 'absolute', top: '15%', right: '15%', fontSize: 16, opacity: 0.6 }}>✨</div>
-                          <div style={{ position: 'absolute', bottom: '20%', left: '10%', fontSize: 12, opacity: 0.4 }}>✨</div>
-                        </div>
-                      ),
-                    },
-                    {
-                      title: 'GET THUMBNAIL',
-                      desc: 'Download your click-worthy AI thumbnail!',
-                      mockup: (
-                        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {/* Result card with white border glow */}
-                          <div style={{ width: '70%', aspectRatio: '16/9', borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #ec4899, #f59e0b)', border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 0 30px rgba(99,102,241,0.3), 0 0 60px rgba(236,72,153,0.15)', position: 'relative' }}>
-                            {/* Play button overlay */}
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Download icon */}
-                          <div style={{ position: 'absolute', bottom: '12%', right: '12%', width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                          </div>
-                        </div>
-                      ),
-                    },
-                  ].map((step, i) => (
-                    <div key={i} style={{
-                      flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden',
-                      border: `1px solid ${C.border}`, background: C.card,
-                      transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                      cursor: 'default',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.3)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
-                    >
-                      {/* Visual area with dark bg + mockup */}
-                      <div style={{
-                        height: 180, background: C.bg,
-                        position: 'relative', borderBottom: `1px solid ${C.border}`,
-                      }}>
-                        {step.mockup}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                  gap: 16,
+                }}>
+                  {/* Step 1 — Describe */}
+                  <div style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 14, overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Describe Your Idea
                       </div>
-                      {/* Text */}
-                      <div style={{ padding: '16px 18px' }}>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: C.text, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.02em' }}>
-                          {step.title}
-                        </div>
-                        <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
-                          {step.desc}
-                        </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Type what you want or let AI suggest viral thumbnail concepts
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Step 2 — Choose Style */}
+                  <div style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 14, overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Choose Style
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Pick from 6 styles: Realistic, Anime, Cinematic, 3D, Minimal, or Pop Art
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3 — Get Thumbnail */}
+                  <div style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderRadius: 14, overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      aspectRatio: '16/10', background: C.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                        Get Your Thumbnail
+                      </div>
+                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                        Download, check CTR Score, get title suggestions, or enhance with AI
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Video placeholder */}
+                <div style={{
+                  marginTop: 20, padding: 16, borderRadius: 12,
+                  background: C.surface, border: `1px solid ${C.border}`,
+                  textAlign: 'center',
+                }}>
+                  <span style={{ fontSize: 13, color: C.dim }}>
+                    Video tutorial coming soon
+                  </span>
+                </div>
+
+                {/* Example prompt chips */}
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                    Try an example
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {EXAMPLE_PROMPTS.map((ep, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPrompt(ep)}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                        style={{
+                          width: '100%', padding: '10px 14px',
+                          borderRadius: 10,
+                          border: `1px solid ${C.border}`,
+                          background: 'transparent',
+                          color: C.sub,
+                          fontSize: 13,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          outline: 'none',
+                          transition: 'all 0.15s ease',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {ep}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               /* ── History tab ─────────────────────────────── */

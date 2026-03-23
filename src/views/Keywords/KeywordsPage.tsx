@@ -174,6 +174,7 @@ export function KeywordsPage() {
 
       {/* ── Search bar ────────────────────────────────────────────── */}
       <div
+        className="tf-keywords-search-bar"
         style={{
           display: 'flex',
           gap: 10,
@@ -271,6 +272,7 @@ export function KeywordsPage() {
 
       {/* ── Tabs ──────────────────────────────────────────────────── */}
       <div
+        className="tf-keywords-tabs"
         style={{
           display: 'flex',
           gap: 6,
@@ -310,6 +312,7 @@ export function KeywordsPage() {
 
       {/* ── Content area ──────────────────────────────────────────── */}
       <div
+        className="tf-keywords-layout"
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 380px',
@@ -883,9 +886,9 @@ function KeywordTable({
   isDark: boolean;
 }) {
   return (
-    <div style={{ overflow: 'hidden' }}>
+    <div className="tf-keywords-table-wrap" style={{ overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ display: 'flex', gap: 8, padding: '0 8px 8px', borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ display: 'flex', gap: 8, padding: '0 8px 8px', borderBottom: `1px solid ${C.border}`, minWidth: 400 }}>
         {columns.map((col) => (
           <span
             key={col.key}

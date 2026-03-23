@@ -767,6 +767,7 @@ export function TeamPage() {
       {/* -- Invite form (collapsible) -------------------------- */}
       {showInviteForm && isAdmin && (
         <div
+          className="tf-team-invite-form"
           style={{
             ...cardStyle,
             padding: 18,
@@ -1443,6 +1444,7 @@ export function TeamPage() {
       {/* -- Activity log --------------------------------------- */}
       <div style={sectionTitle}>{t('team.activityLog')}</div>
       <div
+        className="tf-team-activity"
         style={{
           ...cardStyle,
           overflow: 'hidden',

@@ -17,6 +17,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       }}
     >
       <div
+        className="tf-legal-content"
         style={{
           maxWidth: 720,
           margin: '0 auto',

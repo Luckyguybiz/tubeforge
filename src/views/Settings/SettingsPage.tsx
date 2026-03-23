@@ -272,7 +272,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 1: Profile                                     */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.profile')}</h2>
         <p style={sectionDescStyle}>{t('settings.profileDesc')}</p>
 
@@ -283,7 +283,7 @@ export function SettingsPage() {
         ) : (
           <>
             {/* Avatar + Name + Email */}
-            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap' }}>
+            <div className="tf-settings-profile-row" style={{ display: 'flex', gap: 20, alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap' }}>
               {/* Avatar with upload overlay */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                 <div style={{
@@ -359,7 +359,7 @@ export function SettingsPage() {
               </div>
 
               {/* Name + Email fields */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="tf-settings-profile-fields" style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 180 }}>
                     <label htmlFor="settings-name" style={labelStyle}>{t('settings.name')}</label>
@@ -494,7 +494,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 2: Subscription                                */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.subscription')}</h2>
         <p style={sectionDescStyle}>{t('settings.subscriptionDesc')}</p>
 
@@ -687,7 +687,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 3: YouTube Channels                            */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.youtubeChannels')}</h2>
         <p style={sectionDescStyle}>{t('settings.youtubeDesc')}</p>
 
@@ -841,7 +841,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION: YouTube Access (VPN)                          */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.vpn')}</h2>
         <p style={sectionDescStyle}>{t('settings.vpnDesc')}</p>
 
@@ -1288,7 +1288,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 4: Theme                                       */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.themeTitle')}</h2>
         <p style={sectionDescStyle}>{t('settings.themeDesc')}</p>
 
@@ -1397,7 +1397,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 5: Language                                     */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.languageTitle')}</h2>
         </div>
@@ -1450,7 +1450,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 6: Onboarding Tour Replay                      */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.replayTour')}</h2>
         <p style={sectionDescStyle}>{t('settings.replayTourDesc')}</p>
         <button
@@ -1489,7 +1489,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 7: Privacy & Cookies                           */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.privacy')}</h2>
         <p style={sectionDescStyle}>{t('settings.privacyDesc')}</p>
 
@@ -1598,7 +1598,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 8: Data Export (GDPR)                          */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.exportData')}</h2>
         <p style={sectionDescStyle}>{t('settings.exportDataDesc')}</p>
 
@@ -1669,7 +1669,7 @@ export function SettingsPage() {
       {/* SECTION: SSO Placeholder (Studio only)                 */}
       {/* ====================================================== */}
       {plan === 'STUDIO' && (
-        <div style={sectionStyle}>
+        <div className="tf-settings-section" style={sectionStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
               {'\u{1F512}'} {t('settings.sso.title') !== 'settings.sso.title' ? t('settings.sso.title') : '\u0415\u0434\u0438\u043D\u044B\u0439 \u0432\u0445\u043E\u0434 (SSO)'}
@@ -1766,7 +1766,7 @@ export function SettingsPage() {
       {/* SECTION: White-Label (Studio only)                     */}
       {/* ====================================================== */}
       {plan === 'STUDIO' && (
-        <div style={sectionStyle}>
+        <div className="tf-settings-section" style={sectionStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>White-Label</h2>
             <span style={{
@@ -1832,7 +1832,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION: Enterprise Admin Console                      */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Enterprise</h2>
           <span style={{
@@ -1897,7 +1897,7 @@ export function SettingsPage() {
       {/* SECTION 9b: AI Voice (Z3 placeholder)                  */}
       {/* ====================================================== */}
       {plan === 'STUDIO' && (
-        <div style={sectionStyle}>
+        <div className="tf-settings-section" style={sectionStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.aiVoice.title')}</h2>
             <span style={{
@@ -1966,7 +1966,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION: Integrations (Zapier, Make.com)               */}
       {/* ====================================================== */}
-      <div style={sectionStyle}>
+      <div className="tf-settings-section" style={sectionStyle}>
         <h2 style={sectionHeaderStyle}>{t('settings.integrations')}</h2>
         <p style={sectionDescStyle}>{t('settings.integrationsDesc')}</p>
 
@@ -2065,7 +2065,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       {/* SECTION 10: Account (Danger Zone)                      */}
       {/* ====================================================== */}
-      <div style={{
+      <div className="tf-settings-section" style={{
         ...sectionStyle,
         background: 'rgba(239,68,68,0.08)',
         borderColor: 'rgba(220, 38, 38, 0.25)',
@@ -2393,7 +2393,7 @@ function PushNotificationSection({
   if (!isSupported) return null;
 
   return (
-    <div style={sectionStyle}>
+    <div className="tf-settings-section" style={sectionStyle}>
       <h2 style={sectionHeaderStyle}>{t('settings.pushNotifications')}</h2>
       <p style={sectionDescStyle}>{t('settings.pushNotificationsDesc')}</p>
 
@@ -2498,7 +2498,7 @@ function EmailNotificationSection({
   ];
 
   return (
-    <div style={sectionStyle}>
+    <div className="tf-settings-section" style={sectionStyle}>
       <h2 style={sectionHeaderStyle}>{t('settings.emailNotifications')}</h2>
       <p style={sectionDescStyle}>{t('settings.emailNotificationsDesc')}</p>
 
@@ -2631,7 +2631,7 @@ function WrappedSection({
   ];
 
   return (
-    <div style={sectionStyle}>
+    <div className="tf-settings-section" style={sectionStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
           {'\u0412\u0430\u0448 \u0433\u043E\u0434 \u0432 TubeForge'}
@@ -2734,7 +2734,7 @@ function ApiKeysSection({
   }, []);
 
   return (
-    <div style={sectionStyle}>
+    <div className="tf-settings-section" style={sectionStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>API Keys</h2>
         <a

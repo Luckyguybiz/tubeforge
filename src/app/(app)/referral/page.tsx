@@ -323,6 +323,7 @@ function ReferralContent() {
     alignItems: 'center',
     padding: '40px 48px',
     overflowY: 'auto',
+    minWidth: 0,
   };
 
   const cardStyle: React.CSSProperties = {
@@ -419,9 +420,9 @@ function ReferralContent() {
 
   /* ── Render ─────────────────────────────────────────────────── */
   return (
-    <div style={containerStyle}>
+    <div className="tf-referral-container" style={containerStyle}>
       {/* ── Left Panel: Branding ──────────────────────────────── */}
-      <div style={leftPanelStyle}>
+      <div className="tf-referral-left" style={leftPanelStyle}>
         {/* Background decorative circles */}
         <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
         <div style={{ position: 'absolute', bottom: -80, left: -40, width: 280, height: 280, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
@@ -519,7 +520,7 @@ function ReferralContent() {
       </div>
 
       {/* ── Right Panel: Form/Dashboard ───────────────────────── */}
-      <div style={rightPanelStyle}>
+      <div className="tf-referral-right" style={rightPanelStyle}>
         <div style={cardStyle}>
           {/* Loading state */}
           {isLoading && (
@@ -806,7 +807,7 @@ function ReferralContent() {
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 10 }}>
                   {t('referral.share')}
                 </label>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="tf-referral-share-row" style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={handleShareTelegram}
                     style={{
@@ -884,7 +885,7 @@ function ReferralContent() {
 
               {/* ── QR Code ──────────────────────────────────────── */}
               {qrDataUrl && (
-                <div style={{
+                <div className="tf-referral-qr" style={{
                   marginBottom: 28,
                   padding: '20px',
                   borderRadius: 14,
@@ -953,7 +954,7 @@ function ReferralContent() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
                   {t('referral.statsTitle')}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div className="tf-referral-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                   <div style={statCardStyle}>
                     <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
                       {invited}

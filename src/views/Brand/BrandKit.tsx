@@ -183,7 +183,7 @@ export function BrandKit() {
           {t('brand.colors')}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+        <div className="tf-brand-colors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
           {/* Primary color */}
           <div>
             <label style={inputLabelStyle}>{t('brand.primaryColor')}</label>
@@ -268,7 +268,7 @@ export function BrandKit() {
         />
 
         {logoUrl ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="tf-brand-logo-area" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{
               width: 80, height: 80, borderRadius: 12,
               border: `1px solid ${C.border}`, overflow: 'hidden',
@@ -331,7 +331,7 @@ export function BrandKit() {
       </div>
 
       {/* ── Actions ─────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      <div className="tf-brand-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <button
           onClick={handleSave}
           disabled={saving || saveMutation.isPending}

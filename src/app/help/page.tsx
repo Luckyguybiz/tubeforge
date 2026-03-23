@@ -89,10 +89,10 @@ export default function HelpPage() {
       </header>
 
       {/* Hero */}
-      <div style={{ textAlign: 'center', padding: '56px 24px 36px' }}>
+      <div className="tf-help-hero" style={{ textAlign: 'center', padding: '56px 24px 36px' }}>
         <h1
           style={{
-            fontSize: 40,
+            fontSize: 'clamp(28px, 6vw, 40px)',
             fontWeight: 600,
             margin: 0,
             letterSpacing: '-0.02em',
@@ -116,7 +116,7 @@ export default function HelpPage() {
       </div>
 
       {/* Search */}
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 24px 32px' }}>
+      <div className="tf-help-search" style={{ maxWidth: 640, margin: '0 auto', padding: '0 24px 32px' }}>
         <div style={{ position: 'relative' }}>
           <svg
             width="18"
@@ -176,6 +176,7 @@ export default function HelpPage() {
             Popular Articles
           </h2>
           <div
+            className="tf-help-popular"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
@@ -218,6 +219,7 @@ export default function HelpPage() {
 
       {/* Category pills */}
       <div
+        className="tf-help-categories"
         style={{
           maxWidth: 800,
           margin: '0 auto',
@@ -257,7 +259,7 @@ export default function HelpPage() {
       </div>
 
       {/* Articles */}
-      <div id="help-articles" style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 80px' }}>
+      <div id="help-articles" className="tf-help-articles" style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 80px' }}>
         {/* Result count when filtering */}
         {(search.trim() || activeCategory !== 'all') && filtered.length > 0 && (
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
@@ -344,6 +346,7 @@ export default function HelpPage() {
 
                   {expanded && (
                     <div
+                      className="tf-help-article-body"
                       style={{
                         padding: '0 20px 20px',
                         paddingLeft: 70,

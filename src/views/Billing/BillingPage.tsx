@@ -519,6 +519,7 @@ export function BillingPage() {
 
           {/* ── Monthly / Annual toggle with sliding pill ── */}
           <div
+            className="tf-billing-toggle"
             ref={toggleContainerRef}
             style={{
               display: 'inline-flex',
@@ -960,13 +961,16 @@ export function BillingPage() {
           </div>
 
           <div
-            className="tf-compare-table"
+            className="tf-billing-compare-wrap"
             style={{
               borderRadius: 16,
               border: `1px solid ${cardBorder}`,
               background: cardBg,
               overflow: 'hidden',
             }}
+          >
+          <div
+            className="tf-compare-table tf-billing-compare-inner"
           >
             {/* Table header */}
             <div style={{
@@ -1051,10 +1055,11 @@ export function BillingPage() {
               </div>
             ))}
           </div>
+          </div>
         </div>
 
         {/* ── FAQ Section ─────────────────────────────── */}
-        <div className="tf-faq-section" style={{ marginBottom: 80, maxWidth: 720, margin: '0 auto 80px' }}>
+        <div className="tf-faq-section tf-billing-faq" style={{ marginBottom: 80, maxWidth: 720, margin: '0 auto 80px' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <h2 style={{
               fontSize: 28,

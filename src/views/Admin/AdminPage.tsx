@@ -414,7 +414,7 @@ export function AdminPage() {
       </div>
 
       {/* ── Stats Cards ────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 16, marginBottom: 32 }}>
+      <div className="tf-admin-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 16, marginBottom: 32 }}>
         {statsCards.map((stat) => (
           <div
             key={stat.label}
@@ -467,7 +467,7 @@ export function AdminPage() {
       </div>
 
       {/* ── Tab Switcher ───────────────────────────── */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }} role="tablist">
+      <div className="tf-admin-tabs" style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }} role="tablist">
         {([['users', 'Users'], ['revenue', 'Revenue'], ['analytics', 'Analytics'], ['health', 'System'], ['audit', 'Audit Log'], ['email', 'Email'], ['referrals', 'Referrals']] as const).map(([key, label]) => {
           const active = activeTab === key;
           return (
@@ -497,7 +497,7 @@ export function AdminPage() {
       </div>
 
       {/* ── Users Table Section ────────────────────── */}
-      {activeTab === 'users' && <div style={{
+      {activeTab === 'users' && <div className="tf-admin-table-wrap" style={{
         background: C.card, border: `1px solid ${C.border}`,
         borderRadius: 16, overflow: 'hidden', marginBottom: 32,
       }}>

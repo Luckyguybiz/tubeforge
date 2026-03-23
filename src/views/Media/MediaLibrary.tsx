@@ -253,14 +253,14 @@ export function MediaLibrary() {
 
           {/* Assets grid */}
           {assets.isLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+            <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} style={{ ...cardStyle, padding: 0, height: 200, background: C.surface }} />
               ))}
             </div>
           ) : assets.data && assets.data.items.length > 0 ? (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+              <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
                 {assets.data.items.map((asset) => (
                   <div
                     key={asset.id}
@@ -417,7 +417,7 @@ export function MediaLibrary() {
 
           {/* Stock results */}
           {stockResults.isLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+            <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} style={{ ...cardStyle, padding: 0, height: 200, background: C.surface }} />
               ))}
@@ -428,7 +428,7 @@ export function MediaLibrary() {
             </div>
           ) : stockResults.data && stockResults.data.photos.length > 0 ? (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+              <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
                 {stockResults.data.photos.map((photo) => (
                   <div
                     key={photo.id}

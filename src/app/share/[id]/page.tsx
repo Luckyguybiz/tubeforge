@@ -135,10 +135,10 @@ export default function SharePage() {
       </header>
 
       {/* Main content */}
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 20px' }}>
+      <div className="tf-share-container" style={{ maxWidth: 800, margin: '0 auto', padding: '32px 20px' }}>
         {/* Project info */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>{project.title}</h1>
+          <h1 style={{ fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>{project.title}</h1>
           {project.description && (
             <p style={{ color: C.sub, fontSize: 15, margin: '0 0 12px', lineHeight: 1.5 }}>{project.description}</p>
           )}
@@ -203,7 +203,7 @@ export default function SharePage() {
             <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 14px' }}>
               Scenes ({project.scenes.length})
             </h2>
-            <div style={{
+            <div className="tf-share-scenes" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
               gap: 12,
@@ -257,7 +257,7 @@ export default function SharePage() {
         )}
 
         {/* Like + Share buttons */}
-        <div style={{
+        <div className="tf-share-actions" style={{
           display: 'flex', alignItems: 'center', gap: 12,
           padding: '20px 0', borderTop: `1px solid ${C.border}`,
           flexWrap: 'wrap',
