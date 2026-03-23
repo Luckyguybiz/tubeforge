@@ -688,7 +688,7 @@ function ProfileDropdown({
 
 /* ── Sidebar Component ─────────────────────────────────────────────── */
 
-export const Sidebar = memo(function Sidebar() {
+export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultCollapsed?: boolean } = {}) {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
   const t = useLocaleStore((s) => s.t);
@@ -697,8 +697,9 @@ export const Sidebar = memo(function Sidebar() {
   const { data: session } = useSession();
   const current = pathname.split('/').filter(Boolean)[0] || 'dashboard';
 
-  const shouldAutoCollapse = COLLAPSE_PAGES.includes(current);
+  const shouldAutoCollapse = defaultCollapsed || COLLAPSE_PAGES.includes(current);
   const [collapsed, setCollapsed] = useState(() => {
+    if (defaultCollapsed) return true;
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('tf-sidebar');
       if (stored !== null) return stored === '1';
