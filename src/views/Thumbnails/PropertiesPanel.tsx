@@ -9,6 +9,7 @@ import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import type { CanvasElement, Theme } from '@/lib/types';
 import { COLOR_PRESETS } from '@/lib/element-presets';
 import { FONT_LIBRARY, FONT_CATEGORIES, loadGoogleFont, preloadPopularFonts } from '@/lib/fonts';
+import { TextEffectsPanel } from './panels/TextEffectsPanel';
 
 const FONT_SIZE_PRESETS = [16, 24, 32, 48, 64, 80, 96, 120];
 
@@ -204,6 +205,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               <button onClick={() => updEl(sel.id, { textOutline: sel.textOutline ? undefined : '1px #000000' })} style={{ ...btnSmall, flex: 1, WebkitTextStroke: '1px', background: sel.textOutline ? C.blue + '14' : 'transparent', color: sel.textOutline ? C.blue : C.sub }}>O</button>
             </div>
           </div>
+          {/* Text Effects (Phase 3) */}
+          <TextEffectsPanel C={C as unknown as Record<string, string>} sel={sel as { id: string; shadow?: string; textOutline?: string; color?: string }} updEl={(id, patch) => updEl(id, patch as Partial<CanvasElement>)} />
           {/* Filters */}
           <FiltersPanel C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Flip & Blend */}

@@ -364,7 +364,37 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   // ===== Download =====
-  const downloadCanvas = (format: 'png' | 'jpg' | 'pdf' = 'png') => {
+  const downloadCanvas = (format: 'png' | 'jpg' | 'pdf' | 'svg' | 'clipboard' = 'png') => {
+    // SVG export (Phase 7)
+    if (format === 'svg') {
+      import('@/lib/export-svg').then(({ exportToSVG }) => {
+        const svg = exportToSVG(els, canvasBg, canvasW, canvasH);
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const link = document.createElement('a');
+        link.download = 'thumbnail.svg';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+      return;
+    }
+    // Clipboard copy (Phase 7)
+    if (format === 'clipboard') {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvasW; tempCanvas.height = canvasH;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (tempCtx) {
+        tempCtx.fillStyle = canvasBg; tempCtx.fillRect(0, 0, canvasW, canvasH);
+        tempCanvas.toBlob((blob) => {
+          if (blob) {
+            navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => {
+              import('@/stores/useNotificationStore').then(({ toast }) => toast.info('Copied to clipboard'));
+            }).catch(() => {});
+          }
+        }, 'image/png');
+      }
+      return;
+    }
     const canvas = document.createElement('canvas');
     canvas.width = canvasW; canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
@@ -836,7 +866,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} disabled={isDownloading} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px', opacity: isDownloading ? 0.5 : 1, cursor: isDownloading ? 'wait' : 'pointer' }}>{downloadIcon} {isDownloading ? t('thumbs.editor.downloading') : t('thumbs.editor.download')} {chevronIcon}</button>
             {showDownloadMenu && (
               <div style={{ ...dropdownPanel, minWidth: 140 }}>
-                {[{ label: 'PNG', format: 'png' as const, desc: t('thumbs.editor.lossless') }, { label: 'JPG', format: 'jpg' as const, desc: t('thumbs.editor.compressed') }, { label: 'PDF', format: 'pdf' as const, desc: t('thumbs.editor.documentFormat') }].map((opt) => (
+                {[
+                  { label: 'PNG', format: 'png' as const, desc: t('thumbs.editor.lossless') },
+                  { label: 'JPG', format: 'jpg' as const, desc: t('thumbs.editor.compressed') },
+                  { label: 'PDF', format: 'pdf' as const, desc: t('thumbs.editor.documentFormat') },
+                  { label: 'SVG', format: 'svg' as const, desc: 'Vector' },
+                  { label: 'Copy', format: 'clipboard' as const, desc: 'Clipboard' },
+                ].map((opt) => (
                   <div key={opt.format} role="menuitem" tabIndex={0} aria-label={`${t('thumbs.editor.downloadFormat')} ${opt.label}`} onClick={() => { downloadCanvas(opt.format); setShowDownloadMenu(false); }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); downloadCanvas(opt.format); setShowDownloadMenu(false); } }}
                     style={menuItem}

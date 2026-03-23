@@ -46,7 +46,7 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'photos';
 
   // Canvas size
   canvasW: number;

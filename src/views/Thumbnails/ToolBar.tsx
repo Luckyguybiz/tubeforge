@@ -69,6 +69,7 @@ const DRAWING_TOOLS: ToolDef[] = [
 const PANEL_BUTTONS: ToolDef[] = [
   { id: 'uploads', icon: TOOL_ICONS.uploads, labelKey: 'thumbs.panel.uploads' },
   { id: 'elements', icon: TOOL_ICONS.elements, labelKey: 'thumbs.panel.elements' },
+  { id: 'photos', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, labelKey: 'thumbs.panel.photos' },
   { id: 'projects', icon: TOOL_ICONS.projects, labelKey: 'thumbs.panel.projects' },
 ];
 
