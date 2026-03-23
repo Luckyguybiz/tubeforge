@@ -460,6 +460,7 @@ export function AiThumbnailsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {/* ── Top Bar ────────────────────────────────────── */}
       <div
+        className="tf-aithumbs-topbar"
         style={{
           height: 56,
           display: 'flex',
@@ -727,6 +728,7 @@ export function AiThumbnailsPage() {
             </div>
 
             <textarea
+              className="tf-aithumbs-prompt"
               value={prompt}
               onChange={(e) => { if (e.target.value.length <= 1000) setPrompt(e.target.value); }}
               placeholder={t('aithumbs.prompt.placeholder')}
@@ -974,7 +976,7 @@ export function AiThumbnailsPage() {
                 <div style={{ flex: 1 }} />
 
                 {selectedImage && !isLoading && (
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div className="tf-aithumbs-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <ActionPill
                       C={C}
                       label="Enhance"
@@ -1107,7 +1109,7 @@ export function AiThumbnailsPage() {
                 </div>
 
                 {/* ── CTR Score section ───────────────────── */}
-                <div style={{ padding: '0 16px 16px' }}>
+                <div className="tf-aithumbs-ctr" style={{ padding: '0 16px 16px' }}>
                   {isAnalyzing ? (
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 10,
@@ -1299,11 +1301,11 @@ export function AiThumbnailsPage() {
 
                 {/* History row */}
                 {history.length > 1 && (
-                  <div style={{ padding: '0 16px 16px' }}>
+                  <div className="tf-aithumbs-history-strip" style={{ padding: '0 16px 16px' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
                       History ({history.length})
                     </span>
-                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                    <div className="tf-aithumbs-history-row tf-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                       {history.map((img) => {
                         const isActive = selectedImage?.id === img.id;
                         return (
@@ -1342,7 +1344,7 @@ export function AiThumbnailsPage() {
                   Our AI generates professional YouTube thumbnails that get clicks.
                 </p>
 
-                <div style={{
+                <div className="tf-aithumbs-steps" style={{
                   display: 'grid',
                   gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
                   gap: 16,
@@ -1486,7 +1488,7 @@ export function AiThumbnailsPage() {
                     <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
                       Generated thumbnails ({history.length})
                     </div>
-                    <div style={{
+                    <div className="tf-aithumbs-history-grid" style={{
                       display: 'grid',
                       gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
                       gap: 12,
@@ -1525,6 +1527,7 @@ export function AiThumbnailsPage() {
           {/* ── Premium banner ──────────────────────────── */}
           {plan === 'FREE' && (
             <div
+              className="tf-aithumbs-banner"
               style={{
                 marginTop: 16, padding: '14px 20px',
                 borderRadius: 12, border: `1px solid ${C.accent}33`,

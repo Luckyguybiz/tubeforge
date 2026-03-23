@@ -805,31 +805,45 @@ img {
    MOBILE RESPONSIVE — Batch 1A (6 core app pages)
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ── 1. AI Thumbnails ─────────────────────────────────────────── */
+/* ── 1. AI Thumbnails — pixel-perfect mobile ─────────────────── */
+
+/* 768px: iPad */
 @media (max-width: 768px) {
+  /* Layout: two-panel → single column */
   .tf-aithumbs-layout {
     flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
   .tf-aithumbs-left {
     width: 100% !important;
     max-height: none !important;
     border-right: none !important;
+    flex-shrink: 0 !important;
+    overflow-y: visible !important;
   }
   .tf-aithumbs-right {
     width: 100% !important;
-    flex: 1 !important;
+    flex: 1 1 auto !important;
+    overflow: visible !important;
   }
+
+  /* Sticky generate button */
   .tf-aithumbs-generate-wrap {
     position: sticky !important;
     bottom: 0 !important;
     z-index: 20 !important;
-    padding-top: 12px !important;
+    padding: 12px 0 0 !important;
   }
+
+  /* Style cards: 3-col grid on tablet */
   .tf-aithumbs-styles {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 6px !important;
   }
+
+  /* Tab pills: horizontal scroll, hidden scrollbar */
   .tf-aithumbs-tabs {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
@@ -837,6 +851,239 @@ img {
     scrollbar-width: none;
   }
   .tf-aithumbs-tabs::-webkit-scrollbar { display: none; }
+
+  /* Prompt textarea: full-width, min-height 80px */
+  .tf-aithumbs-prompt {
+    width: 100% !important;
+    min-height: 80px !important;
+    font-size: 16px !important;
+  }
+
+  /* All inputs: 48px height, 16px font (prevents iOS zoom) */
+  .tf-aithumbs-left input,
+  .tf-aithumbs-left select {
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  /* History thumbnails: 2-col grid */
+  .tf-aithumbs-history-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* CTR section: full-width, stacked */
+  .tf-aithumbs-ctr {
+    padding: 0 12px 12px !important;
+  }
+
+  /* Action pills: wrap to multiple rows */
+  .tf-aithumbs-actions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* History strip: horizontal scroll */
+  .tf-aithumbs-history-row {
+    display: flex !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tf-aithumbs-history-row::-webkit-scrollbar { display: none; }
+
+  /* Steps grid → stack */
+  .tf-aithumbs-steps {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Premium banner: stack on mobile */
+  .tf-aithumbs-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+
+  /* Top bar: compact */
+  .tf-aithumbs-topbar {
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+}
+
+/* 375px: iPhone — tighter styles */
+@media (max-width: 480px) {
+  .tf-aithumbs-left {
+    padding: 14px 12px !important;
+    gap: 10px !important;
+  }
+  .tf-aithumbs-right {
+    padding: 14px 12px !important;
+  }
+  .tf-aithumbs-styles {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .tf-aithumbs-topbar {
+    height: 48px !important;
+    padding: 0 10px !important;
+  }
+  .tf-aithumbs-topbar span {
+    font-size: 13px !important;
+  }
+}
+
+/* ── 2. Video Editor — pixel-perfect mobile ──────────────────── */
+
+@media (max-width: 768px) {
+  /* Layout: two-panel → single column */
+  .tf-editor-layout {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .tf-editor-left {
+    width: 100% !important;
+    max-height: none !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0 !important;
+    overflow-y: visible !important;
+    padding: 16px !important;
+  }
+  .tf-editor-right {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    overflow: visible !important;
+    padding: 16px !important;
+  }
+
+  /* Top bar: compact, hide text labels on tight screens */
+  .tf-editor-topbar {
+    padding: 0 12px !important;
+    gap: 6px !important;
+  }
+  .tf-editor-title-label {
+    font-size: 13px !important;
+  }
+  /* Compact undo/redo */
+  .tf-editor-undo-redo {
+    gap: 1px !important;
+  }
+  .tf-editor-undo-redo button {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  /* Style preview card: full-width */
+  .tf-editor-style-card {
+    width: 100% !important;
+  }
+
+  /* Frame uploads: side-by-side (50% each) */
+  .tf-editor-frames {
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .tf-editor-frames > div {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  /* Prompt: full-width, larger */
+  .tf-editor-prompt {
+    width: 100% !important;
+    min-height: 80px !important;
+    font-size: 16px !important;
+  }
+
+  /* All inputs: 48px height, 16px font */
+  .tf-editor-left input,
+  .tf-editor-left select {
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  /* Generate button: full-width, sticky bottom */
+  .tf-editor-gen-btn {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 20 !important;
+    width: 100% !important;
+  }
+
+  /* Settings: compact range inputs */
+  .tf-editor-left input[type="range"] {
+    height: 8px !important;
+    min-height: auto !important;
+  }
+
+  /* Right panel tabs: horizontal scroll */
+  .tf-editor-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+  }
+  .tf-editor-tabs::-webkit-scrollbar { display: none; }
+
+  /* How it works steps: stack */
+  .tf-editor-steps {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Styles gallery panel */
+  .tf-editor-styles-panel {
+    padding: 16px !important;
+  }
+  .tf-editor-style-filters {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none;
+  }
+  .tf-editor-style-filters::-webkit-scrollbar { display: none; }
+  /* Style grid: 2 columns on tablet */
+  .tf-editor-style-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Premium banner: stack */
+  .tf-editor-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+}
+
+/* 375px: iPhone — tighter */
+@media (max-width: 480px) {
+  .tf-editor-left {
+    padding: 12px 10px !important;
+    gap: 10px !important;
+  }
+  .tf-editor-right {
+    padding: 12px 10px !important;
+  }
+  .tf-editor-topbar {
+    height: 48px !important;
+    padding: 0 8px !important;
+  }
+  .tf-editor-title-label {
+    font-size: 12px !important;
+  }
+  /* Hide save status on tiny screens */
+  .tf-editor-save-status {
+    display: none !important;
+  }
+  /* Style grid: 2 columns tighter */
+  .tf-editor-style-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 /* ── 3. Billing ───────────────────────────────────────────────── */

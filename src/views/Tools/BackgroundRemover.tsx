@@ -266,7 +266,7 @@ export function BackgroundRemover() {
           )}
 
           {/* ── Action buttons ── */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div className="tf-bgremover-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <ActionButton
               label={processed ? t('tools.bgRemover.removeAgain') : t('tools.bgRemover.removeBtn')}
               gradient={['#8b5cf6', '#7c3aed']}

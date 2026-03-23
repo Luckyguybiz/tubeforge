@@ -362,6 +362,7 @@ export function SubtitleEditor() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* ── Toolbar ──────────────────────────────────────────────────── */}
         <div
+          className="tf-subedit-toolbar"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -459,7 +460,7 @@ export function SubtitleEditor() {
             {t('tools.subedit.addEntry')}
           </button>
 
-          <div style={{ flex: 1 }} />
+          <div className="tf-subedit-toolbar-spacer" style={{ flex: 1 }} />
 
           {/* Download SRT */}
           <ActionButton
@@ -568,6 +569,7 @@ function EntryRow({
 
   return (
     <div
+      className="tf-subedit-entry"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -585,6 +587,7 @@ function EntryRow({
     >
       {/* Entry number */}
       <div
+        className="tf-subedit-entry-num"
         style={{
           width: 32,
           height: 32,
@@ -605,6 +608,7 @@ function EntryRow({
 
       {/* Timestamps */}
       <div
+        className="tf-subedit-timestamps"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -638,7 +642,7 @@ function EntryRow({
       </div>
 
       {/* Text */}
-      <div style={{ flex: 1, minWidth: 180 }}>
+      <div className="tf-subedit-text" style={{ flex: 1, minWidth: 180 }}>
         <textarea
           value={entry.text}
           onChange={(e) => onUpdate(entry.id, { text: e.target.value })}
@@ -656,6 +660,7 @@ function EntryRow({
 
       {/* Delete */}
       <button
+        className="tf-subedit-delete-btn"
         onClick={() => onDelete(entry.id)}
         title={t('tools.subedit.deleteEntry')}
         style={{

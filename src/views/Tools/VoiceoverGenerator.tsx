@@ -423,7 +423,7 @@ export function VoiceoverGenerator() {
       )}
 
       {/* ── Action buttons ── */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="tf-voice-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         {isPlaying ? (
           <ActionButton
             label={t('tools.voiceover.stop')}

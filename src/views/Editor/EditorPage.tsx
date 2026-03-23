@@ -648,39 +648,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const disabled = !sel?.prompt?.trim() || !canUseAI || isGenerating;
 
   /* ═══════════════════════════════════════════════════════════════
-     MOBILE FALLBACK
+     MOBILE FALLBACK — now shows a proper single-column layout
      ═══════════════════════════════════════════════════════════════ */
-  if (isMobile) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100dvh', padding: 24,
-        textAlign: 'center', background: C.bg,
-      }}>
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <line x1="8" y1="21" x2="16" y2="21" />
-          <line x1="12" y1="17" x2="12" y2="21" />
-        </svg>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: '16px 0 8px' }}>
-          {t('editor.mobileTitle')}
-        </h2>
-        <p style={{ fontSize: 14, color: C.sub, maxWidth: 300, lineHeight: 1.5 }}>
-          {t('editor.mobileDesc')}
-        </p>
-        <button
-          onClick={() => router.push('/dashboard')}
-          style={{
-            marginTop: 20, padding: '12px 24px', borderRadius: 12,
-            border: 'none', background: C.accent, color: C.text,
-            fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          {t('editor.backToDashboard')}
-        </button>
-      </div>
-    );
-  }
 
   /* ═══════════════════════════════════════════════════════════════
      LOADING STATE
@@ -731,6 +700,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {/* ── Top Bar (same as AiThumbnails) ─────────────── */}
         <div
+          className="tf-editor-topbar"
           style={{
             height: 56,
             display: 'flex',
@@ -756,14 +726,14 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
               </svg>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
+            <span className="tf-editor-title-label" style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
               Video Editor
             </span>
             <OnlineUsers />
           </div>
 
           {/* Save status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="tf-editor-save-status" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {autoSaveDirty ? (
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.orange, flexShrink: 0 }} title={t('editor.autoSave.unsaved')} />
             ) : saveStatus === 'saved' ? (
@@ -774,7 +744,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           </div>
 
           {/* Undo/Redo */}
-          <div style={{ display: 'flex', gap: 2 }}>
+          <div className="tf-editor-undo-redo" style={{ display: 'flex', gap: 2 }}>
             <button
               onClick={() => { const es = useEditorStore.getState(); if (es.historyCount > 0) es.undo(); }}
               disabled={historyLen === 0}
@@ -829,6 +799,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
         {/* ── Main Content ───────────────────────────────── */}
         <div
+          className="tf-editor-layout"
           style={{
             flex: 1, display: 'flex',
             flexDirection: 'row',
@@ -837,6 +808,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         >
           {/* LEFT PANEL (380px) — same width as AiThumbnails */}
           <div
+            className="tf-editor-left"
             style={{
               width: 380,
               flexShrink: 0,
@@ -850,6 +822,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
           >
             {/* ── 1. Style Preview Card (clickable to open styles) ── */}
             <div
+              className="tf-editor-style-card"
               onClick={() => setRightPanelTab('styles')}
               style={{
                 borderRadius: 12,
@@ -886,7 +859,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             </div>
 
             {/* ── 2. Frame upload slots ── */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <div className="tf-editor-frames" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <FrameSlot
                 label={t('editor.frame.startFrame')}
                 value={sel?.sf ?? null}
@@ -916,6 +889,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </div>
 
               <textarea
+                className="tf-editor-prompt"
                 ref={promptRef}
                 value={sel?.prompt || ''}
                 rows={4}
@@ -1187,7 +1161,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
             {/* ── 6. Generate CTA — same as AiThumbnails ── */}
             <button
-              className="ed-gen-btn"
+              className="ed-gen-btn tf-editor-gen-btn"
               onClick={handleGenerate}
               disabled={disabled}
               aria-busy={isGenerating || undefined}
@@ -1236,6 +1210,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
           {/* RIGHT PANEL (flex) — same structure as AiThumbnails */}
           <div
+            className="tf-editor-right"
             style={{
               flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column',
@@ -1281,7 +1256,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div className="tf-editor-tabs tf-hscroll" style={{ display: 'flex', gap: 6 }}>
                     {([
                       { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
                       { id: 'history' as const, label: `History${scenes.length > 0 ? ` (${scenes.length})` : ''}`, icon: '\uD83D\uDCC1' },
@@ -1412,7 +1387,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     250+ presets for camera control, framing, and high-quality VFX
                   </p>
 
-                  <div style={{
+                  <div className="tf-editor-steps" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(3, 1fr)',
                     gap: 16,
@@ -1582,9 +1557,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </div>
               ) : rightPanelTab === 'styles' ? (
                 /* ── Styles gallery ── */
-                <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+                <div className="tf-editor-styles-panel" style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                   {/* Filter tags */}
-                  <div style={{
+                  <div className="tf-editor-style-filters tf-hscroll" style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     marginBottom: 12, flexWrap: 'wrap',
                   }}>
@@ -1635,7 +1610,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
 
                   {/* Style grid */}
-                  <div style={{
+                  <div className="tf-editor-style-grid" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
                     gap: 10,
@@ -1664,6 +1639,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             {/* ── Premium banner ──────────────────────────── */}
             {plan === 'FREE' && (
               <div
+                className="tf-editor-banner"
                 style={{
                   marginTop: 16, padding: '14px 20px',
                   borderRadius: 12, border: `1px solid ${C.accent}33`,

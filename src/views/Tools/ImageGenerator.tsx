@@ -206,7 +206,7 @@ export function ImageGenerator() {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+      <div className="tf-imggen-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 16 }}>
         {/* Left: Controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
           {/* Prompt area */}
@@ -360,7 +360,7 @@ export function ImageGenerator() {
                   </div>
                 )}
                 {/* Action buttons */}
-                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <div className="tf-imggen-action-btns" style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                   <button
                     onClick={handleDownload}
                     onMouseEnter={() => setHoveredBtn('download')}
@@ -486,7 +486,7 @@ export function ImageGenerator() {
               <span style={{ fontSize: 14, fontWeight: 600, color: C.text, display: 'block', marginBottom: 12 }}>
                 {t('imggen.history')}
               </span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <div className="tf-imggen-history-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {history.map((img) => (
                   <button
                     key={img.id}

@@ -657,7 +657,7 @@ const ToolCard = memo(function ToolCard({
       }}
     >
       {/* Gradient visual area */}
-      <div style={{
+      <div className="tf-tools-card-gradient" style={{
         height: 100,
         background: tool.available
           ? `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`
@@ -776,11 +776,13 @@ const ToolCard = memo(function ToolCard({
       {/* Bottom action bar — only for available tools */}
       {tool.available && (
         <div style={{
-          padding: '10px 16px',
+          padding: '12px 16px',
+          minHeight: 44,
           borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          boxSizing: 'border-box',
         }}>
           <span style={{
             display: 'inline-flex',
@@ -826,11 +828,13 @@ const ToolCard = memo(function ToolCard({
       {/* Bottom bar — coming soon tools */}
       {!tool.available && (
         <div style={{
-          padding: '10px 16px',
+          padding: '12px 16px',
+          minHeight: 44,
           borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          boxSizing: 'border-box',
         }}>
           <span style={{
             fontSize: 11,
@@ -978,7 +982,7 @@ export function ToolsHub() {
       </div>
 
       {/* ── Search Bar — centered pill ──────────────────── */}
-      <div style={{
+      <div className="tf-tools-search-wrap" style={{
         maxWidth: 560,
         width: '100%',
         margin: '0 auto 12px',
@@ -997,6 +1001,7 @@ export function ToolsHub() {
         </div>
         <input
           ref={searchRef}
+          className="tf-tools-search-input"
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -1050,7 +1055,7 @@ export function ToolsHub() {
       </div>
 
       {/* ── Counters ──────────────────────────────────────── */}
-      <div style={{
+      <div className="tf-tools-counters" style={{
         textAlign: 'center',
         marginBottom: 20,
         fontSize: 13,
