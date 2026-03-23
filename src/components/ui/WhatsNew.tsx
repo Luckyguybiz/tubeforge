@@ -121,7 +121,7 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
           inset: 0,
           zIndex: Z_INDEX.MODAL_BACKDROP,
           background: isDark ? 'rgba(0,0,0,.6)' : 'rgba(0,0,0,.3)',
-          backdropFilter: 'blur(4px)',
+          backdropFilter: 'blur(8px)',
         }}
         onClick={onClose}
       />

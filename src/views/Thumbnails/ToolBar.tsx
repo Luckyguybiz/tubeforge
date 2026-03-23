@@ -431,7 +431,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, backdropFilter: 'blur(4px)',
+            zIndex: 1000, backdropFilter: 'blur(8px)',
           }}
           onClick={() => setShowABTestModal(false)}
         >
