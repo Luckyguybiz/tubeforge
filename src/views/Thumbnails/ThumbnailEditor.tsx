@@ -25,7 +25,7 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, canvasBgImage, canvasBgGradient, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, canvasBgImage, canvasBgGradient, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount, snapToGrid } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
       canvasBgImage: s.canvasBgImage,
@@ -34,6 +34,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
       drag: s.drag, historyCount: s.historyCount, futureCount: s.futureCount,
+      snapToGrid: s.snapToGrid,
     }))
   );
   const store = useThumbnailStore.getState;
@@ -76,6 +77,14 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Load snap-to-grid preference from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tubeforge-snap-to-grid');
+      if (saved !== null) store().setSnapToGrid(JSON.parse(saved));
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time collaboration
   useCollaboration(projectId);
@@ -236,6 +245,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const curDrag = store().drag;
     if (!curDrag) return;
     let nx = Math.round(x - curDrag.ox), ny = Math.round(y - curDrag.oy);
+    // Snap to grid (20px)
+    const GRID_SIZE = 20;
+    const isSnapGrid = store().snapToGrid;
+    if (isSnapGrid) {
+      nx = Math.round(nx / GRID_SIZE) * GRID_SIZE;
+      ny = Math.round(ny / GRID_SIZE) * GRID_SIZE;
+    }
     // Snap guides
     const dragEl = els.find((e) => e.id === curDrag.id);
     if (dragEl) {
@@ -251,21 +267,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       for (const other of els) {
         if (other.id === curDrag.id || other.type === 'line' || other.type === 'arrow' || other.type === 'path') continue;
         const oCx = other.x + other.w / 2, oCy = other.y + other.h / 2;
-        // Left edge → left/right edge
+        // Left edge -> left/right edge
         if (Math.abs(nx - other.x) < snapThreshold) { nx = other.x; gx.push(other.x); }
         if (Math.abs(nx - (other.x + other.w)) < snapThreshold) { nx = other.x + other.w; gx.push(other.x + other.w); }
-        // Right edge → left/right edge
+        // Right edge -> left/right edge
         if (Math.abs(dR - other.x) < snapThreshold) { nx = other.x - dragEl.w; gx.push(other.x); }
         if (Math.abs(dR - (other.x + other.w)) < snapThreshold) { nx = other.x + other.w - dragEl.w; gx.push(other.x + other.w); }
-        // Center → center
+        // Center -> center
         if (Math.abs(dCx - oCx) < snapThreshold) { nx = oCx - dragEl.w / 2; gx.push(oCx); }
-        // Top edge → top/bottom edge
+        // Top edge -> top/bottom edge
         if (Math.abs(ny - other.y) < snapThreshold) { ny = other.y; gy.push(other.y); }
         if (Math.abs(ny - (other.y + other.h)) < snapThreshold) { ny = other.y + other.h; gy.push(other.y + other.h); }
-        // Bottom edge → top/bottom edge
+        // Bottom edge -> top/bottom edge
         if (Math.abs(dB - other.y) < snapThreshold) { ny = other.y - dragEl.h; gy.push(other.y); }
         if (Math.abs(dB - (other.y + other.h)) < snapThreshold) { ny = other.y + other.h - dragEl.h; gy.push(other.y + other.h); }
-        // Center Y → center Y
+        // Center Y -> center Y
         if (Math.abs(dCy - oCy) < snapThreshold) { ny = oCy - dragEl.h / 2; gy.push(oCy); }
       }
       store().setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
@@ -1107,8 +1123,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                 })()}
               </svg>
             )}
-            {guides.x.map((gx, i) => <div key={`gx-${i}`} style={{ position: 'absolute', left: gx / canvasW * 100 + '%', top: 0, bottom: 0, width: 1.5, background: C.accent, opacity: 0.7, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
-            {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1.5, background: C.accent, opacity: 0.7, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
+            {/* Smart alignment guides (purple) */}
+            {guides.x.map((gx, i) => <div key={`gx-${i}`} style={{ position: 'absolute', left: gx / canvasW * 100 + '%', top: 0, bottom: 0, width: 1, background: '#6366f1', opacity: 0.85, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
+            {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1, background: '#6366f1', opacity: 0.85, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
+            {/* Snap-to-grid overlay */}
+            {snapToGrid && (
+              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} viewBox={`0 0 ${canvasW} ${canvasH}`} preserveAspectRatio="none">
+                <defs>
+                  <pattern id="snapGrid20" width={20} height={20} patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+                  </pattern>
+                </defs>
+                <rect width={canvasW} height={canvasH} fill="url(#snapGrid20)" />
+              </svg>
+            )}
             {/* Selection rectangle */}
             {selRect && (() => {
               const rx = Math.min(selRect.x, selRect.x2);

@@ -75,6 +75,7 @@ const PANEL_BUTTONS: ToolDef[] = [
   { id: 'aiText', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>, labelKey: 'thumbs.panel.aiText' },
   { id: 'projects', icon: TOOL_ICONS.projects, labelKey: 'thumbs.panel.projects' },
   { id: 'background', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>, labelKey: 'thumbs.panel.background' },
+  { id: 'textStyles', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>, labelKey: 'thumbs.panel.textStyles' },
 ];
 
 // Submenus
@@ -99,10 +100,10 @@ const INSERT_OPTIONS = [
 export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel } = useThumbnailStore(
-    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel }))
+  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid } = useThumbnailStore(
+    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid }))
   );
-  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote } = useThumbnailStore.getState();
+  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, setSnapToGrid } = useThumbnailStore.getState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
   const [showShapes, setShowShapes] = useState(false);
@@ -312,8 +313,8 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             tabIndex={0}
             aria-label={t('thumbs.toolbar.panelLabel') + pLabel}
             aria-pressed={active}
-            onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background'); } }}
+            onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles'); } }}
             title={pLabel}
             style={{
               width: 44,
@@ -373,6 +374,41 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
           style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
         />
         <span style={{ fontSize: 8, color: C.dim, fontWeight: 600 }}>{t('thumbs.toolbar.bg')}</span>
+      </div>
+
+      {/* Snap to Grid toggle */}
+      {!isMobile && divider}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={t('thumbs.toolbar.snapToGrid')}
+        aria-pressed={snapToGrid}
+        onClick={() => {
+          const next = !snapToGrid;
+          setSnapToGrid(next);
+          try { localStorage.setItem('tubeforge-snap-to-grid', JSON.stringify(next)); } catch {}
+        }}
+        title={t('thumbs.toolbar.snapToGrid')}
+        style={{
+          width: 44, height: 44, borderRadius: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          color: snapToGrid ? C.accent : C.sub,
+          background: snapToGrid ? C.accentDim : 'transparent',
+          border: `1px solid ${snapToGrid ? C.accent + '33' : 'transparent'}`,
+          cursor: 'pointer', transition: 'all .15s',
+        }}
+        onMouseEnter={(e) => { if (!snapToGrid) (e.currentTarget as HTMLElement).style.background = C.surface; }}
+        onMouseLeave={(e) => { if (!snapToGrid) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const next = !snapToGrid; setSnapToGrid(next); try { localStorage.setItem('tubeforge-snap-to-grid', JSON.stringify(next)); } catch {} } }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="3" y1="15" x2="21" y2="15"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+          <line x1="15" y1="3" x2="15" y2="21"/>
+        </svg>
+        <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: snapToGrid ? C.accent : C.dim }}>{t('thumbs.toolbar.grid')}</span>
       </div>
 
       {/* Z4: Remove Background button (placeholder) */}
