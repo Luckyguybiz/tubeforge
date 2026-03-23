@@ -5,7 +5,7 @@
  * Key events: sign_up, project_create, video_generate, upgrade_click, share_project
  */
 
-export type AnalyticsEvent =
+type AnalyticsEvent =
   | 'sign_up'
   | 'project_create'
   | 'video_generate'
@@ -44,27 +44,3 @@ export function trackEvent(event: AnalyticsEvent, properties?: Record<string, un
   }
 }
 
-/**
- * Read all stored events (useful for batch sending later).
- */
-export function getStoredEvents(): StoredEvent[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as StoredEvent[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Clear stored events after successful batch send.
- */
-export function clearStoredEvents(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // ignore
-  }
-}

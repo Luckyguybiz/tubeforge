@@ -166,20 +166,13 @@ textarea:focus-visible, input:focus-visible {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-/* Fix 100vw scrollbar bug */
-html { overflow-x: hidden; }
-
 /* ── Global Mobile Fixes ──────────────────── */
 
-/* Prevent iOS zoom on input focus */
+/* Prevent iOS zoom on input focus + full-screen modals on mobile */
 @media (max-width: 768px) {
   input, select, textarea {
     font-size: 16px !important;
   }
-}
-
-/* All modals full-screen on mobile */
-@media (max-width: 768px) {
   .tf-modal {
     width: 100% !important;
     max-width: 100% !important;

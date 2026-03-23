@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useEditorStore, MUSIC_TRACKS } from '@/stores/useEditorStore';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { OnlineUsers } from '@/components/ui/OnlineUsers';
 import { SceneLockIndicator } from '@/components/ui/SceneLockIndicator';
 import { MODELS } from '@/lib/constants';
@@ -20,7 +19,7 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
-import type { Theme, Scene, TransitionType } from '@/lib/types';
+import type { Theme, Scene } from '@/lib/types';
 import { trackEvent } from '@/lib/analytics-events';
 
 /* ═══════════════════════════════════════════════════════════════════

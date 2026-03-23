@@ -31,14 +31,6 @@ export const FONT_LIBRARY: FontEntry[] = [
 /** All unique categories in display order */
 export const FONT_CATEGORIES = ['sans-serif', 'serif', 'display', 'handwriting', 'monospace'] as const;
 
-/** Group fonts by category */
-export function getFontsByCategory(): Record<string, FontEntry[]> {
-  const grouped: Record<string, FontEntry[]> = {};
-  for (const cat of FONT_CATEGORIES) {
-    grouped[cat] = FONT_LIBRARY.filter((f) => f.category === cat);
-  }
-  return grouped;
-}
 
 const loadedFonts = new Set<string>();
 
