@@ -76,7 +76,7 @@ interface Endpoint {
 
 interface MockDbForWebhooks {
   webhookEndpoint: {
-    findMany: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn> & ((...args: unknown[]) => Promise<{ id: string; url: string; secret: string }[]>);
   };
 }
 
@@ -109,7 +109,7 @@ async function deliverWebhooksAsync(
   );
 
   const succeeded = results.filter(
-    (r) => r.status === 'fulfilled' && r.value.ok,
+    (r): r is PromiseFulfilledResult<{ endpointId: string; ok: boolean }> => r.status === 'fulfilled' && r.value.ok,
   ).length;
 
   return {
