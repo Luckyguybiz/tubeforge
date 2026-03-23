@@ -12,7 +12,7 @@
  *   const next = hm.redo(currentState); // returns next state
  */
 
-export interface HistoryManagerOptions {
+interface HistoryManagerOptions {
   /** Maximum number of undo steps to keep. Defaults to 50. */
   maxHistory?: number;
 }

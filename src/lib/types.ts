@@ -42,13 +42,6 @@ export interface NavItem {
   label: string;
 }
 
-export interface StatItem {
-  label: string;
-  value: string;
-  change: string;
-  up: boolean;
-}
-
 export interface VideoItem {
   title: string;
   views: string;
@@ -159,9 +152,3 @@ export interface AIResult {
   url?: string;
 }
 
-export interface ToolItem {
-  id: string;
-  icon: string;
-  label: string;
-  action?: () => void;
-}

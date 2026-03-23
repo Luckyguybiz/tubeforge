@@ -127,15 +127,3 @@ export function recordError(module: string, message: string): void {
   }
 }
 
-/**
- * Get current-hour error stats for admin dashboard / monitoring.
- */
-export function getErrorStats(): { hour: string; errors: { key: string; count: number; firstSeen: number; lastSeen: number }[] } {
-  rotateIfNeeded();
-  const errors: { key: string; count: number; firstSeen: number; lastSeen: number }[] = [];
-  for (const [key, bucket] of errorBuckets) {
-    errors.push({ key, ...bucket });
-  }
-  errors.sort((a, b) => b.count - a.count);
-  return { hour: currentHourKey, errors };
-}
