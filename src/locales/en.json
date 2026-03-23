@@ -249,6 +249,7 @@
   "thumbs.editor.imageAlt": "Image",
   "thumbs.editor.saving": "Saving...",
   "thumbs.editor.saved": "Saved",
+  "thumbs.editor.unsaved": "Unsaved",
   "thumbs.editor.subtitle": "Create a thumbnail like in Canva or switch to AI generation",
   "thumbs.editor.undoTitle": "Undo (Ctrl+Z)",
   "thumbs.editor.redoTitle": "Redo (Ctrl+Y)",

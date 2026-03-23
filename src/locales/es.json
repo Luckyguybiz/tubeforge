@@ -249,6 +249,7 @@
   "thumbs.editor.imageAlt": "Imagen",
   "thumbs.editor.saving": "Guardando...",
   "thumbs.editor.saved": "Guardado",
+  "thumbs.editor.unsaved": "Sin guardar",
   "thumbs.editor.subtitle": "Crea una miniatura como en Canva o cambia a generación con IA",
   "thumbs.editor.undoTitle": "Deshacer (Ctrl+Z)",
   "thumbs.editor.redoTitle": "Rehacer (Ctrl+Y)",

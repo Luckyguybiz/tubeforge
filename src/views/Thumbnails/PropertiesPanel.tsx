@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -200,7 +200,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div>
             <div style={labelStyle}>Text Stroke</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <input type="color" value={sel.textStroke ?? '#000000'} onChange={(e) => updEl(sel.id, { textStroke: e.target.value })} style={{ width: 28, height: 24, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+              <InlineColorSwatch C={C} value={sel.textStroke ?? '#000000'} onChange={(c) => updEl(sel.id, { textStroke: c })} />
               <input type="range" min={0} max={8} step={0.5} value={sel.textStrokeWidth ?? 0} onChange={(e) => updEl(sel.id, { textStrokeWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
               <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.textStrokeWidth ?? 0}</span>
             </div>
@@ -237,7 +237,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div>
             <div style={labelStyle}>Border</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <input type="color" value={sel.borderColor ?? '#ffffff'} onChange={(e) => updEl(sel.id, { borderColor: e.target.value })} style={{ width: 28, height: 24, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+              <InlineColorSwatch C={C} value={sel.borderColor ?? '#ffffff'} onChange={(c) => updEl(sel.id, { borderColor: c })} />
               <input type="range" min={0} max={12} step={1} value={sel.borderWidth ?? 0} onChange={(e) => updEl(sel.id, { borderWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
               <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderWidth ?? 0}px</span>
             </div>
@@ -513,16 +513,82 @@ const RotationInput = memo(function RotationInput({ C, value, onChange, labelSty
   );
 });
 
-// C3: Color picker with HEX text input
-function ColorWithHex({ C, value, onChange, label }: { C: Theme; value: string | undefined; onChange: (c: string) => void; label?: string }) {
+// C3: Color picker with HEX text input, presets, recent colors, and eyedropper
+const COLOR_PICKER_PRESETS = [
+  '#ffffff', '#000000', '#ef4444', '#f97316', '#eab308', '#22c55e',
+  '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b',
+];
+
+async function pickColorFromScreen(): Promise<string | null> {
+  if (!('EyeDropper' in window)) return null;
+  try {
+    const dropper = new (window as any).EyeDropper();
+    const result = await dropper.open();
+    return result.sRGBHex as string;
+  } catch {
+    return null;
+  }
+}
+
+function addToRecentColors(color: string) {
+  try {
+    const stored = JSON.parse(localStorage.getItem('tf-recent-colors') || '[]') as string[];
+    const filtered = stored.filter((c: string) => c !== color);
+    const updated = [color, ...filtered].slice(0, 12);
+    localStorage.setItem('tf-recent-colors', JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [color];
+  }
+}
+
+function ColorPicker({ C, value, onChange, label }: { C: Theme; value: string | undefined; onChange: (c: string) => void; label?: string }) {
   const color = value ?? '#ffffff';
   let hexForPicker = color;
   if (color.startsWith('rgba') || color.startsWith('rgb')) hexForPicker = '#ffffff';
+  const [showPicker, setShowPicker] = useState(false);
+  const [recent, setRecent] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('tf-recent-colors') || '[]'); } catch { return []; }
+  });
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Close picker on outside click
+  useEffect(() => {
+    if (!showPicker) return;
+    const handleClick = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowPicker(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showPicker]);
+
+  const handleChange = (c: string) => {
+    onChange(c);
+  };
+
+  const handleCommitColor = (c: string) => {
+    onChange(c);
+    const updated = addToRecentColors(c);
+    setRecent(updated);
+  };
+
+  const handleEyeDropper = async () => {
+    const picked = await pickColorFromScreen();
+    if (picked) {
+      handleCommitColor(picked);
+    }
+  };
+
   return (
-    <div>
+    <div ref={pickerRef} style={{ position: 'relative' }}>
       {label && <div style={{ fontSize: 11, color: C.sub, marginBottom: 4, fontWeight: 600 }}>{label}</div>}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <input type="color" value={hexForPicker} onChange={(e) => onChange(e.target.value)} style={{ width: 32, height: 28, border: `1px solid ${C.border}`, borderRadius: 6, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+        {/* Color swatch button */}
+        <button onClick={() => setShowPicker(!showPicker)} style={{
+          width: 32, height: 28, borderRadius: 6, background: color,
+          border: `2px solid ${C.border}`, cursor: 'pointer', flexShrink: 0, padding: 0,
+        }} aria-label="Open color picker" />
+        {/* Hex input inline */}
         <input
           type="text"
           key={color}
@@ -530,13 +596,136 @@ function ColorWithHex({ C, value, onChange, label }: { C: Theme; value: string |
           onBlur={(e) => {
             let v = e.target.value.trim();
             if (!v.startsWith('#')) v = '#' + v;
-            if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v.toLowerCase());
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) handleCommitColor(v.toLowerCase());
             else e.target.value = color.toUpperCase();
           }}
           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
           style={{ flex: 1, padding: '4px 6px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 5, color: C.text, fontSize: 10, fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
         />
+        {/* Eyedropper button */}
+        {'EyeDropper' in (typeof window !== 'undefined' ? window : {}) && (
+          <button onClick={handleEyeDropper} title="Pick color from screen" style={{
+            width: 28, height: 28, borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface,
+            color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 22l1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="M14.5 5.5l4 4"/><path d="M18.5 1.5a2.121 2.121 0 013 3L16 10l-4-4 5.5-5.5z"/></svg>
+          </button>
+        )}
       </div>
+
+      {showPicker && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 6, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 12, width: 210, boxShadow: '0 8px 32px rgba(0,0,0,.25)' }}>
+          {/* Native color input (full width) */}
+          <input type="color" value={hexForPicker} onChange={(e) => handleChange(e.target.value)} onBlur={(e) => { const v = (e.target as HTMLInputElement).value; addToRecentColors(v); setRecent(addToRecentColors(v)); }} style={{ width: '100%', height: 32, border: `1px solid ${C.border}`, borderRadius: 6, padding: 1, cursor: 'pointer', background: C.surface }} />
+
+          {/* Hex text input */}
+          <input
+            type="text"
+            key={color + '-popup'}
+            defaultValue={color.toUpperCase()}
+            onBlur={(e) => {
+              let v = e.target.value.trim();
+              if (!v.startsWith('#')) v = '#' + v;
+              if (/^#[0-9a-fA-F]{6}$/.test(v)) handleCommitColor(v.toLowerCase());
+              else e.target.value = color.toUpperCase();
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            style={{ width: '100%', marginTop: 8, padding: '6px 8px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
+          />
+
+          {/* Preset swatches */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginTop: 8 }}>
+            {COLOR_PICKER_PRESETS.map((c) => (
+              <button key={c} onClick={() => handleCommitColor(c)} style={{
+                width: 26, height: 26, borderRadius: 4, background: c,
+                border: color === c ? '2px solid #fff' : `1px solid ${C.border}`,
+                cursor: 'pointer', padding: 0,
+              }} aria-label={`Color ${c}`} />
+            ))}
+          </div>
+
+          {/* Recent colors */}
+          {recent.length > 0 && (
+            <>
+              <div style={{ fontSize: 10, color: C.dim, marginTop: 8, marginBottom: 4 }}>Recent</div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {recent.slice(0, 6).map((c) => (
+                  <button key={c} onClick={() => handleChange(c)} style={{
+                    width: 26, height: 26, borderRadius: 4, background: c,
+                    border: color === c ? '2px solid #fff' : `1px solid ${C.border}`,
+                    cursor: 'pointer', padding: 0,
+                  }} aria-label={`Recent color ${c}`} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Backward-compatible alias
+function ColorWithHex(props: { C: Theme; value: string | undefined; onChange: (c: string) => void; label?: string }) {
+  return <ColorPicker {...props} />;
+}
+
+// Compact inline color swatch with popover picker (replaces raw <input type="color">)
+function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C: Theme; value: string; onChange: (c: string) => void; width?: number; height?: number }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [recent, setRecent] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('tf-recent-colors') || '[]'); } catch { return []; }
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  const handleCommit = (c: string) => {
+    onChange(c);
+    const updated = addToRecentColors(c);
+    setRecent(updated);
+  };
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width, height, borderRadius: 5, background: value,
+        border: `1px solid ${C.border}`, cursor: 'pointer', padding: 0,
+      }} aria-label="Pick color" />
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 10, width: 190, boxShadow: '0 8px 32px rgba(0,0,0,.25)' }}>
+          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} onBlur={(e) => { handleCommit((e.target as HTMLInputElement).value); }} style={{ width: '100%', height: 28, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3, marginTop: 6 }}>
+            {COLOR_PICKER_PRESETS.map((c) => (
+              <button key={c} onClick={() => handleCommit(c)} style={{
+                width: 24, height: 24, borderRadius: 3, background: c,
+                border: value === c ? '2px solid #fff' : `1px solid ${C.border}`,
+                cursor: 'pointer', padding: 0,
+              }} />
+            ))}
+          </div>
+          {recent.length > 0 && (
+            <>
+              <div style={{ fontSize: 9, color: C.dim, marginTop: 6, marginBottom: 3 }}>Recent</div>
+              <div style={{ display: 'flex', gap: 3 }}>
+                {recent.slice(0, 6).map((c) => (
+                  <button key={c} onClick={() => onChange(c)} style={{
+                    width: 24, height: 24, borderRadius: 3, background: c,
+                    border: `1px solid ${C.border}`, cursor: 'pointer', padding: 0,
+                  }} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -615,7 +804,7 @@ function ShadowControl({ C, value, onChange, inputStyle, labelStyle }: { C: Them
           <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 9, color: C.dim, marginBottom: 2 }}>{t('thumbs.props.color')}</div>
-              <input type="color" value={cColor} onChange={(e) => { setCColor(e.target.value); applyCustom(cX, cY, cBlur, e.target.value, cAlpha); }} style={{ width: '100%', height: 26, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface }} />
+              <InlineColorSwatch C={C} value={cColor} onChange={(c) => { setCColor(c); applyCustom(cX, cY, cBlur, c, cAlpha); }} width={32} height={26} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 9, color: C.dim, marginBottom: 2 }}>{t('thumbs.props.shadowAlpha')}</div>
@@ -687,7 +876,7 @@ function ShapeShadowControl({ C, value, onChange, labelStyle }: { C: Theme; valu
           </div>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             <div style={{ flex: 1 }}><div style={{ fontSize: 9, color: C.dim, marginBottom: 1 }}>Blur</div><input type="range" min={0} max={40} value={blur} onChange={(e) => { setBlur(+e.target.value); apply(offX, offY, +e.target.value, color, alpha); }} style={{ width: '100%', accentColor: '#888' }} /></div>
-            <input type="color" value={color} onChange={(e) => { setColor(e.target.value); apply(offX, offY, blur, e.target.value, alpha); }} style={{ width: 24, height: 24, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+            <InlineColorSwatch C={C} value={color} onChange={(c) => { setColor(c); apply(offX, offY, blur, c, alpha); }} width={24} height={24} />
           </div>
         </div>
       )}
@@ -763,11 +952,11 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
                   <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>From</div>
-                      <input type="color" value={sel.textGradient.from} onChange={(e) => updEl(sel.id, { textGradient: { ...sel.textGradient!, from: e.target.value } })} style={{ width: '100%', height: 22, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface }} />
+                      <InlineColorSwatch C={C} value={sel.textGradient.from} onChange={(c) => updEl(sel.id, { textGradient: { ...sel.textGradient!, from: c } })} width={32} height={22} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>To</div>
-                      <input type="color" value={sel.textGradient.to} onChange={(e) => updEl(sel.id, { textGradient: { ...sel.textGradient!, to: e.target.value } })} style={{ width: '100%', height: 22, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface }} />
+                      <InlineColorSwatch C={C} value={sel.textGradient.to} onChange={(c) => updEl(sel.id, { textGradient: { ...sel.textGradient!, to: c } })} width={32} height={22} />
                     </div>
                   </div>
                   <div>
@@ -800,7 +989,7 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
             {sel.glow && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                  <input type="color" value={sel.glow.color} onChange={(e) => updEl(sel.id, { glow: { ...sel.glow!, color: e.target.value } })} style={{ width: 24, height: 22, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+                  <InlineColorSwatch C={C} value={sel.glow.color} onChange={(c) => updEl(sel.id, { glow: { ...sel.glow!, color: c } })} width={24} height={22} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Blur</div>
                     <input type="range" min={0} max={40} value={sel.glow.blur} onChange={(e) => updEl(sel.id, { glow: { ...sel.glow!, blur: +e.target.value } })} style={{ width: '100%', accentColor: '#888' }} />

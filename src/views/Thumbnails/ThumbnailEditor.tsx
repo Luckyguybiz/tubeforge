@@ -103,22 +103,38 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   }, [project.data, store]);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const savedFingerprintRef = useRef<string>('');
+  const [autoSaveState, setAutoSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const saveCanvas = trpc.project.update.useMutation({
-    onError: (err) => { if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Auto-save failed:', err.message); },
+    onSuccess: () => { savedFingerprintRef.current = currentFingerprint; setAutoSaveState('saved'); },
+    onError: (err) => { setAutoSaveState('unsaved'); if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Auto-save failed:', err.message); },
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
     () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0), ''),
     [els],
   );
+  const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH;
   useEffect(() => {
     if (!loadedRef.current || !projectId) return;
+    // Mark as unsaved when fingerprint changes from last saved state
+    if (currentFingerprint !== savedFingerprintRef.current) {
+      setAutoSaveState('unsaved');
+    }
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
+      setAutoSaveState('saving');
       saveCanvas.mutate({ id: projectId, thumbnailData: store().exportState() as unknown as Record<string, string | number | boolean | null> });
     }, CANVAS_SAVE_DEBOUNCE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [elsFingerprint, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Initialize saved fingerprint on first load
+  useEffect(() => {
+    if (loadedRef.current && projectId) {
+      savedFingerprintRef.current = currentFingerprint;
+      setAutoSaveState('saved');
+    }
+  }, [loadedRef.current && projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ctrl+Scroll zoom
   const onWheelZoom = useCallback((e: WheelEvent) => {
@@ -927,11 +943,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             <h2 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: '0' }}>{t('thumbs.editor.title')}</h2>
             {project.data?.title && <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>— {project.data.title}</span>}
             {projectId && (
-              <span style={{ fontSize: 11, color: saveCanvas.isPending ? C.accent : C.dim, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                {saveCanvas.isPending ? (
-                  <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> {t('thumbs.editor.saving')}</>
+              <span style={{ fontSize: 11, fontWeight: 500, marginLeft: 4, transition: 'color .3s', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                {autoSaveState === 'saving' ? (
+                  <span style={{ color: C.orange, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.orange, display: 'inline-block', animation: 'pulse 1s ease-in-out infinite' }} />
+                    {t('thumbs.editor.saving')}
+                  </span>
+                ) : autoSaveState === 'unsaved' ? (
+                  <span style={{ color: C.red, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.red, display: 'inline-block' }} />
+                    {t('thumbs.editor.unsaved')}
+                  </span>
                 ) : (
-                  <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 3 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> {t('thumbs.editor.saved')}</span>
+                  <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.green, display: 'inline-block' }} />
+                    {t('thumbs.editor.saved')}
+                  </span>
                 )}
               </span>
             )}
