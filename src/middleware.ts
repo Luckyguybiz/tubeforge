@@ -167,25 +167,16 @@ export default function middleware(req: NextRequest) {
     return nextWithSecurityHeaders();
   }
 
-  // --- IP rate limiting (applies to all non-static requests) ---
-  // Prefer Vercel's x-real-ip (set by Vercel Edge from the actual client IP,
-  // more trustworthy than x-forwarded-for which can be appended to).
+  // --- IP extraction (used for auth rate limiting only) ---
   const ip =
     req.headers.get('x-real-ip') ||
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     'unknown';
 
-  if (!checkRateLimit(ip)) {
-    return new NextResponse('Too Many Requests', {
-      status: 429,
-      headers: {
-        'Retry-After': '60',
-        'Content-Type': 'text/plain',
-      },
-    });
-  }
+  // NOTE: Global IP rate limiting removed — was causing false 429 for normal usage.
+  // API-level rate limiting (per-user, per-endpoint) is enforced in tRPC/route handlers.
 
-  // --- Stricter rate limiting for auth endpoints (brute-force protection) ---
+  // --- Stricter rate limiting for auth endpoints only (brute-force protection) ---
   if (pathname.startsWith('/api/auth/')) {
     if (!checkRateLimit(ip, authRateLimitMap, AUTH_RATE_LIMIT_MAX)) {
       return new NextResponse('Too Many Requests', {
