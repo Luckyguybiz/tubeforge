@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, lazy } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -9,8 +9,12 @@ import {
   ClientCookieConsent,
   StickyMobileCTA,
   ReferralCapture,
-  ProductDemo,
 } from "@/components/landing";
+
+/* Lazy-load heavy below-fold client component to avoid blocking hero LCP */
+const ProductDemo = lazy(() =>
+  import("@/components/landing/ProductDemo").then((m) => ({ default: m.ProductDemo })),
+);
 
 /* -- SEO Metadata ------------------------------------------------- */
 
@@ -371,10 +375,12 @@ export default function LandingPage() {
       </section>
 
       {/* ===== PRODUCT DEMO (vidIQ-style interactive tabs) ===== */}
-      <ProductDemo />
+      <Suspense fallback={<div style={{ minHeight: 400, background: BG_ALT }} />}>
+        <ProductDemo />
+      </Suspense>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section id="how-it-works" style={{ padding: "80px 24px", background: BG_PRIMARY }}>
+      <section id="how-it-works" style={{ padding: "80px 24px", background: BG_PRIMARY, contentVisibility: "auto", containIntrinsicSize: "auto 600px" } as React.CSSProperties}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
@@ -399,7 +405,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FREE TOOLS SHOWCASE ===== */}
-      <section id="tools" style={{ padding: "80px 24px", background: BG_ALT }}>
+      <section id="tools" style={{ padding: "80px 24px", background: BG_ALT, contentVisibility: "auto", containIntrinsicSize: "auto 700px" } as React.CSSProperties}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
@@ -457,7 +463,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section id="pricing" style={{ padding: "80px 24px", background: BG_PRIMARY }}>
+      <section id="pricing" style={{ padding: "80px 24px", background: BG_PRIMARY, contentVisibility: "auto", containIntrinsicSize: "auto 800px" } as React.CSSProperties}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
@@ -517,7 +523,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== TESTIMONIALS ===== */}
-      <section style={{ padding: "80px 24px", background: BG_ALT }}>
+      <section style={{ padding: "80px 24px", background: BG_ALT, contentVisibility: "auto", containIntrinsicSize: "auto 500px" } as React.CSSProperties}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0, color: TEXT_PRIMARY }}>
@@ -547,7 +553,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section id="faq" style={{ padding: "80px 24px", background: BG_PRIMARY }}>
+      <section id="faq" style={{ padding: "80px 24px", background: BG_PRIMARY, contentVisibility: "auto", containIntrinsicSize: "auto 600px" } as React.CSSProperties}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>

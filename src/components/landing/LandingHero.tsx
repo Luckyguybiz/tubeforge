@@ -1,20 +1,13 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+/**
+ * LandingHero — Server Component (no 'use client')
+ *
+ * Renders the hero heading immediately without JavaScript hydration delays.
+ * CSS-only animations via @keyframes replace the old useState/useEffect
+ * approach that held the LCP element at opacity:0 for 150ms+ after hydration.
+ */
 export function LandingHero() {
-  const [visible, setVisible] = useState(false);
-  const [textVisible, setTextVisible] = useState(false);
-  const [ctaVisible, setCtaVisible] = useState(false);
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setVisible(true), 150);
-    const t2 = setTimeout(() => setTextVisible(true), 500);
-    const t3 = setTimeout(() => setCtaVisible(true), 900);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, []);
-
   return (
     <section
       id="landing-hero"
@@ -31,6 +24,7 @@ export function LandingHero() {
       <div style={{ maxWidth: 780, margin: '0 auto', textAlign: 'center' }}>
         {/* Badge */}
         <div
+          className="hero-badge"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -40,9 +34,6 @@ export function LandingHero() {
             background: 'rgba(99,102,241,0.1)',
             border: '1px solid rgba(99,102,241,0.2)',
             marginBottom: 24,
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0)' : 'translateY(12px)',
-            transition: 'all 0.6s cubic-bezier(.4,0,.2,1)',
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,7 +42,7 @@ export function LandingHero() {
           <span style={{ fontSize: 13, fontWeight: 500, color: '#818cf8', letterSpacing: '0.01em' }}>AI-Powered Creator Platform</span>
         </div>
 
-        {/* Headline */}
+        {/* Headline — LCP element, renders immediately at full opacity */}
         <h1
           style={{
             fontSize: 'clamp(28px, 7vw, 48px)',
@@ -60,9 +51,6 @@ export function LandingHero() {
             letterSpacing: '-0.025em',
             margin: '0 0 20px',
             color: '#ffffff',
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.8s cubic-bezier(.4,0,.2,1)',
           }}
         >
           Create YouTube Videos
@@ -72,6 +60,7 @@ export function LandingHero() {
 
         {/* Subtitle */}
         <p
+          className="hero-subtitle"
           style={{
             fontSize: 'clamp(15px, 4vw, 18px)',
             color: 'rgba(255,255,255,0.5)',
@@ -79,9 +68,6 @@ export function LandingHero() {
             maxWidth: 540,
             margin: '0 auto 40px',
             fontWeight: 400,
-            opacity: textVisible ? 1 : 0,
-            transform: textVisible ? 'translateY(0)' : 'translateY(16px)',
-            transition: 'all 0.8s cubic-bezier(.4,0,.2,1)',
           }}
         >
           AI-powered tools for thumbnails, video editing, SEO optimization, and more. Everything you need in one platform.
@@ -89,15 +75,13 @@ export function LandingHero() {
 
         {/* CTA */}
         <div
+          className="hero-cta"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 16,
             flexWrap: 'wrap',
-            opacity: ctaVisible ? 1 : 0,
-            transform: ctaVisible ? 'translateY(0)' : 'translateY(16px)',
-            transition: 'all 0.8s cubic-bezier(.4,0,.2,1)',
           }}
         >
           <Link
@@ -151,6 +135,7 @@ export function LandingHero() {
 
         {/* Trust signals */}
         <div
+          className="hero-trust"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -158,8 +143,6 @@ export function LandingHero() {
             gap: 24,
             marginTop: 48,
             flexWrap: 'wrap',
-            opacity: ctaVisible ? 1 : 0,
-            transition: 'opacity 1s ease 0.3s',
           }}
         >
           {['Free forever', 'No credit card', '10,000+ creators'].map((label, i) => (
@@ -172,7 +155,25 @@ export function LandingHero() {
           ))}
         </div>
       </div>
+      {/* CSS-only hero animations — badge/subtitle/CTA animate in without JS,
+          h1 stays fully visible to avoid blocking LCP */}
       <style>{`
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-badge {
+          animation: heroFadeUp 0.6s cubic-bezier(.4,0,.2,1) 0.1s both;
+        }
+        .hero-subtitle {
+          animation: heroFadeUp 0.7s cubic-bezier(.4,0,.2,1) 0.25s both;
+        }
+        .hero-cta {
+          animation: heroFadeUp 0.7s cubic-bezier(.4,0,.2,1) 0.4s both;
+        }
+        .hero-trust {
+          animation: heroFadeUp 0.8s cubic-bezier(.4,0,.2,1) 0.55s both;
+        }
         @media (max-width: 768px) {
           .landing-hero-section {
             padding: 120px 16px 64px !important;
@@ -181,6 +182,12 @@ export function LandingHero() {
         @media (max-width: 480px) {
           .landing-hero-section {
             padding: 100px 16px 48px !important;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-badge, .hero-subtitle, .hero-cta, .hero-trust {
+            animation: none !important;
+            opacity: 1 !important;
           }
         }
       `}</style>
