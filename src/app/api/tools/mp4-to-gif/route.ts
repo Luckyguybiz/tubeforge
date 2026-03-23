@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { writeFile, unlink, mkdir } from 'fs/promises';
+import { writeFile, unlink, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
@@ -15,6 +15,15 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_DURATION = 30; // seconds
 const DEFAULT_FPS = 15;
 const DEFAULT_WIDTH = 480;
+
+/** Sanitize filename to ASCII-safe characters only */
+function safeFilename(name: string): string {
+  return name
+    .replace(/[^\w\s.-]/g, '') // remove non-word characters
+    .replace(/\s+/g, '_')      // spaces to underscores
+    .slice(0, 100)             // max length
+    || 'converted';
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +40,7 @@ export async function POST(req: NextRequest) {
       window: 60,
     });
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 });
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const formData = await req.formData();
@@ -46,11 +55,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: `File too large. Maximum ${MAX_FILE_SIZE / 1024 / 1024}MB.` }, { status: 400 });
+      return NextResponse.json({ error: 'File too large (max 50MB)' }, { status: 400 });
     }
 
     const mimeType = file.type;
-    if (!['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'].includes(mimeType)) {
+    if (!['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'].includes(mimeType)) {
       return NextResponse.json({ error: 'Unsupported format. Use MP4, WebM, MOV, or AVI.' }, { status: 400 });
     }
 
@@ -60,7 +69,8 @@ export async function POST(req: NextRequest) {
     }
 
     const id = randomBytes(8).toString('hex');
-    const inputPath = path.join(TMP_DIR, `${id}.mp4`);
+    const ext = mimeType.includes('webm') ? 'webm' : mimeType.includes('quicktime') ? 'mov' : 'mp4';
+    const inputPath = path.join(TMP_DIR, `${id}.${ext}`);
     const palettePath = path.join(TMP_DIR, `${id}_palette.png`);
     const outputPath = path.join(TMP_DIR, `${id}.gif`);
 
@@ -68,54 +78,56 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(inputPath, buffer);
 
-    try {
-      // Step 1: Generate optimized palette for better GIF quality
-      await exec('ffmpeg', [
-        '-ss', String(startTime),
-        '-t', String(duration),
-        '-i', inputPath,
-        '-vf', `fps=${fps},scale=${width}:-1:flags=lanczos,palettegen=stats_mode=diff`,
-        '-y', palettePath,
-      ], { timeout: 60_000 });
-
-      // Step 2: Convert using palette for high-quality output
-      await exec('ffmpeg', [
-        '-ss', String(startTime),
-        '-t', String(duration),
-        '-i', inputPath,
-        '-i', palettePath,
-        '-lavfi', `fps=${fps},scale=${width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5`,
-        '-y', outputPath,
-      ], { timeout: 120_000 });
-
-      // Read the output GIF
-      const { readFile } = await import('fs/promises');
-      const gifBuffer = await readFile(outputPath);
-
-      // Cleanup temp files
-      await Promise.allSettled([
-        unlink(inputPath),
-        unlink(palettePath),
-        unlink(outputPath),
-      ]);
-
-      return new NextResponse(gifBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'image/gif',
-          'Content-Disposition': `attachment; filename="${file.name.replace(/\.\w+$/, '')}.gif"`,
-          'Content-Length': String(gifBuffer.length),
-        },
-      });
-    } catch (ffmpegError) {
-      // Cleanup on error
+    const cleanup = async () => {
       await Promise.allSettled([
         unlink(inputPath).catch(() => {}),
         unlink(palettePath).catch(() => {}),
         unlink(outputPath).catch(() => {}),
       ]);
+    };
+
+    try {
+      // Step 1: Generate optimized palette
+      await exec('ffmpeg', [
+        '-y',
+        '-ss', String(startTime),
+        '-t', String(duration),
+        '-i', inputPath,
+        '-vf', `fps=${fps},scale=${width}:-1:flags=lanczos,palettegen=stats_mode=diff`,
+        palettePath,
+      ], { timeout: 60_000 });
+
+      // Step 2: Convert using palette for high-quality output
+      await exec('ffmpeg', [
+        '-y',
+        '-ss', String(startTime),
+        '-t', String(duration),
+        '-i', inputPath,
+        '-i', palettePath,
+        '-lavfi', `fps=${fps},scale=${width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5`,
+        outputPath,
+      ], { timeout: 120_000 });
+
+      // Read output
+      const gifBuffer = await readFile(outputPath);
+      await cleanup();
+
+      const safeName = safeFilename(file.name.replace(/\.\w+$/, ''));
+
+      return new NextResponse(gifBuffer, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/gif',
+          'Content-Disposition': `attachment; filename="${safeName}.gif"`,
+          'Content-Length': String(gifBuffer.length),
+        },
+      });
+    } catch (ffmpegError) {
+      await cleanup();
       console.error('[MP4-TO-GIF] FFmpeg error:', ffmpegError);
-      return NextResponse.json({ error: 'Conversion failed. The video may be corrupted or unsupported.' }, { status: 500 });
+      return NextResponse.json({
+        error: 'Conversion failed. Try a shorter duration or smaller file.',
+      }, { status: 500 });
     }
   } catch (err) {
     console.error('[MP4-TO-GIF] Error:', err);
