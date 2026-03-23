@@ -5,8 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 // Allow large video uploads and long processing
 export const runtime = 'nodejs';
 export const maxDuration = 120;
-// Next.js 16 route handler body size limit
-export const config = { api: { bodyParser: false, responseLimit: false } };
+// Body size handled by Next.js serverActions.bodySizeLimit in next.config.ts
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
