@@ -32,7 +32,7 @@ describe('Shape presets', () => {
   });
 
   it('shape types should be valid canvas types', () => {
-    const validTypes = ['rect', 'circle', 'triangle', 'star'];
+    const validTypes = ['rect', 'circle', 'triangle', 'star', 'path'];
     for (const preset of SHAPE_PRESETS) {
       expect(validTypes).toContain(preset.type);
     }
