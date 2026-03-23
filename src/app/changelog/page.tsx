@@ -68,7 +68,7 @@ export default function ChangelogPage() {
 
       {/* Hero */}
       <div style={{ textAlign: 'center', padding: '48px 24px 16px' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
           Changelog
         </h1>
         <p style={{ color: C.sub, fontSize: 16, marginTop: 8 }}>
@@ -77,10 +77,11 @@ export default function ChangelogPage() {
       </div>
 
       {/* Timeline */}
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px 64px' }}>
-        <div style={{ position: 'relative' }}>
+      <div className="tf-changelog-container" style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px 64px' }}>
+        <div className="tf-changelog-timeline" style={{ position: 'relative' }}>
           {/* Vertical line */}
           <div
+            className="tf-changelog-line"
             style={{
               position: 'absolute',
               left: 15,
@@ -98,6 +99,7 @@ export default function ChangelogPage() {
               return (
                 <div
                   key={`${entry.date}-${i}`}
+                  className="tf-changelog-entry"
                   style={{
                     display: 'flex',
                     gap: 24,
@@ -107,6 +109,7 @@ export default function ChangelogPage() {
                 >
                   {/* Dot */}
                   <div
+                    className="tf-changelog-dot"
                     style={{
                       width: 32,
                       height: 32,

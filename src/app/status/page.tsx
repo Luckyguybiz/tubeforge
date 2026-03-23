@@ -163,7 +163,7 @@ export default function StatusPage() {
         </Link>
       </header>
 
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '48px 24px 64px' }}>
+      <div className="tf-status-container" style={{ maxWidth: 680, margin: '0 auto', padding: '48px 24px 64px' }}>
         {/* Overall status */}
         <div
           style={{
@@ -209,7 +209,7 @@ export default function StatusPage() {
               </svg>
             )}
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
             {isLoading ? 'Checking systems...' : overallOk ? 'All Systems Operational' : 'Issues Detected'}
           </h1>
           <p style={{ color: C.sub, fontSize: 14, marginTop: 8 }}>
@@ -222,7 +222,7 @@ export default function StatusPage() {
 
         {/* Services list */}
         <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Services</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="tf-status-grid" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {services.map((service) => {
             const cfg = STATUS_CONFIG[service.status];
             return (
@@ -273,6 +273,7 @@ export default function StatusPage() {
           <div style={{ marginTop: 32 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>System</h2>
             <div
+              className="tf-status-stats"
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',

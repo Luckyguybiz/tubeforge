@@ -70,14 +70,14 @@ export default function GalleryPage() {
         </Link>
       </header>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px' }}>
+      <div className="tf-gallery-container" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px' }}>
         {/* Title + sort */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+        <div className="tf-gallery-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>Project Gallery</h1>
+            <h1 style={{ fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>Project Gallery</h1>
             <p style={{ color: C.sub, fontSize: 14, margin: '6px 0 0' }}>Public projects by TubeForge members</p>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="tf-gallery-filters" style={{ display: 'flex', gap: 6 }}>
             {([
               { label: 'Newest', value: 'createdAt' as SortOption },
               { label: 'Popular', value: 'likesCount' as SortOption },
@@ -102,7 +102,7 @@ export default function GalleryPage() {
 
         {/* Loading */}
         {isLoading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          <div className="tf-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} style={{
                 borderRadius: 14, background: C.card, border: `1px solid ${C.border}`,
@@ -140,7 +140,7 @@ export default function GalleryPage() {
 
         {/* Grid */}
         {allItems.length > 0 && (
-          <div style={{
+          <div className="tf-gallery-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: 16,
