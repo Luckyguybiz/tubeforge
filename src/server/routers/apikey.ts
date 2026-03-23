@@ -65,7 +65,7 @@ export const apikeyRouter = router({
 
   /** Revoke an API key by id. */
   revoke: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkRate(ctx.session.user.id);
       const ok = await revokeApiKey(ctx.session.user.id, input.id);

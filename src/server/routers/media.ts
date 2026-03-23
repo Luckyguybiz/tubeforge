@@ -6,9 +6,9 @@ export const mediaRouter = router({
   /** List user's media assets with search/filter */
   list: protectedProcedure
     .input(z.object({
-      search: z.string().optional(),
+      search: z.string().max(200).optional(),
       type: z.enum(['all', 'image', 'video', 'audio']).default('all'),
-      folderId: z.string().nullish(),
+      folderId: z.string().min(1).max(100).nullish(),
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(100).default(30),
     }))

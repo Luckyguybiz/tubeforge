@@ -18,7 +18,7 @@ async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 
 
 export const videoTaskRouter = router({
   checkStatus: protectedProcedure
-    .input(z.object({ taskId: z.string() }))
+    .input(z.object({ taskId: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       // Verify the requesting user owns the scene associated with this taskId
       const scene = await ctx.db.scene.findFirst({

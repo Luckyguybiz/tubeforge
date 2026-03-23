@@ -201,7 +201,7 @@ export const aiThumbnailsRouter = router({
         format: z.enum(['16:9', '9:16']).default('16:9'),
         count: z.number().min(1).max(3).default(1),
         photoUrl: z.string().url().optional(),
-        youtubeUrl: z.string().optional(),
+        youtubeUrl: z.string().url().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -437,7 +437,7 @@ The image must look like a professional YouTube thumbnail that would get million
      Analyze thumbnail CTR score via GPT-4o Vision
      ═══════════════════════════════════════════════════════ */
   analyzeThumbnail: protectedProcedure
-    .input(z.object({ imageUrl: z.string(), prompt: z.string() }))
+    .input(z.object({ imageUrl: z.string().url(), prompt: z.string().min(1).max(1000) }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -624,7 +624,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
     .input(
       z.object({
         topic: z.string().max(500).optional(),
-        youtubeUrl: z.string().optional(),
+        youtubeUrl: z.string().url().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -739,7 +739,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       z.object({
         imageUrl: z.string().url(),
         instruction: z.string().min(3).max(500),
-        generationId: z.string().optional(),
+        generationId: z.string().min(1).max(100).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -969,8 +969,8 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
     .input(
       z.object({
         filter: z.enum(['all', 'originals', 'edited']).default('all'),
-        search: z.string().optional(),
-        cursor: z.string().optional(),
+        search: z.string().max(200).optional(),
+        cursor: z.string().min(1).max(100).optional(),
         limit: z.number().min(1).max(50).default(20),
       }),
     )
@@ -1049,7 +1049,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
   }),
 
   uploadFace: protectedProcedure
-    .input(z.object({ assetId: z.string() }))
+    .input(z.object({ assetId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -1094,7 +1094,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
     }),
 
   removeFace: protectedProcedure
-    .input(z.object({ assetId: z.string() }))
+    .input(z.object({ assetId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
@@ -1124,7 +1124,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
      Delete a generation
      ═══════════════════════════════════════════════════════ */
   deleteGeneration: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 

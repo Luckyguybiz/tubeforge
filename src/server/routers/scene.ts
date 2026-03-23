@@ -14,14 +14,14 @@ async function checkSceneRate(userId: string) {
 
 /** Validated scene metadata — transformed to Prisma InputJsonValue after validation */
 const sceneMetadataSchema = z.object({
-  ck: z.string().optional(),
-  sf: z.string().nullish(),
-  ef: z.string().nullish(),
+  ck: z.string().max(50).optional(),
+  sf: z.string().max(100).nullish(),
+  ef: z.string().max(100).nullish(),
   enh: z.boolean().optional(),
   snd: z.boolean().optional(),
-  chars: z.array(z.string()).optional(),
+  chars: z.array(z.string().max(100)).max(20).optional(),
   transition: z.enum(['none', 'fade', 'slide', 'zoom']).optional(),
-  voiceoverUrl: z.string().nullish(),
+  voiceoverUrl: z.string().url().nullish(),
   voiceoverStatus: z.enum(['idle', 'generating', 'done', 'error']).optional(),
 }).transform((v) => v as unknown as Prisma.InputJsonValue);
 
@@ -29,7 +29,7 @@ export const sceneRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        projectId: z.string(),
+        projectId: z.string().min(1).max(100),
         prompt: z.string().max(2000).default(''),
         label: z.string().max(100).default(''),
         model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).default('standard'),
@@ -83,7 +83,7 @@ export const sceneRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: z.string().min(1).max(100),
         prompt: z.string().max(2000).optional(),
         label: z.string().max(100).optional(),
         model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).optional(),
@@ -91,7 +91,7 @@ export const sceneRouter = router({
         status: z.enum(['EMPTY', 'EDITING', 'GENERATING', 'READY', 'ERROR']).optional(),
         videoUrl: z.string().url().nullish(),
         metadata: sceneMetadataSchema.optional(),
-        taskId: z.string().nullish(),
+        taskId: z.string().min(1).max(100).nullish(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -111,7 +111,7 @@ export const sceneRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkSceneRate(ctx.session.user.id);
       await ctx.db.$transaction(async (tx) => {
@@ -128,8 +128,8 @@ export const sceneRouter = router({
   reorder: protectedProcedure
     .input(
       z.object({
-        projectId: z.string(),
-        sceneIds: z.array(z.string()).max(200),
+        projectId: z.string().min(1).max(100),
+        sceneIds: z.array(z.string().min(1).max(100)).max(200),
       }),
     )
     .mutation(async ({ ctx, input }) => {

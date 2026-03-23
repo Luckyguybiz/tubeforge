@@ -21,7 +21,7 @@ const ASSET_LIMITS: Record<string, number> = {
 export const assetRouter = router({
   list: protectedProcedure
     .input(z.object({
-      folderId: z.string().nullish(),
+      folderId: z.string().min(1).max(100).nullish(),
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(100).default(30),
     }))
@@ -55,9 +55,9 @@ export const assetRouter = router({
     .input(z.object({
       url: z.string().url(),
       filename: z.string().min(1).max(255),
-      type: z.string().default('image'),
+      type: z.string().min(1).max(50).default('image'),
       size: z.number().min(0).default(0),
-      folderId: z.string().nullish(),
+      folderId: z.string().min(1).max(100).nullish(),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkAssetRate(ctx.session.user.id);
@@ -99,8 +99,8 @@ export const assetRouter = router({
 
   move: protectedProcedure
     .input(z.object({
-      id: z.string(),
-      folderId: z.string().nullish(),
+      id: z.string().min(1).max(100),
+      folderId: z.string().min(1).max(100).nullish(),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkAssetRate(ctx.session.user.id);
@@ -123,7 +123,7 @@ export const assetRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkAssetRate(ctx.session.user.id);
       return ctx.db.asset.delete({

@@ -105,8 +105,8 @@ Generate realistic data for YouTube search. Return 10 related keywords, 8 long-t
     .input(
       z.object({
         period: z.enum(['today', 'week', 'month']).default('month'),
-        topic: z.string().optional(),
-        language: z.string().default('English'),
+        topic: z.string().max(200).optional(),
+        language: z.string().max(50).default('English'),
       }),
     )
     .query(async ({ ctx, input }) => {

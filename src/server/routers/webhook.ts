@@ -240,7 +240,7 @@ export const webhookRouter = router({
 
   /** Delete a webhook by id. */
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkRate(ctx.session.user.id);
 

@@ -547,8 +547,8 @@ Make the scenes visually diverse and engaging.`,
   generateCaptions: protectedProcedure
     .input(z.object({
       scenes: z.array(z.object({
-        text: z.string(),
-        duration: z.number(),
+        text: z.string().min(1).max(5000),
+        duration: z.number().min(0.1).max(300),
       })).min(1).max(50),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -738,7 +738,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
      ═══════════════════════════════════════════════════════════════ */
   removeBackground: protectedProcedure
     .input(z.object({
-      imageUrl: z.string().min(1),
+      imageUrl: z.string().url(),
     }))
     .mutation(async () => {
       throw new TRPCError({
@@ -762,7 +762,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
   generateTTS: protectedProcedure
     .input(z.object({
       text: z.string().min(1).max(5000),
-      voiceId: z.string().default('21m00Tcm4TlvDq8ikWAM'), // Rachel
+      voiceId: z.string().min(1).max(100).default('21m00Tcm4TlvDq8ikWAM'), // Rachel
       speed: z.number().min(0.5).max(2).default(1),
     }))
     .mutation(async ({ ctx, input }) => {

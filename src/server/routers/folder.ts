@@ -14,7 +14,7 @@ async function checkFolderRate(userId: string) {
 export const folderRouter = router({
   list: protectedProcedure
     .input(z.object({
-      parentId: z.string().nullish(),
+      parentId: z.string().min(1).max(100).nullish(),
       limit: z.number().min(1).max(200).default(100),
     }))
     .query(async ({ ctx, input }) => {
@@ -38,7 +38,7 @@ export const folderRouter = router({
   create: protectedProcedure
     .input(z.object({
       name: z.string().min(1).max(100),
-      parentId: z.string().nullish(),
+      parentId: z.string().min(1).max(100).nullish(),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkFolderRate(ctx.session.user.id);
@@ -65,7 +65,7 @@ export const folderRouter = router({
 
   rename: protectedProcedure
     .input(z.object({
-      id: z.string(),
+      id: z.string().min(1).max(100),
       name: z.string().min(1).max(100),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -78,7 +78,7 @@ export const folderRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkFolderRate(ctx.session.user.id);
       // Move assets out of folder and delete in a single transaction

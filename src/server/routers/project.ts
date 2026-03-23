@@ -45,7 +45,7 @@ const importPayloadSchema = z.object({
     status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).default('DRAFT'),
     thumbnailData: thumbnailDataSchema.nullish(),
     characters: z.array(z.object({
-      id: z.string(),
+      id: z.string().min(1).max(100),
       name: z.string().max(100),
       role: z.string().max(100),
       avatar: z.string().max(10),
@@ -67,7 +67,7 @@ export const projectRouter = router({
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(50).default(20),
       // Cursor-based pagination (optional, takes precedence over page)
-      cursor: z.string().nullish(),
+      cursor: z.string().min(1).max(100).nullish(),
     }).optional())
     .query(async ({ ctx, input }) => {
       const { search, status, sortBy = 'updatedAt', sortOrder = 'desc', page = 1, limit = 20, cursor } = input ?? {};
@@ -311,7 +311,7 @@ export const projectRouter = router({
     }),
 
   getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: {
@@ -387,13 +387,13 @@ export const projectRouter = router({
 
   update: protectedProcedure
     .input(z.object({
-      id: z.string(),
+      id: z.string().min(1).max(100),
       title: z.string().max(100).optional(),
       description: z.string().max(5000).optional(),
-      tags: z.array(z.string()).max(30).optional(),
+      tags: z.array(z.string().max(100)).max(30).optional(),
       status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).optional(),
       characters: z.array(z.object({
-        id: z.string(),
+        id: z.string().min(1).max(100),
         name: z.string().max(100),
         role: z.string().max(100),
         avatar: z.string().max(10),
@@ -401,7 +401,7 @@ export const projectRouter = router({
         desc: z.string().max(500),
       })).max(50).optional(),
       thumbnailData: thumbnailDataSchema,
-      thumbnailUrl: z.string().nullish(),
+      thumbnailUrl: z.string().url().nullish(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { id, characters, thumbnailData, ...rest } = input;
@@ -432,7 +432,7 @@ export const projectRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
       return ctx.db.project.delete({
@@ -443,7 +443,7 @@ export const projectRouter = router({
 
   /** Export a project as JSON (only the owner can export) */
   export: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const { success } = await rateLimit({
         identifier: `export:${ctx.session.user.id}`,
@@ -580,7 +580,7 @@ export const projectRouter = router({
 
   /** Duplicate an existing project with all its scenes */
   duplicate: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
 
@@ -672,7 +672,7 @@ export const projectRouter = router({
 
   /** Toggle isPublic flag on a project (owner only) */
   togglePublic: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
       const project = await ctx.db.project.findFirst({
@@ -689,7 +689,7 @@ export const projectRouter = router({
 
   /** Get a public project by ID (no auth required) */
   getPublic: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: { id: input.id, isPublic: true },
@@ -724,7 +724,7 @@ export const projectRouter = router({
 
   /** Like a public project (increment counter, rate-limited) */
   likeProject: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       // Rate limit: max 5 likes per minute per project to prevent spam
       const { success } = await rateLimit({
@@ -750,7 +750,7 @@ export const projectRouter = router({
   listPublic: publicProcedure
     .input(z.object({
       sortBy: z.enum(['createdAt', 'likesCount']).default('createdAt'),
-      cursor: z.string().nullish(),
+      cursor: z.string().min(1).max(100).nullish(),
       limit: z.number().min(1).max(50).default(20),
     }).optional())
     .query(async ({ ctx, input }) => {
@@ -788,8 +788,8 @@ export const projectRouter = router({
   /** List public projects by a specific user (no auth required) */
   listByUser: publicProcedure
     .input(z.object({
-      userId: z.string(),
-      cursor: z.string().nullish(),
+      userId: z.string().min(1).max(100),
+      cursor: z.string().min(1).max(100).nullish(),
       limit: z.number().min(1).max(50).default(20),
     }))
     .query(async ({ ctx, input }) => {
