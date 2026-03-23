@@ -1272,6 +1272,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column',
               overflowY: 'auto', overflowX: 'hidden', padding: 20,
+              background: C.bg,
             }}
           >
             {/* ── Header: Tab switcher / Preview pill + actions ── */}
