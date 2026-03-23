@@ -6,11 +6,19 @@ import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { UploadsPanel } from './panels/UploadsPanel';
 import { ElementsPanel } from './panels/ElementsPanel';
 import { ProjectsPanel } from './panels/ProjectsPanel';
+import { StockPhotosPanel } from './panels/StockPhotosPanel';
+import { AIBackgroundPanel } from './panels/AIBackgroundPanel';
+import { AITextSuggestPanel } from './panels/AITextSuggestPanel';
+import { TemplatesPanel } from './panels/TemplatesPanel';
 
 const PANEL_TITLE_KEYS: Record<string, string> = {
   uploads: 'thumbs.panel.uploads',
   elements: 'thumbs.panel.elements',
   projects: 'thumbs.panel.projects',
+  stock: 'thumbs.panel.stock',
+  aiBg: 'thumbs.panel.aiBg',
+  aiText: 'thumbs.panel.aiText',
+  templates: 'thumbs.panel.templates',
 };
 
 export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
@@ -62,6 +70,10 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
           {leftPanel === 'uploads' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
           {leftPanel === 'elements' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
           {leftPanel === 'projects' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>}
+          {leftPanel === 'stock' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+          {leftPanel === 'aiBg' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/></svg>}
+          {leftPanel === 'aiText' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>}
+          {leftPanel === 'templates' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>}
           {panelTitle}
         </h3>
         <button
@@ -93,6 +105,10 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         {leftPanel === 'uploads' && <UploadsPanel />}
         {leftPanel === 'elements' && <ElementsPanel />}
         {leftPanel === 'projects' && <ProjectsPanel />}
+        {leftPanel === 'stock' && <StockPhotosPanel />}
+        {leftPanel === 'aiBg' && <AIBackgroundPanel />}
+        {leftPanel === 'aiText' && <AITextSuggestPanel />}
+        {leftPanel === 'templates' && <TemplatesPanel />}
       </div>
     </aside>
   );

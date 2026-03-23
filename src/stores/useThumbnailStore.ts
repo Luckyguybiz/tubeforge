@@ -7,7 +7,7 @@ import type { CanvasElement, AIResult } from '@/lib/types';
 /* ------------------------------------------------------------------ */
 /*  Snapshot type — the slice of state tracked by undo/redo            */
 /* ------------------------------------------------------------------ */
-interface CanvasSnapshot {
+export interface CanvasSnapshot {
   els: CanvasElement[];
   canvasBg: string;
 }
@@ -46,7 +46,10 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates';
+
+  // Canvas background image (AI-generated or from stock)
+  canvasBgImage: string | null;
 
   // Canvas size
   canvasW: number;
@@ -84,7 +87,8 @@ interface ThumbnailState {
   setAiLoading: (l: boolean) => void;
   setAiStyle: (s: string) => void;
   setAiCount: (n: number) => void;
-  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects') => void;
+  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates') => void;
+  setCanvasBgImage: (url: string | null) => void;
   setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star') => void;
   setAiReferenceImage: (url: string | null) => void;
   setLinePreview: (p: { x1: number; y1: number; x2: number; y2: number } | null) => void;
@@ -96,6 +100,10 @@ interface ThumbnailState {
   pushHistoryDebounced: () => void;
   undo: () => void;
   redo: () => void;
+  /** Get last N history snapshots (newest first) for visual history panel */
+  getRecentSnapshots: (count: number) => CanvasSnapshot[];
+  /** Restore a specific snapshot from history */
+  restoreSnapshot: (snapshot: CanvasSnapshot) => void;
 
   // Clipboard
   copySelected: () => void;
@@ -151,8 +159,11 @@ interface ThumbnailState {
   future: CanvasElement[][];
 
   // Save/Load
-  loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasW?: number; canvasH?: number } | null) => void;
-  exportState: () => { els: CanvasElement[]; canvasBg: string; canvasW: number; canvasH: number };
+  loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasBgImage?: string | null; canvasW?: number; canvasH?: number } | null) => void;
+  exportState: () => { els: CanvasElement[]; canvasBg: string; canvasBgImage: string | null; canvasW: number; canvasH: number };
+
+  // Templates
+  applyTemplate: (elements: Omit<CanvasElement, 'id'>[], bg: string) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -207,6 +218,9 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   // Left panel
   leftPanel: 'none',
 
+  // Canvas background image
+  canvasBgImage: null,
+
   // Canvas size
   canvasW: CANVAS_W,
   canvasH: CANVAS_H,
@@ -252,6 +266,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   setAiStyle: (s) => set({ aiStyle: s }),
   setAiCount: (n) => set({ aiCount: n }),
   setLeftPanel: (p) => set((s) => ({ leftPanel: s.leftPanel === p ? 'none' : p })),
+  setCanvasBgImage: (url) => set({ canvasBgImage: url }),
   setShapeSub: (s) => set({ shapeSub: s }),
   setAiReferenceImage: (url) => set({ aiReferenceImage: url }),
   setLinePreview: (p) => set({ linePreview: p }),
@@ -292,6 +307,21 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set({
       els: next.els,
       canvasBg: next.canvasBg,
+      selIds: [],
+      ...histCounts(),
+    });
+  },
+
+  getRecentSnapshots: (count: number) => {
+    return hm.getRecentSnapshots(count);
+  },
+
+  restoreSnapshot: (snapshot: CanvasSnapshot) => {
+    const s = get();
+    hm.push(snap(s));
+    set({
+      els: snapshot.els,
+      canvasBg: snapshot.canvasBg,
       selIds: [],
       ...histCounts(),
     });
@@ -626,6 +656,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set({
       els: thumbnailData.els || [],
       canvasBg: thumbnailData.canvasBg || '#0c0c14',
+      canvasBgImage: thumbnailData.canvasBgImage ?? null,
       canvasW: thumbnailData.canvasW || CANVAS_W,
       canvasH: thumbnailData.canvasH || CANVAS_H,
       selIds: [],
@@ -635,6 +666,21 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   exportState: () => {
     const s = get();
-    return { els: s.els, canvasBg: s.canvasBg, canvasW: s.canvasW, canvasH: s.canvasH };
+    return { els: s.els, canvasBg: s.canvasBg, canvasBgImage: s.canvasBgImage, canvasW: s.canvasW, canvasH: s.canvasH };
+  },
+
+  // ===== Templates =====
+  applyTemplate: (elements, bg) => {
+    get().pushHistory();
+    const newEls: CanvasElement[] = elements.map((el) => ({
+      ...el,
+      id: uid(),
+    } as CanvasElement));
+    set({
+      els: newEls,
+      canvasBg: bg,
+      selIds: [],
+      ...histCounts(),
+    });
   },
 }));

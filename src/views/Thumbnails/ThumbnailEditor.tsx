@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
+import type { CanvasSnapshot } from '@/stores/useThumbnailStore';
 import type { CanvasElement } from '@/lib/types';
 import { Z_INDEX } from '@/lib/constants';
 import { AIGeneratorView } from './AIGenerator';
@@ -24,9 +25,10 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, canvasBgImage, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
+      canvasBgImage: s.canvasBgImage,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
@@ -49,6 +51,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp'>('png');
+  const [exportSizeMode, setExportSizeMode] = useState<'original' | '2x' | 'custom'>('original');
+  const [exportCustomW, setExportCustomW] = useState(canvasW);
+  const [exportCustomH, setExportCustomH] = useState(canvasH);
+  const [exportQuality, setExportQuality] = useState(85);
+  const [isCopying, setIsCopying] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isSavingToLibrary, setIsSavingToLibrary] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [thumbnailStatus, setThumbnailStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
 
   // Responsive check
   useEffect(() => {
@@ -90,7 +105,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : ''), ''),
     [els],
   );
   useEffect(() => {
@@ -307,6 +322,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     setIsDownloading(true);
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
 
+    // Draw background image if set
+    const bgImageUrl = useThumbnailStore.getState().canvasBgImage;
+    const bgImagePromise = bgImageUrl ? new Promise<HTMLImageElement | null>((resolve) => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = bgImageUrl;
+    }) : Promise.resolve(null);
+
     // Preload all images first so we can draw elements in correct z-order
     const imgCache = new Map<string, HTMLImageElement>();
     const imageEls = els.filter((el) => el.type === 'image' && el.src && el.visible !== false);
@@ -317,7 +341,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       img.src = el.src!;
     }));
 
-    Promise.all(imagePromises).then(async () => {
+    Promise.all([...imagePromises, bgImagePromise]).then(async (results) => {
+      // Draw background image behind all elements
+      const bgImg = results[results.length - 1] as HTMLImageElement | null;
+      if (bgImg) {
+        ctx.drawImage(bgImg, 0, 0, canvasW, canvasH);
+      }
       // Draw all elements in order (correct z-layering)
       for (const el of els) {
         if (el.visible === false) continue;
@@ -331,6 +360,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.rotate((rot * Math.PI) / 180);
           ctx.translate(-cx, -cy);
         }
+        // Apply glow effect via shadow
+        if (el.glow) {
+          ctx.shadowColor = el.glow.color;
+          ctx.shadowBlur = el.glow.blur;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+        }
+        // Apply canvas filter for blur/brightness/contrast
+        const filterParts: string[] = [];
+        if (el.blur && el.blur > 0) filterParts.push(`blur(${el.blur}px)`);
+        if (el.brightness !== undefined && el.brightness !== 100) filterParts.push(`brightness(${el.brightness / 100})`);
+        if (el.contrast !== undefined && el.contrast !== 100) filterParts.push(`contrast(${el.contrast / 100})`);
+        if (filterParts.length > 0) ctx.filter = filterParts.join(' ');
         // Apply shape shadow for rect/circle/triangle/star
         if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle')) {
           try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
@@ -395,6 +437,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
           for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
         }
+        // Reset effects
+        ctx.filter = 'none';
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
         // Restore rotation transform if applied
         if (rot !== 0) { ctx.restore(); }
         ctx.globalAlpha = 1;
@@ -429,6 +477,38 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     });
   };
 
+  // ===== Effects helper =====
+  const getEffectStyles = (el: CanvasElement): React.CSSProperties => {
+    const styles: React.CSSProperties = {};
+    const filters: string[] = [];
+    if (el.glow) {
+      filters.push(`drop-shadow(0 0 ${el.glow.blur}px ${el.glow.color})`);
+    }
+    if (el.blur && el.blur > 0) {
+      filters.push(`blur(${el.blur}px)`);
+    }
+    if (el.brightness !== undefined && el.brightness !== 100) {
+      filters.push(`brightness(${el.brightness / 100})`);
+    }
+    if (el.contrast !== undefined && el.contrast !== 100) {
+      filters.push(`contrast(${el.contrast / 100})`);
+    }
+    if (filters.length > 0) {
+      styles.filter = filters.join(' ');
+    }
+    return styles;
+  };
+
+  const getTextGradientStyles = (el: CanvasElement): React.CSSProperties => {
+    if (!el.textGradient) return {};
+    return {
+      background: `linear-gradient(${el.textGradient.angle}deg, ${el.textGradient.from}, ${el.textGradient.to})`,
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+    };
+  };
+
   // ===== Render element =====
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
@@ -454,11 +534,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     };
 
     if (el.type === 'text') {
+      const effectStyles = getEffectStyles(el);
+      const gradientStyles = getTextGradientStyles(el);
       const textStyle: React.CSSProperties = {
         position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
         fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
-        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left',
-        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR,
+        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.textGradient ? undefined : el.color, textAlign: el.textAlign ?? 'left',
+        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.textGradient ? undefined : el.bg, borderRadius: el.borderR,
         padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none',
         transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
@@ -466,6 +548,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
         textTransform: el.textTransform && el.textTransform !== 'none' ? el.textTransform : undefined,
         WebkitTextStroke: (el.textStrokeWidth ?? 0) > 0 ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+        ...effectStyles,
+        ...gradientStyles,
       };
       return (
         <div key={el.id} data-text-el={el.id} style={textStyle}
@@ -482,22 +566,25 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
 
     if (el.type === 'rect') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
-    if (el.type === 'image') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
-        onMouseDown={elDrag}>
-        <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
-        {resizeHandle}{deleteHandle}
-      </div>
-    );
+    if (el.type === 'image') {
+      const imgEffects = getEffectStyles(el);
+      return (
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+          onMouseDown={elDrag}>
+          <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none', ...imgEffects }} />
+          {resizeHandle}{deleteHandle}
+        </div>
+      );
+    }
 
     if (el.type === 'path') return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
@@ -764,6 +851,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
               style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
+            {/* AI Background Image — rendered behind all elements */}
+            {canvasBgImage && (
+              <img src={canvasBgImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
+            )}
             {els.map(renderElement)}
             {/* Collaboration cursors overlay */}
             <CollaborationCursors canvasW={canvasW} canvasH={canvasH} containerW={canvasAreaRef.current?.clientWidth ?? canvasW} containerH={canvasAreaRef.current?.clientHeight ?? canvasH} />

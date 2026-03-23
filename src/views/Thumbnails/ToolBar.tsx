@@ -67,8 +67,12 @@ const DRAWING_TOOLS: ToolDef[] = [
 
 // Panel buttons (visually distinct from tools)
 const PANEL_BUTTONS: ToolDef[] = [
+  { id: 'templates', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, labelKey: 'thumbs.panel.templates' },
   { id: 'uploads', icon: TOOL_ICONS.uploads, labelKey: 'thumbs.panel.uploads' },
   { id: 'elements', icon: TOOL_ICONS.elements, labelKey: 'thumbs.panel.elements' },
+  { id: 'stock', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, labelKey: 'thumbs.panel.stock' },
+  { id: 'aiBg', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/></svg>, labelKey: 'thumbs.panel.aiBg' },
+  { id: 'aiText', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>, labelKey: 'thumbs.panel.aiText' },
   { id: 'projects', icon: TOOL_ICONS.projects, labelKey: 'thumbs.panel.projects' },
 ];
 
@@ -307,8 +311,8 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             tabIndex={0}
             aria-label={t('thumbs.toolbar.panelLabel') + pLabel}
             aria-pressed={active}
-            onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects'); } }}
+            onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates'); } }}
             title={pLabel}
             style={{
               width: 44,

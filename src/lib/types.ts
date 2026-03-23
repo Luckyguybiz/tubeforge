@@ -145,6 +145,12 @@ export interface CanvasElement {
   groupId?: string;
   visible?: boolean;
   proportionLocked?: boolean;
+  // visual effects
+  textGradient?: { from: string; to: string; angle: number };
+  glow?: { color: string; blur: number; spread: number };
+  blur?: number; // 0-20px
+  brightness?: number; // 50-150, default 100
+  contrast?: number; // 50-150, default 100
 }
 
 export interface AIResult {

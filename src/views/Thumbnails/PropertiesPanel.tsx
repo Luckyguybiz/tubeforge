@@ -220,6 +220,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* Rotation */}
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Visual Effects */}
+          <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -235,6 +237,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Visual Effects */}
+          <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -247,6 +251,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Visual Effects */}
+          <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} delEl={delEl} />
         </div>
       )}
@@ -671,6 +677,181 @@ function ShapeShadowControl({ C, value, onChange, labelStyle }: { C: Theme; valu
             <div style={{ flex: 1 }}><div style={{ fontSize: 9, color: C.dim, marginBottom: 1 }}>Blur</div><input type="range" min={0} max={40} value={blur} onChange={(e) => { setBlur(+e.target.value); apply(offX, offY, +e.target.value, color, alpha); }} style={{ width: '100%', accentColor: '#888' }} /></div>
             <input type="color" value={color} onChange={(e) => { setColor(e.target.value); apply(offX, offY, blur, e.target.value, alpha); }} style={{ width: 24, height: 24, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// C8b: Visual Effects section
+function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
+  C: Theme;
+  sel: CanvasElement;
+  updEl: (id: string, patch: Partial<CanvasElement>) => void;
+  pushHistory: () => void;
+  labelStyle: React.CSSProperties;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const hasEffects = !!(sel.textGradient || sel.glow || (sel.blur && sel.blur > 0) || (sel.brightness !== undefined && sel.brightness !== 100) || (sel.contrast !== undefined && sel.contrast !== 100));
+  const isText = sel.type === 'text';
+  const isImage = sel.type === 'image';
+
+  return (
+    <div>
+      <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          Effects
+        </span>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: hasEffects ? C.accent : C.dim,
+            fontSize: 9,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            padding: '1px 4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          {expanded ? 'HIDE' : hasEffects ? 'ON' : 'OFF'}
+          <svg
+            width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
+      {expanded && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 6, marginTop: 4, background: C.surface, borderRadius: 6, border: `1px solid ${C.border}` }}>
+          {/* Text Gradient (text elements only) */}
+          {isText && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Gradient Text</span>
+                <button
+                  onClick={() => {
+                    pushHistory();
+                    if (sel.textGradient) updEl(sel.id, { textGradient: undefined });
+                    else updEl(sel.id, { textGradient: { from: '#6366f1', to: '#ec4899', angle: 90 } });
+                  }}
+                  style={{ background: 'none', border: 'none', color: sel.textGradient ? C.accent : C.dim, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}
+                >
+                  {sel.textGradient ? 'ON' : 'OFF'}
+                </button>
+              </div>
+              {sel.textGradient && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>From</div>
+                      <input type="color" value={sel.textGradient.from} onChange={(e) => updEl(sel.id, { textGradient: { ...sel.textGradient!, from: e.target.value } })} style={{ width: '100%', height: 22, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>To</div>
+                      <input type="color" value={sel.textGradient.to} onChange={(e) => updEl(sel.id, { textGradient: { ...sel.textGradient!, to: e.target.value } })} style={{ width: '100%', height: 22, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Angle</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input type="range" min={0} max={360} value={sel.textGradient.angle} onChange={(e) => updEl(sel.id, { textGradient: { ...sel.textGradient!, angle: +e.target.value } })} style={{ flex: 1, accentColor: '#888' }} />
+                      <span style={{ fontSize: 8, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.textGradient.angle}deg</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Glow effect */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Glow</span>
+              <button
+                onClick={() => {
+                  pushHistory();
+                  if (sel.glow) updEl(sel.id, { glow: undefined });
+                  else updEl(sel.id, { glow: { color: '#6366f1', blur: 10, spread: 0 } });
+                }}
+                style={{ background: 'none', border: 'none', color: sel.glow ? C.accent : C.dim, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}
+              >
+                {sel.glow ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            {sel.glow && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  <input type="color" value={sel.glow.color} onChange={(e) => updEl(sel.id, { glow: { ...sel.glow!, color: e.target.value } })} style={{ width: 24, height: 22, border: `1px solid ${C.border}`, borderRadius: 4, padding: 1, cursor: 'pointer', background: C.surface, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Blur</div>
+                    <input type="range" min={0} max={40} value={sel.glow.blur} onChange={(e) => updEl(sel.id, { glow: { ...sel.glow!, blur: +e.target.value } })} style={{ width: '100%', accentColor: '#888' }} />
+                  </div>
+                  <span style={{ fontSize: 8, color: C.dim, minWidth: 16 }}>{sel.glow.blur}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Blur effect */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Blur</span>
+              <span style={{ fontSize: 8, color: C.dim }}>{sel.blur ?? 0}px</span>
+            </div>
+            <input type="range" min={0} max={20} step={0.5} value={sel.blur ?? 0} onChange={(e) => updEl(sel.id, { blur: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+          </div>
+
+          {/* Brightness / Contrast (images only) */}
+          {isImage && (
+            <>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Brightness</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{sel.brightness ?? 100}%</span>
+                </div>
+                <input type="range" min={50} max={150} value={sel.brightness ?? 100} onChange={(e) => updEl(sel.id, { brightness: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Contrast</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{sel.contrast ?? 100}%</span>
+                </div>
+                <input type="range" min={50} max={150} value={sel.contrast ?? 100} onChange={(e) => updEl(sel.id, { contrast: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+              </div>
+            </>
+          )}
+
+          {/* Reset all effects button */}
+          {hasEffects && (
+            <button
+              onClick={() => {
+                pushHistory();
+                updEl(sel.id, { textGradient: undefined, glow: undefined, blur: undefined, brightness: undefined, contrast: undefined });
+              }}
+              style={{
+                width: '100%',
+                padding: '4px',
+                borderRadius: 4,
+                border: `1px solid ${C.accent}33`,
+                background: 'transparent',
+                color: C.accent,
+                fontSize: 8,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                opacity: 0.7,
+              }}
+            >
+              Reset All Effects
+            </button>
+          )}
         </div>
       )}
     </div>
