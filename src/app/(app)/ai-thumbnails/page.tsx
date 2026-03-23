@@ -1,11 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/Skeleton';
+import AiThumbnailsLoading from './loading';
 
 const AiThumbnailsPage = dynamic(
   () => import('@/views/AiThumbnails/AiThumbnailsPage').then((m) => ({ default: m.AiThumbnailsPage })),
-  { loading: () => <Skeleton width="100%" height="80vh" />, ssr: false },
+  { loading: () => <AiThumbnailsLoading />, ssr: false },
 );
 
 export default function Page() {
