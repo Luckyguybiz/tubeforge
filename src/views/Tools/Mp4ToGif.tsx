@@ -22,6 +22,7 @@ export function Mp4ToGif() {
   const [converting, setConverting] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState(10);
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultSize, setResultSize] = useState(0);
@@ -37,20 +38,25 @@ export function Mp4ToGif() {
     setElapsed(0);
     setStepIdx(0);
     const start = Date.now();
+    // Estimate total time based on file size and duration
+    const fileMB = file ? file.size / (1024 * 1024) : 5;
+    const estTotal = Math.max(10, Math.round(duration * 1.5 + fileMB * 0.5));
+    setEstimatedTime(estTotal);
     const iv = setInterval(() => {
       const sec = Math.floor((Date.now() - start) / 1000);
       setElapsed(sec);
-      // Estimate step based on elapsed time
-      if (sec < 2) setStepIdx(0);
-      else if (sec < 5) setStepIdx(1);
-      else if (sec < 15) setStepIdx(2);
-      else setStepIdx(3);
+      // Step progress based on % of estimated time
+      const pct = sec / estTotal;
+      if (pct < 0.15) setStepIdx(0);       // uploading
+      else if (pct < 0.35) setStepIdx(1);   // palette
+      else if (pct < 0.80) setStepIdx(2);   // converting
+      else setStepIdx(3);                    // optimizing
     }, 500);
     return () => clearInterval(iv);
-  }, [converting]);
+  }, [converting, file, duration]);
 
   const handleFile = useCallback((f: File) => {
-    if (f.size > 50 * 1024 * 1024) {
+    if (f.size > 100 * 1024 * 1024) {
       setError(t('tools.gif.fileTooLarge'));
       return;
     }
@@ -91,7 +97,17 @@ export function Mp4ToGif() {
         throw new Error(data.error || t('tools.gif.conversionFailed'));
       }
 
+      // Check content type — if not image/gif, server returned an error as JSON
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('image/gif')) {
+        const data = await res.json().catch(() => ({ error: t('tools.gif.conversionFailed') }));
+        throw new Error(data.error || t('tools.gif.conversionFailed'));
+      }
+
       const blob = await res.blob();
+      if (blob.size < 100) {
+        throw new Error(t('tools.gif.conversionFailed'));
+      }
       setResultSize(blob.size);
       setResultUrl(URL.createObjectURL(blob));
     } catch (err) {
@@ -120,9 +136,6 @@ export function Mp4ToGif() {
     const s = sec % 60;
     return m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `${s}s`;
   };
-
-  // Estimated total time based on settings
-  const estimatedTime = Math.max(5, Math.ceil(duration * fps * width / 15000));
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>

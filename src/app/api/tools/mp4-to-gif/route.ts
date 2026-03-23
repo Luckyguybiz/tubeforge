@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
-// Allow large video uploads (up to 100MB)
+// Allow large video uploads and long processing
 export const runtime = 'nodejs';
-export const maxDuration = 120; // 2 minutes timeout
+export const maxDuration = 120;
+// Next.js 16 route handler body size limit
+export const config = { api: { bodyParser: false, responseLimit: false } };
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
