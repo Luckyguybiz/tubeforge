@@ -846,7 +846,7 @@ export const Sidebar = memo(function Sidebar() {
           textAlign: 'left',
           fontFamily: 'inherit',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          transition: 'all .15s ease',
+          transition: 'all .2s ease',
           letterSpacing: isActive ? '-.01em' : '0',
           overflow: 'visible',
         }}
@@ -879,7 +879,7 @@ export const Sidebar = memo(function Sidebar() {
             flexShrink: 0,
             borderRadius: 8,
             background: 'transparent',
-            transition: 'all .15s ease',
+            transition: 'all .2s ease',
           }}
         >
           {icons[id]?.(iconColor) ?? null}
@@ -891,7 +891,7 @@ export const Sidebar = memo(function Sidebar() {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              transition: 'color .15s ease',
+              transition: 'color .2s ease',
               flex: 1,
             }}
           >

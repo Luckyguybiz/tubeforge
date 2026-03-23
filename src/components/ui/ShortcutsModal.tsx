@@ -218,7 +218,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        backdropFilter: 'blur(4px)',
+        backdropFilter: 'blur(8px)',
         animation: 'shortcutsModalFadeIn .15s ease-out',
       }}
     >

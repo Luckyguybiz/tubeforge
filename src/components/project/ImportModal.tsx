@@ -210,8 +210,8 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         style={{
           position: 'fixed', inset: 0,
           background: C.overlay,
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
           zIndex: Z_INDEX.MODAL_BACKDROP,
           animation: 'fadeIn .2s ease',
         }}
