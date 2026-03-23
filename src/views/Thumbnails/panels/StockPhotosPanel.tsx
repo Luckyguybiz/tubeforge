@@ -1,239 +1,261 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import { trpc } from '@/lib/trpc';
-import { Skeleton } from '@/components/ui/Skeleton';
 
-const CATEGORIES = ['Nature', 'People', 'Technology', 'Business', 'Food', 'Travel', 'Abstract', 'Textures'] as const;
-const PER_PAGE = 15;
+interface StockPhoto {
+  id: number;
+  width: number;
+  height: number;
+  url: string;
+  photographer: string;
+  photographerUrl: string;
+  src: { medium: string; large: string; original: string; small: string };
+  alt: string;
+}
 
 export function StockPhotosPanel() {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const addImage = useThumbnailStore((s) => s.addImage);
-
   const [query, setQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, isFetching } = trpc.stock.searchPhotos.useQuery(
-    { query: searchTerm, page, perPage: PER_PAGE },
-    { enabled: searchTerm.length > 0, placeholderData: (prev) => prev },
+    { query: searchTerm, page, perPage: 20 },
+    { enabled: searchTerm.length > 0 },
   );
+
+  const handleSearch = useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed.length > 0) {
+      setSearchTerm(trimmed);
+      setPage(1);
+    }
+  }, [query]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSearch();
+  }, [handleSearch]);
+
+  const handleAddPhoto = useCallback((photo: StockPhoto) => {
+    const store = useThumbnailStore.getState();
+    store.addImage(photo.src.large);
+  }, []);
 
   const photos = data?.photos ?? [];
   const total = data?.total ?? 0;
-  const hasMore = photos.length > 0 && page * PER_PAGE < total;
-
-  const doSearch = useCallback((term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    setSearchTerm(trimmed);
-    setPage(1);
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    doSearch(query);
-  };
-
-  const handleCategory = (cat: string) => {
-    setQuery(cat);
-    setSearchTerm(cat);
-    setPage(1);
-    inputRef.current?.focus();
-  };
-
-  const handleAddPhoto = (url: string) => {
-    addImage(url);
-  };
+  const note = data?.note;
+  const hasMore = photos.length > 0 && page * 20 < total;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Search bar */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 6 }}>
+      {/* Search input */}
+      <div style={{ display: 'flex', gap: 6 }}>
         <input
-          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search stock photos..."
+          onKeyDown={handleKeyDown}
+          placeholder={t('thumbs.stock.searchPlaceholder')}
+          aria-label={t('thumbs.stock.searchPlaceholder')}
           style={{
             flex: 1,
             padding: '8px 10px',
-            borderRadius: 7,
+            borderRadius: 8,
             border: `1px solid ${C.border}`,
             background: C.surface,
             color: C.text,
             fontSize: 12,
-            outline: 'none',
             fontFamily: 'inherit',
+            outline: 'none',
           }}
         />
         <button
-          type="submit"
+          onClick={handleSearch}
+          aria-label={t('thumbs.stock.search')}
           style={{
-            padding: '8px 14px',
-            borderRadius: 7,
+            padding: '8px 12px',
+            borderRadius: 8,
             border: 'none',
             background: C.accent,
             color: '#fff',
-            fontSize: 11,
-            fontWeight: 700,
+            fontSize: 12,
+            fontWeight: 600,
             cursor: 'pointer',
             fontFamily: 'inherit',
-            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
-          Search
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
         </button>
-      </form>
-
-      {/* Quick category filters */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleCategory(cat)}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 20,
-              border: `1px solid ${searchTerm === cat ? C.accent : C.border}`,
-              background: searchTerm === cat ? `${C.accent}22` : C.surface,
-              color: searchTerm === cat ? C.accent : C.sub,
-              fontSize: 10,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all .12s',
-            }}
-          >
-            {cat}
-          </button>
-        ))}
       </div>
 
-      {/* Results */}
-      {isLoading && searchTerm ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} width="100%" height="72px" rounded />
-          ))}
-        </div>
-      ) : photos.length > 0 ? (
-        <>
-          <div style={{ fontSize: 10, color: C.dim, fontWeight: 500 }}>
-            {total.toLocaleString()} results for &ldquo;{searchTerm}&rdquo;
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-            {photos.map((photo) => (
-              <div
-                key={photo.id}
-                role="button"
-                tabIndex={0}
-                title={`${photo.alt || searchTerm} - ${photo.photographer}`}
-                onClick={() => handleAddPhoto(photo.src.large)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleAddPhoto(photo.src.large);
-                  }
-                }}
-                style={{
-                  position: 'relative',
-                  borderRadius: 6,
-                  overflow: 'hidden',
-                  border: `1px solid ${C.border}`,
-                  cursor: 'pointer',
-                  aspectRatio: '1',
-                  background: C.surface,
-                  transition: 'border-color .12s',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = C.accent;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = C.border;
-                }}
-              >
-                <img
-                  src={photo.src.small}
-                  alt={photo.alt || searchTerm}
-                  loading="lazy"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'linear-gradient(transparent, rgba(0,0,0,.65))',
-                    padding: '10px 4px 3px',
-                    fontSize: 8,
-                    color: '#ffffffcc',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {photo.photographer}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Load More */}
-          {hasMore && (
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={isFetching}
-              style={{
-                padding: '8px 0',
-                borderRadius: 7,
-                border: `1px solid ${C.border}`,
-                background: C.surface,
-                color: C.text,
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: isFetching ? 'wait' : 'pointer',
-                fontFamily: 'inherit',
-                opacity: isFetching ? 0.5 : 1,
-                transition: 'opacity .15s',
-              }}
-            >
-              {isFetching ? 'Loading...' : 'Load More'}
-            </button>
-          )}
-        </>
-      ) : searchTerm && !isLoading ? (
-        <div style={{ textAlign: 'center', padding: '24px 0', color: C.dim, fontSize: 12 }}>
-          <div style={{ marginBottom: 6, opacity: 0.3, fontSize: 28 }}>&#128247;</div>
-          No photos found for &ldquo;{searchTerm}&rdquo;
-        </div>
-      ) : (
-        <div style={{ textAlign: 'center', padding: '24px 0', color: C.dim, fontSize: 12 }}>
-          <div style={{ marginBottom: 6, opacity: 0.3, fontSize: 28 }}>&#128247;</div>
-          Search for free stock photos to add to your design
+      {/* Note / error */}
+      {note && (
+        <div style={{ fontSize: 11, color: C.dim, textAlign: 'center', padding: '4px 0' }}>
+          {note}
         </div>
       )}
 
-      {/* Attribution */}
-      <div style={{ textAlign: 'center', fontSize: 9, color: C.dim, paddingTop: 4, borderTop: `1px solid ${C.border}` }}>
-        Photos by{' '}
+      {/* Loading skeletons */}
+      {(isLoading || isFetching) && searchTerm && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                aspectRatio: '4/3',
+                borderRadius: 8,
+                background: C.surface,
+                animation: 'pulse 1.5s ease-in-out infinite',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !isFetching && searchTerm && photos.length === 0 && !note && (
+        <div style={{ textAlign: 'center', padding: '20px 0', color: C.dim, fontSize: 12 }}>
+          {t('thumbs.stock.noResults')}
+        </div>
+      )}
+
+      {/* Initial state */}
+      {!searchTerm && (
+        <div style={{ textAlign: 'center', padding: '20px 0', color: C.dim, fontSize: 12 }}>
+          {t('thumbs.stock.initialHint')}
+        </div>
+      )}
+
+      {/* Photo grid */}
+      {photos.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+          {photos.map((photo) => (
+            <div
+              key={photo.id}
+              role="button"
+              tabIndex={0}
+              aria-label={photo.alt || `${t('thumbs.stock.photoBy')} ${photo.photographer}`}
+              onClick={() => handleAddPhoto(photo)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAddPhoto(photo); } }}
+              style={{
+                position: 'relative',
+                borderRadius: 8,
+                overflow: 'hidden',
+                cursor: 'pointer',
+                border: `1px solid ${C.border}`,
+                transition: 'all .15s',
+                aspectRatio: '4/3',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = C.accent;
+                (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = C.border;
+                (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+              }}
+            >
+              <img
+                src={photo.src.small}
+                alt={photo.alt || `Photo by ${photo.photographer}`}
+                loading="lazy"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+              {/* Photographer attribution overlay */}
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '12px 6px 4px',
+                background: 'linear-gradient(transparent, rgba(0,0,0,.7))',
+                fontSize: 9,
+                color: 'rgba(255,255,255,.8)',
+                fontWeight: 500,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {photo.photographer}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Load more */}
+      {hasMore && (
+        <button
+          onClick={() => setPage((p) => p + 1)}
+          disabled={isFetching}
+          style={{
+            width: '100%',
+            padding: '8px 0',
+            borderRadius: 8,
+            border: `1px solid ${C.border}`,
+            background: C.surface,
+            color: C.sub,
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: isFetching ? 'wait' : 'pointer',
+            fontFamily: 'inherit',
+            transition: 'all .12s',
+          }}
+        >
+          {isFetching ? t('thumbs.stock.loading') : t('thumbs.stock.loadMore')}
+        </button>
+      )}
+
+      {/* Powered by Pexels attribution */}
+      <div style={{
+        textAlign: 'center',
+        padding: '6px 0 2px',
+        borderTop: `1px solid ${C.border}`,
+        marginTop: 4,
+      }}>
         <a
           href="https://www.pexels.com"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: C.sub, textDecoration: 'underline' }}
+          style={{
+            fontSize: 10,
+            color: C.dim,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            transition: 'color .12s',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = C.sub; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = C.dim; }}
         >
-          Pexels
+          <svg width="12" height="12" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M2 0h28a2 2 0 012 2v28a2 2 0 01-2 2H2a2 2 0 01-2-2V2a2 2 0 012-2zm12.9 17.5a4.6 4.6 0 100-9.2 4.6 4.6 0 000 9.2zm0-12.7a8.1 8.1 0 110 16.2 8.1 8.1 0 010-16.2zM8 25h16v2H8v-2z" />
+          </svg>
+          Powered by Pexels
         </a>
       </div>
+
+      {/* Pulse animation keyframes */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
+        }
+      `}</style>
     </div>
   );
 }

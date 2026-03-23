@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
+import type { CanvasSnapshot } from '@/stores/useThumbnailStore';
 import type { CanvasElement } from '@/lib/types';
 import { Z_INDEX } from '@/lib/constants';
 import { AIGeneratorView } from './AIGenerator';
@@ -24,9 +25,10 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, canvasBgImage, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
+      canvasBgImage: s.canvasBgImage,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
@@ -49,6 +51,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp'>('png');
+  const [exportSizeMode, setExportSizeMode] = useState<'original' | '2x' | 'custom'>('original');
+  const [exportCustomW, setExportCustomW] = useState(canvasW);
+  const [exportCustomH, setExportCustomH] = useState(canvasH);
+  const [exportQuality, setExportQuality] = useState(85);
+  const [isCopying, setIsCopying] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isSavingToLibrary, setIsSavingToLibrary] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [thumbnailStatus, setThumbnailStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
 
   // Responsive check
   useEffect(() => {
@@ -90,7 +105,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : ''), ''),
     [els],
   );
   useEffect(() => {
@@ -295,19 +310,60 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     onCanvasMouseUp();
   };
 
-  // ===== Download =====
-  const downloadCanvas = (format: 'png' | 'jpg' | 'pdf' = 'png') => {
+  // ===== Export formats & presets =====
+  const EXPORT_FORMATS = useMemo(() => [
+    { id: 'png' as const, label: 'PNG', mime: 'image/png' as const, ext: '.png', quality: 1 },
+    { id: 'jpg' as const, label: 'JPG', mime: 'image/jpeg' as const, ext: '.jpg', quality: 0.85 },
+    { id: 'webp' as const, label: 'WebP', mime: 'image/webp' as const, ext: '.webp', quality: 0.9 },
+  ], []);
+
+  const EXPORT_PRESETS = useMemo(() => [
+    { id: 'youtube', label: t('thumbs.export.presetYoutube'), w: 1280, h: 720, format: 'jpg' as const, quality: 85 },
+    { id: 'shorts', label: t('thumbs.export.presetShorts'), w: 1080, h: 1920, format: 'png' as const, quality: 100 },
+    { id: 'instagram', label: t('thumbs.export.presetInstagram'), w: 1080, h: 1080, format: 'png' as const, quality: 100 },
+    { id: 'twitter', label: t('thumbs.export.presetTwitter'), w: 1500, h: 500, format: 'jpg' as const, quality: 85 },
+  ], [t]);
+
+  const getExportSize = useCallback((): { w: number; h: number } => {
+    if (exportSizeMode === '2x') return { w: canvasW * 2, h: canvasH * 2 };
+    if (exportSizeMode === 'custom') return { w: exportCustomW, h: exportCustomH };
+    return { w: canvasW, h: canvasH };
+  }, [exportSizeMode, canvasW, canvasH, exportCustomW, exportCustomH]);
+
+  const getExportMime = useCallback((): { mime: string; ext: string; quality: number } => {
+    const fmt = EXPORT_FORMATS.find((f) => f.id === exportFormat) ?? EXPORT_FORMATS[0];
+    const q = exportFormat === 'png' ? 1 : exportQuality / 100;
+    return { mime: fmt.mime, ext: fmt.ext, quality: q };
+  }, [exportFormat, exportQuality, EXPORT_FORMATS]);
+
+  const applyExportPreset = useCallback((preset: { w: number; h: number; format: 'png' | 'jpg' | 'webp'; quality: number }) => {
+    setExportFormat(preset.format);
+    setExportSizeMode('custom');
+    setExportCustomW(preset.w);
+    setExportCustomH(preset.h);
+    setExportQuality(preset.quality);
+  }, []);
+
+  // ===== Core canvas renderer (reusable for all export paths) =====
+  const renderToCanvas = useCallback((targetW: number, targetH: number): Promise<HTMLCanvasElement> => {
     const canvas = document.createElement('canvas');
-    canvas.width = canvasW; canvas.height = canvasH;
+    canvas.width = targetW; canvas.height = targetH;
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error('[ThumbnailEditor] Failed to create canvas 2D context');
-      return;
-    }
-    setIsDownloading(true);
+    if (!ctx) return Promise.reject(new Error('Failed to create canvas 2D context'));
+    const scaleX = targetW / canvasW;
+    const scaleY = targetH / canvasH;
+    ctx.scale(scaleX, scaleY);
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
 
-    // Preload all images first so we can draw elements in correct z-order
+    // Draw background image if set
+    const bgImageUrl = useThumbnailStore.getState().canvasBgImage;
+    const bgImagePromise = bgImageUrl ? new Promise<HTMLImageElement | null>((resolve) => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = bgImageUrl;
+    }) : Promise.resolve(null);
+
     const imgCache = new Map<string, HTMLImageElement>();
     const imageEls = els.filter((el) => el.type === 'image' && el.src && el.visible !== false);
     const imagePromises = imageEls.map((el) => new Promise<void>((resolve) => {
@@ -317,21 +373,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       img.src = el.src!;
     }));
 
-    Promise.all(imagePromises).then(async () => {
-      // Draw all elements in order (correct z-layering)
+    return Promise.all([...imagePromises, bgImagePromise]).then((results) => {
+      const bgImg = results[results.length - 1] as HTMLImageElement | null;
+      if (bgImg) { ctx.drawImage(bgImg, 0, 0, canvasW, canvasH); }
       for (const el of els) {
         if (el.visible === false) continue;
         ctx.globalAlpha = el.opacity ?? 1;
-        // Apply rotation if present
         const rot = el.rot ?? 0;
-        if (rot !== 0) {
-          const cx = el.x + el.w / 2, cy = el.y + el.h / 2;
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate((rot * Math.PI) / 180);
-          ctx.translate(-cx, -cy);
-        }
-        // Apply shape shadow for rect/circle/triangle/star
+        if (rot !== 0) { const cx = el.x + el.w / 2, cy = el.y + el.h / 2; ctx.save(); ctx.translate(cx, cy); ctx.rotate((rot * Math.PI) / 180); ctx.translate(-cx, -cy); }
+        if (el.glow) { ctx.shadowColor = el.glow.color; ctx.shadowBlur = el.glow.blur; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
+        const filterParts: string[] = [];
+        if (el.blur && el.blur > 0) filterParts.push(`blur(${el.blur}px)`);
+        if (el.brightness !== undefined && el.brightness !== 100) filterParts.push(`brightness(${el.brightness / 100})`);
+        if (el.contrast !== undefined && el.contrast !== 100) filterParts.push(`contrast(${el.contrast / 100})`);
+        if (filterParts.length > 0) ctx.filter = filterParts.join(' ');
         if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle')) {
           try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
         }
@@ -344,7 +399,6 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'text') {
-          // Apply text transform
           let displayText = el.text ?? '';
           if (el.textTransform === 'uppercase') displayText = displayText.toUpperCase();
           else if (el.textTransform === 'lowercase') displayText = displayText.toLowerCase();
@@ -353,23 +407,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.textAlign = el.textAlign ?? 'left';
           if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
           const textX = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
-          // Text stroke
           if ((el.textStrokeWidth ?? 0) > 0) { ctx.strokeStyle = el.textStroke ?? '#000'; ctx.lineWidth = el.textStrokeWidth ?? 0; ctx.strokeText(displayText, textX, el.y + (el.size ?? 32)); }
           ctx.fillStyle = el.color ?? '#fff';
-          // Letter spacing (canvas API doesn't support it natively, so we do it character by character for small texts)
           if ((el.letterSpacing ?? 0) !== 0 && displayText.length < 100) {
-            const ls = el.letterSpacing ?? 0;
-            let curX = textX;
+            const ls = el.letterSpacing ?? 0; let curX = textX;
             for (const ch of displayText) { ctx.fillText(ch, curX, el.y + (el.size ?? 32)); curX += ctx.measureText(ch).width + ls; }
-          } else {
-            ctx.fillText(displayText, textX, el.y + (el.size ?? 32));
-          }
+          } else { ctx.fillText(displayText, textX, el.y + (el.size ?? 32)); }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
         } else if (el.type === 'path') {
           ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
         } else if (el.type === 'image') {
-          const img = imgCache.get(el.id);
-          if (img) { ctx.drawImage(img, el.x, el.y, el.w, el.h); }
+          const img = imgCache.get(el.id); if (img) { ctx.drawImage(img, el.x, el.y, el.w, el.h); }
         } else if (el.type === 'line' || el.type === 'arrow') {
           ctx.strokeStyle = el.strokeColor ?? '#fff'; ctx.lineWidth = el.lineWidth ?? 2; ctx.lineCap = 'round';
           ctx.setLineDash(el.dashStyle === 'dashed' ? [8, 4] : el.dashStyle === 'dotted' ? [2, 4] : []);
@@ -395,38 +443,116 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
           for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
         }
-        // Restore rotation transform if applied
+        ctx.filter = 'none'; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
         if (rot !== 0) { ctx.restore(); }
         ctx.globalAlpha = 1;
       }
+      return canvas;
+    });
+  }, [els, canvasW, canvasH, canvasBg, t]);
 
-      // Export in the requested format
-      if (format === 'pdf') {
-        try {
-          const { default: jsPDF } = await import('jspdf');
-          const orientation = canvasW >= canvasH ? 'landscape' : 'portrait';
-          const pdf = new jsPDF({ orientation, unit: 'px', format: [canvasW, canvasH] });
-          const imgData = canvas.toDataURL('image/jpeg', 0.92);
-          pdf.addImage(imgData, 'JPEG', 0, 0, canvasW, canvasH);
-          pdf.save('thumbnail.pdf');
-        } catch {
-          // Fallback if jspdf not installed - download as PNG
-          const link = document.createElement('a');
-          link.download = 'thumbnail.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        }
-      } else {
-        const link = document.createElement('a');
-        link.download = format === 'jpg' ? 'thumbnail.jpg' : 'thumbnail.png';
-        link.href = format === 'jpg' ? canvas.toDataURL('image/jpeg', 0.92) : canvas.toDataURL('image/png');
-        link.click();
-      }
+  // ===== Download =====
+  const downloadCanvas = useCallback((format?: 'png' | 'jpg' | 'webp', overrideW?: number, overrideH?: number, overrideQ?: number) => {
+    const fmt = format ?? exportFormat;
+    const { w: ew, h: eh } = overrideW && overrideH ? { w: overrideW, h: overrideH } : getExportSize();
+    const fmtInfo = EXPORT_FORMATS.find((f) => f.id === fmt) ?? EXPORT_FORMATS[0];
+    const quality = fmt === 'png' ? 1 : (overrideQ !== undefined ? overrideQ / 100 : exportQuality / 100);
+    setIsDownloading(true);
+    renderToCanvas(ew, eh).then((canvas) => {
+      const link = document.createElement('a');
+      link.download = `thumbnail${fmtInfo.ext}`;
+      link.href = canvas.toDataURL(fmtInfo.mime, quality);
+      link.click();
     }).catch((err) => {
       if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Download failed:', err);
-    }).finally(() => {
-      setIsDownloading(false);
-    });
+    }).finally(() => { setIsDownloading(false); });
+  }, [exportFormat, getExportSize, exportQuality, EXPORT_FORMATS, renderToCanvas]);
+
+  /** Copy thumbnail to clipboard */
+  const copyToClipboard = useCallback(async () => {
+    setIsCopying(true); setCopyStatus('idle');
+    try {
+      const { w, h } = getExportSize();
+      const canvas = await renderToCanvas(w, h);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Blob creation failed')), 'image/png');
+      });
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      setCopyStatus('success'); setTimeout(() => setCopyStatus('idle'), 2000);
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Copy failed:', err);
+      setCopyStatus('error'); setTimeout(() => setCopyStatus('idle'), 2000);
+    } finally { setIsCopying(false); }
+  }, [getExportSize, renderToCanvas]);
+
+  /** Save to media library via /api/upload */
+  const saveToLibrary = useCallback(async () => {
+    setIsSavingToLibrary(true); setSaveStatus('idle');
+    try {
+      const { w, h } = getExportSize();
+      const { mime, ext, quality } = getExportMime();
+      const canvas = await renderToCanvas(w, h);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Blob creation failed')), mime, quality);
+      });
+      const formData = new FormData();
+      formData.append('file', new File([blob], `thumbnail${ext}`, { type: mime }));
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+      setSaveStatus('success'); setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Save to library failed:', err);
+      setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 2000);
+    } finally { setIsSavingToLibrary(false); }
+  }, [getExportSize, getExportMime, renderToCanvas]);
+
+  /** Set as project thumbnail */
+  const setProjectThumbnail = trpc.project.update.useMutation({
+    onSuccess: () => { setThumbnailStatus('success'); setTimeout(() => setThumbnailStatus('idle'), 2000); },
+    onError: () => { setThumbnailStatus('error'); setTimeout(() => setThumbnailStatus('idle'), 2000); },
+  });
+  const handleSetProjectThumbnail = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const canvas = await renderToCanvas(canvasW, canvasH);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      setProjectThumbnail.mutate({ id: projectId, thumbnailUrl: dataUrl });
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Set thumbnail failed:', err);
+      setThumbnailStatus('error'); setTimeout(() => setThumbnailStatus('idle'), 2000);
+    }
+  }, [projectId, canvasW, canvasH, renderToCanvas, setProjectThumbnail]);
+
+  // ===== Effects helper =====
+  const getEffectStyles = (el: CanvasElement): React.CSSProperties => {
+    const styles: React.CSSProperties = {};
+    const filters: string[] = [];
+    if (el.glow) {
+      filters.push(`drop-shadow(0 0 ${el.glow.blur}px ${el.glow.color})`);
+    }
+    if (el.blur && el.blur > 0) {
+      filters.push(`blur(${el.blur}px)`);
+    }
+    if (el.brightness !== undefined && el.brightness !== 100) {
+      filters.push(`brightness(${el.brightness / 100})`);
+    }
+    if (el.contrast !== undefined && el.contrast !== 100) {
+      filters.push(`contrast(${el.contrast / 100})`);
+    }
+    if (filters.length > 0) {
+      styles.filter = filters.join(' ');
+    }
+    return styles;
+  };
+
+  const getTextGradientStyles = (el: CanvasElement): React.CSSProperties => {
+    if (!el.textGradient) return {};
+    return {
+      background: `linear-gradient(${el.textGradient.angle}deg, ${el.textGradient.from}, ${el.textGradient.to})`,
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+    };
   };
 
   // ===== Render element =====
@@ -454,11 +580,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     };
 
     if (el.type === 'text') {
+      const effectStyles = getEffectStyles(el);
+      const gradientStyles = getTextGradientStyles(el);
       const textStyle: React.CSSProperties = {
         position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
         fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
-        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left',
-        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR,
+        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.textGradient ? undefined : el.color, textAlign: el.textAlign ?? 'left',
+        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.textGradient ? undefined : el.bg, borderRadius: el.borderR,
         padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none',
         transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
@@ -466,6 +594,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
         textTransform: el.textTransform && el.textTransform !== 'none' ? el.textTransform : undefined,
         WebkitTextStroke: (el.textStrokeWidth ?? 0) > 0 ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+        ...effectStyles,
+        ...gradientStyles,
       };
       return (
         <div key={el.id} data-text-el={el.id} style={textStyle}
@@ -482,22 +612,25 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
 
     if (el.type === 'rect') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
-    if (el.type === 'image') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
-        onMouseDown={elDrag}>
-        <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
-        {resizeHandle}{deleteHandle}
-      </div>
-    );
+    if (el.type === 'image') {
+      const imgEffects = getEffectStyles(el);
+      return (
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+          onMouseDown={elDrag}>
+          <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none', ...imgEffects }} />
+          {resizeHandle}{deleteHandle}
+        </div>
+      );
+    }
 
     if (el.type === 'path') return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
@@ -724,24 +857,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             )}
           </div>
-          {/* Download dropdown */}
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => { setShowDownloadMenu(!showDownloadMenu); setShowSizeMenu(false); }} disabled={isDownloading} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px', opacity: isDownloading ? 0.5 : 1, cursor: isDownloading ? 'wait' : 'pointer' }}>{downloadIcon} {isDownloading ? t('thumbs.editor.downloading') : t('thumbs.editor.download')} {chevronIcon}</button>
-            {showDownloadMenu && (
-              <div style={{ ...dropdownPanel, minWidth: 140 }}>
-                {[{ label: 'PNG', format: 'png' as const, desc: t('thumbs.editor.lossless') }, { label: 'JPG', format: 'jpg' as const, desc: t('thumbs.editor.compressed') }, { label: 'PDF', format: 'pdf' as const, desc: t('thumbs.editor.documentFormat') }].map((opt) => (
-                  <div key={opt.format} role="menuitem" tabIndex={0} aria-label={`${t('thumbs.editor.downloadFormat')} ${opt.label}`} onClick={() => { downloadCanvas(opt.format); setShowDownloadMenu(false); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); downloadCanvas(opt.format); setShowDownloadMenu(false); } }}
-                    style={menuItem}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                    <span style={{ fontWeight: 600 }}>{opt.label}</span>
-                    <span style={{ fontSize: 10, color: C.dim }}>{opt.desc}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Export button */}
+          <button onClick={() => { setShowExportModal(true); setShowSizeMenu(false); setShowDownloadMenu(false); }} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px' }}>{downloadIcon} {t('thumbs.export.title')}</button>
+          {/* History panel toggle */}
+          {historyCount > 0 && (
+            <button onClick={() => setShowHistoryPanel(!showHistoryPanel)} title={t('thumbs.export.history')} style={{ ...headerBtn, padding: '7px 8px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>
+            </button>
+          )}
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* AI reference + AI generate */}
           <button onClick={() => { const img = captureCanvas(); if (img) { store().setAiReferenceImage(img); store().setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} {t('thumbs.editor.byPhoto')}</button>
@@ -764,6 +888,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
               style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
+            {/* AI Background Image — rendered behind all elements */}
+            {canvasBgImage && (
+              <img src={canvasBgImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
+            )}
             {els.map(renderElement)}
             {/* Collaboration cursors overlay */}
             <CollaborationCursors canvasW={canvasW} canvasH={canvasH} containerW={canvasAreaRef.current?.clientWidth ?? canvasW} containerH={canvasAreaRef.current?.clientHeight ?? canvasH} />
@@ -879,6 +1007,129 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             </div>
           </div>
         )}
+        {/* ===== Export Modal ===== */}
+        {showExportModal && (
+          <div onClick={() => setShowExportModal(false)} style={{ position: 'fixed', inset: 0, zIndex: Z_INDEX.MODAL_BACKDROP, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, minWidth: isMobile ? '90vw' : 420, maxWidth: isMobile ? '95vw' : 480, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(0,0,0,.4)', color: C.text }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{t('thumbs.export.title')}</h3>
+                <button onClick={() => setShowExportModal(false)} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit' }}>&times;</button>
+              </div>
+
+              {/* Format selector */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>{t('thumbs.export.format')}</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {EXPORT_FORMATS.map((fmt) => (
+                    <button key={fmt.id} onClick={() => setExportFormat(fmt.id)} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: `1px solid ${exportFormat === fmt.id ? C.accent : C.border}`, background: exportFormat === fmt.id ? C.accentDim : 'transparent', color: exportFormat === fmt.id ? C.accent : C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                      <div>{fmt.label}</div>
+                      <div style={{ fontSize: 9, color: C.dim, marginTop: 2 }}>
+                        {fmt.id === 'png' ? t('thumbs.export.pngDesc') : fmt.id === 'jpg' ? t('thumbs.export.jpgDesc') : t('thumbs.export.webpDesc')}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Size selector */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>{t('thumbs.export.size')}</label>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  {([
+                    { id: 'original' as const, label: `${t('thumbs.export.original')} (${canvasW}x${canvasH})` },
+                    { id: '2x' as const, label: `${t('thumbs.export.retina')} (${canvasW * 2}x${canvasH * 2})` },
+                    { id: 'custom' as const, label: t('thumbs.export.custom') },
+                  ]).map((opt) => (
+                    <button key={opt.id} onClick={() => setExportSizeMode(opt.id)} style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: `1px solid ${exportSizeMode === opt.id ? C.accent : C.border}`, background: exportSizeMode === opt.id ? C.accentDim : 'transparent', color: exportSizeMode === opt.id ? C.accent : C.text, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {exportSizeMode === 'custom' && (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <label style={{ fontSize: 11, color: C.sub }}>{t('thumbs.export.width')}</label>
+                    <input type="number" value={exportCustomW} onChange={(e) => setExportCustomW(Math.max(1, Number(e.target.value)))} style={{ width: 80, padding: '4px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }} />
+                    <span style={{ color: C.dim, fontSize: 12 }}>x</span>
+                    <label style={{ fontSize: 11, color: C.sub }}>{t('thumbs.export.height')}</label>
+                    <input type="number" value={exportCustomH} onChange={(e) => setExportCustomH(Math.max(1, Number(e.target.value)))} style={{ width: 80, padding: '4px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Quality slider (JPG/WebP only) */}
+              {exportFormat !== 'png' && (
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>{t('thumbs.export.quality')} — {exportQuality}%</label>
+                  <input type="range" min={10} max={100} value={exportQuality} onChange={(e) => setExportQuality(Number(e.target.value))} style={{ width: '100%', accentColor: C.accent, height: 4, cursor: 'pointer' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: C.dim, marginTop: 2 }}><span>10%</span><span>100%</span></div>
+                </div>
+              )}
+
+              {/* Quick Presets */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>{t('thumbs.export.presets')}</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {EXPORT_PRESETS.map((p) => (
+                    <button key={p.id} onClick={() => applyExportPreset(p)} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      {p.label}
+                      <span style={{ fontSize: 9, color: C.dim, marginLeft: 4 }}>{p.w}x{p.h}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {/* Copy to clipboard */}
+                <button onClick={copyToClipboard} disabled={isCopying} style={{ flex: 1, minWidth: 100, padding: '10px 14px', borderRadius: 10, border: `1px solid ${C.border}`, background: copyStatus === 'success' ? C.green + '22' : copyStatus === 'error' ? C.accent + '22' : C.surface, color: copyStatus === 'success' ? C.green : copyStatus === 'error' ? C.accent : C.text, fontSize: 12, fontWeight: 600, cursor: isCopying ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s', opacity: isCopying ? 0.6 : 1 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  {copyStatus === 'success' ? t('thumbs.export.copied') : copyStatus === 'error' ? t('thumbs.export.copyFailed') : t('thumbs.export.copy')}
+                </button>
+                {/* Save to library */}
+                <button onClick={saveToLibrary} disabled={isSavingToLibrary} style={{ flex: 1, minWidth: 100, padding: '10px 14px', borderRadius: 10, border: `1px solid ${C.border}`, background: saveStatus === 'success' ? C.green + '22' : saveStatus === 'error' ? C.accent + '22' : C.surface, color: saveStatus === 'success' ? C.green : saveStatus === 'error' ? C.accent : C.text, fontSize: 12, fontWeight: 600, cursor: isSavingToLibrary ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s', opacity: isSavingToLibrary ? 0.6 : 1 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  {saveStatus === 'success' ? t('thumbs.export.saved') : saveStatus === 'error' ? t('thumbs.export.saveFailed') : isSavingToLibrary ? t('thumbs.export.saving') : t('thumbs.export.save')}
+                </button>
+                {/* Download */}
+                <button onClick={() => { downloadCanvas(); setShowExportModal(false); }} disabled={isDownloading} style={{ flex: 1, minWidth: 100, padding: '10px 14px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg,${C.accent},${C.pink})`, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isDownloading ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s', boxShadow: `0 4px 16px ${C.accent}33`, opacity: isDownloading ? 0.6 : 1 }}>
+                  {downloadIcon}
+                  {isDownloading ? t('thumbs.export.downloading') : t('thumbs.export.download')}
+                </button>
+              </div>
+
+              {/* Use as project thumbnail */}
+              {projectId && (
+                <button onClick={handleSetProjectThumbnail} disabled={setProjectThumbnail.isPending} style={{ width: '100%', marginTop: 10, padding: '8px 14px', borderRadius: 10, border: `1px solid ${C.border}`, background: thumbnailStatus === 'success' ? C.green + '22' : thumbnailStatus === 'error' ? C.accent + '22' : 'transparent', color: thumbnailStatus === 'success' ? C.green : thumbnailStatus === 'error' ? C.accent : C.sub, fontSize: 11, fontWeight: 600, cursor: setProjectThumbnail.isPending ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  {thumbnailStatus === 'success' ? t('thumbs.export.thumbnailSet') : thumbnailStatus === 'error' ? t('thumbs.export.thumbnailFailed') : t('thumbs.export.setThumbnail')}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ===== History Panel ===== */}
+        {showHistoryPanel && (
+          <div onClick={() => setShowHistoryPanel(false)} style={{ position: 'fixed', inset: 0, zIndex: Z_INDEX.MODAL_BACKDROP, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, minWidth: isMobile ? '90vw' : 360, maxWidth: isMobile ? '95vw' : 440, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(0,0,0,.4)', color: C.text }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{t('thumbs.export.history')}</h3>
+                <button onClick={() => setShowHistoryPanel(false)} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit' }}>&times;</button>
+              </div>
+              <HistorySnapshots
+                C={C}
+                t={t}
+                canvasW={canvasW}
+                canvasH={canvasH}
+                onRestore={(snap: CanvasSnapshot) => { store().restoreSnapshot(snap); setShowHistoryPanel(false); }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* On mobile: collapsible properties drawer */}
         {isMobile ? (
           <>
@@ -1051,6 +1302,78 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+/** History Snapshots -- renders mini-thumbnails of recent history states */
+function HistorySnapshots({ C, t, canvasW, canvasH, onRestore }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+  canvasW: number;
+  canvasH: number;
+  onRestore: (snapshot: CanvasSnapshot) => void;
+}) {
+  const snapshots = useThumbnailStore.getState().getRecentSnapshots(5);
+  const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+
+  useEffect(() => {
+    snapshots.forEach((snap, idx) => {
+      const cvs = canvasRefs.current[idx];
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      if (!ctx) return;
+      const thumbW = 120;
+      const thumbH = Math.round(thumbW * (canvasH / canvasW));
+      cvs.width = thumbW;
+      cvs.height = thumbH;
+      const sx = thumbW / canvasW;
+      const sy = thumbH / canvasH;
+      ctx.scale(sx, sy);
+      ctx.fillStyle = snap.canvasBg;
+      ctx.fillRect(0, 0, canvasW, canvasH);
+      for (const el of snap.els) {
+        if (el.visible === false) continue;
+        ctx.globalAlpha = el.opacity ?? 1;
+        if (el.type === 'rect') {
+          ctx.fillStyle = el.color ?? '#fff'; ctx.fillRect(el.x, el.y, el.w, el.h);
+        } else if (el.type === 'circle') {
+          ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+        } else if (el.type === 'text') {
+          ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          const stx = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
+          ctx.textAlign = el.textAlign ?? 'left';
+          ctx.fillText(el.text ?? '', stx, el.y + (el.size ?? 32)); ctx.textAlign = 'left';
+        } else if (el.type === 'path') {
+          ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
+        }
+        ctx.globalAlpha = 1;
+      }
+    });
+  }, [snapshots, canvasW, canvasH]);
+
+  if (snapshots.length === 0) {
+    return <div style={{ padding: 16, textAlign: 'center', color: C.dim, fontSize: 12 }}>{t('thumbs.export.historyEmpty')}</div>;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {snapshots.map((snap, idx) => (
+        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 8, border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'all .12s' }}
+          onClick={() => onRestore(snap)}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.accent; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}>
+          <canvas
+            ref={(el) => { canvasRefs.current[idx] = el; }}
+            style={{ borderRadius: 4, flexShrink: 0, width: 120, height: Math.round(120 * (canvasH / canvasW)) }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Version {snapshots.length - idx}</div>
+            <div style={{ fontSize: 10, color: C.dim }}>{snap.els.length} {snap.els.length === 1 ? 'element' : 'elements'}</div>
+            <div style={{ fontSize: 9, color: C.accent, marginTop: 4 }}>{t('thumbs.export.restoreVersion')}</div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

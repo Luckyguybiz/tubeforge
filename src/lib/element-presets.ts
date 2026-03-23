@@ -446,6 +446,58 @@ export const BACKGROUND_PRESETS: BackgroundPreset[] = [
   { label: 'Cyber', value: 'gradient:135:#06b6d4:#7c3aed', preview: 'linear-gradient(135deg, #06b6d4, #7c3aed)' },
 ];
 
+// ===== Phase 4 — Arrow presets =====
+export const ARROW_PRESETS: ElementPreset[] = [
+  { label: 'Straight', type: 'arrow', icon: '→', props: { strokeColor: '#ffffff', lineWidth: 3, arrowHead: 'end', dashStyle: 'solid' } },
+  { label: 'Curved', type: 'arrow', icon: '↪', props: { strokeColor: '#ffffff', lineWidth: 3, arrowHead: 'end', dashStyle: 'solid' } },
+  { label: 'Dotted', type: 'arrow', icon: '⇢', props: { strokeColor: '#ffffff', lineWidth: 3, arrowHead: 'end', dashStyle: 'dotted' } },
+  { label: 'Thick', type: 'arrow', icon: '➤', props: { strokeColor: '#ffffff', lineWidth: 6, arrowHead: 'end', dashStyle: 'solid' } },
+  { label: 'Neon', type: 'arrow', icon: '⇨', props: { strokeColor: '#00ff88', lineWidth: 4, arrowHead: 'end', dashStyle: 'solid' } },
+  { label: 'Hand-drawn', type: 'arrow', icon: '➝', props: { strokeColor: '#ff2d55', lineWidth: 3, arrowHead: 'end', dashStyle: 'dashed' } },
+];
+
+// ===== Phase 4 — Badge presets =====
+export const BADGE_PRESETS: ElementPreset[] = [
+  { label: 'NEW', type: 'text', icon: '🆕', props: { text: 'NEW', size: 36, bold: true, color: '#ffffff', bg: '#ff2d55', borderR: 8 } },
+  { label: 'FREE', type: 'text', icon: '🆓', props: { text: 'FREE', size: 36, bold: true, color: '#ffffff', bg: '#2dd4a0', borderR: 8 } },
+  { label: '#1', type: 'text', icon: '🥇', props: { text: '#1', size: 48, bold: true, color: '#ffffff', bg: '#f59e0b', borderR: 12 } },
+  { label: 'HOT', type: 'text', icon: '🔥', props: { text: 'HOT', size: 36, bold: true, color: '#ffffff', bg: '#ff4500', borderR: 8 } },
+  { label: 'VS', type: 'text', icon: '⚔️', props: { text: 'VS', size: 48, bold: true, color: '#ffffff', bg: '#8b5cf6', borderR: 24 } },
+  { label: '5 Stars', type: 'text', icon: '⭐', props: { text: '★★★★★', size: 32, bold: false, color: '#f59e0b', bg: 'transparent' } },
+];
+
+// ===== Phase 4 — Emoji presets (popular for thumbnails) =====
+export const EMOJI_PRESETS: ElementPreset[] = [
+  { label: 'Fire', type: 'text', icon: '🔥', props: { text: '🔥', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Shocked', type: 'text', icon: '😱', props: { text: '😱', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Money', type: 'text', icon: '💰', props: { text: '💰', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Gaming', type: 'text', icon: '🎮', props: { text: '🎮', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Phone', type: 'text', icon: '📱', props: { text: '📱', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Eyes', type: 'text', icon: '👀', props: { text: '👀', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Alert', type: 'text', icon: '❗', props: { text: '❗', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+  { label: 'Check', type: 'text', icon: '✅', props: { text: '✅', size: 72, bold: false, color: '#ffffff', bg: 'transparent' } },
+];
+
+// ===== Phase 4 — Divider presets =====
+export const DIVIDER_PRESETS: ElementPreset[] = [
+  { label: 'H-Line', type: 'line', icon: '─', props: { strokeColor: '#ffffff', lineWidth: 2, dashStyle: 'solid' } },
+  { label: 'V-Line', type: 'line', icon: '│', props: { strokeColor: '#ffffff', lineWidth: 2, dashStyle: 'solid' } },
+  { label: 'Dashed', type: 'line', icon: '┈', props: { strokeColor: '#ffffff', lineWidth: 2, dashStyle: 'dashed' } },
+  { label: 'Thick', type: 'line', icon: '━', props: { strokeColor: '#ffffff', lineWidth: 5, dashStyle: 'solid' } },
+  { label: 'Colored', type: 'line', icon: '▬', props: { strokeColor: '#ff2d55', lineWidth: 3, dashStyle: 'solid' } },
+  { label: 'Gradient', type: 'line', icon: '═', props: { strokeColor: '#8b5cf6', lineWidth: 4, dashStyle: 'solid' } },
+];
+
+// ===== Phase 4 — Frame presets =====
+export const FRAME_PRESETS: ElementPreset[] = [
+  { label: 'Circle', type: 'circle', icon: '◯', props: { w: 200, h: 200, color: 'transparent', opacity: 1, border: '3px solid #ffffff' } },
+  { label: 'Rounded', type: 'rect', icon: '▢', props: { w: 200, h: 200, color: 'transparent', opacity: 1, borderR: 20, border: '3px solid #ffffff' } },
+  { label: 'Phone', type: 'rect', icon: '📱', props: { w: 120, h: 240, color: '#1a1a2e', opacity: 1, borderR: 16, border: '3px solid #333' } },
+  { label: 'Laptop', type: 'rect', icon: '💻', props: { w: 280, h: 180, color: '#1a1a2e', opacity: 1, borderR: 8, border: '3px solid #555' } },
+  { label: 'Square', type: 'rect', icon: '◻', props: { w: 200, h: 200, color: 'transparent', opacity: 1, borderR: 0, border: '3px solid #f59e0b' } },
+  { label: 'Neon', type: 'rect', icon: '✨', props: { w: 200, h: 200, color: 'transparent', opacity: 1, borderR: 12, border: '3px solid #00ff88' } },
+];
+
 export const COLOR_PRESETS = [
   '#ff0000', '#ff2d55', '#3a7bfd', '#ffff00', '#2dd4a0', '#8b5cf6',
   '#f59e0b', '#06b6d4', '#ec4899', '#ffffff', '#000000', '#6b7280',
