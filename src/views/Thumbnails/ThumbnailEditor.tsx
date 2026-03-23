@@ -90,7 +90,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? ''), ''),
     [els],
   );
   useEffect(() => {
@@ -331,18 +331,40 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.rotate((rot * Math.PI) / 180);
           ctx.translate(-cx, -cy);
         }
+        // Apply shape shadow for rect/circle/triangle/star
+        if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle')) {
+          try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
+        }
         if (el.type === 'rect') {
           ctx.fillStyle = el.color ?? '#fff';
           if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
           else { ctx.fillRect(el.x, el.y, el.w, el.h); }
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'circle') {
           ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'text') {
-          ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          // Apply text transform
+          let displayText = el.text ?? '';
+          if (el.textTransform === 'uppercase') displayText = displayText.toUpperCase();
+          else if (el.textTransform === 'lowercase') displayText = displayText.toLowerCase();
+          else if (el.textTransform === 'capitalize') displayText = displayText.replace(/\b\w/g, (c) => c.toUpperCase());
+          ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
           ctx.textAlign = el.textAlign ?? 'left';
           if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
           const textX = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
-          ctx.fillText(el.text ?? '', textX, el.y + (el.size ?? 32)); ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
+          // Text stroke
+          if ((el.textStrokeWidth ?? 0) > 0) { ctx.strokeStyle = el.textStroke ?? '#000'; ctx.lineWidth = el.textStrokeWidth ?? 0; ctx.strokeText(displayText, textX, el.y + (el.size ?? 32)); }
+          ctx.fillStyle = el.color ?? '#fff';
+          // Letter spacing (canvas API doesn't support it natively, so we do it character by character for small texts)
+          if ((el.letterSpacing ?? 0) !== 0 && displayText.length < 100) {
+            const ls = el.letterSpacing ?? 0;
+            let curX = textX;
+            for (const ch of displayText) { ctx.fillText(ch, curX, el.y + (el.size ?? 32)); curX += ctx.measureText(ch).width + ls; }
+          } else {
+            ctx.fillText(displayText, textX, el.y + (el.size ?? 32));
+          }
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
         } else if (el.type === 'path') {
           ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = el.strokeW ?? 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(new Path2D(el.path ?? ''));
         } else if (el.type === 'image') {
@@ -431,31 +453,41 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       store().setDrag({ id: el.id, ox: (e.clientX - rect.left) * sx - el.x, oy: (e.clientY - rect.top) * sy - el.y });
     };
 
-    if (el.type === 'text') return (
-      <div key={el.id} data-text-el={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%', fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`, fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left', textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR, padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
-        contentEditable={isSel} suppressContentEditableWarning
-        onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
-        onMouseDown={(e) => {
-          if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
-          // When already selected, set up drag (single-click moves, double-click edits text)
-          elDrag(e);
-        }}
-        onDoubleClick={(e) => {
-          // Focus the contentEditable on double-click for text editing
-          e.stopPropagation();
-          (e.currentTarget as HTMLElement).focus();
-        }}>
-        {el.text}{resizeHandle}{deleteHandle}
-      </div>
-    );
+    if (el.type === 'text') {
+      const textStyle: React.CSSProperties = {
+        position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
+        fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
+        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.color, textAlign: el.textAlign ?? 'left',
+        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.bg, borderRadius: el.borderR,
+        padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: 'move', boxSizing: 'border-box', outline: 'none',
+        transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
+        letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
+        lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
+        textTransform: el.textTransform && el.textTransform !== 'none' ? el.textTransform : undefined,
+        WebkitTextStroke: (el.textStrokeWidth ?? 0) > 0 ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+      };
+      return (
+        <div key={el.id} data-text-el={el.id} style={textStyle}
+          contentEditable={isSel} suppressContentEditableWarning
+          onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
+          onMouseDown={(e) => {
+            if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
+            elDrag(e);
+          }}
+          onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
+          {el.text}{resizeHandle}{deleteHandle}
+        </div>
+      );
+    }
 
     if (el.type === 'rect') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: el.rot ? `rotate(${el.rot}deg)` : undefined, boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined }}
         onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
     );
 
@@ -720,6 +752,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         {/* On mobile: toolbar is horizontal at top */}
         <ToolBar onFileChange={onFileChange} isMobile={isMobile} />
         {!isMobile && <LeftSidebar />}
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, gap: 0 }}>
+        {/* Quick Actions Toolbar */}
+        {!isMobile && selIds.length > 0 && (
+          <QuickActionsBar C={C} selIds={selIds} />
+        )}
         <ErrorBoundary>
         <div ref={canvasWrapperRef} style={{ flex: 1, position: 'relative', minWidth: 0, overflow: 'hidden', borderRadius: isMobile ? 8 : 12, border: `1px solid ${C.border}`, background: C.bg, width: '100%', maxWidth: '100%' }}
           onMouseDown={onMiddleDown} onMouseMove={onMiddleMove} onMouseUp={onMiddleUp} onMouseLeave={onMiddleUp}>
@@ -767,6 +804,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
         </div>
         </ErrorBoundary>
+        </div>
         {/* D8: Context menu */}
         {contextMenu && (
           <div
@@ -916,11 +954,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 function getSizePresets(t: (key: string) => string) {
   return [
     { label: t('thumbs.editor.sizeYoutube'), w: 1280, h: 720 },
+    { label: 'YouTube Shorts', w: 1080, h: 1920 },
     { label: t('thumbs.editor.sizeInstagramPost'), w: 1080, h: 1080 },
     { label: t('thumbs.editor.sizeInstagramStory'), w: 1080, h: 1920 },
-    { label: t('thumbs.editor.sizeFacebookCover'), w: 820, h: 312 },
+    { label: 'Twitter Post', w: 1200, h: 675 },
     { label: t('thumbs.editor.sizeTwitterBanner'), w: 1500, h: 500 },
-    { label: 'HD 1920×1080', w: 1920, h: 1080 },
+    { label: t('thumbs.editor.sizeFacebookCover'), w: 820, h: 312 },
+    { label: 'HD 1920x1080', w: 1920, h: 1080 },
   ];
 }
 
@@ -941,4 +981,76 @@ function hitTestElement(els: CanvasElement[], x: number, y: number): CanvasEleme
     if (el.type !== 'line' && el.type !== 'arrow' && x >= el.x && x <= el.x + el.w && y >= el.y && y <= el.y + el.h) return el;
   }
   return null;
+}
+
+/** Quick Actions Toolbar — shown when elements are selected */
+function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.getState>['theme']; selIds: string[] }) {
+  const store = useThumbnailStore.getState;
+  const hasGroup = selIds.length > 1;
+  const btnStyle: React.CSSProperties = { height: 30, padding: '0 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, transition: 'all .12s', whiteSpace: 'nowrap' };
+  const sepStyle: React.CSSProperties = { width: 1, height: 20, background: C.border, margin: '0 2px', flexShrink: 0 };
+  const hover = (e: React.MouseEvent, on: boolean) => {
+    (e.currentTarget as HTMLElement).style.background = on ? C.surface : 'transparent';
+    (e.currentTarget as HTMLElement).style.color = on ? C.text : C.sub;
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 8px', background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+      {/* Duplicate */}
+      <button onClick={() => store().duplicateSelected()} title="Duplicate (Ctrl+D)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Duplicate
+      </button>
+      {/* Delete */}
+      <button onClick={() => store().delSelected()} title="Delete" style={{ ...btnStyle, color: C.accent + 'aa' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; (e.currentTarget as HTMLElement).style.color = C.accent; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.accent + 'aa'; }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Delete
+      </button>
+      <div style={sepStyle} />
+      {/* Group / Ungroup */}
+      {hasGroup && (
+        <>
+          <button onClick={() => store().groupSelected()} title="Group (Ctrl+G)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M10 6h4m-4 12h4M6 10v4m12-4v4"/></svg>
+            Group
+          </button>
+          <button onClick={() => store().ungroupSelected()} title="Ungroup" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            Ungroup
+          </button>
+          <div style={sepStyle} />
+        </>
+      )}
+      {/* Align */}
+      <button onClick={() => store().alignSelected('left')} title="Align Left" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="3" y2="21"/><rect x="7" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('centerX')} title="Align Center H" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="3" x2="12" y2="21"/><rect x="5" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('right')} title="Align Right" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="21" y1="3" x2="21" y2="21"/><rect x="3" y="6" width="14" height="4" rx="1"/><rect x="7" y="14" width="10" height="4" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('top')} title="Align Top" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="21" y2="3"/><rect x="6" y="7" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('centerY')} title="Align Center V" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12"/><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></svg>
+      </button>
+      <button onClick={() => store().alignSelected('bottom')} title="Align Bottom" style={{ ...btnStyle, padding: '0 5px' }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="21" x2="21" y2="21"/><rect x="6" y="3" width="4" height="14" rx="1"/><rect x="14" y="7" width="4" height="10" rx="1"/></svg>
+      </button>
+      {hasGroup && (
+        <>
+          <div style={sepStyle} />
+          <button onClick={() => store().distributeSelected('horizontal')} title="Distribute Horizontal" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="3" y2="21"/><line x1="21" y1="3" x2="21" y2="21"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            H
+          </button>
+          <button onClick={() => store().distributeSelected('vertical')} title="Distribute Vertical" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="21" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+            V
+          </button>
+        </>
+      )}
+    </div>
+  );
 }

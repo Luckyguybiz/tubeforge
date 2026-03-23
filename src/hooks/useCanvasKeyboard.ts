@@ -68,6 +68,14 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      // Group: Ctrl+G / Ungroup: Ctrl+Shift+G
+      if (ctrl && e.key === 'g') {
+        e.preventDefault();
+        if (e.shiftKey) store.ungroupSelected();
+        else store.groupSelected();
+        return;
+      }
+
       // Select all: Ctrl+A
       if (ctrl && e.key === 'a') {
         e.preventDefault();

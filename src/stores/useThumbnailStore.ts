@@ -131,8 +131,17 @@ interface ThumbnailState {
   // Element operations
   updEl: (id: string, patch: Partial<CanvasElement>) => void;
   delEl: (id: string) => void;
+  delSelected: () => void;
   bringFront: (id: string) => void;
   sendBack: (id: string) => void;
+  moveLayer: (id: string, newIndex: number) => void;
+  renameElement: (id: string, name: string) => void;
+
+  // Alignment helpers (for quick-action toolbar)
+  alignSelected: (alignment: 'left' | 'centerX' | 'right' | 'top' | 'centerY' | 'bottom') => void;
+  distributeSelected: (axis: 'horizontal' | 'vertical') => void;
+  groupSelected: () => void;
+  ungroupSelected: () => void;
 
   // Backward-compatible selId setter
   setSelId: (id: string | null) => void;
@@ -498,6 +507,14 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set((s) => ({ els: s.els.filter((e) => e.id !== id), selIds: s.selIds.filter((sid) => sid !== id) }));
   },
 
+  delSelected: () => {
+    const { selIds, els } = get();
+    if (selIds.length === 0) return;
+    get().pushHistory();
+    const idSet = new Set(selIds);
+    set({ els: els.filter((e) => !idSet.has(e.id)), selIds: [] });
+  },
+
   bringFront: (id) => {
     get().pushHistory();
     set((s) => {
@@ -514,6 +531,92 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       if (!el) return s;
       return { els: [el, ...s.els.filter((e) => e.id !== id)] };
     });
+  },
+
+  moveLayer: (id, newIndex) => {
+    get().pushHistory();
+    set((s) => {
+      const arr = [...s.els];
+      const oldIdx = arr.findIndex((e) => e.id === id);
+      if (oldIdx === -1) return s;
+      const [moved] = arr.splice(oldIdx, 1);
+      arr.splice(Math.max(0, Math.min(arr.length, newIndex)), 0, moved);
+      return { els: arr };
+    });
+  },
+
+  renameElement: (id, name) => {
+    set((s) => ({ els: s.els.map((e) => (e.id === id ? { ...e, name } : e)) }));
+  },
+
+  alignSelected: (alignment) => {
+    const { selIds, els, canvasW, canvasH } = get();
+    const selected = els.filter((e) => selIds.includes(e.id));
+    if (selected.length === 0) return;
+    get().pushHistory();
+    if (selected.length === 1) {
+      // Align to canvas
+      const el = selected[0];
+      const patch: Partial<CanvasElement> = {};
+      if (alignment === 'left') patch.x = 0;
+      else if (alignment === 'centerX') patch.x = (canvasW - el.w) / 2;
+      else if (alignment === 'right') patch.x = canvasW - el.w;
+      else if (alignment === 'top') patch.y = 0;
+      else if (alignment === 'centerY') patch.y = (canvasH - el.h) / 2;
+      else if (alignment === 'bottom') patch.y = canvasH - el.h;
+      get().updEl(el.id, patch);
+    } else {
+      // Align to selection bounds
+      if (alignment === 'left') { const minX = Math.min(...selected.map((e) => e.x)); selIds.forEach((id) => get().updEl(id, { x: minX })); }
+      else if (alignment === 'centerX') { const avgX = selected.reduce((s, e) => s + e.x + e.w / 2, 0) / selected.length; selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { x: avgX - el.w / 2 }); }); }
+      else if (alignment === 'right') { const maxR = Math.max(...selected.map((e) => e.x + e.w)); selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { x: maxR - el.w }); }); }
+      else if (alignment === 'top') { const minY = Math.min(...selected.map((e) => e.y)); selIds.forEach((id) => get().updEl(id, { y: minY })); }
+      else if (alignment === 'centerY') { const avgY = selected.reduce((s, e) => s + e.y + e.h / 2, 0) / selected.length; selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { y: avgY - el.h / 2 }); }); }
+      else if (alignment === 'bottom') { const maxB = Math.max(...selected.map((e) => e.y + e.h)); selIds.forEach((id) => { const el = els.find((e) => e.id === id); if (el) get().updEl(id, { y: maxB - el.h }); }); }
+    }
+  },
+
+  distributeSelected: (axis) => {
+    const { selIds, els } = get();
+    const selected = els.filter((e) => selIds.includes(e.id));
+    if (selected.length < 3) return;
+    get().pushHistory();
+    if (axis === 'horizontal') {
+      const sorted = [...selected].sort((a, b) => a.x - b.x);
+      const totalW = sorted.reduce((s, e) => s + e.w, 0);
+      const span = sorted[sorted.length - 1].x + sorted[sorted.length - 1].w - sorted[0].x;
+      const gap = (span - totalW) / (sorted.length - 1);
+      let cx = sorted[0].x;
+      sorted.forEach((el) => { get().updEl(el.id, { x: Math.round(cx) }); cx += el.w + gap; });
+    } else {
+      const sorted = [...selected].sort((a, b) => a.y - b.y);
+      const totalH = sorted.reduce((s, e) => s + e.h, 0);
+      const span = sorted[sorted.length - 1].y + sorted[sorted.length - 1].h - sorted[0].y;
+      const gap = (span - totalH) / (sorted.length - 1);
+      let cy = sorted[0].y;
+      sorted.forEach((el) => { get().updEl(el.id, { y: Math.round(cy) }); cy += el.h + gap; });
+    }
+  },
+
+  groupSelected: () => {
+    const { selIds } = get();
+    if (selIds.length < 2) return;
+    get().pushHistory();
+    const gid = uid();
+    set((s) => ({
+      els: s.els.map((e) => selIds.includes(e.id) ? { ...e, groupId: gid } : e),
+    }));
+  },
+
+  ungroupSelected: () => {
+    const { selIds, els } = get();
+    if (selIds.length === 0) return;
+    const groupIds = new Set(els.filter((e) => selIds.includes(e.id) && e.groupId).map((e) => e.groupId!));
+    if (groupIds.size === 0) return;
+    get().pushHistory();
+    set((s) => ({
+      els: s.els.map((e) => groupIds.has(e.groupId ?? '') ? { ...e, groupId: undefined } : e),
+    }));
   },
 
   // ===== Save/Load =====
