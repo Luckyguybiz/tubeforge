@@ -221,7 +221,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
           </div>
         ) : value ? (
           <>
-            <img src={value} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+            <img src={value} alt={label} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
             <button
               onClick={(e) => { e.stopPropagation(); onChange(null); setError(null); }}
               style={{

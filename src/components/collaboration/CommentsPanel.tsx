@@ -46,6 +46,7 @@ function UserInitials({ name, image, size = 24, C }: { name: string; image: stri
       <img
         src={image}
         alt=""
+        loading="lazy"
         style={{
           width: size,
           height: size,

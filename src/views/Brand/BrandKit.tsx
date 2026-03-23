@@ -278,6 +278,7 @@ export function BrandKit() {
               <img
                 src={logoUrl}
                 alt={t('brand.logoAlt')}
+                loading="lazy"
                 style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
               />
             </div>

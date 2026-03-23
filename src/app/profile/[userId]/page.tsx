@@ -104,6 +104,7 @@ export default function ProfilePage() {
             <img
               src={user.image}
               alt={user.name ?? ''}
+              loading="lazy"
               style={{ width: 72, height: 72, borderRadius: '50%', flexShrink: 0 }}
             />
           ) : (

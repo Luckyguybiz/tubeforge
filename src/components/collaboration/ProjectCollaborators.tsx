@@ -75,6 +75,7 @@ function CollaboratorAvatar({ name, image, role, size = 24 }: CollaboratorAvatar
           <img
             src={image}
             alt=""
+            loading="lazy"
             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
             referrerPolicy="no-referrer"
           />

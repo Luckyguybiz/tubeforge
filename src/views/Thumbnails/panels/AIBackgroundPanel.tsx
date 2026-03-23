@@ -175,6 +175,7 @@ export function AIBackgroundPanel() {
             <img
               src={canvasBgImage}
               alt="Current AI background"
+              loading="lazy"
               style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
             />
             <button
