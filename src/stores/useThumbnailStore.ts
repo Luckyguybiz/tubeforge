@@ -47,7 +47,7 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles';
 
   // Canvas background image (AI-generated or from stock)
   canvasBgImage: string | null;
@@ -61,6 +61,9 @@ interface ThumbnailState {
 
   // Snap guides
   guides: { x: number[]; y: number[] };
+
+  // Snap to grid
+  snapToGrid: boolean;
 
   // Shape sub-tool
   shapeSub: 'rect' | 'circle' | 'triangle' | 'star';
@@ -91,7 +94,8 @@ interface ThumbnailState {
   setAiLoading: (l: boolean) => void;
   setAiStyle: (s: string) => void;
   setAiCount: (n: number) => void;
-  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background') => void;
+  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles') => void;
+  setSnapToGrid: (v: boolean) => void;
   setCanvasBgImage: (url: string | null) => void;
   setCanvasBgGradient: (g: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null) => void;
   setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star') => void;
@@ -131,6 +135,7 @@ interface ThumbnailState {
 
   // Element creators
   addText: () => void;
+  addTextPreset: (preset: Partial<CanvasElement>) => void;
   addRect: () => void;
   addCircle: () => void;
   addImage: (dataUrl: string) => void;
@@ -240,6 +245,9 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   // Guides
   guides: { x: [], y: [] },
 
+  // Snap to grid
+  snapToGrid: false,
+
   // Shape sub
   shapeSub: 'rect',
 
@@ -278,6 +286,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   setAiStyle: (s) => set({ aiStyle: s }),
   setAiCount: (n) => set({ aiCount: n }),
   setLeftPanel: (p) => set((s) => ({ leftPanel: s.leftPanel === p ? 'none' : p })),
+  setSnapToGrid: (v) => set({ snapToGrid: v }),
   setCanvasBgImage: (url) => set({ canvasBgImage: url }),
   setCanvasBgGradient: (g) => {
     get().pushHistory();
@@ -419,6 +428,33 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       id: uid(), type: 'text', x: 100 + Math.random() * 200, y: 100 + Math.random() * 200, w: 500, h: 80,
       text: 'New text', font: 'Instrument Sans', size: 64, bold: true, italic: false, color: '#ffffff',
       shadow: 'none', opacity: 1, bg: 'transparent', borderR: 0, rot: 0,
+    };
+    set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));
+  },
+
+  addTextPreset: (preset) => {
+    get().pushHistory();
+    const ne: CanvasElement = {
+      id: uid(), type: 'text',
+      x: 100 + Math.random() * 200, y: 100 + Math.random() * 200,
+      w: 500, h: 100,
+      text: preset.text ?? 'Sample Text',
+      font: preset.font ?? 'Inter',
+      size: preset.size ?? 64,
+      bold: preset.bold ?? true,
+      italic: false,
+      color: preset.color ?? '#ffffff',
+      shadow: preset.shadow ?? 'none',
+      opacity: 1,
+      bg: 'transparent',
+      borderR: 0,
+      rot: 0,
+      letterSpacing: preset.letterSpacing,
+      textTransform: preset.textTransform,
+      textStroke: preset.textStroke,
+      textStrokeWidth: preset.textStrokeWidth,
+      textGradient: preset.textGradient,
+      glow: preset.glow,
     };
     set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));
   },
