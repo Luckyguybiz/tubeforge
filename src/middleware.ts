@@ -266,5 +266,5 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/tools/video-translate).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/tools/video-translate|api/tools/mp4-to-gif).*)'],
 };
