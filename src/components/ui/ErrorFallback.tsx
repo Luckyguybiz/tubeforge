@@ -1,11 +1,30 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+
+/** Log error details to structured console output for server-side collection */
+function logErrorToConsole(error: Error): void {
+  try {
+    const entry = {
+      level: 'error',
+      module: 'error-boundary',
+      message: error.message || 'Unknown error',
+      timestamp: new Date().toISOString(),
+      data: {
+        name: error.name,
+        stack: error.stack?.split('\n').slice(0, 5).join('\n'),
+        url: typeof window !== 'undefined' ? window.location.href : undefined,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      },
+    };
+    console.error(JSON.stringify(entry));
+  } catch {
+    // Never let logging itself throw
+  }
+}
 
 function getSuggestions(error: Error, t: (key: string) => string): string[] {
   const msg = error.message?.toLowerCase() ?? '';
@@ -59,8 +78,9 @@ export function ErrorFallback({
   const router = useRouter();
   const [showDetails, setShowDetails] = useState(false);
 
+  // Log error on mount
   useEffect(() => {
-    Sentry.captureException(error, { tags: { component: 'error-boundary' } });
+    logErrorToConsole(error);
   }, [error]);
 
   return (
@@ -238,7 +258,7 @@ export function ErrorFallback({
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
         {reset && (
           <button
             onClick={reset}
@@ -268,6 +288,31 @@ export function ErrorFallback({
           </button>
         )}
         <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '11px 24px',
+            background: C.surface,
+            color: C.text,
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: 'inherit',
+            transition: 'border-color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = C.borderActive;
+            e.currentTarget.style.background = C.card;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = C.border;
+            e.currentTarget.style.background = C.surface;
+          }}
+        >
+          {t('error.reloadPage')}
+        </button>
+        <button
           onClick={() => router.push('/dashboard')}
           style={{
             padding: '11px 24px',
@@ -293,6 +338,22 @@ export function ErrorFallback({
           {t('error.goHome')}
         </button>
       </div>
+
+      {/* Report this issue */}
+      <a
+        href={`mailto:support@tubeforge.co?subject=${encodeURIComponent('Bug Report: ' + (error.name || 'Error'))}&body=${encodeURIComponent('Error: ' + (error.message || 'Unknown error') + '\nURL: ' + (typeof window !== 'undefined' ? window.location.href : '') + '\nTime: ' + new Date().toISOString())}`}
+        style={{
+          marginTop: 16,
+          color: C.dim,
+          fontSize: 12,
+          textDecoration: 'none',
+          transition: 'color 0.15s',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = C.sub)}
+        onMouseLeave={(e) => (e.currentTarget.style.color = C.dim)}
+      >
+        {t('error.reportIssue')}
+      </a>
     </div>
   );
 }

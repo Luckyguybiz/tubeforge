@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { Prisma } from '@prisma/client';
 import { rateLimit } from '@/lib/rate-limit';
 import { RATE_LIMIT_ERROR } from '@/lib/constants';
+import { stripTags } from '@/lib/sanitize';
 
 async function checkAdminRate(userId: string) {
   const { success } = await rateLimit({ identifier: `admin:${userId}`, limit: 60, window: 60 });
@@ -763,7 +764,7 @@ export const adminRouter = router({
 
         // 4. Create the payout record
         return tx.payout.create({
-          data: { userId: input.userId, amount: input.amount, note: input.note },
+          data: { userId: input.userId, amount: input.amount, note: input.note ? stripTags(input.note) : null },
         });
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     }),

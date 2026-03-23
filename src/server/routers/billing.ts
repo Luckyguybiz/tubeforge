@@ -52,7 +52,7 @@ export const billingRouter = router({
       return result;
     }
     if (!sub.items.data[0]) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Subscription has no items' });
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to load subscription details. Please try again.' });
     }
     const result = {
       plan: user.plan,
@@ -102,7 +102,7 @@ export const billingRouter = router({
               select: { stripeId: true },
             });
             customerId = fresh?.stripeId ?? null;
-            if (!customerId) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create Stripe customer' });
+            if (!customerId) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to set up billing. Please try again.' });
           } else {
             customerId = newCustomerId;
           }
@@ -136,13 +136,13 @@ export const billingRouter = router({
         // Lookup the default price from the product
         const prices = await stripe.prices.list({ product: envRef, active: true, limit: 1 });
         if (!prices.data[0]) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No active price found for product in Stripe' });
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Pricing configuration error. Please contact support.' });
         }
         resolvedPriceId = prices.data[0].id;
       } else {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Invalid Stripe price/product config: expected price_ or prod_ prefix, got: ${envRef.slice(0, 8)}...`,
+          message: 'Billing configuration error. Please contact support.',
         });
       }
 
@@ -159,7 +159,7 @@ export const billingRouter = router({
         if (activeSub) {
           const currentItem = activeSub.items.data[0];
           if (!currentItem) {
-            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Existing subscription has no items' });
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to update subscription. Please try again.' });
           }
           // If they're already on this price, no change needed — send to portal
           if (currentItem.price?.id === resolvedPriceId) {

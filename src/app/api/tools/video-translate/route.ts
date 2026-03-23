@@ -360,7 +360,7 @@ export async function POST(req: NextRequest) {
   if (!rl.success) {
     return NextResponse.json(
       { error: 'Daily translation limit reached. Upgrade your plan for more.', remaining: rl.remaining },
-      { status: 429 },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.reset - Date.now()) / 1000)) } },
     );
   }
 
@@ -384,10 +384,10 @@ export async function POST(req: NextRequest) {
 
     // Check API keys
     if (!env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Translation service is temporarily unavailable. Please try again later.' }, { status: 503 });
     }
     if (!env.ELEVENLABS_API_KEY) {
-      return NextResponse.json({ error: 'ElevenLabs API key not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Speech synthesis service is temporarily unavailable. Please try again later.' }, { status: 503 });
     }
 
     // Create job directory

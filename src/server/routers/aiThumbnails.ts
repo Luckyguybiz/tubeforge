@@ -212,7 +212,7 @@ export const aiThumbnailsRouter = router({
       if (!useFal && !env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'Image generation API key not configured. Contact the administrator.',
+          message: 'Image generation service is temporarily unavailable. Please try again later.',
         });
       }
 
@@ -444,7 +444,7 @@ The image must look like a professional YouTube thumbnail that would get million
       if (!env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'OpenAI API key not configured. Contact the administrator.',
+          message: 'AI service is temporarily unavailable. Please try again later.',
         });
       }
 
@@ -633,7 +633,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       if (!env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'OpenAI API key not configured. Contact the administrator.',
+          message: 'AI service is temporarily unavailable. Please try again later.',
         });
       }
 
@@ -755,7 +755,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       if (!useFal && !env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'Image generation API key not configured. Contact the administrator.',
+          message: 'Image generation service is temporarily unavailable. Please try again later.',
         });
       }
 
@@ -763,7 +763,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       if (!env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'OpenAI API key not configured (required for image analysis). Contact the administrator.',
+          message: 'AI analysis service is temporarily unavailable. Please try again later.',
         });
       }
 

@@ -429,7 +429,7 @@ Return ONLY valid JSON, no markdown.`,
     }))
     .mutation(async ({ ctx, input }) => {
       if (!env.OPENAI_API_KEY) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured. Contact the administrator.' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'AI service is temporarily unavailable. Please try again later.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-script', 10);
@@ -553,7 +553,7 @@ Make the scenes visually diverse and engaging.`,
     }))
     .mutation(async ({ ctx, input }) => {
       if (!env.OPENAI_API_KEY) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured. This feature will be available soon.' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'AI service is temporarily unavailable. Please try again later.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-captions', 10);
@@ -768,7 +768,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
     .mutation(async ({ ctx, input }) => {
       const apiKey = process.env.ELEVENLABS_API_KEY;
       if (!apiKey) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'ElevenLabs API key not configured' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Speech synthesis service is temporarily unavailable. Please try again later.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-tts', 10);
@@ -822,7 +822,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
     .input(z.object({ context: z.string().max(500).optional() }))
     .mutation(async ({ ctx, input }) => {
       if (!env.OPENAI_API_KEY) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'OpenAI API key not configured.' });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'AI service is temporarily unavailable. Please try again later.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-text-suggest', 20);

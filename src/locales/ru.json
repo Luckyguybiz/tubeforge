@@ -1355,6 +1355,8 @@
   "error.storage.clear": "Очистите данные сайта в настройках браузера",
   "error.generic.refresh": "Обновите страницу",
   "error.generic.contact": "Если проблема повторяется, напишите в поддержку",
+  "error.reloadPage": "Перезагрузить страницу",
+  "error.reportIssue": "Сообщить о проблеме",
   "chart.views": "Просмотры",
   "chart.subscribers": "Подписчики",
   "chart.watchTime": "Время просмотра (мин)",
