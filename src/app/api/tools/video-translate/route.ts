@@ -266,12 +266,18 @@ function splitTextIntoChunks(text: string, maxLen: number): string[] {
 }
 
 async function mergeAudioWithVideo(videoPath: string, audioPath: string, outputPath: string): Promise<void> {
+  // Mix original audio (volume 20%) with translated voice (volume 100%)
+  // This keeps background music/sfx while adding the translated speech on top
   await execFileAsync('ffmpeg', [
     '-i', videoPath,
     '-i', audioPath,
-    '-c:v', 'copy',
+    '-filter_complex',
+    '[0:a]volume=0.2[bg];[1:a]volume=1.0[voice];[bg][voice]amix=inputs=2:duration=shortest:dropout_transition=2[out]',
     '-map', '0:v:0',
-    '-map', '1:a:0',
+    '-map', '[out]',
+    '-c:v', 'copy',
+    '-c:a', 'aac',
+    '-b:a', '192k',
     '-shortest',
     '-y',
     outputPath,
