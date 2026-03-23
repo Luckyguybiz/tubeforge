@@ -116,6 +116,15 @@ export class HistoryManager<T> {
     return next;
   }
 
+  /**
+   * Returns the most recent N snapshots from the undo stack (newest first).
+   * Useful for building a visual history panel.
+   */
+  getRecentSnapshots(count: number): T[] {
+    const start = Math.max(0, this.past.length - count);
+    return this.past.slice(start).reverse();
+  }
+
   /** Wipe all history (e.g. on project load). */
   clear(): void {
     this.past = [];
