@@ -21,6 +21,7 @@ import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
 import { useUndoHint } from '@/hooks/useUndoHint';
 import { useCollaboration, useCollaborationCursor } from '@/hooks/useCollaboration';
 import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } from '@/lib/constants';
+import { toast } from '@/stores/useNotificationStore';
 
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
@@ -121,7 +122,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? ''), ''),
     [els],
   );
   const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH + (canvasBgGradient ? `${canvasBgGradient.from}${canvasBgGradient.to}${canvasBgGradient.angle}${canvasBgGradient.type}` : '');
@@ -519,7 +520,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           if (el.textTransform === 'uppercase') displayText = displayText.toUpperCase();
           else if (el.textTransform === 'lowercase') displayText = displayText.toLowerCase();
           else if (el.textTransform === 'capitalize') displayText = displayText.replace(/\b\w/g, (c) => c.toUpperCase());
-          ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          ctx.font = (el.italic ? 'italic ' : '') + (el.fontWeight ?? (el.bold ? 700 : 400)) + ' ' + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
           ctx.textAlign = el.textAlign ?? 'left';
           if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
           const textX = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
@@ -988,7 +989,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       } else if (el.type === 'circle') {
         ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
       } else if (el.type === 'text') {
-        ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.italic ? 'italic ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+        ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.italic ? 'italic ' : '') + (el.fontWeight ?? (el.bold ? 700 : 400)) + ' ' + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
         ctx.textAlign = el.textAlign ?? 'left';
         const stx = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
         ctx.fillText(el.text ?? '', stx, el.y + (el.size ?? 32)); ctx.textAlign = 'left';
@@ -1653,7 +1654,89 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
           </button>
         </>
       )}
+      {/* AI Auto Arrange */}
+      <div style={sepStyle} />
+      <AutoArrangeButton C={C} btnStyle={btnStyle} hover={hover} />
     </div>
+  );
+}
+
+/** AI Auto Arrange Button — sends elements to GPT for optimized layout */
+function AutoArrangeButton({ C, btnStyle, hover }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  btnStyle: React.CSSProperties;
+  hover: (e: React.MouseEvent, on: boolean) => void;
+}) {
+  const [isArranging, setIsArranging] = useState(false);
+
+  const autoLayoutMutation = trpc.ai.autoLayout.useMutation({
+    onSuccess: (data) => {
+      if (data.positions.length > 0) {
+        const s = useThumbnailStore.getState();
+        s.pushHistory();
+        data.positions.forEach((pos) => {
+          const el = s.els.find((e) => e.id === pos.id);
+          if (el) {
+            s.updEl(pos.id, { x: pos.x, y: pos.y, w: pos.w, h: pos.h });
+          }
+        });
+        toast.success('Layout optimized');
+      } else {
+        toast.info('No layout suggestions');
+      }
+      setIsArranging(false);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Auto layout failed');
+      setIsArranging(false);
+    },
+  });
+
+  const handleAutoArrange = () => {
+    const s = useThumbnailStore.getState();
+    const { els, canvasW, canvasH } = s;
+    if (els.length === 0) {
+      toast.info('Add some elements first');
+      return;
+    }
+    setIsArranging(true);
+    autoLayoutMutation.mutate({
+      elements: els.map((el) => ({
+        id: el.id,
+        type: el.type,
+        x: el.x,
+        y: el.y,
+        w: el.w,
+        h: el.h,
+        text: el.text,
+      })),
+      canvasW,
+      canvasH,
+    });
+  };
+
+  return (
+    <button
+      onClick={handleAutoArrange}
+      disabled={isArranging}
+      title="AI Auto Arrange"
+      style={{
+        ...btnStyle,
+        border: `1px solid ${C.accent}33`,
+        color: C.accent,
+        opacity: isArranging ? 0.6 : 1,
+        cursor: isArranging ? 'wait' : 'pointer',
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+    >
+      {isArranging ? (
+        <svg width="13" height="13" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="32" strokeLinecap="round" /></svg>
+      ) : (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      )}
+      Auto Arrange
+    </button>
   );
 }
 
@@ -1756,7 +1839,7 @@ function HistorySnapshots({ C, t, canvasW, canvasH, onRestore }: {
         } else if (el.type === 'circle') {
           ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
         } else if (el.type === 'text') {
-          ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.bold ? 'bold ' : '') + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          ctx.fillStyle = el.color ?? '#fff'; ctx.font = (el.fontWeight ?? (el.bold ? 700 : 400)) + ' ' + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
           const stx = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
           ctx.textAlign = el.textAlign ?? 'left';
           ctx.fillText(el.text ?? '', stx, el.y + (el.size ?? 32)); ctx.textAlign = 'left';

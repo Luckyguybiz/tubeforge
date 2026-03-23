@@ -48,7 +48,7 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles' | 'creatorStyles';
 
   // Canvas background image (AI-generated or from stock)
   canvasBgImage: string | null;
@@ -95,7 +95,7 @@ interface ThumbnailState {
   setAiLoading: (l: boolean) => void;
   setAiStyle: (s: string) => void;
   setAiCount: (n: number) => void;
-  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles') => void;
+  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles' | 'creatorStyles') => void;
   setSnapToGrid: (v: boolean) => void;
   setCanvasBgImage: (url: string | null) => void;
   setCanvasBgGradient: (g: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null) => void;
