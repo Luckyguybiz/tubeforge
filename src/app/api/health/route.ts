@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
+import { getMetrics } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  // Health check returns minimal public status — no internals, no memory, no uptime
   let dbStatus: 'connected' | 'disconnected' = 'disconnected';
 
   try {
@@ -15,11 +15,17 @@ export async function GET() {
   }
 
   const isHealthy = dbStatus === 'connected';
+  const m = getMetrics();
 
   return NextResponse.json(
     {
       status: isHealthy ? 'ok' : 'degraded',
       timestamp: new Date().toISOString(),
+      uptime: m.uptime,
+      requests: m.totalRequests,
+      errors: m.totalErrors,
+      avgResponseMs: m.avgResponseTimeMs,
+      memory: m.memory,
     },
     { status: isHealthy ? 200 : 503 },
   );
