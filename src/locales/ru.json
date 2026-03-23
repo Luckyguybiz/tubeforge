@@ -2374,5 +2374,13 @@
   "welcome.viewReceipt": "Посмотреть чек",
   "whatsNew.badge": "Новое",
   "whatsNew.close": "Закрыть",
-  "whatsNew.title": "Что нового"
+  "whatsNew.title": "Что нового",
+  "aithumbnail.analyze.composition": "Композиция",
+  "aithumbs.progress.composing": "Создаём идеальный кадр...",
+  "ui.on": "ВКЛ",
+  "ui.off": "ВЫКЛ",
+  "ui.hide": "СКРЫТЬ",
+  "thumbs.shadow": "Тень",
+  "editor.generateBtn": "Генерировать",
+  "tools.fakeTexts.generate": "Создать видео"
 }

@@ -2374,5 +2374,13 @@
   "welcome.viewReceipt": "Чекті көру",
   "whatsNew.badge": "Жаңа",
   "whatsNew.close": "Жабу",
-  "whatsNew.title": "Жаңалықтар"
+  "whatsNew.title": "Жаңалықтар",
+  "aithumbnail.analyze.composition": "Композиция",
+  "aithumbs.progress.composing": "Тамаша кадр жасалуда...",
+  "ui.on": "ҚОСУ",
+  "ui.off": "ӨШІРУ",
+  "ui.hide": "ЖАСЫРУ",
+  "thumbs.shadow": "Көлеңке",
+  "editor.generateBtn": "Генерациялау",
+  "tools.fakeTexts.generate": "Бейне жасау"
 }

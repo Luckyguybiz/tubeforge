@@ -854,6 +854,7 @@ const OpacitySlider = memo(function OpacitySlider({ C, value, onChange }: { C: T
 
 // Shape shadow control (toggle + offset + blur + color)
 function ShapeShadowControl({ C, value, onChange, labelStyle }: { C: Theme; value: string | undefined; onChange: (v: string | undefined) => void; labelStyle: React.CSSProperties }) {
+  const t = useLocaleStore((s) => s.t);
   const enabled = !!value && value !== 'none';
   const [offX, setOffX] = useState(4);
   const [offY, setOffY] = useState(4);
@@ -886,8 +887,8 @@ function ShapeShadowControl({ C, value, onChange, labelStyle }: { C: Theme; valu
   return (
     <div>
       <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>Shadow</span>
-        <button onClick={() => { if (enabled) onChange(undefined); else { apply(offX, offY, blur, color, alpha); } }} style={{ background: 'none', border: 'none', color: enabled ? C.blue : C.dim, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}>{enabled ? 'ON' : 'OFF'}</button>
+        <span>{t('thumbs.shadow')}</span>
+        <button onClick={() => { if (enabled) onChange(undefined); else { apply(offX, offY, blur, color, alpha); } }} style={{ background: 'none', border: 'none', color: enabled ? C.blue : C.dim, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}>{enabled ? t('ui.on') : t('ui.off')}</button>
       </div>
       {enabled && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 6, background: C.surface, borderRadius: 6, border: `1px solid ${C.border}` }}>
@@ -913,6 +914,7 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
   pushHistory: () => void;
   labelStyle: React.CSSProperties;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [expanded, setExpanded] = useState(false);
   const hasImageFilters = !!((sel.grayscale !== undefined && sel.grayscale > 0) || (sel.sepia !== undefined && sel.sepia > 0) || (sel.hueRotate !== undefined && sel.hueRotate > 0) || (sel.saturate !== undefined && sel.saturate !== 100) || sel.invert);
   const hasEffects = !!(sel.textGradient || sel.glow || (sel.blur && sel.blur > 0) || (sel.brightness !== undefined && sel.brightness !== 100) || (sel.contrast !== undefined && sel.contrast !== 100) || hasImageFilters);
@@ -942,7 +944,7 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
             gap: 2,
           }}
         >
-          {expanded ? 'HIDE' : hasEffects ? 'ON' : 'OFF'}
+          {expanded ? t('ui.hide') : hasEffects ? t('ui.on') : t('ui.off')}
           <svg
             width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}
@@ -966,7 +968,7 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
                   }}
                   style={{ background: 'none', border: 'none', color: sel.textGradient ? C.accent : C.dim, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}
                 >
-                  {sel.textGradient ? 'ON' : 'OFF'}
+                  {sel.textGradient ? t('ui.on') : t('ui.off')}
                 </button>
               </div>
               {sel.textGradient && (
@@ -1005,7 +1007,7 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
                 }}
                 style={{ background: 'none', border: 'none', color: sel.glow ? C.accent : C.dim, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px' }}
               >
-                {sel.glow ? 'ON' : 'OFF'}
+                {sel.glow ? t('ui.on') : t('ui.off')}
               </button>
             </div>
             {sel.glow && (
@@ -1100,7 +1102,7 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
                     padding: '1px 4px',
                   }}
                 >
-                  {sel.invert ? 'ON' : 'OFF'}
+                  {sel.invert ? t('ui.on') : t('ui.off')}
                 </button>
               </div>
             </>
@@ -1211,6 +1213,7 @@ const FlipButtons = memo(function FlipButtons({ C, id, flipX, flipY, flipHorizon
 
 // Crop control (slider-based for images)
 function CropControl({ C, sel, updEl, pushHistory }: { C: Theme; sel: CanvasElement; updEl: (id: string, patch: Partial<CanvasElement>) => void; pushHistory: () => void }) {
+  const t = useLocaleStore((s) => s.t);
   const hasCrop = (sel.cropW !== undefined && sel.cropW < 1) || (sel.cropH !== undefined && sel.cropH < 1) || (sel.cropX !== undefined && sel.cropX > 0) || (sel.cropY !== undefined && sel.cropY > 0);
   const [expanded, setExpanded] = useState(false);
   const cropX = sel.cropX ?? 0;
@@ -1230,7 +1233,7 @@ function CropControl({ C, sel, updEl, pushHistory }: { C: Theme; sel: CanvasElem
           Crop
         </span>
         <button onClick={() => setExpanded(!expanded)} style={{ background: 'none', border: 'none', color: hasCrop ? C.accent : C.dim, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '1px 4px', display: 'flex', alignItems: 'center', gap: 2 }}>
-          {expanded ? 'HIDE' : hasCrop ? 'ON' : 'OFF'}
+          {expanded ? t('ui.hide') : hasCrop ? t('ui.on') : t('ui.off')}
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}><polyline points="6 9 12 15 18 9"/></svg>
         </button>
       </div>

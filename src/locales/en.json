@@ -2374,5 +2374,13 @@
   "welcome.viewReceipt": "View receipt",
   "whatsNew.badge": "New",
   "whatsNew.close": "Close",
-  "whatsNew.title": "What's New"
+  "whatsNew.title": "What's New",
+  "aithumbnail.analyze.composition": "Composition",
+  "aithumbs.progress.composing": "Composing the perfect shot...",
+  "ui.on": "ON",
+  "ui.off": "OFF",
+  "ui.hide": "HIDE",
+  "thumbs.shadow": "Shadow",
+  "editor.generateBtn": "Generate",
+  "tools.fakeTexts.generate": "Generate Video"
 }

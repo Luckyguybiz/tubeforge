@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 /* ─── constants ─── */
 const GRADIENT: [string, string] = ['#8b5cf6', '#6366f1'];
@@ -555,6 +556,7 @@ function drawTypingIndicator(
 
 export function FakeTextsGenerator() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
 
   const [platform, setPlatform] = useState<PlatformStyleId>('imessage');
   const [contactName, setContactName] = useState('Alex');
@@ -1327,7 +1329,7 @@ export function FakeTextsGenerator() {
             label={
               loading
                 ? `Generating... ${progress}%`
-                : 'Generate Video'
+                : t('tools.fakeTexts.generate')
             }
             gradient={GRADIENT}
             onClick={handleGenerate}
