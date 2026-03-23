@@ -1228,6 +1228,8 @@
   "error.storage.clear": "Браузер баптауларында сайт деректерін тазалаңыз",
   "error.generic.refresh": "Бетті жаңартыңыз",
   "error.generic.contact": "Мәселе қайталанса, қолдау қызметіне хабарласыңыз",
+  "error.reloadPage": "Бетті қайта жүктеу",
+  "error.reportIssue": "Мәселені хабарлау",
   "chart.views": "Қаралымдар",
   "chart.subscribers": "Жазылушылар",
   "chart.watchTime": "Қарау уақыты (мин)",

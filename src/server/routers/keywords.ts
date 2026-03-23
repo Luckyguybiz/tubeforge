@@ -25,7 +25,7 @@ export const keywordsRouter = router({
       if (!apiKey) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'OpenAI API key not configured',
+          message: 'AI service is temporarily unavailable. Please try again later.',
         });
       }
 
@@ -126,7 +126,7 @@ Generate realistic data for YouTube search. Return 10 related keywords, 8 long-t
       if (!apiKey) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'OpenAI API key not configured',
+          message: 'AI service is temporarily unavailable. Please try again later.',
         });
       }
 

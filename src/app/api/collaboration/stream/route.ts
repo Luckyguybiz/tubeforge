@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
@@ -164,19 +164,19 @@ export const runtime = 'nodejs';
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return new Response('Unauthorized', { status: 401 });
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId');
   if (!projectId) {
-    return new Response('Missing projectId', { status: 400 });
+    return NextResponse.json({ error: 'Missing projectId parameter' }, { status: 400 });
   }
 
   // Verify user has access to this project
   const hasAccess = await verifyProjectAccess(projectId, session.user.id);
   if (!hasAccess) {
-    return new Response('Forbidden: no access to this project', { status: 403 });
+    return NextResponse.json({ error: 'No access to this project' }, { status: 403 });
   }
 
   const userId = session.user.id;
@@ -289,7 +289,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return new Response('Unauthorized', { status: 401 });
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
   const userId = session.user.id;
@@ -301,7 +301,7 @@ export async function POST(req: NextRequest) {
     window: 60,
   });
   if (!rlOk) {
-    return Response.json(
+    return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
       { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
     );
@@ -312,12 +312,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const parsed = collaborationEventSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json(
+    return NextResponse.json(
       { error: 'Invalid request body', details: parsed.error.flatten() },
       { status: 400 },
     );
@@ -328,7 +328,7 @@ export async function POST(req: NextRequest) {
   // Project authorization
   const hasAccess = await verifyProjectAccess(projectId, userId);
   if (!hasAccess) {
-    return Response.json({ error: 'Forbidden: no access to this project' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden: no access to this project' }, { status: 403 });
   }
   const clients = getClientsForProject(projectId);
 
@@ -343,7 +343,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!senderUser) {
-    return new Response('Not connected to project', { status: 403 });
+    return NextResponse.json({ error: 'Not connected to project stream' }, { status: 403 });
   }
 
   // Handle lock/unlock events
@@ -353,7 +353,7 @@ export async function POST(req: NextRequest) {
     const sceneId = data.sceneId as string;
     const existing = locks.get(sceneId);
     if (existing && existing.userId !== userId) {
-      return Response.json({ error: 'Scene already locked', lockedBy: existing.user }, { status: 409 });
+      return NextResponse.json({ error: 'Scene already locked', lockedBy: existing.user }, { status: 409 });
     }
     locks.set(sceneId, { userId, user: senderUser, lockedAt: Date.now() });
   }
@@ -377,5 +377,5 @@ export async function POST(req: NextRequest) {
   // For cursor moves, only broadcast to others (not back to sender)
   broadcastToProject(projectId, event, userId);
 
-  return Response.json({ ok: true });
+  return NextResponse.json({ ok: true });
 }

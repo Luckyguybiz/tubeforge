@@ -1228,6 +1228,8 @@
   "error.storage.clear": "Limpia los datos del sitio en la configuración del navegador",
   "error.generic.refresh": "Actualiza la página",
   "error.generic.contact": "Si el problema persiste, contacta a soporte",
+  "error.reloadPage": "Recargar página",
+  "error.reportIssue": "Reportar este problema",
   "chart.views": "Vistas",
   "chart.subscribers": "Suscriptores",
   "chart.watchTime": "Tiempo de vista (min)",

@@ -22,9 +22,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
-  const { success } = await rateLimit({ identifier: `upload:${session.user.id}`, limit: 20, window: 60 });
+  const { success, reset } = await rateLimit({ identifier: `upload:${session.user.id}`, limit: 20, window: 60 });
   if (!success) {
-    return NextResponse.json({ error: 'Too many uploads. Please try again later.' }, { status: 429 });
+    return NextResponse.json(
+      { error: 'Too many uploads. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)) } },
+    );
   }
 
   let formData: FormData;

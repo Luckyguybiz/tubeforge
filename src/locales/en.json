@@ -1228,6 +1228,8 @@
   "error.storage.clear": "Clear site data in browser settings",
   "error.generic.refresh": "Refresh the page",
   "error.generic.contact": "If the problem persists, contact support",
+  "error.reloadPage": "Reload page",
+  "error.reportIssue": "Report this issue",
   "chart.views": "Views",
   "chart.subscribers": "Subscribers",
   "chart.watchTime": "Watch time (min)",
