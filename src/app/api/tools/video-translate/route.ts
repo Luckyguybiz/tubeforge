@@ -1,685 +1,484 @@
-import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { createLogger } from '@/lib/logger';
-import { db } from '@/server/db';
-import { writeFile, mkdir, readFile, unlink, stat } from 'fs/promises';
-import { createReadStream, existsSync } from 'fs';
-import { join } from 'path';
-import { Readable } from 'stream';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { env } from '@/lib/env';
 import { randomUUID } from 'crypto';
-import OpenAI from 'openai';
-import { getPlanLimits } from '@/lib/constants';
-
-const execAsync = promisify(exec);
-const log = createLogger('video-translate');
+import { writeFile, readFile, mkdir, unlink, stat } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
 
-const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
-const TEMP_DIR = '/tmp/tubeforge-translate';
-const MAX_FILE_SIZE = 500 * 1024 * 1024;
-const JOB_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const execFileAsync = promisify(execFile);
 
-const VALID_MIME_PREFIXES = ['video/', 'audio/'];
+/* ═══════════════════════════════════════════════════════════════════════════
+   Video Translator API — Full Pipeline
+   1. Upload video → extract audio (FFmpeg)
+   2. Transcribe with Whisper (OpenAI)
+   3. Translate text with GPT-4o
+   4. Generate translated speech (ElevenLabs TTS)
+   5. Merge translated audio with original video (FFmpeg)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-const SUPPORTED_LANGUAGES: Record<string, string> = {
-  en: 'English', ru: 'Russian', es: 'Spanish', fr: 'French',
-  de: 'German', it: 'Italian', pt: 'Portuguese', ja: 'Japanese',
-  ko: 'Korean', zh: 'Chinese', ar: 'Arabic', hi: 'Hindi',
-  tr: 'Turkish', pl: 'Polish', nl: 'Dutch', sv: 'Swedish',
-  cs: 'Czech', ro: 'Romanian', el: 'Greek', hu: 'Hungarian',
-  uk: 'Ukrainian', id: 'Indonesian', vi: 'Vietnamese',
-  th: 'Thai', ms: 'Malay', fil: 'Filipino', da: 'Danish',
-  fi: 'Finnish', no: 'Norwegian', bg: 'Bulgarian', hr: 'Croatian',
-  sk: 'Slovak', ta: 'Tamil',
+const JOBS_DIR = join(process.cwd(), 'tmp', 'video-translate-jobs');
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+
+/** Rate limits per plan (per 24 hours) */
+const DAILY_LIMITS: Record<string, number> = {
+  FREE: 1,
+  PRO: 20,
+  STUDIO: 9999,
 };
 
-/* ── Job State ───────────────────────────────────────────────── */
+/* ── Language definitions ─────────────────────────────────────────────── */
+const LANGUAGES: Record<string, string> = {
+  en: 'English',
+  ru: 'Russian',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  it: 'Italian',
+  pt: 'Portuguese',
+  ja: 'Japanese',
+  ko: 'Korean',
+  zh: 'Chinese',
+  ar: 'Arabic',
+  hi: 'Hindi',
+  tr: 'Turkish',
+  uk: 'Ukrainian',
+  pl: 'Polish',
+  nl: 'Dutch',
+};
 
-type JobStatus = 'extracting' | 'transcribing' | 'translating' | 'cloning' | 'generating_tts' | 'merging' | 'done' | 'error';
+/** ElevenLabs voice IDs for different languages */
+const VOICE_MAP: Record<string, string> = {
+  en: '21m00Tcm4TlvDq8ikWAM', // Rachel
+  ru: 'pNInz6obpgDQGcFmaJgB', // Adam
+  es: 'yoZ06aMxZJJ28mfd3POQ', // Sam
+  fr: 'EXAVITQu4vr4xnSDxMaL', // Bella
+  de: 'TxGEqnHWrfWFTfGW9XjX', // Josh
+  it: 'MF3mGyEYCl7XYWbV9V6O', // Elli
+  pt: '21m00Tcm4TlvDq8ikWAM',
+  ja: 'pNInz6obpgDQGcFmaJgB',
+  ko: 'yoZ06aMxZJJ28mfd3POQ',
+  zh: 'EXAVITQu4vr4xnSDxMaL',
+  ar: 'TxGEqnHWrfWFTfGW9XjX',
+  hi: 'MF3mGyEYCl7XYWbV9V6O',
+  tr: '21m00Tcm4TlvDq8ikWAM',
+  uk: 'pNInz6obpgDQGcFmaJgB',
+  pl: 'yoZ06aMxZJJ28mfd3POQ',
+  nl: 'EXAVITQu4vr4xnSDxMaL',
+};
 
-interface JobState {
-  status: JobStatus;
-  progress: number;
-  outputPath?: string;
-  error?: string;
+/* ── Job state ────────────────────────────────────────────────────────── */
+interface Job {
+  id: string;
   userId: string;
-  targetLang: string;
+  status: 'extracting_audio' | 'transcribing' | 'translating' | 'generating_speech' | 'merging' | 'done' | 'error';
+  progress: number;
+  error?: string;
   sourceLang: string;
+  targetLang: string;
+  outputPath?: string;
   createdAt: number;
 }
 
-const jobs = new Map<string, JobState>();
+/** In-memory job store — acceptable for PM2 single-instance */
+const jobStore = new Map<string, Job>();
 
-// Cleanup stale jobs every 5 minutes
-setInterval(() => {
+/** Clean up jobs older than 1 hour */
+function cleanupOldJobs() {
+  const oneHour = 60 * 60 * 1000;
   const now = Date.now();
-  for (const [id, job] of jobs.entries()) {
-    if (now - job.createdAt > JOB_TIMEOUT_MS * 2) {
-      jobs.delete(id);
+  for (const [id, job] of jobStore) {
+    if (now - job.createdAt > oneHour) {
+      jobStore.delete(id);
+      // Best-effort file cleanup
+      const jobDir = join(JOBS_DIR, id);
+      if (existsSync(jobDir)) {
+        import('fs/promises').then(fs => fs.rm(jobDir, { recursive: true, force: true }).catch(() => {}));
+      }
     }
   }
-}, 5 * 60 * 1000);
+}
 
-/* ── Pipeline (runs in background) ───────────────────────────── */
+// Run cleanup every 10 minutes
+setInterval(cleanupOldJobs, 10 * 60 * 1000);
 
-async function runTranslationPipeline(
-  jobId: string,
-  inputPath: string,
-  sourceLang: string,
-  targetLang: string,
-  userId: string,
-) {
-  const job = jobs.get(jobId);
-  if (!job) return;
+/* ── Pipeline steps ───────────────────────────────────────────────────── */
 
-  const jobDir = join(TEMP_DIR, jobId);
-  const audioPath = join(jobDir, 'audio.wav');
-  const ttsPath = join(jobDir, 'translated_audio.mp3');
-  const outputPath = join(jobDir, 'output.mp4');
-  let clonedVoiceId: string | null = null;
+async function extractAudio(videoPath: string, audioPath: string): Promise<void> {
+  await execFileAsync('ffmpeg', [
+    '-i', videoPath,
+    '-vn',
+    '-acodec', 'pcm_s16le',
+    '-ar', '16000',
+    '-ac', '1',
+    '-y',
+    audioPath,
+  ], { timeout: 120_000 });
+}
 
-  const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY!;
-  const OPENAI_KEY = process.env.OPENAI_API_KEY!;
+async function transcribeWithWhisper(audioPath: string, sourceLang: string): Promise<string> {
+  const apiKey = env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OpenAI API key not configured');
 
-  try {
-    // ── Stage 1: Extract audio with FFmpeg ──────────────────────
-    log.info('Stage 1: Extracting audio', { jobId });
-    job.status = 'extracting';
-    job.progress = 5;
+  const audioData = await readFile(audioPath);
+  const formData = new FormData();
+  formData.append('file', new Blob([audioData], { type: 'audio/wav' }), 'audio.wav');
+  formData.append('model', 'whisper-1');
+  if (sourceLang !== 'auto') {
+    formData.append('language', sourceLang);
+  }
 
-    await execAsync(
-      `ffmpeg -y -i "${inputPath}" -vn -acodec pcm_s16le -ar 16000 -ac 1 "${audioPath}"`,
-      { timeout: 120000 },
-    );
+  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: formData,
+  });
 
-    const audioStat = await stat(audioPath);
-    log.info('Audio extracted', { jobId, audioSize: audioStat.size });
-    job.progress = 15;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => 'Unknown error');
+    throw new Error(`Whisper API error (${res.status}): ${errText}`);
+  }
 
-    // ── Stage 2: Transcribe with OpenAI Whisper ─────────────────
-    log.info('Stage 2: Transcribing with Whisper', { jobId, sourceLang });
-    job.status = 'transcribing';
-    job.progress = 20;
+  const data = await res.json() as { text: string };
+  return data.text;
+}
 
-    const openai = new OpenAI({ apiKey: OPENAI_KEY });
+async function translateWithGPT(text: string, sourceLang: string, targetLang: string): Promise<string> {
+  const apiKey = env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OpenAI API key not configured');
 
-    // Whisper API needs a File-like object; use the node fs approach
-    const audioFile = await readFile(audioPath);
-    const audioBlob = new File([audioFile], 'audio.wav', { type: 'audio/wav' });
+  const sourceLabel = sourceLang === 'auto' ? 'the original language' : (LANGUAGES[sourceLang] ?? sourceLang);
+  const targetLabel = LANGUAGES[targetLang] ?? targetLang;
 
-    const transcriptionParams: Record<string, unknown> = {
-      file: audioBlob,
-      model: 'whisper-1',
-      response_format: 'verbose_json',
-      timestamp_granularities: ['segment'],
-    };
-    // Only set language if not auto-detect
-    if (sourceLang && sourceLang !== 'auto') {
-      transcriptionParams.language = sourceLang;
-    }
-
-    const transcription = await openai.audio.transcriptions.create(transcriptionParams as any);
-
-    const segments = (transcription as unknown as { segments?: Array<{ text: string; start: number; end: number }> }).segments ?? [];
-    const fullText = segments.map((s) => s.text).join(' ').trim() || (transcription as unknown as { text?: string }).text || '';
-
-    log.info('Transcription complete', { jobId, segments: segments.length, textLength: fullText.length });
-    job.progress = 40;
-
-    if (!fullText) {
-      throw new Error('No speech detected in the audio. Please ensure the video contains clear speech.');
-    }
-
-    // ── Stage 3: Translate with GPT-4o ──────────────────────────
-    log.info('Stage 3: Translating with GPT-4o', { jobId, targetLang });
-    job.status = 'translating';
-    job.progress = 45;
-
-    const srcLangName = SUPPORTED_LANGUAGES[sourceLang] ?? sourceLang;
-    const tgtLangName = SUPPORTED_LANGUAGES[targetLang] ?? targetLang;
-
-    const translation = await openai.chat.completions.create({
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: `You are a professional video narrator translator. Translate the following video narration transcript from ${srcLangName} to ${tgtLangName}. Maintain the same tone, style, and natural pacing suitable for voice-over narration. The translation should sound natural when spoken aloud. Return ONLY the translated text as a single continuous passage. Do not include any notes, explanations, or original text.`,
+          content: `You are a professional video translator. Translate the following transcription from ${sourceLabel} to ${targetLabel}. Maintain the tone, style, and meaning. Output ONLY the translated text, nothing else.`,
         },
-        {
-          role: 'user',
-          content: fullText,
-        },
+        { role: 'user', content: text },
       ],
       temperature: 0.3,
       max_tokens: 4096,
-    });
+    }),
+  });
 
-    const translatedText = translation.choices[0]?.message?.content?.trim() ?? '';
-    log.info('Translation complete', { jobId, translatedLength: translatedText.length });
-    job.progress = 60;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => 'Unknown error');
+    throw new Error(`GPT-4o API error (${res.status}): ${errText}`);
+  }
 
-    if (!translatedText) {
-      throw new Error('Translation produced empty result.');
-    }
+  const data = await res.json() as { choices: { message: { content: string } }[] };
+  return data.choices[0]?.message?.content?.trim() ?? '';
+}
 
-    // ── Stage 4: Clone voice from audio ─────────────────────────
-    log.info('Stage 4: Cloning voice', { jobId });
-    job.status = 'cloning';
-    job.progress = 65;
+async function generateSpeechWithElevenLabs(text: string, targetLang: string, outputPath: string): Promise<void> {
+  const apiKey = env.ELEVENLABS_API_KEY;
+  if (!apiKey) throw new Error('ElevenLabs API key not configured');
 
-    const cloneFormData = new FormData();
-    cloneFormData.append('name', `tubeforge_${jobId.slice(0, 8)}`);
-    cloneFormData.append('description', `Temporary clone for translation job ${jobId}`);
-    cloneFormData.append(
-      'files',
-      new Blob([audioFile], { type: 'audio/wav' }),
-      'voice_sample.wav',
-    );
+  const voiceId = VOICE_MAP[targetLang] ?? VOICE_MAP['en'];
 
-    const cloneRes = await fetch(`${ELEVENLABS_API}/voices/add`, {
-      method: 'POST',
-      headers: { 'xi-api-key': ELEVENLABS_KEY },
-      body: cloneFormData,
-    });
+  // Split long text into chunks of ~4000 chars for ElevenLabs limit
+  const chunks = splitTextIntoChunks(text, 4000);
+  const chunkPaths: string[] = [];
 
-    if (!cloneRes.ok) {
-      const errBody = await cloneRes.text();
-      log.error('Voice clone failed', { jobId, status: cloneRes.status, body: errBody.slice(0, 300) });
-      throw new Error(`Voice cloning failed (${cloneRes.status}): ${errBody.slice(0, 200)}`);
-    }
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkPath = outputPath.replace('.mp3', `_chunk_${i}.mp3`);
+    chunkPaths.push(chunkPath);
 
-    const cloneData = await cloneRes.json();
-    clonedVoiceId = cloneData.voice_id;
-    log.info('Voice cloned', { jobId, voiceId: clonedVoiceId });
-    job.progress = 72;
-
-    // ── Stage 5: Generate TTS with cloned voice ─────────────────
-    log.info('Stage 5: Generating TTS', { jobId });
-    job.status = 'generating_tts';
-    job.progress = 75;
-
-    const ttsRes = await fetch(`${ELEVENLABS_API}/text-to-speech/${clonedVoiceId}`, {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
-        'xi-api-key': ELEVENLABS_KEY,
+        'xi-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text: translatedText,
+        text: chunks[i],
         model_id: 'eleven_multilingual_v2',
         voice_settings: {
-          stability: 0.75,
-          similarity_boost: 0.85,
-          style: 0.5,
-          use_speaker_boost: true,
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.3,
         },
       }),
     });
 
-    if (!ttsRes.ok) {
-      const errBody = await ttsRes.text();
-      log.error('TTS generation failed', { jobId, status: ttsRes.status, body: errBody.slice(0, 300) });
-      throw new Error(`TTS generation failed (${ttsRes.status}): ${errBody.slice(0, 200)}`);
+    if (!res.ok) {
+      const errText = await res.text().catch(() => 'Unknown error');
+      throw new Error(`ElevenLabs API error (${res.status}): ${errText}`);
     }
 
-    const ttsAudio = Buffer.from(await ttsRes.arrayBuffer());
-    await writeFile(ttsPath, ttsAudio);
-    log.info('TTS audio generated', { jobId, ttsSize: ttsAudio.length });
-    job.progress = 85;
+    const audioBuffer = Buffer.from(await res.arrayBuffer());
+    await writeFile(chunkPath, audioBuffer);
+  }
 
-    // ── Stage 6: Merge video + translated audio with FFmpeg ─────
-    log.info('Stage 6: Merging video with translated audio', { jobId });
-    job.status = 'merging';
-    job.progress = 88;
+  // Concatenate chunks if multiple
+  if (chunkPaths.length === 1) {
+    const { rename } = await import('fs/promises');
+    await rename(chunkPaths[0], outputPath);
+  } else {
+    const listPath = outputPath.replace('.mp3', '_list.txt');
+    const listContent = chunkPaths.map(p => `file '${p}'`).join('\n');
+    await writeFile(listPath, listContent);
+    await execFileAsync('ffmpeg', [
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', listPath,
+      '-c', 'copy',
+      '-y',
+      outputPath,
+    ], { timeout: 60_000 });
+    // Cleanup chunks
+    for (const p of chunkPaths) {
+      await unlink(p).catch(() => {});
+    }
+    await unlink(listPath).catch(() => {});
+  }
+}
 
-    // Get original video duration and TTS audio duration
-    const { stdout: videoDurStr } = await execAsync(
-      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputPath}"`,
-    );
-    const { stdout: ttsDurStr } = await execAsync(
-      `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${ttsPath}"`,
-    );
-    const videoDur = parseFloat(videoDurStr.trim()) || 0;
-    const ttsDur = parseFloat(ttsDurStr.trim()) || 0;
-
-    log.info('Duration comparison', { jobId, videoDur, ttsDur });
-
-    // If TTS is significantly shorter/longer than video, use atempo to match
-    let mergeCmd: string;
-    if (ttsDur > 0 && videoDur > 0 && Math.abs(videoDur - ttsDur) / videoDur > 0.1) {
-      // Speed ratio: if video is 60s and TTS is 30s, ratio = 0.5 (slow down TTS to 50% speed)
-      const ratio = ttsDur / videoDur;
-      // atempo filter accepts 0.5 to 100.0 — chain multiple if needed
-      let atempoFilter: string;
-      if (ratio >= 0.5 && ratio <= 2.0) {
-        atempoFilter = `atempo=${ratio.toFixed(4)}`;
-      } else if (ratio < 0.5) {
-        // Chain two atempo filters for extreme slowdown
-        const sqrtRatio = Math.sqrt(ratio);
-        atempoFilter = `atempo=${sqrtRatio.toFixed(4)},atempo=${sqrtRatio.toFixed(4)}`;
-      } else {
-        // ratio > 2.0 — chain two for speedup
-        const sqrtRatio = Math.sqrt(ratio);
-        atempoFilter = `atempo=${sqrtRatio.toFixed(4)},atempo=${sqrtRatio.toFixed(4)}`;
-      }
-      mergeCmd = `ffmpeg -y -i "${inputPath}" -i "${ttsPath}" -filter_complex "[1:a]${atempoFilter}[aout]" -map 0:v:0 -map "[aout]" -c:v copy -shortest "${outputPath}"`;
-      log.info('Using atempo adjustment', { jobId, ratio, atempoFilter });
+function splitTextIntoChunks(text: string, maxLen: number): string[] {
+  if (text.length <= maxLen) return [text];
+  const chunks: string[] = [];
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  let current = '';
+  for (const sentence of sentences) {
+    if ((current + ' ' + sentence).length > maxLen && current) {
+      chunks.push(current.trim());
+      current = sentence;
     } else {
-      // Durations are close enough — merge directly
-      mergeCmd = `ffmpeg -y -i "${inputPath}" -i "${ttsPath}" -c:v copy -map 0:v:0 -map 1:a:0 -shortest "${outputPath}"`;
+      current = current ? current + ' ' + sentence : sentence;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks.length > 0 ? chunks : [text.slice(0, maxLen)];
+}
+
+async function mergeAudioWithVideo(videoPath: string, audioPath: string, outputPath: string): Promise<void> {
+  await execFileAsync('ffmpeg', [
+    '-i', videoPath,
+    '-i', audioPath,
+    '-c:v', 'copy',
+    '-map', '0:v:0',
+    '-map', '1:a:0',
+    '-shortest',
+    '-y',
+    outputPath,
+  ], { timeout: 300_000 });
+}
+
+/* ── Run pipeline in background ───────────────────────────────────────── */
+
+async function runPipeline(job: Job, jobDir: string): Promise<void> {
+  const videoPath = join(jobDir, 'input.mp4');
+  const audioPath = join(jobDir, 'extracted.wav');
+  const translatedAudioPath = join(jobDir, 'translated.mp3');
+  const outputPath = join(jobDir, 'output.mp4');
+
+  try {
+    // Step 1: Extract audio
+    job.status = 'extracting_audio';
+    job.progress = 10;
+    jobStore.set(job.id, { ...job });
+    await extractAudio(videoPath, audioPath);
+
+    // Step 2: Transcribe
+    job.status = 'transcribing';
+    job.progress = 25;
+    jobStore.set(job.id, { ...job });
+    const transcript = await transcribeWithWhisper(audioPath, job.sourceLang);
+
+    if (!transcript.trim()) {
+      throw new Error('No speech detected in the video');
     }
 
-    await execAsync(mergeCmd, { timeout: 120000 });
+    // Step 3: Translate
+    job.status = 'translating';
+    job.progress = 50;
+    jobStore.set(job.id, { ...job });
+    const translated = await translateWithGPT(transcript, job.sourceLang, job.targetLang);
 
-    const outputStat = await stat(outputPath);
-    log.info('Video merged', { jobId, outputSize: outputStat.size });
+    // Step 4: Generate speech
+    job.status = 'generating_speech';
+    job.progress = 70;
+    jobStore.set(job.id, { ...job });
+    await generateSpeechWithElevenLabs(translated, job.targetLang, translatedAudioPath);
 
-    // ── Done ────────────────────────────────────────────────────
+    // Step 5: Merge
+    job.status = 'merging';
+    job.progress = 90;
+    jobStore.set(job.id, { ...job });
+    await mergeAudioWithVideo(videoPath, translatedAudioPath, outputPath);
+
+    // Done
     job.status = 'done';
     job.progress = 100;
     job.outputPath = outputPath;
+    jobStore.set(job.id, { ...job });
 
-    // Save asset to DB
-    try {
-      const relDir = `uploads/translations/${userId}`;
-      const absDir = join(process.cwd(), 'public', relDir);
-      await mkdir(absDir, { recursive: true });
-      const filename = `${jobId}_${targetLang}.mp4`;
-      const absPath = join(absDir, filename);
-
-      const outputBuf = await readFile(outputPath);
-      await writeFile(absPath, outputBuf);
-
-      const relPath = `/${relDir}/${filename}`;
-
-      const existing = await db.asset.findFirst({
-        where: { userId, url: relPath },
-      });
-
-      if (!existing) {
-        await db.asset.create({
-          data: {
-            url: relPath,
-            filename: `Translation_${targetLang}_${new Date().toISOString().slice(0, 10)}.mp4`,
-            type: 'video',
-            size: outputStat.size,
-            userId,
-          },
-        });
-
-        await db.auditLog.create({
-          data: {
-            userId,
-            action: 'TOOL_USAGE',
-            target: 'video-translate',
-            metadata: {
-              tool: 'video-translate',
-              jobId,
-              targetLang,
-              sourceLang,
-              fileSize: outputStat.size,
-              savedPath: relPath,
-              pipeline: 'whisper-gpt4o-elevenlabs-tts',
-            },
-          },
-        });
-      }
-
-      log.info('Translation saved to cabinet', { userId, path: relPath });
-    } catch (saveErr) {
-      log.error('Failed to save asset to DB', {
-        error: saveErr instanceof Error ? saveErr.message : String(saveErr),
-      });
-      // Non-blocking: job is still "done"
-    }
+    // Clean up intermediate files
+    await unlink(audioPath).catch(() => {});
+    await unlink(translatedAudioPath).catch(() => {});
   } catch (err) {
-    log.error('Pipeline error', {
-      jobId,
-      stage: job.status,
-      error: err instanceof Error ? err.message : String(err),
-    });
-    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
-      tags: { component: 'video-translate', jobId, stage: job.status },
-    });
     job.status = 'error';
-    job.error = err instanceof Error ? err.message : String(err);
-  } finally {
-    // Cleanup: delete cloned voice to free up voice slots
-    if (clonedVoiceId) {
-      try {
-        await fetch(`${ELEVENLABS_API}/voices/${clonedVoiceId}`, {
-          method: 'DELETE',
-          headers: { 'xi-api-key': ELEVENLABS_KEY },
-        });
-        log.info('Cloned voice deleted', { jobId, voiceId: clonedVoiceId });
-      } catch (delErr) {
-        log.error('Failed to delete cloned voice', {
-          voiceId: clonedVoiceId,
-          error: delErr instanceof Error ? delErr.message : String(delErr),
-        });
-      }
-    }
-
-    // Cleanup temp files (keep output if done, for download)
-    try {
-      if (existsSync(join(TEMP_DIR, jobId, 'audio.wav'))) {
-        await unlink(join(TEMP_DIR, jobId, 'audio.wav'));
-      }
-      if (existsSync(join(TEMP_DIR, jobId, 'translated_audio.mp3'))) {
-        await unlink(join(TEMP_DIR, jobId, 'translated_audio.mp3'));
-      }
-    } catch {
-      // ignore cleanup errors
-    }
-
-    // Schedule output cleanup after 30 minutes
-    setTimeout(async () => {
-      try {
-        const dir = join(TEMP_DIR, jobId);
-        await execAsync(`rm -rf "${dir}"`);
-        jobs.delete(jobId);
-        log.info('Job cleaned up', { jobId });
-      } catch {
-        // ignore
-      }
-    }, 30 * 60 * 1000);
+    job.error = err instanceof Error ? err.message : 'Unknown pipeline error';
+    jobStore.set(job.id, { ...job });
   }
 }
 
-/* ── POST: Start translation job ────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   POST — Upload video and start translation
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const plan = (session.user.plan as string) ?? 'FREE';
+  const dailyLimit = DAILY_LIMITS[plan] ?? DAILY_LIMITS['FREE'];
+
+  // Rate limit
+  const rl = await rateLimit({
+    identifier: `video-translate:${session.user.id}`,
+    limit: dailyLimit,
+    window: 86400, // 24 hours
+  });
+
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Daily translation limit reached. Upgrade your plan for more.', remaining: rl.remaining },
+      { status: 429 },
+    );
+  }
+
   try {
-    const session = await auth();
-    const promoHeader = req.headers.get('x-promo-code');
-    const VALID_PROMOS = ['TESTPRO2026', 'LUCKY100', 'CREATOR'];
-    const hasPromo = promoHeader && VALID_PROMOS.includes(promoHeader.toUpperCase());
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
+    const sourceLang = (formData.get('sourceLang') as string) ?? 'auto';
+    const targetLang = (formData.get('targetLang') as string) ?? 'en';
+
+    if (!file) {
+      return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
     }
 
-    const rl = await rateLimit({ identifier: session.user.id ?? 'anon', limit: 5, window: 60 });
-    if (!rl.success) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 500 MB.' }, { status: 400 });
     }
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'ElevenLabs API not configured' }, { status: 503 });
-    }
-    if (!openaiKey) {
-      return NextResponse.json({ error: 'OpenAI API not configured' }, { status: 503 });
+    if (!LANGUAGES[targetLang]) {
+      return NextResponse.json({ error: 'Unsupported target language' }, { status: 400 });
     }
 
-    const contentType = req.headers.get('content-type') ?? '';
-
-    let sourceUrl: string | undefined;
-    let sourceLang = 'auto';
-    let targetLang = 'en';
-    let file: File | undefined;
-    let fileName: string | undefined;
-    let fileType: string | undefined;
-    let fileSize = 0;
-
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await req.formData();
-      sourceUrl = formData.get('source_url') as string | undefined;
-      sourceLang = (formData.get('source_lang') as string) || 'auto';
-      targetLang = (formData.get('target_lang') as string) || 'en';
-      const uploadedFile = formData.get('file') as File | null;
-      if (uploadedFile && uploadedFile.size > 0) {
-        file = uploadedFile;
-        fileName = uploadedFile.name;
-        fileType = uploadedFile.type;
-        fileSize = uploadedFile.size;
-      }
-    } else {
-      const body = await req.json();
-      sourceUrl = body.source_url;
-      sourceLang = body.source_lang || 'auto';
-      targetLang = body.target_lang || 'en';
+    // Check API keys
+    if (!env.OPENAI_API_KEY) {
+      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+    }
+    if (!env.ELEVENLABS_API_KEY) {
+      return NextResponse.json({ error: 'ElevenLabs API key not configured' }, { status: 500 });
     }
 
-    if (!sourceUrl && !file) {
-      return NextResponse.json({ error: 'Provide source_url or upload a file' }, { status: 400 });
-    }
-
-    if (!SUPPORTED_LANGUAGES[targetLang]) {
-      return NextResponse.json({ error: `Unsupported target language: ${targetLang}` }, { status: 400 });
-    }
-
-    // File validation
-    if (file) {
-      if (fileType && !VALID_MIME_PREFIXES.some((p) => fileType!.startsWith(p))) {
-        return NextResponse.json(
-          { error: `Invalid file type: ${fileType}. Please upload a video or audio file.` },
-          { status: 400 },
-        );
-      }
-      if (fileSize > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: `File too large (${(fileSize / 1024 / 1024).toFixed(0)} MB). Maximum is 500 MB.` },
-          { status: 400 },
-        );
-      }
-    }
-
-
-    // ── Plan usage check ────────────────────────────────────────
-    const user = await db.user.findUnique({
-      where: { id: session.user.id! },
-      select: { plan: true },
-    });
-    const plan = user?.plan ?? 'FREE';
-    const limits = getPlanLimits(plan);
-
-    // Check monthly translation usage
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-
-    const translationCount = await db.auditLog.count({
-      where: {
-        userId: session.user.id!,
-        action: 'TOOL_USAGE',
-        target: 'video-translate',
-        createdAt: { gte: monthStart },
-      },
-    });
-
-    if (false && translationCount >= limits.videoTranslations) { // LIMITS PAUSED
-      return NextResponse.json(
-        { error: 'Translation limit reached. Upgrade for more.', code: 'hasPromo ? "PROMO_BYPASS" : "LIMIT_REACHED"', limit: limits.videoTranslations, used: translationCount },
-        { status: 403 },
-      );
-    }
-
-    // Create job
+    // Create job directory
     const jobId = randomUUID();
-    const jobDir = join(TEMP_DIR, jobId);
+    const jobDir = join(JOBS_DIR, jobId);
     await mkdir(jobDir, { recursive: true });
 
-    const ext = fileName?.split('.').pop() ?? 'mp4';
-    const inputPath = join(jobDir, `input.${ext}`);
+    // Save uploaded file
+    const videoPath = join(jobDir, 'input.mp4');
+    const arrayBuffer = await file.arrayBuffer();
+    await writeFile(videoPath, Buffer.from(arrayBuffer));
 
-    if (file) {
-      const buf = Buffer.from(await file.arrayBuffer());
-      await writeFile(inputPath, buf);
-      log.info('File saved', { jobId, size: buf.length, name: fileName });
-    } else if (sourceUrl) {
-      // Download the video from URL using yt-dlp or direct fetch
-      log.info('Downloading from URL', { jobId, url: sourceUrl.slice(0, 80) });
-      try {
-        // Try yt-dlp first for YouTube/TikTok/etc
-        await execAsync(
-          `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4 -o "${inputPath}" "${sourceUrl}"`,
-          { timeout: 180000 },
-        );
-      } catch {
-        // Fallback: direct HTTP download
-        const dlRes = await fetch(sourceUrl);
-        if (!dlRes.ok || !dlRes.body) {
-          return NextResponse.json({ error: `Failed to download video from URL (${dlRes.status})` }, { status: 400 });
-        }
-        const dlBuf = Buffer.from(await dlRes.arrayBuffer());
-        await writeFile(inputPath, dlBuf);
-      }
-    }
-
-
-    // ── Check video duration against plan limit ─────────────────
-    try {
-      const { stdout: durationStr } = await execAsync(
-        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputPath}"`,
-        { timeout: 30000 },
-      );
-      const durationSec = parseFloat(durationStr.trim());
-      if (false && !isNaN(durationSec) && durationSec > limits.maxVideoLengthSec) { // LIMITS PAUSED
-        return NextResponse.json(
-          {
-            error: `Video too long (${Math.ceil(durationSec)}s). Your plan allows up to ${limits.maxVideoLengthSec}s. Upgrade for longer videos.`,
-            code: 'VIDEO_TOO_LONG',
-            durationSec: Math.ceil(durationSec),
-            maxDurationSec: limits.maxVideoLengthSec,
-          },
-          { status: 403 },
-        );
-      }
-    } catch (probeErr) {
-      log.warn('Failed to probe video duration', { jobId, error: String(probeErr) });
-      // Non-blocking: allow processing if probe fails
-    }
-
-    // Register job
-    jobs.set(jobId, {
-      status: 'extracting',
-      progress: 0,
-      userId: session.user.id!,
-      targetLang,
+    // Create job
+    const job: Job = {
+      id: jobId,
+      userId: session.user.id,
+      status: 'extracting_audio',
+      progress: 5,
       sourceLang,
+      targetLang,
       createdAt: Date.now(),
-    });
+    };
+    jobStore.set(jobId, job);
 
-    log.info('Translation job started', {
-      jobId,
-      sourceLang,
-      targetLang,
-      hasFile: !!file,
-      fileSize: fileSize || undefined,
-      sourceUrl: sourceUrl?.slice(0, 60),
-    });
-
-    // Run pipeline in background (don't await)
-    runTranslationPipeline(jobId, inputPath, sourceLang, targetLang, session.user.id!).catch((err) => {
-      log.error('Pipeline uncaught error', { jobId, error: String(err) });
-    });
+    // Run pipeline in background (non-blocking)
+    runPipeline(job, jobDir).catch(() => {});
 
     return NextResponse.json({
-      job_id: jobId,
-      target_lang: targetLang,
-      source_lang: sourceLang,
-      status: 'extracting',
+      jobId,
+      status: 'extracting_audio',
+      progress: 5,
+      remaining: rl.remaining,
     });
   } catch (err) {
-    log.error('Video translate error', { error: err instanceof Error ? err.message : String(err) });
-    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
-      tags: { component: 'video-translate' },
-    });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Upload error';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
-/* ── GET: Check status / download ────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   GET — Poll job status or download result
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 export async function GET(req: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    const { searchParams } = new URL(req.url);
-    const jobId = searchParams.get('job_id');
-    const download = searchParams.get('download') === 'true';
+  const url = new URL(req.url);
+  const jobId = url.searchParams.get('job_id');
+  const download = url.searchParams.get('download');
 
-    if (!jobId) {
-      return NextResponse.json({ error: 'job_id required' }, { status: 400 });
-    }
+  if (!jobId) {
+    return NextResponse.json({ error: 'Missing job_id parameter' }, { status: 400 });
+  }
 
-    const job = jobs.get(jobId);
-    if (!job) {
-      return NextResponse.json({ error: 'Job not found or expired' }, { status: 404 });
-    }
+  const job = jobStore.get(jobId);
+  if (!job) {
+    return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+  }
 
-    // Security: only the job owner can check status
-    if (job.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+  // Ensure user owns this job
+  if (job.userId !== session.user.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
 
-    // Check timeout
-    if (Date.now() - job.createdAt > JOB_TIMEOUT_MS && job.status !== 'done') {
-      job.status = 'error';
-      job.error = 'Job timed out (10 minute limit)';
-    }
-
-    if (!download || job.status !== 'done') {
-      return NextResponse.json({
-        job_id: jobId,
-        status: job.status,
-        progress: job.progress,
-        error: job.error ?? null,
-        target_lang: job.targetLang,
-        source_lang: job.sourceLang,
+  // Download the result
+  if (download === 'true' && job.status === 'done' && job.outputPath) {
+    try {
+      const fileStat = await stat(job.outputPath);
+      const fileData = await readFile(job.outputPath);
+      return new NextResponse(fileData, {
+        headers: {
+          'Content-Type': 'video/mp4',
+          'Content-Disposition': `attachment; filename="translated_video.mp4"`,
+          'Content-Length': fileStat.size.toString(),
+        },
       });
-    }
-
-    // ── Download ──────────────────────────────────────────────────
-    if (!job.outputPath || !existsSync(job.outputPath)) {
-      // Try serving from public directory
-      const relDir = `uploads/translations/${session.user.id}`;
-      const absDir = join(process.cwd(), 'public', relDir);
-      const filename = `${jobId}_${job.targetLang}.mp4`;
-      const absPath = join(absDir, filename);
-
-      if (existsSync(absPath)) {
-        const fileStat = await stat(absPath);
-        const nodeStream = createReadStream(absPath);
-        const webStream = Readable.toWeb(nodeStream) as ReadableStream;
-
-        const headers = new Headers();
-        headers.set('Content-Type', 'video/mp4');
-        headers.set('Content-Disposition', `attachment; filename="translation_${job.targetLang}_${jobId.slice(0, 8)}.mp4"`);
-        headers.set('Content-Length', String(fileStat.size));
-
-        return new Response(webStream, { headers });
-      }
-
+    } catch {
       return NextResponse.json({ error: 'Output file not found' }, { status: 404 });
     }
-
-    const fileStat = await stat(job.outputPath);
-    const nodeStream = createReadStream(job.outputPath);
-    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
-
-    const headers = new Headers();
-    headers.set('Content-Type', 'video/mp4');
-    headers.set('Content-Disposition', `attachment; filename="translation_${job.targetLang}_${jobId.slice(0, 8)}.mp4"`);
-    headers.set('Content-Length', String(fileStat.size));
-
-    log.info('Serving translated video', { jobId, size: fileStat.size });
-    return new Response(webStream, { headers });
-  } catch (err) {
-    log.error('Status/download error', { error: err instanceof Error ? err.message : String(err) });
-    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
-      tags: { component: 'video-translate' },
-    });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+
+  // Return job status
+  return NextResponse.json({
+    jobId: job.id,
+    status: job.status,
+    progress: job.progress,
+    error: job.error,
+    sourceLang: job.sourceLang,
+    targetLang: job.targetLang,
+  });
 }
