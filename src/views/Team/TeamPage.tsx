@@ -325,6 +325,7 @@ export function TeamPage() {
   if (profile.data?.plan !== 'STUDIO') {
     return (
       <div
+        className="tf-team-upgrade-prompt"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -539,6 +540,7 @@ export function TeamPage() {
     <div>
       {/* -- Header -------------------------------------------- */}
       <div
+        className="tf-team-header"
         style={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -572,7 +574,7 @@ export function TeamPage() {
             {pluralRu(projectCount, t('team.project.one'), t('team.project.few'), t('team.project.many'))}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="tf-team-header-btns" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {/* Role info toggle */}
           <button
             onClick={() => setShowRoleInfo(!showRoleInfo)}
@@ -658,6 +660,7 @@ export function TeamPage() {
 
       {/* -- Team overview card --------------------------------- */}
       <div
+        className="tf-team-overview"
         style={{
           ...cardStyle,
           padding: '18px 22px',
@@ -877,6 +880,7 @@ export function TeamPage() {
       {/* -- Members list --------------------------------------- */}
       <div style={sectionTitle}>{t('team.membersLabel')}</div>
       <div
+        className="tf-team-member-table"
         style={{
           ...cardStyle,
           overflow: 'hidden',

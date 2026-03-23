@@ -142,7 +142,7 @@ export default function SharePage() {
           {project.description && (
             <p style={{ color: C.sub, fontSize: 15, margin: '0 0 12px', lineHeight: 1.5 }}>{project.description}</p>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div className="tf-share-info" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {/* Author */}
             <Link
               href={`/profile/${project.user.id}`}
@@ -359,7 +359,7 @@ export default function SharePage() {
         </div>
 
         {/* Footer CTA */}
-        <div style={{
+        <div className="tf-share-cta" style={{
           marginTop: 32, padding: '24px', borderRadius: 14,
           background: C.card, border: `1px solid ${C.border}`,
           textAlign: 'center',

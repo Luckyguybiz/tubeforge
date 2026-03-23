@@ -931,7 +931,7 @@ export function AdminPage() {
       )}
 
       {/* ── Recent Activity ────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: 16 }}>
+      <div className="tf-admin-recent-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: 16 }}>
         {/* Recent Registrations */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`,
@@ -1597,7 +1597,7 @@ function AnalyticsDashboard({
 
       {/* ── User Analytics (O2) ──────────────────────── */}
       {ua && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 14 }}>
+        <div className="tf-admin-chart-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 14 }}>
           {/* New users cards */}
           <div style={{
             background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px',
@@ -2236,7 +2236,7 @@ function AuditLogPanel({ C, auditLog, auditPage, setAuditPage, onExport, isExpor
   };
 
   return (
-    <div style={{
+    <div className="tf-admin-audit-wrap" style={{
       background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
       overflow: 'hidden', marginBottom: 32,
     }}>
@@ -2446,7 +2446,7 @@ function BulkEmailPanel({ C, sendBulkEmail }: BulkEmailPanelProps) {
         </span>
       </div>
 
-      <div style={{ padding: '24px 20px', maxWidth: 560 }}>
+      <div className="tf-admin-email-form" style={{ padding: '24px 20px', maxWidth: 560 }}>
         {/* Plan Filter */}
         <div style={{ marginBottom: 20 }}>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
