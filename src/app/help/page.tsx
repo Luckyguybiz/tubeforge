@@ -291,6 +291,7 @@ export default function HelpPage() {
                 >
                   <button
                     onClick={() => setExpandedId(expanded ? null : article.id)}
+                    className="tf-help-accordion-btn"
                     style={{
                       width: '100%',
                       padding: '18px 20px',
@@ -369,6 +370,7 @@ export default function HelpPage() {
 
         {/* Contact CTA */}
         <div
+          className="tf-help-cta"
           style={{
             marginTop: 56,
             textAlign: 'center',
