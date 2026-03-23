@@ -2,69 +2,70 @@
 
 import { useEffect, useRef, useCallback, memo } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { formatShortcut } from '@/hooks/useKeyboardShortcuts';
 
 /* ── Shortcut definitions for display ────────────────────── */
 
-interface ShortcutDisplay {
+interface ShortcutMeta {
   keys: string;
-  label: string;
+  labelKey: string;
 }
 
-interface ShortcutGroup {
+interface ShortcutGroupMeta {
   id: string;
-  title: string;
+  titleKey: string;
   icon: string;
-  shortcuts: ShortcutDisplay[];
+  shortcuts: ShortcutMeta[];
 }
 
-const SHORTCUT_GROUPS: ShortcutGroup[] = [
+const SHORTCUT_GROUPS: ShortcutGroupMeta[] = [
   {
     id: 'global',
-    title: 'Global',
+    titleKey: 'shortcuts.group.global',
     icon: '\u2318',
     shortcuts: [
-      { keys: 'Ctrl+K', label: 'Open search' },
-      { keys: '/', label: 'Focus search' },
-      { keys: '?', label: 'Keyboard shortcuts' },
-      { keys: 'Ctrl+/', label: 'Keyboard shortcuts' },
-      { keys: 'Escape', label: 'Close modal / deselect' },
-      { keys: 'G then D', label: 'Go to Dashboard' },
-      { keys: 'G then E', label: 'Go to Editor' },
-      { keys: 'G then T', label: 'Go to Tools' },
-      { keys: 'G then B', label: 'Go to Billing' },
-      { keys: 'G then S', label: 'Go to Settings' },
+      { keys: 'Ctrl+K', labelKey: 'shortcuts.openSearch' },
+      { keys: '/', labelKey: 'shortcuts.focusSearch' },
+      { keys: '?', labelKey: 'shortcuts.keyboardShortcuts' },
+      { keys: 'Ctrl+/', labelKey: 'shortcuts.keyboardShortcuts' },
+      { keys: 'Escape', labelKey: 'shortcuts.closeModal' },
+      { keys: 'G then D', labelKey: 'shortcuts.gotoDashboard' },
+      { keys: 'G then E', labelKey: 'shortcuts.gotoEditor' },
+      { keys: 'G then T', labelKey: 'shortcuts.gotoTools' },
+      { keys: 'G then B', labelKey: 'shortcuts.gotoBilling' },
+      { keys: 'G then S', labelKey: 'shortcuts.gotoSettings' },
     ],
   },
   {
     id: 'editor',
-    title: 'Editor',
+    titleKey: 'shortcuts.group.editor',
     icon: '\u270E',
     shortcuts: [
-      { keys: 'Ctrl+Z', label: 'Undo' },
-      { keys: 'Ctrl+Shift+Z', label: 'Redo' },
-      { keys: 'Ctrl+S', label: 'Save' },
-      { keys: 'Ctrl+A', label: 'Select all' },
-      { keys: 'Ctrl+C', label: 'Copy' },
-      { keys: 'Ctrl+V', label: 'Paste' },
-      { keys: 'Ctrl+X', label: 'Cut' },
-      { keys: 'Ctrl+D', label: 'Duplicate' },
-      { keys: 'Delete', label: 'Delete selected' },
-      { keys: 'Ctrl+=', label: 'Zoom in' },
-      { keys: 'Ctrl+-', label: 'Zoom out' },
-      { keys: 'Ctrl+0', label: 'Fit to screen' },
-      { keys: 'Arrows', label: 'Nudge element (Shift = 10px)' },
+      { keys: 'Ctrl+Z', labelKey: 'shortcuts.undo' },
+      { keys: 'Ctrl+Shift+Z', labelKey: 'shortcuts.redo' },
+      { keys: 'Ctrl+S', labelKey: 'shortcuts.save' },
+      { keys: 'Ctrl+A', labelKey: 'shortcuts.selectAll' },
+      { keys: 'Ctrl+C', labelKey: 'shortcuts.copy' },
+      { keys: 'Ctrl+V', labelKey: 'shortcuts.paste' },
+      { keys: 'Ctrl+X', labelKey: 'shortcuts.cut' },
+      { keys: 'Ctrl+D', labelKey: 'shortcuts.duplicate' },
+      { keys: 'Delete', labelKey: 'shortcuts.deleteSelected' },
+      { keys: 'Ctrl+=', labelKey: 'shortcuts.zoomIn' },
+      { keys: 'Ctrl+-', labelKey: 'shortcuts.zoomOut' },
+      { keys: 'Ctrl+0', labelKey: 'shortcuts.fitToScreen' },
+      { keys: 'Arrows', labelKey: 'shortcuts.nudgeElement' },
     ],
   },
   {
     id: 'tools',
-    title: 'Tools',
+    titleKey: 'shortcuts.group.tools',
     icon: '\u2699',
     shortcuts: [
-      { keys: 'Ctrl+]', label: 'Bring to front' },
-      { keys: 'Ctrl+[', label: 'Send to back' },
-      { keys: 'Ctrl+Enter', label: 'Generate with AI' },
+      { keys: 'Ctrl+]', labelKey: 'shortcuts.bringToFront' },
+      { keys: 'Ctrl+[', labelKey: 'shortcuts.sendToBack' },
+      { keys: 'Ctrl+Enter', labelKey: 'shortcuts.generateWithAI' },
     ],
   },
 ];
@@ -166,6 +167,7 @@ function KeyCombo({
 export const ShortcutsModal = memo(function ShortcutsModal() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const showShortcuts = useNotificationStore((s) => s.showShortcuts);
   const setShowShortcuts = useNotificationStore((s) => s.setShowShortcuts);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -208,7 +210,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Keyboard shortcuts"
+      aria-label={t('shortcuts.title')}
       onClick={handleBackdropClick}
       style={{
         position: 'fixed',
@@ -285,11 +287,11 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
               </svg>
             </div>
             <span style={{ fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: '-.02em' }}>
-              Keyboard Shortcuts
+              {t('shortcuts.title')}
             </span>
           </div>
           <button
-            aria-label="Close"
+            aria-label={t('shortcuts.close')}
             onClick={() => setShowShortcuts(false)}
             style={{
               width: 36,
@@ -360,7 +362,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
                       color: C.accent,
                     }}
                   >
-                    {group.title}
+                    {t(group.titleKey)}
                   </span>
                 </div>
 
@@ -387,7 +389,7 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
                       }}
                     >
                       <span style={{ fontSize: 13, color: C.text, fontWeight: 450 }}>
-                        {sc.label}
+                        {t(sc.labelKey)}
                       </span>
                       <KeyCombo
                         keys={sc.keys}
@@ -416,15 +418,15 @@ export const ShortcutsModal = memo(function ShortcutsModal() {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 11, color: C.dim }}>Press</span>
+          <span style={{ fontSize: 11, color: C.dim }}>{t('shortcuts.press')}</span>
           <Kbd bg={kbdBg} border={kbdBorder} color={C.sub}>
             ?
           </Kbd>
-          <span style={{ fontSize: 11, color: C.dim }}>or</span>
+          <span style={{ fontSize: 11, color: C.dim }}>{t('shortcuts.or')}</span>
           <Kbd bg={kbdBg} border={kbdBorder} color={C.sub}>
             Esc
           </Kbd>
-          <span style={{ fontSize: 11, color: C.dim }}>to close</span>
+          <span style={{ fontSize: 11, color: C.dim }}>{t('shortcuts.toClose')}</span>
         </div>
       </div>
     </div>

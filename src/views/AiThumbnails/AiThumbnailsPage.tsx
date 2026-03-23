@@ -14,7 +14,6 @@ type StyleId = 'realistic' | 'anime' | 'cinematic' | '3d' | 'minimalist' | 'popa
 type FormatId = '16:9' | '9:16';
 type AnalyticsTab = 'scores' | 'strengths' | 'improve' | 'titles';
 
-interface StyleOption { id: StyleId; label: string; icon: string }
 interface GeneratedImage {
   id: string;
   url: string;
@@ -33,13 +32,13 @@ interface CTRAnalysis {
   scores: { emotion: number; contrast: number; composition: number; clickability: number };
 }
 
-const STYLES: StyleOption[] = [
-  { id: 'realistic', label: 'Realistic', icon: '\uD83D\uDCF7' },
-  { id: 'anime', label: 'Anime', icon: '\uD83C\uDFAD' },
-  { id: 'cinematic', label: 'Cinematic', icon: '\uD83C\uDFAC' },
-  { id: '3d', label: '3D', icon: '\uD83E\uDDE9' },
-  { id: 'minimalist', label: 'Minimal', icon: '\u25FB' },
-  { id: 'popart', label: 'Pop Art', icon: '\uD83C\uDFA8' },
+const STYLE_KEYS: { id: StyleId; key: string; icon: string }[] = [
+  { id: 'realistic', key: 'aithumbs.style.realistic', icon: '\uD83D\uDCF7' },
+  { id: 'anime', key: 'aithumbs.style.anime', icon: '\uD83C\uDFAD' },
+  { id: 'cinematic', key: 'aithumbs.style.cinematic', icon: '\uD83C\uDFAC' },
+  { id: '3d', key: 'aithumbs.style.3d', icon: '\uD83E\uDDE9' },
+  { id: 'minimalist', key: 'aithumbs.style.minimalist', icon: '\u25FB' },
+  { id: 'popart', key: 'aithumbs.style.popart', icon: '\uD83C\uDFA8' },
 ];
 
 const COUNT_OPTIONS = [1, 2, 3] as const;
@@ -48,11 +47,11 @@ const FORMAT_OPTIONS: { id: FormatId; label: string; icon: string; pro: boolean 
   { id: '9:16', label: '9:16', icon: '\uD83D\uDCF1', pro: true },
 ];
 
-const EXAMPLE_PROMPTS = [
-  'A shocked face reacting to a massive explosion behind them',
-  'Split screen: broke vs rich lifestyle comparison, luxury cars',
-  'Close-up of hands opening a mysterious glowing box in dark room',
-];
+const EXAMPLE_PROMPT_KEYS = [
+  'aithumbs.example.1',
+  'aithumbs.example.2',
+  'aithumbs.example.3',
+] as const;
 
 let _uid = 0;
 function uid() { return `ait_${Date.now()}_${++_uid}`; }
@@ -197,7 +196,7 @@ export function AiThumbnailsPage() {
     },
     onError: (err) => {
       setProgress(0);
-      toast.error(err.message || 'Generation failed. Please try again.');
+      toast.error(err.message || t('aithumbs.toast.genFailed'));
     },
   });
 
@@ -207,7 +206,7 @@ export function AiThumbnailsPage() {
       setCtrExpanded(false);
     },
     onError: (err) => {
-      toast.error(err.message || 'Thumbnail analysis failed.');
+      toast.error(err.message || t('aithumbs.toast.analysisFailed'));
     },
   });
 
@@ -216,11 +215,11 @@ export function AiThumbnailsPage() {
       if (data.ideas.length > 0) {
         setAiIdeas(data.ideas);
       } else {
-        toast.info('No ideas generated. Try a different topic.');
+        toast.info(t('aithumbs.toast.noIdeas'));
       }
     },
     onError: (err) => {
-      toast.error(err.message || 'Failed to generate ideas. Please try again.');
+      toast.error(err.message || t('aithumbs.toast.ideasFailed'));
     },
   });
 
@@ -242,7 +241,7 @@ export function AiThumbnailsPage() {
       setHistory((prev) => [img, ...prev].slice(0, 20));
       setCtrAnalysis(null);
       setShowResult(true);
-      toast.success('Image enhanced successfully!');
+      toast.success(t('aithumbs.toast.enhanced'));
 
       setTimeout(() => setImageRevealed(true), 100);
 
@@ -254,7 +253,7 @@ export function AiThumbnailsPage() {
     },
     onError: (err) => {
       setProgress(0);
-      toast.error(err.message || 'Enhancement failed. Please try again.');
+      toast.error(err.message || t('aithumbs.toast.enhanceFailed'));
     },
   });
 
@@ -399,7 +398,7 @@ export function AiThumbnailsPage() {
 
   const handleCopyTitle = useCallback((title: string) => {
     navigator.clipboard.writeText(title).then(() => {
-      toast.success('Title copied to clipboard!');
+      toast.success(t('aithumbs.toast.titleCopied'));
     }).catch(() => {
       // fallback
     });
@@ -505,7 +504,7 @@ export function AiThumbnailsPage() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
           </svg>
-          My Works
+          {t('aithumbs.myWorks')}
         </button>
 
         {/* Credits badge */}
@@ -621,7 +620,7 @@ export function AiThumbnailsPage() {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             )}
-            {suggestIdeas.isPending ? 'Generating ideas...' : 'Need an idea?'}
+            {suggestIdeas.isPending ? t('aithumbs.generatingIdeas') : t('aithumbs.suggestIdea')}
           </button>
 
           {/* AI idea chips */}
@@ -663,7 +662,7 @@ export function AiThumbnailsPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                Describe your idea <span style={{ color: C.accent }}>*</span>
+                {t('aithumbs.prompt.label')} <span style={{ color: C.accent }}>*</span>
               </span>
               <span style={{ fontSize: 11, color: prompt.length > 900 ? C.red : C.dim }}>
                 {prompt.length}/1000
@@ -677,10 +676,10 @@ export function AiThumbnailsPage() {
                 C={C}
                 active={!!ytTitle}
                 onClick={() => {
-                  const url = window.prompt('Enter YouTube video URL:');
+                  const url = window.prompt(t('aithumbs.ytUrl.prompt'));
                   if (url) handleYtUrl(url);
                 }}
-                title="Link YouTube video"
+                title={t('aithumbs.ytUrl.title')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
@@ -693,7 +692,7 @@ export function AiThumbnailsPage() {
                 C={C}
                 active={!!uploadedPhoto}
                 onClick={() => fileInputRef.current?.click()}
-                title="Upload photo"
+                title={t('aithumbs.upload.title')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -704,7 +703,7 @@ export function AiThumbnailsPage() {
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
 
               {/* My Photos placeholder */}
-              <SmallIconBtn C={C} active={false} onClick={() => toast.info('Photo gallery coming soon!')} title="My Photos">
+              <SmallIconBtn C={C} active={false} onClick={() => toast.info(t('aithumbs.toast.galleryComingSoon'))} title={t('aithumbs.myPhotos')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
                 </svg>
@@ -716,7 +715,7 @@ export function AiThumbnailsPage() {
                 active={isListening}
                 danger={isListening}
                 onClick={toggleVoice}
-                title="Voice input"
+                title={t('aithumbs.voice.title')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
@@ -797,9 +796,9 @@ export function AiThumbnailsPage() {
               {t('aithumbs.section.style')}
             </span>
             <div className="tf-aithumbs-styles" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {STYLES.map((s) => (
+              {STYLE_KEYS.map((s) => (
                 <button key={s.id} onClick={() => setStyle(s.id)} style={styleChip(style === s.id)}>
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {s.label}
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {t(s.key)}
                 </button>
               ))}
             </div>
@@ -810,7 +809,7 @@ export function AiThumbnailsPage() {
             {/* Count */}
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Count
+                {t('aithumbs.section.count')}
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 {COUNT_OPTIONS.map((c) => (
@@ -840,7 +839,7 @@ export function AiThumbnailsPage() {
             {/* Format */}
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Format
+                {t('aithumbs.section.format')}
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 {FORMAT_OPTIONS.map((f) => (
@@ -874,7 +873,7 @@ export function AiThumbnailsPage() {
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
             <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
-              {count} credit{count > 1 ? 's' : ''}
+              {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
             </span>
           </div>
 
@@ -906,7 +905,7 @@ export function AiThumbnailsPage() {
                 <path d="M9 2a7 7 0 015.2 2.33" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
               </svg>
             )}
-            {isLoading ? t('aithumbs.generating') : 'Create Magic'}
+            {isLoading ? t('aithumbs.generating') : t('aithumbs.createMagic')}
           </button>
 
           {/* Upgrade prompt */}
@@ -958,7 +957,7 @@ export function AiThumbnailsPage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="15 18 9 12 15 6" />
                     </svg>
-                    Back
+                    {t('aithumbs.back')}
                   </button>
                 )}
                 <span
@@ -970,7 +969,7 @@ export function AiThumbnailsPage() {
                     textTransform: 'uppercase', letterSpacing: 1,
                   }}
                 >
-                  PREVIEW {format}
+                  {t('aithumbs.preview')} {format}
                 </span>
 
                 <div style={{ flex: 1 }} />
@@ -979,20 +978,20 @@ export function AiThumbnailsPage() {
                   <div className="tf-aithumbs-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <ActionPill
                       C={C}
-                      label="Enhance"
+                      label={t('aithumbs.enhance')}
                       icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg>}
                       onClick={handleEnhance}
                       loading={editMutation.isPending}
                     />
                     <ActionPill
                       C={C}
-                      label="Regenerate"
+                      label={t('aithumbs.regenerate')}
                       icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>}
                       onClick={handleRegenerate}
                     />
                     <ActionPill
                       C={C}
-                      label="Download"
+                      label={t('aithumbs.action.download')}
                       icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
                       onClick={() => selectedImage && handleDownload(selectedImage)}
                       accent
@@ -1005,8 +1004,8 @@ export function AiThumbnailsPage() {
               <>
                 <div className="tf-aithumbs-tabs" style={{ display: 'flex', gap: 6 }}>
                   {([
-                    { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
-                    { id: 'history' as const, label: `History${history.length > 0 ? ` (${history.length})` : ''}`, icon: '\uD83D\uDCC1' },
+                    { id: 'howto' as const, label: t('aithumbs.tab.howItWorks'), icon: '\uD83C\uDFAC' },
+                    { id: 'history' as const, label: `${t('aithumbs.tab.history')}${history.length > 0 ? ` (${history.length})` : ''}`, icon: '\uD83D\uDCC1' },
                   ] as const).map((t2) => (
                     <button
                       key={t2.id}
@@ -1058,7 +1057,7 @@ export function AiThumbnailsPage() {
                 </div>
 
                 <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>
-                  Generating... {Math.round(progress)}%
+                  {t('aithumbs.generating')} {Math.round(progress)}%
                 </div>
 
                 {/* Progress bar with percentage */}
@@ -1072,10 +1071,10 @@ export function AiThumbnailsPage() {
                 </div>
 
                 <div style={{ fontSize: 13, color: C.dim, maxWidth: 300, textAlign: 'center', lineHeight: 1.5 }}>
-                  {progress < 30 ? 'AI is composing the perfect shot...'
-                    : progress < 60 ? 'Adjusting lighting and contrast...'
-                    : progress < 90 ? 'Optimizing for maximum clicks...'
-                    : 'Almost there, finalizing details...'}
+                  {progress < 30 ? t('aithumbs.progress.composing')
+                    : progress < 60 ? t('aithumbs.progress.lighting')
+                    : progress < 90 ? t('aithumbs.progress.optimizing')
+                    : t('aithumbs.progress.finalizing')}
                 </div>
               </div>
             ) : selectedImage && showResult ? (
@@ -1120,7 +1119,7 @@ export function AiThumbnailsPage() {
                         <circle cx="8" cy="8" r="6" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
                         <path d="M8 2a6 6 0 014.24 1.76" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
                       </svg>
-                      <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>Analyzing CTR potential...</span>
+                      <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>{t('aithumbs.ctr.analyzing')}</span>
                     </div>
                   ) : ctrAnalysis ? (
                     <div
@@ -1153,7 +1152,7 @@ export function AiThumbnailsPage() {
 
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
-                            CTR SCORE
+                            {t('aithumbs.ctr.score')}
                           </div>
                           <div style={{ fontSize: 13, color: C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {ctrAnalysis.summary}
@@ -1175,10 +1174,10 @@ export function AiThumbnailsPage() {
                           {/* Tab bar */}
                           <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}` }}>
                             {([
-                              { id: 'scores' as const, label: 'Scores' },
-                              { id: 'strengths' as const, label: 'Strengths' },
-                              { id: 'improve' as const, label: `Improve${ctrAnalysis.improvements.length ? ` (${ctrAnalysis.improvements.length})` : ''}` },
-                              { id: 'titles' as const, label: 'Titles' },
+                              { id: 'scores' as const, label: t('aithumbs.ctr.tab.scores') },
+                              { id: 'strengths' as const, label: t('aithumbs.ctr.tab.strengths') },
+                              { id: 'improve' as const, label: `${t('aithumbs.ctr.tab.improve')}${ctrAnalysis.improvements.length ? ` (${ctrAnalysis.improvements.length})` : ''}` },
+                              { id: 'titles' as const, label: t('aithumbs.ctr.tab.titles') },
                             ]).map((at) => (
                               <button
                                 key={at.id}
@@ -1230,7 +1229,7 @@ export function AiThumbnailsPage() {
                                   </div>
                                 ))}
                                 {ctrAnalysis.strengths.length === 0 && (
-                                  <span style={{ fontSize: 13, color: C.dim }}>No strengths identified.</span>
+                                  <span style={{ fontSize: 13, color: C.dim }}>{t('aithumbs.ctr.noStrengths')}</span>
                                 )}
                               </div>
                             )}
@@ -1244,7 +1243,7 @@ export function AiThumbnailsPage() {
                                   </div>
                                 ))}
                                 {ctrAnalysis.improvements.length === 0 && (
-                                  <span style={{ fontSize: 13, color: C.dim }}>No improvements needed.</span>
+                                  <span style={{ fontSize: 13, color: C.dim }}>{t('aithumbs.ctr.noImprovements')}</span>
                                 )}
                               </div>
                             )}
@@ -1288,7 +1287,7 @@ export function AiThumbnailsPage() {
                                   </div>
                                 ))}
                                 {ctrAnalysis.titleSuggestions.length === 0 && (
-                                  <span style={{ fontSize: 13, color: C.dim }}>No title suggestions available.</span>
+                                  <span style={{ fontSize: 13, color: C.dim }}>{t('aithumbs.ctr.noTitles')}</span>
                                 )}
                               </div>
                             )}
@@ -1303,7 +1302,7 @@ export function AiThumbnailsPage() {
                 {history.length > 1 && (
                   <div className="tf-aithumbs-history-strip" style={{ padding: '0 16px 16px' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                      History ({history.length})
+                      {t('aithumbs.tab.history')} ({history.length})
                     </span>
                     <div className="tf-aithumbs-history-row tf-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                       {history.map((img) => {
@@ -1338,10 +1337,10 @@ export function AiThumbnailsPage() {
               /* ── How it works tab ────────────────────────── */
               <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
                 <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
-                  CREATE THUMBNAILS IN 3 STEPS
+                  {t('aithumbs.howto.heading')}
                 </h2>
                 <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
-                  Our AI generates professional YouTube thumbnails that get clicks.
+                  {t('aithumbs.howto.subheading')}
                 </p>
 
                 <div className="tf-aithumbs-steps" style={{
@@ -1365,10 +1364,10 @@ export function AiThumbnailsPage() {
                     </div>
                     <div style={{ padding: 14 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Describe Your Idea
+                        {t('aithumbs.howto.step1.title')}
                       </div>
                       <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Type what you want or let AI suggest viral thumbnail concepts
+                        {t('aithumbs.howto.step1.desc')}
                       </div>
                     </div>
                   </div>
@@ -1388,10 +1387,10 @@ export function AiThumbnailsPage() {
                     </div>
                     <div style={{ padding: 14 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Choose Style
+                        {t('aithumbs.howto.step2.title')}
                       </div>
                       <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Pick from 6 styles: Realistic, Anime, Cinematic, 3D, Minimal, or Pop Art
+                        {t('aithumbs.howto.step2.desc')}
                       </div>
                     </div>
                   </div>
@@ -1413,10 +1412,10 @@ export function AiThumbnailsPage() {
                     </div>
                     <div style={{ padding: 14 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        Get Your Thumbnail
+                        {t('aithumbs.howto.step3.title')}
                       </div>
                       <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        Download, check CTR Score, get title suggestions, or enhance with AI
+                        {t('aithumbs.howto.step3.desc')}
                       </div>
                     </div>
                   </div>
@@ -1429,17 +1428,19 @@ export function AiThumbnailsPage() {
                   textAlign: 'center',
                 }}>
                   <span style={{ fontSize: 13, color: C.dim }}>
-                    Video tutorial coming soon
+                    {t('aithumbs.howto.videoSoon')}
                   </span>
                 </div>
 
                 {/* Example prompt chips */}
                 <div style={{ marginTop: 20 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-                    Try an example
+                    {t('aithumbs.tryExample')}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {EXAMPLE_PROMPTS.map((ep, i) => (
+                    {EXAMPLE_PROMPT_KEYS.map((key, i) => {
+                      const ep = t(key);
+                      return (
                       <button
                         key={i}
                         onClick={() => setPrompt(ep)}
@@ -1462,7 +1463,8 @@ export function AiThumbnailsPage() {
                       >
                         {ep}
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1477,16 +1479,16 @@ export function AiThumbnailsPage() {
                       </svg>
                     </div>
                     <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                      No thumbnails yet
+                      {t('aithumbs.history.empty')}
                     </h3>
                     <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                      Generate your first thumbnail and it will appear here
+                      {t('aithumbs.history.emptyDesc')}
                     </p>
                   </div>
                 ) : (
                   <>
                     <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                      Generated thumbnails ({history.length})
+                      {t('aithumbs.history.generated')} ({history.length})
                     </div>
                     <div className="tf-aithumbs-history-grid" style={{
                       display: 'grid',
@@ -1538,10 +1540,10 @@ export function AiThumbnailsPage() {
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                  Want more variants, Character Mode and 9:16 for Shorts?
+                  {t('aithumbs.banner.title')}
                 </div>
                 <div style={{ fontSize: 12, color: C.sub }}>
-                  Upgrade to Pro for unlimited creative power.
+                  {t('aithumbs.banner.desc')}
                 </div>
               </div>
               <a
@@ -1556,7 +1558,7 @@ export function AiThumbnailsPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
               >
-                Upgrade to Pro
+                {t('aithumbs.banner.cta')}
               </a>
             </div>
           )}

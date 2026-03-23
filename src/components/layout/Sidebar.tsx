@@ -13,7 +13,7 @@ const COLLAPSE_PAGES = ['thumbnails'];
 
 const icons: Record<string, (color: string, accent?: string) => React.ReactNode> = {
   dashboard: (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="dash-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -27,19 +27,19 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   editor: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <path d="M7 4L16 10L7 16V4Z" fill={c} opacity=".85" />
       <path d="M4 6V14" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity=".4" />
     </svg>
   ),
   metadata: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <path d="M13.5 3.5L16.5 6.5L7 16H4V13L13.5 3.5Z" fill={c} opacity=".85" />
       <path d="M4 17.5H16" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity=".5" />
     </svg>
   ),
   thumbnails: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="2" y="3" width="16" height="11" rx="2.5" fill={c} opacity=".25" />
       <rect x="3" y="4" width="14" height="9" rx="1.5" fill={c} opacity=".85" />
       <circle cx="7" cy="8" r="2" fill={c} opacity=".35" />
@@ -48,14 +48,14 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   preview: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <circle cx="10" cy="10" r="7.5" stroke={c} strokeWidth="1.5" opacity=".5" />
       <circle cx="10" cy="10" r="3" fill={c} opacity=".85" />
       <circle cx="10" cy="10" r="5" stroke={c} strokeWidth=".5" opacity=".25" />
     </svg>
   ),
   team: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <circle cx="8" cy="6" r="3" fill={c} opacity=".85" />
       <path d="M3 16C3 13 5 11 8 11C11 11 13 13 13 16" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity=".7" />
       <circle cx="14" cy="7" r="2" fill={c} opacity=".5" />
@@ -63,48 +63,48 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   settings: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <circle cx="10" cy="10" r="3" stroke={c} strokeWidth="1.5" opacity=".85" />
       <path d="M10 2V4M10 16V18M18 10H16M4 10H2M15.66 4.34L14.24 5.76M5.76 14.24L4.34 15.66M15.66 15.66L14.24 14.24M5.76 5.76L4.34 4.34" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity=".5" />
     </svg>
   ),
   admin: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <path d="M10 2L3 6V10C3 14.4 6 17.5 10 18.5C14 17.5 17 14.4 17 10V6L10 2Z" fill={c} opacity=".25" />
       <path d="M10 3.5L4.5 6.75V10C4.5 13.7 7 16.2 10 17C13 16.2 15.5 13.7 15.5 10V6.75L10 3.5Z" stroke={c} strokeWidth="1.2" opacity=".85" />
       <path d="M7.5 10L9.5 12L13 8" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".85" />
     </svg>
   ),
   logout: (c) => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M6 2H3.5C2.67 2 2 2.67 2 3.5V12.5C2 13.33 2.67 14 3.5 14H6" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
       <path d="M11 11L14 8L11 5" stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M6 8H14" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   ),
   collapse: (c) => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M10 3L5 8L10 13" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   expand: (c) => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M6 3L11 8L6 13" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   sparkle: (c) => (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none">
       <path d="M6 0L7.5 4.5L12 6L7.5 7.5L6 12L4.5 7.5L0 6L4.5 4.5L6 0Z" fill={c} />
     </svg>
   ),
   search: (c) => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none">
       <circle cx="7" cy="7" r="4.5" stroke={c} strokeWidth="1.3" />
       <path d="M10.5 10.5L14 14" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   ),
   'ai-thumbnails': (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="aithumbs-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -117,7 +117,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   tools: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="2" y="2" width="7" height="7" rx="2" fill={c} opacity=".85" />
       <rect x="11" y="2" width="7" height="7" rx="2" fill={c} opacity=".5" />
       <rect x="2" y="11" width="7" height="7" rx="2" fill={c} opacity=".5" />
@@ -125,7 +125,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   keywords: (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="kw-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -140,14 +140,14 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   billing: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="2" y="4" width="16" height="12" rx="2.5" stroke={c} strokeWidth="1.5" opacity=".85" />
       <path d="M2 8H18" stroke={c} strokeWidth="1.5" opacity=".5" />
       <rect x="4.5" y="11" width="5" height="2" rx="1" fill={c} opacity=".4" />
     </svg>
   ),
   referral: (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="ref-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -162,7 +162,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   media: (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="media-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -175,7 +175,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   brand: (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="brand-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -189,7 +189,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   blog: (c) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <rect x="3" y="2" width="14" height="16" rx="2.5" stroke={c} strokeWidth="1.5" opacity=".85" />
       <path d="M6.5 6H13.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".7" />
       <path d="M6.5 9.5H13.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity=".5" />
@@ -197,7 +197,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   analytics: (c, a) => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <defs>
         <linearGradient id="analytics-g" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor={a ?? c} />
@@ -212,7 +212,7 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
     </svg>
   ),
   gear: (c) => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none">
       <circle cx="7" cy="7" r="2" stroke={c} strokeWidth="1.2" />
       <path d="M7 1.5V3M7 11V12.5M12.5 7H11M3 7H1.5M10.9 3.1L9.8 4.2M4.2 9.8L3.1 10.9M10.9 10.9L9.8 9.8M4.2 4.2L3.1 3.1" stroke={c} strokeWidth="1" strokeLinecap="round" />
     </svg>
@@ -1281,6 +1281,9 @@ export const Sidebar = memo(function Sidebar() {
       {/* ── User Panel with Profile Dropdown ─────────────── */}
       <div
         ref={userMenuRef}
+        role="button"
+        tabIndex={0}
+        aria-label={t('sidebar.userMenu')}
         style={{
           padding: collapsed ? '14px 8px' : '14px 14px',
           display: 'flex',
@@ -1293,6 +1296,12 @@ export const Sidebar = memo(function Sidebar() {
           cursor: 'pointer',
         }}
         onClick={() => setUserMenuOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setUserMenuOpen((v) => !v);
+          }
+        }}
       >
         {/* Avatar with status ring */}
         <div style={{ position: 'relative' }}>

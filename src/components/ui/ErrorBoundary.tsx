@@ -3,6 +3,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 
 type FallbackRender = (props: { error: Error; reset: () => void }) => ReactNode;
 
@@ -120,7 +121,7 @@ export class ErrorBoundary extends Component<Props, State> {
               textAlign: 'center',
             }}
           >
-            {label || '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0442\u043E\u0431\u0440\u0430\u0437\u0438\u0442\u044C \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442'}
+            {label || useLocaleStore.getState().t('errorBoundary.failedToRender')}
           </span>
 
           {/* Show condensed error message in dev */}
@@ -157,7 +158,7 @@ export class ErrorBoundary extends Component<Props, State> {
               transition: 'all 0.15s ease',
             }}
           >
-            {'\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C'}
+            {useLocaleStore.getState().t('errorBoundary.retry')}
           </button>
         </div>
       );

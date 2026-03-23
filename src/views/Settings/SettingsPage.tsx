@@ -1672,7 +1672,7 @@ export function SettingsPage() {
         <div className="tf-settings-section" style={sectionStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>
-              {'\u{1F512}'} {t('settings.sso.title') !== 'settings.sso.title' ? t('settings.sso.title') : '\u0415\u0434\u0438\u043D\u044B\u0439 \u0432\u0445\u043E\u0434 (SSO)'}
+              {'\u{1F512}'} {t('settings.sso.title')}
             </h2>
             <span style={{
               fontSize: 10,
@@ -1687,7 +1687,7 @@ export function SettingsPage() {
             </span>
           </div>
           <p style={sectionDescStyle}>
-            {'\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 SSO \u0434\u043B\u044F \u0432\u0430\u0448\u0435\u0439 \u043A\u043E\u043C\u0430\u043D\u0434\u044B'}
+            {t('settings.sso.description')}
           </p>
 
           <div style={{
@@ -1724,7 +1724,7 @@ export function SettingsPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{provider}</div>
-                  <div style={{ fontSize: 12, color: C.dim }}>{'\u041D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D\u043E'}</div>
+                  <div style={{ fontSize: 12, color: C.dim }}>{t('settings.sso.notConfigured')}</div>
                 </div>
                 <button
                   disabled
@@ -1739,7 +1739,7 @@ export function SettingsPage() {
                     opacity: 0.5,
                   }}
                 >
-                  {'\u041D\u0430\u0441\u0442\u0440\u043E\u0438\u0442\u044C'}
+                  {t('settings.sso.configure')}
                 </button>
               </div>
             ))}
@@ -1754,7 +1754,7 @@ export function SettingsPage() {
             color: C.sub,
             lineHeight: 1.6,
           }}>
-            {'\u0414\u043B\u044F \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 SSO \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+            {t('settings.sso.contactUs')}{' '}
             <a href="mailto:enterprise@tubeforge.co" style={{ color: C.purple, fontWeight: 600 }}>
               enterprise@tubeforge.co
             </a>
@@ -1768,7 +1768,7 @@ export function SettingsPage() {
       {plan === 'STUDIO' && (
         <div className="tf-settings-section" style={sectionStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>White-Label</h2>
+            <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.whiteLabel.title')}</h2>
             <span style={{
               fontSize: 10,
               fontWeight: 700,
@@ -1782,7 +1782,7 @@ export function SettingsPage() {
             </span>
           </div>
           <p style={sectionDescStyle}>
-            {'\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0432\u0438\u0434\u0435\u043E \u043F\u043E\u0434 \u0432\u0430\u0448 \u0431\u0440\u0435\u043D\u0434'}
+            {t('settings.whiteLabel.description')}
           </p>
 
           <div style={{
@@ -1792,11 +1792,11 @@ export function SettingsPage() {
             marginBottom: 20,
           }}>
             {[
-              { icon: '\u{1F3AC}', text: '\u0423\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0440\u0435\u043D\u0434\u0438\u043D\u0433 TubeForge \u0438\u0437 \u0432\u0430\u0448\u0438\u0445 \u0432\u0438\u0434\u0435\u043E' },
-              { icon: '\u{1F310}', text: '\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0441\u043E\u0431\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u0434\u043E\u043C\u0435\u043D \u0434\u043B\u044F \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u0438' },
-              { icon: '\u{1F3A8}', text: '\u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0441\u0432\u043E\u0439 \u043B\u043E\u0433\u043E\u0442\u0438\u043F \u0438 \u0446\u0432\u0435\u0442\u043E\u0432\u0443\u044E \u0441\u0445\u0435\u043C\u0443' },
+              { icon: '\u{1F3AC}', textKey: 'settings.whiteLabel.removeBranding' },
+              { icon: '\u{1F310}', textKey: 'settings.whiteLabel.customDomain' },
+              { icon: '\u{1F3A8}', textKey: 'settings.whiteLabel.customLogo' },
             ].map((item) => (
-              <div key={item.text} style={{
+              <div key={item.textKey} style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
@@ -1807,7 +1807,7 @@ export function SettingsPage() {
                 opacity: 0.65,
               }}>
                 <span style={{ fontSize: 18 }}>{item.icon}</span>
-                <span style={{ fontSize: 13, color: C.text }}>{item.text}</span>
+                <span style={{ fontSize: 13, color: C.text }}>{t(item.textKey)}</span>
               </div>
             ))}
           </div>
@@ -1821,7 +1821,7 @@ export function SettingsPage() {
             color: C.sub,
             lineHeight: 1.6,
           }}>
-            {'\u0414\u043B\u044F \u0430\u043A\u0442\u0438\u0432\u0430\u0446\u0438\u0438 White-Label \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+            {t('settings.whiteLabel.contactUs')}{' '}
             <a href="mailto:enterprise@tubeforge.co" style={{ color: C.purple, fontWeight: 600 }}>
               enterprise@tubeforge.co
             </a>
@@ -1834,7 +1834,7 @@ export function SettingsPage() {
       {/* ====================================================== */}
       <div className="tf-settings-section" style={sectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>Enterprise</h2>
+          <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.enterprise.title')}</h2>
           <span style={{
             fontSize: 10,
             fontWeight: 700,
@@ -1848,7 +1848,7 @@ export function SettingsPage() {
           </span>
         </div>
         <p style={sectionDescStyle}>
-          {'\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u043A\u043E\u043C\u0430\u043D\u0434\u043E\u0439, \u043E\u0442\u0447\u0451\u0442\u043D\u043E\u0441\u0442\u044C, \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u044C'}
+          {t('settings.enterprise.description')}
         </p>
 
         <div className="tf-settings-enterprise-grid" style={{
@@ -1858,12 +1858,12 @@ export function SettingsPage() {
           marginBottom: 20,
         }}>
           {[
-            { icon: '\u{1F465}', title: 'Team Management', desc: '\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0430\u043C\u0438 \u0438 \u0440\u043E\u043B\u044F\u043C\u0438' },
-            { icon: '\u{1F4CA}', title: 'Usage Reports', desc: '\u041E\u0442\u0447\u0451\u0442\u044B \u043E\u0431 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0438' },
-            { icon: '\u{1F6E1}\uFE0F', title: 'IP Whitelist', desc: '\u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043F\u043E IP' },
-            { icon: '\u{23F1}\uFE0F', title: 'Session Timeout', desc: '\u0410\u0432\u0442\u043E-\u0432\u044B\u0445\u043E\u0434 \u0438\u0437 \u043D\u0435\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0441\u0435\u0441\u0441\u0438\u0439' },
+            { icon: '\u{1F465}', titleKey: 'settings.enterprise.teamManagement', descKey: 'settings.enterprise.teamManagementDesc' },
+            { icon: '\u{1F4CA}', titleKey: 'settings.enterprise.usageReports', descKey: 'settings.enterprise.usageReportsDesc' },
+            { icon: '\u{1F6E1}\uFE0F', titleKey: 'settings.enterprise.ipWhitelist', descKey: 'settings.enterprise.ipWhitelistDesc' },
+            { icon: '\u{23F1}\uFE0F', titleKey: 'settings.enterprise.sessionTimeout', descKey: 'settings.enterprise.sessionTimeoutDesc' },
           ].map((feature) => (
-            <div key={feature.title} style={{
+            <div key={feature.titleKey} style={{
               padding: '16px',
               background: C.surface,
               borderRadius: 12,
@@ -1871,8 +1871,8 @@ export function SettingsPage() {
               opacity: 0.6,
             }}>
               <div style={{ fontSize: 22, marginBottom: 8 }}>{feature.icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{feature.title}</div>
-              <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.4 }}>{feature.desc}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>{t(feature.titleKey)}</div>
+              <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.4 }}>{t(feature.descKey)}</div>
             </div>
           ))}
         </div>
@@ -1886,7 +1886,7 @@ export function SettingsPage() {
           color: C.sub,
           lineHeight: 1.6,
         }}>
-          {'\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0432 Enterprise \u043F\u043B\u0430\u043D\u0435 \u2014 \u0441\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 \u043D\u0430\u043C\u0438: '}
+          {t('settings.enterprise.contactUs')}{' '}
           <a href="mailto:enterprise@tubeforge.co" style={{ color: C.blue, fontWeight: 600 }}>
             enterprise@tubeforge.co
           </a>

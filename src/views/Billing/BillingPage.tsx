@@ -133,7 +133,7 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: 'Studio',
       price: 30,
       priceLabel: '$30',
-      description: t('billing.studioPlanDesc') || 'For teams and professionals',
+      description: t('billing.studioPlanDesc'),
       features: [
         t('billing.feat.allPro'),
         t('billing.feat.unlimitedAi'),
@@ -150,46 +150,46 @@ function getPlans(t: (key: string) => string): PlanDef[] {
 
 function getCompareFeatures(t: (key: string) => string): CompareFeature[] {
   return [
-    { name: t('billing.feat.projectsUnit'), free: String(PLAN_LIMITS.FREE.projects), pro: String(PLAN_LIMITS.PRO.projects), studio: 'Unlimited' },
-    { name: t('billing.feat.aiUnit'), free: String(PLAN_LIMITS.FREE.aiGenerations), pro: String(PLAN_LIMITS.PRO.aiGenerations), studio: 'Unlimited' },
-    { name: t('billing.feat.exportQuality') || 'Export Quality', free: '720p', pro: '1080p', studio: '4K' },
-    { name: t('billing.feat.storage') || 'Storage', free: '500 MB', pro: '5 GB', studio: '50 GB' },
+    { name: t('billing.feat.projectsUnit'), free: String(PLAN_LIMITS.FREE.projects), pro: String(PLAN_LIMITS.PRO.projects), studio: t('billing.unlimited') },
+    { name: t('billing.feat.aiUnit'), free: String(PLAN_LIMITS.FREE.aiGenerations), pro: String(PLAN_LIMITS.PRO.aiGenerations), studio: t('billing.unlimited') },
+    { name: t('billing.feat.exportQuality'), free: '720p', pro: '1080p', studio: '4K' },
+    { name: t('billing.feat.storage'), free: '500 MB', pro: '5 GB', studio: '50 GB' },
     { name: t('billing.feat.advancedThumbs'), free: false, pro: true, studio: true },
     { name: t('billing.feat.seo'), free: false, pro: true, studio: true },
     { name: t('billing.feat.noWatermark'), free: false, pro: true, studio: true },
     { name: t('billing.feat.prioritySupport'), free: false, pro: true, studio: true },
-    { name: t('billing.feat.teamUnit'), free: false, pro: false, studio: `${PLAN_LIMITS.STUDIO.teamMembers} members` },
+    { name: t('billing.feat.teamUnit'), free: false, pro: false, studio: `${PLAN_LIMITS.STUDIO.teamMembers} ${t('billing.members')}` },
     { name: t('billing.feat.api'), free: false, pro: false, studio: true },
     { name: t('billing.feat.whiteLabel'), free: false, pro: false, studio: true },
     { name: t('billing.feat.personalManager'), free: false, pro: false, studio: true },
   ];
 }
 
-function getFaqItems(): FaqItem[] {
+function getFaqItems(t: (key: string) => string): FaqItem[] {
   return [
     {
-      question: 'Can I cancel anytime?',
-      answer: 'Yes, cancel anytime from your account settings.',
+      question: t('billing.faq.q1'),
+      answer: t('billing.faq.a1'),
     },
     {
-      question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards via Stripe.',
+      question: t('billing.faq.q2'),
+      answer: t('billing.faq.a2'),
     },
     {
-      question: 'Is there a free trial?',
-      answer: 'Yes, the Free plan is forever free with basic features.',
+      question: t('billing.faq.q3'),
+      answer: t('billing.faq.a3'),
     },
     {
-      question: 'Can I switch plans?',
-      answer: 'Yes, upgrade or downgrade anytime. Changes take effect immediately.',
+      question: t('billing.faq.q4'),
+      answer: t('billing.faq.a4'),
     },
     {
-      question: 'Do you offer refunds?',
-      answer: 'Yes, 14-day money-back guarantee on all paid plans.',
+      question: t('billing.faq.q5'),
+      answer: t('billing.faq.a5'),
     },
     {
-      question: 'What happens when I reach my limit?',
-      answer: "You'll be prompted to upgrade. Your existing work is never deleted.",
+      question: t('billing.faq.q6'),
+      answer: t('billing.faq.a6'),
     },
   ];
 }
@@ -260,7 +260,7 @@ export function BillingPage() {
 
   const PLANS = useMemo(() => getPlans(t), [t]);
   const COMPARE = useMemo(() => getCompareFeatures(t), [t]);
-  const FAQ_ITEMS = useMemo(() => getFaqItems(), []);
+  const FAQ_ITEMS = useMemo(() => getFaqItems(t), [t]);
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
@@ -769,7 +769,7 @@ export function BillingPage() {
                           boxShadow: '0 2px 8px rgba(16,185,129,0.25)',
                           letterSpacing: '.02em',
                         }}>
-                          Save 20%
+                          {t('billing.save20')}
                         </span>
                       </div>
                     )}
@@ -1087,7 +1087,7 @@ export function BillingPage() {
               margin: 0,
               letterSpacing: '-.02em',
             }}>
-              Frequently Asked Questions
+              {t('billing.faq.heading')}
             </h2>
             <p style={{
               fontSize: 15,
@@ -1095,7 +1095,7 @@ export function BillingPage() {
               margin: '8px 0 0',
               lineHeight: 1.5,
             }}>
-              Everything you need to know about our plans
+              {t('billing.faq.subheading')}
             </p>
           </div>
 

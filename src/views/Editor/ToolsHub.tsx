@@ -651,7 +651,7 @@ const ToolCard = memo(function ToolCard({
         boxShadow: hovered && tool.available
           ? `0 8px 24px ${tool.gradient[0]}20, 0 4px 12px rgba(0,0,0,0.2)`
           : 'none',
-        overflow: 'hidden',
+        overflow: 'visible',
         opacity: tool.available ? 1 : 0.5,
         filter: tool.available ? 'none' : 'grayscale(0.6)',
       }}
@@ -666,6 +666,8 @@ const ToolCard = memo(function ToolCard({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        overflow: 'hidden',
+        borderRadius: '14px 14px 0 0',
       }}>
         {/* Centered icon in gradient */}
         <div style={{
