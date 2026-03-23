@@ -264,14 +264,14 @@ export default function OnboardingPage() {
 
   const renderStep1 = () => (
     <div style={slideStyle}>
-      <h1 style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+      <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
         How do you plan to use TubeForge?
       </h1>
       <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
         This helps us personalize your experience
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="tf-onboarding-quiz-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* Personal use */}
         <button
           type="button"
@@ -334,14 +334,14 @@ export default function OnboardingPage() {
 
     return (
       <div style={slideStyle}>
-        <h1 style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+        <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
           What&apos;s your main goal?
         </h1>
         <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
           We&apos;ll tailor your dashboard and recommendations
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="tf-onboarding-quiz-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {goals.map((g) => (
             <button
               key={g.id}
@@ -384,7 +384,7 @@ export default function OnboardingPage() {
 
     return (
       <div style={slideStyle}>
-        <h1 style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+        <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
           How many videos do you publish per month?
         </h1>
         <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
@@ -446,14 +446,14 @@ export default function OnboardingPage() {
 
     return (
       <div style={slideStyle}>
-        <h1 style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+        <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
           What tools have you tried before?
         </h1>
         <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
           Select all that apply
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+        <div className="tf-onboarding-tools-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
           {tools.map((t) => {
             const isSelected = selectedTools.includes(t.id);
             return (
@@ -636,6 +636,7 @@ export default function OnboardingPage() {
   return (
     <div
       ref={containerRef}
+      className="tf-onboarding-container"
       style={{
         minHeight: '100vh',
         background: BG,
@@ -675,6 +676,7 @@ export default function OnboardingPage() {
 
       {/* Logo */}
       <div
+        className="tf-onboarding-logo"
         style={{
           position: 'fixed',
           top: 24,
@@ -710,6 +712,7 @@ export default function OnboardingPage() {
         <button
           type="button"
           onClick={handleSkip}
+          className="tf-onboarding-skip"
           style={{
             position: 'fixed',
             top: 28,
@@ -736,6 +739,7 @@ export default function OnboardingPage() {
       {/* Step dots + back button (quiz steps only) */}
       {isQuizStep && (
         <div
+          className="tf-onboarding-dots"
           style={{
             position: 'fixed',
             bottom: 32,
@@ -753,6 +757,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={handleBack}
+              className="tf-onboarding-back-btn"
               style={{
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.08)',

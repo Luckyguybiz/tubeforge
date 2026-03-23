@@ -73,6 +73,7 @@ function AnalyticsInner() {
 
   return (
     <div
+      className="tf-analytics-container"
       style={{
         padding: '32px 36px',
         maxWidth: 1400,
@@ -109,6 +110,7 @@ function AnalyticsInner() {
 
       {/* ── Tab Switcher ────────────────────────────────────────────── */}
       <div
+        className="tf-analytics-tabs"
         style={{
           display: 'flex',
           gap: 8,
@@ -162,6 +164,7 @@ function AnalyticsInner() {
 
       {/* ── Tab Content ─────────────────────────────────────────────── */}
       <div
+        className="tf-analytics-content"
         style={{
           borderRadius: 16,
           background: isDark

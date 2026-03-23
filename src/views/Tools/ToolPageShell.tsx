@@ -23,7 +23,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
   return (
     <div style={{ width: '100%', minHeight: '100dvh', background: C.bg }}>
       {/* Header */}
-      <div style={{
+      <div className="tf-tool-header" style={{
         padding: '16px 20px',
         borderBottom: `1px solid ${C.border}`,
         background: C.surface,
@@ -36,6 +36,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
         <button
           onClick={() => router.push('/tools')}
           aria-label="Back to tools"
+          className="tf-tool-back-btn"
           style={{
             height: 36, borderRadius: 10,
             border: 'none', background: 'transparent',
@@ -69,7 +70,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0, wordBreak: 'break-word' }}>{title}</h1>
+            <h1 className="tf-tool-title" style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0, wordBreak: 'break-word' }}>{title}</h1>
             {badge && (
               <span style={{
                 padding: '2px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
@@ -114,10 +115,10 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
       )}
 
       {/* Content */}
-      <div style={{
+      <div className="tf-tool-content-wrap" style={{
         padding: '20px 20px', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box',
       }}>
-        <div style={{
+        <div className="tf-tool-content-card" style={{
           background: C.card,
           borderRadius: 16,
           padding: 24,

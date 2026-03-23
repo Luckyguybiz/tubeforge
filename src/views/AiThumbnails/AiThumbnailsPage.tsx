@@ -527,6 +527,7 @@ export function AiThumbnailsPage() {
 
       {/* ── Main Content ───────────────────────────────── */}
       <div
+        className="tf-aithumbs-layout"
         style={{
           flex: 1, display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
@@ -535,6 +536,7 @@ export function AiThumbnailsPage() {
       >
         {/* LEFT PANEL (380px) */}
         <div
+          className="tf-aithumbs-left"
           style={{
             width: isMobile ? '100%' : 380,
             flexShrink: 0,
@@ -792,7 +794,7 @@ export function AiThumbnailsPage() {
             <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
               {t('aithumbs.section.style')}
             </span>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div className="tf-aithumbs-styles" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {STYLES.map((s) => (
                 <button key={s.id} onClick={() => setStyle(s.id)} style={styleChip(style === s.id)}>
                   <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {s.label}
@@ -878,6 +880,7 @@ export function AiThumbnailsPage() {
           <div style={{ flex: 1 }} />
 
           {/* ── 5. CTA Button ──────────────────────────────── */}
+          <div className="tf-aithumbs-generate-wrap">
           <button
             onClick={handleGenerate}
             disabled={disabled}
@@ -919,10 +922,12 @@ export function AiThumbnailsPage() {
               {t('aithumbs.upgrade')}
             </a>
           )}
+          </div>
         </div>
 
         {/* RIGHT PANEL (flex) */}
         <div
+          className="tf-aithumbs-right"
           style={{
             flex: 1, minWidth: 0,
             display: 'flex', flexDirection: 'column',
@@ -996,7 +1001,7 @@ export function AiThumbnailsPage() {
             ) : (
               /* Tab switcher for How it works / History */
               <>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div className="tf-aithumbs-tabs" style={{ display: 'flex', gap: 6 }}>
                   {([
                     { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
                     { id: 'history' as const, label: `History${history.length > 0 ? ` (${history.length})` : ''}`, icon: '\uD83D\uDCC1' },

@@ -61,6 +61,7 @@ function PublishContent() {
     <div>
       {/* Tab pills */}
       <div
+        className="tf-publish-tabs"
         style={{
           display: 'flex',
           gap: 6,
