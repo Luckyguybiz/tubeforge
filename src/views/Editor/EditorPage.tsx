@@ -469,6 +469,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Suppress unused variable warnings
   void generateCaptions;
 
+  // Auto-create first scene if empty
+  useEffect(() => {
+    const store = useEditorStore.getState();
+    if (store.scenes.length === 0) {
+      store.addScene();
+    }
+  }, []);
+
+  // Multi-shot mode (multiple scenes linked together)
+  const [multiShot, setMultiShot] = useState(false);
+
   // Auto-save
   useEffect(() => {
     if (!projectId) return;
@@ -858,7 +869,27 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </span>
             </div>
 
-            {/* ── 2. Frame upload slots ── */}
+            {/* ── 2. Multi-shot toggle ── */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: C.sub }}>Multi-shot</span>
+              <button
+                onClick={() => setMultiShot(!multiShot)}
+                style={{
+                  width: 36, height: 20, borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: multiShot ? C.accent : C.border,
+                  position: 'relative', transition: 'background .2s',
+                }}
+                aria-label="Toggle multi-shot mode"
+              >
+                <span style={{
+                  position: 'absolute', top: 2, left: multiShot ? 18 : 2,
+                  width: 16, height: 16, borderRadius: 8, background: '#fff',
+                  transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+                }} />
+              </button>
+            </div>
+
+            {/* ── 3. Frame upload slots ── */}
             <div className="tf-editor-frames" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <FrameSlot
                 label={t('editor.frame.startFrame')}
@@ -867,15 +898,22 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 accentCol={selCol}
                 onChange={(v) => { if (sel) updScene(sel.id, { sf: v }); }}
               />
-              <FrameSlot
-                label={t('editor.frame.endFrame')}
-                value={sel?.ef ?? null}
-                C={C}
-                accentCol={selCol}
-                onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
-                optional
-              />
+              {!multiShot && (
+                <FrameSlot
+                  label={t('editor.frame.endFrame')}
+                  value={sel?.ef ?? null}
+                  C={C}
+                  accentCol={selCol}
+                  onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
+                  optional
+                />
+              )}
             </div>
+            {multiShot && (
+              <div style={{ fontSize: 10, color: C.dim, fontStyle: 'italic', marginTop: -4 }}>
+                End frame is auto-linked from the next scene&apos;s start frame
+              </div>
+            )}
 
             {/* ── 3. Prompt section ── */}
             <div>
