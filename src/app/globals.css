@@ -846,3 +846,8 @@ img {
     font-size: 15px !important;
   }
 }
+
+/* Hide feedback widget on mobile — overlaps content */
+@media (max-width: 768px) {
+  .tf-feedback-btn { display: none !important; }
+}

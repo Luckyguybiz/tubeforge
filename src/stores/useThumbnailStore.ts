@@ -67,6 +67,48 @@ interface ThumbnailState {
   // Context menu
   contextMenu: { x: number; y: number; elId: string | null } | null;
 
+  // View settings (Phase 1)
+  showRulers: boolean;
+  showGrid: boolean;
+  gridSize: number;
+  snapToGrid: boolean;
+  snapToElements: boolean;
+  userGuides: { axis: 'x' | 'y'; pos: number }[];
+
+  // Marquee selection (Phase 2)
+  marquee: { x: number; y: number; w: number; h: number } | null;
+
+  // Resize handle direction (Phase 2)
+  resizeDir: string | null;
+
+  // Copy/paste style (Phase 8)
+  styleClipboard: Partial<CanvasElement> | null;
+
+  // Phase 1-10 setters
+  setShowRulers: (v: boolean) => void;
+  setShowGrid: (v: boolean) => void;
+  setGridSize: (v: number) => void;
+  setSnapToGrid: (v: boolean) => void;
+  setSnapToElements: (v: boolean) => void;
+  addUserGuide: (axis: 'x' | 'y', pos: number) => void;
+  removeUserGuide: (idx: number) => void;
+  setMarquee: (m: { x: number; y: number; w: number; h: number } | null) => void;
+  setResizeDir: (d: string | null) => void;
+
+  // Lock/visibility (Phase 2)
+  toggleLock: (id: string) => void;
+  toggleVisible: (id: string) => void;
+
+  // Copy/paste style (Phase 8)
+  copyStyle: () => void;
+  pasteStyle: () => void;
+
+  // Move layer (Phase 2)
+  moveLayer: (id: string, direction: 'up' | 'down') => void;
+
+  // Magic resize (Phase 10)
+  magicResize: (newW: number, newH: number) => void;
+
   // Basic setters
   setStep: (s: string) => void;
   setTool: (t: string) => void;
@@ -220,6 +262,21 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // Context menu
   contextMenu: null,
+
+  // View settings (Phase 1)
+  showRulers: false,
+  showGrid: false,
+  gridSize: 50,
+  snapToGrid: false,
+  snapToElements: true,
+  userGuides: [],
+
+  // Marquee (Phase 2)
+  marquee: null,
+  resizeDir: null,
+
+  // Style clipboard (Phase 8)
+  styleClipboard: null,
 
   // ===== Basic setters =====
   setStep: (s) => set({ step: s }),
@@ -540,6 +597,79 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     get().pushHistory();
     set((s) => ({
       els: s.els.map((e) => e.groupId && groupIds.has(e.groupId) ? { ...e, groupId: undefined } : e),
+    }));
+  },
+
+  // ===== View settings (Phase 1) =====
+  setShowRulers: (v) => set({ showRulers: v }),
+  setShowGrid: (v) => set({ showGrid: v }),
+  setGridSize: (v) => set({ gridSize: v }),
+  setSnapToGrid: (v) => set({ snapToGrid: v }),
+  setSnapToElements: (v) => set({ snapToElements: v }),
+  addUserGuide: (axis, pos) => set((s) => ({ userGuides: [...s.userGuides, { axis, pos }] })),
+  removeUserGuide: (idx) => set((s) => ({ userGuides: s.userGuides.filter((_, i) => i !== idx) })),
+  setMarquee: (m) => set({ marquee: m }),
+  setResizeDir: (d) => set({ resizeDir: d }),
+
+  // ===== Lock/visibility (Phase 2) =====
+  toggleLock: (id) => {
+    set((s) => ({ els: s.els.map((e) => e.id === id ? { ...e, locked: !e.locked } : e) }));
+  },
+  toggleVisible: (id) => {
+    set((s) => ({ els: s.els.map((e) => e.id === id ? { ...e, visible: e.visible === false ? undefined : false } : e) }));
+  },
+
+  // ===== Move layer (Phase 2) =====
+  moveLayer: (id, direction) => {
+    get().pushHistory();
+    set((s) => {
+      const idx = s.els.findIndex((e) => e.id === id);
+      if (idx === -1) return s;
+      const newIdx = direction === 'up' ? idx + 1 : idx - 1;
+      if (newIdx < 0 || newIdx >= s.els.length) return s;
+      const arr = [...s.els];
+      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+      return { els: arr };
+    });
+  },
+
+  // ===== Copy/paste style (Phase 8) =====
+  copyStyle: () => {
+    const { selIds, els } = get();
+    if (selIds.length !== 1) return;
+    const el = els.find((e) => e.id === selIds[0]);
+    if (!el) return;
+    const { id, type, x, y, w, h, text, src, path, noteText, cellData, ...style } = el;
+    set({ styleClipboard: style as Partial<CanvasElement> });
+  },
+  pasteStyle: () => {
+    const { selIds, styleClipboard } = get();
+    if (!styleClipboard || selIds.length === 0) return;
+    get().pushHistory();
+    set((s) => ({
+      els: s.els.map((e) => selIds.includes(e.id) ? { ...e, ...styleClipboard } : e),
+    }));
+  },
+
+  // ===== Magic resize (Phase 10) =====
+  magicResize: (newW, newH) => {
+    get().pushHistory();
+    const { canvasW, canvasH } = get();
+    const scaleX = newW / canvasW;
+    const scaleY = newH / canvasH;
+    set((s) => ({
+      canvasW: newW,
+      canvasH: newH,
+      els: s.els.map((e) => ({
+        ...e,
+        x: Math.round(e.x * scaleX),
+        y: Math.round(e.y * scaleY),
+        w: Math.round(e.w * scaleX),
+        h: Math.round(e.h * scaleY),
+        size: e.size ? Math.round(e.size * Math.min(scaleX, scaleY)) : e.size,
+        x2: e.x2 ? Math.round(e.x2 * scaleX) : e.x2,
+        y2: e.y2 ? Math.round(e.y2 * scaleY) : e.y2,
+      })),
     }));
   },
 

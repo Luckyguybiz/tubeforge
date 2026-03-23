@@ -24,13 +24,15 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount, showRulers, showGrid, gridSize, marquee, resizeDir, userGuides } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
       drag: s.drag, historyCount: s.historyCount, futureCount: s.futureCount,
+      showRulers: s.showRulers, showGrid: s.showGrid, gridSize: s.gridSize,
+      marquee: s.marquee, resizeDir: s.resizeDir, userGuides: s.userGuides,
     }))
   );
   const store = useThumbnailStore.getState;
@@ -41,7 +43,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const sel = useMemo(() => els.find((e) => e.id === selId), [els, selId]);
   const loadedRef = useRef(false);
   const isPanning = useRef(false);
+  const isSpacebarPan = useRef(false);
   const panStart = useRef({ x: 0, y: 0, px: 0, py: 0 });
+  const marqueeStart = useRef({ x: 0, y: 0 });
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -49,6 +53,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
+  const [spaceHeld, setSpaceHeld] = useState(false);
 
   // Responsive check
   useEffect(() => {
@@ -101,6 +106,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }, CANVAS_SAVE_DEBOUNCE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [elsFingerprint, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Spacebar pan (Phase 1)
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !e.repeat && !(document.activeElement as HTMLElement)?.isContentEditable && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        setSpaceHeld(true);
+      }
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code === 'Space') { setSpaceHeld(false); isSpacebarPan.current = false; }
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
+  }, []);
 
   // Ctrl+Scroll zoom
   const onWheelZoom = useCallback((e: WheelEvent) => {
@@ -161,6 +182,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   const onCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Spacebar pan mode
+    if (spaceHeld) {
+      isSpacebarPan.current = true;
+      const s = store();
+      panStart.current = { x: e.clientX, y: e.clientY, px: s.panX, py: s.panY };
+      return;
+    }
     const { x, y } = getCanvasCoords(e);
     if (tool === 'draw') { store().setDrawing(true); store().setDrawPts([{ x, y }]); return; }
     if (tool === 'line' || tool === 'arrow') { store().setLinePreview({ x1: x, y1: y, x2: x, y2: y }); return; }
@@ -173,23 +201,50 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (tool !== 'select') return;
     const clicked = hitTestElement(els, x, y);
     if (clicked) {
+      if (clicked.locked) return; // Locked elements can't be selected/moved
       e.shiftKey ? store().addToSelection(clicked.id) : store().setSelId(clicked.id);
-      store().pushHistoryDebounced(); // batch drag into one undo step
+      store().pushHistoryDebounced();
       store().setDrag({ id: clicked.id, ox: x - clicked.x, oy: y - clicked.y });
-    } else { store().setSelId(null); }
+    } else {
+      // Start marquee selection
+      store().setSelId(null);
+      marqueeStart.current = { x, y };
+      store().setMarquee({ x, y, w: 0, h: 0 });
+    }
   };
 
   const onCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Spacebar pan
+    if (isSpacebarPan.current) {
+      const dx = e.clientX - panStart.current.x;
+      const dy = e.clientY - panStart.current.y;
+      store().setPan(panStart.current.px + dx, panStart.current.py + dy);
+      return;
+    }
     const { x, y } = getCanvasCoords(e);
+    // Marquee selection
+    const curMarquee = store().marquee;
+    if (curMarquee !== null && !store().drag && !store().resize) {
+      const mx = Math.min(marqueeStart.current.x, x);
+      const my = Math.min(marqueeStart.current.y, y);
+      const mw = Math.abs(x - marqueeStart.current.x);
+      const mh = Math.abs(y - marqueeStart.current.y);
+      store().setMarquee({ x: mx, y: my, w: mw, h: mh });
+      return;
+    }
     if (drawing && tool === 'draw') { store().setDrawPts((p) => [...p, { x, y }]); return; }
     if (linePreview && (tool === 'line' || tool === 'arrow')) { store().setLinePreview({ ...linePreview, x2: x, y2: y }); return; }
     const curResize = store().resize;
     if (curResize) {
       const el = els.find((e) => e.id === curResize.id);
       if (!el) return;
-      let nw = x - el.x, nh = y - el.y;
-      if (nw < 20) nw = 20; if (nh < 20) nh = 20;
-      store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
+      const dir = store().resizeDir || 'se';
+      let nx = el.x, ny = el.y, nw = el.w, nh = el.h;
+      if (dir.includes('e')) nw = Math.max(20, x - el.x);
+      if (dir.includes('s')) nh = Math.max(20, y - el.y);
+      if (dir.includes('w')) { nw = Math.max(20, el.x + el.w - x); nx = Math.min(x, el.x + el.w - 20); }
+      if (dir.includes('n')) { nh = Math.max(20, el.y + el.h - y); ny = Math.min(y, el.y + el.h - 20); }
+      store().updEl(curResize.id, { x: Math.round(nx), y: Math.round(ny), w: Math.round(nw), h: Math.round(nh) });
       return;
     }
     const curDrag = store().drag;
@@ -233,6 +288,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   const onCanvasMouseUp = () => {
+    // Spacebar pan end
+    if (isSpacebarPan.current) { isSpacebarPan.current = false; return; }
+    // Marquee selection end
+    const curMarquee = store().marquee;
+    if (curMarquee && (curMarquee.w > 5 || curMarquee.h > 5)) {
+      const selected = els.filter((el) => {
+        if (el.visible === false || el.locked) return false;
+        return el.x < curMarquee.x + curMarquee.w && el.x + el.w > curMarquee.x &&
+               el.y < curMarquee.y + curMarquee.h && el.y + el.h > curMarquee.y;
+      });
+      if (selected.length > 0) store().setSelIds(selected.map((e) => e.id));
+    }
+    store().setMarquee(null);
     if (drawing && drawPts.length > 1) {
       const path = drawPts.map((p, i) => i === 0 ? ('M' + p.x + ' ' + p.y) : ('L' + p.x + ' ' + p.y)).join(' ');
       store().addPath(path, drawColor, drawSize);
@@ -245,7 +313,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       }
       store().setLinePreview(null);
     }
-    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] });
+    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setResizeDir(null); store().setGuides({ x: [], y: [] });
   };
 
   // ===== Touch event handlers for mobile support =====
@@ -463,11 +531,30 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
     const isSel = selIds.includes(el.id);
-    const resizeHandle = isSel && (
-      <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
-        style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, background: C.accent, borderRadius: 2, cursor: 'nwse-resize', zIndex: 5 }} />
+    const handleStyle = (cursor: string, pos: React.CSSProperties): React.CSSProperties => ({
+      position: 'absolute', width: 10, height: 10, background: '#fff', border: `2px solid ${C.accent}`, borderRadius: 2, cursor, zIndex: 5, ...pos,
+    });
+    const startResize = (dir: string) => (e: React.MouseEvent) => {
+      e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); store().setResizeDir(dir);
+    };
+    const resizeHandles = isSel && !el.locked && (
+      <>
+        <div onMouseDown={startResize('nw')} style={handleStyle('nwse-resize', { top: -5, left: -5 })} />
+        <div onMouseDown={startResize('n')} style={handleStyle('ns-resize', { top: -5, left: '50%', marginLeft: -5 })} />
+        <div onMouseDown={startResize('ne')} style={handleStyle('nesw-resize', { top: -5, right: -5 })} />
+        <div onMouseDown={startResize('w')} style={handleStyle('ew-resize', { top: '50%', left: -5, marginTop: -5 })} />
+        <div onMouseDown={startResize('e')} style={handleStyle('ew-resize', { top: '50%', right: -5, marginTop: -5 })} />
+        <div onMouseDown={startResize('sw')} style={handleStyle('nesw-resize', { bottom: -5, left: -5 })} />
+        <div onMouseDown={startResize('s')} style={handleStyle('ns-resize', { bottom: -5, left: '50%', marginLeft: -5 })} />
+        <div onMouseDown={startResize('se')} style={handleStyle('nwse-resize', { bottom: -5, right: -5 })} />
+      </>
     );
-    const deleteHandle = isSel && (
+    // Rotation handle
+    const rotationHandle = isSel && !el.locked && (
+      <div onMouseDown={(e) => { e.stopPropagation(); /* rotation handled separately */ }}
+        style={{ position: 'absolute', top: -28, left: '50%', marginLeft: -6, width: 12, height: 12, borderRadius: '50%', background: C.accent, border: '2px solid #fff', cursor: 'grab', zIndex: 6 }} />
+    );
+    const deleteHandle = isSel && !el.locked && (
       <div
         title={t('thumbs.editor.deleteTitle')}
         onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().delEl(el.id); }}
@@ -497,25 +584,25 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           e.stopPropagation();
           (e.currentTarget as HTMLElement).focus();
         }}>
-        {el.text}{resizeHandle}{deleteHandle}
+        {el.text}{resizeHandles}{rotationHandle}{deleteHandle}
       </div>
     );
 
     if (el.type === 'rect') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: elBackground(el), opacity: el.opacity, borderRadius: el.borderR, border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
-        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
+        onMouseDown={elDrag}>{resizeHandles}{rotationHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'circle') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: elBackground(el), opacity: el.opacity, borderRadius: '50%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
-        onMouseDown={elDrag}>{resizeHandle}{deleteHandle}</div>
+        onMouseDown={elDrag}>{resizeHandles}{rotationHandle}{deleteHandle}</div>
     );
 
     if (el.type === 'image') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', ...enhancedStyles(el) }}
         onMouseDown={elDrag}>
         <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: el.opacity, borderRadius: el.borderR, pointerEvents: 'none' }} />
-        {resizeHandle}{deleteHandle}
+        {resizeHandles}{rotationHandle}{deleteHandle}
       </div>
     );
 
@@ -560,7 +647,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
         onDoubleClick={(e) => { e.stopPropagation(); (e.currentTarget as HTMLElement).focus(); }}>
-        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandle}{deleteHandle}
+        {el.noteText ?? t('thumbs.editor.noteDefault')}{resizeHandles}{rotationHandle}{deleteHandle}
       </div>
     );
 
@@ -584,7 +671,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             );
           })}
-          {resizeHandle}{deleteHandle}
+          {resizeHandles}{rotationHandle}{deleteHandle}
         </div>
       );
     }
@@ -778,8 +865,24 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
-              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
+              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: spaceHeld ? (isSpacebarPan.current ? 'grabbing' : 'grab') : tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
+            {/* Grid overlay (Phase 1) */}
+            {showGrid && (
+              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
+                <defs><pattern id="grid" width={gridSize} height={gridSize} patternUnits="userSpaceOnUse"><path d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="0.5" /></pattern></defs>
+                <rect width={canvasW} height={canvasH} fill="url(#grid)" />
+              </svg>
+            )}
             {els.map(renderElement)}
+            {/* User guides (Phase 1) */}
+            {userGuides.map((g, i) => g.axis === 'x'
+              ? <div key={`ug-${i}`} style={{ position: 'absolute', left: g.pos / canvasW * 100 + '%', top: 0, bottom: 0, width: 1, background: '#3b82f6', opacity: 0.6, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />
+              : <div key={`ug-${i}`} style={{ position: 'absolute', top: g.pos / canvasH * 100 + '%', left: 0, right: 0, height: 1, background: '#3b82f6', opacity: 0.6, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />
+            )}
+            {/* Marquee selection (Phase 2) */}
+            {marquee && marquee.w > 2 && marquee.h > 2 && (
+              <div style={{ position: 'absolute', left: marquee.x / canvasW * 100 + '%', top: marquee.y / canvasH * 100 + '%', width: marquee.w / canvasW * 100 + '%', height: marquee.h / canvasH * 100 + '%', border: `1.5px dashed ${C.accent}`, background: `${C.accent}10`, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />
+            )}
             {/* Collaboration cursors overlay */}
             <CollaborationCursors canvasW={canvasW} canvasH={canvasH} containerW={canvasAreaRef.current?.clientWidth ?? canvasW} containerH={canvasAreaRef.current?.clientHeight ?? canvasH} />
             {drawing && drawPts.length > 1 && (
@@ -800,13 +903,24 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1.5, background: C.accent, opacity: 0.7, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
           </div>
           </div>
-          {/* Floating zoom controls */}
-          <div title={t('thumbs.editor.zoomHint')} style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
+          {/* Floating zoom controls + View settings */}
+          <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
             <button onClick={() => store().zoomOut()} title={t('thumbs.editor.zoomOut')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
+            {/* Zoom presets dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => {
+                const presets = [25, 50, 75, 100, 150, 200, 300];
+                const current = Math.round(zoom * 100);
+                const next = presets.find((p) => p > current) ?? presets[0];
+                store().setZoom(next / 100);
+              }} style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px', borderRadius: 4 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >{Math.round(zoom * 100)}%</button>
+            </div>
             <button onClick={() => store().zoomIn()} title={t('thumbs.editor.zoomIn')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
@@ -816,7 +930,28 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{fitIcon} {t('thumbs.editor.fitLabel')}</button>
+            <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+            {/* View settings toggle buttons */}
+            <button onClick={() => store().setShowGrid(!showGrid)} title="Toggle Grid" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: showGrid ? C.accentDim : 'transparent', color: showGrid ? C.accent : C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, transition: 'all .12s' }}>#</button>
+            <button onClick={() => store().setShowRulers(!showRulers)} title="Toggle Rulers (Shift+R)" style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: showRulers ? C.accentDim : 'transparent', color: showRulers ? C.accent : C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, transition: 'all .12s' }}>R</button>
           </div>
+          {/* Rulers (Phase 1) */}
+          {showRulers && (
+            <>
+              {/* Horizontal ruler */}
+              <div style={{ position: 'absolute', top: 0, left: 20, right: 0, height: 20, background: C.card, borderBottom: `1px solid ${C.border}`, zIndex: Z_INDEX.ZOOM_CONTROLS + 1, overflow: 'hidden', fontSize: 8, color: C.dim, userSelect: 'none' }}>
+                {Array.from({ length: Math.ceil(canvasW / 100) + 1 }, (_, i) => (
+                  <span key={i} style={{ position: 'absolute', left: `${(i * 100) / canvasW * 100}%`, top: 6, transform: 'translateX(-50%)' }}>{i * 100}</span>
+                ))}
+              </div>
+              {/* Vertical ruler */}
+              <div style={{ position: 'absolute', top: 20, left: 0, bottom: 0, width: 20, background: C.card, borderRight: `1px solid ${C.border}`, zIndex: Z_INDEX.ZOOM_CONTROLS + 1, overflow: 'hidden', fontSize: 8, color: C.dim, userSelect: 'none' }}>
+                {Array.from({ length: Math.ceil(canvasH / 100) + 1 }, (_, i) => (
+                  <span key={i} style={{ position: 'absolute', top: `${(i * 100) / canvasH * 100}%`, left: 2, transform: 'translateY(-50%)', writingMode: 'vertical-lr' }}>{i * 100}</span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         </ErrorBoundary>
         {/* D8: Context menu */}
@@ -853,11 +988,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   }
                 }}>
                   {[
+                    { label: 'Copy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+C', action: () => store().copySelected() },
+                    { label: 'Cut', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>, shortcut: 'Ctrl+X', action: () => store().cutSelected() },
                     { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
+                    { label: 'Copy Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>, shortcut: 'Alt+C', action: () => store().copyStyle() },
+                    { label: 'Paste Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>, shortcut: 'Alt+V', action: () => store().pasteStyle() },
+                    null, // separator
                     { label: t('thumbs.editor.bringForward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => { const id = store().contextMenu?.elId; if (id) store().bringFront(id); } },
                     { label: t('thumbs.editor.sendBackward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => { const id = store().contextMenu?.elId; if (id) store().sendBack(id); } },
+                    { label: (() => { const el = els.find((e) => e.id === contextMenu.elId); return el?.locked ? 'Unlock' : 'Lock'; })(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>, shortcut: '', action: () => { const id = store().contextMenu?.elId; if (id) store().toggleLock(id); } },
+                    null, // separator
                     { label: t('thumbs.editor.delete'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { const id = store().contextMenu?.elId; if (id) store().delEl(id); }, danger: true },
-                  ].map((item, i) => (
+                  ].filter(Boolean).map((item, i) => item === null ? (
+                    <div key={`sep-${i}`} style={{ height: 1, background: C.border, margin: '3px 8px' }} />
+                  ) : (
                     <div
                       key={item.label}
                       role="menuitem"
@@ -881,9 +1025,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                       onFocus={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
                       onBlur={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                     >
-                      <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
-                      <span style={{ flex: 1 }}>{item.label}</span>
-                      <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{item.shortcut}</span>
+                      <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{(item as { icon: React.ReactElement }).icon}</span>
+                      <span style={{ flex: 1 }}>{(item as { label: string }).label}</span>
+                      <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{(item as { shortcut: string }).shortcut}</span>
                     </div>
                   ))}
                 </div>

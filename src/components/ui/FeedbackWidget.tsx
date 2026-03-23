@@ -70,6 +70,7 @@ export function FeedbackWidget() {
       <button
         onClick={() => setOpen(!open)}
         aria-label={t('feedback.ariaLabel')}
+        className="tf-feedback-btn"
         style={{
           position: 'fixed',
           bottom: 24,

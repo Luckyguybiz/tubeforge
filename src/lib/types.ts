@@ -180,6 +180,15 @@ export interface CanvasElement {
   // Flip
   flipX?: boolean;
   flipY?: boolean;
+  // Crop (image only)
+  cropX?: number;
+  cropY?: number;
+  cropW?: number;
+  cropH?: number;
+  // Text effects
+  textEffect?: 'none' | 'shadow' | 'outline' | 'neon' | 'echo' | 'glitch' | 'lift' | '3d' | 'retro' | 'fire';
+  // Image mask shape
+  maskShape?: 'none' | 'circle' | 'rounded' | 'star' | 'triangle' | 'heart' | 'hexagon';
 }
 
 export interface AIResult {

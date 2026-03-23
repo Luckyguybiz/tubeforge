@@ -650,36 +650,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   /* ═══════════════════════════════════════════════════════════════
      MOBILE FALLBACK
      ═══════════════════════════════════════════════════════════════ */
+  // Mobile: show simplified single-column editor instead of blocking
   if (isMobile) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100dvh', padding: 24,
-        textAlign: 'center', background: C.bg,
-      }}>
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <line x1="8" y1="21" x2="16" y2="21" />
-          <line x1="12" y1="17" x2="12" y2="21" />
-        </svg>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: '16px 0 8px' }}>
-          {t('editor.mobileTitle')}
-        </h2>
-        <p style={{ fontSize: 14, color: C.sub, maxWidth: 300, lineHeight: 1.5 }}>
-          {t('editor.mobileDesc')}
-        </p>
-        <button
-          onClick={() => router.push('/dashboard')}
-          style={{
-            marginTop: 20, padding: '12px 24px', borderRadius: 12,
-            border: 'none', background: C.accent, color: C.text,
-            fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          {t('editor.backToDashboard')}
-        </button>
-      </div>
-    );
+    // Don't block — render a simplified mobile layout below
   }
 
   /* ═══════════════════════════════════════════════════════════════

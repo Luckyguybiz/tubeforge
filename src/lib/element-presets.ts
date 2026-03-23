@@ -8,12 +8,45 @@ export interface ElementPreset {
 }
 
 export const SHAPE_PRESETS: ElementPreset[] = [
+  // ── Basic Shapes ──────────────────────────────────────────
   { label: 'Rectangle', type: 'rect', icon: '□', props: { w: 200, h: 120, color: '#ff2d55', borderR: 8, opacity: 0.8 } },
   { label: 'Circle', type: 'circle', icon: '○', props: { w: 120, h: 120, color: '#3a7bfd', opacity: 0.8 } },
   { label: 'Square', type: 'rect', icon: '■', props: { w: 120, h: 120, color: '#8b5cf6', borderR: 0, opacity: 0.8 } },
   { label: 'Rounded', type: 'rect', icon: '▢', props: { w: 180, h: 100, color: '#2dd4a0', borderR: 24, opacity: 0.8 } },
   { label: 'Triangle', type: 'triangle', icon: '△', props: { color: '#8b5cf6' } },
   { label: 'Star', type: 'star', icon: '☆', props: { color: '#f59e0b' } },
+  { label: 'Pentagon', type: 'path', icon: '⬠', props: { w: 200, h: 200, color: '#06b6d4', path: 'M100,0 L195.1,69 L163.5,181 L36.5,181 L4.9,69 Z', strokeW: 0 } },
+  { label: 'Hexagon', type: 'path', icon: '⬡', props: { w: 200, h: 200, color: '#ec4899', path: 'M50,0 L150,0 L200,100 L150,200 L50,200 L0,100 Z', strokeW: 0 } },
+  { label: 'Diamond', type: 'path', icon: '◇', props: { w: 200, h: 200, color: '#f59e0b', path: 'M100,0 L200,100 L100,200 L0,100 Z', strokeW: 0 } },
+  { label: 'Parallelogram', type: 'path', icon: '▱', props: { w: 200, h: 140, color: '#8b5cf6', path: 'M40,0 L200,0 L160,140 L0,140 Z', strokeW: 0 } },
+
+  // ── Arrows ────────────────────────────────────────────────
+  { label: 'Right Arrow', type: 'path', icon: '➡', props: { w: 200, h: 140, color: '#3b82f6', path: 'M0,35 L130,35 L130,0 L200,70 L130,140 L130,105 L0,105 Z', strokeW: 0 } },
+  { label: 'Left Arrow', type: 'path', icon: '⬅', props: { w: 200, h: 140, color: '#3b82f6', path: 'M200,35 L70,35 L70,0 L0,70 L70,140 L70,105 L200,105 Z', strokeW: 0 } },
+  { label: 'Up Arrow', type: 'path', icon: '⬆', props: { w: 140, h: 200, color: '#22c55e', path: 'M35,200 L35,70 L0,70 L70,0 L140,70 L105,70 L105,200 Z', strokeW: 0 } },
+  { label: 'Down Arrow', type: 'path', icon: '⬇', props: { w: 140, h: 200, color: '#ef4444', path: 'M35,0 L35,130 L0,130 L70,200 L140,130 L105,130 L105,0 Z', strokeW: 0 } },
+  { label: 'Chevron Right', type: 'path', icon: '›', props: { w: 140, h: 200, color: '#f97316', path: 'M0,0 L100,100 L0,200 L40,200 L140,100 L40,0 Z', strokeW: 0 } },
+  { label: 'Double Arrow', type: 'path', icon: '⇔', props: { w: 200, h: 120, color: '#a855f7', path: 'M40,0 L0,60 L40,120 L40,80 L160,80 L160,120 L200,60 L160,0 L160,40 L40,40 Z', strokeW: 0 } },
+
+  // ── Callouts ──────────────────────────────────────────────
+  { label: 'Speech Left', type: 'path', icon: '💬', props: { w: 200, h: 160, color: '#ffffff', path: 'M20,0 L180,0 Q200,0 200,20 L200,110 Q200,130 180,130 L60,130 L20,160 L30,130 L20,130 Q0,130 0,110 L0,20 Q0,0 20,0 Z', strokeW: 0 } },
+  { label: 'Speech Right', type: 'path', icon: '🗨', props: { w: 200, h: 160, color: '#ffffff', path: 'M20,0 L180,0 Q200,0 200,20 L200,110 Q200,130 180,130 L170,130 L180,160 L140,130 L20,130 Q0,130 0,110 L0,20 Q0,0 20,0 Z', strokeW: 0 } },
+  { label: 'Thought Bubble', type: 'path', icon: '💭', props: { w: 200, h: 180, color: '#ffffff', path: 'M20,10 Q0,10 0,30 L0,100 Q0,120 20,120 L160,120 Q180,120 180,100 L180,30 Q180,10 160,10 Z M50,120 Q45,140 30,145 M25,150 Q20,158 15,160 M12,164 Q8,168 5,170', strokeW: 2 } },
+  { label: 'Callout Box', type: 'path', icon: '📢', props: { w: 200, h: 160, color: '#fef08a', path: 'M0,0 L200,0 L200,120 L120,120 L100,160 L80,120 L0,120 Z', strokeW: 0 } },
+
+  // ── Decorative ────────────────────────────────────────────
+  { label: 'Heart', type: 'path', icon: '❤', props: { w: 200, h: 180, color: '#ef4444', path: 'M100,180 C60,140 0,100 0,50 C0,22 22,0 50,0 C70,0 88,12 100,30 C112,12 130,0 150,0 C178,0 200,22 200,50 C200,100 140,140 100,180 Z', strokeW: 0 } },
+  { label: 'Cloud', type: 'path', icon: '☁', props: { w: 200, h: 140, color: '#e2e8f0', path: 'M40,120 C18,120 0,102 0,80 C0,62 12,46 30,40 C30,18 48,0 72,0 C88,0 102,10 110,24 C116,18 126,14 138,14 C162,14 182,30 186,52 C194,56 200,66 200,78 C200,96 186,110 168,112 L40,120 Z', strokeW: 0 } },
+  { label: 'Lightning', type: 'path', icon: '⚡', props: { w: 140, h: 200, color: '#facc15', path: 'M80,0 L30,90 L65,90 L20,200 L120,100 L82,100 L140,0 Z', strokeW: 0 } },
+  { label: 'Cross', type: 'path', icon: '✚', props: { w: 200, h: 200, color: '#ef4444', path: 'M70,0 L130,0 L130,70 L200,70 L200,130 L130,130 L130,200 L70,200 L70,130 L0,130 L0,70 L70,70 Z', strokeW: 0 } },
+  { label: 'Shield', type: 'path', icon: '🛡', props: { w: 180, h: 200, color: '#3b82f6', path: 'M90,0 L180,30 L180,100 C180,150 140,185 90,200 C40,185 0,150 0,100 L0,30 Z', strokeW: 0 } },
+  { label: 'Ribbon', type: 'path', icon: '🎀', props: { w: 200, h: 160, color: '#f97316', path: 'M0,0 L200,0 L200,120 L180,100 L160,120 L140,100 L120,120 L100,100 L80,120 L60,100 L40,120 L20,100 L0,120 Z M0,130 L200,130 L200,160 L0,160 Z', strokeW: 0 } },
+
+  // ── Abstract ──────────────────────────────────────────────
+  { label: 'Ring', type: 'path', icon: '◎', props: { w: 200, h: 200, color: '#a855f7', path: 'M100,0 A100,100 0 1,1 100,200 A100,100 0 1,1 100,0 Z M100,40 A60,60 0 1,0 100,160 A60,60 0 1,0 100,40 Z', strokeW: 0 } },
+  { label: 'Half Circle', type: 'path', icon: '◗', props: { w: 200, h: 100, color: '#06b6d4', path: 'M0,100 A100,100 0 0,1 200,100 Z', strokeW: 0 } },
+  { label: 'Quarter Circle', type: 'path', icon: '◔', props: { w: 200, h: 200, color: '#ec4899', path: 'M0,0 L200,0 A200,200 0 0,1 0,200 Z', strokeW: 0 } },
+  { label: 'Wave', type: 'path', icon: '〰', props: { w: 200, h: 100, color: '#3b82f6', path: 'M0,50 Q25,0 50,50 Q75,100 100,50 Q125,0 150,50 Q175,100 200,50 L200,100 L0,100 Z', strokeW: 0 } },
 ];
 
 export const LINE_PRESETS: ElementPreset[] = [
@@ -67,6 +100,12 @@ export const GRADIENT_SHAPE_PRESETS: ElementPreset[] = [
   { label: 'Gold Badge', type: 'rect', icon: '🏅', props: { w: 160, h: 80, borderR: 8, opacity: 1, gradient: { type: 'linear', angle: 135, stops: [{ offset: 0, color: '#f59e0b' }, { offset: 1, color: '#eab308' }] } } },
   { label: 'Fire Bar', type: 'rect', icon: '🔥', props: { w: 300, h: 40, borderR: 20, opacity: 1, gradient: { type: 'linear', angle: 90, stops: [{ offset: 0, color: '#ef4444' }, { offset: 1, color: '#f59e0b' }] } } },
   { label: 'Ice Blob', type: 'circle', icon: '❄️', props: { w: 160, h: 160, opacity: 0.8, gradient: { type: 'radial', stops: [{ offset: 0, color: '#67e8f9' }, { offset: 1, color: '#a78bfa' }] } } },
+  { label: 'Aurora Square', type: 'rect', icon: '🌌', props: { w: 160, h: 160, borderR: 16, opacity: 1, gradient: { type: 'linear', angle: 180, stops: [{ offset: 0, color: '#22c55e' }, { offset: 0.5, color: '#06b6d4' }, { offset: 1, color: '#8b5cf6' }] } } },
+  { label: 'Peach Ring', type: 'circle', icon: '🍑', props: { w: 140, h: 140, opacity: 1, gradient: { type: 'radial', stops: [{ offset: 0, color: '#fb923c' }, { offset: 1, color: '#f43f5e' }] } } },
+  { label: 'Lime Strip', type: 'rect', icon: '🍀', props: { w: 280, h: 32, borderR: 16, opacity: 1, gradient: { type: 'linear', angle: 90, stops: [{ offset: 0, color: '#84cc16' }, { offset: 1, color: '#22d3ee' }] } } },
+  { label: 'Berry Card', type: 'rect', icon: '🫐', props: { w: 200, h: 140, borderR: 20, opacity: 1, gradient: { type: 'linear', angle: 160, stops: [{ offset: 0, color: '#7c3aed' }, { offset: 1, color: '#2563eb' }] } } },
+  { label: 'Coral Dot', type: 'circle', icon: '🪸', props: { w: 100, h: 100, opacity: 0.9, gradient: { type: 'radial', stops: [{ offset: 0, color: '#fb7185' }, { offset: 1, color: '#f97316' }] } } },
+  { label: 'Midnight Slab', type: 'rect', icon: '🌙', props: { w: 240, h: 80, borderR: 4, opacity: 1, gradient: { type: 'linear', angle: 135, stops: [{ offset: 0, color: '#1e293b' }, { offset: 1, color: '#7c3aed' }] } } },
 ];
 
 /** YouTube thumbnail text presets */
@@ -77,6 +116,12 @@ export const TEXT_STYLE_PRESETS: ElementPreset[] = [
   { label: 'Badge Text', type: 'text', icon: '★', props: { text: 'NEW', size: 24, bold: true, color: '#ffffff', bg: '#ef4444', borderR: 6, textTransform: 'uppercase', letterSpacing: 2 } },
   { label: 'Gradient Text', type: 'text', icon: '🎨', props: { text: 'GRADIENT', size: 72, bold: true, color: '#ffffff', gradient: { type: 'linear', angle: 90, stops: [{ offset: 0, color: '#f97316' }, { offset: 1, color: '#ec4899' }] }, textTransform: 'uppercase' } },
   { label: 'Clickbait', type: 'text', icon: '!', props: { text: 'YOU WON\'T BELIEVE THIS!', size: 56, bold: true, color: '#fef08a', shadow: '0 4px 16px rgba(0,0,0,.8)', textTransform: 'uppercase' } },
+  { label: 'Neon Glow', type: 'text', icon: '~', props: { text: 'NEON GLOW', size: 72, bold: true, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: 4, shadow: '0 0 10px #22d3ee, 0 0 40px #06b6d4, 0 0 80px #0891b2' } },
+  { label: 'Fire Text', type: 'text', icon: 'F', props: { text: 'FIRE TEXT', size: 72, bold: true, color: '#f97316', textTransform: 'uppercase', letterSpacing: 3, shadow: '0 0 10px #ef4444, 0 0 40px #dc2626, 0 4px 20px rgba(239,68,68,.6)' } },
+  { label: 'Retro', type: 'text', icon: 'R', props: { text: 'RETRO STYLE', size: 64, bold: true, color: '#fde68a', textTransform: 'uppercase', letterSpacing: 6, shadow: '3px 3px 0 #92400e, 6px 6px 0 #78350f' } },
+  { label: '3D Text', type: 'text', icon: '3D', props: { text: '3D DEPTH', size: 80, bold: true, color: '#ffffff', textTransform: 'uppercase', letterSpacing: 3, shadow: '1px 1px 0 #64748b, 2px 2px 0 #64748b, 3px 3px 0 #475569, 4px 4px 0 #475569, 5px 5px 10px rgba(0,0,0,.6)' } },
+  { label: 'Minimal', type: 'text', icon: 'M', props: { text: 'minimal clean', size: 48, bold: false, color: '#d1d5db', letterSpacing: 2, fontWeight: 300 } },
+  { label: 'Stamp', type: 'text', icon: 'S', props: { text: 'APPROVED', size: 56, bold: true, color: '#ef4444', textTransform: 'uppercase', letterSpacing: 6, textOutline: '3px #ef4444', bg: 'transparent', borderR: 8, border: '4px solid #ef4444' } },
 ];
 
 /** Complete thumbnail templates (multiple elements) */

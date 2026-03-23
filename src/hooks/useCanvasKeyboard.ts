@@ -42,6 +42,27 @@ export function useCanvasKeyboard() {
       // Skip rest if editing text
       if (isEditing) return;
 
+      // Toggle rulers: Shift+R
+      if (e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+        store.setShowRulers(!store.showRulers);
+        return;
+      }
+
+      // Copy style: Alt+C
+      if (e.altKey && e.key === 'c') {
+        e.preventDefault();
+        store.copyStyle();
+        return;
+      }
+
+      // Paste style: Alt+V
+      if (e.altKey && e.key === 'v') {
+        e.preventDefault();
+        store.pasteStyle();
+        return;
+      }
+
       // Copy: Ctrl+C
       if (ctrl && e.key === 'c') {
         store.copySelected();
