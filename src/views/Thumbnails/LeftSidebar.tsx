@@ -12,6 +12,7 @@ import { AITextSuggestPanel } from './panels/AITextSuggestPanel';
 import { TemplatesPanel } from './panels/TemplatesPanel';
 import { BackgroundPanel } from './panels/BackgroundPanel';
 import { TextPresetsPanel } from './panels/TextPresetsPanel';
+import { CreatorStylesPanel } from './panels/CreatorStylesPanel';
 
 const PANEL_TITLE_KEYS: Record<string, string> = {
   uploads: 'thumbs.panel.uploads',
@@ -23,6 +24,7 @@ const PANEL_TITLE_KEYS: Record<string, string> = {
   templates: 'thumbs.panel.templates',
   background: 'thumbs.panel.background',
   textStyles: 'thumbs.panel.textStyles',
+  creatorStyles: 'thumbs.panel.creatorStyles',
 };
 
 export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
@@ -81,6 +83,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
           {leftPanel === 'templates' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>}
           {leftPanel === 'background' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>}
           {leftPanel === 'textStyles' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>}
+          {leftPanel === 'creatorStyles' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>}
           {panelTitle}
         </h3>
         <button
@@ -118,6 +121,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         {leftPanel === 'templates' && <TemplatesPanel />}
         {leftPanel === 'background' && <BackgroundPanel />}
         {leftPanel === 'textStyles' && <TextPresetsPanel />}
+        {leftPanel === 'creatorStyles' && <CreatorStylesPanel />}
       </div>
     </aside>
   );

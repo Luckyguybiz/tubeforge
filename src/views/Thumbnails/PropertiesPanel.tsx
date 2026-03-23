@@ -9,8 +9,44 @@ import { useThumbnailStore } from '@/stores/useThumbnailStore';
 import type { CanvasElement, Theme } from '@/lib/types';
 import { COLOR_PRESETS } from '@/lib/element-presets';
 import { FONT_LIBRARY, FONT_CATEGORIES, loadGoogleFont, preloadPopularFonts } from '@/lib/fonts';
+import { trpc } from '@/lib/trpc';
+import { toast } from '@/stores/useNotificationStore';
 
 const FONT_SIZE_PRESETS = [16, 24, 32, 48, 64, 80, 96, 120];
+
+const FONT_WEIGHT_PRESETS = [
+  { label: 'Thin', value: 100 },
+  { label: 'Light', value: 300 },
+  { label: 'Regular', value: 400 },
+  { label: 'Medium', value: 500 },
+  { label: 'SemiBold', value: 600 },
+  { label: 'Bold', value: 700 },
+  { label: 'Black', value: 900 },
+];
+
+const BLEND_MODE_OPTIONS = [
+  'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn',
+] as const;
+
+const IMAGE_FILTER_PRESETS = [
+  { name: 'None', filters: {} as Record<string, number> },
+  { name: 'Vintage', filters: { sepia: 40, brightness: 110, contrast: 90, saturate: 80 } },
+  { name: 'B&W', filters: { grayscale: 100 } },
+  { name: 'Cinematic', filters: { contrast: 120, saturate: 80, brightness: 95 } },
+  { name: 'Warm', filters: { sepia: 15, saturate: 120, brightness: 105 } },
+  { name: 'Cool', filters: { hueRotate: 180, saturate: 80 } },
+  { name: 'Dramatic', filters: { contrast: 140, brightness: 90, saturate: 60 } },
+  { name: 'HDR', filters: { contrast: 130, saturate: 130, brightness: 105 } },
+];
+
+const QUICK_SHADOW_PRESETS = [
+  { name: 'None', shadow: null as null | { x: number; y: number; blur: number; color: string; alpha: number } },
+  { name: 'Soft', shadow: { x: 2, y: 4, blur: 12, color: '#000000', alpha: 0.15 } },
+  { name: 'Hard', shadow: { x: 4, y: 4, blur: 0, color: '#000000', alpha: 0.3 } },
+  { name: 'Neon', shadow: { x: 0, y: 0, blur: 20, color: '#6366f1', alpha: 0.8 } },
+  { name: '3D', shadow: { x: 6, y: 6, blur: 0, color: '#000000', alpha: 0.4 } },
+  { name: 'Long', shadow: { x: 12, y: 12, blur: 2, color: '#000000', alpha: 0.2 } },
+];
 
 const SHADOW_PRESETS = [
   { labelKey: 'thumbs.props.shadowNone', value: 'none' },
@@ -134,6 +170,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
       {sel && sel.type === 'text' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div><div style={labelStyle}>{t('thumbs.props.textLabel')}</div><input value={sel.text ?? ''} onChange={(e) => updEl(sel.id, { text: e.target.value })} style={inputStyle} /></div>
+          {/* AI Enhance Text */}
+          <AIEnhanceTextButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <FontPicker C={C} value={sel.font ?? 'Inter'} onChange={(f) => updEl(sel.id, { font: f })} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* Font size slider + presets */}
           <div>
@@ -149,10 +187,35 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           {/* Color with HEX + presets */}
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          {/* Font Weight */}
+          <div>
+            <div style={labelStyle}>Weight</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="range" min={100} max={900} step={100} value={sel.fontWeight ?? (sel.bold ? 700 : 400)} onChange={(e) => { const w = +e.target.value; updEl(sel.id, { fontWeight: w, bold: w >= 700 }); }} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.fontWeight ?? (sel.bold ? 700 : 400)}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
+              {FONT_WEIGHT_PRESETS.map((fw) => {
+                const currentWeight = sel.fontWeight ?? (sel.bold ? 700 : 400);
+                const isActive = currentWeight === fw.value;
+                return <button key={fw.value} onClick={() => updEl(sel.id, { fontWeight: fw.value, bold: fw.value >= 700 })} style={{ padding: '2px 4px', borderRadius: 4, border: `1px solid ${isActive ? C.blue + '55' : C.border}`, background: isActive ? C.blue + '14' : 'transparent', color: isActive ? C.blue : C.dim, fontSize: 8, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fw.value }}>{fw.label}</button>;
+              })}
+            </div>
+          </div>
           <div style={{ display: 'flex', gap: 4 }}>
-            <button onClick={() => updEl(sel.id, { bold: !sel.bold })} title={t('thumbs.props.bold')} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${sel.bold ? C.blue + '55' : C.border}`, background: sel.bold ? C.blue + '14' : 'transparent', color: sel.bold ? C.blue : C.sub, fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'serif' }}>B</button>
             <button onClick={() => updEl(sel.id, { italic: !sel.italic })} title={t('thumbs.props.italic')} style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${sel.italic ? C.blue + '55' : C.border}`, background: sel.italic ? C.blue + '14' : 'transparent', color: sel.italic ? C.blue : C.sub, fontSize: 11, fontStyle: 'italic', cursor: 'pointer', fontFamily: 'serif' }}>I</button>
             <button onClick={() => updEl(sel.id, { underline: !sel.underline })} title="Underline" style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${sel.underline ? C.blue + '55' : C.border}`, background: sel.underline ? C.blue + '14' : 'transparent', color: sel.underline ? C.blue : C.sub, fontSize: 11, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'serif' }}>U</button>
+          </div>
+          {/* Curved Text */}
+          <div>
+            <div style={labelStyle}>Curve</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="range" min={-100} max={100} step={1} value={sel.curveAmount ?? 0} onChange={(e) => updEl(sel.id, { curveAmount: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+              <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.curveAmount ?? 0}</span>
+              {(sel.curveAmount ?? 0) !== 0 && (
+                <button onClick={() => updEl(sel.id, { curveAmount: 0 })} style={{ padding: '2px 4px', borderRadius: 3, border: `1px solid ${C.border}`, background: 'transparent', color: C.dim, fontSize: 8, cursor: 'pointer', fontFamily: 'inherit' }}>Reset</button>
+              )}
+            </div>
           </div>
           {/* Text alignment */}
           <div>
@@ -222,6 +285,10 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* Rotation */}
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Blend Mode */}
+          <BlendModeSelect C={C} value={sel.blendMode} onChange={(v) => updEl(sel.id, { blendMode: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Quick Shadow Presets */}
+          <QuickShadowPresets C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           {/* Flip */}
@@ -247,10 +314,14 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           </div>
           {/* Shape Shadow */}
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
+          {/* Quick Shadow Presets */}
+          <QuickShadowPresets C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <LockAspectToggle C={C} value={sel.lockAspect} onChange={(v) => updEl(sel.id, { lockAspect: v })} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Blend Mode */}
+          <BlendModeSelect C={C} value={sel.blendMode} onChange={(v) => updEl(sel.id, { blendMode: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           {/* Flip */}
@@ -262,14 +333,22 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
       {sel && sel.type === 'image' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+          {/* AI Remove Background */}
+          <AIRemoveBackgroundButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}</span></div></div>
           {/* Image Shadow */}
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
+          {/* Quick Shadow Presets */}
+          <QuickShadowPresets C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
+          {/* Image Filter Presets */}
+          <ImageFilterPresets C={C} sel={sel} updEl={updEl} labelStyle={labelStyle} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <LockAspectToggle C={C} value={sel.lockAspect ?? true} onChange={(v) => updEl(sel.id, { lockAspect: v })} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
+          {/* Blend Mode */}
+          <BlendModeSelect C={C} value={sel.blendMode} onChange={(v) => updEl(sel.id, { blendMode: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           {/* Visual Effects */}
           <EffectsSection C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           {/* Crop */}
@@ -402,9 +481,33 @@ const CATEGORY_LABELS: Record<string, string> = {
   'monospace': 'Monospace',
 };
 
+const RECENT_FONTS_KEY = 'tubeforge-recent-fonts';
+const MAX_RECENT_FONTS = 5;
+
+function getRecentFonts(): string[] {
+  try {
+    const saved = localStorage.getItem(RECENT_FONTS_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch { /* ignore */ }
+  return [];
+}
+
+function addRecentFont(family: string): void {
+  try {
+    const recent = getRecentFonts().filter((f) => f !== family);
+    recent.unshift(family);
+    localStorage.setItem(RECENT_FONTS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_FONTS)));
+  } catch { /* ignore */ }
+}
+
 function FontPicker({ C, value, onChange, inputStyle, labelStyle }: { C: Theme; value: string; onChange: (f: string) => void; inputStyle: React.CSSProperties; labelStyle: React.CSSProperties }) {
   const t = useLocaleStore((s) => s.t);
   const [open, setOpen] = useState(false);
+  const [fontSearch, setFontSearch] = useState('');
+  const [recentFonts, setRecentFonts] = useState<string[]>([]);
+
+  // Load recent fonts on mount
+  useEffect(() => { setRecentFonts(getRecentFonts()); }, []);
 
   // Preload popular fonts on first mount
   useEffect(() => { preloadPopularFonts(); }, []);
@@ -412,8 +515,11 @@ function FontPicker({ C, value, onChange, inputStyle, labelStyle }: { C: Theme; 
   const handleSelect = useCallback((family: string) => {
     const entry = FONT_LIBRARY.find((f) => f.family === family);
     if (entry) loadGoogleFont(family, entry.weights);
+    addRecentFont(family);
+    setRecentFonts(getRecentFonts());
     onChange(family);
     setOpen(false);
+    setFontSearch('');
   }, [onChange]);
 
   // Load selected font on mount if it's a Google Font
@@ -460,8 +566,50 @@ function FontPicker({ C, value, onChange, inputStyle, labelStyle }: { C: Theme; 
             padding: 4,
           }}
         >
+          {/* Font search */}
+          <input
+            type="text"
+            placeholder="Search fonts..."
+            value={fontSearch}
+            onChange={(e) => setFontSearch(e.target.value)}
+            autoFocus
+            style={{
+              width: '100%', padding: '5px 8px', background: C.surface, border: `1px solid ${C.border}`,
+              borderRadius: 5, color: C.text, fontSize: 10, fontFamily: 'inherit', boxSizing: 'border-box',
+              outline: 'none', marginBottom: 4, position: 'sticky', top: 0, zIndex: 1,
+            }}
+          />
+          {/* Recent Fonts */}
+          {recentFonts.length > 0 && !fontSearch && (
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.5, padding: '6px 6px 2px', userSelect: 'none' }}>
+                Recent
+              </div>
+              {recentFonts.map((family) => {
+                const entry = FONT_LIBRARY.find((f) => f.family === family);
+                return (
+                  <button
+                    key={`recent-${family}`}
+                    onClick={() => handleSelect(family)}
+                    onMouseEnter={() => { if (entry) loadGoogleFont(family, entry.weights); }}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px',
+                      border: 'none', borderRadius: 5, background: value === family ? C.accentDim : 'transparent',
+                      color: value === family ? C.accent : C.text, fontFamily: family, fontSize: 12, cursor: 'pointer',
+                      textAlign: 'left', transition: 'background .1s', boxSizing: 'border-box',
+                    }}
+                  >
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{family}</span>
+                    <span style={{ fontSize: 8, color: C.orange, background: C.orange + '18', padding: '1px 4px', borderRadius: 3, fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}>RECENT</span>
+                  </button>
+                );
+              })}
+              <div style={{ height: 1, background: C.border, margin: '4px 0' }} />
+            </div>
+          )}
           {FONT_CATEGORIES.map((cat) => {
-            const fonts = FONT_LIBRARY.filter((f) => f.category === cat);
+            const searchLower = fontSearch.toLowerCase();
+            const fonts = FONT_LIBRARY.filter((f) => f.category === cat && f.family.toLowerCase().includes(searchLower));
             if (fonts.length === 0) return null;
             return (
               <div key={cat}>
@@ -1138,6 +1286,113 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
   );
 }
 
+
+// Blend Mode dropdown
+function BlendModeSelect({ C, value, onChange, labelStyle, inputStyle }: { C: Theme; value: string | undefined; onChange: (v: string) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties }) {
+  return (
+    <div>
+      <div style={labelStyle}>Blend Mode</div>
+      <select
+        value={value ?? 'normal'}
+        onChange={(e) => onChange(e.target.value)}
+        style={inputStyle}
+      >
+        {BLEND_MODE_OPTIONS.map((mode) => (
+          <option key={mode} value={mode}>{mode.charAt(0).toUpperCase() + mode.slice(1).replace(/-/g, ' ')}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// Quick Shadow Presets
+function QuickShadowPresets({ C, value, onChange, labelStyle }: { C: Theme; value: string | undefined; onChange: (v: string | undefined) => void; labelStyle: React.CSSProperties }) {
+  const buildShadow = (preset: typeof QUICK_SHADOW_PRESETS[number]) => {
+    if (!preset.shadow) return undefined;
+    const { x, y, blur, color, alpha } = preset.shadow;
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `${x}px ${y}px ${blur}px rgba(${r},${g},${b},${alpha})`;
+  };
+
+  return (
+    <div>
+      <div style={labelStyle}>Shadow Presets</div>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        {QUICK_SHADOW_PRESETS.map((preset) => {
+          const shadowVal = buildShadow(preset);
+          const isActive = (!value || value === 'none') ? !preset.shadow : value === shadowVal;
+          return (
+            <button
+              key={preset.name}
+              onClick={() => onChange(shadowVal)}
+              style={{
+                padding: '3px 6px',
+                borderRadius: 4,
+                border: `1px solid ${isActive ? C.blue + '55' : C.border}`,
+                background: isActive ? C.blue + '14' : 'transparent',
+                color: isActive ? C.blue : C.dim,
+                fontSize: 8,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              {preset.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Image Filter Presets (1-click)
+function ImageFilterPresets({ C, sel, updEl, labelStyle }: { C: Theme; sel: CanvasElement; updEl: (id: string, patch: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties }) {
+  const applyFilter = (filters: Record<string, number | undefined>) => {
+    updEl(sel.id, {
+      grayscale: filters.grayscale ?? 0,
+      sepia: filters.sepia ?? 0,
+      hueRotate: filters.hueRotate ?? 0,
+      saturate: filters.saturate ?? 100,
+      brightness: filters.brightness ?? 100,
+      contrast: filters.contrast ?? 100,
+    });
+  };
+
+  return (
+    <div>
+      <div style={labelStyle}>Filters</div>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        {IMAGE_FILTER_PRESETS.map((preset) => (
+          <button
+            key={preset.name}
+            onClick={() => applyFilter(preset.filters as Record<string, number | undefined>)}
+            style={{
+              padding: '3px 6px',
+              borderRadius: 4,
+              border: `1px solid ${C.border}`,
+              background: 'transparent',
+              color: C.sub,
+              fontSize: 8,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all .1s',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent; (e.currentTarget as HTMLElement).style.color = C.accent; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+          >
+            {preset.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // C9: Size inputs with proportion lock
 const SizeInputs = memo(function SizeInputs({ C, w, h, proportionLocked, onChange, inputStyle, labelStyle }: { C: Theme; w: number; h: number; proportionLocked?: boolean; onChange: (p: Partial<CanvasElement>) => void; inputStyle: React.CSSProperties; labelStyle: React.CSSProperties }) {
   const t = useLocaleStore((s) => s.t);
@@ -1473,3 +1728,184 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
     </div>
   );
 });
+
+
+/** AI Enhance Text Button — suggests improved, more viral text for thumbnails */
+function AIEnhanceTextButton({ C, sel, updEl, pushHistory }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  sel: CanvasElement;
+  updEl: (id: string, patch: Partial<CanvasElement>) => void;
+  pushHistory: () => void;
+}) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+
+  const enhanceMutation = trpc.ai.enhanceText.useMutation({
+    onSuccess: (data) => {
+      if (data.suggestions.length > 0) {
+        setSuggestions(data.suggestions);
+      } else {
+        toast.info('No suggestions generated');
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to enhance text');
+    },
+  });
+
+  const handleEnhance = () => {
+    if (!sel.text?.trim()) {
+      toast.info('Enter some text first');
+      return;
+    }
+    setOpen(true);
+    enhanceMutation.mutate({ text: sel.text });
+  };
+
+  const applySuggestion = (newText: string) => {
+    pushHistory();
+    updEl(sel.id, { text: newText });
+    setOpen(false);
+    setSuggestions([]);
+    toast.success('Text updated');
+  };
+
+  return (
+    <div>
+      <button
+        onClick={handleEnhance}
+        disabled={enhanceMutation.isPending}
+        style={{
+          width: '100%',
+          padding: '6px 10px',
+          borderRadius: 6,
+          border: `1px solid ${C.accent}33`,
+          background: `linear-gradient(135deg, ${C.accent}12, ${C.pink ?? C.accent}12)`,
+          color: C.accent,
+          fontSize: 10,
+          fontWeight: 700,
+          cursor: enhanceMutation.isPending ? 'wait' : 'pointer',
+          fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 5,
+          opacity: enhanceMutation.isPending ? 0.7 : 1,
+          transition: 'all .15s',
+        }}
+      >
+        {enhanceMutation.isPending ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="32" strokeLinecap="round" /></svg>
+            Enhancing...
+          </span>
+        ) : (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Enhance with AI
+          </>
+        )}
+      </button>
+      {open && suggestions.length > 0 && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => applySuggestion(s)}
+              style={{
+                width: '100%',
+                padding: '6px 8px',
+                borderRadius: 5,
+                border: `1px solid ${C.border}`,
+                background: C.surface,
+                color: C.text,
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                textAlign: 'left',
+                transition: 'all .12s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '14'; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+            >
+              {s}
+            </button>
+          ))}
+          <button
+            onClick={() => { setOpen(false); setSuggestions([]); }}
+            style={{ padding: '3px', background: 'none', border: 'none', color: C.dim, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** AI Remove Background Button — uses fal.ai BiRefNet to remove image backgrounds */
+function AIRemoveBackgroundButton({ C, sel, updEl, pushHistory }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  sel: CanvasElement;
+  updEl: (id: string, patch: Partial<CanvasElement>) => void;
+  pushHistory: () => void;
+}) {
+  const removeBgMutation = trpc.ai.removeBackground.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        pushHistory();
+        updEl(sel.id, { src: data.url });
+        toast.success('Background removed');
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to remove background');
+    },
+  });
+
+  const handleRemoveBg = () => {
+    if (!sel.src) {
+      toast.info('No image source');
+      return;
+    }
+    removeBgMutation.mutate({ imageUrl: sel.src });
+  };
+
+  return (
+    <button
+      onClick={handleRemoveBg}
+      disabled={removeBgMutation.isPending}
+      style={{
+        width: '100%',
+        padding: '6px 10px',
+        borderRadius: 6,
+        border: `1px solid ${C.accent}33`,
+        background: `linear-gradient(135deg, ${C.accent}12, ${C.pink ?? C.accent}12)`,
+        color: C.accent,
+        fontSize: 10,
+        fontWeight: 700,
+        cursor: removeBgMutation.isPending ? 'wait' : 'pointer',
+        fontFamily: 'inherit',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 5,
+        opacity: removeBgMutation.isPending ? 0.7 : 1,
+        transition: 'all .15s',
+      }}
+    >
+      {removeBgMutation.isPending ? (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="32" strokeLinecap="round" /></svg>
+          Removing...
+        </span>
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 3l18 18"/></svg>
+          Remove Background
+        </>
+      )}
+    </button>
+  );
+}

@@ -769,17 +769,41 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
     }),
 
   /* ═══════════════════════════════════════════════════════════════
-     Z4: AI Background Removal — placeholder
+     AI Background Removal — Uses fal.ai BiRefNet model
      ═══════════════════════════════════════════════════════════════ */
   removeBackground: protectedProcedure
     .input(z.object({
-      imageUrl: z.string().url(),
+      imageUrl: z.string().min(1).max(10000),
     }))
-    .mutation(async () => {
-      throw new TRPCError({
-        code: 'PRECONDITION_FAILED',
-        message: 'Background removal coming soon. Feature is under development.',
-      });
+    .mutation(async ({ ctx, input }) => {
+      if (!env.FAL_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Background removal service is temporarily unavailable. Please try again later.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-bg-remove', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      fal.config({ credentials: env.FAL_KEY });
+
+      try {
+        const result = await fal.subscribe('fal-ai/birefnet', {
+          input: {
+            image_url: input.imageUrl,
+          },
+        }) as { data: { image: { url: string } } };
+
+        const outputUrl = result.data?.image?.url;
+        if (!outputUrl) {
+          await decrementAIUsage(ctx.session.user.id, ctx.db);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Background removal failed - no output image' });
+        }
+
+        return { url: outputUrl };
+      } catch (e) {
+        if (e instanceof TRPCError) throw e;
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Background removal service error' });
+      }
     }),
 
   /* ═══════════════════════════════════════════════════════════════
@@ -913,6 +937,166 @@ Rules: ALL CAPS, max 4 words each, emotionally charged, curiosity-inducing.`,
           }
         }
         return { suggestions: [] };
+      }
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     AI Enhance Text — Improve text for clickability / virality
+     ═══════════════════════════════════════════════════════════════ */
+  enhanceText: protectedProcedure
+    .input(z.object({ text: z.string().min(1).max(200) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'AI service is temporarily unavailable. Please try again later.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-enhance-text', 20);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [{
+              role: 'user',
+              content: `Improve this YouTube thumbnail text to be more clickable and viral: "${input.text}". Return 3 options as JSON array.
+Rules: Each option should be SHORT (1-5 words), ALL CAPS, emotionally charged, curiosity-inducing. Keep the same general topic/meaning.
+Return ONLY valid JSON: { "suggestions": ["OPTION 1", "OPTION 2", "OPTION 3"] }`,
+            }],
+            response_format: { type: 'json_object' },
+            max_tokens: 200,
+          }),
+        });
+      } catch {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse response' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '{"suggestions":[]}';
+
+      try {
+        const parsed = JSON.parse(text) as { suggestions?: string[] };
+        return { suggestions: (parsed.suggestions ?? []).slice(0, 3) };
+      } catch {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { suggestions?: string[] };
+            return { suggestions: (parsed.suggestions ?? []).slice(0, 3) };
+          } catch {
+            // fall through
+          }
+        }
+        return { suggestions: [] };
+      }
+    }),
+
+  /* ═══════════════════════════════════════════════════════════════
+     AI Auto-Layout — Optimize element positions for YouTube thumbnails
+     ═══════════════════════════════════════════════════════════════ */
+  autoLayout: protectedProcedure
+    .input(z.object({
+      elements: z.array(z.object({
+        id: z.string(),
+        type: z.string(),
+        x: z.number(),
+        y: z.number(),
+        w: z.number(),
+        h: z.number(),
+        text: z.string().optional(),
+      })),
+      canvasW: z.number(),
+      canvasH: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!env.OPENAI_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'AI service is temporarily unavailable. Please try again later.' });
+      }
+
+      await checkRateLimit(ctx.session.user.id, 'ai-auto-layout', 10);
+      await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
+
+      const elementsSummary = input.elements.map((el) =>
+        `{ id: "${el.id}", type: "${el.type}", x: ${el.x}, y: ${el.y}, w: ${el.w}, h: ${el.h}${el.text ? `, text: "${el.text}"` : ''} }`
+      ).join('\n');
+
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(API_ENDPOINTS.OPENAI_CHAT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [{
+              role: 'user',
+              content: `You are a YouTube thumbnail layout expert. Given these elements on a ${input.canvasW}x${input.canvasH} canvas, optimize their positions following YouTube thumbnail best practices:
+
+Elements:
+${elementsSummary}
+
+Best practices:
+- Text should be large, bold, and positioned for maximum readability (usually left or center)
+- Images of people should be on the right side, taking up ~40% of the canvas
+- Leave breathing room between elements (minimum 20px padding)
+- Keep all elements within the canvas bounds
+- Create visual hierarchy: main text large and prominent, secondary elements smaller
+- Use the rule of thirds for positioning
+
+Return ONLY valid JSON: { "positions": [{ "id": "...", "x": number, "y": number, "w": number, "h": number }] }
+Keep the same element IDs. You may adjust width/height slightly for better layout.`,
+            }],
+            response_format: { type: 'json_object' },
+            max_tokens: 500,
+          }),
+        });
+      } catch {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
+      }
+
+      if (!res.ok) {
+        await decrementAIUsage(ctx.session.user.id, ctx.db);
+        const err = await res.json().catch(() => ({}));
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (err as { error?: { message?: string } }).error?.message ?? 'OpenAI API error' });
+      }
+
+      const data = await res.json().catch(() => {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse response' });
+      });
+      const text = (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? '{"positions":[]}';
+
+      try {
+        const parsed = JSON.parse(text) as { positions?: { id: string; x: number; y: number; w: number; h: number }[] };
+        return { positions: parsed.positions ?? [] };
+      } catch {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]) as { positions?: { id: string; x: number; y: number; w: number; h: number }[] };
+            return { positions: parsed.positions ?? [] };
+          } catch {
+            // fall through
+          }
+        }
+        return { positions: [] };
       }
     }),
 });
