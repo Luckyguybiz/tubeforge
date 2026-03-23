@@ -795,22 +795,67 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const effectStyles = getEffectStyles(el);
       const gradientStyles = getTextGradientStyles(el);
       const isEditingText = isSel && document.activeElement?.getAttribute('data-text-el') === el.id;
+      const resolvedFontWeight = el.fontWeight ?? (el.bold ? 700 : 400);
+      const hasCurve = el.curveAmount && el.curveAmount !== 0;
       const textStyle: React.CSSProperties = {
         position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
-        fontSize: `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
-        fontWeight: el.bold ? 'bold' : 'normal', fontStyle: el.italic ? 'italic' : 'normal', fontFamily: el.font, color: el.textGradient ? undefined : el.color, textAlign: el.textAlign ?? 'left',
-        textDecoration: el.underline ? 'underline' : 'none',
-        textShadow: el.shadow !== 'none' ? el.shadow : 'none', opacity: el.opacity, background: el.textGradient ? undefined : el.bg, borderRadius: el.borderR,
-        padding: '4px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        fontSize: hasCurve ? undefined : `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
+        fontWeight: hasCurve ? undefined : resolvedFontWeight, fontStyle: hasCurve ? undefined : (el.italic ? 'italic' : 'normal'), fontFamily: hasCurve ? undefined : el.font, color: hasCurve ? undefined : (el.textGradient ? undefined : el.color), textAlign: hasCurve ? undefined : (el.textAlign ?? 'left'),
+        textDecoration: hasCurve ? undefined : (el.underline ? 'underline' : 'none'),
+        textShadow: hasCurve ? undefined : (el.shadow !== 'none' ? el.shadow : 'none'), opacity: el.opacity, background: hasCurve ? undefined : (el.textGradient ? undefined : el.bg), borderRadius: el.borderR,
+        padding: hasCurve ? undefined : '4px 8px', whiteSpace: hasCurve ? undefined : 'pre-wrap', wordBreak: hasCurve ? undefined : 'break-word',
         border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: isEditingText ? 'text' : 'move', boxSizing: 'border-box', outline: 'none',
         transform: buildTransform(el),
-        letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
-        lineHeight: el.lineHeight ? `${el.lineHeight}` : undefined,
-        textTransform: el.textTransform && el.textTransform !== 'none' ? el.textTransform : undefined,
-        WebkitTextStroke: (el.textStrokeWidth ?? 0) > 0 ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+        letterSpacing: (!hasCurve && el.letterSpacing) ? `${el.letterSpacing}px` : undefined,
+        lineHeight: (!hasCurve && el.lineHeight) ? `${el.lineHeight}` : undefined,
+        textTransform: (!hasCurve && el.textTransform && el.textTransform !== 'none') ? el.textTransform : undefined,
+        WebkitTextStroke: (!hasCurve && (el.textStrokeWidth ?? 0) > 0) ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+        mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined,
         ...effectStyles,
-        ...gradientStyles,
+        ...(hasCurve ? {} : gradientStyles),
       };
+
+      // Curved text rendering via SVG textPath
+      if (hasCurve) {
+        const curveDir = el.curveAmount! > 0;
+        const absAmount = Math.abs(el.curveAmount!);
+        const svgW = el.w;
+        const svgH = el.h;
+        const qY = curveDir ? svgH - (absAmount / 100) * svgH : (absAmount / 100) * svgH;
+        const startY = curveDir ? svgH : 0;
+        const endY = startY;
+        const pathD = `M 0,${startY} Q ${svgW / 2},${qY} ${svgW},${endY}`;
+        const svgFontSize = Math.min((el.size ?? 32), svgH * 0.8);
+        return (
+          <div key={el.id} data-text-el={el.id} style={textStyle}
+            onMouseDown={(e) => {
+              if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
+              elDrag(e);
+            }}
+            onDoubleClick={(e) => { e.stopPropagation(); }}>
+            <svg width="100%" height="100%" viewBox={`0 0 ${svgW} ${svgH}`} style={{ overflow: 'visible' }}>
+              <defs>
+                <path id={`curve-${el.id}`} d={pathD} fill="none" />
+              </defs>
+              <text
+                fill={el.color ?? '#fff'}
+                fontSize={svgFontSize}
+                fontWeight={resolvedFontWeight}
+                fontStyle={el.italic ? 'italic' : 'normal'}
+                fontFamily={el.font ?? 'sans-serif'}
+                textDecoration={el.underline ? 'underline' : undefined}
+                letterSpacing={el.letterSpacing ?? undefined}
+              >
+                <textPath href={`#curve-${el.id}`} startOffset="50%" textAnchor="middle">
+                  {el.text}
+                </textPath>
+              </text>
+            </svg>
+            {resizeHandles}{deleteHandle}
+          </div>
+        );
+      }
+
       return (
         <div key={el.id} data-text-el={el.id} style={textStyle}
           contentEditable={false} suppressContentEditableWarning
@@ -842,7 +887,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'rect') {
       const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : (el.border ?? 'none'));
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, ...getEffectStyles(el) }}
           onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
       );
     }
@@ -850,7 +895,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'circle') {
       const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : 'none');
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, ...getEffectStyles(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, ...getEffectStyles(el) }}
           onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
       );
     }
@@ -863,7 +908,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const cropW = el.cropW ?? 1;
       const cropH = el.cropH ?? 1;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : undefined }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined }}
           onMouseDown={elDrag}>
           <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{
             width: hasCrop ? `${100 / cropW}%` : '100%',

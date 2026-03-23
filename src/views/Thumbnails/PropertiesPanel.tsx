@@ -170,6 +170,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
       {sel && sel.type === 'text' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div><div style={labelStyle}>{t('thumbs.props.textLabel')}</div><input value={sel.text ?? ''} onChange={(e) => updEl(sel.id, { text: e.target.value })} style={inputStyle} /></div>
+          {/* AI Enhance Text */}
+          <AIEnhanceTextButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <FontPicker C={C} value={sel.font ?? 'Inter'} onChange={(f) => updEl(sel.id, { font: f })} inputStyle={inputStyle} labelStyle={labelStyle} />
           {/* Font size slider + presets */}
           <div>
@@ -331,6 +333,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
       {sel && sel.type === 'image' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+          {/* AI Remove Background */}
+          <AIRemoveBackgroundButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}</span></div></div>
           {/* Image Shadow */}
@@ -1724,3 +1728,184 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
     </div>
   );
 });
+
+
+/** AI Enhance Text Button — suggests improved, more viral text for thumbnails */
+function AIEnhanceTextButton({ C, sel, updEl, pushHistory }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  sel: CanvasElement;
+  updEl: (id: string, patch: Partial<CanvasElement>) => void;
+  pushHistory: () => void;
+}) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+
+  const enhanceMutation = trpc.ai.enhanceText.useMutation({
+    onSuccess: (data) => {
+      if (data.suggestions.length > 0) {
+        setSuggestions(data.suggestions);
+      } else {
+        toast.info('No suggestions generated');
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to enhance text');
+    },
+  });
+
+  const handleEnhance = () => {
+    if (!sel.text?.trim()) {
+      toast.info('Enter some text first');
+      return;
+    }
+    setOpen(true);
+    enhanceMutation.mutate({ text: sel.text });
+  };
+
+  const applySuggestion = (newText: string) => {
+    pushHistory();
+    updEl(sel.id, { text: newText });
+    setOpen(false);
+    setSuggestions([]);
+    toast.success('Text updated');
+  };
+
+  return (
+    <div>
+      <button
+        onClick={handleEnhance}
+        disabled={enhanceMutation.isPending}
+        style={{
+          width: '100%',
+          padding: '6px 10px',
+          borderRadius: 6,
+          border: `1px solid ${C.accent}33`,
+          background: `linear-gradient(135deg, ${C.accent}12, ${C.pink ?? C.accent}12)`,
+          color: C.accent,
+          fontSize: 10,
+          fontWeight: 700,
+          cursor: enhanceMutation.isPending ? 'wait' : 'pointer',
+          fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 5,
+          opacity: enhanceMutation.isPending ? 0.7 : 1,
+          transition: 'all .15s',
+        }}
+      >
+        {enhanceMutation.isPending ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="32" strokeLinecap="round" /></svg>
+            Enhancing...
+          </span>
+        ) : (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Enhance with AI
+          </>
+        )}
+      </button>
+      {open && suggestions.length > 0 && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => applySuggestion(s)}
+              style={{
+                width: '100%',
+                padding: '6px 8px',
+                borderRadius: 5,
+                border: `1px solid ${C.border}`,
+                background: C.surface,
+                color: C.text,
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                textAlign: 'left',
+                transition: 'all .12s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '14'; (e.currentTarget as HTMLElement).style.borderColor = C.accent + '55'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+            >
+              {s}
+            </button>
+          ))}
+          <button
+            onClick={() => { setOpen(false); setSuggestions([]); }}
+            style={{ padding: '3px', background: 'none', border: 'none', color: C.dim, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** AI Remove Background Button — uses fal.ai BiRefNet to remove image backgrounds */
+function AIRemoveBackgroundButton({ C, sel, updEl, pushHistory }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  sel: CanvasElement;
+  updEl: (id: string, patch: Partial<CanvasElement>) => void;
+  pushHistory: () => void;
+}) {
+  const removeBgMutation = trpc.ai.removeBackground.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        pushHistory();
+        updEl(sel.id, { src: data.url });
+        toast.success('Background removed');
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to remove background');
+    },
+  });
+
+  const handleRemoveBg = () => {
+    if (!sel.src) {
+      toast.info('No image source');
+      return;
+    }
+    removeBgMutation.mutate({ imageUrl: sel.src });
+  };
+
+  return (
+    <button
+      onClick={handleRemoveBg}
+      disabled={removeBgMutation.isPending}
+      style={{
+        width: '100%',
+        padding: '6px 10px',
+        borderRadius: 6,
+        border: `1px solid ${C.accent}33`,
+        background: `linear-gradient(135deg, ${C.accent}12, ${C.pink ?? C.accent}12)`,
+        color: C.accent,
+        fontSize: 10,
+        fontWeight: 700,
+        cursor: removeBgMutation.isPending ? 'wait' : 'pointer',
+        fontFamily: 'inherit',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 5,
+        opacity: removeBgMutation.isPending ? 0.7 : 1,
+        transition: 'all .15s',
+      }}
+    >
+      {removeBgMutation.isPending ? (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="32" strokeLinecap="round" /></svg>
+          Removing...
+        </span>
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 3l18 18"/></svg>
+          Remove Background
+        </>
+      )}
+    </button>
+  );
+}

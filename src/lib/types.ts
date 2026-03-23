@@ -107,6 +107,11 @@ export interface CanvasElement {
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   textStroke?: string;
   textStrokeWidth?: number;
+  // advanced text
+  fontWeight?: number; // 100-900, default 400
+  curveAmount?: number; // -100 to 100
+  // blend mode
+  blendMode?: string; // CSS mix-blend-mode
   // shape shadow
   shapeShadow?: string;
   // element name for layers panel
