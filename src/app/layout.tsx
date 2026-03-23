@@ -66,10 +66,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Preconnect to external origins for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://v3.fal.media" />
-        <link rel="preconnect" href="https://images.pexels.com" />
-        <link rel="preconnect" href="https://lh3.googleusercontent.com" />
-        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="preconnect" href="https://v3.fal.media" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.pexels.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://lh3.googleusercontent.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
+        {/* DNS-prefetch fallback for browsers without preconnect support */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="dns-prefetch" href="https://v3.fal.media" />
+        <link rel="dns-prefetch" href="https://images.pexels.com" />
+        <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+        <link rel="dns-prefetch" href="https://i.ytimg.com" />
         {/* Prevent flash of wrong theme: read persisted mode before paint */}
         <script
           dangerouslySetInnerHTML={{
