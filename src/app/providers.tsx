@@ -13,9 +13,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         staleTime: 5 * 60 * 1000,  // 5 minutes
         gcTime: 10 * 60 * 1000,    // 10 minutes
         retry: (failureCount, error) => {
-          // Don't retry on auth or forbidden errors — redirect to login instead
-          const status = (error as unknown as { data?: { httpStatus?: number } })?.data?.httpStatus;
-          if (status === 401 || status === 403) return false;
+          // Don't retry on auth, forbidden, or rate-limit errors
+          const trpcData = (error as unknown as { data?: { httpStatus?: number; code?: string } })?.data;
+          const status = trpcData?.httpStatus;
+          if (status === 401 || status === 403 || status === 429) return false;
+          if (trpcData?.code === 'TOO_MANY_REQUESTS') return false;
           return failureCount < 2;
         },
         refetchOnWindowFocus: false,
@@ -23,8 +25,33 @@ export function Providers({ children }: { children: React.ReactNode }) {
       mutations: {
         retry: false, // Never retry mutations automatically
         onError: (error: unknown) => {
-          const message = (error as { message?: string })?.message;
-          if (message && !message.includes('UNAUTHORIZED')) {
+          const trpcError = error as { message?: string; data?: { code?: string }; cause?: { code?: string } };
+          const code = trpcError.data?.code ?? trpcError.cause?.code;
+          const message = trpcError.message ?? '';
+
+          // Rate limit — user-friendly toast instead of raw error
+          if (code === 'TOO_MANY_REQUESTS' || message.toLowerCase().includes('too many request')) {
+            toast.warning('Please wait a moment before trying again.');
+            return;
+          }
+
+          // Network / connection failures
+          if (
+            message.includes('Failed to fetch') ||
+            message.includes('NetworkError') ||
+            message.includes('Load failed') ||
+            message.includes('ECONNREFUSED')
+          ) {
+            toast.error('Network error — please check your connection and retry.');
+            return;
+          }
+
+          // Auth errors — don't show toast (redirect will handle)
+          if (code === 'UNAUTHORIZED' || message.includes('UNAUTHORIZED')) {
+            return;
+          }
+
+          if (message) {
             console.error('[mutation error]', message);
             toast.error(message);
           }

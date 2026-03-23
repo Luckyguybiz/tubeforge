@@ -65,7 +65,7 @@ export const adminRouter = router({
     .input(z.object({
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(50).default(20),
-      search: z.string().optional(),
+      search: z.string().max(200).optional(),
       planFilter: z.enum(['FREE', 'PRO', 'STUDIO']).optional(),
       sortBy: z.enum(['createdAt', 'name', 'plan', 'role']).default('createdAt'),
       sortDir: z.enum(['asc', 'desc']).default('desc'),
@@ -133,7 +133,7 @@ export const adminRouter = router({
 
   updateUser: adminProcedure
     .input(z.object({
-      userId: z.string(),
+      userId: z.string().min(1).max(100),
       plan: z.enum(['FREE', 'PRO', 'STUDIO']).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -146,7 +146,7 @@ export const adminRouter = router({
 
   updateUserRole: adminProcedure
     .input(z.object({
-      userId: z.string(),
+      userId: z.string().min(1).max(100),
       role: z.enum(['USER', 'ADMIN']),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -173,7 +173,7 @@ export const adminRouter = router({
    */
   deleteUser: adminProcedure
     .input(z.object({
-      userId: z.string(),
+      userId: z.string().min(1).max(100),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
@@ -442,7 +442,7 @@ export const adminRouter = router({
   /* ── O3: Suspend User ──────────────────────────────────────── */
 
   suspendUser: adminProcedure
-    .input(z.object({ userId: z.string(), reason: z.string().optional() }))
+    .input(z.object({ userId: z.string().min(1).max(100), reason: z.string().max(500).optional() }))
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
       if (input.userId === ctx.session.user.id) {
@@ -478,7 +478,7 @@ export const adminRouter = router({
   /* ── O3: Grant Trial ───────────────────────────────────────── */
 
   grantTrial: adminProcedure
-    .input(z.object({ userId: z.string(), plan: z.enum(['PRO', 'STUDIO']).default('PRO') }))
+    .input(z.object({ userId: z.string().min(1).max(100), plan: z.enum(['PRO', 'STUDIO']).default('PRO') }))
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
       const user = await ctx.db.user.findUnique({ where: { id: input.userId }, select: { id: true, plan: true } });
@@ -631,7 +631,7 @@ export const adminRouter = router({
   exportUsers: adminProcedure
     .input(z.object({
       planFilter: z.enum(['FREE', 'PRO', 'STUDIO']).optional(),
-      search: z.string().optional(),
+      search: z.string().max(200).optional(),
     }).optional())
     .query(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
@@ -731,7 +731,7 @@ export const adminRouter = router({
   }),
 
   createPayout: adminProcedure
-    .input(z.object({ userId: z.string(), amount: z.number().positive(), note: z.string().optional() }))
+    .input(z.object({ userId: z.string().min(1).max(100), amount: z.number().positive(), note: z.string().max(500).optional() }))
     .mutation(async ({ ctx, input }) => {
       await checkAdminRate(ctx.session.user.id);
 

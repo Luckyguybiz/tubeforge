@@ -2,9 +2,8 @@ import { z } from 'zod';
 import { router, protectedProcedure, publicProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { rateLimit } from '@/lib/rate-limit';
-import { RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
+import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
-import { deliverWebhook } from '@/lib/webhook-delivery';
 import type { Prisma } from '@prisma/client';
 import { deliverWebhooks } from './webhook';
 
@@ -14,6 +13,7 @@ async function checkMutationRate(userId: string) {
   if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
 }
 
+const PLAN_LIMITS: Record<string, number> = { FREE: 3, PRO: 25, STUDIO: Infinity };
 const SCENE_LIMITS: Record<string, number> = { FREE: 10, PRO: 50, STUDIO: 200 };
 
 /** Current export format version */
@@ -45,7 +45,7 @@ const importPayloadSchema = z.object({
     status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).default('DRAFT'),
     thumbnailData: thumbnailDataSchema.nullish(),
     characters: z.array(z.object({
-      id: z.string(),
+      id: z.string().min(1).max(100),
       name: z.string().max(100),
       role: z.string().max(100),
       avatar: z.string().max(10),
@@ -67,7 +67,7 @@ export const projectRouter = router({
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(50).default(20),
       // Cursor-based pagination (optional, takes precedence over page)
-      cursor: z.string().nullish(),
+      cursor: z.string().min(1).max(100).nullish(),
     }).optional())
     .query(async ({ ctx, input }) => {
       const { search, status, sortBy = 'updatedAt', sortOrder = 'desc', page = 1, limit = 20, cursor } = input ?? {};
@@ -311,7 +311,7 @@ export const projectRouter = router({
     }),
 
   getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: {
@@ -367,24 +367,14 @@ export const projectRouter = router({
           where: { id: ctx.session.user.id },
           select: { plan: true, _count: { select: { projects: true } } },
         });
-        const planLimit = getPlanLimits(user?.plan ?? 'FREE').projects;
+        const planLimit = PLAN_LIMITS[user?.plan ?? 'FREE'];
         if ((user?._count.projects ?? 0) >= planLimit) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Project limit reached. Please upgrade your plan.' });
         }
-        const created = await tx.project.create({
+        return tx.project.create({
           data: { title: stripTags(input.title ?? 'Untitled'), userId: ctx.session.user.id },
           select: { id: true, title: true, status: true, createdAt: true },
         });
-
-        // Fire-and-forget webhook delivery
-        deliverWebhook(ctx.session.user.id, 'project.created', {
-          id: created.id,
-          title: created.title,
-          status: created.status,
-          createdAt: created.createdAt,
-        });
-
-        return created;
       });
 
       deliverWebhooks(ctx.session.user.id, 'project.created', {
@@ -397,13 +387,13 @@ export const projectRouter = router({
 
   update: protectedProcedure
     .input(z.object({
-      id: z.string(),
+      id: z.string().min(1).max(100),
       title: z.string().max(100).optional(),
       description: z.string().max(5000).optional(),
-      tags: z.array(z.string()).max(30).optional(),
+      tags: z.array(z.string().max(100)).max(30).optional(),
       status: z.enum(['DRAFT', 'RENDERING', 'READY', 'PUBLISHED']).optional(),
       characters: z.array(z.object({
-        id: z.string(),
+        id: z.string().min(1).max(100),
         name: z.string().max(100),
         role: z.string().max(100),
         avatar: z.string().max(10),
@@ -411,7 +401,7 @@ export const projectRouter = router({
         desc: z.string().max(500),
       })).max(50).optional(),
       thumbnailData: thumbnailDataSchema,
-      thumbnailUrl: z.string().nullish(),
+      thumbnailUrl: z.string().url().nullish(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { id, characters, thumbnailData, ...rest } = input;
@@ -442,43 +432,18 @@ export const projectRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
-
-      // Verify ownership or team membership before deleting
-      const existing = await ctx.db.project.findFirst({
-        where: {
-          id: input.id,
-          OR: [
-            { userId: ctx.session.user.id },
-            { team: { members: { some: { userId: ctx.session.user.id } } } },
-          ],
-        },
+      return ctx.db.project.delete({
+        where: { id: input.id, userId: ctx.session.user.id },
         select: { id: true },
       });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Project not found.' });
-      }
-
-      try {
-        await ctx.db.project.delete({
-          where: { id: existing.id },
-          select: { id: true },
-        });
-        return { id: existing.id };
-      } catch (error) {
-        console.error('Project deletion failed:', error);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to delete project. Please try again.',
-        });
-      }
     }),
 
   /** Export a project as JSON (only the owner can export) */
   export: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const { success } = await rateLimit({
         identifier: `export:${ctx.session.user.id}`,
@@ -553,7 +518,7 @@ export const projectRouter = router({
           select: { plan: true, _count: { select: { projects: true } } },
         });
 
-        const projectLimit = getPlanLimits(user?.plan ?? 'FREE').projects ?? 3;
+        const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
         if ((user?._count.projects ?? 0) >= projectLimit) {
           throw new TRPCError({
             code: 'FORBIDDEN',
@@ -615,7 +580,7 @@ export const projectRouter = router({
 
   /** Duplicate an existing project with all its scenes */
   duplicate: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
 
@@ -627,7 +592,7 @@ export const projectRouter = router({
           where: { id: userId },
           select: { plan: true, _count: { select: { projects: true } } },
         });
-        const projectLimit = getPlanLimits(user?.plan ?? 'FREE').projects ?? 3;
+        const projectLimit = PLAN_LIMITS[user?.plan ?? 'FREE'] ?? 3;
         if ((user?._count.projects ?? 0) >= projectLimit) {
           throw new TRPCError({
             code: 'FORBIDDEN',
@@ -707,7 +672,7 @@ export const projectRouter = router({
 
   /** Toggle isPublic flag on a project (owner only) */
   togglePublic: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkMutationRate(ctx.session.user.id);
       const project = await ctx.db.project.findFirst({
@@ -724,7 +689,7 @@ export const projectRouter = router({
 
   /** Get a public project by ID (no auth required) */
   getPublic: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: { id: input.id, isPublic: true },
@@ -759,7 +724,7 @@ export const projectRouter = router({
 
   /** Like a public project (increment counter, rate-limited) */
   likeProject: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       // Rate limit: max 5 likes per minute per project to prevent spam
       const { success } = await rateLimit({
@@ -785,35 +750,21 @@ export const projectRouter = router({
   listPublic: publicProcedure
     .input(z.object({
       sortBy: z.enum(['createdAt', 'likesCount']).default('createdAt'),
-      tag: z.string().max(100).optional(),
-      search: z.string().max(100).optional(),
-      cursor: z.string().nullish(),
+      cursor: z.string().min(1).max(100).nullish(),
       limit: z.number().min(1).max(50).default(20),
     }).optional())
     .query(async ({ ctx, input }) => {
-      const { sortBy = 'createdAt', tag, search, cursor, limit = 20 } = input ?? {};
+      const { sortBy = 'createdAt', cursor, limit = 20 } = input ?? {};
       const orderBy = sortBy === 'likesCount'
         ? [{ likesCount: 'desc' as const }, { createdAt: 'desc' as const }]
         : [{ createdAt: 'desc' as const }];
 
-      const where: Prisma.ProjectWhereInput = { isPublic: true };
-      if (tag) {
-        where.tags = { has: tag };
-      }
-      if (search) {
-        where.OR = [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
       const items = await ctx.db.project.findMany({
-        where,
+        where: { isPublic: true },
         select: {
           id: true,
           title: true,
           description: true,
-          tags: true,
           thumbnailUrl: true,
           status: true,
           likesCount: true,
@@ -828,22 +779,8 @@ export const projectRouter = router({
 
       const hasMore = items.length > limit;
       const results = hasMore ? items.slice(0, limit) : items;
-
-      // Collect popular tags from results for tag filter suggestions
-      const tagCounts: Record<string, number> = {};
-      for (const item of results) {
-        for (const t of item.tags) {
-          tagCounts[t] = (tagCounts[t] ?? 0) + 1;
-        }
-      }
-      const popularTags = Object.entries(tagCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 20)
-        .map(([name, count]) => ({ name, count }));
-
       return {
         items: results,
-        popularTags,
         nextCursor: hasMore ? results[results.length - 1]?.id : null,
       };
     }),
@@ -851,8 +788,8 @@ export const projectRouter = router({
   /** List public projects by a specific user (no auth required) */
   listByUser: publicProcedure
     .input(z.object({
-      userId: z.string(),
-      cursor: z.string().nullish(),
+      userId: z.string().min(1).max(100),
+      cursor: z.string().min(1).max(100).nullish(),
       limit: z.number().min(1).max(50).default(20),
     }))
     .query(async ({ ctx, input }) => {

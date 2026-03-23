@@ -112,7 +112,7 @@ export const teamRouter = router({
 
   /** Accept a pending invite */
   acceptInvite: protectedProcedure
-    .input(z.object({ memberId: z.string() }))
+    .input(z.object({ memberId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkTeamRate(ctx.session.user.id);
 
@@ -145,7 +145,7 @@ export const teamRouter = router({
 
   /** Decline a pending invite */
   declineInvite: protectedProcedure
-    .input(z.object({ memberId: z.string() }))
+    .input(z.object({ memberId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkTeamRate(ctx.session.user.id);
 
@@ -173,7 +173,7 @@ export const teamRouter = router({
 
   /** Cancel a pending invite (owner/admin action) */
   cancelInvite: protectedProcedure
-    .input(z.object({ memberId: z.string() }))
+    .input(z.object({ memberId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkTeamRate(ctx.session.user.id);
 
@@ -364,7 +364,7 @@ export const teamRouter = router({
     }),
 
   removeMember: protectedProcedure
-    .input(z.object({ memberId: z.string() }))
+    .input(z.object({ memberId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkTeamRate(ctx.session.user.id);
       const member = await ctx.db.teamMember.findUnique({
@@ -400,7 +400,7 @@ export const teamRouter = router({
 
   updateRole: protectedProcedure
     .input(z.object({
-      memberId: z.string(),
+      memberId: z.string().min(1).max(100),
       role: z.enum(['ADMIN', 'EDITOR', 'VIEWER']),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -442,7 +442,7 @@ export const teamRouter = router({
     }),
 
   shareProject: protectedProcedure
-    .input(z.object({ projectId: z.string() }))
+    .input(z.object({ projectId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: { id: input.projectId, userId: ctx.session.user.id },
@@ -474,7 +474,7 @@ export const teamRouter = router({
     }),
 
   unshareProject: protectedProcedure
-    .input(z.object({ projectId: z.string() }))
+    .input(z.object({ projectId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       await checkTeamRate(ctx.session.user.id);
       const project = await ctx.db.project.findFirst({
@@ -504,7 +504,7 @@ export const teamRouter = router({
 
   /** Get project collaborators -- returns team members who have access to this project */
   getProjectCollaborators: protectedProcedure
-    .input(z.object({ projectId: z.string() }))
+    .input(z.object({ projectId: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const project = await ctx.db.project.findFirst({
         where: {

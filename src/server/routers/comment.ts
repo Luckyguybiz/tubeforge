@@ -15,9 +15,9 @@ export const commentRouter = router({
   /** Add a comment to a project (optionally tied to a scene) */
   add: protectedProcedure
     .input(z.object({
-      projectId: z.string(),
+      projectId: z.string().min(1).max(100),
       text: z.string().min(1).max(2000),
-      sceneId: z.string().nullish(),
+      sceneId: z.string().min(1).max(100).nullish(),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkCommentRate(ctx.session.user.id);
@@ -63,8 +63,8 @@ export const commentRouter = router({
   /** List comments for a project */
   list: protectedProcedure
     .input(z.object({
-      projectId: z.string(),
-      sceneId: z.string().nullish(),
+      projectId: z.string().min(1).max(100),
+      sceneId: z.string().min(1).max(100).nullish(),
     }))
     .query(async ({ ctx, input }) => {
       // Verify access
@@ -110,8 +110,8 @@ export const commentRouter = router({
   /** Resolve (or unresolve) a comment */
   resolve: protectedProcedure
     .input(z.object({
-      projectId: z.string(),
-      commentId: z.string(),
+      projectId: z.string().min(1).max(100),
+      commentId: z.string().min(1).max(100),
       resolved: z.boolean().default(true),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -159,8 +159,8 @@ export const commentRouter = router({
   /** Delete a comment (author or project owner only) */
   delete: protectedProcedure
     .input(z.object({
-      projectId: z.string(),
-      commentId: z.string(),
+      projectId: z.string().min(1).max(100),
+      commentId: z.string().min(1).max(100),
     }))
     .mutation(async ({ ctx, input }) => {
       await checkCommentRate(ctx.session.user.id);
