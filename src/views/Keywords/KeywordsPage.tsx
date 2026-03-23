@@ -889,7 +889,7 @@ function KeywordTable({
   isDark: boolean;
 }) {
   return (
-    <div className="tf-keywords-table-wrap" style={{ overflow: 'hidden' }}>
+    <div className="tf-keywords-table-wrap" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
       {/* Header */}
       <div style={{ display: 'flex', gap: 8, padding: '0 8px 8px', borderBottom: `1px solid ${C.border}`, minWidth: 400 }}>
         {columns.map((col) => (

@@ -21,7 +21,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
   const router = useRouter();
 
   return (
-    <div style={{ width: '100%', minHeight: '100dvh', background: C.bg }}>
+    <div style={{ width: '100%', minHeight: 0, background: C.bg }}>
       {/* Header */}
       <div className="tf-tool-header" style={{
         padding: '16px 20px',

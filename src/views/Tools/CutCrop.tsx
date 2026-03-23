@@ -759,7 +759,7 @@ export function CutCrop() {
       {/* Toast */}
       {toast && (
         <div style={{
-          position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
           padding: '10px 24px', borderRadius: 10,
           background: C.surface, border: `1px solid ${C.border}`,
           color: C.text, fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.25)',

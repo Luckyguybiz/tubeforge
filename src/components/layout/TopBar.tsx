@@ -283,7 +283,7 @@ export const TopBar = memo(function TopBar() {
       </span>
 
       {/* Notification bell */}
-      <div ref={bellRef} style={{ position: 'relative' }}>
+      <div ref={bellRef} className="tf-topbar-bell" style={{ position: 'relative' }}>
         <button
           className="tf-topbar-btn"
           title={t('topbar.notifications')}

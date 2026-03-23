@@ -720,7 +720,7 @@ function Toast({
     <div
       style={{
         position: 'fixed',
-        bottom: 32,
+        bottom: 80,
         left: '50%',
         transform: 'translateX(-50%)',
         padding: '10px 24px',

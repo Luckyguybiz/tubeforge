@@ -292,7 +292,7 @@ export function BillingPage() {
     <div
       style={{
         flex: 1,
-        minHeight: '100dvh',
+        minHeight: 0,
         background: pageBg,
         color: C.text,
         fontFamily: 'inherit',

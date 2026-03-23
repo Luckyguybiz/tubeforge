@@ -135,9 +135,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .tf-mobile-drawer.open{transform:translateX(0)}
         .tf-bottom-tabs{display:none}
         @media(max-width:768px){
+          .tf-app-shell{height:100%!important;overflow:visible!important}
+          .tf-app-column{overflow:visible!important}
+          .tf-topbar{height:48px!important}
+          .tf-topbar-btn{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important}
+          .tf-topbar-whatsnew{display:none!important}
+          .tf-topbar-bell{display:none!important}
           .tf-bottom-tabs{
             display:flex !important;
-            position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;z-index:9990 !important;
+            position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;z-index:9999 !important;
             height:56px;
             background:${C.surface};
             border-top:1px solid ${C.border};
@@ -165,9 +171,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       ) : (
         <>
           <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
-          <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
+          <div className="tf-app-shell" style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
             {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="tf-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
               {isEditor ? (
                 <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
