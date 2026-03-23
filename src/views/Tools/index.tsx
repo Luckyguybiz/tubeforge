@@ -35,6 +35,7 @@ const tools: Record<string, () => Promise<{ [key: string]: React.ComponentType }
   'content-planner': () => import('./ContentPlanner'),
   'video-translator': () => import('./VideoTranslator'),
   'mp4-to-gif': () => import('./Mp4ToGif'),
+  'multi-publisher': () => import('./MultiPublisher'),
 };
 
 const COMPONENT_NAMES: Record<string, string> = {
@@ -63,6 +64,7 @@ const COMPONENT_NAMES: Record<string, string> = {
   'content-planner': 'ContentPlanner',
   'video-translator': 'VideoTranslator',
   'mp4-to-gif': 'Mp4ToGif',
+  'multi-publisher': 'MultiPublisher',
 };
 
 /**
@@ -112,4 +114,5 @@ export const AVAILABLE_TOOL_IDS = new Set([
   'image-generator',
   'video-translator',
   'mp4-to-gif',
+  'multi-publisher',
 ]);

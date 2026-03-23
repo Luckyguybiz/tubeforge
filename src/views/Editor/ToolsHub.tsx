@@ -314,6 +314,17 @@ function getTools(t: (key: string) => string): ToolDef[] {
     gradient: ['#06b6d4', '#8b5cf6'],
   },
   {
+    id: 'multi-publisher',
+    name: t('toolshub.tool.multi-publisher.name'),
+    subtitle: t('toolshub.tool.multi-publisher.subtitle'),
+    description: t('toolshub.tool.multi-publisher.description'),
+    category: 'publishing',
+    route: '/tools/multi-publisher',
+    available: true,
+    badge: 'NEW',
+    gradient: ['#0ea5e9', '#6366f1'],
+  },
+  {
     id: 'ai-video-generator',
     name: 'AI Video Generator',
     subtitle: 'Runway · Kling · Pika · Veo',
@@ -576,6 +587,12 @@ const TOOL_ICONS: Record<string, (color: string) => React.ReactNode> = {
   'face-swap': (c) => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="9" cy="9" r="5" /><circle cx="15" cy="15" r="5" /><path d="M16 8l2-2 2 2" /><path d="M8 16l-2 2-2-2" />
+    </svg>
+  ),
+  'multi-publisher': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
+      <circle cx="6" cy="18" r="1.5" fill={c} stroke="none" opacity=".5" /><circle cx="12" cy="18" r="1.5" fill={c} stroke="none" opacity=".5" /><circle cx="18" cy="18" r="1.5" fill={c} stroke="none" opacity=".5" />
     </svg>
   ),
 };
