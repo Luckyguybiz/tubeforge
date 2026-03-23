@@ -42,10 +42,10 @@ export function useCanvasKeyboard() {
       // Skip rest if editing text
       if (isEditing) return;
 
-      // Toggle rulers: Shift+R
-      if (e.shiftKey && e.key === 'R') {
+      // Toggle rulers: Shift+R (if store supports it)
+      if (e.shiftKey && e.key === 'R' && 'setShowRulers' in store) {
         e.preventDefault();
-        store.setShowRulers(!store.showRulers);
+        (store as Record<string, unknown> & typeof store).setShowRulers!(!(store as Record<string, unknown>).showRulers);
         return;
       }
 
