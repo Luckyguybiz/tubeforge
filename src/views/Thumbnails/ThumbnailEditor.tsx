@@ -25,10 +25,11 @@ import { CANVAS_SAVE_DEBOUNCE_MS, STICKY_NOTE_COLOR, STICKY_NOTE_TEXT_COLOR } fr
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, canvasBgImage, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, canvasBgImage, canvasBgGradient, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
       canvasBgImage: s.canvasBgImage,
+      canvasBgGradient: s.canvasBgGradient,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
@@ -111,10 +112,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false), ''),
     [els],
   );
-  const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH;
+  const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH + (canvasBgGradient ? `${canvasBgGradient.from}${canvasBgGradient.to}${canvasBgGradient.angle}${canvasBgGradient.type}` : '');
   useEffect(() => {
     if (!loadedRef.current || !projectId) return;
     // Mark as unsaved when fingerprint changes from last saved state
@@ -127,7 +128,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       saveCanvas.mutate({ id: projectId, thumbnailData: store().exportState() as unknown as Record<string, string | number | boolean | null> });
     }, CANVAS_SAVE_DEBOUNCE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [elsFingerprint, canvasBg, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [elsFingerprint, canvasBg, canvasBgGradient, canvasW, canvasH]); // eslint-disable-line react-hooks/exhaustive-deps
   // Initialize saved fingerprint on first load
   useEffect(() => {
     if (loadedRef.current && projectId) {
@@ -395,6 +396,27 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     ctx.scale(scaleX, scaleY);
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
 
+    // Draw gradient background if set
+    const bgGrad = useThumbnailStore.getState().canvasBgGradient;
+    if (bgGrad && !useThumbnailStore.getState().canvasBgImage) {
+      let gradient: CanvasGradient;
+      if (bgGrad.type === 'radial') {
+        gradient = ctx.createRadialGradient(canvasW / 2, canvasH / 2, 0, canvasW / 2, canvasH / 2, Math.max(canvasW, canvasH) / 2);
+      } else {
+        const angleRad = (bgGrad.angle - 90) * Math.PI / 180;
+        const cx = canvasW / 2, cy = canvasH / 2;
+        const len = Math.max(canvasW, canvasH);
+        gradient = ctx.createLinearGradient(
+          cx - Math.cos(angleRad) * len / 2, cy - Math.sin(angleRad) * len / 2,
+          cx + Math.cos(angleRad) * len / 2, cy + Math.sin(angleRad) * len / 2,
+        );
+      }
+      gradient.addColorStop(0, bgGrad.from);
+      gradient.addColorStop(1, bgGrad.to);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvasW, canvasH);
+    }
+
     // Draw background image if set
     const bgImageUrl = useThumbnailStore.getState().canvasBgImage;
     const bgImagePromise = bgImageUrl ? new Promise<HTMLImageElement | null>((resolve) => {
@@ -426,6 +448,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (el.blur && el.blur > 0) filterParts.push(`blur(${el.blur}px)`);
         if (el.brightness !== undefined && el.brightness !== 100) filterParts.push(`brightness(${el.brightness / 100})`);
         if (el.contrast !== undefined && el.contrast !== 100) filterParts.push(`contrast(${el.contrast / 100})`);
+        if (el.grayscale !== undefined && el.grayscale > 0) filterParts.push(`grayscale(${el.grayscale}%)`);
+        if (el.sepia !== undefined && el.sepia > 0) filterParts.push(`sepia(${el.sepia}%)`);
+        if (el.hueRotate !== undefined && el.hueRotate > 0) filterParts.push(`hue-rotate(${el.hueRotate}deg)`);
+        if (el.saturate !== undefined && el.saturate !== 100) filterParts.push(`saturate(${el.saturate}%)`);
+        if (el.invert) filterParts.push('invert(100%)');
         if (filterParts.length > 0) ctx.filter = filterParts.join(' ');
         if (el.shapeShadow && el.shapeShadow !== 'none' && (el.type === 'rect' || el.type === 'circle' || el.type === 'image')) {
           try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
@@ -499,7 +526,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       }
       return canvas;
     });
-  }, [els, canvasW, canvasH, canvasBg, t]);
+  }, [els, canvasW, canvasH, canvasBg, canvasBgGradient, t]);
 
   // ===== Download =====
   const downloadCanvas = useCallback((format?: 'png' | 'jpg' | 'webp', overrideW?: number, overrideH?: number, overrideQ?: number) => {
@@ -611,6 +638,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
     if (el.contrast !== undefined && el.contrast !== 100) {
       filters.push(`contrast(${el.contrast / 100})`);
+    }
+    // Image filters
+    if (el.grayscale !== undefined && el.grayscale > 0) {
+      filters.push(`grayscale(${el.grayscale}%)`);
+    }
+    if (el.sepia !== undefined && el.sepia > 0) {
+      filters.push(`sepia(${el.sepia}%)`);
+    }
+    if (el.hueRotate !== undefined && el.hueRotate > 0) {
+      filters.push(`hue-rotate(${el.hueRotate}deg)`);
+    }
+    if (el.saturate !== undefined && el.saturate !== 100) {
+      filters.push(`saturate(${el.saturate}%)`);
+    }
+    if (el.invert) {
+      filters.push('invert(100%)');
     }
     if (filters.length > 0) {
       styles.filter = filters.join(' ');
@@ -839,6 +882,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
+    // Gradient background in fallback capture
+    const capGrad = useThumbnailStore.getState().canvasBgGradient;
+    if (capGrad && !useThumbnailStore.getState().canvasBgImage) {
+      let gradient: CanvasGradient;
+      if (capGrad.type === 'radial') {
+        gradient = ctx.createRadialGradient(canvasW / 2, canvasH / 2, 0, canvasW / 2, canvasH / 2, Math.max(canvasW, canvasH) / 2);
+      } else {
+        const angleRad = (capGrad.angle - 90) * Math.PI / 180;
+        const cx = canvasW / 2, cy = canvasH / 2, len = Math.max(canvasW, canvasH);
+        gradient = ctx.createLinearGradient(cx - Math.cos(angleRad) * len / 2, cy - Math.sin(angleRad) * len / 2, cx + Math.cos(angleRad) * len / 2, cy + Math.sin(angleRad) * len / 2);
+      }
+      gradient.addColorStop(0, capGrad.from);
+      gradient.addColorStop(1, capGrad.to);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvasW, canvasH);
+    }
     for (const el of els) {
       if (el.visible === false) continue;
       ctx.globalAlpha = el.opacity ?? 1;
@@ -1026,7 +1085,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
-              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
+              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBgImage ? canvasBg : canvasBgGradient ? (canvasBgGradient.type === 'linear' ? `linear-gradient(${canvasBgGradient.angle}deg, ${canvasBgGradient.from}, ${canvasBgGradient.to})` : `radial-gradient(circle, ${canvasBgGradient.from}, ${canvasBgGradient.to})`) : canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
             {/* AI Background Image — rendered behind all elements */}
             {canvasBgImage && (
               <img src={canvasBgImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />

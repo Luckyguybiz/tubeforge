@@ -893,7 +893,8 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
   labelStyle: React.CSSProperties;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const hasEffects = !!(sel.textGradient || sel.glow || (sel.blur && sel.blur > 0) || (sel.brightness !== undefined && sel.brightness !== 100) || (sel.contrast !== undefined && sel.contrast !== 100));
+  const hasImageFilters = !!((sel.grayscale !== undefined && sel.grayscale > 0) || (sel.sepia !== undefined && sel.sepia > 0) || (sel.hueRotate !== undefined && sel.hueRotate > 0) || (sel.saturate !== undefined && sel.saturate !== 100) || sel.invert);
+  const hasEffects = !!(sel.textGradient || sel.glow || (sel.blur && sel.blur > 0) || (sel.brightness !== undefined && sel.brightness !== 100) || (sel.contrast !== undefined && sel.contrast !== 100) || hasImageFilters);
   const isText = sel.type === 'text';
   const isImage = sel.type === 'image';
 
@@ -1029,12 +1030,67 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
             </>
           )}
 
+          {/* Image Filters (images only) */}
+          {isImage && (
+            <>
+              <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 6, marginTop: 2 }}>
+                <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Filters</span>
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Grayscale</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{sel.grayscale ?? 0}%</span>
+                </div>
+                <input type="range" min={0} max={100} value={sel.grayscale ?? 0} onChange={(e) => updEl(sel.id, { grayscale: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Sepia</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{sel.sepia ?? 0}%</span>
+                </div>
+                <input type="range" min={0} max={100} value={sel.sepia ?? 0} onChange={(e) => updEl(sel.id, { sepia: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Hue Rotate</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{sel.hueRotate ?? 0}deg</span>
+                </div>
+                <input type="range" min={0} max={360} value={sel.hueRotate ?? 0} onChange={(e) => updEl(sel.id, { hueRotate: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Saturate</span>
+                  <span style={{ fontSize: 8, color: C.dim }}>{sel.saturate ?? 100}%</span>
+                </div>
+                <input type="range" min={0} max={200} value={sel.saturate ?? 100} onChange={(e) => updEl(sel.id, { saturate: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 9, color: C.sub, fontWeight: 600 }}>Invert</span>
+                <button
+                  onClick={() => updEl(sel.id, { invert: !sel.invert })}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: sel.invert ? C.accent : C.dim,
+                    fontSize: 8,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    padding: '1px 4px',
+                  }}
+                >
+                  {sel.invert ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </>
+          )}
+
           {/* Reset all effects button */}
           {hasEffects && (
             <button
               onClick={() => {
                 pushHistory();
-                updEl(sel.id, { textGradient: undefined, glow: undefined, blur: undefined, brightness: undefined, contrast: undefined });
+                updEl(sel.id, { textGradient: undefined, glow: undefined, blur: undefined, brightness: undefined, contrast: undefined, grayscale: undefined, sepia: undefined, hueRotate: undefined, saturate: undefined, invert: undefined });
               }}
               style={{
                 width: '100%',

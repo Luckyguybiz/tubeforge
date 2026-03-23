@@ -10,6 +10,7 @@ import { StockPhotosPanel } from './panels/StockPhotosPanel';
 import { AIBackgroundPanel } from './panels/AIBackgroundPanel';
 import { AITextSuggestPanel } from './panels/AITextSuggestPanel';
 import { TemplatesPanel } from './panels/TemplatesPanel';
+import { BackgroundPanel } from './panels/BackgroundPanel';
 
 const PANEL_TITLE_KEYS: Record<string, string> = {
   uploads: 'thumbs.panel.uploads',
@@ -19,6 +20,7 @@ const PANEL_TITLE_KEYS: Record<string, string> = {
   aiBg: 'thumbs.panel.aiBg',
   aiText: 'thumbs.panel.aiText',
   templates: 'thumbs.panel.templates',
+  background: 'thumbs.panel.background',
 };
 
 export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
@@ -75,6 +77,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
           {leftPanel === 'aiBg' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/></svg>}
           {leftPanel === 'aiText' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>}
           {leftPanel === 'templates' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>}
+          {leftPanel === 'background' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>}
           {panelTitle}
         </h3>
         <button
@@ -110,6 +113,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         {leftPanel === 'aiBg' && <AIBackgroundPanel />}
         {leftPanel === 'aiText' && <AITextSuggestPanel />}
         {leftPanel === 'templates' && <TemplatesPanel />}
+        {leftPanel === 'background' && <BackgroundPanel />}
       </div>
     </aside>
   );
