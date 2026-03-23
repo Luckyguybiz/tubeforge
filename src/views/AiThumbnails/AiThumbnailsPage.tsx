@@ -789,21 +789,6 @@ export function AiThumbnailsPage() {
           {/* Divider */}
           <div style={{ height: 1, background: C.border }} />
 
-          {/* ── 4. Settings ────────────────────────────────── */}
-          {/* Style selector */}
-          <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-              {t('aithumbs.section.style')}
-            </span>
-            <div className="tf-aithumbs-styles" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {STYLE_KEYS.map((s) => (
-                <button key={s.id} onClick={() => setStyle(s.id)} style={styleChip(style === s.id)}>
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>{s.icon}</span> {t(s.key)}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Count & Format row */}
           <div style={{ display: 'flex', gap: 16 }}>
             {/* Count */}
@@ -1422,51 +1407,7 @@ export function AiThumbnailsPage() {
                 </div>
 
                 {/* Video placeholder */}
-                <div style={{
-                  marginTop: 20, padding: 16, borderRadius: 12,
-                  background: C.surface, border: `1px solid ${C.border}`,
-                  textAlign: 'center',
-                }}>
-                  <span style={{ fontSize: 13, color: C.dim }}>
-                    {t('aithumbs.howto.videoSoon')}
-                  </span>
-                </div>
-
-                {/* Example prompt chips */}
-                <div style={{ marginTop: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-                    {t('aithumbs.tryExample')}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {EXAMPLE_PROMPT_KEYS.map((key, i) => {
-                      const ep = t(key);
-                      return (
-                      <button
-                        key={i}
-                        onClick={() => setPrompt(ep)}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                        style={{
-                          width: '100%', padding: '10px 14px',
-                          borderRadius: 10,
-                          border: `1px solid ${C.border}`,
-                          background: 'transparent',
-                          color: C.sub,
-                          fontSize: 13,
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                          outline: 'none',
-                          transition: 'all 0.15s ease',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {ep}
-                      </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* Video tutorial and example prompts removed for cleaner UX */}
               </div>
             ) : (
               /* ── History tab ─────────────────────────────── */

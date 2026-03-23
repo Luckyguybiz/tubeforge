@@ -699,23 +699,29 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
         });
       }
 
-      const data = (await res.json().catch(() => {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to parse OpenAI response',
-        });
-      })) as { choices?: Array<{ message?: { content?: string } }> };
+      let data: { choices?: Array<{ message?: { content?: string } }> };
+      try {
+        const text = await res.text();
+        if (!text || text.trim().length === 0) {
+          console.error('[suggestIdeas] Empty response from OpenAI');
+          return { ideas: [] };
+        }
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        console.error('[suggestIdeas] Failed to parse OpenAI response:', parseErr);
+        return { ideas: [] };
+      }
 
-      const text = data.choices?.[0]?.message?.content ?? '';
+      const content = data.choices?.[0]?.message?.content ?? '';
 
       try {
-        const parsed = JSON.parse(text) as { ideas?: string[] };
+        const parsed = JSON.parse(content) as { ideas?: string[] };
         if (parsed.ideas && Array.isArray(parsed.ideas)) {
           return { ideas: parsed.ideas.map(String).slice(0, 5) };
         }
       } catch {
         // Try extracting JSON
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           try {
             const parsed = JSON.parse(jsonMatch[0]) as { ideas?: string[] };
