@@ -184,6 +184,16 @@ function getTools(t: (key: string) => string): ToolDef[] {
     gradient: ['#ef4444', '#f97316'],
   },
   {
+    id: 'mp4-to-gif',
+    name: 'MP4 to GIF',
+    subtitle: 'Video · Converter',
+    description: 'Convert MP4 videos to high-quality GIF animations with custom FPS, size, and duration.',
+    category: 'video',
+    route: '/tools/mp4-to-gif',
+    available: true,
+    gradient: ['#8b5cf6', '#6366f1'],
+  },
+  {
     id: 'reddit-video',
     name: 'Reddit Video Generator',
     subtitle: 'Reddit · Shorts',

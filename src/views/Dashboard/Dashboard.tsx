@@ -352,8 +352,8 @@ export function Dashboard() {
         </div>
         {/* Right: horizontal scroll of product cards */}
         <div style={{
-          display: 'flex', gap: 14, overflowX: 'auto', flex: 1,
-          scrollSnapType: 'x mandatory', padding: '8px 0',
+          display: 'flex', gap: 14, overflowX: 'auto', overflowY: 'visible', flex: 1,
+          scrollSnapType: 'x mandatory', padding: '12px 4px',
           msOverflowStyle: 'none', scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch', touchAction: 'pan-x',
         }} className="tf-dash-showcase-scroll">
@@ -456,8 +456,9 @@ export function Dashboard() {
             display: 'flex',
             gap: 16,
             overflowX: 'auto',
+            overflowY: 'visible',
             scrollSnapType: 'x mandatory',
-            padding: '8px 0',
+            padding: '12px 4px',
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
             WebkitOverflowScrolling: 'touch',

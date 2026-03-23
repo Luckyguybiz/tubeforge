@@ -1431,70 +1431,49 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
                 </div>
               ) : rightPanelTab === 'howto' ? (
-                /* ── How it works tab — shows preset preview videos ── */
+                /* ── How it works / Preset preview tab ──────────── */
                 <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-                  <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
-                    MAKE VIDEOS IN ONE CLICK
-                  </h2>
-                  <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
-                    250+ presets for camera control, framing, and high-quality VFX
-                  </p>
-
-                  {/* Preview videos grid — loads from /videos/presets/ */}
-                  {(() => {
-                    const style = selectedStyle;
-                    const previewFiles = style.previews && style.previews.length > 0
-                      ? style.previews
-                      : [`/videos/presets/${style.id}-1.mp4`, `/videos/presets/${style.id}-2.mp4`, `/videos/presets/${style.id}-3.mp4`];
-                    return (
+                  {selectedStyle.previews && selectedStyle.previews.length > 0 ? (
+                    /* Show video previews when preset has them */
+                    <>
+                      <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
+                        {selectedStyle.name}
+                      </h2>
+                      <p style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Preview videos</p>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                        {previewFiles.slice(0, 3).map((src, i) => (
-                          <div key={`${style.id}-${i}`} style={{
-                            borderRadius: 12, overflow: 'hidden',
-                            border: `1px solid ${C.border}`,
-                            background: C.surface,
-                          }}>
-                            <video
-                              src={src}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              style={{
-                                width: '100%', aspectRatio: '9/16',
-                                objectFit: 'cover', display: 'block',
-                                background: C.bg,
-                              }}
-                              onError={(e) => {
-                                // Hide broken video, show placeholder
-                                const el = e.currentTarget;
-                                el.style.display = 'none';
-                                const placeholder = el.nextElementSibling as HTMLElement;
-                                if (placeholder) placeholder.style.display = 'flex';
-                              }}
-                            />
-                            <div style={{
-                              display: 'none', aspectRatio: '9/16',
-                              alignItems: 'center', justifyContent: 'center',
-                              background: `linear-gradient(135deg, ${style.gradient[0]}20, ${style.gradient[1]}20)`,
-                              flexDirection: 'column', gap: 8,
-                            }}>
-                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5">
-                                <polygon points="5 3 19 12 5 21 5 3" />
-                              </svg>
-                              <span style={{ fontSize: 10, color: C.dim, fontWeight: 600 }}>
-                                {style.name} #{i + 1}
-                              </span>
+                        {selectedStyle.previews.slice(0, 3).map((src, i) => (
+                          <div key={`${selectedStyle.id}-${i}`} style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
+                            <video src={src} autoPlay loop muted playsInline style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', display: 'block', background: C.bg }} />
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    /* Default: 3-step instructions */
+                    <>
+                      <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
+                        MAKE VIDEOS IN ONE CLICK
+                      </h2>
+                      <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
+                        250+ presets for camera control, framing, and high-quality VFX
+                      </p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                        {[
+                          { title: 'Add Image', desc: 'Upload or generate an image to start your animation', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
+                          { title: 'Choose Preset', desc: 'Pick from 250+ animation presets for camera, framing, and VFX', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg> },
+                          { title: 'Get Video', desc: 'Click generate and download your high-quality video', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
+                        ].map((step) => (
+                          <div key={step.title} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+                            <div style={{ aspectRatio: '16/10', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{step.icon}</div>
+                            <div style={{ padding: 14 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>{step.title}</div>
+                              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>{step.desc}</div>
                             </div>
                           </div>
                         ))}
                       </div>
-                    );
-                  })()}
-
-                  <p style={{ fontSize: 11, color: C.dim, marginTop: 12, textAlign: 'center' }}>
-                    Select a style on the left to see preview videos
-                  </p>
+                    </>
+                  )}
                 </div>
               ) : rightPanelTab === 'history' ? (
                 /* ── History tab ─────────────────────────────── */
