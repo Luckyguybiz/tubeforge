@@ -842,13 +842,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               flexShrink: 0,
               background: C.card,
               borderRight: `1px solid ${C.border}`,
-              padding: 20,
-              overflowY: 'scroll',
-              overflowX: 'hidden',
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(128,128,128,.2) transparent',
+              position: 'relative',
             }}
           >
+            <div style={{
+              position: 'absolute', inset: 0,
+              overflowY: 'auto', overflowX: 'hidden',
+              padding: 20,
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(128,128,128,.2) transparent',
+            }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* ── 1. Style Preview Card (clickable to open styles) ── */}
             <div
@@ -1258,8 +1261,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 Upgrade for more credits
               </a>
             )}
-          </div>
-          </div>{/* end left panel inner wrapper */}
+          </div>{/* end flex-column wrapper */}
+          </div>{/* end absolute scroll wrapper */}
+          </div>{/* end left panel */}
 
           {/* RIGHT PANEL (flex) — same structure as AiThumbnails */}
           <div

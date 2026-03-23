@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
+
+// Allow large video uploads (up to 100MB)
+export const runtime = 'nodejs';
+export const maxDuration = 120; // 2 minutes timeout
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
