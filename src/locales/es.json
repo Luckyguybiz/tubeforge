@@ -2103,7 +2103,6 @@
   "tools.translator.uploadError": "Error al subir el video. Intentalo de nuevo.",
   "tools.translator.networkError": "Error de red. Comprueba tu conexion a internet.",
   "tools.translator.pipelineError": "Error en el proceso de traduccion. Intentalo de nuevo.",
-
   "thumbs.stock.searchPlaceholder": "Buscar fotos...",
   "thumbs.stock.search": "Buscar",
   "thumbs.stock.noResults": "No se encontraron fotos. Intenta otra busqueda.",
@@ -2111,7 +2110,6 @@
   "thumbs.stock.photoBy": "Foto de",
   "thumbs.stock.loading": "Cargando...",
   "thumbs.stock.loadMore": "Cargar mas",
-
   "thumbs.aiBg.description": "Genera un fondo AI para tu miniatura. Describe lo que quieres.",
   "thumbs.aiBg.placeholder": "Describe un fondo...",
   "thumbs.aiBg.generate": "Generar",
@@ -2121,7 +2119,6 @@
   "thumbs.aiBg.quickPrompts": "Sugerencias rapidas",
   "thumbs.aiBg.current": "Fondo actual",
   "thumbs.aiBg.remove": "Eliminar imagen de fondo",
-
   "thumbs.aiText.description": "Obtener sugerencias de texto AI para tu miniatura.",
   "thumbs.aiText.placeholder": "Describe el tema de tu video (opcional)...",
   "thumbs.aiText.suggest": "Sugerir Texto",
@@ -2134,5 +2131,19 @@
   "thumbs.aiText.clickToApply": "Haz clic en una sugerencia para aplicarla al texto seleccionado o agregar como texto nuevo.",
   "thumbs.aiText.hint": "Consejo: Selecciona un elemento de texto primero, luego haz clic en una sugerencia para reemplazar su contenido.",
   "errorBoundary.failedToRender": "No se pudo renderizar el componente",
-  "errorBoundary.retry": "Reintentar"
+  "errorBoundary.retry": "Reintentar",
+  "whatsnew.new": "NUEVO",
+  "whatsnew.improved": "MEJORADO",
+  "whatsnew.fix": "CORRECCIÓN",
+  "whatsnew.v140.1": "Tour de incorporación mejorado con guía paso a paso",
+  "whatsnew.v140.2": "Función Novedades para estar al día con los cambios",
+  "whatsnew.v140.3": "Repetir el tour desde la página de Configuración",
+  "whatsnew.v140.4": "Estado de incorporación guardado en la base de datos",
+  "whatsnew.v130.1": "Soporte de internacionalización (EN, RU, KK, ES)",
+  "whatsnew.v130.2": "Banner de consentimiento de cookies para GDPR",
+  "whatsnew.v130.3": "Navegación móvil con panel deslizable",
+  "whatsnew.v130.4": "Limitación de velocidad en todos los endpoints",
+  "whatsnew.v120.1": "Herramienta de conversión MP3 de video a audio",
+  "whatsnew.v120.2": "Compresor de video con ajustes de calidad",
+  "whatsnew.v120.3": "Editor de miniaturas con notas adhesivas y tablas"
 }

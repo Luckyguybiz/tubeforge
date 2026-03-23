@@ -13,52 +13,55 @@ interface ChangelogEntry {
   items: { type: 'feature' | 'improvement' | 'fix'; text: string }[];
 }
 
-const CHANGELOG: ChangelogEntry[] = [
-  {
-    version: '1.4.0',
-    date: '2026-03-19',
-    items: [
-      { type: 'feature', text: 'Enhanced onboarding tour with step-by-step walkthrough' },
-      { type: 'feature', text: 'What\'s New feature to stay updated on platform changes' },
-      { type: 'improvement', text: 'Replay onboarding tour from Settings page' },
-      { type: 'improvement', text: 'Onboarding state persisted to database instead of localStorage' },
-    ],
-  },
-  {
-    version: '1.3.0',
-    date: '2026-03-15',
-    items: [
-      { type: 'feature', text: 'Internationalization support (EN, RU, KK, ES)' },
-      { type: 'feature', text: 'Cookie consent banner for GDPR compliance' },
-      { type: 'improvement', text: 'Mobile navigation with slide-out drawer' },
-      { type: 'fix', text: 'Rate limiting on all mutation endpoints' },
-    ],
-  },
-  {
-    version: '1.2.0',
-    date: '2026-03-10',
-    items: [
-      { type: 'feature', text: 'MP3 converter tool for video-to-audio conversion' },
-      { type: 'feature', text: 'Video compressor with quality presets' },
-      { type: 'improvement', text: 'Thumbnail editor with sticky notes and tables' },
-    ],
-  },
-];
+// Changelog uses i18n keys for text — falls back to key if translation missing
+function getChangelog(t: (key: string) => string): ChangelogEntry[] {
+  return [
+    {
+      version: '1.4.0',
+      date: '2026-03-19',
+      items: [
+        { type: 'feature', text: t('whatsnew.v140.1') },
+        { type: 'feature', text: t('whatsnew.v140.2') },
+        { type: 'improvement', text: t('whatsnew.v140.3') },
+        { type: 'improvement', text: t('whatsnew.v140.4') },
+      ],
+    },
+    {
+      version: '1.3.0',
+      date: '2026-03-15',
+      items: [
+        { type: 'feature', text: t('whatsnew.v130.1') },
+        { type: 'feature', text: t('whatsnew.v130.2') },
+        { type: 'improvement', text: t('whatsnew.v130.3') },
+        { type: 'fix', text: t('whatsnew.v130.4') },
+      ],
+    },
+    {
+      version: '1.2.0',
+      date: '2026-03-10',
+      items: [
+        { type: 'feature', text: t('whatsnew.v120.1') },
+        { type: 'feature', text: t('whatsnew.v120.2') },
+        { type: 'improvement', text: t('whatsnew.v120.3') },
+      ],
+    },
+  ];
+}
 
-const LATEST_VERSION = CHANGELOG[0]?.version ?? '1.0.0';
+const LATEST_VERSION = '1.4.0';
 const STORAGE_KEY = 'tubeforge_last_seen_version';
 
 /* ── Badge type colors ─────────────────────────────────────────────── */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function typeBadge(type: string, C: Record<string, any>): { bg: string; color: string; label: string } {
+function typeBadge(type: string, C: Record<string, any>, t: (k: string) => string): { bg: string; color: string; label: string } {
   switch (type) {
     case 'feature':
-      return { bg: `${C.green}18`, color: C.green, label: 'NEW' };
+      return { bg: `${C.green}18`, color: C.green, label: t('whatsnew.new') };
     case 'improvement':
-      return { bg: `${C.blue}18`, color: C.blue, label: 'IMPROVED' };
+      return { bg: `${C.blue}18`, color: C.blue, label: t('whatsnew.improved') };
     case 'fix':
-      return { bg: `${C.orange}18`, color: C.orange, label: 'FIX' };
+      return { bg: `${C.orange}18`, color: C.orange, label: t('whatsnew.fix') };
     default:
       return { bg: `${C.dim}18`, color: C.dim, label: type.toUpperCase() };
   }
@@ -227,8 +230,8 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
             padding: '16px 16px 20px',
           }}
         >
-          {CHANGELOG.map((entry, ei) => (
-            <div key={entry.version} style={{ marginBottom: ei < CHANGELOG.length - 1 ? 24 : 0 }}>
+          {getChangelog(t).map((entry, ei) => (
+            <div key={entry.version} style={{ marginBottom: ei < getChangelog(t).length - 1 ? 24 : 0 }}>
               {/* Version header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <span
@@ -271,7 +274,7 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
               {/* Items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {entry.items.map((item, ii) => {
-                  const badge = typeBadge(item.type, C);
+                  const badge = typeBadge(item.type, C, t);
                   return (
                     <div
                       key={ii}
@@ -316,7 +319,7 @@ export function WhatsNewModal({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* Divider */}
-              {ei < CHANGELOG.length - 1 && (
+              {ei < getChangelog(t).length - 1 && (
                 <div
                   style={{
                     height: 1,

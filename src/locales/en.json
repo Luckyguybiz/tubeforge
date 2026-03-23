@@ -2103,7 +2103,6 @@
   "tools.translator.uploadError": "Failed to upload video. Please try again.",
   "tools.translator.networkError": "Network error. Check your internet connection.",
   "tools.translator.pipelineError": "Translation pipeline failed. Please try again.",
-
   "thumbs.stock.searchPlaceholder": "Search stock photos...",
   "thumbs.stock.search": "Search",
   "thumbs.stock.noResults": "No photos found. Try a different search.",
@@ -2111,7 +2110,6 @@
   "thumbs.stock.photoBy": "Photo by",
   "thumbs.stock.loading": "Loading...",
   "thumbs.stock.loadMore": "Load more",
-
   "thumbs.aiBg.description": "Generate an AI background image for your thumbnail. Describe what you want and we will create it.",
   "thumbs.aiBg.placeholder": "Describe a background...",
   "thumbs.aiBg.generate": "Generate",
@@ -2121,7 +2119,6 @@
   "thumbs.aiBg.quickPrompts": "Quick prompts",
   "thumbs.aiBg.current": "Current background",
   "thumbs.aiBg.remove": "Remove background image",
-
   "thumbs.aiText.description": "Get AI-powered text suggestions for your thumbnail. Catchy, clickable, viral headlines.",
   "thumbs.aiText.placeholder": "Describe your video topic (optional)...",
   "thumbs.aiText.suggest": "Suggest Text",
@@ -2134,5 +2131,19 @@
   "thumbs.aiText.clickToApply": "Click a suggestion to apply it to the selected text element, or add it as new text.",
   "thumbs.aiText.hint": "Tip: Select a text element first, then click a suggestion to replace its content. Without a selection, a new text element will be created.",
   "errorBoundary.failedToRender": "Failed to render component",
-  "errorBoundary.retry": "Retry"
+  "errorBoundary.retry": "Retry",
+  "whatsnew.new": "NEW",
+  "whatsnew.improved": "IMPROVED",
+  "whatsnew.fix": "FIX",
+  "whatsnew.v140.1": "Enhanced onboarding tour with step-by-step walkthrough",
+  "whatsnew.v140.2": "What's New feature to stay updated on platform changes",
+  "whatsnew.v140.3": "Replay onboarding tour from Settings page",
+  "whatsnew.v140.4": "Onboarding state persisted to database",
+  "whatsnew.v130.1": "Internationalization support (EN, RU, KK, ES)",
+  "whatsnew.v130.2": "Cookie consent banner for GDPR compliance",
+  "whatsnew.v130.3": "Mobile navigation with slide-out drawer",
+  "whatsnew.v130.4": "Rate limiting on all mutation endpoints",
+  "whatsnew.v120.1": "MP3 converter tool for video-to-audio conversion",
+  "whatsnew.v120.2": "Video compressor with quality presets",
+  "whatsnew.v120.3": "Thumbnail editor with sticky notes and tables"
 }

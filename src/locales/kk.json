@@ -2103,7 +2103,6 @@
   "tools.translator.uploadError": "Бейнені жүктеу сәтсіз аяқталды. Қайта көріңіз.",
   "tools.translator.networkError": "Желі қатесі. Интернет байланысын тексеріңіз.",
   "tools.translator.pipelineError": "Аударма конвейерінің қатесі. Қайта көріңіз.",
-
   "thumbs.stock.searchPlaceholder": "Фотоларды іздеу...",
   "thumbs.stock.search": "Іздеу",
   "thumbs.stock.noResults": "Фото табылмады. Басқа сұрауды қолданып көріңіз.",
@@ -2111,7 +2110,6 @@
   "thumbs.stock.photoBy": "Фото:",
   "thumbs.stock.loading": "Жүктелуде...",
   "thumbs.stock.loadMore": "Көбірек жүктеу",
-
   "thumbs.aiBg.description": "Обложкаңыз үшін AI фон жасаңыз. Қалаған фонды сипаттаңыз.",
   "thumbs.aiBg.placeholder": "Фонды сипаттаңыз...",
   "thumbs.aiBg.generate": "Жасау",
@@ -2121,7 +2119,6 @@
   "thumbs.aiBg.quickPrompts": "Жылдам нұсқалар",
   "thumbs.aiBg.current": "Ағымдағы фон",
   "thumbs.aiBg.remove": "Фон суретін жою",
-
   "thumbs.aiText.description": "Обложкаңыз үшін AI мәтін ұсыныстарын алыңыз.",
   "thumbs.aiText.placeholder": "Бейне тақырыбын сипаттаңыз (міндетті емес)...",
   "thumbs.aiText.suggest": "Мәтін ұсыну",
@@ -2134,5 +2131,19 @@
   "thumbs.aiText.clickToApply": "Ұсынысты таңдалған мәтін элементіне қолдану үшін басыңыз.",
   "thumbs.aiText.hint": "Кеңес: алдымен мәтін элементін таңдаңыз, содан кейін мазмұнын ауыстыру үшін ұсынысты басыңыз.",
   "errorBoundary.failedToRender": "Компонентті көрсету мүмкін болмады",
-  "errorBoundary.retry": "Қайталау"
+  "errorBoundary.retry": "Қайталау",
+  "whatsnew.new": "ЖАҢА",
+  "whatsnew.improved": "ЖАҚСАРТЫЛДЫ",
+  "whatsnew.fix": "ТҮЗЕТІЛДІ",
+  "whatsnew.v140.1": "Қадамдық нұсқаулықпен жетілдірілген таныстыру туры",
+  "whatsnew.v140.2": "Платформа жаңалықтарын бақылау үшін «Жаңалықтар» мүмкіндігі",
+  "whatsnew.v140.3": "Баптаулар бетінен турды қайта бастау",
+  "whatsnew.v140.4": "Тур күйі дерекқорда сақталады",
+  "whatsnew.v130.1": "Интернационализация қолдауы (EN, RU, KK, ES)",
+  "whatsnew.v130.2": "GDPR сәйкестігі үшін cookie баннері",
+  "whatsnew.v130.3": "Сырғымалы панельді мобильді навигация",
+  "whatsnew.v130.4": "Барлық эндпоинттерде сұрау жиілігін шектеу",
+  "whatsnew.v120.1": "Бейнеден аудио алу үшін MP3 түрлендіргіш",
+  "whatsnew.v120.2": "Сапа пресеттері бар бейне компрессор",
+  "whatsnew.v120.3": "Жабысқақ жазбалар мен кестелері бар мұқаба редакторы"
 }
