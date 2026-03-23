@@ -18,6 +18,7 @@ export function LandingHero() {
   return (
     <section
       id="landing-hero"
+      className="landing-hero-section"
       style={{
         position: 'relative',
         display: 'flex',
@@ -53,7 +54,7 @@ export function LandingHero() {
         {/* Headline */}
         <h1
           style={{
-            fontSize: 48,
+            fontSize: 'clamp(28px, 7vw, 48px)',
             fontWeight: 700,
             lineHeight: 1.08,
             letterSpacing: '-0.025em',
@@ -72,7 +73,7 @@ export function LandingHero() {
         {/* Subtitle */}
         <p
           style={{
-            fontSize: 18,
+            fontSize: 'clamp(15px, 4vw, 18px)',
             color: 'rgba(255,255,255,0.5)',
             lineHeight: 1.5,
             maxWidth: 540,
@@ -171,6 +172,18 @@ export function LandingHero() {
           ))}
         </div>
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .landing-hero-section {
+            padding: 120px 16px 64px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .landing-hero-section {
+            padding: 100px 16px 48px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }

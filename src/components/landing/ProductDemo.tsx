@@ -55,15 +55,15 @@ export function ProductDemo() {
 
   return (
     <section style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
-      <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', textAlign: 'center', marginBottom: 8 }}>
+      <h2 style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 800, color: '#fff', textAlign: 'center', marginBottom: 8 }}>
         One Platform for Everything YouTube
       </h2>
-      <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 40 }}>
+      <p style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 40 }}>
         Everything you need to create, optimize, and grow your channel
       </p>
 
-      {/* Tab pills */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
+      {/* Tab pills -- horizontal scroll on mobile */}
+      <div className="product-demo-tabs" style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
         {PRODUCTS.map((p, i) => (
           <button key={p.id} onClick={() => setActive(i)} style={{
             padding: '10px 20px', borderRadius: 10,
@@ -73,6 +73,7 @@ export function ProductDemo() {
             fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
             transition: 'all 0.2s ease',
             display: 'flex', alignItems: 'center', gap: 6,
+            whiteSpace: 'nowrap', flexShrink: 0,
           }}>
             <span>{p.icon}</span> {p.label}
           </button>
@@ -93,6 +94,7 @@ export function ProductDemo() {
           border: '1px solid rgba(255,255,255,0.06)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           position: 'relative', overflow: 'hidden',
+          minWidth: 0,
         }}>
           {/* Placeholder for future video/screenshot */}
           <div style={{ textAlign: 'center' }}>
@@ -104,8 +106,8 @@ export function ProductDemo() {
         </div>
 
         {/* Right: description */}
-        <div style={{ flex: 1, maxWidth: 400 }}>
-          <h3 style={{ fontSize: 28, fontWeight: 700, color: '#fff', marginBottom: 12 }}>
+        <div className="product-demo-desc" style={{ flex: 1, maxWidth: 400 }}>
+          <h3 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 700, color: '#fff', marginBottom: 12 }}>
             {product.title}
           </h3>
           <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 24 }}>
@@ -124,6 +126,37 @@ export function ProductDemo() {
           </a>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .product-demo-tabs {
+            flex-wrap: nowrap !important;
+            justify-content: flex-start !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+          }
+          .product-demo-tabs::-webkit-scrollbar { display: none; }
+          .product-demo-card {
+            flex-direction: column !important;
+            padding: 20px !important;
+            min-height: auto !important;
+          }
+          .product-demo-card > div:first-child {
+            width: 100% !important;
+            aspect-ratio: 16/10;
+          }
+          .product-demo-desc {
+            max-width: 100% !important;
+            text-align: center;
+          }
+          .product-demo-desc a {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      `}</style>
     </section>
   );
 }

@@ -188,7 +188,7 @@ export default function PricingPage() {
       <LandingNav />
 
       {/* Hero */}
-      <section style={{ padding: "120px 24px 48px", textAlign: "center" }}>
+      <section className="pricing-hero" style={{ padding: "120px 24px 48px", textAlign: "center" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h1
             style={{
@@ -204,7 +204,7 @@ export default function PricingPage() {
           </h1>
           <p
             style={{
-              fontSize: 19,
+              fontSize: 'clamp(15px, 4vw, 19px)',
               color: "rgba(255,255,255,0.5)",
               maxWidth: 480,
               margin: "0 auto",
@@ -508,10 +508,11 @@ export default function PricingPage() {
           </p>
           <Link
             href="/register"
-            className="tf-cta-primary"
+            className="tf-cta-primary pricing-cta-btn"
             style={{
               display: "inline-flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: 6,
               background: "#6366f1",
               color: "#fff",
@@ -573,6 +574,12 @@ export default function PricingPage() {
         @media (max-width: 768px) {
           .pricing-grid {
             grid-template-columns: 1fr !important;
+          }
+          .pricing-hero {
+            padding: 100px 16px 32px !important;
+          }
+          .pricing-cta-btn {
+            width: 100%;
           }
         }
       `}</style>

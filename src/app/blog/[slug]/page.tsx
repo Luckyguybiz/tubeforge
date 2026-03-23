@@ -181,7 +181,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         />
       )}
 
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '48px 24px 96px' }}>
+      <div className="blog-post-container" style={{ maxWidth: 980, margin: '0 auto', padding: '48px 24px 96px' }}>
         {/* Back to blog */}
         <Link
           href="/blog"
@@ -219,7 +219,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           {/* Title */}
           <h1
             style={{
-              fontSize: 40,
+              fontSize: 'clamp(24px, 6vw, 40px)',
               fontWeight: 600,
               color: '#ffffff',
               letterSpacing: '-0.02em',
@@ -304,11 +304,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                 Related Articles
               </h2>
               <div
+                className="related-posts-row"
                 style={{
                   display: 'flex',
                   gap: 20,
                   overflowX: 'auto',
                   paddingBottom: 8,
+                  WebkitOverflowScrolling: 'touch',
                 }}
               >
                 {related.map((relPost) => {
@@ -441,10 +443,24 @@ export default async function BlogPostPage({ params }: PageProps) {
           background: rgba(255,255,255,0.08) !important;
           transform: translateY(-1px);
         }
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
+          .blog-post-container {
+            padding: 32px 16px 64px !important;
+          }
           .blog-article-content h2 {
             font-size: 20px;
+            margin: 32px 0 12px;
           }
+          .blog-article-content h3 {
+            font-size: 18px;
+          }
+          .blog-article-content {
+            font-size: 16px !important;
+          }
+          .related-posts-row {
+            scrollbar-width: none;
+          }
+          .related-posts-row::-webkit-scrollbar { display: none; }
         }
       `}</style>
     </main>
