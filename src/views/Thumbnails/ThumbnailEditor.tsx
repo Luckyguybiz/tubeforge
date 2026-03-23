@@ -70,6 +70,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [selRect, setSelRect] = useState<{ x: number; y: number; x2: number; y2: number } | null>(null);
   const [showYouTubePreview, setShowYouTubePreview] = useState(false);
   const [youtubePreviewUrl, setYoutubePreviewUrl] = useState<string | null>(null);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   // Responsive check
   useEffect(() => {
@@ -77,6 +78,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Listen for "?" shortcut from useCanvasKeyboard
+  useEffect(() => {
+    const handler = () => setShowShortcutsHelp((v) => !v);
+    window.addEventListener('tubeforge:toggle-shortcuts-help', handler);
+    return () => window.removeEventListener('tubeforge:toggle-shortcuts-help', handler);
   }, []);
 
   // Load snap-to-grid preference from localStorage
@@ -1155,8 +1163,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', overflowX: isMobile ? 'auto' : 'visible', flexShrink: 0, maxWidth: '100%', WebkitOverflowScrolling: 'touch' as const }}>
           {!isMobile && <OnlineUsers />}
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
-          <button onClick={() => store().undo()} disabled={historyCount === 0} title={`${t('thumbs.editor.undoTitle')}${historyCount > 0 ? ` — ${historyCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: historyCount === 0 ? C.dim : C.sub, cursor: historyCount === 0 ? 'default' : 'pointer', opacity: historyCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{undoIcon}{historyCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>}</button>
-          <button onClick={() => store().redo()} disabled={futureCount === 0} title={`${t('thumbs.editor.redoTitle')}${futureCount > 0 ? ` — ${futureCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: futureCount === 0 ? C.dim : C.sub, cursor: futureCount === 0 ? 'default' : 'pointer', opacity: futureCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{redoIcon}{futureCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureCount})</span>}</button>
+          <button onClick={() => store().undo()} disabled={historyCount === 0} title={`${t('thumbs.editor.undoTitle')} (Ctrl+Z)${historyCount > 0 ? ` — ${historyCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: historyCount === 0 ? C.dim : C.sub, cursor: historyCount === 0 ? 'default' : 'pointer', opacity: historyCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{undoIcon}{historyCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>}</button>
+          <button onClick={() => store().redo()} disabled={futureCount === 0} title={`${t('thumbs.editor.redoTitle')} (Ctrl+Shift+Z)${futureCount > 0 ? ` — ${futureCount}` : ''}`} style={{ ...headerBtn, padding: '7px 8px', color: futureCount === 0 ? C.dim : C.sub, cursor: futureCount === 0 ? 'default' : 'pointer', opacity: futureCount === 0 ? 0.3 : 1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{redoIcon}{futureCount > 0 && <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({futureCount})</span>}</button>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* Size presets */}
           <div style={{ position: 'relative' }}>
@@ -1192,6 +1200,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               <span style={{ fontSize: 9, fontWeight: 600, opacity: 0.7 }}>({historyCount})</span>
             </button>
           )}
+          {/* Keyboard shortcuts help */}
+          <button onClick={() => setShowShortcutsHelp(true)} title="Keyboard Shortcuts (?)" style={{ ...headerBtn, padding: '7px 8px', fontSize: 13, fontWeight: 700, minWidth: 30 }}>?</button>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* AI reference + AI generate */}
           <button onClick={() => { const img = captureCanvas(); if (img) { store().setAiReferenceImage(img); store().setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} {t('thumbs.editor.byPhoto')}</button>
@@ -1261,17 +1271,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Floating zoom controls */}
           <div title={t('thumbs.editor.zoomHint')} style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
-            <button onClick={() => store().zoomOut()} title={t('thumbs.editor.zoomOut')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => store().zoomOut()} title={`${t('thumbs.editor.zoomOut')} (Ctrl+-)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => store().zoomIn()} title={t('thumbs.editor.zoomIn')} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => store().zoomIn()} title={`${t('thumbs.editor.zoomIn')} (Ctrl++)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomInIcon}</button>
             <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-            <button onClick={() => store().fitToScreen()} title={t('thumbs.editor.fitToScreen')} style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+            <button onClick={() => store().fitToScreen()} title={`${t('thumbs.editor.fitToScreen')} (Ctrl+0)`} style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{fitIcon} {t('thumbs.editor.fitLabel')}</button>
@@ -1281,77 +1291,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         </div>
         {/* D8: Context menu */}
         {contextMenu && (
-          <div
-            onClick={() => store().setContextMenu(null)}
-            style={{ position: 'fixed', inset: 0, zIndex: Z_INDEX.MODAL_BACKDROP }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: 'fixed',
-                left: Math.min(contextMenu.x, window.innerWidth - 180),
-                top: Math.min(contextMenu.y, window.innerHeight - 180),
-                background: C.card,
-                border: `1px solid ${C.border}`,
-                borderRadius: 10,
-                padding: 4,
-                minWidth: 160,
-                boxShadow: '0 4px 20px rgba(0,0,0,.35)',
-                zIndex: Z_INDEX.CONTEXT_MENU,
-              }}
-            >
-              {contextMenu.elId ? (
-                <div role="menu" onKeyDown={(e) => {
-                  if (e.key === 'Escape') store().setContextMenu(null);
-                  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    const items = (e.currentTarget as HTMLElement).querySelectorAll('[role="menuitem"]');
-                    const focused = document.activeElement;
-                    const idx = Array.from(items).indexOf(focused as Element);
-                    const next = e.key === 'ArrowDown' ? (idx + 1) % items.length : (idx - 1 + items.length) % items.length;
-                    (items[next] as HTMLElement).focus();
-                  }
-                }}>
-                  {[
-                    { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
-                    { label: t('thumbs.editor.bringForward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>, shortcut: 'Ctrl+]', action: () => { const id = store().contextMenu?.elId; if (id) store().bringFront(id); } },
-                    { label: t('thumbs.editor.sendBackward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>, shortcut: 'Ctrl+[', action: () => { const id = store().contextMenu?.elId; if (id) store().sendBack(id); } },
-                    { label: t('thumbs.editor.delete'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { const id = store().contextMenu?.elId; if (id) store().delEl(id); }, danger: true },
-                  ].map((item, i) => (
-                    <div
-                      key={item.label}
-                      role="menuitem"
-                      tabIndex={-1}
-                      ref={i === 0 ? (el) => el?.focus() : undefined}
-                      onClick={() => { item.action(); store().setContextMenu(null); }}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.action(); store().setContextMenu(null); } }}
-                      style={{
-                        padding: '7px 12px',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        color: (item as { danger?: boolean }).danger ? C.accent : C.text,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        outline: 'none',
-                      }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                      onFocus={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
-                      onBlur={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
-                      <span style={{ flex: 1 }}>{item.label}</span>
-                      <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{item.shortcut}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ padding: '8px 12px', fontSize: 11, color: C.dim }}>{t('thumbs.editor.noElement')}</div>
-              )}
-            </div>
-          </div>
+          <ContextMenuOverlay
+            contextMenu={contextMenu}
+            els={els}
+            C={C}
+            t={t}
+          />
         )}
         {/* ===== Export Modal ===== */}
         {showExportModal && (
@@ -1474,6 +1419,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               />
             </div>
           </div>
+        )}
+
+        {/* ===== Keyboard Shortcuts Help Modal ===== */}
+        {showShortcutsHelp && (
+          <EditorShortcutsHelpModal C={C} onClose={() => setShowShortcutsHelp(false)} />
         )}
 
         {/* ===== YouTube Preview Overlay ===== */}
@@ -1918,6 +1868,340 @@ function HistorySnapshots({ C, t, canvasW, canvasH, onRestore }: {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ===== Keyboard Shortcuts Help Modal (Editor-specific) =====
+const EDITOR_SHORTCUTS = [
+  { category: 'General', items: [
+    { keys: 'Ctrl+Z', action: 'Undo' },
+    { keys: 'Ctrl+Shift+Z', action: 'Redo' },
+    { keys: 'Ctrl+S', action: 'Save' },
+    { keys: 'Ctrl+A', action: 'Select all' },
+    { keys: 'Delete', action: 'Delete selected' },
+    { keys: 'Escape', action: 'Deselect' },
+    { keys: '?', action: 'Show shortcuts' },
+  ]},
+  { category: 'Elements', items: [
+    { keys: 'Ctrl+D', action: 'Duplicate' },
+    { keys: 'Ctrl+G', action: 'Group' },
+    { keys: 'Ctrl+Shift+G', action: 'Ungroup' },
+    { keys: 'Ctrl+C', action: 'Copy' },
+    { keys: 'Ctrl+V', action: 'Paste' },
+    { keys: 'Ctrl+X', action: 'Cut' },
+  ]},
+  { category: 'View', items: [
+    { keys: 'Ctrl++', action: 'Zoom in' },
+    { keys: 'Ctrl+-', action: 'Zoom out' },
+    { keys: 'Ctrl+0', action: 'Fit to screen' },
+    { keys: '+/-', action: 'Zoom in/out' },
+  ]},
+  { category: 'Layers', items: [
+    { keys: 'Ctrl+]', action: 'Bring forward' },
+    { keys: 'Ctrl+[', action: 'Send backward' },
+    { keys: 'Arrow keys', action: 'Nudge 1px' },
+    { keys: 'Shift+Arrow', action: 'Nudge 10px' },
+  ]},
+];
+
+function EditorShortcutsHelpModal({ C, onClose }: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === '?') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Editor keyboard shortcuts"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,.6)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          padding: 0,
+          width: 'calc(100vw - 40px)',
+          maxWidth: 600,
+          maxHeight: '85vh',
+          boxShadow: '0 24px 64px rgba(0,0,0,.4)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 20px',
+          borderBottom: `1px solid ${C.border}`,
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Keyboard Shortcuts</span>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              background: 'transparent', color: C.sub,
+              cursor: 'pointer', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, fontFamily: 'inherit',
+            }}
+          >&times;</button>
+        </div>
+
+        {/* Content -- 2-column layout */}
+        <div style={{ padding: '16px 20px', overflowY: 'auto', flex: 1 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 20,
+          }}>
+            {EDITOR_SHORTCUTS.map((group) => (
+              <div key={group.category}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '.08em', color: C.accent,
+                  marginBottom: 8, paddingBottom: 6,
+                  borderBottom: `1px solid ${C.border}`,
+                }}>
+                  {group.category}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {group.items.map((sc) => (
+                    <div
+                      key={sc.keys}
+                      style={{
+                        display: 'flex', alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '5px 4px', borderRadius: 6,
+                      }}
+                    >
+                      <span style={{ fontSize: 12, color: C.text, fontWeight: 450 }}>{sc.action}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        {sc.keys.split('+').map((k, i) => (
+                          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                            {i > 0 && <span style={{ fontSize: 10, color: C.dim, fontWeight: 600 }}>+</span>}
+                            <kbd style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              minWidth: 24, height: 22, padding: '0 6px',
+                              borderRadius: 5, background: 'rgba(255,255,255,.06)',
+                              border: '1px solid rgba(255,255,255,.1)',
+                              color: C.text, fontSize: 10, fontWeight: 600,
+                              fontFamily: "'JetBrains Mono', monospace",
+                              lineHeight: 1, whiteSpace: 'nowrap',
+                              boxShadow: '0 1px 2px rgba(0,0,0,.1)',
+                            }}>{k.trim()}</kbd>
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: '10px 20px',
+          borderTop: `1px solid ${C.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 11, color: C.dim }}>Press</span>
+          <kbd style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            minWidth: 22, height: 22, padding: '0 6px', borderRadius: 5,
+            background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)',
+            color: C.sub, fontSize: 11, fontWeight: 600,
+            fontFamily: "'JetBrains Mono', monospace",
+          }}>?</kbd>
+          <span style={{ fontSize: 11, color: C.dim }}>or</span>
+          <kbd style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            minWidth: 22, height: 22, padding: '0 6px', borderRadius: 5,
+            background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)',
+            color: C.sub, fontSize: 11, fontWeight: 600,
+            fontFamily: "'JetBrains Mono', monospace",
+          }}>Esc</kbd>
+          <span style={{ fontSize: 11, color: C.dim }}>to close</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== Context Menu Overlay (right-click) =====
+function ContextMenuOverlay({ contextMenu, els, C, t }: {
+  contextMenu: { x: number; y: number; elId: string | null };
+  els: CanvasElement[];
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+}) {
+  const store = useThumbnailStore.getState;
+  const targetEl = contextMenu.elId ? els.find((e) => e.id === contextMenu.elId) : null;
+
+  const ctxItemStyle: React.CSSProperties = {
+    padding: '7px 12px',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontSize: 12,
+    color: C.text,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    outline: 'none',
+  };
+
+  const ctxSep: React.CSSProperties = {
+    height: 1,
+    background: C.border,
+    margin: '3px 8px',
+  };
+
+  const hover = (e: React.MouseEvent | React.FocusEvent, on: boolean) => {
+    (e.currentTarget as HTMLElement).style.background = on ? C.surface : 'transparent';
+  };
+
+  type CtxItem = {
+    label: string;
+    icon: React.ReactElement;
+    shortcut?: string;
+    action: () => void;
+    danger?: boolean;
+  } | 'separator';
+
+  // Build menu items depending on whether we right-clicked an element or empty canvas
+  const items: CtxItem[] = contextMenu.elId ? [
+    { label: t('thumbs.editor.cut') || 'Cut', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>, shortcut: 'Ctrl+X', action: () => store().cutSelected() },
+    { label: t('thumbs.editor.copy') || 'Copy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+C', action: () => store().copySelected() },
+    { label: t('thumbs.editor.paste') || 'Paste', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>, shortcut: 'Ctrl+V', action: () => store().pasteClipboard() },
+    { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
+    'separator' as const,
+    { label: t('thumbs.editor.bringForward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>, shortcut: 'Ctrl+]', action: () => { if (contextMenu.elId) store().bringFront(contextMenu.elId); } },
+    { label: t('thumbs.editor.sendBackward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>, shortcut: 'Ctrl+[', action: () => { if (contextMenu.elId) store().sendBack(contextMenu.elId); } },
+    'separator' as const,
+    { label: targetEl?.locked ? 'Unlock' : 'Lock', icon: targetEl?.locked ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>, action: () => { if (contextMenu.elId) store().updEl(contextMenu.elId, { locked: !targetEl?.locked }); } },
+    { label: targetEl?.visible === false ? 'Show' : 'Hide', icon: targetEl?.visible === false ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>, action: () => { if (contextMenu.elId) store().updEl(contextMenu.elId, { visible: targetEl?.visible === false ? true : false }); } },
+    'separator' as const,
+    { label: t('thumbs.editor.delete'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { if (contextMenu.elId) store().delEl(contextMenu.elId); }, danger: true },
+  ] : [
+    // Empty canvas context menu
+    { label: t('thumbs.editor.paste') || 'Paste', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>, shortcut: 'Ctrl+V', action: () => store().pasteClipboard() },
+    { label: 'Select All', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>, shortcut: 'Ctrl+A', action: () => store().setSelIds(store().els.map((el) => el.id)) },
+    'separator' as const,
+    { label: 'Add Text', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>, action: () => store().addText() },
+    { label: 'Add Rectangle', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>, action: () => store().addRect() },
+    { label: 'Add Circle', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>, action: () => store().addCircle() },
+    'separator' as const,
+    { label: 'Canvas Settings', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>, action: () => store().setLeftPanel('background') },
+  ];
+
+  // Calculate menu height for positioning
+  const itemCount = items.filter((it) => it !== 'separator').length;
+  const sepCount = items.filter((it) => it === 'separator').length;
+  const estimatedHeight = itemCount * 32 + sepCount * 7 + 8;
+
+  return (
+    <div
+      onClick={() => store().setContextMenu(null)}
+      style={{ position: 'fixed', inset: 0, zIndex: Z_INDEX.MODAL_BACKDROP }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="menu"
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') store().setContextMenu(null);
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const menuItems = (e.currentTarget as HTMLElement).querySelectorAll('[role="menuitem"]');
+            const focused = document.activeElement;
+            const idx = Array.from(menuItems).indexOf(focused as Element);
+            const next = e.key === 'ArrowDown' ? (idx + 1) % menuItems.length : (idx - 1 + menuItems.length) % menuItems.length;
+            (menuItems[next] as HTMLElement).focus();
+          }
+        }}
+        style={{
+          position: 'fixed',
+          left: Math.min(contextMenu.x, window.innerWidth - 210),
+          top: Math.min(contextMenu.y, window.innerHeight - estimatedHeight),
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 10,
+          padding: 4,
+          minWidth: 200,
+          boxShadow: '0 4px 24px rgba(0,0,0,.4)',
+          zIndex: Z_INDEX.CONTEXT_MENU,
+        }}
+      >
+        {items.map((item, i) => {
+          if (item === 'separator') return <div key={`sep-${i}`} style={ctxSep} />;
+          const it = item;
+          return (
+            <div
+              key={it.label}
+              role="menuitem"
+              tabIndex={-1}
+              ref={i === 0 ? (el) => el?.focus() : undefined}
+              onClick={() => { it.action(); store().setContextMenu(null); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.action(); store().setContextMenu(null); } }}
+              style={{
+                ...ctxItemStyle,
+                color: it.danger ? C.accent : C.text,
+              }}
+              onMouseEnter={(e) => hover(e, true)}
+              onMouseLeave={(e) => hover(e, false)}
+              onFocus={(e) => hover(e, true)}
+              onBlur={(e) => hover(e, false)}
+            >
+              <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{it.icon}</span>
+              <span style={{ flex: 1 }}>{it.label}</span>
+              {it.shortcut && <span style={{ fontSize: 9, color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>{it.shortcut}</span>}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

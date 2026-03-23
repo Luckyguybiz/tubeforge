@@ -37,7 +37,12 @@ export function useCanvasKeyboard() {
         return;
       }
 
-      // Note: `?` shortcut is now handled by useGlobalShortcuts
+      // `?` shortcut to toggle editor shortcuts help modal
+      if (e.key === '?' && !ctrl && !isEditing) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('tubeforge:toggle-shortcuts-help'));
+        return;
+      }
 
       // Skip rest if editing text
       if (isEditing) return;

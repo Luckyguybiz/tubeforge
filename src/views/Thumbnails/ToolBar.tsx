@@ -103,6 +103,27 @@ const INSERT_OPTIONS = [
   { id: 'image', icon: SUB_ICONS.image, labelKey: 'thumbs.insert.image' },
 ];
 
+// Shortcut hints for toolbar tooltips
+const TOOL_SHORTCUT_HINTS: Record<string, string> = {
+  select: 'V',
+  text: 'T',
+  shapes: 'S',
+  lines: 'L',
+  insert: 'I',
+  draw: 'D',
+  eraser: 'E',
+  templates: '',
+  uploads: 'U',
+  elements: '',
+  stock: '',
+  aiBg: '',
+  aiText: '',
+  projects: '',
+  background: '',
+  textStyles: '',
+  creatorStyles: '',
+};
+
 export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
@@ -159,6 +180,8 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
 
   const renderToolButton = (td: ToolDef) => {
     const label = t(td.labelKey);
+    const shortcutHint = TOOL_SHORTCUT_HINTS[td.id];
+    const tooltipText = shortcutHint ? `${label} (${shortcutHint})` : label;
     const active =
       tool === td.id ||
       (td.id === 'shapes' && showShapes) ||
@@ -169,11 +192,11 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
         key={td.id}
         role="button"
         tabIndex={0}
-        aria-label={label}
+        aria-label={tooltipText}
         aria-pressed={tool === td.id}
         onClick={() => handleToolClick(td.id)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToolClick(td.id); } }}
-        title={label}
+        title={tooltipText}
         style={{
           width: 44,
           height: 44,
@@ -312,6 +335,8 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
       {PANEL_BUTTONS.map((p) => {
         const active = leftPanel === p.id;
         const pLabel = t(p.labelKey);
+        const panelShortcut = TOOL_SHORTCUT_HINTS[p.id];
+        const panelTooltip = panelShortcut ? `${pLabel} (${panelShortcut})` : pLabel;
         return (
           <div
             key={p.id}
@@ -321,7 +346,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             aria-pressed={active}
             onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles'); } }}
-            title={pLabel}
+            title={panelTooltip}
             style={{
               width: 44,
               height: 44,
