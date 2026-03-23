@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
-  const isFullBleed = pathname === '/editor' || pathname === '/ai-thumbnails' || pathname === '/thumbnails';
+  const isEditor = pathname === '/editor';
   const isOnboarding = pathname === '/onboarding';
 
   const mobileMenuOpen = useMobileMenuStore((s) => s.open);
@@ -135,15 +135,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .tf-mobile-drawer.open{transform:translateX(0)}
         .tf-bottom-tabs{display:none}
         @media(max-width:768px){
-          .tf-app-shell{height:100%!important;overflow:visible!important}
-          .tf-app-column{overflow:visible!important}
-          .tf-topbar{height:48px!important}
-          .tf-topbar-btn{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}
-          .tf-topbar-whatsnew{display:none!important}
-          .tf-topbar-bell{display:none!important}
           .tf-bottom-tabs{
             display:flex !important;
-            position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;z-index:9999 !important;
+            position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;z-index:9990 !important;
             height:56px;
             background:${C.surface};
             border-top:1px solid ${C.border};
@@ -171,54 +165,58 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       ) : (
         <>
           <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
-          <div className="tf-app-shell" style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
-            <div className="tf-sidebar" style={{ position: 'relative', zIndex: 10, flexShrink: 0 }}><Sidebar defaultCollapsed={isFullBleed} /></div>
-            <div className="tf-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
+            {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
-              {isFullBleed ? (
-                <main id="main-content" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
+              {isEditor ? (
+                <main id="main-content" role="main" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
               ) : (
-                <main id="main-content" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
+                <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
               )}
             </div>
           </div>
 
           {/* Mobile sidebar drawer */}
-          <div
-            className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
-            onClick={handleBackdropClick}
-            aria-hidden="true"
-          />
-          <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
-            {/* Close button */}
-            <button
-              aria-label="Close menu"
-              onClick={closeMobileMenu}
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                border: 'none',
-                background: 'rgba(255,255,255,0.1)',
-                color: '#fff',
-                fontSize: 18,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-              }}
-            >
-              &times;
-            </button>
-            <Sidebar />
-          </div>
+          {!isEditor && (
+            <>
+              <div
+                className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
+                onClick={handleBackdropClick}
+                aria-hidden="true"
+              />
+              <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+                {/* Close button */}
+                <button
+                  aria-label="Close menu"
+                  onClick={closeMobileMenu}
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                  }}
+                >
+                  &times;
+                </button>
+                <Sidebar />
+              </div>
+            </>
+          )}
 
-          {/* Mobile bottom tab bar — always rendered, even on full-bleed pages */}
-          <MobileBottomTabs pathname={pathname} C={C} t={t} />
+          {/* Mobile bottom tab bar */}
+          {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
         </>
       )}
 

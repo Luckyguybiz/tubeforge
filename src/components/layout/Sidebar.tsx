@@ -814,6 +814,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
       <button
         key={id}
         className="tf-mobile-nav-item"
+        aria-label={label}
         aria-current={isActive ? 'page' : undefined}
         data-tour={tourId}
         onClick={() => navigate(id)}

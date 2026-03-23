@@ -214,7 +214,7 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
   },
   switchText: {
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.5)',
     fontSize: 14,
     marginTop: 24,
     marginBottom: 0,
@@ -225,7 +225,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   legal: {
-    color: 'rgba(255,255,255,0.2)',
+    color: 'rgba(255,255,255,0.45)',
     fontSize: 12,
     marginTop: 16,
     textAlign: 'center' as const,
