@@ -305,12 +305,12 @@ export function Dashboard() {
   const user = profile.data;
 
   return (
-    <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
+    <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box', overflow: 'hidden' }}>
 
       {/* ── Welcome header ────────────────────────── */}
       <div style={{ marginBottom: 24 }}>
         <h1 className="tf-dash-heading" style={{
-          fontSize: 'clamp(20px, 4vw, 26px)', fontWeight: 600, margin: '0 0 4px',
+          fontSize: 'clamp(18px, 4vw, 26px)', fontWeight: 600, margin: '0 0 4px',
           letterSpacing: '-.02em', lineHeight: 1.2, color: C.text,
         }}>
           {profile.isLoading
@@ -330,7 +330,7 @@ export function Dashboard() {
       <div style={{
         background: C.surface, borderRadius: 16, padding: 32,
         marginBottom: 32, display: 'flex', gap: 32, alignItems: 'center',
-        overflow: 'visible', boxSizing: 'border-box',
+        overflow: 'hidden', boxSizing: 'border-box',
       }} className="tf-dash-showcase">
         {/* Left: headline + CTA */}
         <div style={{ flexShrink: 0, minWidth: 200 }} className="tf-dash-showcase-left">

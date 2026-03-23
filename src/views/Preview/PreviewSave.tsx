@@ -545,7 +545,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
 
       {/* ── Header ──────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? 16 : 24, flexWrap: 'wrap', gap: isMobile ? 10 : 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
           <button
             onClick={() => router.push('/dashboard')}
             title={t('preview.backToDashboardTitle')}
@@ -553,23 +553,23 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
               width: 44, height: 44, borderRadius: 10, border: `1px solid ${C.border}`,
               background: C.surface, color: C.sub, fontSize: 16, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'inherit', transition: 'all .15s',
+              fontFamily: 'inherit', transition: 'all .15s', flexShrink: 0,
             }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.sub; }}
           >
             &#8592;
           </button>
-          <div>
-            <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: '-0.02em' }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: isMobile ? 18 : 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: '-0.02em' }}>
               {t('preview.title')}
             </h1>
-            <p style={{ fontSize: 13, color: C.sub, margin: '2px 0 0' }}>
+            <p style={{ fontSize: 13, color: C.sub, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {p.title || t('preview.untitled')} &middot; {pluralRu(scenes.length, t('preview.scene.one'), t('preview.scene.few'), t('preview.scene.many'))} &middot; {fmtTime(totalDuration)}
             </p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="tf-preview-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             onClick={handleDownload}
             disabled={!hasVideo}

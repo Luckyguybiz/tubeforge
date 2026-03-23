@@ -24,7 +24,7 @@ function LoginContent() {
   const error = searchParams.get('error');
 
   useEffect(() => {
-    if (status === 'authenticated') window.location.href = '/ai-thumbnails';
+    if (status === 'authenticated') window.location.href = '/dashboard';
   }, [status]);
 
   // Capture referral code from URL to localStorage
@@ -83,7 +83,7 @@ function LoginContent() {
 
         {/* Google OAuth */}
         <button
-          onClick={() => signIn('google', { callbackUrl: '/ai-thumbnails' })}
+          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
           style={styles.googleBtn}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.06)';

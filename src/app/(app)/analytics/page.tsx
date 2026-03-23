@@ -88,7 +88,7 @@ function AnalyticsInner() {
     <div
       className="tf-analytics-container"
       style={{
-        padding: '32px 36px',
+        padding: '24px 20px',
         maxWidth: 1400,
         margin: '0 auto',
         display: 'flex',
