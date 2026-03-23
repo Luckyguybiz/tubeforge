@@ -179,6 +179,11 @@ interface ThumbnailState {
   history: CanvasElement[][];
   future: CanvasElement[][];
 
+  // Copy/Paste Style
+  copiedStyle: Partial<CanvasElement> | null;
+  copyStyle: () => void;
+  pasteStyle: () => void;
+
   // Save/Load
   loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasBgImage?: string | null; canvasBgGradient?: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW?: number; canvasH?: number } | null) => void;
   exportState: () => { els: CanvasElement[]; canvasBg: string; canvasBgImage: string | null; canvasBgGradient: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW: number; canvasH: number };
@@ -230,6 +235,9 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // Clipboard
   clipboard: null,
+
+  // Copy/Paste Style
+  copiedStyle: null,
 
   // Zoom/Pan
   zoom: 1,
@@ -427,6 +435,60 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set((s) => ({
       els: [...s.els, ...copies],
       selIds: copies.map((c) => c.id),
+    }));
+  },
+
+  // ===== Copy/Paste Style =====
+  copyStyle: () => {
+    const { selIds, els } = get();
+    if (selIds.length === 0) return;
+    const el = els.find((e) => e.id === selIds[selIds.length - 1]);
+    if (!el) return;
+    // Extract only visual/style properties
+    const style: Partial<CanvasElement> = {};
+    if (el.color !== undefined) style.color = el.color;
+    if (el.size !== undefined) style.size = el.size;
+    if (el.font !== undefined) style.font = el.font;
+    if (el.fontWeight !== undefined) style.fontWeight = el.fontWeight;
+    if (el.bold !== undefined) style.bold = el.bold;
+    if (el.italic !== undefined) style.italic = el.italic;
+    if (el.underline !== undefined) style.underline = el.underline;
+    if (el.textAlign !== undefined) style.textAlign = el.textAlign;
+    if (el.opacity !== undefined) style.opacity = el.opacity;
+    if (el.borderColor !== undefined) style.borderColor = el.borderColor;
+    if (el.borderWidth !== undefined) style.borderWidth = el.borderWidth;
+    if (el.borderR !== undefined) style.borderR = el.borderR;
+    if (el.shadow !== undefined) style.shadow = el.shadow;
+    if (el.glow !== undefined) style.glow = el.glow;
+    if (el.blur !== undefined) style.blur = el.blur;
+    if (el.textGradient !== undefined) style.textGradient = el.textGradient;
+    if (el.textStroke !== undefined) style.textStroke = el.textStroke;
+    if (el.textStrokeWidth !== undefined) style.textStrokeWidth = el.textStrokeWidth;
+    if (el.letterSpacing !== undefined) style.letterSpacing = el.letterSpacing;
+    if (el.lineHeight !== undefined) style.lineHeight = el.lineHeight;
+    if (el.blendMode !== undefined) style.blendMode = el.blendMode;
+    if (el.shapeShadow !== undefined) style.shapeShadow = el.shapeShadow;
+    set({ copiedStyle: JSON.parse(JSON.stringify(style)) });
+  },
+
+  pasteStyle: () => {
+    const { copiedStyle, selIds, els } = get();
+    if (!copiedStyle || selIds.length === 0) return;
+    get().pushHistory();
+    // Text-specific properties that should not be applied to non-text elements
+    const textOnlyKeys = new Set<string>(['size', 'font', 'fontWeight', 'bold', 'italic', 'underline', 'textAlign', 'textGradient', 'textStroke', 'textStrokeWidth', 'letterSpacing', 'lineHeight']);
+    const textTypes = new Set(['text', 'stickyNote']);
+    set((s) => ({
+      els: s.els.map((el) => {
+        if (!selIds.includes(el.id)) return el;
+        const patch: Partial<CanvasElement> = {};
+        for (const [key, value] of Object.entries(copiedStyle)) {
+          // Skip text-only properties for non-text elements
+          if (textOnlyKeys.has(key) && !textTypes.has(el.type)) continue;
+          (patch as Record<string, unknown>)[key] = value;
+        }
+        return { ...el, ...patch };
+      }),
     }));
   },
 

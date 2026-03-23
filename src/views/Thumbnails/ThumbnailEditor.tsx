@@ -71,6 +71,8 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [showYouTubePreview, setShowYouTubePreview] = useState(false);
   const [youtubePreviewUrl, setYoutubePreviewUrl] = useState<string | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  // Measurement tooltip — track mouse position during drag/resize
+  const [measureTooltip, setMeasureTooltip] = useState<{ mx: number; my: number; ex: number; ey: number; ew: number; eh: number } | null>(null);
 
   // Responsive check
   useEffect(() => {
@@ -261,10 +263,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (nh < 20) { nh = 20; nw = Math.round(20 * ratio); }
       }
       store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
+      setMeasureTooltip({ mx: e.clientX, my: e.clientY, ex: Math.round(el.x), ey: Math.round(el.y), ew: Math.round(nw), eh: Math.round(nh) });
       return;
     }
     const curDrag = store().drag;
-    if (!curDrag) return;
+    if (!curDrag) { setMeasureTooltip(null); return; }
     let nx = Math.round(x - curDrag.ox), ny = Math.round(y - curDrag.oy);
     // Snap to grid (20px)
     const GRID_SIZE = 20;
@@ -308,6 +311,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       store().setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
     }
     store().updEl(curDrag.id, { x: nx, y: ny });
+    // Show measurement tooltip during drag
+    const updatedEl = store().els.find((e) => e.id === curDrag.id);
+    if (updatedEl) {
+      setMeasureTooltip({ mx: e.clientX, my: e.clientY, ex: nx, ey: ny, ew: Math.round(updatedEl.w), eh: Math.round(updatedEl.h) });
+    }
   };
 
   const onCanvasMouseUp = () => {
@@ -338,7 +346,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       }
       setSelRect(null);
     }
-    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] });
+    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] }); setMeasureTooltip(null);
   };
 
   // ===== Touch event handlers for mobile support =====
@@ -1309,6 +1317,28 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             t={t}
           />
         )}
+        {/* Measurement tooltip during drag/resize */}
+        {measureTooltip && (
+          <div style={{
+            position: 'fixed',
+            left: measureTooltip.mx + 16,
+            top: measureTooltip.my + 16,
+            background: 'rgba(0,0,0,0.85)',
+            color: '#fff',
+            padding: '4px 8px',
+            borderRadius: 6,
+            fontSize: 11,
+            fontFamily: "'JetBrains Mono', monospace",
+            pointerEvents: 'none',
+            zIndex: 9999,
+            whiteSpace: 'nowrap',
+            lineHeight: 1.5,
+            border: '1px solid rgba(255,255,255,0.12)',
+          }}>
+            <div>{measureTooltip.ex}, {measureTooltip.ey}</div>
+            <div style={{ color: 'rgba(255,255,255,0.65)' }}>{measureTooltip.ew} x {measureTooltip.eh}</div>
+          </div>
+        )}
         {/* ===== Export Modal ===== */}
         {showExportModal && (
           <div onClick={() => setShowExportModal(false)} style={{ position: 'fixed', inset: 0, zIndex: Z_INDEX.MODAL_BACKDROP, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2129,6 +2159,9 @@ function ContextMenuOverlay({ contextMenu, els, C, t }: {
     { label: t('thumbs.editor.copy') || 'Copy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+C', action: () => store().copySelected() },
     { label: t('thumbs.editor.paste') || 'Paste', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>, shortcut: 'Ctrl+V', action: () => store().pasteClipboard() },
     { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
+    'separator' as const,
+    { label: 'Copy Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 16V7a2 2 0 00-2-2H9m-4 5v9a2 2 0 002 2h9a2 2 0 002-2v-1"/><path d="M2 12l3-3 3 3"/><path d="M5 9v8"/></svg>, shortcut: 'Alt+C', action: () => store().copyStyle() },
+    { label: 'Paste Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 16V7a2 2 0 00-2-2H9m-4 5v9a2 2 0 002 2h9a2 2 0 002-2v-1"/><path d="M2 17l3 3 3-3"/><path d="M5 20v-8"/></svg>, shortcut: 'Alt+V', action: () => store().pasteStyle() },
     'separator' as const,
     { label: t('thumbs.editor.bringForward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>, shortcut: 'Ctrl+]', action: () => { if (contextMenu.elId) store().bringFront(contextMenu.elId); } },
     { label: t('thumbs.editor.sendBackward'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>, shortcut: 'Ctrl+[', action: () => { if (contextMenu.elId) store().sendBack(contextMenu.elId); } },

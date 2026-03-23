@@ -47,27 +47,19 @@ export function useCanvasKeyboard() {
       // Skip rest if editing text
       if (isEditing) return;
 
-      // Toggle rulers: Shift+R
-      if (e.shiftKey && e.key === 'R' && 'setShowRulers' in store) {
+      // Copy Style: Alt+C
+      if (e.altKey && e.key === 'c' && !ctrl) {
         e.preventDefault();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (store as any).setShowRulers(!(store as any).showRulers);
+        store.copyStyle();
+        useNotificationStore.getState().addToast('info', 'Style copied', 1500);
         return;
       }
 
-      // Copy style: Alt+C
-      if (e.altKey && e.key === 'c' && 'copyStyle' in store) {
+      // Paste Style: Alt+V
+      if (e.altKey && e.key === 'v' && !ctrl) {
         e.preventDefault();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (store as any).copyStyle();
-        return;
-      }
-
-      // Paste style: Alt+V
-      if (e.altKey && e.key === 'v' && 'pasteStyle' in store) {
-        e.preventDefault();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (store as any).pasteStyle();
+        store.pasteStyle();
+        useNotificationStore.getState().addToast('info', 'Style pasted', 1500);
         return;
       }
 
@@ -143,20 +135,6 @@ export function useCanvasKeyboard() {
       if (ctrl && e.key === '0') {
         e.preventDefault();
         store.fitToScreen();
-        return;
-      }
-
-      // Group: Ctrl+G
-      if (ctrl && e.key === 'g' && !e.shiftKey) {
-        e.preventDefault();
-        store.groupSelected();
-        return;
-      }
-
-      // Ungroup: Ctrl+Shift+G
-      if (ctrl && e.key === 'g' && e.shiftKey) {
-        e.preventDefault();
-        store.ungroupSelected();
         return;
       }
 
