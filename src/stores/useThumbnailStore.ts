@@ -10,6 +10,7 @@ import type { CanvasElement, AIResult } from '@/lib/types';
 export interface CanvasSnapshot {
   els: CanvasElement[];
   canvasBg: string;
+  canvasBgGradient?: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -46,10 +47,13 @@ interface ThumbnailState {
   panY: number;
 
   // Left panel
-  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates';
+  leftPanel: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background';
 
   // Canvas background image (AI-generated or from stock)
   canvasBgImage: string | null;
+
+  // Canvas background gradient
+  canvasBgGradient: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null;
 
   // Canvas size
   canvasW: number;
@@ -87,8 +91,9 @@ interface ThumbnailState {
   setAiLoading: (l: boolean) => void;
   setAiStyle: (s: string) => void;
   setAiCount: (n: number) => void;
-  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates') => void;
+  setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background') => void;
   setCanvasBgImage: (url: string | null) => void;
+  setCanvasBgGradient: (g: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null) => void;
   setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star') => void;
   setAiReferenceImage: (url: string | null) => void;
   setLinePreview: (p: { x1: number; y1: number; x2: number; y2: number } | null) => void;
@@ -163,8 +168,8 @@ interface ThumbnailState {
   future: CanvasElement[][];
 
   // Save/Load
-  loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasBgImage?: string | null; canvasW?: number; canvasH?: number } | null) => void;
-  exportState: () => { els: CanvasElement[]; canvasBg: string; canvasBgImage: string | null; canvasW: number; canvasH: number };
+  loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasBgImage?: string | null; canvasBgGradient?: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW?: number; canvasH?: number } | null) => void;
+  exportState: () => { els: CanvasElement[]; canvasBg: string; canvasBgImage: string | null; canvasBgGradient: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW: number; canvasH: number };
 
   // Templates
   applyTemplate: (elements: Omit<CanvasElement, 'id'>[], bg: string) => void;
@@ -181,8 +186,8 @@ function histCounts() {
 }
 
 /** Build current snapshot from state */
-function snap(s: { els: CanvasElement[]; canvasBg: string }): CanvasSnapshot {
-  return { els: s.els, canvasBg: s.canvasBg };
+function snap(s: { els: CanvasElement[]; canvasBg: string; canvasBgGradient?: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null }): CanvasSnapshot {
+  return { els: s.els, canvasBg: s.canvasBg, canvasBgGradient: s.canvasBgGradient ?? null };
 }
 
 export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
@@ -224,6 +229,9 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // Canvas background image
   canvasBgImage: null,
+
+  // Canvas background gradient
+  canvasBgGradient: null,
 
   // Canvas size
   canvasW: CANVAS_W,
@@ -271,6 +279,10 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   setAiCount: (n) => set({ aiCount: n }),
   setLeftPanel: (p) => set((s) => ({ leftPanel: s.leftPanel === p ? 'none' : p })),
   setCanvasBgImage: (url) => set({ canvasBgImage: url }),
+  setCanvasBgGradient: (g) => {
+    get().pushHistory();
+    set({ canvasBgGradient: g, ...histCounts() });
+  },
   setShapeSub: (s) => set({ shapeSub: s }),
   setAiReferenceImage: (url) => set({ aiReferenceImage: url }),
   setLinePreview: (p) => set({ linePreview: p }),
@@ -299,6 +311,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set({
       els: prev.els,
       canvasBg: prev.canvasBg,
+      canvasBgGradient: prev.canvasBgGradient ?? null,
       selIds: [],
       ...histCounts(),
     });
@@ -311,6 +324,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set({
       els: next.els,
       canvasBg: next.canvasBg,
+      canvasBgGradient: next.canvasBgGradient ?? null,
       selIds: [],
       ...histCounts(),
     });
@@ -326,6 +340,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     set({
       els: snapshot.els,
       canvasBg: snapshot.canvasBg,
+      canvasBgGradient: snapshot.canvasBgGradient ?? null,
       selIds: [],
       ...histCounts(),
     });
@@ -698,6 +713,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       els: thumbnailData.els || [],
       canvasBg: thumbnailData.canvasBg || '#0c0c14',
       canvasBgImage: thumbnailData.canvasBgImage ?? null,
+      canvasBgGradient: thumbnailData.canvasBgGradient ?? null,
       canvasW: thumbnailData.canvasW || CANVAS_W,
       canvasH: thumbnailData.canvasH || CANVAS_H,
       selIds: [],
@@ -707,7 +723,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   exportState: () => {
     const s = get();
-    return { els: s.els, canvasBg: s.canvasBg, canvasBgImage: s.canvasBgImage, canvasW: s.canvasW, canvasH: s.canvasH };
+    return { els: s.els, canvasBg: s.canvasBg, canvasBgImage: s.canvasBgImage, canvasBgGradient: s.canvasBgGradient, canvasW: s.canvasW, canvasH: s.canvasH };
   },
 
   // ===== Templates =====

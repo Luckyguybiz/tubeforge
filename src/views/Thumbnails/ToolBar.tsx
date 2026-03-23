@@ -74,6 +74,7 @@ const PANEL_BUTTONS: ToolDef[] = [
   { id: 'aiBg', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/></svg>, labelKey: 'thumbs.panel.aiBg' },
   { id: 'aiText', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>, labelKey: 'thumbs.panel.aiText' },
   { id: 'projects', icon: TOOL_ICONS.projects, labelKey: 'thumbs.panel.projects' },
+  { id: 'background', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>, labelKey: 'thumbs.panel.background' },
 ];
 
 // Submenus
@@ -311,8 +312,8 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             tabIndex={0}
             aria-label={t('thumbs.toolbar.panelLabel') + pLabel}
             aria-pressed={active}
-            onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates')}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates'); } }}
+            onClick={() => setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLeftPanel(p.id as 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background'); } }}
             title={pLabel}
             style={{
               width: 44,
