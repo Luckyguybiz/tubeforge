@@ -721,7 +721,7 @@ function ReferralContent() {
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.sub, display: 'block', marginBottom: 10 }}>
                   {t('referral.yourLink')}
                 </label>
-                <div style={inputRowStyle}>
+                <div className="tf-referral-input-row" style={inputRowStyle}>
                   <input
                     type="text"
                     readOnly
@@ -758,7 +758,7 @@ function ReferralContent() {
                 </div>
 
                 {/* Referral code badge with copy */}
-                <div style={{
+                <div className="tf-referral-code-row" style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,

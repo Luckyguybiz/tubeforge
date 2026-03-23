@@ -498,7 +498,7 @@ export default function OnboardingPage() {
       <div style={{ fontSize: 56, marginBottom: 16 }} role="img" aria-label="celebration">
         {'\uD83C\uDF89'}
       </div>
-      <h1 style={{ fontSize: 40, fontWeight: 700, color: TEXT, margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+      <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
         Welcome to TubeForge!
       </h1>
       <p style={{ fontSize: 16, color: SUB, margin: '0 0 32px', lineHeight: 1.5 }}>
@@ -507,6 +507,7 @@ export default function OnboardingPage() {
 
       {/* Offer card */}
       <div
+        className="tf-onboarding-offer-card"
         style={{
           background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))',
           border: `1.5px solid ${ACCENT}`,
@@ -555,6 +556,7 @@ export default function OnboardingPage() {
         {/* Countdown */}
         {countdown > 0 && (
           <div
+            className="tf-onboarding-countdown"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -586,6 +588,7 @@ export default function OnboardingPage() {
 
         <button
           type="button"
+          className="tf-onboarding-offer-cta"
           onClick={handleClaimOffer}
           disabled={countdown <= 0}
           style={{
@@ -612,6 +615,7 @@ export default function OnboardingPage() {
       {/* Skip link */}
       <button
         type="button"
+        className="tf-onboarding-offer-skip"
         onClick={handleSkipOffer}
         style={{
           background: 'none',
@@ -802,15 +806,6 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {/* Responsive styles */}
-      <style>{`
-        @media (max-width: 640px) {
-          h1 { font-size: 28px !important; }
-        }
-        @media (max-width: 480px) {
-          h1 { font-size: 24px !important; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -644,6 +644,7 @@ export default function LandingPage() {
           .mobile-menu-btn { display: block !important; }
           .footer-grid { grid-template-columns: 1fr 1fr !important; }
           .sticky-mobile-cta { display: block !important; }
+          #features, #how-it-works, #tools, #pricing, #faq { padding-left: 16px !important; padding-right: 16px !important; }
         }
         @media (min-width: 769px) and (max-width: 1024px) {
           .features-grid, .testimonials-grid { grid-template-columns: repeat(2, 1fr) !important; }

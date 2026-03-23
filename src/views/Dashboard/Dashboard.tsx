@@ -199,7 +199,7 @@ function TopChoiceCard({
   return (
     <Link
       href={href}
-      className="tf-top-choice-card"
+      className="tf-top-choice-card tf-top-choice-item"
       style={{
         width: 220,
         flexShrink: 0,
@@ -390,7 +390,7 @@ export function Dashboard() {
       {/* ── Welcome header ────────────────────────── */}
       <div style={{ marginBottom: 24 }}>
         <h1 className="tf-dash-heading" style={{
-          fontSize: 26, fontWeight: 600, margin: '0 0 4px',
+          fontSize: 'clamp(20px, 4vw, 26px)', fontWeight: 600, margin: '0 0 4px',
           letterSpacing: '-.02em', lineHeight: 1.2, color: C.text,
         }}>
           {profile.isLoading
@@ -410,7 +410,7 @@ export function Dashboard() {
       <div style={{
         background: C.surface, borderRadius: 16, padding: 32,
         marginBottom: 32, display: 'flex', gap: 32, alignItems: 'center',
-        overflow: 'hidden',
+        overflow: 'hidden', boxSizing: 'border-box',
       }} className="tf-dash-showcase">
         {/* Left: headline + CTA */}
         <div style={{ flexShrink: 0, minWidth: 200 }} className="tf-dash-showcase-left">
@@ -451,7 +451,7 @@ export function Dashboard() {
             { href: '/tools/youtube-downloader', title: 'Video Analyzer', gradientFrom: '#14b8a6', gradientTo: '#22d3ee', badge: 'FREE', badgeColor: '#22c55e',
               icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg> },
           ] as const).map((product) => (
-            <Link key={product.href} href={product.href} className="tf-dash-showcase-card" style={{
+            <Link key={product.href} href={product.href} className="tf-dash-showcase-card tf-dash-product-card" style={{
               width: 180, flexShrink: 0, scrollSnapAlign: 'start',
               background: C.card, border: `1px solid ${C.border}`,
               borderRadius: 14, overflow: 'hidden',
@@ -628,7 +628,7 @@ export function Dashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 14,
-                  padding: '14px 18px',
+                  padding: '14px 16px',
                   background: C.card,
                   border: `1px solid ${C.border}`,
                   borderRadius: 14,

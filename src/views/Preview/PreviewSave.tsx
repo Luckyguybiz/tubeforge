@@ -1275,7 +1275,7 @@ export function PreviewSave({ projectId }: { projectId: string | null }) {
           {/* ── Platform Presets ────────────────────── */}
           <div style={cardPadded}>
             <div style={sectionTitle}>{t('preview.platformPresets')}</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div className="tf-publish-presets" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {PLATFORM_PRESETS.map((preset) => {
                 const isActive = selectedPreset === preset.id;
                 return (

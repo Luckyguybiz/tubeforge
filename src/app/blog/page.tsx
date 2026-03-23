@@ -97,7 +97,7 @@ export default function BlogIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_JSON_LD) }}
       />
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '48px 24px 96px' }}>
+      <div className="blog-container" style={{ maxWidth: 980, margin: '0 auto', padding: '48px 24px 96px' }}>
         {/* Back to home */}
         <Link
           href="/"
@@ -119,7 +119,7 @@ export default function BlogIndexPage() {
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1
             style={{
-              fontSize: 40,
+              fontSize: 'clamp(28px, 6vw, 40px)',
               fontWeight: 600,
               letterSpacing: '-0.02em',
               color: '#ffffff',
@@ -144,6 +144,7 @@ export default function BlogIndexPage() {
 
         {/* Category Filter Pills */}
         <div
+          className="blog-category-pills"
           style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -177,6 +178,7 @@ export default function BlogIndexPage() {
 
         {/* Articles Grid */}
         <div
+          className="blog-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 440px), 1fr))',
@@ -307,7 +309,7 @@ export default function BlogIndexPage() {
         </div>
       </div>
 
-      {/* Hover styles */}
+      {/* Hover + mobile styles */}
       <style>{`
         .blog-card:hover {
           box-shadow: 0 4px 24px rgba(0,0,0,.3);
@@ -319,6 +321,26 @@ export default function BlogIndexPage() {
         }
         main a:hover {
           text-decoration: none;
+        }
+        @media (max-width: 768px) {
+          .blog-container {
+            padding: 32px 16px 64px !important;
+          }
+          .blog-category-pills {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            justify-content: flex-start !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+          }
+          .blog-category-pills::-webkit-scrollbar { display: none; }
+          .blog-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .blog-card {
+            padding: 24px 20px !important;
+          }
         }
       `}</style>
     </main>

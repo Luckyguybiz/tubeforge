@@ -322,6 +322,7 @@ export function KeywordsPage() {
       >
         {/* ── Left panel: Search results ──────────────────────────── */}
         <div
+          className="tf-keywords-left-panel"
           style={{
             background: C.card,
             border: `1px solid ${C.border}`,
@@ -361,6 +362,7 @@ export function KeywordsPage() {
 
         {/* ── Right panel: Trending ───────────────────────────────── */}
         <div
+          className="tf-keywords-right-panel"
           style={{
             background: C.card,
             border: `1px solid ${C.border}`,
@@ -522,6 +524,7 @@ export function KeywordsPage() {
           {/* PRO upsell */}
           {isFree && trendingKws.length > 5 && (
             <div
+              className="tf-keywords-upsell"
               style={{
                 marginTop: 16,
                 padding: '14px 16px',
@@ -622,7 +625,7 @@ function OverviewTab({
             {trendIcon(mk.trend)} {mk.trend}
           </span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div className="tf-keywords-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
           <StatBlock label={t('keywords.stat.volume')} value={fmtVol(mk.searchVolume)} C={C} />
           <StatBlock label={t('keywords.stat.competition')} value={mk.competition} color={compColor(mk.competition)} C={C} />
           <StatBlock label={t('keywords.stat.cpc')} value={`$${mk.cpc.toFixed(2)}`} C={C} />

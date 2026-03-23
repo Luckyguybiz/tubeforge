@@ -114,7 +114,7 @@ export default function GalleryPage() {
 
         {/* Empty state */}
         {!isLoading && allItems.length === 0 && (
-          <div style={{
+          <div className="tf-gallery-empty" style={{
             textAlign: 'center', padding: '80px 20px',
           }}>
             <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }}>🎬</div>
@@ -240,10 +240,11 @@ export default function GalleryPage() {
 
         {/* Load more */}
         {hasNextPage && (
-          <div style={{ textAlign: 'center', marginTop: 28 }}>
+          <div className="tf-gallery-loadmore" style={{ textAlign: 'center', marginTop: 28 }}>
             <button
               onClick={handleLoadMore}
               disabled={isFetchingNextPage}
+              className="tf-gallery-loadmore-btn"
               style={{
                 padding: '10px 28px', borderRadius: 10,
                 border: `1px solid ${C.border}`,

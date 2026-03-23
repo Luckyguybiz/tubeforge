@@ -656,9 +656,9 @@ const ToolCard = memo(function ToolCard({
         filter: tool.available ? 'none' : 'grayscale(0.6)',
       }}
     >
-      {/* Gradient visual area with animated background */}
-      <div style={{
-        height: 120,
+      {/* Gradient visual area */}
+      <div className="tf-tools-card-gradient" style={{
+        height: 100,
         background: tool.available
           ? `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`
           : `linear-gradient(135deg, ${C.border}, ${C.surface})`,
@@ -666,53 +666,18 @@ const ToolCard = memo(function ToolCard({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        overflow: 'hidden',
       }}>
-        {/* Animated background shapes */}
-        {tool.available && (
-          <>
-            <div style={{
-              position: 'absolute', width: 80, height: 80, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.06)',
-              top: -20, right: -10,
-              animation: hovered ? 'float 3s ease-in-out infinite' : 'none',
-            }} />
-            <div style={{
-              position: 'absolute', width: 40, height: 40, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.04)',
-              bottom: -10, left: '20%',
-              animation: hovered ? 'float 4s ease-in-out infinite reverse' : 'none',
-            }} />
-            <div style={{
-              position: 'absolute', width: 60, height: 60, borderRadius: 12,
-              background: 'rgba(255,255,255,0.03)',
-              top: '30%', left: -15, transform: 'rotate(45deg)',
-              animation: hovered ? 'float 3.5s ease-in-out infinite' : 'none',
-            }} />
-            {/* Scan line on hover */}
-            {hovered && (
-              <div style={{
-                position: 'absolute', top: 0, bottom: 0, width: 2,
-                background: 'rgba(255,255,255,0.4)',
-                boxShadow: '0 0 8px 2px rgba(255,255,255,0.2)',
-                animation: 'scanLine 2s ease-in-out infinite',
-              }} />
-            )}
-          </>
-        )}
-        {/* Centered icon */}
+        {/* Centered icon in gradient */}
         <div style={{
           width: 48,
           height: 48,
           borderRadius: '50%',
           background: 'rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'transform .3s ease',
-          transform: hovered && tool.available ? 'scale(1.15)' : 'none',
-          zIndex: 1,
+          transition: 'transform .2s',
+          transform: hovered && tool.available ? 'scale(1.1)' : 'none',
         }}>
           {iconFn ? iconFn(tool.available ? '#fff' : C.dim) : null}
         </div>
@@ -811,11 +776,13 @@ const ToolCard = memo(function ToolCard({
       {/* Bottom action bar — only for available tools */}
       {tool.available && (
         <div style={{
-          padding: '10px 16px',
+          padding: '12px 16px',
+          minHeight: 44,
           borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          boxSizing: 'border-box',
         }}>
           <span style={{
             display: 'inline-flex',
@@ -861,11 +828,13 @@ const ToolCard = memo(function ToolCard({
       {/* Bottom bar — coming soon tools */}
       {!tool.available && (
         <div style={{
-          padding: '10px 16px',
+          padding: '12px 16px',
+          minHeight: 44,
           borderTop: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          boxSizing: 'border-box',
         }}>
           <span style={{
             fontSize: 11,
@@ -1013,7 +982,7 @@ export function ToolsHub() {
       </div>
 
       {/* ── Search Bar — centered pill ──────────────────── */}
-      <div style={{
+      <div className="tf-tools-search-wrap" style={{
         maxWidth: 560,
         width: '100%',
         margin: '0 auto 12px',
@@ -1032,6 +1001,7 @@ export function ToolsHub() {
         </div>
         <input
           ref={searchRef}
+          className="tf-tools-search-input"
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -1085,7 +1055,7 @@ export function ToolsHub() {
       </div>
 
       {/* ── Counters ──────────────────────────────────────── */}
-      <div style={{
+      <div className="tf-tools-counters" style={{
         textAlign: 'center',
         marginBottom: 20,
         fontSize: 13,

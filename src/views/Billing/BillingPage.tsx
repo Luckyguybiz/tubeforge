@@ -319,10 +319,28 @@ export function BillingPage() {
           .tf-pricing-subheading{font-size:15px!important}
           .tf-compare-table{font-size:12px!important}
           .tf-faq-section{padding:0 8px!important}
+          .tf-pricing-card{max-width:100%!important}
+          .tf-pricing-card .tf-card-inner{padding:28px 20px 24px!important}
+          .tf-pricing-grid .tf-pro-glow-wrap{
+            animation:none!important;
+            box-shadow:0 0 12px ${accentGlow}!important;
+          }
+          .tf-billing-toggle-wrap{width:100%!important;display:flex!important;justify-content:center!important}
+          .tf-feature-check{width:18px!important;height:18px!important;border-radius:5px!important}
+          .tf-feature-check svg{width:14px!important;height:14px!important}
+          .tf-faq-btn{padding:16px!important}
+          .tf-faq-answer{padding-left:16px!important;padding-right:16px!important}
+          .tf-invoice-scroll{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
+          .tf-invoice-scroll::-webkit-scrollbar{height:4px}
+          .tf-invoice-inner{min-width:500px!important}
+          .tf-guarantee-badge{justify-content:center!important}
+          .tf-plan-cta-btn{width:100%!important}
+          .tf-save-badge{position:static!important;margin-left:8px!important}
         }
         @media(max-width:480px){
           .tf-pricing-inner{padding:16px 10px 32px!important}
           .tf-pricing-heading{font-size:24px!important}
+          .tf-pricing-card .tf-card-inner{padding:24px 16px 20px!important}
         }
       `}</style>
 
@@ -519,7 +537,7 @@ export function BillingPage() {
 
           {/* ── Monthly / Annual toggle with sliding pill ── */}
           <div
-            className="tf-billing-toggle"
+            className="tf-billing-toggle tf-billing-toggle-wrap"
             ref={toggleContainerRef}
             style={{
               display: 'inline-flex',
@@ -680,7 +698,7 @@ export function BillingPage() {
                 )}
 
                 {/* Card content */}
-                <div style={{ padding: '36px 32px 32px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div className="tf-card-inner" style={{ padding: '36px 32px 32px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {/* Plan name */}
                   <div style={{
                     fontSize: 20,
@@ -741,7 +759,7 @@ export function BillingPage() {
                           {plan.priceLabel}{t('billing.perMonth')}
                         </span>
                         {/* Save 20% pill badge */}
-                        <span style={{
+                        <span className="tf-save-badge" style={{
                           fontSize: 11,
                           fontWeight: 700,
                           color: '#fff',
@@ -787,7 +805,7 @@ export function BillingPage() {
                           lineHeight: 1.4,
                         }}
                       >
-                        <span style={{
+                        <span className="tf-feature-check" style={{
                           flexShrink: 0,
                           display: 'flex',
                           alignItems: 'center',
@@ -891,7 +909,7 @@ export function BillingPage() {
 
                   {/* Money-back guarantee badge below CTA */}
                   {plan.price > 0 && (
-                    <div style={{
+                    <div className="tf-guarantee-badge" style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -913,6 +931,7 @@ export function BillingPage() {
               return (
                 <div
                   key={plan.id}
+                  className="tf-pro-glow-wrap"
                   style={{
                     borderRadius: 20,
                     padding: 2,
@@ -1103,6 +1122,7 @@ export function BillingPage() {
                   }}
                 >
                   <button
+                    className="tf-faq-btn"
                     onClick={() => setOpenFaq(isOpen ? null : idx)}
                     style={{
                       width: '100%',
@@ -1131,6 +1151,7 @@ export function BillingPage() {
 
                   {/* Expandable answer */}
                   <div
+                    className="tf-faq-answer"
                     style={{
                       maxHeight: isOpen ? 200 : 0,
                       overflow: 'hidden',
@@ -1209,6 +1230,7 @@ export function BillingPage() {
               <p style={{ fontSize: 14, color: C.sub, textAlign: 'center' }}>{t('billing.noInvoices') || 'No invoices yet.'}</p>
             ) : (
               <div
+                className="tf-invoice-scroll"
                 style={{
                   borderRadius: 16,
                   border: `1px solid ${cardBorder}`,

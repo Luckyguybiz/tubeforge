@@ -212,7 +212,7 @@ export default function StatusPage() {
           <h1 style={{ fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
             {isLoading ? 'Checking systems...' : overallOk ? 'All Systems Operational' : 'Issues Detected'}
           </h1>
-          <p style={{ color: C.sub, fontSize: 14, marginTop: 8 }}>
+          <p className="tf-status-refresh" style={{ color: C.sub, fontSize: 14, marginTop: 8 }}>
             {lastChecked
               ? `Last checked: ${lastChecked.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
               : 'Checking...'}
@@ -228,6 +228,7 @@ export default function StatusPage() {
             return (
               <div
                 key={service.name}
+                className="tf-status-service"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -306,6 +307,7 @@ export default function StatusPage() {
 
         {/* Footer note */}
         <div
+          className="tf-status-footer"
           style={{
             marginTop: 32,
             padding: '20px 24px',

@@ -157,11 +157,11 @@ export default function ContactPage() {
         </Link>
       </header>
 
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '56px 24px 80px' }}>
+      <div className="contact-container" style={{ maxWidth: 980, margin: '0 auto', padding: '56px 24px 80px' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <h1
             style={{
-              fontSize: 40,
+              fontSize: 'clamp(28px, 6vw, 40px)',
               fontWeight: 600,
               margin: 0,
               letterSpacing: '-0.02em',
@@ -248,6 +248,7 @@ export default function ContactPage() {
           ) : (
           <form
             onSubmit={handleSubmit}
+            className="contact-form"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -512,6 +513,13 @@ export default function ContactPage() {
         @media (max-width: 768px) {
           .tf-contact-grid {
             grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+          .contact-container {
+            padding: 32px 16px 64px !important;
+          }
+          .contact-form {
+            max-width: 100% !important;
           }
         }
         a:hover {

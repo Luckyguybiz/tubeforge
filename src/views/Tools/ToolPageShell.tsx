@@ -55,10 +55,10 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
           Back to Tools
         </button>
 
-        <div style={{ flex: 1 }} />
+        <div className="tf-tool-header-spacer" style={{ flex: 1 }} />
 
         {/* Tool icon — 40px accent circle */}
-        <div style={{
+        <div className="tf-tool-header-icon" style={{
           width: 40, height: 40, borderRadius: '50%',
           background: `${gradient[0]}20`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -68,7 +68,7 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
             <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
           </svg>
         </div>
-        <div style={{ minWidth: 0 }}>
+        <div className="tf-tool-header-info" style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <h1 className="tf-tool-title" style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0, wordBreak: 'break-word' }}>{title}</h1>
             {badge && (
@@ -138,11 +138,13 @@ export function UploadArea({ C, accept, onFile, label }: {
   const t = useLocaleStore((s) => s.t);
   return (
     <label
+      className="tf-tool-upload-area"
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         padding: '48px 24px', borderRadius: 16,
         border: `2px dashed ${C.border}`, background: C.surface,
         cursor: 'pointer', transition: 'all 0.2s ease', textAlign: 'center',
+        width: '100%', boxSizing: 'border-box',
       }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.dim; e.currentTarget.style.background = C.surface; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }}
@@ -172,6 +174,7 @@ export function ActionButton({ label, gradient, onClick, disabled, loading }: {
   const AB = useThemeStore((s) => s.theme);
   return (
     <button
+      className="tf-tool-action-btn"
       onClick={onClick}
       disabled={disabled || loading}
       aria-busy={loading || undefined}

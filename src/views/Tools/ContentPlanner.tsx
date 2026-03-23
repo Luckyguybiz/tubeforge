@@ -425,7 +425,7 @@ export function ContentPlanner() {
       gradient={GRADIENT}
     >
       {/* ── Stats Bar ────────────────────────────────────── */}
-      <div style={{
+      <div className="tf-planner-stats" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
         gap: 12,
@@ -464,7 +464,7 @@ export function ContentPlanner() {
       </div>
 
       {/* ── Tabs ─────────────────────────────────────────── */}
-      <div style={{
+      <div className="tf-planner-tabs" style={{
         display: 'flex',
         gap: 4,
         marginBottom: 24,
@@ -741,7 +741,7 @@ export function ContentPlanner() {
       {activeTab === 'Content List' && (
         <div>
           {/* Filter Bar */}
-          <div style={{
+          <div className="tf-planner-filter-bar" style={{
             display: 'flex', gap: 12, marginBottom: 20,
             flexWrap: 'wrap', alignItems: 'center',
           }}>
@@ -803,7 +803,7 @@ export function ContentPlanner() {
             </div>
 
             {/* Sort Dropdown */}
-            <div style={{ marginLeft: 'auto', flex: '0 0 auto' }}>
+            <div className="tf-planner-sort" style={{ marginLeft: 'auto', flex: '0 0 auto' }}>
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value as SortOption)}
@@ -840,7 +840,7 @@ export function ContentPlanner() {
               </p>
             </div>
           ) : (
-            <div style={{
+            <div className="tf-planner-content-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
               gap: 12,
@@ -953,7 +953,7 @@ export function ContentPlanner() {
             <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>
               {t('contentPlanner.quickAddIdea')}
             </h3>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="tf-planner-ideas-add" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
               <div style={{ flex: '1 1 250px' }}>
                 <label style={labelStyle}>{t('contentPlanner.idea')}</label>
                 <input

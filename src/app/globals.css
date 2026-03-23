@@ -277,10 +277,25 @@ img {
 
 /* ── Dashboard responsive overrides ──────────────────── */
 
+@media (max-width: 960px) {
+  .tf-top-choice-scroll {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+  }
+  .tf-top-choice-item {
+    width: calc(50% - 8px) !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+  }
+}
+
 @media (max-width: 768px) {
+  .tf-dash-container {
+    padding: 0 16px !important;
+  }
   .tf-dash-showcase {
     flex-direction: column !important;
-    padding: 24px !important;
+    padding: 20px 16px !important;
     gap: 20px !important;
   }
   .tf-dash-showcase-left {
@@ -290,11 +305,28 @@ img {
   .tf-dash-showcase-left h2 {
     font-size: 22px !important;
   }
+  .tf-dash-product-card {
+    width: 160px !important;
+  }
+  .tf-dash-product-card > div:first-child {
+    height: 110px !important;
+  }
 }
 
 @media (max-width: 640px) {
   .tf-dash-heading {
-    font-size: 22px !important;
+    font-size: 20px !important;
+  }
+  .tf-dash-showcase {
+    padding: 16px !important;
+  }
+  .tf-top-choice-scroll {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+  }
+  .tf-top-choice-item {
+    width: 180px !important;
+    flex-shrink: 0 !important;
   }
   .tf-history-grid {
     grid-template-columns: 1fr !important;
@@ -305,7 +337,8 @@ img {
 
 @media (max-width: 768px) {
   .tf-analytics-container {
-    padding: 16px 12px !important;
+    padding: 16px !important;
+    gap: 16px !important;
   }
   .tf-analytics-tabs {
     width: 100% !important;
@@ -313,9 +346,26 @@ img {
   .tf-analytics-tabs button {
     flex: 1 !important;
     justify-content: center !important;
+    padding: 10px 12px !important;
   }
   .tf-analytics-content {
     border-radius: 12px !important;
+    min-height: 300px !important;
+  }
+  /* Data tables: horizontal scroll */
+  .tf-shorts-table-wrap,
+  .tf-tiktok-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tf-shorts-table-wrap table,
+  .tf-tiktok-table-wrap table {
+    min-width: 600px !important;
+  }
+  /* Filters/dropdowns inside analytics: full-width */
+  .tf-analytics-content select {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 }
 
@@ -343,10 +393,37 @@ img {
     width: 100% !important;
   }
   .tf-referral-qr {
+    flex-direction: column !important;
+    align-items: center !important;
     text-align: center !important;
+  }
+  .tf-referral-qr > div:first-child {
+    width: 100px !important;
+    height: 100px !important;
   }
   .tf-referral-rewards .tf-referral-reward-card {
     width: 100% !important;
+  }
+  .tf-referral-code-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .tf-referral-code-row > div,
+  .tf-referral-code-row > button {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  .tf-referral-input-row {
+    flex-direction: column !important;
+  }
+  .tf-referral-input-row > input {
+    width: 100% !important;
+  }
+  .tf-referral-input-row > button {
+    width: 100% !important;
+  }
+  .tf-referral-left h1 {
+    font-size: 26px !important;
   }
 }
 
@@ -409,6 +486,47 @@ img {
   .tf-team-invite-form select {
     width: 100% !important;
   }
+  .tf-team-invite-form > div {
+    flex-direction: column !important;
+  }
+  .tf-team-invite-form div[style*="flex: 0 0 140px"] {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+  .tf-team-invite-form div[style*="flex: 1 1 220px"] {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .tf-team-overview {
+    flex-direction: column !important;
+  }
+  .tf-team-overview > div {
+    border-right: none !important;
+    padding: 8px 0 !important;
+    width: 100% !important;
+    flex: unset !important;
+  }
+  .tf-team-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .tf-team-header-btns {
+    width: 100% !important;
+  }
+  .tf-team-header-btns > button {
+    flex: 1 !important;
+  }
+  .tf-team-member-table {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tf-team-upgrade-prompt {
+    padding: 32px 20px !important;
+  }
+  .tf-team-upgrade-prompt h2 {
+    font-size: 20px !important;
+  }
 }
 
 /* ── Admin page ──────────────────────────────── */
@@ -432,6 +550,23 @@ img {
   .tf-admin-stat-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
+  .tf-admin-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .tf-admin-audit-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tf-admin-email-form {
+    max-width: 100% !important;
+  }
+  .tf-admin-email-form input,
+  .tf-admin-email-form select {
+    width: 100% !important;
+  }
+  .tf-admin-recent-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 @media (max-width: 480px) {
   .tf-admin-stat-grid {
@@ -448,6 +583,8 @@ img {
   .tf-publish-tabs button {
     flex: 1 !important;
     justify-content: center !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
   }
   .tf-publish-content {
     width: 100% !important;
@@ -456,6 +593,26 @@ img {
     aspect-ratio: 16/9 !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+  /* SEO tab: inputs full-width */
+  .tf-publish-content input,
+  .tf-publish-content textarea,
+  .tf-publish-content select {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Platform presets: horizontal scroll */
+  .tf-publish-presets {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+    padding-bottom: 4px !important;
+  }
+  .tf-publish-presets::-webkit-scrollbar { display: none; }
+  .tf-publish-presets button {
+    flex-shrink: 0 !important;
   }
 }
 
@@ -467,9 +624,11 @@ img {
   }
   .tf-onboarding-quiz-grid {
     grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
   .tf-onboarding-tools-grid {
     grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
   }
   .tf-onboarding-dots {
     justify-content: center !important;
@@ -478,24 +637,48 @@ img {
     width: 100% !important;
   }
   .tf-onboarding-heading {
-    font-size: 28px !important;
+    font-size: clamp(20px, 5vw, 40px) !important;
   }
   .tf-onboarding-logo {
     left: 16px !important;
   }
   .tf-onboarding-skip {
     right: 16px !important;
+    display: block !important;
+    visibility: visible !important;
+    text-align: center !important;
   }
   .tf-onboarding-back-btn {
     left: 16px !important;
   }
+  /* Offer card: full-width, centered */
+  .tf-onboarding-offer-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 28px 20px !important;
+  }
+  /* Countdown: centered */
+  .tf-onboarding-countdown {
+    justify-content: center !important;
+  }
+  /* CTA button: full-width */
+  .tf-onboarding-offer-cta {
+    width: 100% !important;
+  }
+  /* Skip link on offer: visible, centered */
+  .tf-onboarding-offer-skip {
+    display: block !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  /* Progress bar: already full-width via fixed positioning */
 }
 @media (max-width: 480px) {
   .tf-onboarding-tools-grid {
     grid-template-columns: 1fr !important;
   }
   .tf-onboarding-heading {
-    font-size: 24px !important;
+    font-size: clamp(20px, 5vw, 28px) !important;
   }
 }
 
@@ -508,11 +691,28 @@ img {
   }
   .tf-tool-header {
     padding: 12px 12px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+  .tf-tool-header-info {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    order: 3 !important;
+    margin-top: 8px !important;
+  }
+  .tf-tool-header-icon {
+    order: 2 !important;
   }
   .tf-tool-back-btn {
     padding: 0 6px !important;
     font-size: 12px !important;
     height: 32px !important;
+    order: 1 !important;
+  }
+  .tf-tool-header-spacer {
+    display: none !important;
   }
   .tf-tool-title {
     font-size: 18px !important;
@@ -523,37 +723,166 @@ img {
   .tf-tool-input-area {
     width: 100% !important;
   }
+  /* ActionButton: full-width on mobile */
+  .tf-tool-action-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  /* Upload areas: full-width */
+  .tf-tool-upload-area {
+    width: 100% !important;
+  }
+}
+
+/* ── Individual Tool Pages — Mobile ─────────── */
+
+@media (max-width: 768px) {
+  /* ImageGenerator: prompt area + results stack vertically */
+  .tf-imggen-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .tf-imggen-history-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  /* SubtitleEditor: entry rows stack */
+  .tf-subedit-entry {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .tf-subedit-entry-num {
+    align-self: flex-start !important;
+  }
+  .tf-subedit-timestamps {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .tf-subedit-timestamps input {
+    width: 100% !important;
+    flex: 1 !important;
+  }
+  .tf-subedit-text {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .tf-subedit-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .tf-subedit-toolbar-spacer {
+    display: none !important;
+  }
+  .tf-subedit-delete-btn {
+    align-self: flex-end !important;
+  }
+  /* VoiceoverGenerator: action buttons full-width */
+  .tf-voice-actions {
+    flex-direction: column !important;
+  }
+  .tf-voice-actions > * {
+    width: 100% !important;
+  }
+  /* BackgroundRemover: action buttons stack */
+  .tf-bgremover-actions {
+    flex-direction: column !important;
+  }
+  .tf-bgremover-actions > * {
+    width: 100% !important;
+  }
+  /* ContentPlanner: stats grid stack on small */
+  .tf-planner-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .tf-planner-tabs {
+    scrollbar-width: none;
+  }
+  .tf-planner-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .tf-planner-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .tf-planner-filter-bar > div {
+    width: 100% !important;
+  }
+  .tf-planner-sort {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  .tf-planner-sort select {
+    width: 100% !important;
+  }
+  .tf-planner-ideas-add {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .tf-planner-ideas-add > div {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+  }
+  .tf-planner-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .tf-planner-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .tf-imggen-action-btns {
+    flex-direction: column !important;
+  }
+  .tf-imggen-action-btns button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    MOBILE RESPONSIVE — Batch 1A (6 core app pages)
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ── 1. AI Thumbnails ─────────────────────────────────────────── */
+/* ── 1. AI Thumbnails — pixel-perfect mobile ─────────────────── */
+
+/* 768px: iPad */
 @media (max-width: 768px) {
+  /* Layout: two-panel → single column */
   .tf-aithumbs-layout {
     flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
   .tf-aithumbs-left {
     width: 100% !important;
     max-height: none !important;
     border-right: none !important;
+    flex-shrink: 0 !important;
+    overflow-y: visible !important;
   }
   .tf-aithumbs-right {
     width: 100% !important;
-    flex: 1 !important;
+    flex: 1 1 auto !important;
+    overflow: visible !important;
   }
+
+  /* Sticky generate button */
   .tf-aithumbs-generate-wrap {
     position: sticky !important;
     bottom: 0 !important;
     z-index: 20 !important;
-    padding-top: 12px !important;
+    padding: 12px 0 0 !important;
   }
+
+  /* Style cards: 3-col grid on tablet */
   .tf-aithumbs-styles {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 6px !important;
   }
+
+  /* Tab pills: horizontal scroll, hidden scrollbar */
   .tf-aithumbs-tabs {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
@@ -561,6 +890,239 @@ img {
     scrollbar-width: none;
   }
   .tf-aithumbs-tabs::-webkit-scrollbar { display: none; }
+
+  /* Prompt textarea: full-width, min-height 80px */
+  .tf-aithumbs-prompt {
+    width: 100% !important;
+    min-height: 80px !important;
+    font-size: 16px !important;
+  }
+
+  /* All inputs: 48px height, 16px font (prevents iOS zoom) */
+  .tf-aithumbs-left input,
+  .tf-aithumbs-left select {
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  /* History thumbnails: 2-col grid */
+  .tf-aithumbs-history-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* CTR section: full-width, stacked */
+  .tf-aithumbs-ctr {
+    padding: 0 12px 12px !important;
+  }
+
+  /* Action pills: wrap to multiple rows */
+  .tf-aithumbs-actions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* History strip: horizontal scroll */
+  .tf-aithumbs-history-row {
+    display: flex !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tf-aithumbs-history-row::-webkit-scrollbar { display: none; }
+
+  /* Steps grid → stack */
+  .tf-aithumbs-steps {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Premium banner: stack on mobile */
+  .tf-aithumbs-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+
+  /* Top bar: compact */
+  .tf-aithumbs-topbar {
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+}
+
+/* 375px: iPhone — tighter styles */
+@media (max-width: 480px) {
+  .tf-aithumbs-left {
+    padding: 14px 12px !important;
+    gap: 10px !important;
+  }
+  .tf-aithumbs-right {
+    padding: 14px 12px !important;
+  }
+  .tf-aithumbs-styles {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .tf-aithumbs-topbar {
+    height: 48px !important;
+    padding: 0 10px !important;
+  }
+  .tf-aithumbs-topbar span {
+    font-size: 13px !important;
+  }
+}
+
+/* ── 2. Video Editor — pixel-perfect mobile ──────────────────── */
+
+@media (max-width: 768px) {
+  /* Layout: two-panel → single column */
+  .tf-editor-layout {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .tf-editor-left {
+    width: 100% !important;
+    max-height: none !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0 !important;
+    overflow-y: visible !important;
+    padding: 16px !important;
+  }
+  .tf-editor-right {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    overflow: visible !important;
+    padding: 16px !important;
+  }
+
+  /* Top bar: compact, hide text labels on tight screens */
+  .tf-editor-topbar {
+    padding: 0 12px !important;
+    gap: 6px !important;
+  }
+  .tf-editor-title-label {
+    font-size: 13px !important;
+  }
+  /* Compact undo/redo */
+  .tf-editor-undo-redo {
+    gap: 1px !important;
+  }
+  .tf-editor-undo-redo button {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  /* Style preview card: full-width */
+  .tf-editor-style-card {
+    width: 100% !important;
+  }
+
+  /* Frame uploads: side-by-side (50% each) */
+  .tf-editor-frames {
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .tf-editor-frames > div {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  /* Prompt: full-width, larger */
+  .tf-editor-prompt {
+    width: 100% !important;
+    min-height: 80px !important;
+    font-size: 16px !important;
+  }
+
+  /* All inputs: 48px height, 16px font */
+  .tf-editor-left input,
+  .tf-editor-left select {
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  /* Generate button: full-width, sticky bottom */
+  .tf-editor-gen-btn {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 20 !important;
+    width: 100% !important;
+  }
+
+  /* Settings: compact range inputs */
+  .tf-editor-left input[type="range"] {
+    height: 8px !important;
+    min-height: auto !important;
+  }
+
+  /* Right panel tabs: horizontal scroll */
+  .tf-editor-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+  }
+  .tf-editor-tabs::-webkit-scrollbar { display: none; }
+
+  /* How it works steps: stack */
+  .tf-editor-steps {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Styles gallery panel */
+  .tf-editor-styles-panel {
+    padding: 16px !important;
+  }
+  .tf-editor-style-filters {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none;
+  }
+  .tf-editor-style-filters::-webkit-scrollbar { display: none; }
+  /* Style grid: 2 columns on tablet */
+  .tf-editor-style-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Premium banner: stack */
+  .tf-editor-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+}
+
+/* 375px: iPhone — tighter */
+@media (max-width: 480px) {
+  .tf-editor-left {
+    padding: 12px 10px !important;
+    gap: 10px !important;
+  }
+  .tf-editor-right {
+    padding: 12px 10px !important;
+  }
+  .tf-editor-topbar {
+    height: 48px !important;
+    padding: 0 8px !important;
+  }
+  .tf-editor-title-label {
+    font-size: 12px !important;
+  }
+  /* Hide save status on tiny screens */
+  .tf-editor-save-status {
+    display: none !important;
+  }
+  /* Style grid: 2 columns tighter */
+  .tf-editor-style-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 /* ── 3. Billing ───────────────────────────────────────────────── */
@@ -584,6 +1146,17 @@ img {
   .tf-billing-faq {
     width: 100% !important;
     max-width: 100% !important;
+    padding: 0 16px !important;
+    margin-bottom: 40px !important;
+    box-sizing: border-box !important;
+  }
+  .tf-invoice-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .tf-invoice-scroll::-webkit-scrollbar { height: 4px; }
+  .tf-guarantee-badge {
+    justify-content: center !important;
   }
 }
 @media (max-width: 480px) {
@@ -591,6 +1164,9 @@ img {
     width: 100% !important;
     min-height: 48px !important;
     font-size: 15px !important;
+  }
+  .tf-billing-faq {
+    padding: 0 !important;
   }
 }
 
@@ -607,8 +1183,69 @@ img {
   .tf-settings-profile-fields {
     width: 100% !important;
   }
+  .tf-settings-profile-fields > div {
+    flex-direction: column !important;
+  }
+  .tf-settings-profile-fields > div > div {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
   .tf-settings-danger-btn {
     width: 100% !important;
+  }
+  /* Theme toggle: full-width segmented control */
+  .tf-settings-theme-toggle {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .tf-settings-theme-toggle button {
+    flex: 1 !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    justify-content: center !important;
+  }
+  /* Language buttons: 2×2 grid */
+  .tf-settings-lang-toggle {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    gap: 4px !important;
+  }
+  .tf-settings-lang-toggle button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  /* Email notification toggle rows: full-width */
+  .tf-settings-email-row {
+    flex-direction: row !important;
+    width: 100% !important;
+  }
+  .tf-settings-email-row > div:first-child {
+    min-width: 0 !important;
+  }
+  /* Wrapped stats grid */
+  .tf-settings-wrapped-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  /* Enterprise grid: stack */
+  .tf-settings-enterprise-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* SSO / White-Label provider rows: stack on mobile */
+  .tf-settings-sso-row {
+    flex-wrap: wrap !important;
+  }
+  .tf-settings-sso-row button {
+    width: 100% !important;
+  }
+  /* Danger zone: reduced padding */
+  .tf-settings-danger-zone {
+    padding: 14px !important;
+  }
+}
+@media (max-width: 420px) {
+  .tf-settings-wrapped-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -620,8 +1257,13 @@ img {
   .tf-keywords-search-bar {
     flex-direction: column !important;
   }
+  .tf-keywords-search-bar input {
+    height: 48px !important;
+    font-size: 14px !important;
+  }
   .tf-keywords-search-bar button {
     width: 100% !important;
+    height: 48px !important;
   }
   .tf-keywords-tabs {
     overflow-x: auto !important;
@@ -635,6 +1277,32 @@ img {
     -webkit-overflow-scrolling: touch !important;
   }
   .tf-keywords-table-wrap::-webkit-scrollbar { height: 4px; }
+  /* Compact keyword rows on mobile */
+  .tf-keywords-table-wrap span {
+    font-size: 12px !important;
+  }
+  /* Left panel: reduced padding */
+  .tf-keywords-left-panel {
+    padding: 16px !important;
+    min-height: 280px !important;
+  }
+  /* Right panel: reduced padding */
+  .tf-keywords-right-panel {
+    padding: 16px !important;
+  }
+  /* Stat blocks in overview */
+  .tf-keywords-stat-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+  }
+  .tf-keywords-stat-grid p {
+    font-size: 18px !important;
+  }
+  /* PRO upsell: full-width */
+  .tf-keywords-upsell {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 /* ── 6. Tools Hub ─────────────────────────────────────────────── */
@@ -654,10 +1322,26 @@ img {
   .tf-tools-hero-title {
     font-size: 22px !important;
   }
+  .tf-tools-search-wrap {
+    max-width: 100% !important;
+  }
+  .tf-tools-search-input {
+    height: 48px !important;
+    font-size: 16px !important; /* prevents iOS zoom */
+  }
+  .tf-tools-counters {
+    font-size: 12px !important;
+  }
+  .tf-tools-card-gradient {
+    aspect-ratio: 2.2 / 1 !important;
+  }
 }
 @media (max-width: 480px) {
   .tf-tools-grid {
     grid-template-columns: 1fr !important;
+  }
+  .tf-tools-card-gradient {
+    aspect-ratio: 2.5 / 1 !important;
   }
 }
 
@@ -678,12 +1362,27 @@ img {
   .tf-gallery-header {
     flex-direction: column !important;
     align-items: flex-start !important;
+    gap: 12px !important;
   }
   .tf-gallery-filters {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
     width: 100%;
+    scrollbar-width: none;
+  }
+  .tf-gallery-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .tf-gallery-loadmore {
+    margin-top: 20px !important;
+  }
+  .tf-gallery-loadmore-btn {
+    width: 100% !important;
+    padding: 14px 20px !important;
+  }
+  .tf-gallery-empty {
+    padding: 48px 16px !important;
   }
 }
 @media (max-width: 480px) {
@@ -704,6 +1403,7 @@ img {
   }
   .tf-help-popular {
     grid-template-columns: 1fr !important;
+    gap: 8px !important;
   }
   .tf-help-categories {
     padding: 0 16px 20px !important;
@@ -719,8 +1419,19 @@ img {
   .tf-help-articles {
     padding: 0 16px 60px !important;
   }
+  .tf-help-accordion-btn {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
   .tf-help-article-body {
-    padding-left: 20px !important;
+    padding: 0 14px 14px !important;
+    padding-left: 14px !important;
+    font-size: 14px !important;
+  }
+  .tf-help-cta {
+    padding: 28px 16px !important;
+    margin-top: 36px !important;
+    border-radius: 12px !important;
   }
 }
 
@@ -733,8 +1444,22 @@ img {
   .tf-status-grid {
     gap: 6px !important;
   }
+  .tf-status-service {
+    padding: 14px 16px !important;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
   .tf-status-stats {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .tf-status-refresh {
+    font-size: 12px !important;
+    line-height: 1.5;
+  }
+  .tf-status-footer {
+    padding: 16px !important;
+    margin-top: 24px !important;
   }
 }
 
@@ -746,6 +1471,7 @@ img {
   }
   .tf-changelog-entry {
     gap: 16px !important;
+    padding-bottom: 24px !important;
   }
 }
 @media (max-width: 480px) {
@@ -759,7 +1485,9 @@ img {
     gap: 0 !important;
     flex-direction: column !important;
     padding: 16px !important;
+    padding-bottom: 16px !important;
     background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 12px;
     margin-bottom: 8px !important;
   }
@@ -783,6 +1511,14 @@ img {
   .tf-profile-grid {
     grid-template-columns: 1fr !important;
   }
+  .tf-profile-social {
+    justify-content: center !important;
+  }
+  .tf-profile-card > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
 }
 
 /* ── Mobile: Share ──────────────────────────────────── */
@@ -792,7 +1528,24 @@ img {
     padding: 24px 16px !important;
   }
   .tf-share-scenes {
-    grid-template-columns: repeat(2, 1fr) !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 12px !important;
+    padding-bottom: 8px;
+  }
+  .tf-share-scenes > div {
+    min-width: 200px !important;
+    flex-shrink: 0 !important;
+    scroll-snap-align: start;
+  }
+  .tf-share-scenes::-webkit-scrollbar {
+    height: 4px;
+  }
+  .tf-share-scenes::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
   }
   .tf-share-actions {
     gap: 8px !important;
@@ -801,11 +1554,12 @@ img {
     font-size: 12px !important;
     padding: 7px 10px !important;
   }
+  .tf-share-info {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
 }
 @media (max-width: 480px) {
-  .tf-share-scenes {
-    grid-template-columns: 1fr !important;
-  }
   .tf-share-actions {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -817,6 +1571,11 @@ img {
     justify-content: center !important;
     font-size: 13px !important;
     padding: 10px 14px !important;
+  }
+  .tf-share-cta a {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
   }
 }
 
@@ -837,13 +1596,23 @@ img {
     font-size: 18px !important;
   }
   .tf-legal-content article nav {
-    padding: 16px !important;
+    display: none !important;
   }
   .tf-legal-content article p,
   .tf-legal-content article li,
   .tf-legal-content article ul,
   .tf-legal-content article ol {
     font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+  .tf-legal-content article table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    font-size: 13px !important;
+  }
+  .tf-legal-content > a {
+    margin-bottom: 32px !important;
   }
 }
 
