@@ -1176,7 +1176,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 Resolution
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
-                {['720p', '1080p', '4K'].map((res) => (
+                {['720p', '1080p'].map((res) => (
                   <button
                     key={res}
                     onClick={() => setResolution(res)}
@@ -1190,11 +1190,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     }}
                   >
                     {res}
-                    {res === '4K' && plan === 'FREE' && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
-                        PRO
-                      </span>
-                    )}
                   </button>
                 ))}
               </div>
@@ -1704,7 +1699,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                    Want 4K, longer videos, and unlimited presets?
+                    Want 1080p, longer videos, and unlimited presets?
                   </div>
                   <div style={{ fontSize: 12, color: C.sub }}>
                     Upgrade to Pro for unlimited creative power.
