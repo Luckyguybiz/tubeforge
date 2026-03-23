@@ -895,9 +895,10 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
       </div>
 
       {/* ── Body ──────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <div className="tf-tiktok-body" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {/* ── Sidebar ──────────────────────────────────────── */}
         <div
+          className="tf-tiktok-sidebar"
           style={{
             width: 220,
             flexShrink: 0,
