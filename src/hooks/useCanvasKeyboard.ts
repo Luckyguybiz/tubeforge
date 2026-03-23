@@ -137,6 +137,18 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      // Zoom: +/- without modifier
+      if ((e.key === '=' || e.key === '+') && !ctrl) {
+        e.preventDefault();
+        store.zoomIn();
+        return;
+      }
+      if (e.key === '-' && !ctrl) {
+        e.preventDefault();
+        store.zoomOut();
+        return;
+      }
+
       // Arrow keys: nudge selected elements (with debounced undo)
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && store.selIds.length > 0) {
         e.preventDefault();
