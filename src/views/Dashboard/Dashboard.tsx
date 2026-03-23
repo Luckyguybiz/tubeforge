@@ -143,14 +143,12 @@ function TopChoiceCard({
       {/* Visual area — gradient with icon */}
       <div style={{
         height: 160,
-        borderRadius: '14px 14px 0 0',
         overflow: 'hidden',
         background: `linear-gradient(135deg, ${from}, ${to})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        borderRadius: '14px 14px 0 0',
       }}>
         {icon}
         {badge && (
