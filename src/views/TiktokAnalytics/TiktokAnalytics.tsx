@@ -716,6 +716,28 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
     return result.map((item, i) => ({ ...item, rank: i + 1 }));
   }, [data, filters.hideIndian, filters.hashtag, filters.trendingSounds, isMock]);
 
+  const exportCSV = useCallback(() => {
+    const headers = ['Rank', 'Title', 'Views', 'Likes', 'Comments', 'Shares', 'Creator', 'Uploaded'];
+    const rows = filteredData.map((item, i) => [
+      i + 1,
+      `"${item.title.replace(/"/g, '""')}"`,
+      item.views,
+      item.likes,
+      item.comments,
+      item.shares,
+      `"${item.creator.replace(/"/g, '""')}"`,
+      item.uploaded,
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tiktok-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredData, filters.category]);
+
   const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
   const showUpgradeOverlay = !isPro && !loading;
 
@@ -830,21 +852,51 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
           </p>
         </div>
 
-        {/* Period badge */}
-        <div
-          style={{
-            padding: '6px 14px',
-            borderRadius: 8,
-            background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)',
-            border: `1px solid ${C.border}`,
-            fontSize: 12,
-            fontWeight: 500,
-            color: C.sub,
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-          }}
-        >
-          {dateRange}
+        {/* Period badge + Export CSV */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <div
+            style={{
+              padding: '6px 14px',
+              borderRadius: 8,
+              background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)',
+              border: `1px solid ${C.border}`,
+              fontSize: 12,
+              fontWeight: 500,
+              color: C.sub,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {dateRange}
+          </div>
+          <button
+            onClick={exportCSV}
+            disabled={filteredData.length === 0 || loading}
+            title={t('tiktok.exportCsv')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              background: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)',
+              color: C.sub,
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: filteredData.length === 0 || loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              opacity: filteredData.length === 0 || loading ? 0.5 : 1,
+              transition: 'opacity .15s ease',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {t('tiktok.exportCsv')}
+          </button>
         </div>
       </div>
 
@@ -1381,7 +1433,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                     : Math.round(nicheStats.estimatedEarnings).toLocaleString('en-US')}
                 </div>
                 <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
-                  RPM: ${nicheStats.rpm.toFixed(2)} (TikTok)
+                  {t('tiktok.rpmLabel')}: ${nicheStats.rpm.toFixed(2)}
                 </div>
               </div>
 

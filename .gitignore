@@ -44,6 +44,9 @@ coverage/
 public/uploads/*
 !public/uploads/.gitkeep
 
+# AI-generated images
+public/gen/
+
 # Prisma
 prisma/*.db
 prisma/*.db-journal

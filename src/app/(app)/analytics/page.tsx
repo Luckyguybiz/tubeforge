@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useState, useCallback, lazy } from 'react';
+import { Suspense, useState, useCallback, useMemo, lazy } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
@@ -24,10 +25,16 @@ const TiktokAnalytics = lazy(() =>
 
 type Tab = 'shorts' | 'tiktok';
 
-const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
+interface TabDef {
+  key: Tab;
+  labelKey: string;
+  icon: React.ReactNode;
+}
+
+const TAB_DEFS: TabDef[] = [
   {
     key: 'shorts',
-    label: 'YouTube Shorts',
+    labelKey: 'analytics.tabShorts',
     icon: (
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
         <rect x="7" y="2" width="6" height="16" rx="3" fill="currentColor" opacity=".85" />
@@ -37,7 +44,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   },
   {
     key: 'tiktok',
-    label: 'TikTok',
+    labelKey: 'analytics.tabTiktok',
     icon: (
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
         <path
@@ -55,12 +62,18 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
 function AnalyticsInner() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
+  const t = useLocaleStore((s) => s.t);
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const TABS = useMemo(
+    () => TAB_DEFS.map((td) => ({ ...td, label: t(td.labelKey) })),
+    [t],
+  );
+
   const initialTab = (searchParams.get('tab') as Tab) || 'shorts';
   const [activeTab, setActiveTab] = useState<Tab>(
-    TABS.some((t) => t.key === initialTab) ? initialTab : 'shorts',
+    TAB_DEFS.some((td) => td.key === initialTab) ? initialTab : 'shorts',
   );
 
   const switchTab = useCallback(
@@ -94,7 +107,7 @@ function AnalyticsInner() {
             margin: 0,
           }}
         >
-          Analytics
+          {t('nav.analytics')}
         </h1>
         <p
           style={{
@@ -104,7 +117,7 @@ function AnalyticsInner() {
             fontWeight: 450,
           }}
         >
-          Trending content insights for YouTube Shorts and TikTok
+          {t('analytics.subtitle')}
         </p>
       </div>
 
