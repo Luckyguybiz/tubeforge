@@ -69,7 +69,7 @@ export const billingRouter = router({
   }),
 
   createCheckout: protectedProcedure
-    .input(z.object({ plan: z.enum(['PRO', 'STUDIO']) }))
+    .input(z.object({ plan: z.enum(['PRO', 'STUDIO']), annual: z.boolean().optional() }))
     .mutation(async ({ ctx, input }) => {
       await checkBillingRate(ctx.session.user.id);
       cache.delete(`billing:sub:${ctx.session.user.id}`);
@@ -115,7 +115,18 @@ export const billingRouter = router({
         }
       }
 
-      const envRef = input.plan === 'PRO' ? env.STRIPE_PRICE_PRO : env.STRIPE_PRICE_STUDIO;
+      const isAnnual = input.annual ?? false;
+
+      let envRef: string;
+      if (input.plan === 'PRO') {
+        envRef = isAnnual && env.STRIPE_PRICE_PRO_ANNUAL
+          ? env.STRIPE_PRICE_PRO_ANNUAL
+          : env.STRIPE_PRICE_PRO;
+      } else {
+        envRef = isAnnual && env.STRIPE_PRICE_STUDIO_ANNUAL
+          ? env.STRIPE_PRICE_STUDIO_ANNUAL
+          : env.STRIPE_PRICE_STUDIO;
+      }
 
       // Support both price IDs (price_...) and product IDs (prod_...)
       let resolvedPriceId: string;

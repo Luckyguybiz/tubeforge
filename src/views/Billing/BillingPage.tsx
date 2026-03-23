@@ -71,6 +71,8 @@ interface PlanDef {
   name: string;
   price: number;
   priceLabel: string;
+  annualTotal: number;
+  annualMonthly: string;
   badge?: string;
   features: string[];
   buttonLabel: string;
@@ -99,6 +101,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: t('billing.planFree'),
       price: 0,
       priceLabel: '$0',
+      annualTotal: 0,
+      annualMonthly: '$0',
       description: t('billing.freePlanDesc'),
       features: [
         `${PLAN_LIMITS.FREE.projects} ${t('billing.feat.projectsUnit')}`,
@@ -114,6 +118,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: 'Pro',
       price: 12,
       priceLabel: '$12',
+      annualTotal: 115,
+      annualMonthly: '$9.58',
       badge: t('billing.popular'),
       description: t('billing.paidPlanDesc'),
       features: [
@@ -133,6 +139,8 @@ function getPlans(t: (key: string) => string): PlanDef[] {
       name: 'Studio',
       price: 30,
       priceLabel: '$30',
+      annualTotal: 288,
+      annualMonthly: '$24',
       description: t('billing.studioPlanDesc') || 'For teams and professionals',
       features: [
         t('billing.feat.allPro'),
@@ -641,8 +649,8 @@ export function BillingPage() {
             const isStudio = plan.id === 'STUDIO';
 
             const displayPrice = isAnnual && plan.price > 0
-              ? Math.round(plan.price * 0.8)
-              : plan.price;
+              ? plan.annualMonthly
+              : `$${plan.price}`;
 
             /* Pro card uses an outer wrapper for the animated gradient border */
             const cardContent = (
@@ -730,7 +738,7 @@ export function BillingPage() {
                         letterSpacing: '-.04em',
                         lineHeight: 1,
                       }}>
-                        ${displayPrice}
+                        {displayPrice}
                       </span>
                       {plan.price > 0 && (
                         <span style={{
@@ -739,7 +747,7 @@ export function BillingPage() {
                           color: C.sub,
                           marginLeft: 2,
                         }}>
-                          {t('billing.perMonth')}
+                          {isAnnual ? t('billing.perMonth') : t('billing.perMonth')}
                         </span>
                       )}
                     </div>
@@ -750,7 +758,15 @@ export function BillingPage() {
                         alignItems: 'center',
                         gap: 8,
                         marginTop: 8,
+                        flexWrap: 'wrap',
                       }}>
+                        <span style={{
+                          fontSize: 13,
+                          color: C.sub,
+                          fontWeight: 600,
+                        }}>
+                          ${plan.annualTotal}/year
+                        </span>
                         <span style={{
                           fontSize: 13,
                           color: C.dim,
@@ -861,8 +877,8 @@ export function BillingPage() {
                         if (plan.id === 'STUDIO') {
                           window.location.href = 'mailto:support@tubeforge.co?subject=Studio%20Plan%20Inquiry';
                         } else if (plan.id !== 'FREE') {
-                          trackEvent('upgrade_click', { plan: plan.id });
-                          createCheckout.mutate({ plan: plan.id });
+                          trackEvent('upgrade_click', { plan: plan.id, annual: isAnnual });
+                          createCheckout.mutate({ plan: plan.id, annual: isAnnual });
                         }
                       }}
                       disabled={createCheckout.isPending && plan.id !== 'FREE'}
