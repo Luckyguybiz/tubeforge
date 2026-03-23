@@ -706,9 +706,9 @@ img {
     order: 2 !important;
   }
   .tf-tool-back-btn {
-    padding: 0 6px !important;
-    font-size: 12px !important;
-    height: 32px !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    height: 28px !important;
     order: 1 !important;
   }
   .tf-tool-header-spacer {

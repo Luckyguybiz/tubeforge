@@ -32,27 +32,24 @@ export function ToolPageShell({ title, subtitle, badge, badgeColor, gradient, co
         gap: 12,
         flexWrap: 'wrap',
       }}>
-        {/* Back button — ghost style */}
+        {/* Back button — minimal text link */}
         <button
           onClick={() => { if (window.history.length > 1) { router.back(); } else { router.push('/tools'); } }}
-          aria-label="Back to tools"
+          aria-label={t('common.back')}
           className="tf-tool-back-btn"
           style={{
-            height: 36, borderRadius: 10,
+            height: 32, borderRadius: 6,
             border: 'none', background: 'transparent',
             color: C.sub, cursor: 'pointer', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', gap: 6,
-            transition: 'all 0.2s ease', fontFamily: 'inherit',
-            outline: 'none', flexShrink: 0, padding: '0 10px',
+            alignItems: 'center', justifyContent: 'center', gap: 4,
+            transition: 'color 0.15s ease', fontFamily: 'inherit',
+            outline: 'none', flexShrink: 0, padding: 0,
             fontSize: 13, fontWeight: 500,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = C.border; e.currentTarget.style.color = C.text; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.sub; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = C.text; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = C.sub; }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M19 12H5" /><polyline points="12 19 5 12 12 5" />
-          </svg>
-          Back to Tools
+          <span aria-hidden="true">{'\u2190'}</span> {t('common.back')}
         </button>
 
         <div className="tf-tool-header-spacer" style={{ flex: 1 }} />

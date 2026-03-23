@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import ruTranslations from '@/locales/ru.json';
+import enTranslations from '@/locales/en.json';
 
 export type Locale = 'ru' | 'en' | 'kk' | 'es';
 
@@ -13,9 +13,9 @@ interface LocaleState {
 type Translations = Record<string, string>;
 
 /* Cache for dynamically-loaded locale bundles.
-   Russian is always available synchronously (imported above). */
+   English is always available synchronously (imported above). */
 const localeCache: Record<string, Translations> = {
-  ru: ruTranslations as Translations,
+  en: enTranslations as Translations,
 };
 
 /** Dynamically import a locale bundle and cache it.
@@ -25,8 +25,8 @@ export async function loadLocale(lang: string): Promise<Translations> {
 
   let mod: { default: Translations };
   switch (lang) {
-    case 'en':
-      mod = await import('@/locales/en.json');
+    case 'ru':
+      mod = await import('@/locales/ru.json');
       break;
     case 'kk':
       mod = await import('@/locales/kk.json');
@@ -35,7 +35,7 @@ export async function loadLocale(lang: string): Promise<Translations> {
       mod = await import('@/locales/es.json');
       break;
     default:
-      return localeCache['ru'];
+      return localeCache['en'];
   }
 
   localeCache[lang] = mod.default as Translations;
@@ -43,17 +43,17 @@ export async function loadLocale(lang: string): Promise<Translations> {
 }
 
 function translate(locale: Locale, key: string): string {
-  return localeCache[locale]?.[key] ?? localeCache['ru'][key] ?? key;
+  return localeCache[locale]?.[key] ?? localeCache['en'][key] ?? key;
 }
 
 export const useLocaleStore = create<LocaleState>()(
   persist(
     (set, get) => ({
-      locale: 'ru',
+      locale: 'en',
       setLocale: (locale) => {
         /* Set locale immediately so the UI reflects the choice.
            If the bundle is already cached, translations work right away.
-           Otherwise, t() falls back to Russian until the bundle loads. */
+           Otherwise, t() falls back to English until the bundle loads. */
         set({
           locale,
           t: (key: string) => translate(locale, key),
@@ -81,7 +81,7 @@ export const useLocaleStore = create<LocaleState>()(
       onRehydrateStorage: () => (state) => {
         /* After zustand restores the persisted locale,
            eagerly load the bundle so t() works immediately. */
-        if (state && state.locale !== 'ru') {
+        if (state && state.locale !== 'en') {
           loadLocale(state.locale).then(() => {
             const current = useLocaleStore.getState();
             if (current.locale === state.locale) {
