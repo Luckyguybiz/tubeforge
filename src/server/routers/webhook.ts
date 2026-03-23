@@ -6,11 +6,18 @@ import { RATE_LIMIT_ERROR } from '@/lib/constants';
 import { sanitizeUrl, stripTags } from '@/lib/sanitize';
 import { randomBytes, createHmac } from 'crypto';
 import { createLogger } from '@/lib/logger';
+import { db } from '@/server/db';
 
 const log = createLogger('webhook');
 
 export const WEBHOOK_EVENTS = ['video.completed', 'project.created'] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+/** Delivery timeout in milliseconds */
+const DELIVERY_TIMEOUT_MS = 5_000;
+
+/** Number of retries on delivery failure */
+const MAX_RETRIES = 1;
 
 /** Mutation rate limit */
 async function checkRate(userId: string) {
@@ -20,22 +27,128 @@ async function checkRate(userId: string) {
 
 /**
  * Sign a webhook payload with HMAC-SHA256.
- * Used by deliverWebhook() in src/lib/webhook-delivery.ts.
  */
 export function signPayload(secret: string, payload: string): string {
   return createHmac('sha256', secret).update(payload).digest('hex');
 }
 
 /**
- * Deliver a webhook event to all registered endpoints for a user.
- *
- * TODO: Implement actual delivery
- * 1. Query WebhookEndpoint where userId and events contains event
- * 2. For each endpoint, POST to url with HMAC-signed payload
- * 3. Log delivery status
+ * Deliver a single webhook POST to one endpoint with retry logic.
+ * Returns true on success, false on failure.
  */
-export async function deliverWebhook(userId: string, event: string, payload: unknown) {
-  log.info(`[Webhook] Would deliver ${event} to user ${userId}`, { event, userId, payload });
+async function deliverToEndpoint(
+  url: string,
+  secret: string,
+  event: string,
+  body: string,
+): Promise<boolean> {
+  const signature = signPayload(secret, body);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-TubeForge-Event': event,
+    'X-TubeForge-Signature': `sha256=${signature}`,
+  };
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body,
+        signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
+      });
+
+      if (res.ok) {
+        return true;
+      }
+
+      log.warn('Webhook delivery non-OK response', {
+        url,
+        event,
+        status: res.status,
+        attempt: attempt + 1,
+      });
+    } catch (err) {
+      log.warn('Webhook delivery failed', {
+        url,
+        event,
+        attempt: attempt + 1,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Deliver a webhook event to all active endpoints registered by a user for the given event type.
+ *
+ * Queries all active WebhookEndpoint records matching the user and event,
+ * POSTs the payload to each URL with HMAC-SHA256 signature,
+ * retries once on failure, and logs success/failure for each endpoint.
+ *
+ * Runs in the background (fire-and-forget) so it does not block the caller.
+ */
+export function deliverWebhooks(userId: string, event: WebhookEvent, payload: Record<string, unknown>): void {
+  // Fire-and-forget — errors are logged but never thrown to the caller
+  void deliverWebhooksAsync(userId, event, payload);
+}
+
+async function deliverWebhooksAsync(
+  userId: string,
+  event: WebhookEvent,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const endpoints = await db.webhookEndpoint.findMany({
+      where: {
+        userId,
+        active: true,
+        events: { has: event },
+      },
+      select: { id: true, url: true, secret: true },
+    });
+
+    if (endpoints.length === 0) {
+      return;
+    }
+
+    const body = JSON.stringify({
+      event,
+      timestamp: new Date().toISOString(),
+      data: payload,
+    });
+
+    const results = await Promise.allSettled(
+      endpoints.map(async (ep) => {
+        const ok = await deliverToEndpoint(ep.url, ep.secret, event, body);
+        if (ok) {
+          log.info('Webhook delivered', { endpointId: ep.id, event, url: ep.url });
+        } else {
+          log.error('Webhook delivery failed after retries', { endpointId: ep.id, event, url: ep.url });
+        }
+        return { endpointId: ep.id, ok };
+      }),
+    );
+
+    const succeeded = results.filter(
+      (r) => r.status === 'fulfilled' && r.value.ok,
+    ).length;
+    log.info('Webhook delivery batch complete', {
+      event,
+      userId,
+      total: endpoints.length,
+      succeeded,
+      failed: endpoints.length - succeeded,
+    });
+  } catch (err) {
+    log.error('Webhook delivery query error', {
+      event,
+      userId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 export const webhookRouter = router({

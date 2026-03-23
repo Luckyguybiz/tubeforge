@@ -2130,5 +2130,7 @@
   "thumbs.aiText.applied": "Text applied to selected element",
   "thumbs.aiText.added": "Text element added to canvas",
   "thumbs.aiText.clickToApply": "Click a suggestion to apply it to the selected text element, or add it as new text.",
-  "thumbs.aiText.hint": "Tip: Select a text element first, then click a suggestion to replace its content. Without a selection, a new text element will be created."
+  "thumbs.aiText.hint": "Tip: Select a text element first, then click a suggestion to replace its content. Without a selection, a new text element will be created.",
+  "errorBoundary.failedToRender": "Failed to render component",
+  "errorBoundary.retry": "Retry"
 }

@@ -6,6 +6,7 @@ import { RATE_LIMIT_ERROR, getPlanLimits } from '@/lib/constants';
 import { stripTags } from '@/lib/sanitize';
 import { deliverWebhook } from '@/lib/webhook-delivery';
 import type { Prisma } from '@prisma/client';
+import { deliverWebhooks } from './webhook';
 
 /** Mutation rate limit: 20 writes per minute per user */
 async function checkMutationRate(userId: string) {
@@ -361,7 +362,7 @@ export const projectRouter = router({
       await checkMutationRate(ctx.session.user.id);
 
       // Use interactive transaction to atomically check limit and create
-      return ctx.db.$transaction(async (tx) => {
+      const result = await ctx.db.$transaction(async (tx) => {
         const user = await tx.user.findUnique({
           where: { id: ctx.session.user.id },
           select: { plan: true, _count: { select: { projects: true } } },
@@ -385,6 +386,13 @@ export const projectRouter = router({
 
         return created;
       });
+
+      deliverWebhooks(ctx.session.user.id, 'project.created', {
+        projectId: result.id,
+        title: result.title,
+      });
+
+      return result;
     }),
 
   update: protectedProcedure
@@ -597,6 +605,11 @@ export const projectRouter = router({
         return newProject;
       });
 
+      deliverWebhooks(ctx.session.user.id, 'project.created', {
+        projectId: result.id,
+        title: result.title,
+      });
+
       return { id: result.id, title: result.title };
     }),
 
@@ -682,6 +695,11 @@ export const projectRouter = router({
         }
 
         return newProject;
+      });
+
+      deliverWebhooks(ctx.session.user.id, 'project.created', {
+        projectId: result.id,
+        title: result.title,
       });
 
       return result;

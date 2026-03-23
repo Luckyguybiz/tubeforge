@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { env } from '@/lib/env';
+import { deliverWebhooks } from './webhook';
 
 /** Fetch wrapper with AbortController timeout */
 async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 30000): Promise<Response> {
@@ -50,10 +51,28 @@ export const videoTaskRouter = router({
       }
 
       const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Runway API response' }); });
+
+      const status = data.status as 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+      const videoUrl = data.output?.[0] as string | undefined;
+
+      // Fire webhook when a video task completes successfully
+      if (status === 'SUCCEEDED' && videoUrl) {
+        const sceneWithProject = await ctx.db.scene.findFirst({
+          where: { taskId: input.taskId },
+          select: { project: { select: { id: true, userId: true } } },
+        });
+        if (sceneWithProject) {
+          deliverWebhooks(sceneWithProject.project.userId, 'video.completed', {
+            projectId: sceneWithProject.project.id,
+            videoUrl,
+          });
+        }
+      }
+
       return {
-        status: data.status as 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED',
+        status,
         progress: data.progress as number | undefined,
-        output: data.output?.[0] as string | undefined,
+        output: videoUrl,
         error: data.failure as string | undefined,
       };
     }),

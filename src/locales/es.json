@@ -2130,5 +2130,7 @@
   "thumbs.aiText.applied": "Texto aplicado al elemento seleccionado",
   "thumbs.aiText.added": "Elemento de texto agregado al lienzo",
   "thumbs.aiText.clickToApply": "Haz clic en una sugerencia para aplicarla al texto seleccionado o agregar como texto nuevo.",
-  "thumbs.aiText.hint": "Consejo: Selecciona un elemento de texto primero, luego haz clic en una sugerencia para reemplazar su contenido."
+  "thumbs.aiText.hint": "Consejo: Selecciona un elemento de texto primero, luego haz clic en una sugerencia para reemplazar su contenido.",
+  "errorBoundary.failedToRender": "No se pudo renderizar el componente",
+  "errorBoundary.retry": "Reintentar"
 }
