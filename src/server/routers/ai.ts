@@ -9,7 +9,7 @@ import { Prisma } from '@prisma/client';
 import { fal } from '@fal-ai/client';
 
 /** Fetch wrapper with AbortController timeout */
-async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 30000): Promise<Response> {
+async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 60000): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -126,6 +126,7 @@ Professional YouTube thumbnail that would get millions of clicks.
               num_images: 1,
               safety_tolerance: '5',
             },
+            timeout: 90_000,
           }) as { data: { images: Array<{ url: string }> } };
 
           const imageUrl = falResult.data?.images?.[0]?.url;
@@ -273,6 +274,7 @@ Be VERY specific about spatial positioning. Example: "Person photo occupying rig
               num_images: 1,
               safety_tolerance: '5',
             },
+            timeout: 90_000,
           }) as { data: { images: Array<{ url: string }> } };
 
           const imageUrl = falResult.data?.images?.[0]?.url;
@@ -716,6 +718,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
               num_images: 1,
               safety_tolerance: '5',
             },
+            timeout: 90_000,
           }) as { data: { images: Array<{ url: string }> } };
 
           const imageUrl = falResult.data?.images?.[0]?.url;
@@ -790,6 +793,7 @@ Break the text into short subtitles (max 2 lines, ~10 words). Timecodes must pre
           input: {
             image_url: input.imageUrl,
           },
+          timeout: 90_000,
         }) as { data: { image: { url: string } } };
 
         const outputUrl = result.data?.image?.url;

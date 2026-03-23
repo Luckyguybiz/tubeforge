@@ -19,7 +19,7 @@ import { fal } from '@fal-ai/client';
 async function fetchWithTimeout(
   url: string,
   options?: RequestInit,
-  timeoutMs = 30000,
+  timeoutMs = 60000,
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -304,6 +304,7 @@ Professional YouTube thumbnail that would get millions of clicks.
                 num_images: 1,
                 safety_tolerance: '5',
               },
+              timeout: 90_000,
             }) as { data: { images: Array<{ url: string }> } };
 
             const imageUrl = falResult.data?.images?.[0]?.url;
@@ -874,6 +875,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
               num_images: 1,
               safety_tolerance: '5',
             },
+            timeout: 90_000,
           }) as { data: { images: Array<{ url: string }> } };
 
           const url = falResult.data?.images?.[0]?.url;
