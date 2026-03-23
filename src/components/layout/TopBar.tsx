@@ -1,10 +1,42 @@
 'use client';
-import { memo, useCallback } from 'react';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { NAV, Z_INDEX } from '@/lib/constants';
 import { useThemeStore } from '@/stores/useThemeStore';
 import type { ThemeMode } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
+import type { Notification } from '@/stores/useNotificationStore';
+import { WhatsNewBadge, WhatsNewModal } from '@/components/ui/WhatsNew';
+
+/** Translation keys for extra page labels not in NAV */
+const PAGE_LABEL_KEYS: Record<string, string> = {
+  settings: 'nav.settings',
+  admin: 'nav.admin',
+  team: 'nav.team',
+  referral: 'nav.referral',
+  blog: 'nav.blog',
+  'ai-thumbnails': 'nav.aiThumbnails',
+  thumbnails: 'nav.designStudio',
+};
+
+const NOTIF_ICONS: Record<Notification['type'], string> = {
+  success: '\u2705',
+  error: '\u274C',
+  info: '\u2139\uFE0F',
+  warning: '\u26A0\uFE0F',
+};
+
+/** SVG bell icon – replaces emoji for consistent cross-platform rendering */
+function BellIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
 
 /** SVG sun icon for light mode */
 function SunIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
@@ -38,6 +70,18 @@ function MonitorIcon({ size = 14, color = 'currentColor' }: { size?: number; col
 
 const THEME_MODE_LABELS: Record<ThemeMode, string> = { dark: 'settings.dark', light: 'settings.light', system: 'settings.system' };
 
+function timeAgo(ts: number, t: (key: string) => string): string {
+  const diff = Math.max(0, Date.now() - ts);
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return t('topbar.timeJustNow');
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} ${t('topbar.timeMinAgo')}`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} ${t('topbar.timeHourAgo')}`;
+  const d = Math.floor(h / 24);
+  return `${d} ${t('topbar.timeDayAgo')}`;
+}
+
 export const TopBar = memo(function TopBar() {
   const C = useThemeStore((s) => s.theme);
   const isDark = useThemeStore((s) => s.isDark);
@@ -49,11 +93,61 @@ export const TopBar = memo(function TopBar() {
   const current = pathname.split('/').filter(Boolean)[0] || 'dashboard';
   const isEditor = current === 'editor';
 
+  const notifications = useNotificationStore((s) => s.notifications);
+  const markRead = useNotificationStore((s) => s.markRead);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const showShortcuts = useNotificationStore((s) => s.showShortcuts);
+  const setShowShortcuts = useNotificationStore((s) => s.setShowShortcuts);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
+
+  /* ── What's New ────────────────────────────────── */
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
+
+  // Close notification dropdown on outside click
+  useEffect(() => {
+    if (!bellOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setBellOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [bellOpen]);
+
+  // Close notification dropdown on Escape
+  useEffect(() => {
+    if (!bellOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBellOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [bellOpen]);
+
+  // Note: `?` shortcut and Escape for shortcuts modal are now handled
+  // by useGlobalShortcuts in AppShell and ShortcutsModal component.
+
+  const pageLabelKey = PAGE_LABEL_KEYS[current];
+  const navItem = NAV.find((n) => n.id === current);
+  const pageLabel = pageLabelKey ? t(pageLabelKey) : navItem ? t(`nav.${navItem.id}`) : '';
+
   const btnBase: React.CSSProperties = { width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: 18, border: 'none', background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
 
   const handleBtnHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, entering: boolean) => {
     (e.currentTarget as HTMLButtonElement).style.background = entering ? C.border : 'transparent';
-  }, [C.border]);
+  }, []);
+
+  const handleNotifKeyDown = useCallback((e: React.KeyboardEvent, n: Notification) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (!n.read) markRead(n.id);
+    }
+  }, [markRead]);
 
   const mobileMenuToggle = useMobileMenuStore((s) => s.toggle);
 
@@ -170,6 +264,116 @@ export const TopBar = memo(function TopBar() {
         {'\uD83D\uDCB0'} {t('topbar.referralCta')}
       </button>
 
+      {/* Keyboard shortcuts hint button */}
+      <button
+        className="tf-topbar-shortcuts"
+        title={t('topbar.shortcutsLabel')}
+        aria-label={t('topbar.shortcuts')}
+        onClick={() => setShowShortcuts(!showShortcuts)}
+        onMouseEnter={(e) => handleBtnHover(e, true)}
+        onMouseLeave={(e) => handleBtnHover(e, false)}
+        style={{ ...btnBase, fontSize: 13, fontWeight: 700 }}
+      >
+        ?
+      </button>
+
+      {/* What's New badge */}
+      <span className="tf-topbar-whatsnew">
+        <WhatsNewBadge onClick={() => setShowWhatsNew(true)} />
+      </span>
+
+      {/* Notification bell */}
+      <div ref={bellRef} style={{ position: 'relative' }}>
+        <button
+          className="tf-topbar-btn"
+          title={t('topbar.notifications')}
+          aria-label={t('topbar.notifications')}
+          aria-expanded={bellOpen}
+          aria-haspopup="true"
+          onClick={() => setBellOpen((v) => !v)}
+          onMouseEnter={(e) => handleBtnHover(e, true)}
+          onMouseLeave={(e) => handleBtnHover(e, false)}
+          style={btnBase}
+        >
+          <BellIcon size={14} color={C.sub} />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16,
+              borderRadius: 8, background: C.accent, color: '#fff', fontSize: 9,
+              fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '0 4px', lineHeight: 1,
+            }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {/* Notification dropdown */}
+        {bellOpen && (
+          <div style={{
+            position: 'absolute', top: 48, right: 0, width: 320,
+            maxWidth: 'calc(100vw - 32px)',
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
+            boxShadow: `0 8px 32px ${C.overlay}`, zIndex: Z_INDEX.DROPDOWN, overflow: 'hidden',
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 14px', borderBottom: `1px solid ${C.border}`,
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{t('topbar.notifications')}</span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={() => markAllRead()}
+                  style={{
+                    background: 'none', border: 'none', color: C.accent,
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    padding: '2px 6px', borderRadius: 4,
+                  }}
+                >
+                  {t('topbar.markAllRead')}
+                </button>
+              )}
+            </div>
+            {/* List */}
+            <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+              {notifications.length === 0 && (
+                <div style={{ padding: '24px 14px', textAlign: 'center', color: C.dim, fontSize: 12 }}>
+                  {t('topbar.noNotifications')}
+                </div>
+              )}
+              {notifications.map((n) => (
+                <div
+                  key={n.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => { if (!n.read) markRead(n.id); }}
+                  onKeyDown={(e) => handleNotifKeyDown(e, n)}
+                  style={{
+                    display: 'flex', gap: 10, padding: '10px 14px', cursor: n.read ? 'default' : 'pointer',
+                    background: n.read ? 'transparent' : `${C.accent}08`,
+                    borderBottom: `1px solid ${C.border}`,
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: 14, flexShrink: 0, lineHeight: '20px' }}>{NOTIF_ICONS[n.type]}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</span>
+                      {!n.read && (
+                        <span style={{ width: 6, height: 6, borderRadius: 3, background: C.accent, flexShrink: 0 }} />
+                      )}
+                    </div>
+                    <div title={n.message} style={{ fontSize: 11, color: C.sub, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.message}</div>
+                    <div style={{ fontSize: 10, color: C.dim, marginTop: 3 }}>{timeAgo(n.createdAt, t)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Theme toggle: cycles dark -> light -> system */}
       <button
         className="tf-topbar-btn"
@@ -180,10 +384,15 @@ export const TopBar = memo(function TopBar() {
         onMouseLeave={(e) => handleBtnHover(e, false)}
         style={btnBase}
       >
-        {themeMode === 'dark' && <MoonIcon size={14} color={C.sub} />}
-        {themeMode === 'light' && <SunIcon size={14} color={C.sub} />}
-        {themeMode === 'system' && <MonitorIcon size={14} color={C.sub} />}
+        {themeMode === 'dark' && <MoonIcon size={14} color={C.text} />}
+        {themeMode === 'light' && <SunIcon size={14} color={C.text} />}
+        {themeMode === 'system' && <MonitorIcon size={14} color={C.text} />}
       </button>
+
+      {/* Keyboard shortcuts modal is now rendered by ShortcutsModal in AppShell */}
+
+      {/* What's New modal */}
+      {showWhatsNew && <WhatsNewModal onClose={() => setShowWhatsNew(false)} />}
     </div>
   );
 });

@@ -137,7 +137,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         @media(max-width:768px){
           .tf-bottom-tabs{
             display:flex !important;
-            position:fixed;bottom:0;left:0;right:0;z-index:9990;
+            position:fixed !important;bottom:0 !important;left:0 !important;right:0 !important;z-index:9990 !important;
             height:56px;
             background:${C.surface};
             border-top:1px solid ${C.border};
@@ -155,8 +155,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             min-height:44px;
           }
           .tf-bottom-tab.active{color:${C.accent}}
-          .tf-bottom-tab svg{transition:color .15s}
-          .tf-main-content{padding-bottom:68px!important}
+          .tf-bottom-tab svg{transition:color .15s;display:block;vertical-align:middle}
+          .tf-main-content{padding-bottom:80px!important}
         }
       `}</style>
       {/* Onboarding quiz: render fullscreen without sidebar/topbar */}
@@ -186,6 +186,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 aria-hidden="true"
               />
               <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+                {/* Close button */}
+                <button
+                  aria-label="Close menu"
+                  onClick={closeMobileMenu}
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                  }}
+                >
+                  &times;
+                </button>
                 <Sidebar />
               </div>
             </>
