@@ -252,18 +252,16 @@ img {
 .tf-dash-showcase-scroll::-webkit-scrollbar { height: 4px; }
 .tf-dash-showcase-scroll::-webkit-scrollbar-track { background: transparent; }
 .tf-dash-showcase-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
-.tf-dash-showcase-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; padding: 8px 0 12px; margin: -8px 0 -12px; }
+.tf-dash-showcase-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
 .tf-dash-showcase-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(99,102,241,0.15), 0 4px 12px rgba(0,0,0,0.2);
 }
 .tf-free-tools-scroll::-webkit-scrollbar { display: none; }
-.tf-free-tools-scroll { padding: 6px 0 10px; margin: -6px 0 -10px; }
 
 /* ── Top Choice cards ──────────────────────────────── */
 
 .tf-top-choice-scroll::-webkit-scrollbar { display: none; }
-.tf-top-choice-scroll { padding: 8px 0 12px; margin: -8px 0 -12px; }
 .tf-top-choice-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(99,102,241,0.15), 0 4px 12px rgba(0,0,0,0.2);

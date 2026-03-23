@@ -349,9 +349,10 @@ export function Dashboard() {
           </Link>
         </div>
         {/* Right: horizontal scroll of product cards */}
+        <div style={{ overflow: 'clip', overflowClipMargin: 12, flex: 1 }}>
         <div style={{
-          display: 'flex', gap: 14, overflowX: 'auto', flex: 1,
-          scrollSnapType: 'x mandatory', paddingBottom: 4,
+          display: 'flex', gap: 14, overflowX: 'auto',
+          scrollSnapType: 'x mandatory', padding: '8px 0 16px',
           msOverflowStyle: 'none', scrollbarWidth: 'none',
         }} className="tf-dash-showcase-scroll">
           {([
@@ -402,6 +403,7 @@ export function Dashboard() {
             </Link>
           ))}
         </div>
+        </div>
       </div>
 
       {/* ── Top Choice — horizontal scroll ────────── */}
@@ -442,37 +444,40 @@ export function Dashboard() {
             {t('dashboard.seeAll')} <span>&rsaquo;</span>
           </Link>
         </div>
-        <div
-          onWheel={(e) => {
-            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-              e.currentTarget.scrollLeft += e.deltaY;
-              e.preventDefault();
-            }
-          }}
-          style={{
-            display: 'flex',
-            gap: 16,
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            paddingBottom: 4,
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-          className="tf-top-choice-scroll"
-        >
-          {TOP_TOOLS.map((tool) => (
-            <TopChoiceCard
-              key={tool.href}
-              title={t(tool.titleKey)}
-              desc={t(tool.descKey)}
-              href={tool.href}
-              from={tool.from}
-              to={tool.to}
-              badge={tool.badge}
-              icon={tool.icon}
-              C={C}
-            />
-          ))}
+        {/* Wrapper clips horizontally, allows vertical shadow overflow */}
+        <div style={{ overflow: 'clip', overflowClipMargin: 12 }}>
+          <div
+            onWheel={(e) => {
+              if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.currentTarget.scrollLeft += e.deltaY;
+                e.preventDefault();
+              }
+            }}
+            style={{
+              display: 'flex',
+              gap: 16,
+              overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              padding: '8px 0 16px',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+            }}
+            className="tf-top-choice-scroll"
+          >
+            {TOP_TOOLS.map((tool) => (
+              <TopChoiceCard
+                key={tool.href}
+                title={t(tool.titleKey)}
+                desc={t(tool.descKey)}
+                href={tool.href}
+                from={tool.from}
+                to={tool.to}
+                badge={tool.badge}
+                icon={tool.icon}
+                C={C}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -495,27 +500,29 @@ export function Dashboard() {
             {t('dashboard.viewAll')} &rarr;
           </Link>
         </div>
-        <div
-          ref={freeToolsScrollRef}
-          className="tf-free-tools-scroll"
-          style={{
-            display: 'flex',
-            gap: 10,
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            paddingBottom: 4,
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-        >
-          {FREE_TOOLS.map((tool) => (
-            <FreeToolChip
-              key={tool.href}
-              title={t(tool.titleKey)}
-              href={tool.href}
-              C={C}
-            />
-          ))}
+        <div style={{ overflow: 'clip', overflowClipMargin: 10 }}>
+          <div
+            ref={freeToolsScrollRef}
+            className="tf-free-tools-scroll"
+            style={{
+              display: 'flex',
+              gap: 10,
+              overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              padding: '6px 0 14px',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {FREE_TOOLS.map((tool) => (
+              <FreeToolChip
+                key={tool.href}
+                title={t(tool.titleKey)}
+                href={tool.href}
+                C={C}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
