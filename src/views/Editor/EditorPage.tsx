@@ -839,18 +839,17 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             className="tf-editor-left"
             style={{
               width: 380,
-              height: '100%',
               flexShrink: 0,
               background: C.card,
               borderRight: `1px solid ${C.border}`,
               padding: 20,
-              display: 'flex', flexDirection: 'column', gap: 14,
-              overflowY: 'auto',
+              overflowY: 'scroll',
               overflowX: 'hidden',
               scrollbarWidth: 'thin',
               scrollbarColor: 'rgba(128,128,128,.2) transparent',
             }}
           >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* ── 1. Style Preview Card (clickable to open styles) ── */}
             <div
               className="tf-editor-style-card"
@@ -1260,6 +1259,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </a>
             )}
           </div>
+          </div>{/* end left panel inner wrapper */}
 
           {/* RIGHT PANEL (flex) — same structure as AiThumbnails */}
           <div
