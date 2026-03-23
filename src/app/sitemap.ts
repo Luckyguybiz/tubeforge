@@ -38,6 +38,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/compare/tubeforge-vs-veed', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/compare/tubeforge-vs-opus-clip', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/compare/tubeforge-vs-descript', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.8 },
+    // Feature pages (public marketing)
+    { path: '/features/video-generation', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/ai-image-generator', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/ai-voiceover', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/content-planner', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/cover-editor', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/seo-metadata', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/subtitle-editor', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/video-compressor', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/video-translator', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
+    { path: '/features/youtube-analyzer', lastModified: '2026-03-23', changeFrequency: 'monthly', priority: 0.8 },
     // Tools hub + individual tool pages
     { path: '/tools', lastModified: '2026-03-22', changeFrequency: 'weekly', priority: 0.9 },
     { path: '/tools/image-generator', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.8 },

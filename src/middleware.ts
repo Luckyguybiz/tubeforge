@@ -231,6 +231,8 @@ export default function middleware(req: NextRequest) {
     '/status',
     '/gallery',
     '/api-docs',
+    '/features',
+    '/oferta',
   ];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
