@@ -13,10 +13,14 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // On non-landing pages, anchor links must point to /#section
+  const isLanding = typeof window !== 'undefined' && window.location.pathname === '/';
+  const anchor = (hash: string) => isLanding ? hash : `/${hash}`;
+
   const navLinks = [
-    { label: 'Features', href: '#features' },
-    { label: 'Tools', href: '#tools' },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Features', href: anchor('#features') },
+    { label: 'Tools', href: anchor('#tools') },
+    { label: 'Pricing', href: anchor('#pricing') },
     { label: 'Blog', href: '/blog' },
   ];
 
