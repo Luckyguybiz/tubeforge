@@ -172,7 +172,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <>
           <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
           <div className="tf-app-shell" style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
-            <div className="tf-sidebar"><Sidebar defaultCollapsed={isFullBleed} /></div>
+            <div className="tf-sidebar" style={{ position: 'relative', zIndex: 10, flexShrink: 0 }}><Sidebar defaultCollapsed={isFullBleed} /></div>
             <div className="tf-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
               {isFullBleed ? (
