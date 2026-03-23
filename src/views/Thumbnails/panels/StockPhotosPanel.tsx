@@ -22,7 +22,7 @@ export function StockPhotosPanel() {
 
   const { data, isLoading, isFetching } = trpc.stock.searchPhotos.useQuery(
     { query: searchTerm, page, perPage: PER_PAGE },
-    { enabled: searchTerm.length > 0, keepPreviousData: true },
+    { enabled: searchTerm.length > 0, placeholderData: (prev) => prev },
   );
 
   const photos = data?.photos ?? [];
