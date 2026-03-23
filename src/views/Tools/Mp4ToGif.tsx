@@ -56,7 +56,7 @@ export function Mp4ToGif() {
   }, [converting, file, duration]);
 
   const handleFile = useCallback((f: File) => {
-    if (f.size > 100 * 1024 * 1024) {
+    if (f.size > 500 * 1024 * 1024) {
       setError(t('tools.gif.fileTooLarge'));
       return;
     }
@@ -169,7 +169,7 @@ export function Mp4ToGif() {
             {t('tools.gif.dropHere')}
           </div>
           <div style={{ fontSize: 13, color: C.dim }}>
-            MP4, WebM, MOV, AVI — {t('tools.gif.maxSize')}
+            MP4, WebM, MOV, AVI — max 500MB
           </div>
           <input ref={inputRef} type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
             style={{ display: 'none' }}
@@ -230,7 +230,7 @@ export function Mp4ToGif() {
               <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', marginBottom: 6 }}>
                 {t('tools.gif.duration')}: {duration}s
               </div>
-              <input type="range" min={1} max={30} value={duration} onChange={(e) => setDuration(+e.target.value)}
+              <input type="range" min={1} max={60} value={duration} onChange={(e) => setDuration(+e.target.value)}
                 style={{ width: '100%', accentColor: C.accent }} />
             </div>
 

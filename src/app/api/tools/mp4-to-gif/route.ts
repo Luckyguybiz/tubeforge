@@ -13,7 +13,7 @@ import path from 'path';
 import { randomBytes } from 'crypto';
 
 const TMP_DIR = path.join(process.cwd(), '.tmp', 'gif-convert');
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 
 function runFFmpeg(args: string[], timeoutMs = 120_000): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const fps = Math.min(30, Math.max(5, Number(formData.get('fps')) || 15));
     const width = Math.min(1280, Math.max(160, Number(formData.get('width')) || 480));
     const startTime = Math.max(0, Number(formData.get('start')) || 0);
-    const duration = Math.min(30, Math.max(1, Number(formData.get('duration')) || 10));
+    const duration = Math.min(60, Math.max(1, Number(formData.get('duration')) || 10));
 
     if (!existsSync(TMP_DIR)) await mkdir(TMP_DIR, { recursive: true });
 
