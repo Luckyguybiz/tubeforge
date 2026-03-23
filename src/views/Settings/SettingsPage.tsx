@@ -304,6 +304,7 @@ export function SettingsPage() {
                       alt={userName}
                       width={72}
                       height={72}
+                      loading="lazy"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       referrerPolicy="no-referrer"
                     />

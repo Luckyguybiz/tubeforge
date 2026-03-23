@@ -39,6 +39,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'oaidalleapiprodscus.blob.core.windows.net' },
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
       { protocol: 'https', hostname: 'images.pexels.com' },
+      { protocol: 'https', hostname: 'v3.fal.media' },
+      { protocol: 'https', hostname: 'v3b.fal.media' },
+      { protocol: 'https', hostname: '*.fal.media' },
     ],
   },
 

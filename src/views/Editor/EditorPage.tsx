@@ -32,15 +32,11 @@ interface AnimationStyle {
   category: string;
   badge: string | null;
   gradient: [string, string];
-  /** Optional preview GIF/video URLs shown in the "How it works" panel */
-  previews?: string[];
 }
 
 const ANIMATION_STYLES: AnimationStyle[] = [
   { id: 'general', name: 'GENERAL', category: 'all', badge: 'Top Choice', gradient: ['#6366f1', '#8b5cf6'] },
   { id: '3d-cats', name: '3D CATS', category: '3d', badge: 'Trending', gradient: ['#f59e0b', '#ef4444'] },
-  { id: '2d-cats', name: '2D CATS', category: 'cats', badge: 'New', gradient: ['#f472b6', '#ec4899'], previews: ['/demo/2d-cats.mp4', '/demo/2d-cats-2.mp4', '/demo/2d-cats-3.mp4'] },
-  { id: 'kpop-demon', name: 'K-POP DEMON', category: 'effects', badge: 'Trending', gradient: ['#7c3aed', '#dc2626'] },
   { id: 'anime-2d', name: 'ANIME 2D', category: 'anime', badge: 'Top Choice', gradient: ['#ec4899', '#8b5cf6'] },
   { id: 'cartoon-style', name: 'CARTOON', category: 'cartoon', badge: 'New', gradient: ['#22c55e', '#06b6d4'] },
   { id: 'realistic', name: 'REALISTIC', category: 'realistic', badge: 'Top Choice', gradient: ['#3b82f6', '#1d4ed8'] },
@@ -174,7 +170,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
   }, [onChange]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minWidth: 0, position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
       <span style={{ fontSize: 9, fontWeight: 600, color: C.sub, textTransform: 'uppercase', letterSpacing: '.03em' }}>
         {label}
       </span>
@@ -204,17 +200,12 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
             (e.currentTarget as HTMLElement).style.borderColor = accentCol + '55';
             (e.currentTarget as HTMLElement).style.background = accentCol + '06';
           }
-          // Show full preview popup
-          const preview = (e.currentTarget as HTMLElement).querySelector('.tf-frame-preview') as HTMLElement;
-          if (preview) preview.style.opacity = '1';
         }}
         onMouseLeave={(e) => {
           if (!value) {
             (e.currentTarget as HTMLElement).style.borderColor = C.border;
             (e.currentTarget as HTMLElement).style.background = C.bg;
           }
-          const preview = (e.currentTarget as HTMLElement).querySelector('.tf-frame-preview') as HTMLElement;
-          if (preview) preview.style.opacity = '0';
         }}
       >
         {isLoading ? (
@@ -230,16 +221,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
           </div>
         ) : value ? (
           <>
-            <img src={value} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
-            {/* Full preview on hover */}
-            <div className="tf-frame-preview" style={{
-              position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-              marginBottom: 6, pointerEvents: 'none', opacity: 0, transition: 'opacity .15s',
-              zIndex: 100, padding: 4, background: C.card, borderRadius: 8,
-              border: `1px solid ${C.border}`, boxShadow: '0 4px 20px rgba(0,0,0,.4)',
-            }}>
-              <img src={value} alt={label} style={{ maxWidth: 200, maxHeight: 280, borderRadius: 6, display: 'block' }} />
-            </div>
+            <img src={value} alt={label} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
             <button
               onClick={(e) => { e.stopPropagation(); onChange(null); setError(null); }}
               style={{
@@ -355,7 +337,7 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
    ═══════════════════════════════════════════════════════════════════ */
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
-    <div style={{ display: 'flex', height: '100%', background: C.bg, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100dvh', background: C.bg, overflow: 'hidden' }}>
       <div style={{ width: 380, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Skeleton width="100%" height={80} style={{ borderRadius: 12 }} />
         <div style={{ display: 'flex', gap: 10 }}>
@@ -487,17 +469,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Suppress unused variable warnings
   void generateCaptions;
 
-  // Auto-create first scene if empty
-  useEffect(() => {
-    const store = useEditorStore.getState();
-    if (store.scenes.length === 0) {
-      store.addScene();
-    }
-  }, []);
-
-  // Multi-shot mode (multiple scenes linked together)
-  const [multiShot, setMultiShot] = useState(false);
-
   // Auto-save
   useEffect(() => {
     if (!projectId) return;
@@ -592,7 +563,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Undo / Redo
   const historyLen = useEditorStore((s) => s.historyCount);
   const futureLen = useEditorStore((s) => s.futureCount);
-  // useUndoHint removed — toast on page load was disruptive
+  useUndoHint(historyLen);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -692,7 +663,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
      ═══════════════════════════════════════════════════════════════ */
   if (projectId && sync.isError) {
     return (
-      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+      <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: C.accent }}>!</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('editor.loadError')}</div>
@@ -723,10 +694,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       style={{
         background: C.bg,
         color: C.text,
-        fontFamily: 'inherit',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {/* ── Top Bar (same as AiThumbnails) ─────────────── */}
         <div
           className="tf-editor-topbar"
@@ -843,17 +814,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               flexShrink: 0,
               background: C.card,
               borderRight: `1px solid ${C.border}`,
-              position: 'relative',
+              padding: 20,
+              display: 'flex', flexDirection: 'column', gap: 14,
+              overflowY: 'auto',
+              maxHeight: '100%',
             }}
           >
-            <div style={{
-              position: 'absolute', inset: 0,
-              overflowY: 'auto', overflowX: 'hidden',
-              padding: 20,
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(128,128,128,.2) transparent',
-            }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* ── 1. Style Preview Card (clickable to open styles) ── */}
             <div
               className="tf-editor-style-card"
@@ -892,27 +858,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </span>
             </div>
 
-            {/* ── 2. Multi-shot toggle ── */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: C.sub }}>Multi-shot</span>
-              <button
-                onClick={() => setMultiShot(!multiShot)}
-                style={{
-                  width: 36, height: 20, borderRadius: 10, border: 'none', cursor: 'pointer',
-                  background: multiShot ? C.accent : C.border,
-                  position: 'relative', transition: 'background .2s',
-                }}
-                aria-label="Toggle multi-shot mode"
-              >
-                <span style={{
-                  position: 'absolute', top: 2, left: multiShot ? 18 : 2,
-                  width: 16, height: 16, borderRadius: 8, background: '#fff',
-                  transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
-                }} />
-              </button>
-            </div>
-
-            {/* ── 3. Frame upload slots ── */}
+            {/* ── 2. Frame upload slots ── */}
             <div className="tf-editor-frames" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <FrameSlot
                 label={t('editor.frame.startFrame')}
@@ -921,22 +867,15 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 accentCol={selCol}
                 onChange={(v) => { if (sel) updScene(sel.id, { sf: v }); }}
               />
-              {!multiShot && (
-                <FrameSlot
-                  label={t('editor.frame.endFrame')}
-                  value={sel?.ef ?? null}
-                  C={C}
-                  accentCol={selCol}
-                  onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
-                  optional
-                />
-              )}
+              <FrameSlot
+                label={t('editor.frame.endFrame')}
+                value={sel?.ef ?? null}
+                C={C}
+                accentCol={selCol}
+                onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
+                optional
+              />
             </div>
-            {multiShot && (
-              <div style={{ fontSize: 10, color: C.dim, fontStyle: 'italic', marginTop: -4 }}>
-                End frame is auto-linked from the next scene&apos;s start frame
-              </div>
-            )}
 
             {/* ── 3. Prompt section ── */}
             <div>
@@ -1183,7 +1122,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 Resolution
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
-                {['720p', '1080p'].map((res) => (
+                {['720p', '1080p', '4K'].map((res) => (
                   <button
                     key={res}
                     onClick={() => setResolution(res)}
@@ -1197,6 +1136,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     }}
                   >
                     {res}
+                    {res === '4K' && plan === 'FREE' && (
+                      <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                        PRO
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -1262,9 +1206,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 Upgrade for more credits
               </a>
             )}
-          </div>{/* end flex-column wrapper */}
-          </div>{/* end absolute scroll wrapper */}
-          </div>{/* end left panel */}
+          </div>
 
           {/* RIGHT PANEL (flex) — same structure as AiThumbnails */}
           <div
@@ -1273,7 +1215,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               flex: 1, minWidth: 0,
               display: 'flex', flexDirection: 'column',
               overflowY: 'auto', overflowX: 'hidden', padding: 20,
-              background: C.bg,
             }}
           >
             {/* ── Header: Tab switcher / Preview pill + actions ── */}
@@ -1437,66 +1378,110 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
                 </div>
               ) : rightPanelTab === 'howto' ? (
-                /* ── How it works / Preset preview tab ──────────── */
+                /* ── How it works tab ────────────────────────── */
                 <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
-                  {selectedStyle.previews && selectedStyle.previews.length > 0 ? (
-                    /* Show video previews when preset has them — Higgsfield style */
-                    <>
-                      <h2 style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
-                        {selectedStyle.name}
-                      </h2>
-                      <p style={{ fontSize: 12, color: C.sub, marginBottom: 14 }}>Preview videos</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-                        {selectedStyle.previews.slice(0, 3).map((src, i) => (
-                          <div key={`${selectedStyle.id}-${i}`} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}`, position: 'relative' }}>
-                              <video src={src} autoPlay loop muted playsInline style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block', background: C.bg }} />
-                              {/* Scene number badge */}
-                              <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(8px)', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.05em' }}>
-                                Scene {i + 1}
-                              </div>
-                            </div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: C.sub, textAlign: 'center' }}>
-                              {selectedStyle.name} #{i + 1}
-                            </div>
-                          </div>
-                        ))}
+                  <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
+                    MAKE VIDEOS IN ONE CLICK
+                  </h2>
+                  <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
+                    250+ presets for camera control, framing, and high-quality VFX
+                  </p>
+
+                  <div className="tf-editor-steps" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 16,
+                  }}>
+                    {/* Step 1 — Add Image */}
+                    <div
+                      style={{
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 14, overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        aspectRatio: '16/10', background: C.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                        </svg>
                       </div>
-                    </>
-                  ) : (
-                    /* Default: 3-step instructions */
-                    <>
-                      <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
-                        MAKE VIDEOS IN ONE CLICK
-                      </h2>
-                      <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
-                        250+ presets for camera control, framing, and high-quality VFX
-                      </p>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: '8px 4px' }}>
-                        {[
-                          { title: 'Add Image', desc: 'Upload or generate an image to start your animation', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
-                          { title: 'Choose Preset', desc: 'Pick from 250+ animation presets for camera, framing, and VFX', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg> },
-                          { title: 'Get Video', desc: 'Click generate and download your high-quality video', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
-                        ].map((step) => (
-                          <div
-                            key={step.title}
-                            style={{
-                              background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14,
-                              overflow: 'hidden', transition: 'transform .2s ease, box-shadow .2s ease',
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                          >
-                            <div style={{ aspectRatio: '16/10', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{step.icon}</div>
-                            <div style={{ padding: 14 }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>{step.title}</div>
-                              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>{step.desc}</div>
-                            </div>
-                          </div>
-                        ))}
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Add Image
+                        </div>
+                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                          Upload or generate an image to start your animation
+                        </div>
                       </div>
-                    </>
-                  )}
+                    </div>
+
+                    {/* Step 2 — Choose Preset */}
+                    <div
+                      style={{
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 14, overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        aspectRatio: '16/10', background: C.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                        </svg>
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Choose Preset
+                        </div>
+                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                          Pick from 250+ animation presets for camera, framing, and VFX
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3 — Get Video */}
+                    <div
+                      style={{
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 14, overflow: 'hidden',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        aspectRatio: '16/10', background: C.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Get Video
+                        </div>
+                        <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
+                          Click generate and download your high-quality video
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               ) : rightPanelTab === 'history' ? (
                 /* ── History tab ─────────────────────────────── */
@@ -1665,7 +1650,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                    Want 1080p, longer videos, and unlimited presets?
+                    Want 4K, longer videos, and unlimited presets?
                   </div>
                   <div style={{ fontSize: 12, color: C.sub }}>
                     Upgrade to Pro for unlimited creative power.
