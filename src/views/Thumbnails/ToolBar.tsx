@@ -127,10 +127,10 @@ const TOOL_SHORTCUT_HINTS: Record<string, string> = {
 export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid } = useThumbnailStore(
-    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid }))
+  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid, showSafeZone } = useThumbnailStore(
+    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid, showSafeZone: s.showSafeZone }))
   );
-  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, setSnapToGrid } = useThumbnailStore.getState();
+  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, setSnapToGrid, setShowSafeZone } = useThumbnailStore.getState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
   const [showShapes, setShowShapes] = useState(false);
@@ -440,6 +440,37 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
           <line x1="15" y1="3" x2="15" y2="21"/>
         </svg>
         <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: snapToGrid ? C.accent : C.dim }}>{t('thumbs.toolbar.grid')}</span>
+      </div>
+
+      {/* Safe Zone toggle */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Toggle Safe Zone"
+        aria-pressed={showSafeZone}
+        onClick={() => {
+          const next = !showSafeZone;
+          setShowSafeZone(next);
+          try { localStorage.setItem('tubeforge-safe-zone', JSON.stringify(next)); } catch {}
+        }}
+        title="Safe Zone — shows 10% margin where text stays readable"
+        style={{
+          width: 44, height: 44, borderRadius: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          color: showSafeZone ? C.accent : C.sub,
+          background: showSafeZone ? C.accentDim : 'transparent',
+          border: `1px solid ${showSafeZone ? C.accent + '33' : 'transparent'}`,
+          cursor: 'pointer', transition: 'all .15s',
+        }}
+        onMouseEnter={(e) => { if (!showSafeZone) (e.currentTarget as HTMLElement).style.background = C.surface; }}
+        onMouseLeave={(e) => { if (!showSafeZone) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const next = !showSafeZone; setShowSafeZone(next); try { localStorage.setItem('tubeforge-safe-zone', JSON.stringify(next)); } catch {} } }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <rect x="6" y="6" width="12" height="12" rx="1" strokeDasharray="3 2"/>
+        </svg>
+        <span style={{ fontSize: 7, fontWeight: 600, lineHeight: 1, color: showSafeZone ? C.accent : C.dim }}>Safe</span>
       </div>
 
       {/* Z4: Remove Background button (placeholder) */}

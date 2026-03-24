@@ -86,6 +86,27 @@ const PATTERN_OPTIONS: Array<{ value: CanvasElement['pattern']; label: string }>
   { value: 'waves', label: 'Waves' },
 ];
 
+const TEXT_EFFECTS: Array<{
+  name: string;
+  shadow: string;
+  stroke: string;
+  strokeWidth?: number;
+  glow: { color: string; blur: number; spread: number } | null;
+}> = [
+  { name: 'None', shadow: '', stroke: '', glow: null },
+  { name: '3D', shadow: '2px 2px 0 #000, 4px 4px 0 #333', stroke: '', glow: null },
+  { name: 'Emboss', shadow: '-1px -1px 0 #fff, 1px 1px 0 #000', stroke: '', glow: null },
+  { name: 'Retro', shadow: '3px 3px 0 #ff6b35, 6px 6px 0 #f7c59f', stroke: '', glow: null },
+  { name: 'Neon Blue', shadow: '', stroke: '', glow: { color: '#3b82f6', blur: 20, spread: 5 } },
+  { name: 'Neon Pink', shadow: '', stroke: '', glow: { color: '#ec4899', blur: 20, spread: 5 } },
+  { name: 'Shadow Pop', shadow: '4px 4px 0 rgba(0,0,0,0.5)', stroke: '', glow: null },
+  { name: 'Long Shadow', shadow: '1px 1px 0 #333, 2px 2px 0 #333, 3px 3px 0 #333, 4px 4px 0 #333, 5px 5px 0 #333', stroke: '', glow: null },
+  { name: 'Outline White', shadow: '', stroke: '#ffffff', strokeWidth: 2, glow: null },
+  { name: 'Outline Black', shadow: '', stroke: '#000000', strokeWidth: 3, glow: null },
+  { name: 'Double Stroke', shadow: '', stroke: '#ffffff', strokeWidth: 4, glow: null },
+  { name: 'Fire Glow', shadow: '', stroke: '', glow: { color: '#ff4500', blur: 30, spread: 10 } },
+];
+
 interface PropertiesPanelProps {
   sel: CanvasElement | null;
 }
@@ -166,6 +187,25 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
                 let cy = sorted[0].y;
                 sorted.forEach((el) => { updEl(el.id, { y: Math.round(cy) }); cy += el.h + gap; });
               }} style={{ ...btnSmall, flex: 1, fontSize: 9 }}>↕ {t('thumbs.props.distributeV')}</button>
+            </div>
+          </div>
+
+          {/* Equal Size */}
+          <div>
+            <div style={labelStyle}>Match Size</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button onClick={() => {
+                if (selectedEls.length < 2) return;
+                pushHistory();
+                const maxW = Math.max(...selectedEls.map((e) => e.w));
+                selIds.forEach((id) => { updEl(id, { w: maxW }); });
+              }} style={{ ...btnSmall, flex: 1, fontSize: 9 }} title="Resize all selected to widest element's width">⇔ Equal Width</button>
+              <button onClick={() => {
+                if (selectedEls.length < 2) return;
+                pushHistory();
+                const maxH = Math.max(...selectedEls.map((e) => e.h));
+                selIds.forEach((id) => { updEl(id, { h: maxH }); });
+              }} style={{ ...btnSmall, flex: 1, fontSize: 9 }} title="Resize all selected to tallest element's height">⇕ Equal Height</button>
             </div>
           </div>
 
@@ -289,6 +329,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.textStrokeWidth ?? 0}</span>
             </div>
           </div>
+          {/* Text Effects Library */}
+          <TextEffectsLibrary C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} labelStyle={labelStyle} />
           {/* Shadow with custom option */}
           <ShadowControl C={C} value={sel.shadow} onChange={(v) => updEl(sel.id, { shadow: v })} inputStyle={inputStyle} labelStyle={labelStyle} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
@@ -1161,6 +1203,87 @@ function ShapeShadowControl({ C, value, onChange, labelStyle }: { C: Theme; valu
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Text Effects Library — click-to-apply text effect presets */
+function TextEffectsLibrary({ C, sel, updEl, pushHistory, labelStyle }: {
+  C: Theme;
+  sel: CanvasElement;
+  updEl: (id: string, patch: Partial<CanvasElement>) => void;
+  pushHistory: () => void;
+  labelStyle: React.CSSProperties;
+}) {
+  const applyEffect = (effect: typeof TEXT_EFFECTS[number]) => {
+    pushHistory();
+    updEl(sel.id, {
+      shadow: effect.shadow || 'none',
+      textStroke: effect.stroke || undefined,
+      textStrokeWidth: effect.strokeWidth ?? 0,
+      glow: effect.glow ?? undefined,
+    });
+  };
+
+  // Detect current active effect
+  const currentShadow = sel.shadow ?? '';
+  const currentStroke = sel.textStroke ?? '';
+  const currentStrokeW = sel.textStrokeWidth ?? 0;
+  const currentGlow = sel.glow;
+  const isEffectActive = (effect: typeof TEXT_EFFECTS[number]) => {
+    const shadowMatch = (effect.shadow || 'none') === (currentShadow || 'none');
+    const strokeMatch = (effect.stroke || '') === (currentStroke || '');
+    const strokeWMatch = (effect.strokeWidth ?? 0) === currentStrokeW;
+    const glowMatch = effect.glow === null
+      ? !currentGlow
+      : !!currentGlow && currentGlow.color === effect.glow.color && currentGlow.blur === effect.glow.blur;
+    return shadowMatch && strokeMatch && strokeWMatch && glowMatch;
+  };
+
+  return (
+    <div>
+      <div style={labelStyle}>Text Effects</div>
+      <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'thin' }}>
+        {TEXT_EFFECTS.map((effect) => {
+          const active = isEffectActive(effect);
+          // Build preview style
+          const previewStyle: React.CSSProperties = {
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: 700,
+            lineHeight: 1,
+            textShadow: effect.shadow || undefined,
+            WebkitTextStroke: effect.stroke ? `${effect.strokeWidth ?? 2}px ${effect.stroke}` : undefined,
+            filter: effect.glow ? `drop-shadow(0 0 ${Math.min(effect.glow.blur, 6)}px ${effect.glow.color})` : undefined,
+          };
+          return (
+            <button
+              key={effect.name}
+              onClick={() => applyEffect(effect)}
+              title={effect.name}
+              style={{
+                minWidth: 52,
+                height: 40,
+                borderRadius: 6,
+                border: `1.5px solid ${active ? C.accent : C.border}`,
+                background: active ? C.accent + '18' : C.surface,
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1,
+                padding: '2px 4px',
+                flexShrink: 0,
+                transition: 'border-color .15s',
+              }}
+            >
+              <span style={previewStyle}>Aa</span>
+              <span style={{ fontSize: 7, color: active ? C.accent : C.dim, lineHeight: 1, whiteSpace: 'nowrap' }}>{effect.name}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
