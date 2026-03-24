@@ -45,6 +45,7 @@ const SUB_ICONS: Record<string, React.ReactElement> = {
   stickyNote: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="14 3 14 8 21 8"/></svg>,
   table: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
   image: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  qrCode: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="22"/><line x1="14" y1="22" x2="22" y2="22"/><rect x="5" y="5" width="2" height="2"/><rect x="17" y="5" width="2" height="2"/><rect x="5" y="17" width="2" height="2"/></svg>,
 };
 
 // Group 1: Selection
@@ -100,6 +101,7 @@ const LINE_OPTIONS = [
 const INSERT_OPTIONS = [
   { id: 'stickyNote', icon: SUB_ICONS.stickyNote, labelKey: 'thumbs.insert.stickyNote' },
   { id: 'table', icon: SUB_ICONS.table, labelKey: 'thumbs.insert.table' },
+  { id: 'qrCode', icon: SUB_ICONS.qrCode, labelKey: 'thumbs.insert.qrCode' },
   { id: 'image', icon: SUB_ICONS.image, labelKey: 'thumbs.insert.image' },
 ];
 
@@ -130,13 +132,15 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid } = useThumbnailStore(
     useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid }))
   );
-  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, setSnapToGrid } = useThumbnailStore.getState();
+  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, addImage, setSnapToGrid } = useThumbnailStore.getState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
   const [showShapes, setShowShapes] = useState(false);
   const [showLines, setShowLines] = useState(false);
   const [showInsert, setShowInsert] = useState(false);
   const [showTablePicker, setShowTablePicker] = useState(false);
+  const [showQrInput, setShowQrInput] = useState(false);
+  const [qrUrl, setQrUrl] = useState('');
   const [tableHover, setTableHover] = useState({ r: 0, c: 0 });
   const [showABTestModal, setShowABTestModal] = useState(false);
 
@@ -145,6 +149,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
     setShowLines(false);
     setShowInsert(false);
     setShowTablePicker(false);
+    setShowQrInput(false);
   }, []);
 
   const handleToolClick = useCallback((id: string) => {
@@ -170,8 +175,17 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const handleInsertClick = useCallback((insertId: string) => {
     if (insertId === 'stickyNote') { addStickyNote(); closeAllSubmenus(); return; }
     if (insertId === 'table') { setShowInsert(false); setShowTablePicker(true); return; }
+    if (insertId === 'qrCode') { setShowInsert(false); setShowQrInput(true); setQrUrl(''); return; }
     if (insertId === 'image') { fileInputRef.current?.click(); closeAllSubmenus(); return; }
   }, [closeAllSubmenus, addStickyNote]);
+
+  const handleQrCodeInsert = useCallback(() => {
+    const url = qrUrl.trim();
+    if (!url) return;
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    addImage(qrApiUrl);
+    closeAllSubmenus();
+  }, [qrUrl, closeAllSubmenus, addImage]);
 
   const handleTableSelect = useCallback((rows: number, cols: number) => {
     addTable(rows, cols);
@@ -638,6 +652,42 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* QR Code URL input popover */}
+      {showQrInput && (
+        <div style={{ ...popoverBase, ...(isMobile ? {} : { top: 188 }), padding: 14, minWidth: 220 }}>
+          <div style={{ fontSize: 11, color: C.sub, marginBottom: 8, fontWeight: 600 }}>
+            {t('thumbs.insert.qrCodeUrl')}
+          </div>
+          <input
+            type="url"
+            value={qrUrl}
+            onChange={(e) => setQrUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleQrCodeInsert(); } if (e.key === 'Escape') closeAllSubmenus(); }}
+            placeholder="https://example.com"
+            autoFocus
+            style={{
+              width: '100%', padding: '7px 10px', background: C.surface,
+              border: `1px solid ${C.border}`, borderRadius: 8, color: C.text,
+              fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box',
+              outline: 'none', marginBottom: 8,
+            }}
+          />
+          <button
+            onClick={handleQrCodeInsert}
+            disabled={!qrUrl.trim()}
+            style={{
+              width: '100%', padding: '7px 0', borderRadius: 8,
+              border: 'none', background: qrUrl.trim() ? C.accent : C.surface,
+              color: qrUrl.trim() ? '#fff' : C.dim, fontSize: 12,
+              fontWeight: 600, cursor: qrUrl.trim() ? 'pointer' : 'default',
+              fontFamily: 'inherit', transition: 'all .15s',
+            }}
+          >
+            {t('thumbs.insert.qrCodeInsert')}
+          </button>
         </div>
       )}
     </div>
