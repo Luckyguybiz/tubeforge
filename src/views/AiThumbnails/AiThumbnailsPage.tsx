@@ -1,44 +1,32 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLocaleStore } from '@/stores/useLocaleStore';
-import { useThemeStore } from '@/stores/useThemeStore';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
-import type { Theme } from '@/lib/types';
 
 /* ── Constants ──────────────────────────────────────────────────────── */
 
-/** Lime accent used throughout the AI thumbnails page */
-const LIME = '#BFFF00';
-const LIME_DIM = 'rgba(191,255,0,0.08)';
-const LIME_GLOW = 'rgba(191,255,0,0.4)';
-const DARK_BG = '#0D0D0D';
-const CARD_BG = '#151515';
-const SURFACE_BG = '#1A1A1A';
+/** Brand accent used throughout the AI thumbnails page */
+const ACCENT = '#6366f1';
+const ACCENT_DIM = 'rgba(99,102,241,0.1)';
+const ACCENT_GLOW = 'rgba(99,102,241,0.4)';
+const DARK_BG = '#0a0a0a';
+const CARD_BG = '#141414';
+const SURFACE_BG = '#1a1a1a';
 
 type TabId = 'scratch' | 'swap';
-type StyleId = 'realistic' | 'anime' | 'cinematic' | '3d' | 'minimalist' | 'popart';
 type FormatId = '16:9' | '9:16';
 
 interface GeneratedImage {
   id: string;
   url: string;
   prompt: string;
-  style: StyleId;
+  style: string;
   revisedPrompt?: string;
   parentId?: string;
 }
-
-const STYLE_KEYS: { id: StyleId; key: string; icon: string }[] = [
-  { id: 'realistic', key: 'aithumbs.style.realistic', icon: '\uD83D\uDCF7' },
-  { id: 'anime', key: 'aithumbs.style.anime', icon: '\uD83C\uDFAD' },
-  { id: 'cinematic', key: 'aithumbs.style.cinematic', icon: '\uD83C\uDFAC' },
-  { id: '3d', key: 'aithumbs.style.3d', icon: '\uD83E\uDDE9' },
-  { id: 'minimalist', key: 'aithumbs.style.minimalist', icon: '\u25FB' },
-  { id: 'popart', key: 'aithumbs.style.popart', icon: '\uD83C\uDFA8' },
-];
 
 const COUNT_OPTIONS = [1, 2, 3] as const;
 const FORMAT_OPTIONS: { id: FormatId; label: string; pro: boolean }[] = [
@@ -97,13 +85,11 @@ function getProgressStage(p: number, t: (k: string) => string): string {
 
 export function AiThumbnailsPage() {
   const t = useLocaleStore((s) => s.t);
-  const C = useThemeStore((s) => s.theme);
   const { canUseAI, remainingAI, plan } = usePlanLimits();
 
   /* ── State ──────────────────────────────────────── */
   const [tab, setTab] = useState<TabId>('scratch');
   const [prompt, setPrompt] = useState('');
-  const [style, setStyle] = useState<StyleId>('realistic');
   const [count, setCount] = useState<1 | 2 | 3>(1);
   const [format, setFormat] = useState<FormatId>('16:9');
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
@@ -152,7 +138,7 @@ export function AiThumbnailsPage() {
           id: img.id || uid(),
           url: img.url,
           prompt: data.prompt,
-          style: data.style as StyleId,
+          style: data.style ?? 'realistic',
           revisedPrompt: img.revisedPrompt,
         }),
       );
@@ -178,7 +164,7 @@ export function AiThumbnailsPage() {
         id: data.id || uid(),
         url: data.url,
         prompt: 'Enhanced version',
-        style,
+        style: 'realistic',
         parentId: selectedImage?.id,
       };
       setProgress(100);
@@ -232,20 +218,20 @@ export function AiThumbnailsPage() {
     const countToUse = count > 1 && plan === 'FREE' ? 1 : count;
     generate.mutate({
       prompt: prompt.trim(),
-      style,
+      style: 'realistic',
       count: countToUse,
       format,
       youtubeUrl: ytUrl || undefined,
       photoUrl: uploadedPhoto || undefined,
     });
-  }, [prompt, style, count, format, plan, generate, canUseAI, t, ytUrl, uploadedPhoto]);
+  }, [prompt, count, format, plan, generate, canUseAI, t, ytUrl, uploadedPhoto]);
 
   const handleRegenerate = useCallback(() => {
     if (!selectedImage || generate.isPending) return;
     if (!canUseAI) { toast.error(t('aithumbs.toast.limitReached')); return; }
     generate.mutate({
       prompt: selectedImage.prompt,
-      style: selectedImage.style,
+      style: 'realistic',
       count: 1,
       format,
     });
@@ -339,29 +325,6 @@ export function AiThumbnailsPage() {
 
   const progressPct = Math.round(progress);
 
-  /* ── Memoized style chip ──── */
-  const chipStyle = useMemo(
-    () =>
-      (active: boolean): React.CSSProperties => ({
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        padding: '7px 14px',
-        borderRadius: 8,
-        border: `1px solid ${active ? LIME : C.border}`,
-        background: active ? LIME_DIM : 'transparent',
-        color: active ? LIME : C.sub,
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        fontFamily: 'inherit',
-        outline: 'none',
-        whiteSpace: 'nowrap' as const,
-      }),
-    [C],
-  );
-
   /* ── Gallery query (for modal) ── */
   const galleryQuery = trpc.aiThumbnails.getGallery.useQuery(
     { filter: 'all', limit: 30 },
@@ -392,12 +355,12 @@ export function AiThumbnailsPage() {
             <div
               style={{
                 width: 32, height: 32, borderRadius: 8,
-                background: LIME_DIM,
+                background: ACCENT_DIM,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
               </svg>
             </div>
@@ -428,14 +391,14 @@ export function AiThumbnailsPage() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
               padding: '5px 12px', borderRadius: 20,
-              background: canUseAI ? LIME_DIM : 'rgba(239,68,68,0.1)',
-              border: `1px solid ${canUseAI ? LIME + '26' : 'rgba(239,68,68,0.2)'}`,
+              background: canUseAI ? ACCENT_DIM : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${canUseAI ? ACCENT + '26' : 'rgba(239,68,68,0.2)'}`,
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? LIME : '#ef4444'} strokeWidth="2.5" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? ACCENT : '#ef4444'} strokeWidth="2.5" strokeLinecap="round">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
-            <span style={{ fontSize: 12, fontWeight: 700, color: canUseAI ? LIME : '#ef4444' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: canUseAI ? ACCENT : '#ef4444' }}>
               {remainingAI}
             </span>
           </div>
@@ -483,17 +446,17 @@ export function AiThumbnailsPage() {
                   <div
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      background: LIME_DIM,
+                      background: ACCENT_DIM,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}
                   >
                     {m === 'scratch' ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
                       </svg>
                     ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                         <path d="M23 21v-2a4 4 0 00-3-3.87" />
@@ -520,7 +483,7 @@ export function AiThumbnailsPage() {
                   {uploadedPhoto ? (
                     <div style={{ position: 'relative', width: 56, height: 56 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={uploadedPhoto} alt="Face" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${LIME}` }} />
+                      <img src={uploadedPhoto} alt="Face" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${ACCENT}` }} />
                       <button
                         onClick={() => setUploadedPhoto(null)}
                         style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 9, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontSize: 10 }}
@@ -550,7 +513,7 @@ export function AiThumbnailsPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
-                  {t('aithumbs.prompt.label')} <span style={{ color: LIME }}>*</span>
+                  {t('aithumbs.prompt.label')} <span style={{ color: ACCENT }}>*</span>
                 </span>
                 <span style={{ fontSize: 11, color: prompt.length > 900 ? '#ef4444' : 'rgba(255,255,255,0.2)' }}>
                   {prompt.length}/1000
@@ -570,7 +533,7 @@ export function AiThumbnailsPage() {
                   outline: 'none', transition: 'border-color 0.2s ease',
                   boxSizing: 'border-box', lineHeight: 1.5,
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = LIME + '60'; }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = ACCENT + '60'; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
               />
 
@@ -629,13 +592,13 @@ export function AiThumbnailsPage() {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '8px 12px', borderRadius: 10,
-                background: LIME_DIM, border: `1px solid ${LIME}20`,
+                background: ACCENT_DIM, border: `1px solid ${ACCENT}20`,
               }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round">
                   <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z" />
                   <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
                 </svg>
-                <span style={{ fontSize: 12, color: LIME, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {ytTitle}
                 </span>
                 <button
@@ -665,11 +628,11 @@ export function AiThumbnailsPage() {
             >
               {suggestIdeas.isPending ? (
                 <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'ait-spin 1s linear infinite', flexShrink: 0 }}>
-                  <circle cx="7" cy="7" r="5" stroke={LIME} strokeWidth="1.5" fill="none" opacity="0.3" />
-                  <path d="M7 2a5 5 0 013.54 1.46" stroke={LIME} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  <circle cx="7" cy="7" r="5" stroke={ACCENT} strokeWidth="1.5" fill="none" opacity="0.3" />
+                  <path d="M7 2a5 5 0 013.54 1.46" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
                 </svg>
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <circle cx="12" cy="12" r="10" />
                   <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -687,8 +650,8 @@ export function AiThumbnailsPage() {
                     style={{
                       padding: '6px 12px',
                       borderRadius: 8,
-                      border: `1px solid ${LIME}30`,
-                      background: LIME_DIM,
+                      border: `1px solid ${ACCENT}30`,
+                      background: ACCENT_DIM,
                       color: '#fff',
                       fontSize: 12,
                       lineHeight: 1.4,
@@ -713,24 +676,6 @@ export function AiThumbnailsPage() {
             {/* Divider */}
             <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
-            {/* 4. Style chips */}
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                {t('aithumbs.section.style')}
-              </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {STYLE_KEYS.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setStyle(s.id)}
-                    style={chipStyle(style === s.id)}
-                  >
-                    <span>{s.icon}</span> {t(s.key)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Count & Format row */}
             <div style={{ display: 'flex', gap: 16 }}>
               {/* Count */}
@@ -745,16 +690,16 @@ export function AiThumbnailsPage() {
                       onClick={() => setCount(c as 1 | 2 | 3)}
                       style={{
                         position: 'relative', width: 40, height: 36, borderRadius: 8,
-                        border: `1px solid ${count === c ? LIME : 'rgba(255,255,255,0.08)'}`,
-                        background: count === c ? LIME_DIM : 'transparent',
-                        color: count === c ? LIME : 'rgba(255,255,255,0.4)',
+                        border: `1px solid ${count === c ? ACCENT : 'rgba(255,255,255,0.08)'}`,
+                        background: count === c ? ACCENT_DIM : 'transparent',
+                        color: count === c ? ACCENT : 'rgba(255,255,255,0.4)',
                         fontSize: 14, fontWeight: 700, cursor: 'pointer',
                         fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none', padding: 0,
                       }}
                     >
                       {c}
                       {c > 1 && plan === 'FREE' && (
-                        <span style={{ fontSize: 8, fontWeight: 800, color: LIME, background: LIME_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                        <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
                           PRO
                         </span>
                       )}
@@ -775,16 +720,16 @@ export function AiThumbnailsPage() {
                       onClick={() => setFormat(f.id)}
                       style={{
                         position: 'relative', padding: '7px 14px', borderRadius: 8,
-                        border: `1px solid ${format === f.id ? LIME : 'rgba(255,255,255,0.08)'}`,
-                        background: format === f.id ? LIME_DIM : 'transparent',
-                        color: format === f.id ? LIME : 'rgba(255,255,255,0.4)',
+                        border: `1px solid ${format === f.id ? ACCENT : 'rgba(255,255,255,0.08)'}`,
+                        background: format === f.id ? ACCENT_DIM : 'transparent',
+                        color: format === f.id ? ACCENT : 'rgba(255,255,255,0.4)',
                         fontSize: 12, fontWeight: 700, cursor: 'pointer',
                         fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
                       }}
                     >
                       {f.id === '16:9' ? '\uD83D\uDDA5' : '\uD83D\uDCF1'} {f.id}
                       {f.pro && plan === 'FREE' && (
-                        <span style={{ fontSize: 8, fontWeight: 800, color: LIME, background: LIME_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                        <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
                           PRO
                         </span>
                       )}
@@ -795,11 +740,11 @@ export function AiThumbnailsPage() {
             </div>
 
             {/* Credit cost */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: LIME_DIM }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2.5" strokeLinecap="round">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: ACCENT_DIM }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
-              <span style={{ fontSize: 12, color: LIME, fontWeight: 600 }}>
+              <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>
                 {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
               </span>
             </div>
@@ -814,19 +759,19 @@ export function AiThumbnailsPage() {
               aria-busy={isLoading || undefined}
               style={{
                 width: '100%', padding: '14px 0', borderRadius: 12,
-                background: disabled ? 'rgba(255,255,255,0.06)' : `linear-gradient(135deg, ${LIME}, #8AE600)`,
-                color: disabled ? 'rgba(255,255,255,0.2)' : '#000',
+                background: disabled ? 'rgba(255,255,255,0.06)' : `linear-gradient(135deg, ${ACCENT}, #818cf8)`,
+                color: disabled ? 'rgba(255,255,255,0.2)' : '#fff',
                 fontSize: 15, fontWeight: 700, border: 'none',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: disabled ? 'none' : `0 4px 20px ${LIME_GLOW}`,
+                boxShadow: disabled ? 'none' : `0 4px 20px ${ACCENT_GLOW}`,
                 transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none', flexShrink: 0,
               }}
             >
               {isLoading && (
                 <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: 'ait-spin 1s linear infinite' }}>
-                  <circle cx="9" cy="9" r="7" stroke="rgba(0,0,0,.2)" strokeWidth="2" fill="none" />
-                  <path d="M9 2a7 7 0 015.2 2.33" stroke="#000" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  <circle cx="9" cy="9" r="7" stroke="rgba(255,255,255,.3)" strokeWidth="2" fill="none" />
+                  <path d="M9 2a7 7 0 015.2 2.33" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
                 </svg>
               )}
               {isLoading ? t('aithumbs.generating') : t('aithumbs.createMagic')}
@@ -838,8 +783,8 @@ export function AiThumbnailsPage() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   padding: '10px 16px', borderRadius: 12,
-                  background: LIME_DIM, border: `1px solid ${LIME}26`,
-                  color: LIME, fontSize: 13, fontWeight: 600,
+                  background: ACCENT_DIM, border: `1px solid ${ACCENT}26`,
+                  color: ACCENT, fontSize: 13, fontWeight: 600,
                   textDecoration: 'none', textAlign: 'center', transition: 'all 0.2s ease',
                 }}
               >
@@ -862,8 +807,8 @@ export function AiThumbnailsPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '5px 14px', borderRadius: 20,
-                  background: LIME_DIM, border: `1px solid ${LIME}1a`,
-                  fontSize: 11, fontWeight: 700, color: LIME,
+                  background: ACCENT_DIM, border: `1px solid ${ACCENT}1a`,
+                  fontSize: 11, fontWeight: 700, color: ACCENT,
                   textTransform: 'uppercase', letterSpacing: 1,
                 }}
               >
@@ -913,8 +858,8 @@ export function AiThumbnailsPage() {
                       position: 'absolute',
                       top: 0, bottom: 0,
                       width: 3,
-                      background: LIME,
-                      boxShadow: `0 0 30px 10px ${LIME_GLOW}, 0 0 60px 20px ${LIME_GLOW}`,
+                      background: ACCENT,
+                      boxShadow: `0 0 30px 10px ${ACCENT_GLOW}, 0 0 60px 20px ${ACCENT_GLOW}`,
                       animation: 'ait-scan 4s ease-in-out infinite',
                       zIndex: 2,
                     }}
@@ -927,8 +872,8 @@ export function AiThumbnailsPage() {
                       position: 'absolute',
                       top: 0, left: 0, right: 0,
                       height: 1,
-                      background: `linear-gradient(90deg, transparent 20%, ${LIME}40 50%, transparent 80%)`,
-                      boxShadow: `0 0 15px 3px ${LIME_GLOW}`,
+                      background: `linear-gradient(90deg, transparent 20%, ${ACCENT}40 50%, transparent 80%)`,
+                      boxShadow: `0 0 15px 3px ${ACCENT_GLOW}`,
                       animation: 'ait-flare 3s ease-in-out infinite',
                       zIndex: 1,
                     }}
@@ -939,8 +884,8 @@ export function AiThumbnailsPage() {
                       position: 'absolute',
                       bottom: 0, left: 0, right: 0,
                       height: 1,
-                      background: `linear-gradient(90deg, transparent 20%, ${LIME}40 50%, transparent 80%)`,
-                      boxShadow: `0 0 15px 3px ${LIME_GLOW}`,
+                      background: `linear-gradient(90deg, transparent 20%, ${ACCENT}40 50%, transparent 80%)`,
+                      boxShadow: `0 0 15px 3px ${ACCENT_GLOW}`,
                       animation: 'ait-flare 3s ease-in-out infinite reverse',
                       zIndex: 1,
                     }}
@@ -953,7 +898,7 @@ export function AiThumbnailsPage() {
                   }}>
                     <div style={{
                       fontSize: 72, fontWeight: 800, color: '#fff',
-                      textShadow: `0 0 40px ${LIME_GLOW}, 0 0 80px ${LIME_GLOW}`,
+                      textShadow: `0 0 40px ${ACCENT_GLOW}, 0 0 80px ${ACCENT_GLOW}`,
                       lineHeight: 1,
                       fontVariantNumeric: 'tabular-nums',
                     }}>
@@ -988,7 +933,7 @@ export function AiThumbnailsPage() {
                       maxHeight: '65vh',
                       position: 'relative', overflow: 'hidden', borderRadius: 12,
                       background: '#000',
-                      boxShadow: `0 0 20px ${LIME}10, 0 4px 16px rgba(0,0,0,0.3)`,
+                      boxShadow: `0 0 20px ${ACCENT}10, 0 4px 16px rgba(0,0,0,0.3)`,
                       margin: '0 auto',
                     }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1024,7 +969,7 @@ export function AiThumbnailsPage() {
                               }}
                               style={{
                                 padding: 0, width: 80, height: 45, flexShrink: 0,
-                                border: isActive ? `2px solid ${LIME}` : `1px solid rgba(255,255,255,0.08)`,
+                                border: isActive ? `2px solid ${ACCENT}` : `1px solid rgba(255,255,255,0.08)`,
                                 borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
                                 background: '#000', outline: 'none', transition: 'all 0.2s ease',
                               }}
@@ -1047,10 +992,10 @@ export function AiThumbnailsPage() {
                 }}>
                   <div style={{
                     width: 80, height: 80, borderRadius: 20,
-                    background: LIME_DIM,
+                    background: ACCENT_DIM,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
                       <polyline points="21 15 16 10 5 21" />
@@ -1073,8 +1018,8 @@ export function AiThumbnailsPage() {
               <div
                 style={{
                   marginTop: 16, padding: '14px 20px',
-                  borderRadius: 12, border: `1px solid ${LIME}33`,
-                  background: `linear-gradient(135deg, ${LIME}14, transparent)`,
+                  borderRadius: 12, border: `1px solid ${ACCENT}33`,
+                  background: `linear-gradient(135deg, ${ACCENT}14, transparent)`,
                   display: 'flex', alignItems: 'center', gap: 16,
                   flexShrink: 0,
                 }}
@@ -1091,7 +1036,7 @@ export function AiThumbnailsPage() {
                   href="/billing"
                   style={{
                     padding: '8px 20px', borderRadius: 8,
-                    background: LIME, color: '#000',
+                    background: ACCENT, color: '#fff',
                     fontSize: 12, fontWeight: 700, textDecoration: 'none',
                     whiteSpace: 'nowrap', flexShrink: 0,
                     transition: 'all 0.2s ease',
@@ -1152,8 +1097,8 @@ export function AiThumbnailsPage() {
               {galleryQuery.isLoading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'rgba(255,255,255,0.4)' }}>
                   <svg width="20" height="20" viewBox="0 0 20 20" style={{ animation: 'ait-spin 1s linear infinite', marginRight: 8 }}>
-                    <circle cx="10" cy="10" r="8" stroke={LIME} strokeWidth="1.5" fill="none" opacity="0.3" />
-                    <path d="M10 2a8 8 0 015.66 2.34" stroke={LIME} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                    <circle cx="10" cy="10" r="8" stroke={ACCENT} strokeWidth="1.5" fill="none" opacity="0.3" />
+                    <path d="M10 2a8 8 0 015.66 2.34" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
                   </svg>
                   {t('aithumbs.generating')}
                 </div>
@@ -1175,7 +1120,7 @@ export function AiThumbnailsPage() {
                           id: item.id,
                           url: item.imageUrl,
                           prompt: item.prompt,
-                          style: (item.style as StyleId) || 'realistic',
+                          style: item.style || 'realistic',
                         });
                         setImageRevealed(true);
                         setShowGallery(false);
@@ -1213,8 +1158,8 @@ export function AiThumbnailsPage() {
           to { transform: rotate(360deg); }
         }
         @keyframes ait-pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px ${LIME_GLOW}; }
-          50% { box-shadow: 0 0 40px ${LIME_GLOW}; }
+          0%, 100% { box-shadow: 0 0 20px ${ACCENT_GLOW}; }
+          50% { box-shadow: 0 0 40px ${ACCENT_GLOW}; }
         }
       `}</style>
     </div>
@@ -1236,9 +1181,9 @@ function SmallIconBtn({
   title: string;
   children: React.ReactNode;
 }) {
-  const borderColor = danger ? '#ef4444' : active ? LIME + '66' : 'rgba(255,255,255,0.08)';
-  const bg = danger ? 'rgba(239,68,68,0.12)' : active ? LIME_DIM : 'transparent';
-  const color = danger ? '#ef4444' : active ? LIME : 'rgba(255,255,255,0.4)';
+  const borderColor = danger ? '#ef4444' : active ? ACCENT + '66' : 'rgba(255,255,255,0.08)';
+  const bg = danger ? 'rgba(239,68,68,0.12)' : active ? ACCENT_DIM : 'transparent';
+  const color = danger ? '#ef4444' : active ? ACCENT : 'rgba(255,255,255,0.4)';
   return (
     <button
       onClick={onClick}
@@ -1275,9 +1220,9 @@ function ActionPill({
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: '6px 14px', borderRadius: 8,
-        border: `1px solid ${accent ? LIME + '99' : 'rgba(255,255,255,0.08)'}`,
-        background: accent ? LIME_DIM : 'transparent',
-        color: accent ? LIME : '#fff',
+        border: `1px solid ${accent ? ACCENT + '99' : 'rgba(255,255,255,0.08)'}`,
+        background: accent ? ACCENT_DIM : 'transparent',
+        color: accent ? ACCENT : '#fff',
         fontSize: 12, fontWeight: 600,
         cursor: loading ? 'wait' : 'pointer',
         fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
