@@ -31,6 +31,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: env.AUTH_GOOGLE_ID,
       clientSecret: env.AUTH_GOOGLE_SECRET,
+      authorization: {
+        params: {
+          scope: [
+            'openid',
+            'email',
+            'profile',
+            'https://www.googleapis.com/auth/youtube.readonly',
+            'https://www.googleapis.com/auth/yt-analytics.readonly',
+            'https://www.googleapis.com/auth/youtube.upload',
+          ].join(' '),
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
     }),
     // DEV-ONLY: email-based login without OAuth (disabled in production)
     ...(process.env.NODE_ENV !== 'production' ? [
