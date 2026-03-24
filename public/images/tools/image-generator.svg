@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle cx="150" cy="130" r="60" stroke="white" stroke-width="1.5" opacity="0.2"/>
+    <circle cx="150" cy="130" r="40" stroke="white" stroke-width="1" opacity="0.15"/>
+    <path d="M130 130 C130 110, 150 100, 150 120 C150 100, 170 110, 170 130 C170 150, 150 160, 150 140 C150 160, 130 150, 130 130Z" fill="white" opacity="0.2"/>
+    <circle cx="140" cy="120" r="3" fill="white" opacity="0.5"/>
+    <circle cx="160" cy="125" r="2.5" fill="white" opacity="0.4"/>
+    <circle cx="145" cy="140" r="2" fill="white" opacity="0.3"/>
+    <path d="M190 130 L240 100" stroke="white" stroke-width="1" opacity="0.3" stroke-dasharray="4 4"/>
+    <path d="M190 130 L250 140" stroke="white" stroke-width="1" opacity="0.3" stroke-dasharray="4 4"/>
+    <path d="M190 130 L240 170" stroke="white" stroke-width="1" opacity="0.3" stroke-dasharray="4 4"/>
+    <rect x="240" y="80" width="120" height="90" rx="8" stroke="white" stroke-width="1.5" opacity="0.35"/>
+    <rect x="240" y="80" width="120" height="90" rx="8" fill="white" opacity="0.05"/>
+    <circle cx="270" cy="105" r="10" fill="white" opacity="0.2"/>
+    <polygon points="260,155 300,120 340,140 340,170 260,170" fill="white" opacity="0.15"/>
+    <path d="M135 75 L140 65 L145 75" stroke="white" stroke-width="1" opacity="0.4" fill="none"/>
+    <path d="M165 80 L175 70" stroke="white" stroke-width="1" opacity="0.3"/>
+    <path d="M120 105 L110 95" stroke="white" stroke-width="1" opacity="0.3"/>
+    <circle cx="150" cy="130" r="4" fill="white" opacity="0.4" filter="url(#glow)"/>
+    <text x="200" y="250" text-anchor="middle" fill="white" font-size="11" opacity="0.3" font-family="Arial">AI GENERATION</text>
+  </svg>

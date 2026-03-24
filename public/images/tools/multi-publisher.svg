@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle cx="200" cy="100" r="40" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <polyline points="190,100 198,110 215,90" stroke="white" stroke-width="2.5" opacity="0.5" fill="none" stroke-linecap="round"/>
+    <circle cx="100" cy="180" r="25" stroke="white" stroke-width="1" opacity="0.2"/>
+    <polygon points="95,175 95,190 108,182" fill="white" opacity="0.25"/>
+    <circle cx="200" cy="210" r="25" stroke="white" stroke-width="1" opacity="0.2"/>
+    <path d="M200 198 C200 188, 210 185, 215 195 L215 218" stroke="white" stroke-width="1.5" opacity="0.25" fill="none"/>
+    <circle cx="300" cy="180" r="25" stroke="white" stroke-width="1" opacity="0.2"/>
+    <rect x="290" y="172" width="20" height="16" rx="3" stroke="white" stroke-width="1" opacity="0.25"/>
+    <line x1="200" y1="140" x2="120" y2="163" stroke="white" stroke-width="1" opacity="0.2"/>
+    <line x1="200" y1="140" x2="200" y2="185" stroke="white" stroke-width="1" opacity="0.2"/>
+    <line x1="200" y1="140" x2="280" y2="163" stroke="white" stroke-width="1" opacity="0.2"/>
+    <path d="M180 55 L190 45 L200 55" stroke="white" stroke-width="1.5" opacity="0.3" fill="none"/>
+    <line x1="190" y1="45" x2="190" y2="65" stroke="white" stroke-width="1.5" opacity="0.25"/>
+    <text x="200" y="270" text-anchor="middle" fill="white" font-size="10" opacity="0.25" font-family="Arial">PUBLISH EVERYWHERE</text>
+  </svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="60" y="40" width="280" height="170" rx="8" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <rect x="60" y="40" width="280" height="170" rx="8" fill="white" opacity="0.05"/>
+    <polygon points="180,100 180,140 210,120" fill="white" opacity="0.2"/>
+    <rect x="100" y="170" width="200" height="30" rx="4" fill="black" opacity="0.3"/>
+    <rect x="110" y="176" width="180" height="8" rx="2" fill="white" opacity="0.6"/>
+    <rect x="130" y="188" width="140" height="6" rx="2" fill="white" opacity="0.4"/>
+    <line x1="60" y1="230" x2="340" y2="230" stroke="white" stroke-width="1" opacity="0.15"/>
+    <rect x="60" y="240" width="280" height="8" rx="2" fill="white" opacity="0.08"/>
+    <rect x="80" y="240" width="30" height="8" rx="2" fill="white" opacity="0.3"/>
+    <rect x="120" y="240" width="80" height="8" rx="2" fill="white" opacity="0.25"/>
+    <rect x="220" y="240" width="50" height="8" rx="2" fill="white" opacity="0.2"/>
+    <rect x="60" y="254" width="280" height="8" rx="2" fill="white" opacity="0.08"/>
+    <rect x="60" y="254" width="40" height="8" rx="2" fill="white" opacity="0.25"/>
+    <rect x="110" y="254" width="100" height="8" rx="2" fill="white" opacity="0.3"/>
+    <circle cx="355" cy="248" r="12" stroke="white" stroke-width="1" opacity="0.2"/>
+    <text x="355" y="252" text-anchor="middle" fill="white" font-size="10" opacity="0.4" font-family="Arial">T</text>
+  </svg>

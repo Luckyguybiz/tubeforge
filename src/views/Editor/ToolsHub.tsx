@@ -595,6 +595,32 @@ const TOOL_ICONS: Record<string, (color: string) => React.ReactNode> = {
       <circle cx="6" cy="18" r="1.5" fill={c} stroke="none" opacity=".5" /><circle cx="12" cy="18" r="1.5" fill={c} stroke="none" opacity=".5" /><circle cx="18" cy="18" r="1.5" fill={c} stroke="none" opacity=".5" />
     </svg>
   ),
+  'mp4-to-gif': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="8" height="6" rx="1" /><path d="M14 7h6" /><polygon points="22,7 20,5 20,9" fill={c} stroke="none" />
+      <rect x="14" y="4" width="8" height="6" rx="1" opacity=".5" /><path d="M14 18h4" /><rect x="2" y="14" width="8" height="6" rx="1" />
+      <text x="6" y="19" textAnchor="middle" fill={c} fontSize="4" fontWeight="700" stroke="none">GIF</text>
+    </svg>
+  ),
+  'content-planner': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+      <circle cx="8" cy="14" r="1" fill={c} stroke="none" /><circle cx="12" cy="14" r="1" fill={c} stroke="none" /><circle cx="16" cy="14" r="1" fill={c} stroke="none" />
+      <circle cx="8" cy="18" r="1" fill={c} stroke="none" opacity=".5" /><circle cx="12" cy="18" r="1" fill={c} stroke="none" opacity=".5" />
+    </svg>
+  ),
+  'ai-video-generator': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" />
+      <path d="M6 8l1 2h2l-1.5 1.2.5 2L6 12l-2 1.2.5-2L3 10h2l1-2z" fill={c} stroke="none" opacity=".5" />
+    </svg>
+  ),
+  'video-translator': (c) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><ellipse cx="12" cy="12" rx="4" ry="10" /><line x1="2" y1="12" x2="22" y2="12" />
+      <line x1="12" y1="2" x2="12" y2="22" />
+    </svg>
+  ),
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -683,9 +709,9 @@ const ToolCard = memo(function ToolCard({
         filter: tool.available ? 'none' : 'grayscale(0.6)',
       }}
     >
-      {/* Gradient visual area */}
+      {/* Gradient visual area with illustration */}
       <div className="tf-tools-card-gradient" style={{
-        height: 100,
+        height: 140,
         background: tool.available
           ? `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`
           : `linear-gradient(135deg, ${C.border}, ${C.surface})`,
@@ -696,7 +722,7 @@ const ToolCard = memo(function ToolCard({
         overflow: 'hidden',
         borderRadius: '14px 14px 0 0',
       }}>
-        {/* Centered icon in gradient */}
+        {/* Fallback icon (behind illustration) */}
         <div style={{
           width: 48,
           height: 48,
@@ -707,9 +733,31 @@ const ToolCard = memo(function ToolCard({
           justifyContent: 'center',
           transition: 'transform .2s',
           transform: hovered && tool.available ? 'scale(1.1)' : 'none',
+          position: 'relative',
+          zIndex: 0,
         }}>
           {iconFn ? iconFn(tool.available ? '#fff' : C.dim) : null}
         </div>
+        {/* Full-bleed SVG illustration overlay */}
+        <img
+          src={`/images/tools/${tool.id}.svg`}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'transform .3s ease, opacity .3s',
+            transform: hovered && tool.available ? 'scale(1.05)' : 'none',
+            opacity: tool.available ? 1 : 0.5,
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
 
         {/* Badge */}
         {tool.badge && tool.available && (

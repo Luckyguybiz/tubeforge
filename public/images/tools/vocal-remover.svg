@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle cx="150" cy="120" r="45" stroke="white" stroke-width="1.5" opacity="0.25"/>
+    <path d="M135 120 C135 100 165 100 165 120 C165 140 135 140 135 120" fill="white" opacity="0.15"/>
+    <circle cx="142" cy="112" r="3" fill="white" opacity="0.4"/>
+    <circle cx="158" cy="112" r="3" fill="white" opacity="0.4"/>
+    <path d="M143 130 C143 135 157 135 157 130" stroke="white" stroke-width="1" opacity="0.3" fill="none"/>
+    <line x1="195" y1="100" x2="210" y2="100" stroke="white" stroke-width="2" opacity="0.3"/>
+    <polygon points="215,100 210,95 210,105" fill="white" opacity="0.3"/>
+    <line x1="195" y1="140" x2="210" y2="140" stroke="white" stroke-width="2" opacity="0.3"/>
+    <polygon points="215,140 210,135 210,145" fill="white" opacity="0.3"/>
+    <path d="M250 70 Q260 60 260 75 L260 100" stroke="white" stroke-width="2" opacity="0.4" fill="none"/>
+    <circle cx="255" cy="105" r="8" fill="white" opacity="0.15" stroke="white" stroke-width="1" opacity="0.3"/>
+    <path d="M290 70 Q300 55 300 75 L300 95" stroke="white" stroke-width="2" opacity="0.35" fill="none"/>
+    <circle cx="295" cy="100" r="8" fill="white" opacity="0.12" stroke="white" stroke-width="1" opacity="0.25"/>
+    <path d="M330 80 Q340 65 340 85 L340 105" stroke="white" stroke-width="1.5" opacity="0.25" fill="none"/>
+    <circle cx="335" cy="110" r="7" fill="white" opacity="0.1" stroke="white" stroke-width="1"/>
+    <rect x="230" y="130" width="130" height="50" rx="6" stroke="white" stroke-width="1" opacity="0.15"/>
+    <path d="M245,155 Q255,140 265,155 Q275,170 285,155 Q295,140 305,155 Q315,170 325,155 Q335,140 345,155" stroke="white" stroke-width="1.5" opacity="0.35" fill="none"/>
+    <line x1="100" y1="80" x2="200" y2="80" stroke="white" stroke-width="2.5" opacity="0.15" stroke-linecap="round" transform="rotate(-35 150 100)"/>
+  </svg>

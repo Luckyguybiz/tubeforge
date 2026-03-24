@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="160" y="60" width="30" height="60" rx="15" stroke="white" stroke-width="2" opacity="0.4"/>
+    <path d="M145 100 Q145 135 175 135 Q205 135 205 100" stroke="white" stroke-width="1.5" opacity="0.3" fill="none"/>
+    <line x1="175" y1="135" x2="175" y2="150" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="100" cy="170" r="25" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <text x="100" y="167" text-anchor="middle" fill="white" font-size="20" opacity="0.3" font-family="Arial">M</text>
+    <text x="100" y="183" text-anchor="middle" fill="white" font-size="8" opacity="0.2" font-family="Arial">MALE</text>
+    <circle cx="175" cy="200" r="25" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <text x="175" y="197" text-anchor="middle" fill="white" font-size="20" opacity="0.3" font-family="Arial">F</text>
+    <text x="175" y="213" text-anchor="middle" fill="white" font-size="8" opacity="0.2" font-family="Arial">FEMALE</text>
+    <circle cx="250" cy="170" r="25" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <text x="250" y="165" text-anchor="middle" fill="white" font-size="14" opacity="0.3" font-family="Arial">FX</text>
+    <text x="250" y="183" text-anchor="middle" fill="white" font-size="8" opacity="0.2" font-family="Arial">EFFECTS</text>
+    <path d="M270 90 Q280 80 290 95 Q300 80 310 90" stroke="white" stroke-width="1.5" opacity="0.3" fill="none"/>
+    <path d="M270 110 Q285 95 310 110" stroke="white" stroke-width="1" opacity="0.2" fill="none"/>
+    <path d="M175 150 L100 148" stroke="white" stroke-width="1" opacity="0.15" stroke-dasharray="4 3"/>
+    <path d="M175 150 L175 175" stroke="white" stroke-width="1" opacity="0.15" stroke-dasharray="4 3"/>
+    <path d="M175 150 L250 148" stroke="white" stroke-width="1" opacity="0.15" stroke-dasharray="4 3"/>
+  </svg>

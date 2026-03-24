@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="150" y="30" width="100" height="200" rx="12" stroke="white" stroke-width="2" opacity="0.4"/>
+    <rect x="150" y="30" width="100" height="200" rx="12" fill="white" opacity="0.05"/>
+    <rect x="180" y="38" width="40" height="6" rx="3" fill="white" opacity="0.15"/>
+    <polygon points="185,110 185,150 215,130" fill="white" opacity="0.25"/>
+    <rect x="175" y="215" width="50" height="5" rx="2" fill="white" opacity="0.15"/>
+    <line x1="140" y1="30" x2="140" y2="230" stroke="white" stroke-width="1" opacity="0.25"/>
+    <line x1="136" y1="30" x2="144" y2="30" stroke="white" stroke-width="1" opacity="0.25"/>
+    <line x1="136" y1="230" x2="144" y2="230" stroke="white" stroke-width="1" opacity="0.25"/>
+    <text x="128" y="135" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial" transform="rotate(-90 128 135)">1920px</text>
+    <line x1="150" y1="240" x2="250" y2="240" stroke="white" stroke-width="1" opacity="0.25"/>
+    <line x1="150" y1="236" x2="150" y2="244" stroke="white" stroke-width="1" opacity="0.25"/>
+    <line x1="250" y1="236" x2="250" y2="244" stroke="white" stroke-width="1" opacity="0.25"/>
+    <text x="200" y="255" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial">1080px</text>
+    <text x="200" y="280" text-anchor="middle" fill="white" font-size="12" font-weight="700" opacity="0.35" font-family="Arial">9:16 VERTICAL</text>
+    <rect x="280" y="60" width="70" height="30" rx="5" stroke="white" stroke-width="1" opacity="0.15"/>
+    <text x="315" y="80" text-anchor="middle" fill="white" font-size="8" opacity="0.25" font-family="Arial">1080p</text>
+    <rect x="280" y="100" width="70" height="30" rx="5" stroke="white" stroke-width="1" opacity="0.15"/>
+    <text x="315" y="120" text-anchor="middle" fill="white" font-size="8" opacity="0.25" font-family="Arial">60 sec</text>
+    <rect x="280" y="140" width="70" height="30" rx="5" stroke="white" stroke-width="1" opacity="0.15"/>
+    <text x="315" y="160" text-anchor="middle" fill="white" font-size="8" opacity="0.25" font-family="Arial">MP4/WebM</text>
+  </svg>

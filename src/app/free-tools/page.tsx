@@ -246,10 +246,10 @@ export default function FreeToolsPage() {
                 overflow: "hidden",
               }}
             >
-              {/* Gradient visual area with animated shapes */}
+              {/* Gradient visual area with illustration */}
               <div
                 style={{
-                  height: 120,
+                  height: 140,
                   background: `linear-gradient(135deg, ${tool.gradient[0]}, ${tool.gradient[1]})`,
                   display: "flex",
                   alignItems: "center",
@@ -260,7 +260,23 @@ export default function FreeToolsPage() {
               >
                 <div style={{ position: "absolute", width: 60, height: 60, borderRadius: "50%", background: "rgba(255,255,255,0.06)", top: -15, right: -5 }} className="tf-float-shape" />
                 <div style={{ position: "absolute", width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.04)", bottom: -8, left: "20%" }} className="tf-float-shape-rev" />
-                <div style={{ position: "relative", zIndex: 1 }}>{tool.icon}</div>
+                <div style={{ position: "relative", zIndex: 0 }}>{tool.icon}</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/images/tools/${tool.href.split("/").pop()}.svg`}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    zIndex: 1,
+                    pointerEvents: "none",
+                  }}
+                />
               </div>
               {/* Text content */}
               <div style={{ padding: "16px 20px", flex: 1, display: "flex", flexDirection: "column" }}>

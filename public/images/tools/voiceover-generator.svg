@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="135" y="60" width="30" height="70" rx="15" stroke="white" stroke-width="2" opacity="0.5"/>
+    <rect x="135" y="60" width="30" height="70" rx="15" fill="white" opacity="0.1"/>
+    <path d="M120 110 Q120 155 150 155 Q180 155 180 110" stroke="white" stroke-width="1.5" opacity="0.35" fill="none"/>
+    <line x1="150" y1="155" x2="150" y2="175" stroke="white" stroke-width="1.5" opacity="0.35"/>
+    <line x1="135" y1="175" x2="165" y2="175" stroke="white" stroke-width="1.5" opacity="0.35"/>
+    <path d="M200 80 Q210 80 210 90 Q210 100 220 95 Q220 105 230 100 Q230 110 240 105 Q240 120 250 112" stroke="white" stroke-width="2" opacity="0.5" fill="none" stroke-linecap="round"/>
+    <path d="M200 120 Q208 115 210 125 Q215 110 220 130 Q228 105 235 125 Q240 115 250 120" stroke="white" stroke-width="1.5" opacity="0.35" fill="none" stroke-linecap="round"/>
+    <path d="M200 145 Q210 140 215 150 Q220 135 230 148 Q235 138 250 145" stroke="white" stroke-width="1" opacity="0.25" fill="none" stroke-linecap="round"/>
+    <circle cx="270" cy="80" r="3" fill="white" opacity="0.3"/>
+    <circle cx="285" cy="100" r="2" fill="white" opacity="0.2"/>
+    <circle cx="275" cy="140" r="2.5" fill="white" opacity="0.25"/>
+    <rect x="80" y="210" width="240" height="50" rx="8" stroke="white" stroke-width="1" opacity="0.15"/>
+    <rect x="95" y="225" width="210" height="4" rx="2" fill="white" opacity="0.1"/>
+    <rect x="95" y="225" width="140" height="4" rx="2" fill="white" opacity="0.3"/>
+    <circle cx="95" cy="240" r="8" fill="white" opacity="0.15"/>
+    <polygon points="93,237 99,240 93,243" fill="white" opacity="0.4"/>
+  </svg>
