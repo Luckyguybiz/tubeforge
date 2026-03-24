@@ -24,8 +24,8 @@ const authRateLimitMap = new Map<string, RateLimitEntry>();
 
 /** Requests allowed per window per IP (page navigations + API calls) */
 const RATE_LIMIT_MAX = 600;
-/** Auth endpoint: stricter limit (10 requests per minute) */
-const AUTH_RATE_LIMIT_MAX = 10;
+/** Auth endpoint: stricter limit (30 requests per minute — OAuth flow uses ~5 req per attempt) */
+const AUTH_RATE_LIMIT_MAX = 30;
 /** Window duration in ms (1 minute) */
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** Purge stale entries every N calls to keep the Map bounded */
@@ -177,7 +177,9 @@ export default function middleware(req: NextRequest) {
   // API-level rate limiting (per-user, per-endpoint) is enforced in tRPC/route handlers.
 
   // --- Stricter rate limiting for auth endpoints only (brute-force protection) ---
-  if (pathname.startsWith('/api/auth/')) {
+  // Exclude /api/auth/session from rate limit — session checks are frequent
+  // and not a brute-force vector (they just read the JWT cookie).
+  if (pathname.startsWith('/api/auth/') && pathname !== '/api/auth/session') {
     if (!checkRateLimit(ip, authRateLimitMap, AUTH_RATE_LIMIT_MAX)) {
       return new NextResponse('Too Many Requests', {
         status: 429,
