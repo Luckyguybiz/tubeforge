@@ -10,6 +10,7 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
 import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
 import { ChannelAnalytics } from './ChannelAnalytics';
+import { DashboardUpgradeModal } from '@/components/ui/DashboardUpgradeModal';
 
 /* ── Tool icon definitions (static, no i18n needed) ──── */
 
@@ -602,6 +603,9 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ── Upgrade modal for new FREE users ──────── */}
+      {user && <DashboardUpgradeModal userPlan={user.plan} />}
     </div>
   );
 }
