@@ -158,6 +158,13 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      // Ctrl+1: Zoom to selection
+      if (ctrl && e.key === '1') {
+        e.preventDefault();
+        store.zoomToSelection();
+        return;
+      }
+
       // Bring to front: Ctrl+] / Send to back: Ctrl+[
       if (ctrl && (e.key === ']' || e.key === '[') && store.selIds.length === 1) {
         e.preventDefault();

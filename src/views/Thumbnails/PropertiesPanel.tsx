@@ -1814,9 +1814,20 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
             onMouseEnter={(e) => { if (!isSel && !dragId) (e.currentTarget as HTMLElement).style.background = C.surface; }}
             onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, flexShrink: 0, color: isSel ? C.accent : C.dim, background: isSel ? C.accent + '14' : C.surface, borderRadius: 5 }}>
-              {LAYER_ICONS[el.type] ?? LAYER_ICONS.rect}
-            </span>
+            {/* Layer thumbnail preview */}
+            {el.type === 'image' && el.src ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, flexShrink: 0, borderRadius: 4, overflow: 'hidden', background: C.surface, border: `1px solid ${isSel ? C.accent + '44' : C.border}` }}>
+                <img src={el.src} alt="" style={{ width: 24, height: 24, objectFit: 'cover' }} />
+              </span>
+            ) : (el.type === 'rect' || el.type === 'circle' || el.type === 'triangle' || el.type === 'star') ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, flexShrink: 0, borderRadius: el.type === 'circle' ? '50%' : 4, background: el.bg && el.bg !== 'transparent' ? el.bg : (el.color ?? C.accent), border: `1px solid ${isSel ? C.accent + '44' : C.border}` }}>
+                <span style={{ color: isSel ? '#fff' : C.dim, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'scale(0.65)' }}>{LAYER_ICONS[el.type] ?? LAYER_ICONS.rect}</span>
+              </span>
+            ) : (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, flexShrink: 0, color: isSel ? C.accent : C.dim, background: isSel ? C.accent + '14' : C.surface, borderRadius: 5 }}>
+                {LAYER_ICONS[el.type] ?? LAYER_ICONS.rect}
+              </span>
+            )}
             {isRenaming ? (
               <input
                 autoFocus
@@ -1828,9 +1839,16 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
                 style={{ flex: 1, fontSize: 11, fontWeight: 500, color: C.text, background: C.surface, border: `1px solid ${C.blue}`, borderRadius: 4, padding: '1px 4px', outline: 'none', fontFamily: 'inherit', minWidth: 0 }}
               />
             ) : (
-              <span style={{ flex: 1, fontSize: 11, fontWeight: isSel ? 600 : 500, color: isSel ? C.text : C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {getDisplayName(el)}
-              </span>
+              <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 11, fontWeight: isSel ? 600 : 500, color: isSel ? C.text : C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {getDisplayName(el)}
+                </span>
+                {el.type === 'text' && el.text && (
+                  <span style={{ display: 'block', fontSize: 9, color: C.dim, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
+                    {el.text.slice(0, 20)}{el.text.length > 20 ? '...' : ''}
+                  </span>
+                )}
+              </div>
             )}
             {/* Visibility toggle */}
             <button onClick={(e) => { e.stopPropagation(); updEl(el.id, { visible: el.visible === false ? true : false }); }}

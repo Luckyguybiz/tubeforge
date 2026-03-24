@@ -127,6 +127,8 @@ interface ThumbnailState {
   zoomIn: () => void;
   zoomOut: () => void;
   fitToScreen: () => void;
+  /** Zoom to fit selected elements with padding */
+  zoomToSelection: () => void;
 
   // Canvas size
   setCanvasSize: (w: number, h: number) => void;
@@ -507,6 +509,27 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   zoomIn: () => set((s) => ({ zoom: Math.min(CANVAS_ZOOM_MAX, s.zoom + 0.1) })),
   zoomOut: () => set((s) => ({ zoom: Math.max(CANVAS_ZOOM_MIN, s.zoom - 0.1) })),
   fitToScreen: () => set({ zoom: 1, panX: 0, panY: 0 }),
+  zoomToSelection: () => {
+    const s = get();
+    const selected = s.els.filter((e) => s.selIds.includes(e.id));
+    if (selected.length === 0) return;
+    const minX = Math.min(...selected.map((e) => e.x));
+    const minY = Math.min(...selected.map((e) => e.y));
+    const maxX = Math.max(...selected.map((e) => e.x + e.w));
+    const maxY = Math.max(...selected.map((e) => e.y + e.h));
+    const bw = maxX - minX;
+    const bh = maxY - minY;
+    if (bw < 1 || bh < 1) return;
+    const PAD = 80;
+    const zoomX = s.canvasW / (bw + PAD * 2);
+    const zoomY = s.canvasH / (bh + PAD * 2);
+    const newZoom = Math.min(Math.max(Math.min(zoomX, zoomY), CANVAS_ZOOM_MIN), CANVAS_ZOOM_MAX);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const panXVal = (s.canvasW / 2 - cx) * (newZoom > 1 ? 0.5 : 1);
+    const panYVal = (s.canvasH / 2 - cy) * (newZoom > 1 ? 0.5 : 1);
+    set({ zoom: newZoom, panX: panXVal, panY: panYVal });
+  },
 
   // ===== Canvas size =====
   setCanvasSize: (w, h) => set({ canvasW: w, canvasH: h }),

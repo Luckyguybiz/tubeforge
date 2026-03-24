@@ -77,6 +77,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [resizeDialog, setResizeDialog] = useState<{ w: number; h: number } | null>(null);
   // Duplicate as new size dialog
   const [showDuplicateAs, setShowDuplicateAs] = useState(false);
+  // Smart spacing guides — equal-distance indicators between elements during drag
+  const [spacingGuides, setSpacingGuides] = useState<{ axis: 'h' | 'v'; x: number; y: number; length: number; gap: number }[]>([]);
+  // Element info overlay on hover (without selection)
+  const [hoverInfo, setHoverInfo] = useState<{ mx: number; my: number; name: string; type: string; w: number; h: number; x: number; y: number } | null>(null);
 
   // Responsive check
   useEffect(() => {
@@ -220,6 +224,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   };
 
   const onCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setHoverInfo(null); // Clear hover info on any click
     const { x, y } = getCanvasCoords(e);
     if (tool === 'draw') { store().setDrawing(true); store().setDrawPts([{ x, y }]); return; }
     if (tool === 'line' || tool === 'arrow') { store().setLinePreview({ x1: x, y1: y, x2: x, y2: y }); return; }
@@ -271,7 +276,22 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       return;
     }
     const curDrag = store().drag;
-    if (!curDrag) { setMeasureTooltip(null); return; }
+    if (!curDrag) {
+      setMeasureTooltip(null);
+      // Element info overlay on hover (only when not dragging/resizing/drawing and tool is select)
+      if (tool === 'select' && !drawing && !selRect) {
+        const hovered = hitTestElement(els, x, y);
+        if (hovered && !selIds.includes(hovered.id)) {
+          const nameMap: Record<string, string> = { text: 'Text', rect: 'Rectangle', circle: 'Circle', triangle: 'Triangle', star: 'Star', image: 'Image', path: 'Path', line: 'Line', arrow: 'Arrow', stickyNote: 'Note', table: 'Table' };
+          setHoverInfo({ mx: e.clientX, my: e.clientY, name: hovered.name || nameMap[hovered.type] || hovered.type, type: hovered.type, w: Math.round(hovered.w), h: Math.round(hovered.h), x: Math.round(hovered.x), y: Math.round(hovered.y) });
+        } else {
+          setHoverInfo(null);
+        }
+      } else {
+        setHoverInfo(null);
+      }
+      return;
+    }
     let nx = Math.round(x - curDrag.ox), ny = Math.round(y - curDrag.oy);
     // Snap to grid (20px)
     const GRID_SIZE = 20;
@@ -313,6 +333,62 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (Math.abs(dCy - oCy) < snapThreshold) { ny = oCy - dragEl.h / 2; gy.push(oCy); }
       }
       store().setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
+
+      // --- Smart spacing guides (equal-distance indicators) ---
+      const SPACING_THRESH = 3;
+      const others = els.filter((o) => o.id !== curDrag.id && o.type !== 'line' && o.type !== 'arrow' && o.type !== 'path' && o.visible !== false);
+      const dragL = nx, dragR = nx + dragEl.w, dragT = ny, dragB = ny + dragEl.h;
+      const newSpacing: { axis: 'h' | 'v'; x: number; y: number; length: number; gap: number }[] = [];
+
+      // Horizontal spacing: find pairs of elements with matching gaps on the horizontal axis
+      const hSorted = [...others, { ...dragEl, x: nx, y: ny }].sort((a, b) => a.x - b.x);
+      for (let i = 0; i < hSorted.length - 2; i++) {
+        for (let j = i + 1; j < hSorted.length - 1; j++) {
+          const gapIJ = hSorted[j].x - (hSorted[i].x + hSorted[i].w);
+          if (gapIJ < 5) continue;
+          for (let k = j + 1; k < hSorted.length; k++) {
+            const gapJK = hSorted[k].x - (hSorted[j].x + hSorted[j].w);
+            if (Math.abs(gapIJ - gapJK) < SPACING_THRESH) {
+              const involves = hSorted[i].id === curDrag.id || hSorted[j].id === curDrag.id || hSorted[k].id === curDrag.id;
+              if (involves) {
+                const midY1 = Math.max(hSorted[i].y, hSorted[j].y);
+                const botY1 = Math.min(hSorted[i].y + hSorted[i].h, hSorted[j].y + hSorted[j].h);
+                const cy1 = (midY1 + botY1) / 2;
+                newSpacing.push({ axis: 'h', x: hSorted[i].x + hSorted[i].w, y: cy1, length: gapIJ, gap: Math.round(gapIJ) });
+                const midY2 = Math.max(hSorted[j].y, hSorted[k].y);
+                const botY2 = Math.min(hSorted[j].y + hSorted[j].h, hSorted[k].y + hSorted[k].h);
+                const cy2 = (midY2 + botY2) / 2;
+                newSpacing.push({ axis: 'h', x: hSorted[j].x + hSorted[j].w, y: cy2, length: gapJK, gap: Math.round(gapJK) });
+              }
+            }
+          }
+        }
+      }
+      // Vertical spacing: find pairs of elements with matching gaps on the vertical axis
+      const vSorted = [...others, { ...dragEl, x: nx, y: ny }].sort((a, b) => a.y - b.y);
+      for (let i = 0; i < vSorted.length - 2; i++) {
+        for (let j = i + 1; j < vSorted.length - 1; j++) {
+          const gapIJ = vSorted[j].y - (vSorted[i].y + vSorted[i].h);
+          if (gapIJ < 5) continue;
+          for (let k = j + 1; k < vSorted.length; k++) {
+            const gapJK = vSorted[k].y - (vSorted[j].y + vSorted[j].h);
+            if (Math.abs(gapIJ - gapJK) < SPACING_THRESH) {
+              const involves = vSorted[i].id === curDrag.id || vSorted[j].id === curDrag.id || vSorted[k].id === curDrag.id;
+              if (involves) {
+                const midX1 = Math.max(vSorted[i].x, vSorted[j].x);
+                const rX1 = Math.min(vSorted[i].x + vSorted[i].w, vSorted[j].x + vSorted[j].w);
+                const cx1 = (midX1 + rX1) / 2;
+                newSpacing.push({ axis: 'v', x: cx1, y: vSorted[i].y + vSorted[i].h, length: gapIJ, gap: Math.round(gapIJ) });
+                const midX2 = Math.max(vSorted[j].x, vSorted[k].x);
+                const rX2 = Math.min(vSorted[j].x + vSorted[j].w, vSorted[k].x + vSorted[k].w);
+                const cx2 = (midX2 + rX2) / 2;
+                newSpacing.push({ axis: 'v', x: cx2, y: vSorted[j].y + vSorted[j].h, length: gapJK, gap: Math.round(gapJK) });
+              }
+            }
+          }
+        }
+      }
+      setSpacingGuides(newSpacing);
     }
     store().updEl(curDrag.id, { x: nx, y: ny });
     // Show measurement tooltip during drag
@@ -350,7 +426,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       }
       setSelRect(null);
     }
-    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] }); setMeasureTooltip(null);
+    store().setDrawing(false); store().setDrawPts([]); store().setDrag(null); store().setResize(null); store().setGuides({ x: [], y: [] }); setMeasureTooltip(null); setSpacingGuides([]);
   };
 
   // ===== Touch event handlers for mobile support =====
@@ -1382,6 +1458,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             {/* Smart alignment guides (purple) */}
             {guides.x.map((gx, i) => <div key={`gx-${i}`} style={{ position: 'absolute', left: gx / canvasW * 100 + '%', top: 0, bottom: 0, width: 1, background: '#6366f1', opacity: 0.85, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
             {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1, background: '#6366f1', opacity: 0.85, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
+            {/* Smart spacing guides — equal distance indicators */}
+            {spacingGuides.map((sg, i) => (
+              <div key={`sg-${i}`} style={{ position: 'absolute', pointerEvents: 'none', zIndex: Z_INDEX.GUIDES, ...(sg.axis === 'h' ? { left: sg.x / canvasW * 100 + '%', top: sg.y / canvasH * 100 + '%', width: sg.length / canvasW * 100 + '%', height: 0, borderTop: '1px dashed #f59e0b', transform: 'translateY(-0.5px)' } : { left: sg.x / canvasW * 100 + '%', top: sg.y / canvasH * 100 + '%', height: sg.length / canvasH * 100 + '%', width: 0, borderLeft: '1px dashed #f59e0b', transform: 'translateX(-0.5px)' }) }}>
+                <span style={{ position: 'absolute', ...(sg.axis === 'h' ? { top: -16, left: '50%', transform: 'translateX(-50%)' } : { left: 6, top: '50%', transform: 'translateY(-50%)' }), background: '#f59e0b', color: '#000', fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3, whiteSpace: 'nowrap', lineHeight: '14px', fontFamily: "'JetBrains Mono', monospace" }}>{sg.gap}px</span>
+              </div>
+            ))}
             {/* Snap-to-grid overlay */}
             {snapToGrid && (
               <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} viewBox={`0 0 ${canvasW} ${canvasH}`} preserveAspectRatio="none">
@@ -1419,6 +1501,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{fitIcon} {t('thumbs.editor.fitLabel')}</button>
+            {selIds.length > 0 && (
+              <>
+                <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
+                <button onClick={() => store().zoomToSelection()} title="Zoom to Selection (Ctrl+1)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+                ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/></svg> Sel</button>
+              </>
+            )}
           </div>
         </div>
         </ErrorBoundary>
@@ -1452,6 +1543,29 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           }}>
             <div>{measureTooltip.ex}, {measureTooltip.ey}</div>
             <div style={{ color: 'rgba(255,255,255,0.65)' }}>{measureTooltip.ew} x {measureTooltip.eh}</div>
+          </div>
+        )}
+        {/* Element info overlay on hover */}
+        {hoverInfo && !drag && !resize && (
+          <div style={{
+            position: 'fixed',
+            left: hoverInfo.mx + 14,
+            top: hoverInfo.my - 50,
+            background: 'rgba(0,0,0,0.78)',
+            color: '#fff',
+            padding: '5px 8px',
+            borderRadius: 6,
+            fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace",
+            pointerEvents: 'none',
+            zIndex: 9998,
+            whiteSpace: 'nowrap',
+            lineHeight: 1.5,
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(6px)',
+          }}>
+            <div style={{ fontWeight: 600, color: '#a5b4fc', fontSize: 10 }}>{hoverInfo.type.charAt(0).toUpperCase() + hoverInfo.type.slice(1)}: {hoverInfo.name}</div>
+            <div style={{ color: 'rgba(255,255,255,0.55)' }}>{hoverInfo.w} x {hoverInfo.h} &middot; ({hoverInfo.x}, {hoverInfo.y})</div>
           </div>
         )}
         {/* ===== Export Modal ===== */}
