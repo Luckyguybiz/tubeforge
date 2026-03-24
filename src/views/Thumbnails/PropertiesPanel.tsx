@@ -65,6 +65,27 @@ const BG_SWATCHES = [
   { value: 'rgba(255,255,255,.15)', titleKey: 'thumbs.props.bgLight' },
 ];
 
+const GRADIENT_PRESETS: Array<{ name: string; from: string; to: string; mid?: string; angle: number }> = [
+  { name: 'Fire', from: '#ff4500', to: '#ffd700', angle: 90 },
+  { name: 'Ocean', from: '#0077b6', to: '#00b4d8', angle: 90 },
+  { name: 'Sunset', from: '#ff6b35', to: '#f7c59f', angle: 90 },
+  { name: 'Neon', from: '#7b2ff7', to: '#ff2eaf', angle: 90 },
+  { name: 'Gold', from: '#f59e0b', to: '#fbbf24', angle: 90 },
+  { name: 'Ice', from: '#023e8a', to: '#90e0ef', angle: 90 },
+  { name: 'Forest', from: '#2d6a4f', to: '#95d5b2', angle: 90 },
+  { name: 'Rainbow', from: '#ff0000', to: '#ff00ff', mid: '#00ff00', angle: 90 },
+];
+
+const PATTERN_OPTIONS: Array<{ value: CanvasElement['pattern']; label: string }> = [
+  { value: 'none', label: 'None' },
+  { value: 'dots', label: 'Dots' },
+  { value: 'lines', label: 'Lines' },
+  { value: 'grid', label: 'Grid' },
+  { value: 'diagonal', label: 'Diagonal' },
+  { value: 'chevron', label: 'Chevron' },
+  { value: 'waves', label: 'Waves' },
+];
+
 interface PropertiesPanelProps {
   sel: CanvasElement | null;
 }
@@ -75,7 +96,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
   const { els, selIds } = useThumbnailStore(
     useShallow((s) => ({ els: s.els, selIds: s.selIds }))
   );
-  const { setSelId, updEl, delEl, bringFront, sendBack, moveUp, moveDown, pushHistory, flipHorizontal, flipVertical } = useThumbnailStore.getState();
+  const { setSelId, updEl, delEl, bringFront, sendBack, moveUp, moveDown, pushHistory, flipHorizontal, flipVertical, replaceImage } = useThumbnailStore.getState();
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
   const multiSel = selIds.length > 1;
   const selectedEls = els.filter((e) => selIds.includes(e.id));
@@ -299,11 +320,53 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
 
       {sel && (sel.type === 'rect' || sel.type === 'circle' || sel.type === 'triangle' || sel.type === 'star') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Fill mode: Solid / Pattern */}
+          <div>
+            <div style={labelStyle}>Fill</div>
+            <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+              <button onClick={() => updEl(sel.id, { pattern: 'none' })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${(!sel.pattern || sel.pattern === 'none') ? C.accent : C.border}`, background: (!sel.pattern || sel.pattern === 'none') ? C.accent + '18' : 'transparent', color: (!sel.pattern || sel.pattern === 'none') ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Solid</button>
+              <button onClick={() => updEl(sel.id, { pattern: sel.pattern && sel.pattern !== 'none' ? sel.pattern : 'dots' })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${sel.pattern && sel.pattern !== 'none' ? C.accent : C.border}`, background: sel.pattern && sel.pattern !== 'none' ? C.accent + '18' : 'transparent', color: sel.pattern && sel.pattern !== 'none' ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Pattern</button>
+            </div>
+          </div>
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          {/* Pattern picker */}
+          {sel.pattern && sel.pattern !== 'none' && (
+            <div>
+              <div style={labelStyle}>Pattern Style</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, marginBottom: 6 }}>
+                {PATTERN_OPTIONS.filter((p) => p.value !== 'none').map((p) => (
+                  <button key={p.value} title={p.label} onClick={() => updEl(sel.id, { pattern: p.value })} style={{ width: '100%', height: 32, borderRadius: 5, border: `1px solid ${sel.pattern === p.value ? C.accent : C.border}`, background: sel.pattern === p.value ? C.accent + '18' : C.surface, cursor: 'pointer', padding: 0, position: 'relative', overflow: 'hidden' }}>
+                    <svg width="100%" height="100%" viewBox="0 0 40 32">
+                      <defs>
+                        {p.value === 'dots' && <pattern id={`pp-${p.value}`} width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.5" fill={C.text} /></pattern>}
+                        {p.value === 'lines' && <pattern id={`pp-${p.value}`} width="10" height="10" patternUnits="userSpaceOnUse"><line x1="0" y1="5" x2="10" y2="5" stroke={C.text} strokeWidth="0.8" /></pattern>}
+                        {p.value === 'grid' && <pattern id={`pp-${p.value}`} width="10" height="10" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="10" stroke={C.text} strokeWidth="0.6" /><line x1="0" y1="0" x2="10" y2="0" stroke={C.text} strokeWidth="0.6" /></pattern>}
+                        {p.value === 'diagonal' && <pattern id={`pp-${p.value}`} width="10" height="10" patternUnits="userSpaceOnUse"><line x1="0" y1="10" x2="10" y2="0" stroke={C.text} strokeWidth="0.8" /></pattern>}
+                        {p.value === 'chevron' && <pattern id={`pp-${p.value}`} width="10" height="10" patternUnits="userSpaceOnUse"><polyline points="0,5 5,0 10,5" fill="none" stroke={C.text} strokeWidth="0.8" /><polyline points="0,10 5,5 10,10" fill="none" stroke={C.text} strokeWidth="0.8" /></pattern>}
+                        {p.value === 'waves' && <pattern id={`pp-${p.value}`} width="10" height="10" patternUnits="userSpaceOnUse"><path d="M0,5 Q2.5,0 5,5 T10,5" fill="none" stroke={C.text} strokeWidth="0.8" /></pattern>}
+                      </defs>
+                      <rect width="40" height="32" fill={`url(#pp-${p.value})`} />
+                    </svg>
+                    <span style={{ position: 'absolute', bottom: 1, left: 0, right: 0, fontSize: 7, color: C.dim, textAlign: 'center' }}>{p.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 4 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Pattern Color</div>
+                  <InlineColorSwatch C={C} value={sel.patternColor ?? '#ffffff'} onChange={(c) => updEl(sel.id, { patternColor: c })} width={32} height={22} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Size {sel.patternSize ?? 20}px</div>
+                  <input type="range" min={10} max={50} value={sel.patternSize ?? 20} onChange={(e) => updEl(sel.id, { patternSize: +e.target.value })} style={{ width: '100%', accentColor: '#888' }} />
+                </div>
+              </div>
+            </div>
+          )}
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={50} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}px</span></div></div>}
-          {/* Border color + width */}
+          {/* Border color + width + dash style */}
           <div>
             <div style={labelStyle}>Border</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -311,6 +374,14 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               <input type="range" min={0} max={12} step={1} value={sel.borderWidth ?? 0} onChange={(e) => updEl(sel.id, { borderWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
               <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderWidth ?? 0}px</span>
             </div>
+            {/* Border dash style */}
+            {(sel.borderWidth ?? 0) > 0 && (
+              <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
+                {(['solid', 'dashed', 'dotted'] as const).map((style) => (
+                  <button key={style} onClick={() => updEl(sel.id, { borderDash: style })} style={{ flex: 1, padding: '3px 0', borderRadius: 4, border: `1px solid ${(sel.borderDash ?? 'solid') === style ? C.accent : C.border}`, background: (sel.borderDash ?? 'solid') === style ? C.accent + '18' : 'transparent', color: (sel.borderDash ?? 'solid') === style ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{style}</button>
+                ))}
+              </div>
+            )}
           </div>
           {/* Shape Shadow */}
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
@@ -333,6 +404,46 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
       {sel && sel.type === 'image' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ width: '100%', aspectRatio: '16/9', background: C.surface, borderRadius: 6, overflow: 'hidden', border: `1px solid ${C.border}` }}><img src={sel.src} alt={t('thumbs.props.previewImage')} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+          {/* Replace Image */}
+          <button onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = () => {
+              const file = input.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (ev) => {
+                const result = ev.target?.result;
+                if (typeof result === 'string') replaceImage(sel.id, result);
+              };
+              reader.readAsDataURL(file);
+            };
+            input.click();
+          }} style={{ width: '100%', padding: '6px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Replace Image
+          </button>
+          {/* Image Fit Mode */}
+          <div>
+            <div style={labelStyle}>Fit Mode</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+              {([
+                { val: 'cover' as const, label: 'Cover', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l4-4 4 4 4-4 6 6"/></svg> },
+                { val: 'contain' as const, label: 'Contain', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6" y="6" width="12" height="12" rx="1"/></svg> },
+                { val: 'fill' as const, label: 'Fill', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 3l18 18M3 21L21 3"/></svg> },
+                { val: 'none' as const, label: 'None', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/></svg> },
+              ] as const).map((fit) => {
+                const isActive = (sel.objectFit ?? 'cover') === fit.val;
+                return (
+                  <button key={fit.val} onClick={() => updEl(sel.id, { objectFit: fit.val })} title={fit.label} style={{ padding: '5px 2px', borderRadius: 5, border: `1px solid ${isActive ? C.blue + '55' : C.border}`, background: isActive ? C.blue + '14' : 'transparent', color: isActive ? C.blue : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    {fit.icon}
+                    <span>{fit.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           {/* AI Remove Background */}
           <AIRemoveBackgroundButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
@@ -1121,10 +1232,23 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
               </div>
               {sel.textGradient && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {/* Gradient preview bar */}
+                  <div style={{ width: '100%', height: 12, borderRadius: 4, background: `linear-gradient(${sel.textGradient.angle}deg, ${sel.textGradient.from}${sel.textGradient.mid ? `, ${sel.textGradient.mid}` : ''}, ${sel.textGradient.to})`, border: `1px solid ${C.border}` }} />
                   <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>From</div>
                       <InlineColorSwatch C={C} value={sel.textGradient.from} onChange={(c) => updEl(sel.id, { textGradient: { ...sel.textGradient!, from: c } })} width={32} height={22} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Mid</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <InlineColorSwatch C={C} value={sel.textGradient.mid ?? '#888888'} onChange={(c) => updEl(sel.id, { textGradient: { ...sel.textGradient!, mid: c } })} width={sel.textGradient.mid ? 26 : 26} height={22} />
+                        {sel.textGradient.mid ? (
+                          <button onClick={() => updEl(sel.id, { textGradient: { ...sel.textGradient!, mid: undefined } })} style={{ background: 'none', border: 'none', color: C.dim, fontSize: 10, cursor: 'pointer', padding: 0, lineHeight: 1 }} title="Remove middle color">&times;</button>
+                        ) : (
+                          <button onClick={() => updEl(sel.id, { textGradient: { ...sel.textGradient!, mid: '#888888' } })} style={{ background: 'none', border: 'none', color: C.dim, fontSize: 8, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }} title="Add middle color">+</button>
+                        )}
+                      </div>
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>To</div>
@@ -1136,6 +1260,15 @@ function EffectsSection({ C, sel, updEl, pushHistory, labelStyle }: {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <input type="range" min={0} max={360} value={sel.textGradient.angle} onChange={(e) => updEl(sel.id, { textGradient: { ...sel.textGradient!, angle: +e.target.value } })} style={{ flex: 1, accentColor: '#888' }} />
                       <span style={{ fontSize: 8, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.textGradient.angle}deg</span>
+                    </div>
+                  </div>
+                  {/* Gradient Presets */}
+                  <div>
+                    <div style={{ fontSize: 8, color: C.dim, marginBottom: 3 }}>Presets</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+                      {GRADIENT_PRESETS.map((p) => (
+                        <button key={p.name} title={p.name} onClick={() => { pushHistory(); updEl(sel.id, { textGradient: { from: p.from, to: p.to, mid: p.mid, angle: p.angle } }); }} style={{ width: '100%', height: 20, borderRadius: 4, border: `1px solid ${C.border}`, background: `linear-gradient(${p.angle}deg, ${p.from}${p.mid ? `, ${p.mid}` : ''}, ${p.to})`, cursor: 'pointer', padding: 0 }} />
+                      ))}
                     </div>
                   </div>
                 </div>

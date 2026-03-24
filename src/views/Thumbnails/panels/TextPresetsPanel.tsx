@@ -15,7 +15,7 @@ interface TextPreset {
   textStroke?: string;
   textStrokeWidth?: number;
   glow?: { color: string; blur: number; spread: number };
-  textGradient?: { from: string; to: string; angle: number };
+  textGradient?: { from: string; to: string; mid?: string; angle: number };
   letterSpacing?: number;
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   textShadow?: string;
@@ -128,7 +128,8 @@ function PreviewCard({ preset, onClick }: { preset: TextPreset; onClick: () => v
 
   // Gradient text
   if (preset.textGradient) {
-    previewStyle.background = `linear-gradient(${preset.textGradient.angle}deg, ${preset.textGradient.from}, ${preset.textGradient.to})`;
+    const midStop = preset.textGradient.mid ? `, ${preset.textGradient.mid}` : '';
+    previewStyle.background = `linear-gradient(${preset.textGradient.angle}deg, ${preset.textGradient.from}${midStop}, ${preset.textGradient.to})`;
     previewStyle.WebkitBackgroundClip = 'text';
     previewStyle.WebkitTextFillColor = 'transparent';
     previewStyle.backgroundClip = 'text';
