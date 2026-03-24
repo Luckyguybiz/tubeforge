@@ -491,6 +491,11 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     if (el.patternColor !== undefined) style.patternColor = el.patternColor;
     if (el.patternSize !== undefined) style.patternSize = el.patternSize;
     if (el.borderDash !== undefined) style.borderDash = el.borderDash;
+    if (el.shapeGradient !== undefined) style.shapeGradient = el.shapeGradient;
+    if (el.clipMask !== undefined) style.clipMask = el.clipMask;
+    if (el.arrowStartStyle !== undefined) style.arrowStartStyle = el.arrowStartStyle;
+    if (el.arrowEndStyle !== undefined) style.arrowEndStyle = el.arrowEndStyle;
+    if (el.arrowHeadSize !== undefined) style.arrowHeadSize = el.arrowHeadSize;
     set({ copiedStyle: JSON.parse(JSON.stringify(style)) });
   },
 

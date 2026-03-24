@@ -181,6 +181,14 @@ export interface CanvasElement {
   lockAspect?: boolean;
   // image fit mode
   objectFit?: 'cover' | 'contain' | 'fill' | 'none';
+  // shape gradient fill
+  shapeGradient?: { from: string; to: string; mid?: string; angle: number; type: 'linear' | 'radial' };
+  // image clip mask
+  clipMask?: 'none' | 'circle' | 'rounded' | 'star' | 'hexagon';
+  // enhanced arrow heads
+  arrowStartStyle?: 'none' | 'triangle' | 'circle' | 'diamond';
+  arrowEndStyle?: 'none' | 'triangle' | 'circle' | 'diamond';
+  arrowHeadSize?: 'small' | 'medium' | 'large';
 }
 
 export interface AIResult {
