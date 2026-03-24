@@ -73,6 +73,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   // Measurement tooltip — track mouse position during drag/resize
   const [measureTooltip, setMeasureTooltip] = useState<{ mx: number; my: number; ex: number; ey: number; ew: number; eh: number } | null>(null);
+  // Smart resize canvas dialog
+  const [resizeDialog, setResizeDialog] = useState<{ w: number; h: number } | null>(null);
+  // Duplicate as new size dialog
+  const [showDuplicateAs, setShowDuplicateAs] = useState(false);
 
   // Responsive check
   useEffect(() => {
@@ -132,7 +136,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.mid ?? ''}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? '') + (e.pattern ?? '') + (e.patternColor ?? '') + (e.patternSize ?? 0) + (e.borderDash ?? '') + (e.objectFit ?? '') + (e.src ?? ''), ''),
     [els],
   );
   const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH + (canvasBgGradient ? `${canvasBgGradient.from}${canvasBgGradient.to}${canvasBgGradient.angle}${canvasBgGradient.type}` : '');
@@ -738,12 +742,74 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 
   const getTextGradientStyles = (el: CanvasElement): React.CSSProperties => {
     if (!el.textGradient) return {};
+    const midStop = el.textGradient.mid ? `, ${el.textGradient.mid}` : '';
     return {
-      background: `linear-gradient(${el.textGradient.angle}deg, ${el.textGradient.from}, ${el.textGradient.to})`,
+      background: `linear-gradient(${el.textGradient.angle}deg, ${el.textGradient.from}${midStop}, ${el.textGradient.to})`,
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text',
     };
+  };
+
+  /** Generate SVG pattern defs + fill for shape pattern fills */
+  const getPatternDefs = (el: CanvasElement, patternId: string): React.ReactNode => {
+    if (!el.pattern || el.pattern === 'none') return null;
+    const size = el.patternSize ?? 20;
+    const pColor = el.patternColor ?? '#ffffff';
+    switch (el.pattern) {
+      case 'dots':
+        return (
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <circle cx={size / 2} cy={size / 2} r={size * 0.15} fill={pColor} />
+          </pattern>
+        );
+      case 'lines':
+        return (
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <line x1={0} y1={size / 2} x2={size} y2={size / 2} stroke={pColor} strokeWidth={size * 0.08} />
+          </pattern>
+        );
+      case 'grid':
+        return (
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <line x1={0} y1={0} x2={0} y2={size} stroke={pColor} strokeWidth={size * 0.06} />
+            <line x1={0} y1={0} x2={size} y2={0} stroke={pColor} strokeWidth={size * 0.06} />
+          </pattern>
+        );
+      case 'diagonal':
+        return (
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <line x1={0} y1={size} x2={size} y2={0} stroke={pColor} strokeWidth={size * 0.08} />
+          </pattern>
+        );
+      case 'chevron': {
+        const mid = size / 2;
+        return (
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <polyline points={`0,${mid} ${mid},0 ${size},${mid}`} fill="none" stroke={pColor} strokeWidth={size * 0.08} />
+            <polyline points={`0,${size} ${mid},${mid} ${size},${size}`} fill="none" stroke={pColor} strokeWidth={size * 0.08} />
+          </pattern>
+        );
+      }
+      case 'waves': {
+        const mid = size / 2;
+        return (
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <path d={`M0,${mid} Q${size * 0.25},0 ${mid},${mid} T${size},${mid}`} fill="none" stroke={pColor} strokeWidth={size * 0.08} />
+          </pattern>
+        );
+      }
+      default:
+        return null;
+    }
+  };
+
+  /** Get border dash CSS for shapes */
+  const getShapeBorderStyle = (el: CanvasElement, isSel: boolean): string => {
+    if (isSel) return `2px dashed ${C.accent}88`;
+    if (!el.borderWidth || el.borderWidth <= 0) return el.border ?? 'none';
+    const style = el.borderDash === 'dashed' ? 'dashed' : el.borderDash === 'dotted' ? 'dotted' : 'solid';
+    return `${el.borderWidth}px ${style} ${el.borderColor ?? '#fff'}`;
   };
 
   /** Build CSS transform string including rotation and flip */
@@ -901,18 +967,40 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
 
     if (el.type === 'rect') {
-      const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : (el.border ?? 'none'));
+      const shapeBorder = getShapeBorderStyle(el, isSel);
+      const hasPattern = el.pattern && el.pattern !== 'none';
+      const patternId = `pattern-${el.id}`;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, ...getEffectStyles(el) }}
-          onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el) }}
+          onMouseDown={elDrag}>
+          {hasPattern && (
+            <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, borderRadius: el.borderR }}>
+              <defs>{getPatternDefs(el, patternId)}</defs>
+              <rect width="100%" height="100%" fill={el.color ?? '#6366f1'} />
+              <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+            </svg>
+          )}
+          {resizeHandles}{deleteHandle}
+        </div>
       );
     }
 
     if (el.type === 'circle') {
-      const shapeBorder = isSel ? `2px dashed ${C.accent}88` : (el.borderWidth && el.borderWidth > 0 ? `${el.borderWidth}px solid ${el.borderColor ?? '#fff'}` : 'none');
+      const shapeBorder = getShapeBorderStyle(el, isSel);
+      const hasPattern = el.pattern && el.pattern !== 'none';
+      const patternId = `pattern-${el.id}`;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, ...getEffectStyles(el) }}
-          onMouseDown={elDrag}>{resizeHandles}{deleteHandle}</div>
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el) }}
+          onMouseDown={elDrag}>
+          {hasPattern && (
+            <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+              <defs>{getPatternDefs(el, patternId)}</defs>
+              <rect width="100%" height="100%" fill={el.color ?? '#6366f1'} />
+              <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+            </svg>
+          )}
+          {resizeHandles}{deleteHandle}
+        </div>
       );
     }
 
@@ -923,13 +1011,31 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const cropY = el.cropY ?? 0;
       const cropW = el.cropW ?? 1;
       const cropH = el.cropH ?? 1;
+      const fitMode = el.objectFit ?? 'cover';
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined }}
-          onMouseDown={elDrag}>
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined }}
+          onMouseDown={elDrag}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = () => {
+              const file = input.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (ev) => {
+                const result = ev.target?.result;
+                if (typeof result === 'string') store().replaceImage(el.id, result);
+              };
+              reader.readAsDataURL(file);
+            };
+            input.click();
+          }}>
           <img src={el.src} alt={t('thumbs.editor.imageAlt')} loading="lazy" decoding="async" style={{
             width: hasCrop ? `${100 / cropW}%` : '100%',
             height: hasCrop ? `${100 / cropH}%` : '100%',
-            objectFit: 'cover',
+            objectFit: fitMode,
             opacity: el.opacity,
             borderRadius: el.borderR,
             pointerEvents: 'none',
@@ -1182,8 +1288,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             {showSizeMenu && (
               <div style={{ ...dropdownPanel, minWidth: 200 }}>
                 {SIZE_PRESETS.map((p) => (
-                  <div key={p.label} role="menuitem" tabIndex={0} aria-label={`${p.label} ${p.w}×${p.h}`} onClick={() => { store().setCanvasSize(p.w, p.h); setShowSizeMenu(false); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); store().setCanvasSize(p.w, p.h); setShowSizeMenu(false); } }}
+                  <div key={p.label} role="menuitem" tabIndex={0} aria-label={`${p.label} ${p.w}×${p.h}`} onClick={() => {
+                    if (canvasW === p.w && canvasH === p.h) { setShowSizeMenu(false); return; }
+                    if (els.length > 0) { setResizeDialog({ w: p.w, h: p.h }); setShowSizeMenu(false); }
+                    else { store().setCanvasSize(p.w, p.h); setShowSizeMenu(false); }
+                  }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (canvasW === p.w && canvasH === p.h) { setShowSizeMenu(false); return; } if (els.length > 0) { setResizeDialog({ w: p.w, h: p.h }); setShowSizeMenu(false); } else { store().setCanvasSize(p.w, p.h); setShowSizeMenu(false); } } }}
                     style={{ ...menuItem, color: canvasW === p.w && canvasH === p.h ? C.accent : C.text, background: canvasW === p.w && canvasH === p.h ? C.accentDim : 'transparent' }}
                     onMouseEnter={(e) => { if (canvasW !== p.w || canvasH !== p.h) (e.currentTarget as HTMLElement).style.background = C.surface; }}
                     onMouseLeave={(e) => { if (canvasW !== p.w || canvasH !== p.h) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
@@ -1194,6 +1304,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               </div>
             )}
           </div>
+          {/* Duplicate as new size */}
+          <button onClick={() => { setShowDuplicateAs(!showDuplicateAs); setShowSizeMenu(false); setShowDownloadMenu(false); }} title="Duplicate design at a different size" style={{ ...headerBtn, padding: '7px 10px', fontSize: 11 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Duplicate as...
+          </button>
           {/* Export button */}
           <button onClick={() => { setShowExportModal(true); setShowSizeMenu(false); setShowDownloadMenu(false); }} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px' }}>{downloadIcon} {t('thumbs.export.title')}</button>
           {/* YouTube Preview button */}
@@ -1529,6 +1644,79 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         {/* Mobile left sidebar as bottom sheet */}
         {isMobile && <LeftSidebar isMobile={isMobile} />}
       </div>
+      {/* Smart Resize Canvas Dialog */}
+      {resizeDialog && (
+        <div onClick={() => setResizeDialog(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: Z_INDEX.MODAL_BACKDROP, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, minWidth: 340, maxWidth: 420, boxShadow: '0 12px 40px rgba(0,0,0,.4)' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: C.text }}>Resize Canvas</h3>
+            <p style={{ fontSize: 12, color: C.sub, marginBottom: 16 }}>
+              {canvasW}x{canvasH} &rarr; {resizeDialog.w}x{resizeDialog.h}
+            </p>
+            <p style={{ fontSize: 11, color: C.dim, marginBottom: 16 }}>
+              Your design has {els.length} element{els.length !== 1 ? 's' : ''}. How should they be handled?
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, true); setResizeDialog(null); toast.success('Canvas resized — elements scaled'); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.blue}44`, background: C.blue + '14', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>Scale all elements</div>
+                <div style={{ fontSize: 10, opacity: 0.8, fontWeight: 400 }}>Proportionally resize and reposition everything</div>
+              </button>
+              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, false); setResizeDialog(null); toast.info('Canvas resized — elements unchanged'); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>Keep positions</div>
+                <div style={{ fontSize: 10, color: C.dim, fontWeight: 400 }}>Just change the canvas, elements stay where they are</div>
+              </button>
+              <button onClick={() => setResizeDialog(null)} style={{ width: '100%', padding: '8px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: C.dim, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Duplicate as New Size Dialog */}
+      {showDuplicateAs && (
+        <div onClick={() => setShowDuplicateAs(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: Z_INDEX.MODAL_BACKDROP, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, minWidth: 340, maxWidth: 420, boxShadow: '0 12px 40px rgba(0,0,0,.4)' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: C.text }}>Duplicate as New Size</h3>
+            <p style={{ fontSize: 12, color: C.sub, marginBottom: 16 }}>
+              Create a copy of this design at a different size. All elements will be scaled proportionally.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {SIZE_PRESETS.filter((p) => !(p.w === canvasW && p.h === canvasH)).map((p) => (
+                <button key={p.label} onClick={() => {
+                  const sx = p.w / canvasW;
+                  const sy = p.h / canvasH;
+                  const scaledEls = els.map((el) => ({
+                    ...el,
+                    x: Math.round(el.x * sx),
+                    y: Math.round(el.y * sy),
+                    w: Math.round(el.w * sx),
+                    h: Math.round(el.h * sy),
+                    ...(el.size ? { size: Math.round(el.size * Math.min(sx, sy)) } : {}),
+                  }));
+                  store().pushHistory();
+                  store().loadFromProject({
+                    els: scaledEls,
+                    canvasBg: canvasBg,
+                    canvasBgImage: store().canvasBgImage,
+                    canvasBgGradient: canvasBgGradient,
+                    canvasW: p.w,
+                    canvasH: p.h,
+                  });
+                  setShowDuplicateAs(false);
+                  toast.success(`Duplicated as ${p.label} (${p.w}x${p.h})`);
+                }} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background .1s' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                  <span>{p.label}</span>
+                  <span style={{ fontSize: 10, color: C.dim }}>{p.w}x{p.h}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setShowDuplicateAs(false)} style={{ width: '100%', padding: '8px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: C.dim, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2148,6 +2336,26 @@ function ContextMenuOverlay({ contextMenu, els, C, t }: {
     { label: t('thumbs.editor.copy') || 'Copy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+C', action: () => store().copySelected() },
     { label: t('thumbs.editor.paste') || 'Paste', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>, shortcut: 'Ctrl+V', action: () => store().pasteClipboard() },
     { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
+    // Replace Image — only shown for image elements
+    ...(targetEl?.type === 'image' ? [
+      'separator' as const,
+      { label: 'Replace Image', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>, shortcut: 'Dbl-click', action: () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const result = ev.target?.result;
+            if (typeof result === 'string' && contextMenu.elId) store().replaceImage(contextMenu.elId, result);
+          };
+          reader.readAsDataURL(file);
+        };
+        input.click();
+      } } as CtxItem,
+    ] : []),
     'separator' as const,
     { label: 'Copy Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 16V7a2 2 0 00-2-2H9m-4 5v9a2 2 0 002 2h9a2 2 0 002-2v-1"/><path d="M2 12l3-3 3 3"/><path d="M5 9v8"/></svg>, shortcut: 'Alt+C', action: () => store().copyStyle() },
     { label: 'Paste Style', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 16V7a2 2 0 00-2-2H9m-4 5v9a2 2 0 002 2h9a2 2 0 002-2v-1"/><path d="M2 17l3 3 3-3"/><path d="M5 20v-8"/></svg>, shortcut: 'Alt+V', action: () => store().pasteStyle() },

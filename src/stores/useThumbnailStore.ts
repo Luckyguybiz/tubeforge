@@ -130,6 +130,8 @@ interface ThumbnailState {
 
   // Canvas size
   setCanvasSize: (w: number, h: number) => void;
+  /** Resize canvas and optionally scale all elements proportionally */
+  setCanvasSizeWithScale: (w: number, h: number, scaleElements: boolean) => void;
 
   // Guides
   setGuides: (g: { x: number[]; y: number[] }) => void;
@@ -146,6 +148,9 @@ interface ThumbnailState {
   addStickyNote: (x?: number, y?: number) => void;
   addTable: (rows?: number, cols?: number, x?: number, y?: number) => void;
   addShape: (shapeType: string, x?: number, y?: number) => void;
+
+  // Image replace
+  replaceImage: (id: string, dataUrl: string) => void;
 
   // Element operations
   updEl: (id: string, patch: Partial<CanvasElement>) => void;
@@ -468,6 +473,10 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     if (el.lineHeight !== undefined) style.lineHeight = el.lineHeight;
     if (el.blendMode !== undefined) style.blendMode = el.blendMode;
     if (el.shapeShadow !== undefined) style.shapeShadow = el.shapeShadow;
+    if (el.pattern !== undefined) style.pattern = el.pattern;
+    if (el.patternColor !== undefined) style.patternColor = el.patternColor;
+    if (el.patternSize !== undefined) style.patternSize = el.patternSize;
+    if (el.borderDash !== undefined) style.borderDash = el.borderDash;
     set({ copiedStyle: JSON.parse(JSON.stringify(style)) });
   },
 
@@ -501,6 +510,30 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // ===== Canvas size =====
   setCanvasSize: (w, h) => set({ canvasW: w, canvasH: h }),
+
+  setCanvasSizeWithScale: (w, h, scaleElements) => {
+    const s = get();
+    get().pushHistory();
+    if (scaleElements) {
+      const sx = w / s.canvasW;
+      const sy = h / s.canvasH;
+      set({
+        canvasW: w,
+        canvasH: h,
+        els: s.els.map((el) => ({
+          ...el,
+          x: Math.round(el.x * sx),
+          y: Math.round(el.y * sy),
+          w: Math.round(el.w * sx),
+          h: Math.round(el.h * sy),
+          ...(el.size ? { size: Math.round(el.size * Math.min(sx, sy)) } : {}),
+        })),
+        ...histCounts(),
+      });
+    } else {
+      set({ canvasW: w, canvasH: h, ...histCounts() });
+    }
+  },
 
   // ===== Guides =====
   setGuides: (g) => set({ guides: g }),
@@ -689,6 +722,14 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
         set((s) => ({ els: [...s.els, ne], selIds: [ne.id], tool: 'select' }));
       }
     }
+  },
+
+  // ===== Image replace — keeps position/size/effects =====
+  replaceImage: (id, dataUrl) => {
+    get().pushHistory();
+    set((s) => ({
+      els: s.els.map((e) => (e.id === id ? { ...e, src: dataUrl } : e)),
+    }));
   },
 
   // ===== Element operations =====

@@ -147,11 +147,17 @@ export interface CanvasElement {
   visible?: boolean;
   proportionLocked?: boolean;
   // visual effects
-  textGradient?: { from: string; to: string; angle: number };
+  textGradient?: { from: string; to: string; mid?: string; angle: number };
   glow?: { color: string; blur: number; spread: number };
   blur?: number; // 0-20px
   brightness?: number; // 50-150, default 100
   contrast?: number; // 50-150, default 100
+  // pattern fill (shapes only)
+  pattern?: 'none' | 'dots' | 'lines' | 'grid' | 'diagonal' | 'chevron' | 'waves';
+  patternColor?: string;
+  patternSize?: number; // 10-50px
+  // shape border dash style
+  borderDash?: 'solid' | 'dashed' | 'dotted';
   // image filters
   grayscale?: number;   // 0-100
   sepia?: number;       // 0-100
@@ -168,6 +174,8 @@ export interface CanvasElement {
   cropH?: number;
   // lock aspect ratio during resize
   lockAspect?: boolean;
+  // image fit mode
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none';
 }
 
 export interface AIResult {

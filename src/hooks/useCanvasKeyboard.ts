@@ -69,10 +69,30 @@ export function useCanvasKeyboard() {
         return;
       }
 
-      // Paste: Ctrl+V
+      // Paste: Ctrl+V — check for clipboard image first, then fall back to element paste
       if (ctrl && e.key === 'v') {
         e.preventDefault();
-        store.pasteClipboard();
+        (async () => {
+          try {
+            if (typeof navigator?.clipboard?.read === 'function') {
+              const items = await navigator.clipboard.read();
+              for (const item of items) {
+                const imageType = item.types.find((t) => t.startsWith('image/'));
+                if (imageType) {
+                  const blob = await item.getType(imageType);
+                  const url = URL.createObjectURL(blob);
+                  useThumbnailStore.getState().addImage(url);
+                  useNotificationStore.getState().addToast('info', 'Image pasted from clipboard', 1500);
+                  return;
+                }
+              }
+            }
+          } catch {
+            // clipboard API not available or permission denied — fall through
+          }
+          // Fall back to internal element clipboard
+          useThumbnailStore.getState().pasteClipboard();
+        })();
         return;
       }
 
