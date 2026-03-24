@@ -1791,6 +1791,7 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
   const [renameVal, setRenameVal] = useState('');
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [layerSearch, setLayerSearch] = useState('');
   const { moveLayer } = useThumbnailStore.getState();
 
   const nameMap: Record<string, string> = {
@@ -1821,6 +1822,19 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
   };
 
   const reversedEls = [...els].reverse();
+  const searchLower = layerSearch.toLowerCase().trim();
+  const matchingIds = searchLower
+    ? new Set(
+        els
+          .filter((el) => {
+            const name = getDisplayName(el).toLowerCase();
+            const type = el.type.toLowerCase();
+            return name.includes(searchLower) || type.includes(searchLower);
+          })
+          .map((el) => el.id)
+      )
+    : null;
+  const filteredEls = matchingIds ? reversedEls.filter((el) => matchingIds.has(el.id)) : reversedEls;
 
   return (
     <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 12, paddingTop: 10 }}>
@@ -1828,10 +1842,63 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
         <span style={{ fontSize: 12, fontWeight: 700, color: C.sub }}>{t('thumbs.layers.title')}</span>
         <span style={{ fontSize: 10, color: C.dim, fontWeight: 600, background: C.surface, padding: '1px 6px', borderRadius: 4 }}>{els.length}</span>
       </div>
-      {reversedEls.map((el) => {
+      {/* Layer search input */}
+      {els.length > 3 && (
+        <div style={{ position: 'relative', marginBottom: 6 }}>
+          <input
+            type="text"
+            value={layerSearch}
+            onChange={(e) => setLayerSearch(e.target.value)}
+            placeholder={t('thumbs.layers.searchPlaceholder')}
+            aria-label={t('thumbs.layers.searchPlaceholder')}
+            style={{
+              width: '100%',
+              fontSize: 11,
+              fontWeight: 500,
+              color: C.text,
+              background: C.surface,
+              border: `1px solid ${layerSearch ? C.accent + '55' : C.border}`,
+              borderRadius: 6,
+              padding: '5px 26px 5px 8px',
+              outline: 'none',
+              fontFamily: 'inherit',
+              transition: 'border-color .15s',
+              boxSizing: 'border-box',
+            }}
+            onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.accent + '88'; }}
+            onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = layerSearch ? C.accent + '55' : C.border; }}
+          />
+          {/* Search icon or clear button */}
+          {layerSearch ? (
+            <button
+              onClick={() => setLayerSearch('')}
+              title={t('thumbs.layers.clearSearch')}
+              aria-label={t('thumbs.layers.clearSearch')}
+              style={{
+                position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
+                width: 18, height: 18, borderRadius: 4, border: 'none',
+                background: 'transparent', color: C.sub, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontFamily: 'inherit', padding: 0,
+              }}
+            >
+              &times;
+            </button>
+          ) : (
+            <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', color: C.dim, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+          )}
+        </div>
+      )}
+      {searchLower && filteredEls.length === 0 && (
+        <div style={{ padding: '8px 0', textAlign: 'center', fontSize: 11, color: C.dim }}>{t('thumbs.layers.noResults')}</div>
+      )}
+      {filteredEls.map((el) => {
         const isSel = selIds.includes(el.id);
         const isRenaming = renamingId === el.id;
         const isDragOver = dragOverId === el.id && dragId !== el.id;
+        const isSearchMatch = matchingIds !== null && matchingIds.has(el.id);
         return (
           <div key={el.id}
             draggable={!isRenaming}
@@ -1844,7 +1911,7 @@ const LayersPanel = memo(function LayersPanel({ els, selId, selIds, setSelId, de
             onClick={() => { if (!isRenaming) setSelId(el.id); }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelId(el.id); } }}
             onDoubleClick={(e) => { e.stopPropagation(); setRenamingId(el.id); setRenameVal(el.name || getDisplayName(el)); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px', borderRadius: 8, marginBottom: 2, background: isSel ? C.accentDim : 'transparent', border: `1px solid ${isDragOver ? C.accent : isSel ? C.accent + '33' : 'transparent'}`, cursor: isRenaming ? 'text' : 'pointer', transition: 'all .12s', opacity: dragId === el.id ? 0.4 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px', borderRadius: 8, marginBottom: 2, background: isSel ? C.accentDim : (isSearchMatch && !isSel ? '#e040fb0c' : 'transparent'), border: `1px solid ${isDragOver ? C.accent : isSel ? C.accent + '33' : (isSearchMatch && !isSel ? '#e040fb22' : 'transparent')}`, cursor: isRenaming ? 'text' : 'pointer', transition: 'all .12s', opacity: dragId === el.id ? 0.4 : 1 }}
             onMouseEnter={(e) => { if (!isSel && !dragId) (e.currentTarget as HTMLElement).style.background = C.surface; }}
             onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >

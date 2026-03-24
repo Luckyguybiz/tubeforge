@@ -129,10 +129,10 @@ const TOOL_SHORTCUT_HINTS: Record<string, string> = {
 export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid } = useThumbnailStore(
-    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid }))
+  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid, customGuidesCount } = useThumbnailStore(
+    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid, customGuidesCount: s.customGuides.length }))
   );
-  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, addImage, setSnapToGrid } = useThumbnailStore.getState();
+  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, addImage, setSnapToGrid, addCustomGuide, clearCustomGuides } = useThumbnailStore.getState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
   const [showShapes, setShowShapes] = useState(false);
@@ -455,6 +455,60 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
         </svg>
         <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: snapToGrid ? C.accent : C.dim }}>{t('thumbs.toolbar.grid')}</span>
       </div>
+
+      {/* Custom Guides — Add H/V guide buttons */}
+      {!isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, marginTop: 2 }}>
+          <div style={{ display: 'flex', gap: 2 }}>
+            <button
+              onClick={() => addCustomGuide('h')}
+              title={t('thumbs.toolbar.addHGuide')}
+              aria-label={t('thumbs.toolbar.addHGuide')}
+              style={{
+                width: 21, height: 20, borderRadius: 5, border: `1px solid ${C.border}`,
+                background: 'transparent', color: '#e040fb', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', padding: 0, transition: 'all .12s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="2" y1="12" x2="22" y2="12"/></svg>
+            </button>
+            <button
+              onClick={() => addCustomGuide('v')}
+              title={t('thumbs.toolbar.addVGuide')}
+              aria-label={t('thumbs.toolbar.addVGuide')}
+              style={{
+                width: 21, height: 20, borderRadius: 5, border: `1px solid ${C.border}`,
+                background: 'transparent', color: '#e040fb', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', padding: 0, transition: 'all .12s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="2" x2="12" y2="22"/></svg>
+            </button>
+          </div>
+          {customGuidesCount > 0 && (
+            <button
+              onClick={() => clearCustomGuides()}
+              title={t('thumbs.toolbar.clearGuides')}
+              aria-label={t('thumbs.toolbar.clearGuides')}
+              style={{
+                width: 44, height: 14, borderRadius: 4, border: 'none',
+                background: 'transparent', color: '#e040fb', cursor: 'pointer',
+                fontSize: 8, fontWeight: 600, padding: 0, fontFamily: 'inherit',
+                transition: 'all .12s', opacity: 0.7,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.7'; }}
+            >
+              {customGuidesCount} {t('thumbs.toolbar.guidesLabel')}  &times;
+            </button>
+          )}
+          <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: C.dim }}>{t('thumbs.toolbar.guides')}</span>
+        </div>
+      )}
 
       {/* Z4: Remove Background button (placeholder) */}
       {!isMobile && divider}
