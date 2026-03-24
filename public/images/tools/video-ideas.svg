@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle cx="200" cy="100" r="45" stroke="white" stroke-width="1.5" opacity="0.25" filter="url(#glow)"/>
+    <path d="M185 115 C185 140 215 140 215 115" stroke="white" stroke-width="1.5" opacity="0.3" fill="none"/>
+    <rect x="188" y="140" width="24" height="12" rx="3" stroke="white" stroke-width="1" opacity="0.25"/>
+    <path d="M200 68 L200 58" stroke="white" stroke-width="1.5" opacity="0.4"/>
+    <path d="M175 78 L168 70" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <path d="M225 78 L232 70" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <rect x="80" y="180" width="100" height="25" rx="5" stroke="white" stroke-width="1" opacity="0.2"/>
+    <rect x="90" y="188" width="60" height="8" rx="2" fill="white" opacity="0.2"/>
+    <rect x="200" y="180" width="120" height="25" rx="5" stroke="white" stroke-width="1" opacity="0.2"/>
+    <rect x="210" y="188" width="80" height="8" rx="2" fill="white" opacity="0.2"/>
+    <rect x="100" y="220" width="110" height="25" rx="5" stroke="white" stroke-width="1" opacity="0.15"/>
+    <rect x="110" y="228" width="70" height="8" rx="2" fill="white" opacity="0.18"/>
+    <rect x="230" y="220" width="90" height="25" rx="5" stroke="white" stroke-width="1" opacity="0.15"/>
+    <rect x="240" y="228" width="50" height="8" rx="2" fill="white" opacity="0.15"/>
+    <rect x="140" y="258" width="120" height="22" rx="5" fill="white" opacity="0.1"/>
+    <text x="200" y="273" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial">50+ IDEAS</text>
+  </svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="80" y="40" width="240" height="160" rx="10" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <rect x="80" y="40" width="240" height="160" rx="10" fill="white" opacity="0.05"/>
+    <path d="M100 180 Q120 120 160 150 Q200 100 240 140 Q280 110 300 130 L300 200 L100 200 Z" fill="white" opacity="0.15"/>
+    <circle cx="140" cy="80" r="15" fill="white" opacity="0.15"/>
+    <rect x="170" y="75" width="130" height="12" rx="3" fill="white" opacity="0.25"/>
+    <rect x="170" y="95" width="90" height="8" rx="2" fill="white" opacity="0.15"/>
+    <path d="M60 130 C50 120 50 140 60 130" stroke="white" stroke-width="3" opacity="0.3"/>
+    <path d="M50 130 L50 180 Q50 190 60 190 L80 190" stroke="white" stroke-width="2" opacity="0.25" fill="none"/>
+    <circle cx="200" cy="240" r="15" stroke="white" stroke-width="1" opacity="0.2"/>
+    <text x="200" y="244" text-anchor="middle" fill="white" font-size="10" font-weight="700" opacity="0.4" font-family="Arial">AI</text>
+    <path d="M175 240 L160 240" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <path d="M215 240 L230 240" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+  </svg>

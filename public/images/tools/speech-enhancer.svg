@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <text x="120" y="55" text-anchor="middle" fill="white" font-size="11" opacity="0.35" font-family="Arial">BEFORE</text>
+    <rect x="40" y="65" width="160" height="80" rx="8" stroke="white" stroke-width="1" opacity="0.2"/>
+    <line x1="55" y1="105" x2="60" y2="95" stroke="white" stroke-width="2" opacity="0.25" stroke-linecap="round"/>
+    <line x1="65" y1="105" x2="70" y2="115" stroke="white" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+    <line x1="75" y1="105" x2="80" y2="80" stroke="white" stroke-width="2" opacity="0.2" stroke-linecap="round"/>
+    <line x1="85" y1="105" x2="90" y2="120" stroke="white" stroke-width="2" opacity="0.35" stroke-linecap="round"/>
+    <line x1="95" y1="105" x2="100" y2="90" stroke="white" stroke-width="2" opacity="0.25" stroke-linecap="round"/>
+    <line x1="105" y1="105" x2="115" y2="130" stroke="white" stroke-width="2" opacity="0.2" stroke-linecap="round"/>
+    <line x1="120" y1="105" x2="130" y2="75" stroke="white" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+    <line x1="135" y1="105" x2="140" y2="95" stroke="white" stroke-width="2" opacity="0.2" stroke-linecap="round"/>
+    <line x1="150" y1="105" x2="155" y2="115" stroke="white" stroke-width="2" opacity="0.25" stroke-linecap="round"/>
+    <line x1="165" y1="105" x2="175" y2="85" stroke="white" stroke-width="2" opacity="0.3" stroke-linecap="round"/>
+    <path d="M210 105 L230 105" stroke="white" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+    <polygon points="235,105 225,98 225,112" fill="white" opacity="0.4"/>
+    <text x="300" y="55" text-anchor="middle" fill="white" font-size="11" opacity="0.35" font-family="Arial">AFTER</text>
+    <rect x="220" y="65" width="160" height="80" rx="8" stroke="white" stroke-width="1" opacity="0.2"/>
+    <path d="M240,105 Q250,85 260,105 Q270,125 280,105 Q290,85 300,105 Q310,125 320,105 Q330,85 340,105 Q350,125 360,105" stroke="white" stroke-width="2" opacity="0.5" fill="none" stroke-linecap="round"/>
+    <circle cx="200" cy="200" r="30" stroke="white" stroke-width="1.5" opacity="0.2"/>
+    <path d="M185 200 L192 195 L192 188" stroke="white" stroke-width="1.5" opacity="0.3" fill="none" stroke-linecap="round"/>
+    <path d="M195 210 C195 215 205 215 205 210" stroke="white" stroke-width="1" opacity="0.3" fill="none"/>
+    <circle cx="200" cy="200" r="3" fill="white" opacity="0.3"/>
+    <text x="200" y="260" text-anchor="middle" fill="white" font-size="10" opacity="0.25" font-family="Arial">AI ENHANCED</text>
+  </svg>

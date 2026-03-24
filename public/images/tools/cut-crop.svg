@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="60" y="40" width="280" height="180" rx="4" stroke="white" stroke-width="1" opacity="0.15" stroke-dasharray="6 4"/>
+    <rect x="100" y="70" width="200" height="130" rx="2" stroke="white" stroke-width="2" opacity="0.5"/>
+    <rect x="100" y="70" width="200" height="130" rx="2" fill="white" opacity="0.05"/>
+    <rect x="96" y="66" width="10" height="10" fill="white" opacity="0.4"/>
+    <rect x="294" y="66" width="10" height="10" fill="white" opacity="0.4"/>
+    <rect x="96" y="194" width="10" height="10" fill="white" opacity="0.4"/>
+    <rect x="294" y="194" width="10" height="10" fill="white" opacity="0.4"/>
+    <line x1="100" y1="40" x2="100" y2="66" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="300" y1="40" x2="300" y2="66" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="60" y1="70" x2="96" y2="70" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="60" y1="200" x2="96" y2="200" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="100" y1="220" x2="100" y2="250" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="300" y1="220" x2="300" y2="250" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="304" y1="70" x2="340" y2="70" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <line x1="304" y1="200" x2="340" y2="200" stroke="white" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    <circle cx="160" cy="110" r="15" fill="white" opacity="0.15"/>
+    <polygon points="140,180 200,130 260,160 260,200 140,200" fill="white" opacity="0.1"/>
+    <text x="200" y="260" text-anchor="middle" fill="white" font-size="10" opacity="0.25" font-family="Arial">400 x 300</text>
+  </svg>

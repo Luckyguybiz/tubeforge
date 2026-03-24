@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="40" y="50" width="180" height="200" rx="8" stroke="white" stroke-width="1.5" opacity="0.25"/>
+    <rect x="55" y="70" width="100" height="10" rx="3" fill="white" opacity="0.3"/>
+    <rect x="55" y="90" width="150" height="8" rx="2" fill="white" opacity="0.15"/>
+    <rect x="55" y="105" width="130" height="8" rx="2" fill="white" opacity="0.15"/>
+    <rect x="55" y="130" width="50" height="20" rx="10" stroke="white" stroke-width="1" opacity="0.3"/>
+    <text x="80" y="144" text-anchor="middle" fill="white" font-size="9" opacity="0.5" font-family="Arial">SEO</text>
+    <rect x="115" y="130" width="60" height="20" rx="10" stroke="white" stroke-width="1" opacity="0.3"/>
+    <text x="145" y="144" text-anchor="middle" fill="white" font-size="9" opacity="0.5" font-family="Arial">Tags</text>
+    <rect x="55" y="160" width="50" height="20" rx="10" stroke="white" stroke-width="1" opacity="0.25"/>
+    <rect x="115" y="160" width="45" height="20" rx="10" stroke="white" stroke-width="1" opacity="0.25"/>
+    <rect x="55" y="190" width="150" height="6" rx="3" fill="white" opacity="0.1"/>
+    <rect x="55" y="190" width="120" height="6" rx="3" fill="white" opacity="0.25"/>
+    <rect x="55" y="205" width="150" height="6" rx="3" fill="white" opacity="0.1"/>
+    <rect x="55" y="205" width="90" height="6" rx="3" fill="white" opacity="0.2"/>
+    <rect x="55" y="220" width="150" height="6" rx="3" fill="white" opacity="0.1"/>
+    <rect x="55" y="220" width="140" height="6" rx="3" fill="white" opacity="0.3"/>
+    <rect x="250" y="60" width="110" height="80" rx="8" stroke="white" stroke-width="1" opacity="0.2"/>
+    <polyline points="265,120 285,100 305,110 325,80 345,90" stroke="white" stroke-width="2" opacity="0.5" fill="none" stroke-linecap="round"/>
+    <rect x="250" y="160" width="110" height="80" rx="8" stroke="white" stroke-width="1" opacity="0.2"/>
+    <rect x="265" y="220" width="15" height="10" rx="2" fill="white" opacity="0.25"/>
+    <rect x="290" y="200" width="15" height="30" rx="2" fill="white" opacity="0.3"/>
+    <rect x="315" y="210" width="15" height="20" rx="2" fill="white" opacity="0.2"/>
+    <rect x="340" y="190" width="15" height="40" rx="2" fill="white" opacity="0.35"/>
+  </svg>

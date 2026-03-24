@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="40" y="70" width="130" height="90" rx="8" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <rect x="40" y="70" width="130" height="90" rx="8" fill="white" opacity="0.05"/>
+    <polygon points="90,100 90,130 115,115" fill="white" opacity="0.3"/>
+    <text x="105" y="180" text-anchor="middle" fill="white" font-size="12" font-weight="700" opacity="0.4" font-family="Arial">.MP4</text>
+    <path d="M180 115 L210 115" stroke="white" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+    <polygon points="215,115 210,108 210,122" fill="white" opacity="0.4"/>
+    <path d="M195 105 L195 95" stroke="white" stroke-width="1" opacity="0.2"/>
+    <path d="M195 125 L195 135" stroke="white" stroke-width="1" opacity="0.2"/>
+    <circle cx="195" cy="115" r="20" stroke="white" stroke-width="1" opacity="0.15" stroke-dasharray="3 3"/>
+    <rect x="230" y="70" width="130" height="90" rx="8" stroke="white" stroke-width="1.5" opacity="0.4"/>
+    <rect x="230" y="70" width="130" height="90" rx="8" fill="white" opacity="0.08"/>
+    <rect x="245" y="85" width="100" height="55" rx="4" fill="white" opacity="0.1"/>
+    <circle cx="270" cy="105" r="8" fill="white" opacity="0.15"/>
+    <circle cx="295" cy="115" r="6" fill="white" opacity="0.12"/>
+    <circle cx="325" cy="100" r="5" fill="white" opacity="0.1"/>
+    <text x="295" y="180" text-anchor="middle" fill="white" font-size="12" font-weight="700" opacity="0.5" font-family="Arial">.GIF</text>
+    <text x="295" y="160" text-anchor="middle" fill="white" font-size="8" opacity="0.25" font-family="Arial">ANIMATED</text>
+    <rect x="100" y="220" width="200" height="30" rx="6" stroke="white" stroke-width="1" opacity="0.15"/>
+    <rect x="110" y="228" width="180" height="4" rx="2" fill="white" opacity="0.1"/>
+    <rect x="110" y="228" width="120" height="4" rx="2" fill="white" opacity="0.3"/>
+    <text x="200" y="265" text-anchor="middle" fill="white" font-size="9" opacity="0.2" font-family="Arial">CONVERTING...</text>
+  </svg>

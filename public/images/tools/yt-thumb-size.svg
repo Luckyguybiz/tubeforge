@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="80" y="60" width="240" height="135" rx="6" stroke="white" stroke-width="2" opacity="0.4"/>
+    <rect x="80" y="60" width="240" height="135" rx="6" fill="white" opacity="0.05"/>
+    <line x1="70" y1="60" x2="70" y2="195" stroke="white" stroke-width="1" opacity="0.3"/>
+    <line x1="66" y1="60" x2="74" y2="60" stroke="white" stroke-width="1" opacity="0.3"/>
+    <line x1="66" y1="195" x2="74" y2="195" stroke="white" stroke-width="1" opacity="0.3"/>
+    <text x="55" y="132" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial" transform="rotate(-90 55 132)">720px</text>
+    <line x1="80" y1="205" x2="320" y2="205" stroke="white" stroke-width="1" opacity="0.3"/>
+    <line x1="80" y1="201" x2="80" y2="209" stroke="white" stroke-width="1" opacity="0.3"/>
+    <line x1="320" y1="201" x2="320" y2="209" stroke="white" stroke-width="1" opacity="0.3"/>
+    <text x="200" y="220" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial">1280px</text>
+    <circle cx="130" cy="100" r="15" fill="white" opacity="0.12"/>
+    <rect x="160" y="90" width="120" height="12" rx="3" fill="white" opacity="0.2"/>
+    <rect x="160" y="108" width="80" height="8" rx="2" fill="white" opacity="0.12"/>
+    <polygon points="120,170 200,130 280,155 280,195 120,195" fill="white" opacity="0.08"/>
+    <text x="200" y="260" text-anchor="middle" fill="white" font-size="12" font-weight="700" opacity="0.4" font-family="Arial">1280 x 720</text>
+    <text x="200" y="280" text-anchor="middle" fill="white" font-size="9" opacity="0.25" font-family="Arial">16:9 RATIO</text>
+  </svg>

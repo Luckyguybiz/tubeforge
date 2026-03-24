@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none"><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="100" y="40" width="200" height="120" rx="10" stroke="white" stroke-width="1.5" opacity="0.3"/>
+    <rect x="100" y="40" width="200" height="120" rx="10" fill="white" opacity="0.05"/>
+    <text x="200" y="85" text-anchor="middle" fill="white" font-size="28" font-weight="700" opacity="0.5" font-family="Arial">$12,450</text>
+    <text x="200" y="105" text-anchor="middle" fill="white" font-size="10" opacity="0.25" font-family="Arial">ESTIMATED REVENUE</text>
+    <rect x="115" y="120" width="60" height="25" rx="4" fill="white" opacity="0.1"/>
+    <text x="145" y="137" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial">CPM</text>
+    <rect x="185" y="120" width="60" height="25" rx="4" fill="white" opacity="0.1"/>
+    <text x="215" y="137" text-anchor="middle" fill="white" font-size="9" opacity="0.3" font-family="Arial">RPM</text>
+    <rect x="255" y="120" width="35" height="25" rx="4" fill="white" opacity="0.1"/>
+    <text x="272" y="137" text-anchor="middle" fill="white" font-size="12" opacity="0.3" font-family="Arial">$</text>
+    <rect x="60" y="190" width="280" height="70" rx="8" stroke="white" stroke-width="1" opacity="0.15"/>
+    <rect x="75" y="210" width="100" height="6" rx="2" fill="white" opacity="0.15"/>
+    <rect x="75" y="225" width="250" height="8" rx="3" fill="white" opacity="0.08"/>
+    <rect x="75" y="225" width="180" height="8" rx="3" fill="white" opacity="0.2"/>
+    <rect x="75" y="240" width="250" height="8" rx="3" fill="white" opacity="0.08"/>
+    <rect x="75" y="240" width="120" height="8" rx="3" fill="white" opacity="0.15"/>
+    <circle cx="330" cy="215" r="15" stroke="white" stroke-width="1" opacity="0.2"/>
+    <text x="330" y="220" text-anchor="middle" fill="white" font-size="14" font-weight="700" opacity="0.3" font-family="Arial">$</text>
+  </svg>
