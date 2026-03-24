@@ -84,6 +84,9 @@ interface ThumbnailState {
   // Context menu
   contextMenu: { x: number; y: number; elId: string | null } | null;
 
+  // Project colors — last 12 colors used, auto-populated
+  projectColors: string[];
+
   // Basic setters
   setStep: (s: string) => void;
   setTool: (t: string) => void;
@@ -210,9 +213,12 @@ interface ThumbnailState {
   copyStyle: () => void;
   pasteStyle: () => void;
 
+  // Project colors
+  addProjectColor: (color: string) => void;
+
   // Save/Load
-  loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasBgImage?: string | null; canvasBgGradient?: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW?: number; canvasH?: number } | null) => void;
-  exportState: () => { els: CanvasElement[]; canvasBg: string; canvasBgImage: string | null; canvasBgGradient: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW: number; canvasH: number };
+  loadFromProject: (thumbnailData: { els?: CanvasElement[]; canvasBg?: string; canvasBgImage?: string | null; canvasBgGradient?: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW?: number; canvasH?: number; projectColors?: string[] } | null) => void;
+  exportState: () => { els: CanvasElement[]; canvasBg: string; canvasBgImage: string | null; canvasBgGradient: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null; canvasW: number; canvasH: number; projectColors: string[] };
 
   // Templates
   applyTemplate: (elements: Omit<CanvasElement, 'id'>[], bg: string) => void;
@@ -306,6 +312,9 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // Context menu
   contextMenu: null,
+
+  // Project colors
+  projectColors: [],
 
   // ===== Basic setters =====
   setStep: (s) => set({ step: s }),
@@ -540,6 +549,8 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     if (el.textGradient !== undefined) style.textGradient = el.textGradient;
     if (el.textStroke !== undefined) style.textStroke = el.textStroke;
     if (el.textStrokeWidth !== undefined) style.textStrokeWidth = el.textStrokeWidth;
+    if (el.textStrokes !== undefined) style.textStrokes = el.textStrokes;
+    if (el.pulse !== undefined) style.pulse = el.pulse;
     if (el.letterSpacing !== undefined) style.letterSpacing = el.letterSpacing;
     if (el.lineHeight !== undefined) style.lineHeight = el.lineHeight;
     if (el.blendMode !== undefined) style.blendMode = el.blendMode;
@@ -561,7 +572,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     if (!copiedStyle || selIds.length === 0) return;
     get().pushHistory();
     // Text-specific properties that should not be applied to non-text elements
-    const textOnlyKeys = new Set<string>(['size', 'font', 'fontWeight', 'bold', 'italic', 'underline', 'textAlign', 'textGradient', 'textStroke', 'textStrokeWidth', 'letterSpacing', 'lineHeight']);
+    const textOnlyKeys = new Set<string>(['size', 'font', 'fontWeight', 'bold', 'italic', 'underline', 'textAlign', 'textGradient', 'textStroke', 'textStrokeWidth', 'textStrokes', 'letterSpacing', 'lineHeight']);
     const textTypes = new Set(['text', 'stickyNote']);
     set((s) => ({
       els: s.els.map((el) => {
@@ -575,6 +586,15 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
         return { ...el, ...patch };
       }),
     }));
+  },
+
+  // ===== Project Colors =====
+  addProjectColor: (color: string) => {
+    const normalized = color.toLowerCase();
+    set((s) => {
+      const filtered = s.projectColors.filter((c) => c !== normalized);
+      return { projectColors: [normalized, ...filtered].slice(0, 12) };
+    });
   },
 
   // ===== Zoom =====
@@ -759,6 +779,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       textTransform: preset.textTransform,
       textStroke: preset.textStroke,
       textStrokeWidth: preset.textStrokeWidth,
+      textStrokes: preset.textStrokes,
       textGradient: preset.textGradient,
       glow: preset.glow,
     };
@@ -1113,6 +1134,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       canvasBgGradient: thumbnailData.canvasBgGradient ?? null,
       canvasW: thumbnailData.canvasW || CANVAS_W,
       canvasH: thumbnailData.canvasH || CANVAS_H,
+      projectColors: thumbnailData.projectColors ?? [],
       selIds: [],
       ...histCounts(),
     });
@@ -1120,7 +1142,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   exportState: () => {
     const s = get();
-    return { els: s.els, canvasBg: s.canvasBg, canvasBgImage: s.canvasBgImage, canvasBgGradient: s.canvasBgGradient, canvasW: s.canvasW, canvasH: s.canvasH };
+    return { els: s.els, canvasBg: s.canvasBg, canvasBgImage: s.canvasBgImage, canvasBgGradient: s.canvasBgGradient, canvasW: s.canvasW, canvasH: s.canvasH, projectColors: s.projectColors };
   },
 
   // ===== Templates =====

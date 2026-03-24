@@ -80,6 +80,12 @@ input:focus, textarea:focus, select:focus {
   100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
 }
 
+/* Design Studio: element pulse animation (editor-only preview) */
+@keyframes elementPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
 /* Design Studio: left panel slide-in */
 @keyframes panelSlideIn {
   from { transform: translateX(-20px); opacity: 0; }
