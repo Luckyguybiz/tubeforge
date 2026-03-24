@@ -69,8 +69,8 @@ interface ThumbnailState {
   // Snap to grid
   snapToGrid: boolean;
 
-  // Safe zone overlay (10% from edges)
-  showSafeZone: boolean;
+  // Snap to pixel (round positions to integers)
+  snapToPixel: boolean;
 
   // Shape sub-tool
   shapeSub: 'rect' | 'circle' | 'triangle' | 'star' | 'pentagon' | 'hexagon' | 'arrowShape' | 'speechBubble' | 'heart';
@@ -103,7 +103,7 @@ interface ThumbnailState {
   setAiCount: (n: number) => void;
   setLeftPanel: (p: 'none' | 'uploads' | 'elements' | 'projects' | 'stock' | 'aiBg' | 'aiText' | 'templates' | 'background' | 'textStyles' | 'creatorStyles') => void;
   setSnapToGrid: (v: boolean) => void;
-  setShowSafeZone: (v: boolean) => void;
+  setSnapToPixel: (v: boolean) => void;
   setCanvasBgImage: (url: string | null) => void;
   setCanvasBgGradient: (g: { from: string; to: string; angle: number; type: 'linear' | 'radial' } | null) => void;
   setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star' | 'pentagon' | 'hexagon' | 'arrowShape' | 'speechBubble' | 'heart') => void;
@@ -292,8 +292,8 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   // Snap to grid
   snapToGrid: false,
 
-  // Safe zone overlay
-  showSafeZone: false,
+  // Snap to pixel
+  snapToPixel: false,
 
   // Shape sub
   shapeSub: 'rect',
@@ -334,7 +334,7 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   setAiCount: (n) => set({ aiCount: n }),
   setLeftPanel: (p) => set((s) => ({ leftPanel: s.leftPanel === p ? 'none' : p })),
   setSnapToGrid: (v) => set({ snapToGrid: v }),
-  setShowSafeZone: (v) => set({ showSafeZone: v }),
+  setSnapToPixel: (v) => set({ snapToPixel: v }),
   setCanvasBgImage: (url) => set({ canvasBgImage: url }),
   setCanvasBgGradient: (g) => {
     get().pushHistory();

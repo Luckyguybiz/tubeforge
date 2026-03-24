@@ -129,10 +129,10 @@ const TOOL_SHORTCUT_HINTS: Record<string, string> = {
 export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid, customGuidesCount } = useThumbnailStore(
-    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid, customGuidesCount: s.customGuides.length }))
+  const { tool, shapeSub, drawColor, drawSize, canvasBg, leftPanel, snapToGrid, snapToPixel, customGuidesCount } = useThumbnailStore(
+    useShallow((s) => ({ tool: s.tool, shapeSub: s.shapeSub, drawColor: s.drawColor, drawSize: s.drawSize, canvasBg: s.canvasBg, leftPanel: s.leftPanel, snapToGrid: s.snapToGrid, snapToPixel: s.snapToPixel, customGuidesCount: s.customGuides.length }))
   );
-  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, addImage, setSnapToGrid, addCustomGuide, clearCustomGuides } = useThumbnailStore.getState();
+  const { setTool, addText, addShape, setShapeSub, setDrawColor, setDrawSize, setCanvasBg, setLeftPanel, addTable, addStickyNote, addImage, setSnapToGrid, setSnapToPixel, addCustomGuide, clearCustomGuides } = useThumbnailStore.getState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
   const [showShapes, setShowShapes] = useState(false);
@@ -454,6 +454,39 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
           <line x1="15" y1="3" x2="15" y2="21"/>
         </svg>
         <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: snapToGrid ? C.accent : C.dim }}>{t('thumbs.toolbar.grid')}</span>
+      </div>
+
+      {/* Snap to Pixel — round positions to whole numbers */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Snap to Pixel"
+        aria-pressed={snapToPixel}
+        onClick={() => {
+          const next = !snapToPixel;
+          setSnapToPixel(next);
+          try { localStorage.setItem('tubeforge-snap-to-pixel', JSON.stringify(next)); } catch {}
+        }}
+        title="Snap to Pixel — round all positions to whole numbers"
+        style={{
+          width: 44, height: 44, borderRadius: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+          color: snapToPixel ? C.accent : C.sub,
+          background: snapToPixel ? C.accentDim : 'transparent',
+          border: `1px solid ${snapToPixel ? C.accent + '33' : 'transparent'}`,
+          cursor: 'pointer', transition: 'all .15s',
+        }}
+        onMouseEnter={(e) => { if (!snapToPixel) (e.currentTarget as HTMLElement).style.background = C.surface; }}
+        onMouseLeave={(e) => { if (!snapToPixel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const next = !snapToPixel; setSnapToPixel(next); try { localStorage.setItem('tubeforge-snap-to-pixel', JSON.stringify(next)); } catch {} } }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, color: snapToPixel ? C.accent : C.dim }}>Pixel</span>
       </div>
 
       {/* Custom Guides — Add H/V guide buttons */}
