@@ -93,8 +93,8 @@ interface PropertiesPanelProps {
 export function PropertiesPanel({ sel }: PropertiesPanelProps) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { els, selIds } = useThumbnailStore(
-    useShallow((s) => ({ els: s.els, selIds: s.selIds }))
+  const { els, selIds, canvasBg } = useThumbnailStore(
+    useShallow((s) => ({ els: s.els, selIds: s.selIds, canvasBg: s.canvasBg }))
   );
   const { setSelId, updEl, delEl, bringFront, sendBack, moveUp, moveDown, pushHistory, flipHorizontal, flipVertical, replaceImage } = useThumbnailStore.getState();
   const selId = selIds.length > 0 ? selIds[selIds.length - 1] : null;
@@ -208,6 +208,8 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           {/* Color with HEX + presets */}
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          <ColorHarmony C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          <ContrastChecker C={C} fg={sel.color} bg={canvasBg} />
           {/* Font Weight */}
           <div>
             <div style={labelStyle}>Weight</div>
@@ -330,6 +332,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           </div>
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          <ColorHarmony C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           {/* Pattern picker */}
           {sel.pattern && sel.pattern !== 'none' && (
             <div>
@@ -424,6 +427,13 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Replace Image
           </button>
+          {/* Extract Color Palette from Image */}
+          <ImagePaletteExtractor C={C} src={sel.src} onApply={(c) => {
+            // Apply extracted color: copy to clipboard and show toast, or apply to a selected text/shape
+            navigator.clipboard?.writeText(c).catch(() => {});
+            toast.success(`Copied ${c}`);
+            addToRecentColors(c);
+          }} labelStyle={labelStyle} />
           {/* Image Fit Mode */}
           <div>
             <div style={labelStyle}>Fit Mode</div>
@@ -475,6 +485,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div style={{ fontSize: 10, color: C.sub }}>{t('thumbs.props.drawnElement')}</div>
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          <ColorHarmony C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
@@ -490,6 +501,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <div style={{ fontSize: 10, color: C.sub, fontWeight: 600 }}>{sel.type === 'arrow' ? t('thumbs.props.arrowLabel') : t('thumbs.props.lineLabel')}</div>
           <ColorWithHex C={C} value={sel.strokeColor ?? '#ffffff'} onChange={(c) => updEl(sel.id, { strokeColor: c })} label={t('thumbs.props.strokeColor')} />
           <ColorPresets C={C} value={sel.strokeColor ?? '#ffffff'} onChange={(c) => updEl(sel.id, { strokeColor: c })} />
+          <ColorHarmony C={C} value={sel.strokeColor ?? '#ffffff'} onChange={(c) => updEl(sel.id, { strokeColor: c })} />
           <div><div style={labelStyle}>{t('thumbs.props.thickness')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={1} max={12} value={sel.lineWidth ?? 2} onChange={(e) => updEl(sel.id, { lineWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 16 }}>{sel.lineWidth ?? 2}</span></div></div>
           <div><div style={labelStyle}>{t('thumbs.props.style')}</div>
             <div style={{ display: 'flex', gap: 3 }}>
@@ -2058,5 +2070,280 @@ function AIRemoveBackgroundButton({ C, sel, updEl, pushHistory }: {
         </>
       )}
     </button>
+  );
+}
+
+// ============================================================
+// Color Harmony — show complementary/analogous/triadic/split colors
+// ============================================================
+
+function hexToHsl(hex: string): [number, number, number] {
+  let r = parseInt(hex.slice(1, 3), 16) / 255;
+  let g = parseInt(hex.slice(3, 5), 16) / 255;
+  let b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return [h * 360, s * 100, l * 100];
+}
+
+function hslToHex(h: number, s: number, l: number): string {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(100, s)) / 100;
+  l = Math.max(0, Math.min(100, l)) / 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * Math.max(0, Math.min(1, color))).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function getHarmonyColors(hex: string): { complementary: string; analogous: string[]; triadic: string[]; split: string[] } {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return { complementary: hex, analogous: [hex, hex], triadic: [hex, hex], split: [hex, hex] };
+  const [h, s, l] = hexToHsl(hex);
+  return {
+    complementary: hslToHex(h + 180, s, l),
+    analogous: [hslToHex(h - 30, s, l), hslToHex(h + 30, s, l)],
+    triadic: [hslToHex(h + 120, s, l), hslToHex(h + 240, s, l)],
+    split: [hslToHex(h + 150, s, l), hslToHex(h + 210, s, l)],
+  };
+}
+
+const ColorHarmony = memo(function ColorHarmony({ C, value, onChange }: { C: Theme; value: string | undefined; onChange: (c: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const color = value ?? '#ffffff';
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) return null;
+  const harmony = getHarmonyColors(color);
+
+  const swatchStyle = (c: string): React.CSSProperties => ({
+    width: 20, height: 20, borderRadius: 4, background: c,
+    border: `1.5px solid ${C.border}`, cursor: 'pointer', padding: 0, flexShrink: 0,
+  });
+
+  const groupLabel: React.CSSProperties = { fontSize: 8, color: C.dim, minWidth: 56, textAlign: 'right' as const, flexShrink: 0 };
+
+  return (
+    <div>
+      <button onClick={() => setExpanded(!expanded)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill={C.sub} opacity="0.3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+        <span style={{ fontSize: 10, color: C.sub, fontWeight: 600, flex: 1, textAlign: 'left' }}>Color Harmony</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {expanded && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {/* Complementary */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={groupLabel}>Compl.</span>
+            <button onClick={() => onChange(harmony.complementary)} style={swatchStyle(harmony.complementary)} title={`Complementary: ${harmony.complementary}`} />
+          </div>
+          {/* Analogous */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={groupLabel}>Analogous</span>
+            {harmony.analogous.map((c, i) => <button key={i} onClick={() => onChange(c)} style={swatchStyle(c)} title={`Analogous: ${c}`} />)}
+          </div>
+          {/* Triadic */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={groupLabel}>Triadic</span>
+            {harmony.triadic.map((c, i) => <button key={i} onClick={() => onChange(c)} style={swatchStyle(c)} title={`Triadic: ${c}`} />)}
+          </div>
+          {/* Split Compl */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={groupLabel}>Split</span>
+            {harmony.split.map((c, i) => <button key={i} onClick={() => onChange(c)} style={swatchStyle(c)} title={`Split complementary: ${c}`} />)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ============================================================
+// WCAG Contrast Checker — for text vs background
+// ============================================================
+
+function hexToLinearChannel(val: number): number {
+  const srgb = val / 255;
+  return srgb <= 0.04045 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(hex: string): number {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return 0;
+  const r = hexToLinearChannel(parseInt(hex.slice(1, 3), 16));
+  const g = hexToLinearChannel(parseInt(hex.slice(3, 5), 16));
+  const b = hexToLinearChannel(parseInt(hex.slice(5, 7), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function getContrastRatio(fg: string, bg: string): number {
+  const l1 = relativeLuminance(fg);
+  const l2 = relativeLuminance(bg);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+const ContrastChecker = memo(function ContrastChecker({ C, fg, bg }: { C: Theme; fg: string | undefined; bg: string }) {
+  const fgColor = fg ?? '#ffffff';
+  if (!/^#[0-9a-fA-F]{6}$/.test(fgColor) || !/^#[0-9a-fA-F]{6}$/.test(bg)) return null;
+
+  const ratio = getContrastRatio(fgColor, bg);
+  const ratioStr = ratio.toFixed(1);
+  const passAAA = ratio >= 7;
+  const passAA = ratio >= 4.5;
+  const passAALarge = ratio >= 3;
+
+  let badge: string;
+  let badgeColor: string;
+  if (passAAA) { badge = `AAA ${ratioStr}:1`; badgeColor = '#22c55e'; }
+  else if (passAA) { badge = `AA ${ratioStr}:1`; badgeColor = '#22c55e'; }
+  else if (passAALarge) { badge = `AA-lg ${ratioStr}:1`; badgeColor = '#f59e0b'; }
+  else { badge = `Low ${ratioStr}:1`; badgeColor = '#ef4444'; }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      <span style={{ fontSize: 9, color: C.dim }}>Contrast</span>
+      <span style={{ fontSize: 9, fontWeight: 700, color: badgeColor, background: badgeColor + '18', padding: '1px 6px', borderRadius: 4 }}>{badge}</span>
+      {/* Preview: small AA text sample */}
+      <span style={{ fontSize: 9, color: fgColor, background: bg, padding: '1px 4px', borderRadius: 3, border: `1px solid ${C.border}`, fontWeight: 600, lineHeight: 1 }}>Aa</span>
+    </div>
+  );
+});
+
+// ============================================================
+// Image Palette Extractor — extract dominant colors from an image
+// ============================================================
+
+function extractPaletteFromImage(src: string, numColors: number = 6): Promise<string[]> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 64; // sample at low res for speed
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve([]); return; }
+      ctx.drawImage(img, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+
+      // Simple median-cut-lite: collect all pixels, quantize, find most common
+      const buckets = new Map<string, number>();
+      for (let i = 0; i < data.length; i += 4) {
+        // Quantize to reduce color space (shift right 4 bits = 16 levels per channel)
+        const r = (data[i] >> 4) << 4;
+        const g = (data[i + 1] >> 4) << 4;
+        const b = (data[i + 2] >> 4) << 4;
+        const a = data[i + 3];
+        if (a < 128) continue; // skip transparent pixels
+        const key = `${r},${g},${b}`;
+        buckets.set(key, (buckets.get(key) || 0) + 1);
+      }
+
+      // Sort by frequency, take top N, convert to hex
+      const sorted = [...buckets.entries()].sort((a, b) => b[1] - a[1]);
+      const colors: string[] = [];
+      for (const [key] of sorted) {
+        if (colors.length >= numColors) break;
+        const [r, g, b] = key.split(',').map(Number);
+        const hex = '#' + [r, g, b].map((v) => Math.min(255, v).toString(16).padStart(2, '0')).join('');
+        // Ensure minimum distance from existing picks (avoid near-duplicates)
+        const tooClose = colors.some((existing) => {
+          const [er, eg, eb] = [parseInt(existing.slice(1, 3), 16), parseInt(existing.slice(3, 5), 16), parseInt(existing.slice(5, 7), 16)];
+          return Math.abs(r - er) + Math.abs(g - eg) + Math.abs(b - eb) < 60;
+        });
+        if (!tooClose) colors.push(hex);
+      }
+      resolve(colors);
+    };
+    img.onerror = () => resolve([]);
+    img.src = src;
+  });
+}
+
+function ImagePaletteExtractor({ C, src, onApply, labelStyle }: { C: Theme; src: string | undefined; onApply: (color: string) => void; labelStyle: React.CSSProperties }) {
+  const [palette, setPalette] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [extracted, setExtracted] = useState(false);
+  const lastSrc = useRef<string | undefined>(undefined);
+
+  // Reset when image changes
+  useEffect(() => {
+    if (src !== lastSrc.current) {
+      setPalette([]);
+      setExtracted(false);
+      lastSrc.current = src;
+    }
+  }, [src]);
+
+  const handleExtract = async () => {
+    if (!src) return;
+    setLoading(true);
+    try {
+      const colors = await extractPaletteFromImage(src, 6);
+      setPalette(colors);
+      setExtracted(true);
+    } catch {
+      setPalette([]);
+    }
+    setLoading(false);
+  };
+
+  if (!src) return null;
+
+  return (
+    <div>
+      <div style={labelStyle}>Color Palette</div>
+      {!extracted ? (
+        <button onClick={handleExtract} disabled={loading} style={{
+          width: '100%', padding: '5px', borderRadius: 5,
+          border: `1px solid ${C.accent}33`,
+          background: `linear-gradient(135deg, ${C.accent}08, ${C.accent}14)`,
+          color: C.accent, fontSize: 9, fontWeight: 600,
+          cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+          opacity: loading ? 0.6 : 1,
+        }}>
+          {loading ? (
+            <svg width="12" height="12" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="32" strokeLinecap="round" /></svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          )}
+          Extract from Image
+        </button>
+      ) : palette.length > 0 ? (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {palette.map((c, i) => (
+            <button key={i} onClick={() => onApply(c)} title={c} style={{
+              width: 26, height: 26, borderRadius: 5, background: c,
+              border: `1.5px solid ${C.border}`, cursor: 'pointer', padding: 0,
+              transition: 'transform .1s',
+            }} onMouseEnter={(e) => { (e.target as HTMLElement).style.transform = 'scale(1.15)'; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.transform = 'scale(1)'; }} />
+          ))}
+          <button onClick={handleExtract} title="Re-extract" style={{
+            width: 26, height: 26, borderRadius: 5, border: `1px dashed ${C.border}`,
+            background: 'transparent', color: C.dim, cursor: 'pointer', padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      ) : (
+        <div style={{ fontSize: 9, color: C.dim, padding: '4px 0' }}>No distinct colors found.</div>
+      )}
+    </div>
   );
 }
