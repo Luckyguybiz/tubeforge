@@ -205,7 +205,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.mid ?? ''}${e.textGradient.angle}` : '') + (e.shapeGradient ? `sg${e.shapeGradient.from}${e.shapeGradient.to}${e.shapeGradient.mid ?? ''}${e.shapeGradient.angle}${e.shapeGradient.type}` : '') + (e.clipMask ?? '') + (e.arrowStartStyle ?? '') + (e.arrowEndStyle ?? '') + (e.arrowHeadSize ?? '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? '') + (e.pattern ?? '') + (e.patternColor ?? '') + (e.patternSize ?? 0) + (e.borderDash ?? '') + (e.objectFit ?? '') + (e.src ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.mid ?? ''}${e.textGradient.angle}` : '') + (e.shapeGradient ? `sg${e.shapeGradient.from}${e.shapeGradient.to}${e.shapeGradient.mid ?? ''}${e.shapeGradient.angle}${e.shapeGradient.type}` : '') + (e.clipMask ?? '') + (e.arrowStartStyle ?? '') + (e.arrowEndStyle ?? '') + (e.arrowHeadSize ?? '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? '') + (e.pattern ?? '') + (e.patternColor ?? '') + (e.patternSize ?? 0) + (e.borderDash ?? '') + (e.objectFit ?? '') + (e.src ?? '') + (e.note ?? ''), ''),
     [els],
   );
   const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH + (canvasBgGradient ? `${canvasBgGradient.from}${canvasBgGradient.to}${canvasBgGradient.angle}${canvasBgGradient.type}` : '');
@@ -1877,6 +1877,44 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               <img src={canvasBgImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
             )}
             {els.map(renderElement)}
+            {/* Group visual indicators — dashed border around grouped elements */}
+            {(() => {
+              const groupMap = new Map<string, CanvasElement[]>();
+              els.forEach((el) => {
+                if (el.groupId && el.visible !== false) {
+                  const list = groupMap.get(el.groupId) || [];
+                  list.push(el);
+                  groupMap.set(el.groupId, list);
+                }
+              });
+              return Array.from(groupMap.entries()).map(([gid, members]) => {
+                if (members.length < 2) return null;
+                const minX = Math.min(...members.map((e) => e.x));
+                const minY = Math.min(...members.map((e) => e.y));
+                const maxX = Math.max(...members.map((e) => e.x + e.w));
+                const maxY = Math.max(...members.map((e) => e.y + e.h));
+                const PAD = 4;
+                return (
+                  <div key={`group-${gid}`} style={{
+                    position: 'absolute',
+                    left: (minX - PAD) / canvasW * 100 + '%',
+                    top: (minY - PAD) / canvasH * 100 + '%',
+                    width: (maxX - minX + PAD * 2) / canvasW * 100 + '%',
+                    height: (maxY - minY + PAD * 2) / canvasH * 100 + '%',
+                    border: `1.5px dashed ${C.accent}55`,
+                    borderRadius: 4,
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                  }}>
+                    <span style={{
+                      position: 'absolute', top: -14, left: 4, fontSize: 8, fontWeight: 700,
+                      color: C.accent, background: C.card, padding: '1px 4px', borderRadius: 3,
+                      lineHeight: '12px', letterSpacing: '0.03em', opacity: 0.8,
+                    }}>Group</span>
+                  </div>
+                );
+              });
+            })()}
             {/* Collaboration cursors overlay */}
             <CollaborationCursors canvasW={canvasW} canvasH={canvasH} containerW={canvasAreaRef.current?.clientWidth ?? canvasW} containerH={canvasAreaRef.current?.clientHeight ?? canvasH} />
             {drawing && drawPts.length > 1 && (
@@ -1940,7 +1978,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
+            <ZoomPresetsDropdown zoom={zoom} C={C} smoothZoomRef={smoothZoomRef} />
             <button onClick={() => { smoothZoomRef.current = true; store().zoomIn(); }} title={`${t('thumbs.editor.zoomIn')} (Ctrl++)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
@@ -2588,6 +2626,116 @@ function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#333'; }}
         >Close Preview</button>
       </div>
+    </div>
+  );
+}
+
+/** Zoom level presets dropdown — shows preset values next to current zoom percentage */
+const ZOOM_PRESETS = [
+  { label: '25%', value: 0.25 },
+  { label: '50%', value: 0.5 },
+  { label: '75%', value: 0.75 },
+  { label: '100%', value: 1 },
+  { label: '150%', value: 1.5 },
+  { label: '200%', value: 2 },
+  { label: '300%', value: 3 },
+] as const;
+
+function ZoomPresetsDropdown({ zoom, C, smoothZoomRef }: {
+  zoom: number;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  smoothZoomRef: React.MutableRefObject<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  const setZoomPreset = (value: number) => {
+    smoothZoomRef.current = true;
+    useThumbnailStore.getState().setZoom(value);
+    if (value === 1) useThumbnailStore.getState().setPan(0, 0);
+    setOpen(false);
+  };
+
+  const handleFitClick = () => {
+    smoothZoomRef.current = true;
+    useThumbnailStore.getState().fitToScreen();
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        title="Zoom presets"
+        style={{
+          fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center',
+          userSelect: 'none', cursor: 'pointer', background: 'transparent', border: 'none',
+          borderRadius: 6, padding: '2px 4px', fontFamily: 'inherit', transition: 'all .12s',
+          display: 'flex', alignItems: 'center', gap: 2,
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+      >
+        {Math.round(zoom * 100)}%
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .15s' }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+          marginBottom: 6, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
+          padding: 4, minWidth: 100, boxShadow: '0 8px 32px rgba(0,0,0,.25)', zIndex: 200,
+        }}>
+          {ZOOM_PRESETS.map((preset) => {
+            const isActive = Math.round(zoom * 100) === Math.round(preset.value * 100);
+            return (
+              <button
+                key={preset.label}
+                onClick={() => setZoomPreset(preset.value)}
+                style={{
+                  display: 'block', width: '100%', padding: '5px 12px', border: 'none',
+                  borderRadius: 6, fontSize: 11, fontWeight: isActive ? 700 : 500, cursor: 'pointer',
+                  fontFamily: "'JetBrains Mono', monospace", textAlign: 'left', transition: 'all .1s',
+                  background: isActive ? C.accent + '18' : 'transparent',
+                  color: isActive ? C.accent : C.sub,
+                }}
+                onMouseEnter={(e) => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; } }}
+                onMouseLeave={(e) => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; } }}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+          <div style={{ height: 1, background: C.border, margin: '3px 4px' }} />
+          <button
+            onClick={handleFitClick}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '5px 12px',
+              border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'inherit', textAlign: 'left', transition: 'all .1s',
+              background: 'transparent', color: C.sub,
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
+            </svg>
+            Fit to Screen
+          </button>
+        </div>
+      )}
     </div>
   );
 }

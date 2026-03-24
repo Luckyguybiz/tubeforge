@@ -199,6 +199,8 @@ export interface CanvasElement {
   pin?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
   // opacity fade at edges (CSS mask-image)
   opacityFade?: 'none' | 'left' | 'right' | 'top' | 'bottom';
+  // element comment/note (not rendered on canvas, shown in properties panel)
+  note?: string;
 }
 
 export interface AIResult {

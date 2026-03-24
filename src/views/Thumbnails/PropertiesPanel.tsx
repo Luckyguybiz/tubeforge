@@ -808,6 +808,11 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
         </div>
       )}
 
+      {/* Element Notes/Comments */}
+      {sel && (
+        <ElementNotes C={C} el={sel} updEl={updEl} labelStyle={labelStyle} inputStyle={inputStyle} />
+      )}
+
       <LayersPanel els={els} selId={selId} selIds={selIds} setSelId={setSelId} delEl={delEl} updEl={updEl} C={C} />
     </div>
   );
@@ -1025,6 +1030,47 @@ const RotationInput = memo(function RotationInput({ C, value, onChange, labelSty
   );
 });
 
+type ColorMode = 'hex' | 'hsl';
+
+// HSL sliders sub-component
+function HslSliders({ C, h, s, l, onChange }: { C: Theme; h: number; s: number; l: number; onChange: (hex: string) => void }) {
+  const sliderTrack: React.CSSProperties = { width: '100%', height: 8, borderRadius: 4, cursor: 'pointer', appearance: 'none' as const, WebkitAppearance: 'none' as const, outline: 'none', border: 'none' };
+  const labelSt: React.CSSProperties = { fontSize: 9, color: C.dim, fontWeight: 600, minWidth: 10 };
+  const valSt: React.CSSProperties = { fontSize: 9, color: C.sub, fontFamily: 'monospace', minWidth: 28, textAlign: 'right' as const };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+      {/* Hue */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={labelSt}>H</span>
+        <input type="range" min={0} max={360} value={h}
+          onChange={(e) => onChange(hslToHex(Number(e.target.value), s, l))}
+          style={{ ...sliderTrack, background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)' }}
+        />
+        <span style={valSt}>{Math.round(h)}&deg;</span>
+      </div>
+      {/* Saturation */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={labelSt}>S</span>
+        <input type="range" min={0} max={100} value={Math.round(s)}
+          onChange={(e) => onChange(hslToHex(h, Number(e.target.value), l))}
+          style={{ ...sliderTrack, background: `linear-gradient(to right, ${hslToHex(h, 0, l)}, ${hslToHex(h, 100, l)})` }}
+        />
+        <span style={valSt}>{Math.round(s)}%</span>
+      </div>
+      {/* Lightness */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={labelSt}>L</span>
+        <input type="range" min={0} max={100} value={Math.round(l)}
+          onChange={(e) => onChange(hslToHex(h, s, Number(e.target.value)))}
+          style={{ ...sliderTrack, background: `linear-gradient(to right, #000000, ${hslToHex(h, s, 50)}, #ffffff)` }}
+        />
+        <span style={valSt}>{Math.round(l)}%</span>
+      </div>
+    </div>
+  );
+}
+
 // C3: Color picker with HEX text input, presets, recent colors, and eyedropper
 const COLOR_PICKER_PRESETS = [
   '#ffffff', '#000000', '#ef4444', '#f97316', '#eab308', '#22c55e',
@@ -1059,10 +1105,14 @@ function ColorPicker({ C, value, onChange, label }: { C: Theme; value: string | 
   let hexForPicker = color;
   if (color.startsWith('rgba') || color.startsWith('rgb')) hexForPicker = '#ffffff';
   const [showPicker, setShowPicker] = useState(false);
+  const [colorMode, setColorMode] = useState<ColorMode>('hex');
   const [recent, setRecent] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('tf-recent-colors') || '[]'); } catch { return []; }
   });
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  const [hsl_h_raw, hsl_s_raw, hsl_l_raw] = hexToHsl(hexForPicker);
+  const hsl_h = Math.round(hsl_h_raw), hsl_s = Math.round(hsl_s_raw), hsl_l = Math.round(hsl_l_raw);
 
   // Close picker on outside click
   useEffect(() => {
@@ -1090,6 +1140,13 @@ function ColorPicker({ C, value, onChange, label }: { C: Theme; value: string | 
       handleCommitColor(picked);
     }
   };
+
+  const modeToggleBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '3px 0', border: 'none', borderRadius: 4, fontSize: 9, fontWeight: 700,
+    cursor: 'pointer', fontFamily: 'monospace', transition: 'all .12s',
+    background: active ? C.accent : 'transparent',
+    color: active ? '#fff' : C.dim,
+  });
 
   return (
     <div ref={pickerRef} style={{ position: 'relative' }}>
@@ -1130,20 +1187,31 @@ function ColorPicker({ C, value, onChange, label }: { C: Theme; value: string | 
           {/* Native color input (full width) */}
           <input type="color" value={hexForPicker} onChange={(e) => handleChange(e.target.value)} onBlur={(e) => { const v = (e.target as HTMLInputElement).value; addToRecentColors(v); setRecent(addToRecentColors(v)); }} style={{ width: '100%', height: 32, border: `1px solid ${C.border}`, borderRadius: 6, padding: 1, cursor: 'pointer', background: C.surface }} />
 
-          {/* Hex text input */}
-          <input
-            type="text"
-            key={color + '-popup'}
-            defaultValue={color.toUpperCase()}
-            onBlur={(e) => {
-              let v = e.target.value.trim();
-              if (!v.startsWith('#')) v = '#' + v;
-              if (/^#[0-9a-fA-F]{6}$/.test(v)) handleCommitColor(v.toLowerCase());
-              else e.target.value = color.toUpperCase();
-            }}
-            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-            style={{ width: '100%', marginTop: 8, padding: '6px 8px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
-          />
+          {/* HEX / HSL toggle */}
+          <div style={{ display: 'flex', gap: 2, marginTop: 8, background: C.surface, borderRadius: 6, padding: 2 }}>
+            <button onClick={() => setColorMode('hex')} style={modeToggleBtnStyle(colorMode === 'hex')}>HEX</button>
+            <button onClick={() => setColorMode('hsl')} style={modeToggleBtnStyle(colorMode === 'hsl')}>HSL</button>
+          </div>
+
+          {colorMode === 'hex' ? (
+            /* Hex text input */
+            <input
+              type="text"
+              key={color + '-popup'}
+              defaultValue={color.toUpperCase()}
+              onBlur={(e) => {
+                let v = e.target.value.trim();
+                if (!v.startsWith('#')) v = '#' + v;
+                if (/^#[0-9a-fA-F]{6}$/.test(v)) handleCommitColor(v.toLowerCase());
+                else e.target.value = color.toUpperCase();
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              style={{ width: '100%', marginTop: 8, padding: '6px 8px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, fontFamily: 'monospace', boxSizing: 'border-box' as const, outline: 'none' }}
+            />
+          ) : (
+            /* HSL sliders */
+            <HslSliders C={C} h={hsl_h} s={hsl_s} l={hsl_l} onChange={handleCommitColor} />
+          )}
 
           {/* Preset swatches */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginTop: 8 }}>
@@ -1274,11 +1342,17 @@ function PulseToggle({ C, value, onChange, labelStyle }: { C: Theme; value: bool
 // Compact inline color swatch with popover picker (replaces raw <input type="color">)
 function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C: Theme; value: string; onChange: (c: string) => void; width?: number; height?: number }) {
   const [open, setOpen] = useState(false);
+  const [colorMode, setColorMode] = useState<ColorMode>('hex');
   const ref = useRef<HTMLDivElement>(null);
   const projectColors = useThumbnailStore((s) => s.projectColors);
   const [recent, setRecent] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('tf-recent-colors') || '[]'); } catch { return []; }
   });
+
+  let hexForHsl = value;
+  if (value.startsWith('rgba') || value.startsWith('rgb')) hexForHsl = '#ffffff';
+  const [hsl_h_raw, hsl_s_raw, hsl_l_raw] = hexToHsl(hexForHsl);
+  const hsl_h = Math.round(hsl_h_raw), hsl_s = Math.round(hsl_s_raw), hsl_l = Math.round(hsl_l_raw);
 
   useEffect(() => {
     if (!open) return;
@@ -1296,6 +1370,13 @@ function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C:
     useThumbnailStore.getState().addProjectColor(c);
   };
 
+  const modeToggleBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '2px 0', border: 'none', borderRadius: 3, fontSize: 8, fontWeight: 700,
+    cursor: 'pointer', fontFamily: 'monospace', transition: 'all .12s',
+    background: active ? C.accent : 'transparent',
+    color: active ? '#fff' : C.dim,
+  });
+
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <button onClick={() => setOpen(!open)} style={{
@@ -1304,7 +1385,15 @@ function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C:
       }} aria-label="Pick color" />
       {open && (
         <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 10, width: 190, boxShadow: '0 8px 32px rgba(0,0,0,.25)' }}>
-          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} onBlur={(e) => { handleCommit((e.target as HTMLInputElement).value); }} style={{ width: '100%', height: 28, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface }} />
+          <input type="color" value={hexForHsl} onChange={(e) => onChange(e.target.value)} onBlur={(e) => { handleCommit((e.target as HTMLInputElement).value); }} style={{ width: '100%', height: 28, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface }} />
+          {/* HEX / HSL toggle */}
+          <div style={{ display: 'flex', gap: 2, marginTop: 6, background: C.surface, borderRadius: 5, padding: 2 }}>
+            <button onClick={() => setColorMode('hex')} style={modeToggleBtnStyle(colorMode === 'hex')}>HEX</button>
+            <button onClick={() => setColorMode('hsl')} style={modeToggleBtnStyle(colorMode === 'hsl')}>HSL</button>
+          </div>
+          {colorMode === 'hsl' && (
+            <HslSliders C={C} h={hsl_h} s={hsl_s} l={hsl_l} onChange={handleCommit} />
+          )}
           {/* Project Colors */}
           {projectColors.length > 0 && (
             <>
@@ -1343,6 +1432,54 @@ function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C:
             </>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// Element Notes/Comments — collapsible note field per element
+function ElementNotes({ C, el, updEl, labelStyle, inputStyle }: { C: Theme; el: CanvasElement; updEl: (id: string, patch: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties; inputStyle: React.CSSProperties }) {
+  const [expanded, setExpanded] = useState(!!el.note);
+
+  return (
+    <div style={{ marginTop: 10, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 4, width: '100%',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          padding: 0, color: C.sub, fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+        }}
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform .15s' }}>
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+        Notes
+        {el.note && <span style={{ fontSize: 8, color: C.dim, marginLeft: 'auto' }}>has note</span>}
+      </button>
+      {expanded && (
+        <textarea
+          key={el.id + '-note'}
+          defaultValue={el.note ?? ''}
+          placeholder="Add a note about this element..."
+          onBlur={(e) => {
+            const val = e.target.value.trim();
+            updEl(el.id, { note: val || undefined });
+          }}
+          style={{
+            ...inputStyle,
+            marginTop: 6,
+            minHeight: 52,
+            maxHeight: 120,
+            resize: 'vertical' as const,
+            fontSize: 10,
+            lineHeight: '1.4',
+          }}
+        />
       )}
     </div>
   );
