@@ -82,6 +82,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   // Element info overlay on hover (without selection)
   const [hoverInfo, setHoverInfo] = useState<{ mx: number; my: number; name: string; type: string; w: number; h: number; x: number; y: number } | null>(null);
 
+  // Element entrance animations — track recently added element IDs
+  const [recentlyAdded, setRecentlyAdded] = useState<Set<string>>(new Set());
+  const prevElsCountRef = useRef(0);
+  // Selection highlight animation — track recently selected element IDs
+  const [recentlySelected, setRecentlySelected] = useState<Set<string>>(new Set());
+  const prevSelIdsRef = useRef<string[]>([]);
+  // Smooth zoom — only for button clicks, not scroll wheel
+  const smoothZoomRef = useRef(false);
+  // Auto-save: last saved timestamp for relative time display
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [saveFlashActive, setSaveFlashActive] = useState(false);
+  const [, setTimeTick] = useState(0);
+
   // Responsive check
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -96,6 +109,53 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     window.addEventListener('tubeforge:toggle-shortcuts-help', handler);
     return () => window.removeEventListener('tubeforge:toggle-shortcuts-help', handler);
   }, []);
+
+  // Track newly added elements for entrance animation
+  useEffect(() => {
+    if (prevElsCountRef.current > 0 && els.length > prevElsCountRef.current) {
+      const prevIds = new Set(els.slice(0, prevElsCountRef.current).map((e) => e.id));
+      const newIds = els.filter((e) => !prevIds.has(e.id)).map((e) => e.id);
+      if (newIds.length > 0) {
+        setRecentlyAdded((prev) => { const next = new Set(prev); newIds.forEach((id) => next.add(id)); return next; });
+        setTimeout(() => {
+          setRecentlyAdded((prev) => { const next = new Set(prev); newIds.forEach((id) => next.delete(id)); return next; });
+        }, 300);
+      }
+    }
+    prevElsCountRef.current = els.length;
+  }, [els.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track selection changes for highlight flash animation
+  useEffect(() => {
+    const newlySelected = selIds.filter((id) => !prevSelIdsRef.current.includes(id));
+    if (newlySelected.length > 0) {
+      setRecentlySelected((prev) => { const next = new Set(prev); newlySelected.forEach((id) => next.add(id)); return next; });
+      setTimeout(() => {
+        setRecentlySelected((prev) => { const next = new Set(prev); newlySelected.forEach((id) => next.delete(id)); return next; });
+      }, 200);
+    }
+    prevSelIdsRef.current = selIds;
+  }, [selIds]);
+
+  // Live-updating "saved X ago" timer — tick every 10 seconds
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const interval = setInterval(() => setTimeTick((n) => n + 1), 10000);
+    return () => clearInterval(interval);
+  }, [lastSavedAt]);
+
+  // Ctrl+S manual save handler
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (!projectId) return;
+        window.dispatchEvent(new CustomEvent('tubeforge:manual-save'));
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [projectId]);
 
   // Load snap-to-grid preference from localStorage
   useEffect(() => {
@@ -135,7 +195,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const savedFingerprintRef = useRef<string>('');
   const [autoSaveState, setAutoSaveState] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const saveCanvas = trpc.project.update.useMutation({
-    onSuccess: () => { savedFingerprintRef.current = currentFingerprint; setAutoSaveState('saved'); },
+    onSuccess: () => { savedFingerprintRef.current = currentFingerprint; setAutoSaveState('saved'); setLastSavedAt(Date.now()); setSaveFlashActive(true); setTimeout(() => setSaveFlashActive(false), 600); },
     onError: (err) => { setAutoSaveState('unsaved'); if (process.env.NODE_ENV === 'development') console.error('[ThumbnailEditor] Auto-save failed:', err.message); },
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
@@ -165,10 +225,32 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
   }, [loadedRef.current && projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Ctrl+Scroll zoom
+  // Manual save (Ctrl+S) listener
+  useEffect(() => {
+    const handler = () => {
+      if (!projectId || !loadedRef.current) return;
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      setAutoSaveState('saving');
+      saveCanvas.mutate({ id: projectId, thumbnailData: store().exportState() as unknown as Record<string, string | number | boolean | null> });
+    };
+    window.addEventListener('tubeforge:manual-save', handler);
+    return () => window.removeEventListener('tubeforge:manual-save', handler);
+  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Helper: format relative time for auto-save indicator
+  const formatSavedAgo = useCallback((ts: number) => {
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 5) return 'just now';
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
+  }, []);
+
+  // Ctrl+Scroll zoom — instant (no smooth transition)
   const onWheelZoom = useCallback((e: WheelEvent) => {
     if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
+    smoothZoomRef.current = false;
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     const s = store();
     s.setZoom(s.zoom + delta);
@@ -901,6 +983,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
     const isSel = selIds.includes(el.id);
+    // Entrance animation for newly added elements
+    const isNewEl = recentlyAdded.has(el.id);
+    const entranceAnim: React.CSSProperties = isNewEl ? { animation: 'elementAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' } : {};
+    // Selection highlight flash animation
+    const isNewSel = recentlySelected.has(el.id);
+    const selectionFlashAnim: React.CSSProperties = isNewSel ? { animation: 'selectionFlash 0.2s ease-out' } : {};
     // 8-dot resize handles + rotation handle
     const handleDotStyle = (cursor: string, pos: React.CSSProperties): React.CSSProperties => ({
       position: 'absolute', width: 8, height: 8, background: '#fff', border: `1.5px solid ${C.accent}`, borderRadius: '50%', cursor, zIndex: 5, ...pos,
@@ -985,7 +1073,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         const pathD = `M 0,${startY} Q ${svgW / 2},${qY} ${svgW},${endY}`;
         const svgFontSize = Math.min((el.size ?? 32), svgH * 0.8);
         return (
-          <div key={el.id} data-text-el={el.id} style={textStyle}
+          <div key={el.id} data-text-el={el.id} style={{ ...textStyle, ...entranceAnim, ...selectionFlashAnim }}
             onMouseDown={(e) => {
               if (!isSel) { e.stopPropagation(); store().setSelId(el.id); return; }
               elDrag(e);
@@ -1015,7 +1103,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       }
 
       return (
-        <div key={el.id} data-text-el={el.id} style={textStyle}
+        <div key={el.id} data-text-el={el.id} style={{ ...textStyle, ...entranceAnim, ...selectionFlashAnim }}
           contentEditable={false} suppressContentEditableWarning
           onBlur={(e) => store().updEl(el.id, { text: (e.target as HTMLElement).innerText })}
           onMouseDown={(e) => {
@@ -1047,7 +1135,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const hasPattern = el.pattern && el.pattern !== 'none';
       const patternId = `pattern-${el.id}`;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
           {hasPattern && (
             <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, borderRadius: el.borderR }}>
@@ -1066,7 +1154,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const hasPattern = el.pattern && el.pattern !== 'none';
       const patternId = `pattern-${el.id}`;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
           {hasPattern && (
             <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
@@ -1089,7 +1177,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const cropH = el.cropH ?? 1;
       const fitMode = el.objectFit ?? 'cover';
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}
           onDoubleClick={(e) => {
             e.stopPropagation();
@@ -1171,7 +1259,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     );
 
     if (el.type === 'stickyNote') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: buildTransform(el) }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
@@ -1183,7 +1271,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'table') {
       const rows = el.rows ?? 3, cols = el.cols ?? 3;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : el.strokeColor ?? 'rgba(255,255,255,.2)'}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el) }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : el.strokeColor ?? 'rgba(255,255,255,.2)'}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
           {Array.from({ length: rows * cols }, (_, i) => {
             const r = Math.floor(i / cols), c = i % cols;
@@ -1351,10 +1439,19 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                     {t('thumbs.editor.unsaved')}
                   </span>
                 ) : (
-                  <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.green, display: 'inline-block' }} />
-                    {t('thumbs.editor.saved')}
+                  <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 6px', borderRadius: 6, transition: 'background 0.6s ease', background: saveFlashActive ? 'rgba(34,197,94,0.15)' : 'transparent' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.green, display: 'inline-block', transition: 'transform 0.3s ease', transform: saveFlashActive ? 'scale(1.3)' : 'scale(1)' }} />
+                    {lastSavedAt ? `Saved ${formatSavedAgo(lastSavedAt)}` : t('thumbs.editor.saved')}
                   </span>
+                )}
+                {autoSaveState === 'unsaved' && (
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('tubeforge:manual-save'))}
+                    title="Save Now (Ctrl+S)"
+                    style={{ fontSize: 10, fontWeight: 600, color: C.accent, background: 'transparent', border: `1px solid ${C.accent}44`, borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', marginLeft: 2 }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '15'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >Save Now</button>
                 )}
               </span>
             )}
@@ -1431,9 +1528,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         <div ref={canvasWrapperRef} style={{ flex: 1, position: 'relative', minWidth: 0, overflow: 'hidden', borderRadius: isMobile ? 8 : 12, border: `1px solid ${C.border}`, background: C.bg, width: '100%', maxWidth: '100%' }}
           onMouseDown={onMiddleDown} onMouseMove={onMiddleMove} onMouseUp={onMiddleUp} onMouseLeave={onMiddleUp}>
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
-          <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : 'transform .1s ease-out' }}>
+          <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : smoothZoomRef.current ? 'transform .15s ease-out' : 'none' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
-              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBgImage ? canvasBg : canvasBgGradient ? (canvasBgGradient.type === 'linear' ? `linear-gradient(${canvasBgGradient.angle}deg, ${canvasBgGradient.from}, ${canvasBgGradient.to})` : `radial-gradient(circle, ${canvasBgGradient.from}, ${canvasBgGradient.to})`) : canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none' }}>
+              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBgImage ? canvasBg : canvasBgGradient ? (canvasBgGradient.type === 'linear' ? `linear-gradient(${canvasBgGradient.angle}deg, ${canvasBgGradient.from}, ${canvasBgGradient.to})` : `radial-gradient(circle, ${canvasBgGradient.from}, ${canvasBgGradient.to})`) : canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none', transition: 'background 0.3s ease' }}>
             {/* AI Background Image — rendered behind all elements */}
             {canvasBgImage && (
               <img src={canvasBgImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
@@ -1487,24 +1584,24 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           </div>
           {/* Floating zoom controls */}
           <div title={t('thumbs.editor.zoomHint')} style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px', zIndex: Z_INDEX.ZOOM_CONTROLS, boxShadow: '0 2px 12px rgba(0,0,0,.15)' }}>
-            <button onClick={() => store().zoomOut()} title={`${t('thumbs.editor.zoomOut')} (Ctrl+-)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => { smoothZoomRef.current = true; store().zoomOut(); }} title={`${t('thumbs.editor.zoomOut')} (Ctrl+-)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomOutIcon}</button>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.sub, minWidth: 44, textAlign: 'center', userSelect: 'none' }}>{Math.round(zoom * 100)}%</span>
-            <button onClick={() => store().zoomIn()} title={`${t('thumbs.editor.zoomIn')} (Ctrl++)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
+            <button onClick={() => { smoothZoomRef.current = true; store().zoomIn(); }} title={`${t('thumbs.editor.zoomIn')} (Ctrl++)`} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{zoomInIcon}</button>
             <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-            <button onClick={() => store().fitToScreen()} title={`${t('thumbs.editor.fitToScreen')} (Ctrl+0)`} style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+            <button onClick={() => { smoothZoomRef.current = true; store().fitToScreen(); }} title={`${t('thumbs.editor.fitToScreen')} (Ctrl+0)`} style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
             >{fitIcon} {t('thumbs.editor.fitLabel')}</button>
             {selIds.length > 0 && (
               <>
                 <div style={{ width: 1, height: 16, background: C.border, margin: '0 2px' }} />
-                <button onClick={() => store().zoomToSelection()} title="Zoom to Selection (Ctrl+1)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
+                <button onClick={() => { smoothZoomRef.current = true; store().zoomToSelection(); }} title="Zoom to Selection (Ctrl+1)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
                 ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/></svg> Sel</button>

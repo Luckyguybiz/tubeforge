@@ -52,6 +52,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         flexDirection: 'column',
         overflow: 'hidden',
         maxHeight: 260,
+        animation: 'panelSlideIn 0.25s ease-out',
       } : {
         width: '100%',
         height: '100%',
@@ -63,6 +64,7 @@ export function LeftSidebar({ isMobile = false }: { isMobile?: boolean } = {}) {
         flexDirection: 'column',
         overflow: 'hidden',
         boxSizing: 'border-box' as const,
+        animation: 'panelSlideIn 0.25s ease-out',
       }}>
       {/* Header */}
       <div style={{
