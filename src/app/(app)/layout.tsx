@@ -166,7 +166,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <>
           <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
           <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
-            {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
+            <div className="tf-sidebar"><Sidebar /></div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
               {isEditor ? (
@@ -178,45 +178,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Mobile sidebar drawer */}
-          {!isEditor && (
-            <>
-              <div
-                className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
-                onClick={handleBackdropClick}
-                aria-hidden="true"
-              />
-              <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
-                {/* Close button */}
-                <button
-                  aria-label="Close menu"
-                  onClick={closeMobileMenu}
-                  style={{
-                    position: 'absolute',
-                    top: 12,
-                    right: 12,
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    border: 'none',
-                    background: 'rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontSize: 18,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                  }}
-                >
-                  &times;
-                </button>
-                <Sidebar />
-              </div>
-            </>
-          )}
+          <>
+            <div
+              className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
+              onClick={handleBackdropClick}
+              aria-hidden="true"
+            />
+            <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+              {/* Close button */}
+              <button
+                aria-label="Close menu"
+                onClick={closeMobileMenu}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10,
+                }}
+              >
+                &times;
+              </button>
+              <Sidebar />
+            </div>
+          </>
 
           {/* Mobile bottom tab bar */}
-          {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
+          <MobileBottomTabs pathname={pathname} C={C} t={t} />
         </>
       )}
 
