@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
 import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
+import { ChannelAnalytics } from './ChannelAnalytics';
 
 /* ── Tool icon definitions (static, no i18n needed) ──── */
 
@@ -324,6 +325,11 @@ export function Dashboard() {
             : t('dashboard.manageProjects')
           }
         </p>
+      </div>
+
+      {/* ── Channel Analytics ──────────────────────── */}
+      <div style={{ marginBottom: 32 }}>
+        <ChannelAnalytics />
       </div>
 
       {/* ── Product showcase: "What will you create today?" ── */}
