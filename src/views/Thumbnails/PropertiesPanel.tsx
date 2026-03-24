@@ -364,17 +364,81 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
 
       {sel && (sel.type === 'rect' || sel.type === 'circle' || sel.type === 'triangle' || sel.type === 'star') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {/* Fill mode: Solid / Pattern */}
-          <div>
-            <div style={labelStyle}>Fill</div>
-            <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
-              <button onClick={() => updEl(sel.id, { pattern: 'none' })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${(!sel.pattern || sel.pattern === 'none') ? C.accent : C.border}`, background: (!sel.pattern || sel.pattern === 'none') ? C.accent + '18' : 'transparent', color: (!sel.pattern || sel.pattern === 'none') ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Solid</button>
-              <button onClick={() => updEl(sel.id, { pattern: sel.pattern && sel.pattern !== 'none' ? sel.pattern : 'dots' })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${sel.pattern && sel.pattern !== 'none' ? C.accent : C.border}`, background: sel.pattern && sel.pattern !== 'none' ? C.accent + '18' : 'transparent', color: sel.pattern && sel.pattern !== 'none' ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Pattern</button>
+          {/* Fill mode: Solid / Gradient / Pattern */}
+          {(() => {
+            const fillMode = sel.shapeGradient ? 'gradient' : (sel.pattern && sel.pattern !== 'none') ? 'pattern' : 'solid';
+            return (
+              <div>
+                <div style={labelStyle}>Fill</div>
+                <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+                  <button onClick={() => updEl(sel.id, { pattern: 'none', shapeGradient: undefined })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${fillMode === 'solid' ? C.accent : C.border}`, background: fillMode === 'solid' ? C.accent + '18' : 'transparent', color: fillMode === 'solid' ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Solid</button>
+                  <button onClick={() => updEl(sel.id, { pattern: 'none', shapeGradient: sel.shapeGradient ?? { from: '#6366f1', to: '#ec4899', angle: 90, type: 'linear' } })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${fillMode === 'gradient' ? C.accent : C.border}`, background: fillMode === 'gradient' ? C.accent + '18' : 'transparent', color: fillMode === 'gradient' ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Gradient</button>
+                  <button onClick={() => updEl(sel.id, { shapeGradient: undefined, pattern: sel.pattern && sel.pattern !== 'none' ? sel.pattern : 'dots' })} style={{ flex: 1, padding: '4px 0', borderRadius: 5, border: `1px solid ${fillMode === 'pattern' ? C.accent : C.border}`, background: fillMode === 'pattern' ? C.accent + '18' : 'transparent', color: fillMode === 'pattern' ? C.accent : C.sub, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Pattern</button>
+                </div>
+              </div>
+            );
+          })()}
+          {/* Gradient controls (shape gradient mode) */}
+          {sel.shapeGradient && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 6, background: C.surface, borderRadius: 6, border: `1px solid ${C.border}` }}>
+              {/* Gradient type toggle */}
+              <div style={{ display: 'flex', gap: 3, marginBottom: 2 }}>
+                <button onClick={() => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, type: 'linear' } })} style={{ flex: 1, padding: '3px 0', borderRadius: 4, border: `1px solid ${sel.shapeGradient.type === 'linear' ? C.accent : C.border}`, background: sel.shapeGradient.type === 'linear' ? C.accent + '18' : 'transparent', color: sel.shapeGradient.type === 'linear' ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Linear</button>
+                <button onClick={() => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, type: 'radial' } })} style={{ flex: 1, padding: '3px 0', borderRadius: 4, border: `1px solid ${sel.shapeGradient.type === 'radial' ? C.accent : C.border}`, background: sel.shapeGradient.type === 'radial' ? C.accent + '18' : 'transparent', color: sel.shapeGradient.type === 'radial' ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Radial</button>
+              </div>
+              {/* Gradient preview bar */}
+              <div style={{ width: '100%', height: 14, borderRadius: 4, background: sel.shapeGradient.type === 'radial' ? `radial-gradient(circle, ${sel.shapeGradient.from}${sel.shapeGradient.mid ? `, ${sel.shapeGradient.mid}` : ''}, ${sel.shapeGradient.to})` : `linear-gradient(${sel.shapeGradient.angle}deg, ${sel.shapeGradient.from}${sel.shapeGradient.mid ? `, ${sel.shapeGradient.mid}` : ''}, ${sel.shapeGradient.to})`, border: `1px solid ${C.border}` }} />
+              {/* From / Mid / To color pickers */}
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>From</div>
+                  <InlineColorSwatch C={C} value={sel.shapeGradient.from} onChange={(c) => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, from: c } })} width={32} height={22} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Mid</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <InlineColorSwatch C={C} value={sel.shapeGradient.mid ?? '#888888'} onChange={(c) => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, mid: c } })} width={26} height={22} />
+                    {sel.shapeGradient.mid ? (
+                      <button onClick={() => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, mid: undefined } })} style={{ background: 'none', border: 'none', color: C.dim, fontSize: 10, cursor: 'pointer', padding: 0, lineHeight: 1 }} title="Remove middle color">&times;</button>
+                    ) : (
+                      <button onClick={() => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, mid: '#888888' } })} style={{ background: 'none', border: 'none', color: C.dim, fontSize: 8, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }} title="Add middle color">+</button>
+                    )}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>To</div>
+                  <InlineColorSwatch C={C} value={sel.shapeGradient.to} onChange={(c) => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, to: c } })} width={32} height={22} />
+                </div>
+              </div>
+              {/* Angle slider (linear only) */}
+              {sel.shapeGradient.type === 'linear' && (
+                <div>
+                  <div style={{ fontSize: 8, color: C.dim, marginBottom: 1 }}>Angle</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input type="range" min={0} max={360} value={sel.shapeGradient.angle} onChange={(e) => updEl(sel.id, { shapeGradient: { ...sel.shapeGradient!, angle: +e.target.value } })} style={{ flex: 1, accentColor: '#888' }} />
+                    <span style={{ fontSize: 8, color: C.dim, minWidth: 24, textAlign: 'right' }}>{sel.shapeGradient.angle}deg</span>
+                  </div>
+                </div>
+              )}
+              {/* Gradient Presets */}
+              <div>
+                <div style={{ fontSize: 8, color: C.dim, marginBottom: 3 }}>Presets</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+                  {GRADIENT_PRESETS.map((p) => (
+                    <button key={p.name} title={p.name} onClick={() => { pushHistory(); updEl(sel.id, { shapeGradient: { from: p.from, to: p.to, mid: p.mid, angle: p.angle, type: sel.shapeGradient?.type ?? 'linear' } }); }} style={{ width: '100%', height: 20, borderRadius: 4, border: `1px solid ${C.border}`, background: `linear-gradient(${p.angle}deg, ${p.from}${p.mid ? `, ${p.mid}` : ''}, ${p.to})`, cursor: 'pointer', padding: 0 }} />
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
-          <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
-          <ColorHarmony C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+          )}
+          {/* Solid color controls (only when not gradient) */}
+          {!sel.shapeGradient && (
+            <>
+              <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
+              <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+              <ColorHarmony C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
+            </>
+          )}
           {/* Pattern picker */}
           {sel.pattern && sel.pattern !== 'none' && (
             <div>
@@ -496,6 +560,27 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               })}
             </div>
           </div>
+          {/* Clip Mask */}
+          <div>
+            <div style={labelStyle}>Clip Mask</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
+              {([
+                { val: 'none' as const, label: 'None', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> },
+                { val: 'circle' as const, label: 'Circle', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/></svg> },
+                { val: 'rounded' as const, label: 'Rounded', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="6"/></svg> },
+                { val: 'star' as const, label: 'Star', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg> },
+                { val: 'hexagon' as const, label: 'Hexagon', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><polygon points="12,2 22,8 22,16 12,22 2,16 2,8"/></svg> },
+              ] as const).map((mask) => {
+                const isActive = (sel.clipMask ?? 'none') === mask.val;
+                return (
+                  <button key={mask.val} onClick={() => updEl(sel.id, { clipMask: mask.val })} title={mask.label} style={{ padding: '5px 2px', borderRadius: 5, border: `1px solid ${isActive ? C.accent + '55' : C.border}`, background: isActive ? C.accent + '14' : 'transparent', color: isActive ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    {mask.icon}
+                    <span>{mask.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           {/* AI Remove Background */}
           <AIRemoveBackgroundButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
@@ -556,12 +641,42 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           </div>
           {sel.type === 'arrow' && (
             <div><div style={labelStyle}>{t('thumbs.props.arrowHead')}</div>
-              <div style={{ display: 'flex', gap: 3 }}>
+              <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
                 {(['end', 'both', 'none'] as const).map((ah) => (
                   <button key={ah} onClick={() => updEl(sel.id, { arrowHead: ah })} style={{ flex: 1, padding: '4px', borderRadius: 5, border: `1px solid ${sel.arrowHead === ah ? C.blue + '55' : C.border}`, background: sel.arrowHead === ah ? C.blue + '14' : 'transparent', color: sel.arrowHead === ah ? C.blue : C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {ah === 'end' ? '→' : ah === 'both' ? '↔' : '—'}
                   </button>
                 ))}
+              </div>
+              {/* Arrow Start Style */}
+              <div style={{ fontSize: 8, color: C.dim, marginBottom: 2, marginTop: 4 }}>Start Style</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3, marginBottom: 6 }}>
+                {(['none', 'triangle', 'circle', 'diamond'] as const).map((s) => {
+                  const isActive = (sel.arrowStartStyle ?? 'none') === s;
+                  return (
+                    <button key={s} onClick={() => updEl(sel.id, { arrowStartStyle: s })} style={{ padding: '3px 0', borderRadius: 4, border: `1px solid ${isActive ? C.accent : C.border}`, background: isActive ? C.accent + '18' : 'transparent', color: isActive ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{s === 'none' ? '---' : s === 'triangle' ? '\u25C0' : s === 'circle' ? '\u25CF' : '\u25C6'}</button>
+                  );
+                })}
+              </div>
+              {/* Arrow End Style */}
+              <div style={{ fontSize: 8, color: C.dim, marginBottom: 2 }}>End Style</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3, marginBottom: 6 }}>
+                {(['none', 'triangle', 'circle', 'diamond'] as const).map((s) => {
+                  const isActive = (sel.arrowEndStyle ?? 'triangle') === s;
+                  return (
+                    <button key={s} onClick={() => updEl(sel.id, { arrowEndStyle: s })} style={{ padding: '3px 0', borderRadius: 4, border: `1px solid ${isActive ? C.accent : C.border}`, background: isActive ? C.accent + '18' : 'transparent', color: isActive ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{s === 'none' ? '---' : s === 'triangle' ? '\u25B6' : s === 'circle' ? '\u25CF' : '\u25C6'}</button>
+                  );
+                })}
+              </div>
+              {/* Arrow Head Size */}
+              <div style={{ fontSize: 8, color: C.dim, marginBottom: 2 }}>Head Size</div>
+              <div style={{ display: 'flex', gap: 3 }}>
+                {(['small', 'medium', 'large'] as const).map((sz) => {
+                  const isActive = (sel.arrowHeadSize ?? 'medium') === sz;
+                  return (
+                    <button key={sz} onClick={() => updEl(sel.id, { arrowHeadSize: sz })} style={{ flex: 1, padding: '3px 0', borderRadius: 4, border: `1px solid ${isActive ? C.accent : C.border}`, background: isActive ? C.accent + '18' : 'transparent', color: isActive ? C.accent : C.sub, fontSize: 8, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>{sz[0].toUpperCase()}</button>
+                  );
+                })}
               </div>
             </div>
           )}

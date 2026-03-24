@@ -201,7 +201,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   });
   // Lightweight fingerprint instead of JSON.stringify(els) on every render
   const elsFingerprint = useMemo(
-    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.mid ?? ''}${e.textGradient.angle}` : '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? '') + (e.pattern ?? '') + (e.patternColor ?? '') + (e.patternSize ?? 0) + (e.borderDash ?? '') + (e.objectFit ?? '') + (e.src ?? ''), ''),
+    () => els.reduce((h, e) => h + e.id + e.x + e.y + e.w + e.h + (e.color ?? '') + (e.text ?? '') + (e.opacity ?? 1) + (e.textAlign ?? '') + (e.letterSpacing ?? 0) + (e.lineHeight ?? 0) + (e.textTransform ?? '') + (e.textStroke ?? '') + (e.textStrokeWidth ?? 0) + (e.shapeShadow ?? '') + (e.name ?? '') + (e.visible ?? true) + (e.locked ?? false) + (e.groupId ?? '') + (e.blur ?? 0) + (e.brightness ?? 100) + (e.contrast ?? 100) + (e.glow ? `${e.glow.color}${e.glow.blur}` : '') + (e.textGradient ? `${e.textGradient.from}${e.textGradient.to}${e.textGradient.mid ?? ''}${e.textGradient.angle}` : '') + (e.shapeGradient ? `sg${e.shapeGradient.from}${e.shapeGradient.to}${e.shapeGradient.mid ?? ''}${e.shapeGradient.angle}${e.shapeGradient.type}` : '') + (e.clipMask ?? '') + (e.arrowStartStyle ?? '') + (e.arrowEndStyle ?? '') + (e.arrowHeadSize ?? '') + (e.underline ?? false) + (e.borderColor ?? '') + (e.borderWidth ?? 0) + (e.rot ?? 0) + (e.grayscale ?? 0) + (e.sepia ?? 0) + (e.hueRotate ?? 0) + (e.saturate ?? 100) + (e.invert ?? false) + (e.fontWeight ?? 400) + (e.curveAmount ?? 0) + (e.blendMode ?? '') + (e.pattern ?? '') + (e.patternColor ?? '') + (e.patternSize ?? 0) + (e.borderDash ?? '') + (e.objectFit ?? '') + (e.src ?? ''), ''),
     [els],
   );
   const currentFingerprint = elsFingerprint + canvasBg + canvasW + canvasH + (canvasBgGradient ? `${canvasBgGradient.from}${canvasBgGradient.to}${canvasBgGradient.angle}${canvasBgGradient.type}` : '');
@@ -699,14 +699,51 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           try { const sp = el.shapeShadow.match(/([\d.-]+)/g); if (sp && sp.length >= 3) { ctx.shadowOffsetX = parseFloat(sp[0]); ctx.shadowOffsetY = parseFloat(sp[1]); ctx.shadowBlur = parseFloat(sp[2]); ctx.shadowColor = el.shapeShadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.4)'; } } catch { /* skip */ }
         }
         if (el.type === 'rect') {
-          ctx.fillStyle = el.color ?? '#fff';
+          // Shape gradient fill support
+          if (el.shapeGradient) {
+            const sg = el.shapeGradient;
+            let gradient: CanvasGradient;
+            if (sg.type === 'radial') {
+              gradient = ctx.createRadialGradient(el.x + el.w / 2, el.y + el.h / 2, 0, el.x + el.w / 2, el.y + el.h / 2, Math.max(el.w, el.h) / 2);
+            } else {
+              const angleRad = (sg.angle - 90) * Math.PI / 180;
+              const cx2 = el.x + el.w / 2, cy2 = el.y + el.h / 2;
+              const len = Math.max(el.w, el.h);
+              gradient = ctx.createLinearGradient(cx2 - Math.cos(angleRad) * len / 2, cy2 - Math.sin(angleRad) * len / 2, cx2 + Math.cos(angleRad) * len / 2, cy2 + Math.sin(angleRad) * len / 2);
+            }
+            gradient.addColorStop(0, sg.from);
+            if (sg.mid) gradient.addColorStop(0.5, sg.mid);
+            gradient.addColorStop(1, sg.to);
+            ctx.fillStyle = gradient;
+          } else {
+            ctx.fillStyle = el.color ?? '#fff';
+          }
           if ((el.borderR ?? 0) > 0) { const r = el.borderR!; ctx.beginPath(); ctx.moveTo(el.x + r, el.y); ctx.lineTo(el.x + el.w - r, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + r); ctx.lineTo(el.x + el.w, el.y + el.h - r); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - r, el.y + el.h); ctx.lineTo(el.x + r, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - r); ctx.lineTo(el.x, el.y + r); ctx.quadraticCurveTo(el.x, el.y, el.x + r, el.y); ctx.closePath(); ctx.fill(); }
           else { ctx.fillRect(el.x, el.y, el.w, el.h); }
           // Border stroke
           if ((el.borderWidth ?? 0) > 0) { ctx.strokeStyle = el.borderColor ?? '#fff'; ctx.lineWidth = el.borderWidth!; if ((el.borderR ?? 0) > 0) { ctx.stroke(); } else { ctx.strokeRect(el.x, el.y, el.w, el.h); } }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'circle') {
-          ctx.fillStyle = el.color ?? '#fff'; ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+          // Shape gradient fill support
+          if (el.shapeGradient) {
+            const sg = el.shapeGradient;
+            let gradient: CanvasGradient;
+            if (sg.type === 'radial') {
+              gradient = ctx.createRadialGradient(el.x + el.w / 2, el.y + el.h / 2, 0, el.x + el.w / 2, el.y + el.h / 2, Math.max(el.w, el.h) / 2);
+            } else {
+              const angleRad = (sg.angle - 90) * Math.PI / 180;
+              const cx2 = el.x + el.w / 2, cy2 = el.y + el.h / 2;
+              const len = Math.max(el.w, el.h);
+              gradient = ctx.createLinearGradient(cx2 - Math.cos(angleRad) * len / 2, cy2 - Math.sin(angleRad) * len / 2, cx2 + Math.cos(angleRad) * len / 2, cy2 + Math.sin(angleRad) * len / 2);
+            }
+            gradient.addColorStop(0, sg.from);
+            if (sg.mid) gradient.addColorStop(0.5, sg.mid);
+            gradient.addColorStop(1, sg.to);
+            ctx.fillStyle = gradient;
+          } else {
+            ctx.fillStyle = el.color ?? '#fff';
+          }
+          ctx.beginPath(); ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2); ctx.fill();
           if ((el.borderWidth ?? 0) > 0) { ctx.strokeStyle = el.borderColor ?? '#fff'; ctx.lineWidth = el.borderWidth!; ctx.stroke(); }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
         } else if (el.type === 'text') {
@@ -737,6 +774,28 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         } else if (el.type === 'image') {
           const img = imgCache.get(el.id);
           if (img) {
+            // Clip mask support for canvas export
+            const mask = el.clipMask;
+            if (mask && mask !== 'none') {
+              ctx.save();
+              ctx.beginPath();
+              if (mask === 'circle') {
+                ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2);
+              } else if (mask === 'rounded') {
+                const rr = 20;
+                ctx.moveTo(el.x + rr, el.y); ctx.lineTo(el.x + el.w - rr, el.y); ctx.quadraticCurveTo(el.x + el.w, el.y, el.x + el.w, el.y + rr); ctx.lineTo(el.x + el.w, el.y + el.h - rr); ctx.quadraticCurveTo(el.x + el.w, el.y + el.h, el.x + el.w - rr, el.y + el.h); ctx.lineTo(el.x + rr, el.y + el.h); ctx.quadraticCurveTo(el.x, el.y + el.h, el.x, el.y + el.h - rr); ctx.lineTo(el.x, el.y + rr); ctx.quadraticCurveTo(el.x, el.y, el.x + rr, el.y);
+              } else if (mask === 'star') {
+                const cx2 = el.x + el.w / 2, cy2 = el.y + el.h / 2;
+                const outerR = Math.min(el.w, el.h) / 2, innerR = outerR * 0.38;
+                for (let si = 0; si < 10; si++) { const a = (si * Math.PI / 5) - Math.PI / 2; const r = si % 2 === 0 ? outerR : innerR; if (si === 0) ctx.moveTo(cx2 + r * Math.cos(a), cy2 + r * Math.sin(a)); else ctx.lineTo(cx2 + r * Math.cos(a), cy2 + r * Math.sin(a)); }
+              } else if (mask === 'hexagon') {
+                const cx2 = el.x + el.w / 2, cy2 = el.y + el.h / 2;
+                const hr = Math.min(el.w, el.h) / 2;
+                for (let hi = 0; hi < 6; hi++) { const a = (hi * Math.PI / 3) - Math.PI / 2; if (hi === 0) ctx.moveTo(cx2 + hr * Math.cos(a), cy2 + hr * Math.sin(a)); else ctx.lineTo(cx2 + hr * Math.cos(a), cy2 + hr * Math.sin(a)); }
+              }
+              ctx.closePath();
+              ctx.clip();
+            }
             const hasCrop = (el.cropW !== undefined && el.cropW < 1) || (el.cropH !== undefined && el.cropH < 1) || (el.cropX !== undefined && el.cropX > 0) || (el.cropY !== undefined && el.cropY > 0);
             if (hasCrop) {
               const sx = (el.cropX ?? 0) * img.naturalWidth;
@@ -747,17 +806,43 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             } else {
               ctx.drawImage(img, el.x, el.y, el.w, el.h);
             }
+            if (mask && mask !== 'none') ctx.restore();
           }
         } else if (el.type === 'line' || el.type === 'arrow') {
-          ctx.strokeStyle = el.strokeColor ?? '#fff'; ctx.lineWidth = el.lineWidth ?? 2; ctx.lineCap = 'round';
+          const arrowColor2 = el.strokeColor ?? '#fff';
+          ctx.strokeStyle = arrowColor2; ctx.lineWidth = el.lineWidth ?? 2; ctx.lineCap = 'round';
           ctx.setLineDash(el.dashStyle === 'dashed' ? [8, 4] : el.dashStyle === 'dotted' ? [2, 4] : []);
           ctx.beginPath(); ctx.moveTo(el.x, el.y); ctx.lineTo(el.x2 ?? el.x, el.y2 ?? el.y); ctx.stroke();
-          if (el.type === 'arrow' && el.arrowHead !== 'none') {
-            const ax = el.x2 ?? el.x, ay = el.y2 ?? el.y, angle = Math.atan2(ay - el.y, ax - el.x), hs = 12;
-            ctx.fillStyle = el.strokeColor ?? '#fff'; ctx.beginPath(); ctx.moveTo(ax, ay);
-            ctx.lineTo(ax - hs * Math.cos(angle - Math.PI / 6), ay - hs * Math.sin(angle - Math.PI / 6));
-            ctx.lineTo(ax - hs * Math.cos(angle + Math.PI / 6), ay - hs * Math.sin(angle + Math.PI / 6));
-            ctx.closePath(); ctx.fill();
+          if (el.type === 'arrow') {
+            const headSizeMap2 = { small: 8, medium: 12, large: 18 };
+            const hs2 = headSizeMap2[el.arrowHeadSize ?? 'medium'];
+            const axe = el.x2 ?? el.x, aye = el.y2 ?? el.y;
+            const lineAngle2 = Math.atan2(aye - el.y, axe - el.x);
+            const endStyle2 = el.arrowEndStyle ?? (el.arrowHead !== 'none' ? 'triangle' : 'none');
+            const startStyle2 = el.arrowStartStyle ?? (el.arrowHead === 'both' ? 'triangle' : 'none');
+            const drawHead = (hx: number, hy: number, ang: number, style: string, isStart: boolean) => {
+              if (style === 'none') return;
+              const dir = isStart ? ang + Math.PI : ang;
+              ctx.fillStyle = arrowColor2;
+              if (style === 'triangle') {
+                ctx.beginPath(); ctx.moveTo(hx, hy);
+                ctx.lineTo(hx - hs2 * Math.cos(dir - Math.PI / 6), hy - hs2 * Math.sin(dir - Math.PI / 6));
+                ctx.lineTo(hx - hs2 * Math.cos(dir + Math.PI / 6), hy - hs2 * Math.sin(dir + Math.PI / 6));
+                ctx.closePath(); ctx.fill();
+              } else if (style === 'circle') {
+                ctx.beginPath(); ctx.arc(hx, hy, hs2 * 0.4, 0, Math.PI * 2); ctx.fill();
+              } else if (style === 'diamond') {
+                const ds2 = hs2 * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(hx + ds2 * Math.cos(dir), hy + ds2 * Math.sin(dir));
+                ctx.lineTo(hx + ds2 * Math.cos(dir + Math.PI / 2), hy + ds2 * Math.sin(dir + Math.PI / 2));
+                ctx.lineTo(hx + ds2 * Math.cos(dir + Math.PI), hy + ds2 * Math.sin(dir + Math.PI));
+                ctx.lineTo(hx + ds2 * Math.cos(dir - Math.PI / 2), hy + ds2 * Math.sin(dir - Math.PI / 2));
+                ctx.closePath(); ctx.fill();
+              }
+            };
+            drawHead(axe, aye, lineAngle2, endStyle2, false);
+            drawHead(el.x, el.y, lineAngle2, startStyle2, true);
           }
           ctx.setLineDash([]);
         } else if (el.type === 'stickyNote') {
@@ -1171,11 +1256,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'rect') {
       const shapeBorder = getShapeBorderStyle(el, isSel);
       const hasPattern = el.pattern && el.pattern !== 'none';
+      const hasGradient = !!el.shapeGradient;
       const patternId = `pattern-${el.id}`;
+      const gradientBg = hasGradient ? (
+        el.shapeGradient!.type === 'radial'
+          ? `radial-gradient(circle, ${el.shapeGradient!.from}${el.shapeGradient!.mid ? `, ${el.shapeGradient!.mid}` : ''}, ${el.shapeGradient!.to})`
+          : `linear-gradient(${el.shapeGradient!.angle}deg, ${el.shapeGradient!.from}${el.shapeGradient!.mid ? `, ${el.shapeGradient!.mid}` : ''}, ${el.shapeGradient!.to})`
+      ) : undefined;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasGradient ? gradientBg : hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: el.borderR, border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
-          {hasPattern && (
+          {hasPattern && !hasGradient && (
             <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, borderRadius: el.borderR }}>
               <defs>{getPatternDefs(el, patternId)}</defs>
               <rect width="100%" height="100%" fill={el.color ?? '#6366f1'} />
@@ -1190,11 +1281,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (el.type === 'circle') {
       const shapeBorder = getShapeBorderStyle(el, isSel);
       const hasPattern = el.pattern && el.pattern !== 'none';
+      const hasGradient = !!el.shapeGradient;
       const patternId = `pattern-${el.id}`;
+      const gradientBg = hasGradient ? (
+        el.shapeGradient!.type === 'radial'
+          ? `radial-gradient(circle, ${el.shapeGradient!.from}${el.shapeGradient!.mid ? `, ${el.shapeGradient!.mid}` : ''}, ${el.shapeGradient!.to})`
+          : `linear-gradient(${el.shapeGradient!.angle}deg, ${el.shapeGradient!.from}${el.shapeGradient!.mid ? `, ${el.shapeGradient!.mid}` : ''}, ${el.shapeGradient!.to})`
+      ) : undefined;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: hasGradient ? gradientBg : hasPattern ? undefined : el.color, opacity: el.opacity, borderRadius: '50%', border: shapeBorder, cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, overflow: 'hidden', ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
-          {hasPattern && (
+          {hasPattern && !hasGradient && (
             <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
               <defs>{getPatternDefs(el, patternId)}</defs>
               <rect width="100%" height="100%" fill={el.color ?? '#6366f1'} />
@@ -1214,8 +1311,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const cropW = el.cropW ?? 1;
       const cropH = el.cropH ?? 1;
       const fitMode = el.objectFit ?? 'cover';
+      // Clip mask CSS
+      const clipMaskMap: Record<string, string> = {
+        circle: 'circle(50% at 50% 50%)',
+        rounded: 'inset(0 round 20px)',
+        star: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+        hexagon: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+      };
+      const clipPath = (el.clipMask && el.clipMask !== 'none') ? clipMaskMap[el.clipMask] : undefined;
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, ...entranceAnim, ...selectionFlashAnim }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, clipPath, WebkitClipPath: clipPath, ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}
           onDoubleClick={(e) => {
             e.stopPropagation();
@@ -1265,25 +1370,47 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       </svg>
     );
 
-    if (el.type === 'line' || el.type === 'arrow') return (
-      <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
-        <line x1={el.x} y1={el.y} x2={el.x2 ?? el.x} y2={el.y2 ?? el.y}
-          stroke={el.strokeColor ?? '#fff'} strokeWidth={el.lineWidth ?? 2}
-          strokeDasharray={el.dashStyle === 'dashed' ? '8,4' : el.dashStyle === 'dotted' ? '2,4' : 'none'}
-          opacity={el.opacity ?? 1} />
-        {el.type === 'arrow' && el.arrowHead !== 'none' && (() => {
-          const ax = el.x2 ?? el.x, ay = el.y2 ?? el.y, angle = Math.atan2(ay - el.y, ax - el.x), hs = 12;
-          return <polygon points={`${ax},${ay} ${ax - hs * Math.cos(angle - Math.PI / 6)},${ay - hs * Math.sin(angle - Math.PI / 6)} ${ax - hs * Math.cos(angle + Math.PI / 6)},${ay - hs * Math.sin(angle + Math.PI / 6)}`} fill={el.strokeColor ?? '#fff'} opacity={el.opacity ?? 1} />;
-        })()}
-        <line x1={el.x} y1={el.y} x2={el.x2 ?? el.x} y2={el.y2 ?? el.y} stroke="transparent" strokeWidth={12}
-          style={{ pointerEvents: 'stroke', cursor: 'move' }}
-          onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
-        {isSel && <>
-          <circle cx={el.x} cy={el.y} r={5} fill={C.accent} style={{ pointerEvents: 'auto', cursor: 'crosshair' }} />
-          <circle cx={el.x2 ?? el.x} cy={el.y2 ?? el.y} r={5} fill={C.accent} style={{ pointerEvents: 'auto', cursor: 'crosshair' }} />
-        </>}
-      </svg>
-    );
+    if (el.type === 'line' || el.type === 'arrow') {
+      const arrowColor = el.strokeColor ?? '#fff';
+      const headSizeMap = { small: 8, medium: 12, large: 18 };
+      const hs = headSizeMap[el.arrowHeadSize ?? 'medium'];
+      const endStyle = el.arrowEndStyle ?? (el.type === 'arrow' && el.arrowHead !== 'none' ? 'triangle' : 'none');
+      const startStyle = el.arrowStartStyle ?? (el.arrowHead === 'both' ? 'triangle' : 'none');
+      const renderArrowHead = (cx: number, cy: number, angle: number, style: string, isStart: boolean) => {
+        if (style === 'none') return null;
+        const dir = isStart ? angle + Math.PI : angle;
+        if (style === 'triangle') {
+          return <polygon points={`${cx},${cy} ${cx - hs * Math.cos(dir - Math.PI / 6)},${cy - hs * Math.sin(dir - Math.PI / 6)} ${cx - hs * Math.cos(dir + Math.PI / 6)},${cy - hs * Math.sin(dir + Math.PI / 6)}`} fill={arrowColor} opacity={el.opacity ?? 1} />;
+        }
+        if (style === 'circle') {
+          return <circle cx={cx} cy={cy} r={hs * 0.4} fill={arrowColor} opacity={el.opacity ?? 1} />;
+        }
+        if (style === 'diamond') {
+          const ds = hs * 0.5;
+          return <polygon points={`${cx + ds * Math.cos(dir)},${cy + ds * Math.sin(dir)} ${cx + ds * Math.cos(dir + Math.PI / 2)},${cy + ds * Math.sin(dir + Math.PI / 2)} ${cx + ds * Math.cos(dir + Math.PI)},${cy + ds * Math.sin(dir + Math.PI)} ${cx + ds * Math.cos(dir - Math.PI / 2)},${cy + ds * Math.sin(dir - Math.PI / 2)}`} fill={arrowColor} opacity={el.opacity ?? 1} />;
+        }
+        return null;
+      };
+      const ax = el.x2 ?? el.x, ay = el.y2 ?? el.y;
+      const lineAngle = Math.atan2(ay - el.y, ax - el.x);
+      return (
+        <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
+          <line x1={el.x} y1={el.y} x2={ax} y2={ay}
+            stroke={arrowColor} strokeWidth={el.lineWidth ?? 2}
+            strokeDasharray={el.dashStyle === 'dashed' ? '8,4' : el.dashStyle === 'dotted' ? '2,4' : 'none'}
+            opacity={el.opacity ?? 1} />
+          {el.type === 'arrow' && renderArrowHead(ax, ay, lineAngle, endStyle, false)}
+          {el.type === 'arrow' && renderArrowHead(el.x, el.y, lineAngle, startStyle, true)}
+          <line x1={el.x} y1={el.y} x2={ax} y2={ay} stroke="transparent" strokeWidth={12}
+            style={{ pointerEvents: 'stroke', cursor: 'move' }}
+            onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
+          {isSel && <>
+            <circle cx={el.x} cy={el.y} r={5} fill={C.accent} style={{ pointerEvents: 'auto', cursor: 'crosshair' }} />
+            <circle cx={ax} cy={ay} r={5} fill={C.accent} style={{ pointerEvents: 'auto', cursor: 'crosshair' }} />
+          </>}
+        </svg>
+      );
+    }
 
     if (el.type === 'stickyNote') return (
       <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
