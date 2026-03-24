@@ -159,6 +159,46 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      // Tab / Shift+Tab: cycle through elements
+      if (e.key === 'Tab' && store.els.length > 0) {
+        e.preventDefault();
+        const els = store.els;
+        if (store.selIds.length === 0) {
+          // Nothing selected — select first or last element
+          store.setSelIds([e.shiftKey ? els[els.length - 1].id : els[0].id]);
+        } else {
+          const currentId = store.selIds[store.selIds.length - 1];
+          const idx = els.findIndex((el) => el.id === currentId);
+          const nextIdx = e.shiftKey
+            ? (idx - 1 + els.length) % els.length
+            : (idx + 1) % els.length;
+          store.setSelIds([els[nextIdx].id]);
+        }
+        return;
+      }
+
+      // Enter: enter text editing mode for selected text element
+      if (e.key === 'Enter' && store.selIds.length === 1) {
+        const selEl = store.els.find((el) => el.id === store.selIds[0]);
+        if (selEl && selEl.type === 'text') {
+          e.preventDefault();
+          // The text element wrapper itself is contenteditable on double-click
+          const wrapper = document.querySelector(`[data-text-el="${selEl.id}"]`) as HTMLElement;
+          if (wrapper) {
+            wrapper.contentEditable = 'true';
+            wrapper.focus();
+            // Place cursor at end
+            const range = document.createRange();
+            range.selectNodeContents(wrapper);
+            range.collapse(false);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }
+          return;
+        }
+      }
+
       // Ctrl+0: Fit to screen
       if (ctrl && e.key === '0') {
         e.preventDefault();

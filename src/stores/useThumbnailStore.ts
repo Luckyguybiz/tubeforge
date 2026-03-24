@@ -81,8 +81,8 @@ interface ThumbnailState {
   // Line preview
   linePreview: { x1: number; y1: number; x2: number; y2: number } | null;
 
-  // Context menu
-  contextMenu: { x: number; y: number; elId: string | null } | null;
+  // Context menu (x/y = screen coords, canvasX/canvasY = canvas-space coords for paste-at-position)
+  contextMenu: { x: number; y: number; canvasX: number; canvasY: number; elId: string | null } | null;
 
   // Project colors — last 12 colors used, auto-populated
   projectColors: string[];
@@ -112,7 +112,7 @@ interface ThumbnailState {
   setShapeSub: (s: 'rect' | 'circle' | 'triangle' | 'star' | 'pentagon' | 'hexagon' | 'arrowShape' | 'speechBubble' | 'heart') => void;
   setAiReferenceImage: (url: string | null) => void;
   setLinePreview: (p: { x1: number; y1: number; x2: number; y2: number } | null) => void;
-  setContextMenu: (m: { x: number; y: number; elId: string | null } | null) => void;
+  setContextMenu: (m: { x: number; y: number; canvasX: number; canvasY: number; elId: string | null } | null) => void;
 
   // History
   pushHistory: () => void;
@@ -130,6 +130,8 @@ interface ThumbnailState {
   pasteClipboard: () => void;
   /** Paste at original position (same X, Y as copied element) */
   pasteInPlace: () => void;
+  /** Paste clipboard elements centered at a specific canvas position */
+  pasteAtPosition: (canvasX: number, canvasY: number) => void;
   cutSelected: () => void;
   duplicateSelected: () => void;
 
@@ -489,6 +491,32 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
       ...JSON.parse(JSON.stringify(e)),
       id: uid(),
       // Keep original position — no offset
+    }));
+    set((s) => ({
+      els: [...s.els, ...copies],
+      selIds: copies.map((c) => c.id),
+    }));
+  },
+
+  // ===== Paste At Position (right-click paste) =====
+  pasteAtPosition: (canvasX: number, canvasY: number) => {
+    const { clipboard } = get();
+    if (!clipboard || clipboard.length === 0) return;
+    get().pushHistory();
+    // Calculate the bounding box center of clipboard elements
+    const minX = Math.min(...clipboard.map((e) => e.x));
+    const minY = Math.min(...clipboard.map((e) => e.y));
+    const maxX = Math.max(...clipboard.map((e) => e.x + e.w));
+    const maxY = Math.max(...clipboard.map((e) => e.y + e.h));
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const dx = canvasX - centerX;
+    const dy = canvasY - centerY;
+    const copies = clipboard.map((e) => ({
+      ...JSON.parse(JSON.stringify(e)),
+      id: uid(),
+      x: e.x + dx,
+      y: e.y + dy,
     }));
     set((s) => ({
       els: [...s.els, ...copies],
