@@ -21,7 +21,7 @@ import {
 
 const GRADIENT: [string, string] = ['#06b6d4', '#8b5cf6'];
 
-const TAB_KEYS = ['Calendar', 'Content List', 'Ideas Bank', 'Templates'] as const;
+const TAB_KEYS = ['Calendar', 'Kanban', 'Content List', 'Ideas Bank', 'Templates'] as const;
 type Tab = (typeof TAB_KEYS)[number];
 
 const STATUS_COLORS: Record<ContentStatus, string> = {
@@ -111,6 +111,7 @@ export function ContentPlanner() {
 
   const TAB_LABELS: Record<Tab, string> = {
     'Calendar': t('contentPlanner.tab.calendar'),
+    'Kanban': t('contentPlanner.tab.kanban') || 'Kanban',
     'Content List': t('contentPlanner.tab.contentList'),
     'Ideas Bank': t('contentPlanner.tab.ideasBank'),
     'Templates': t('contentPlanner.tab.templates'),
@@ -171,6 +172,13 @@ export function ContentPlanner() {
   const [ideaCategory, setIdeaCategory] = useState('General');
   const [ideaPriority, setIdeaPriority] = useState<1 | 2 | 3>(2);
 
+  /* Search */
+  const [searchQuery, setSearchQuery] = useState('');
+
+  /* Kanban drag state */
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<ContentStatus | null>(null);
+
   /* Hover states */
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
@@ -179,10 +187,29 @@ export function ContentPlanner() {
 
   /* ── Derived data ──────────────────────────────────────── */
 
-  const filteredItems = useMemo(
-    () => getFilteredItems(),
-    [contentItems, filterStatus, filterType, sortOption, getFilteredItems],
-  );
+  const filteredItems = useMemo(() => {
+    let items = getFilteredItems();
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q) ||
+          i.tags.some((tag) => tag.toLowerCase().includes(q)),
+      );
+    }
+    return items;
+  }, [contentItems, filterStatus, filterType, sortOption, getFilteredItems, searchQuery]);
+
+  const kanbanColumns = useMemo(() => {
+    const columns: Record<ContentStatus, ContentItem[]> = {
+      Idea: [], Draft: [], Scheduled: [], Published: [],
+    };
+    contentItems.forEach((item) => {
+      columns[item.status].push(item);
+    });
+    return columns;
+  }, [contentItems]);
 
   const stats = useMemo(() => {
     const total = contentItems.length;
@@ -362,6 +389,34 @@ export function ContentPlanner() {
     setIdeaPriority(2);
   }, [ideaText, ideaCategory, ideaPriority, addIdea]);
 
+  /* ── Kanban DnD handlers ──────────────────────────────── */
+
+  const handleDragStart = useCallback((itemId: string) => {
+    setDraggedItemId(itemId);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, status: ContentStatus) => {
+    e.preventDefault();
+    setDragOverStatus(status);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverStatus(null);
+  }, []);
+
+  const handleDrop = useCallback((targetStatus: ContentStatus) => {
+    if (draggedItemId) {
+      updateContentItem(draggedItemId, { status: targetStatus });
+    }
+    setDraggedItemId(null);
+    setDragOverStatus(null);
+  }, [draggedItemId, updateContentItem]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedItemId(null);
+    setDragOverStatus(null);
+  }, []);
+
   const handlePromoteIdea = useCallback((id: string) => {
     const newId = promoteIdea(id);
     if (newId) {
@@ -468,13 +523,25 @@ export function ContentPlanner() {
         display: 'flex',
         gap: 4,
         marginBottom: 24,
-        borderBottom: `1px solid ${C.border}`,
+        padding: 4,
+        borderRadius: 12,
+        background: C.surface,
+        border: `1px solid ${C.border}`,
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
+        width: 'fit-content',
+        maxWidth: '100%',
       }}>
         {TAB_KEYS.map((tab) => {
           const isActive = activeTab === tab;
           const isHovered = hoveredTab === tab;
+          const tabIcons: Record<Tab, string> = {
+            'Calendar': '\uD83D\uDCC5',
+            'Kanban': '\u2B50',
+            'Content List': '\uD83D\uDCCB',
+            'Ideas Bank': '\uD83D\uDCA1',
+            'Templates': '\uD83D\uDCC4',
+          };
           return (
             <button
               key={tab}
@@ -482,22 +549,27 @@ export function ContentPlanner() {
               onMouseEnter={() => setHoveredTab(tab)}
               onMouseLeave={() => setHoveredTab(null)}
               style={{
-                padding: '12px 20px',
-                fontSize: 14,
+                padding: '8px 16px',
+                fontSize: 13,
                 fontWeight: isActive ? 700 : 500,
-                color: isActive ? GRADIENT[0] : isHovered ? C.text : C.sub,
-                background: 'transparent',
+                color: isActive ? '#fff' : isHovered ? C.text : C.sub,
+                background: isActive ? `linear-gradient(135deg, ${GRADIENT[0]}, ${GRADIENT[1]})` : 'transparent',
                 border: 'none',
-                borderBottom: isActive ? `2px solid ${GRADIENT[0]}` : '2px solid transparent',
+                borderRadius: 9,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 fontFamily: 'inherit',
                 whiteSpace: 'nowrap',
                 outline: 'none',
                 flexShrink: 0,
-                minHeight: 44,
+                minHeight: 38,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: isActive ? `0 2px 8px ${GRADIENT[0]}30` : 'none',
               }}
             >
+              <span style={{ fontSize: 14 }}>{tabIcons[tab]}</span>
               {TAB_LABELS[tab]}
             </button>
           );
@@ -628,20 +700,32 @@ export function ContentPlanner() {
                   }}>
                     {day}
                   </span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    {items.slice(0, 4).map((item) => (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', overflow: 'hidden' }}>
+                    {items.slice(0, 2).map((item) => (
                       <div
                         key={item.id}
                         title={item.title}
                         style={{
-                          width: 8, height: 8, borderRadius: '50%',
-                          background: STATUS_COLORS[item.status], flexShrink: 0,
+                          display: 'flex', alignItems: 'center', gap: 3,
+                          width: '100%', overflow: 'hidden',
                         }}
-                      />
+                      >
+                        <div style={{
+                          width: 5, height: 5, borderRadius: '50%',
+                          background: STATUS_COLORS[item.status], flexShrink: 0,
+                        }} />
+                        <span style={{
+                          fontSize: 9, fontWeight: 600, color: C.sub,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          lineHeight: '12px',
+                        }}>
+                          {item.title}
+                        </span>
+                      </div>
                     ))}
-                    {items.length > 4 && (
-                      <span style={{ fontSize: 9, color: C.dim, lineHeight: '8px' }}>
-                        +{items.length - 4}
+                    {items.length > 2 && (
+                      <span style={{ fontSize: 9, color: C.dim, fontWeight: 600, paddingLeft: 8 }}>
+                        +{items.length - 2} more
                       </span>
                     )}
                   </div>
@@ -736,10 +820,222 @@ export function ContentPlanner() {
       )}
 
       {/* ────────────────────────────────────────────────────
+           Kanban Board View
+         ──────────────────────────────────────────────────── */}
+      {activeTab === 'Kanban' && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 12,
+          minHeight: 400,
+          overflowX: 'auto',
+        }}>
+          {ALL_STATUSES.map((status) => {
+            const colItems = kanbanColumns[status];
+            const colColor = STATUS_COLORS[status];
+            const isDragOver = dragOverStatus === status;
+            return (
+              <div
+                key={status}
+                onDragOver={(e) => handleDragOver(e, status)}
+                onDragLeave={handleDragLeave}
+                onDrop={() => handleDrop(status)}
+                style={{
+                  display: 'flex', flexDirection: 'column',
+                  borderRadius: 14,
+                  background: isDragOver ? `${colColor}08` : C.surface,
+                  border: isDragOver ? `2px dashed ${colColor}` : `1px solid ${C.border}`,
+                  transition: 'all 0.2s ease',
+                  minWidth: 200,
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Column Header */}
+                <div style={{
+                  padding: '14px 16px 12px', display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', borderBottom: `1px solid ${C.border}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{
+                      width: 10, height: 10, borderRadius: '50%', background: colColor,
+                    }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                      {STATUS_LABELS[status] ?? status}
+                    </span>
+                  </div>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: 10,
+                    fontSize: 11, fontWeight: 700,
+                    background: `${colColor}15`, color: colColor,
+                  }}>
+                    {colItems.length}
+                  </span>
+                </div>
+
+                {/* Column Body */}
+                <div style={{
+                  padding: 8, flex: 1,
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                  minHeight: 100,
+                }}>
+                  {colItems.length === 0 && (
+                    <div style={{
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, color: C.dim, fontStyle: 'italic', padding: 16,
+                    }}>
+                      {isDragOver ? 'Drop here' : 'No items'}
+                    </div>
+                  )}
+                  {colItems.map((item) => {
+                    const isDragging = draggedItemId === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        draggable
+                        onDragStart={() => handleDragStart(item.id)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => openEditModal(item)}
+                        style={{
+                          padding: '12px 14px', borderRadius: 10,
+                          background: C.card,
+                          border: `1px solid ${isDragging ? colColor : C.border}`,
+                          cursor: 'grab',
+                          opacity: isDragging ? 0.5 : 1,
+                          transition: 'all 0.15s ease',
+                          display: 'flex', flexDirection: 'column', gap: 8,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDragging) {
+                            e.currentTarget.style.borderColor = C.borderActive;
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = `0 4px 12px ${isDark ? 'rgba(0,0,0,.3)' : 'rgba(0,0,0,.08)'}`;
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = isDragging ? colColor : C.border;
+                          e.currentTarget.style.transform = 'none';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      >
+                        {/* Card Title */}
+                        <div style={{
+                          fontSize: 13, fontWeight: 600, color: C.text,
+                          overflow: 'hidden', textOverflow: 'ellipsis',
+                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                          wordBreak: 'break-word', lineHeight: '18px',
+                        }}>
+                          {item.title}
+                        </div>
+
+                        {/* Card Meta */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{
+                            padding: '1px 7px', borderRadius: 5,
+                            fontSize: 10, fontWeight: 600,
+                            background: C.surface, color: C.dim,
+                          }}>
+                            {item.contentType}
+                          </span>
+                          {item.scheduledDate && (
+                            <span style={{ fontSize: 10, color: C.dim }}>
+                              {new Date(item.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Card Platforms */}
+                        {item.platforms.length > 0 && (
+                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            {item.platforms.slice(0, 3).map((p) => (
+                              <span key={p} style={{
+                                width: 6, height: 6, borderRadius: '50%',
+                                background: PLATFORM_COLORS[p],
+                              }} title={p} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Add to column */}
+                  <button
+                    onClick={() => {
+                      setFormStatus(status);
+                      openAddModal();
+                    }}
+                    style={{
+                      padding: '10px 12px', borderRadius: 8,
+                      border: `1px dashed ${C.border}`, background: 'transparent',
+                      color: C.dim, fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', transition: 'all 0.15s ease',
+                      fontFamily: 'inherit', outline: 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = colColor; e.currentTarget.style.color = colColor; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.dim; }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ────────────────────────────────────────────────────
            Content List View
          ──────────────────────────────────────────────────── */}
       {activeTab === 'Content List' && (
         <div>
+          {/* Search Bar */}
+          <div style={{ marginBottom: 16, position: 'relative' }}>
+            <div style={{
+              position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+              display: 'flex', alignItems: 'center', pointerEvents: 'none',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('contentPlanner.searchPlaceholder') || 'Search content...'}
+              style={{
+                ...inputStyle,
+                paddingLeft: 40,
+                height: 44,
+                borderRadius: 12,
+                background: C.surface,
+                transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; e.currentTarget.style.boxShadow = `0 0 0 3px ${GRADIENT[0]}15`; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = 'none'; }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                  width: 24, height: 24, borderRadius: 6, border: 'none',
+                  background: C.cardHover, color: C.sub, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  outline: 'none',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+
           {/* Filter Bar */}
           <div className="tf-planner-filter-bar" style={{
             display: 'flex', gap: 12, marginBottom: 20,
