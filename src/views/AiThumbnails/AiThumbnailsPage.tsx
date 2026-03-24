@@ -6,13 +6,21 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
+import type { Theme } from '@/lib/types';
 
 /* ── Constants ──────────────────────────────────────────────────────── */
+
+/** Lime accent used throughout the AI thumbnails page */
+const LIME = '#BFFF00';
+const LIME_DIM = 'rgba(191,255,0,0.08)';
+const LIME_GLOW = 'rgba(191,255,0,0.4)';
+const DARK_BG = '#0D0D0D';
+const CARD_BG = '#151515';
+const SURFACE_BG = '#1A1A1A';
 
 type TabId = 'scratch' | 'swap';
 type StyleId = 'realistic' | 'anime' | 'cinematic' | '3d' | 'minimalist' | 'popart';
 type FormatId = '16:9' | '9:16';
-type AnalyticsTab = 'scores' | 'strengths' | 'improve' | 'titles';
 
 interface GeneratedImage {
   id: string;
@@ -21,15 +29,6 @@ interface GeneratedImage {
   style: StyleId;
   revisedPrompt?: string;
   parentId?: string;
-}
-
-interface CTRAnalysis {
-  ctrScore: number;
-  summary: string;
-  strengths: string[];
-  improvements: string[];
-  titleSuggestions: Array<{ title: string; score: number; reason: string }>;
-  scores: { emotion: number; contrast: number; composition: number; clickability: number };
 }
 
 const STYLE_KEYS: { id: StyleId; key: string; icon: string }[] = [
@@ -42,16 +41,10 @@ const STYLE_KEYS: { id: StyleId; key: string; icon: string }[] = [
 ];
 
 const COUNT_OPTIONS = [1, 2, 3] as const;
-const FORMAT_OPTIONS: { id: FormatId; label: string; icon: string; pro: boolean }[] = [
-  { id: '16:9', label: '16:9', icon: '\uD83D\uDDA5', pro: false },
-  { id: '9:16', label: '9:16', icon: '\uD83D\uDCF1', pro: true },
+const FORMAT_OPTIONS: { id: FormatId; label: string; pro: boolean }[] = [
+  { id: '16:9', label: '16:9', pro: false },
+  { id: '9:16', label: '9:16', pro: true },
 ];
-
-const EXAMPLE_PROMPT_KEYS = [
-  'aithumbs.example.1',
-  'aithumbs.example.2',
-  'aithumbs.example.3',
-] as const;
 
 let _uid = 0;
 function uid() { return `ait_${Date.now()}_${++_uid}`; }
@@ -90,6 +83,16 @@ function createRecognition(): SpeechRecognitionInstance | null {
   return new (SR as new () => SpeechRecognitionInstance)();
 }
 
+/* ── Progress stage helper ──────────────────────────────────────────── */
+
+function getProgressStage(p: number, t: (k: string) => string): string {
+  if (p < 20) return t('aithumbs.progress.analyzing');
+  if (p < 50) return t('aithumbs.progress.composing');
+  if (p < 80) return t('aithumbs.progress.creating');
+  if (p < 95) return t('aithumbs.progress.finalTouches');
+  return t('aithumbs.progress.done');
+}
+
 /* ── Main Component ─────────────────────────────────────────────────── */
 
 export function AiThumbnailsPage() {
@@ -106,17 +109,9 @@ export function AiThumbnailsPage() {
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [rightTab, setRightTab] = useState<'howto' | 'history'>('howto');
-  const [showResult, setShowResult] = useState(false);
 
   /* AI Ideas */
   const [aiIdeas, setAiIdeas] = useState<string[]>([]);
-
-  /* CTR Analysis */
-  const [ctrAnalysis, setCtrAnalysis] = useState<CTRAnalysis | null>(null);
-  const [ctrExpanded, setCtrExpanded] = useState(false);
-  const [analyticsTab, setAnalyticsTab] = useState<AnalyticsTab>('scores');
-  const [animatedScore, setAnimatedScore] = useState(0);
 
   /* Progress */
   const [progress, setProgress] = useState(0);
@@ -125,7 +120,6 @@ export function AiThumbnailsPage() {
   /* YouTube context */
   const [ytUrl, setYtUrl] = useState('');
   const [ytTitle, setYtTitle] = useState<string | null>(null);
-  const [ytLoading, setYtLoading] = useState(false);
 
   /* Voice input */
   const [isListening, setIsListening] = useState(false);
@@ -135,6 +129,9 @@ export function AiThumbnailsPage() {
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /* Gallery modal */
+  const [showGallery, setShowGallery] = useState(false);
+
   /* Responsive */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 900);
@@ -142,23 +139,6 @@ export function AiThumbnailsPage() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-
-  /* CTR score count-up animation */
-  useEffect(() => {
-    if (!ctrAnalysis) { setAnimatedScore(0); return; }
-    const target = ctrAnalysis.ctrScore;
-    let frame = 0;
-    const totalFrames = 40;
-    const timer = setInterval(() => {
-      frame++;
-      const p = frame / totalFrames;
-      // Ease-out
-      const eased = 1 - Math.pow(1 - p, 3);
-      setAnimatedScore(Math.round(eased * target * 10) / 10);
-      if (frame >= totalFrames) clearInterval(timer);
-    }, 25);
-    return () => clearInterval(timer);
-  }, [ctrAnalysis]);
 
   /* ── tRPC mutations ─────────────────────────────── */
   const generate = trpc.aiThumbnails.generate.useMutation({
@@ -179,47 +159,12 @@ export function AiThumbnailsPage() {
       setProgress(100);
       setSelectedImage(imgs[0] || null);
       setHistory((prev) => [...imgs, ...prev].slice(0, 20));
-      setCtrAnalysis(null);
-      setShowResult(true);
       toast.success(t('aithumbs.toast.success'));
-
-      // Trigger blur-to-clear reveal after a tiny delay
       setTimeout(() => setImageRevealed(true), 100);
-
-      // Auto-analyze the first image
-      if (imgs[0]) {
-        analyzeMutation.mutate({
-          imageUrl: imgs[0].url,
-          prompt: data.prompt,
-        });
-      }
     },
     onError: (err) => {
       setProgress(0);
       toast.error(err.message || t('aithumbs.toast.genFailed'));
-    },
-  });
-
-  const analyzeMutation = trpc.aiThumbnails.analyzeThumbnail.useMutation({
-    onSuccess: (data) => {
-      setCtrAnalysis(data);
-      setCtrExpanded(false);
-    },
-    onError: (err) => {
-      toast.error(err.message || t('aithumbs.toast.analysisFailed'));
-    },
-  });
-
-  const suggestIdeas = trpc.aiThumbnails.suggestIdeas.useMutation({
-    onSuccess: (data) => {
-      if (data.ideas.length > 0) {
-        setAiIdeas(data.ideas);
-      } else {
-        toast.info(t('aithumbs.toast.noIdeas'));
-      }
-    },
-    onError: (err) => {
-      toast.error(err.message || t('aithumbs.toast.ideasFailed'));
     },
   });
 
@@ -239,21 +184,25 @@ export function AiThumbnailsPage() {
       setProgress(100);
       setSelectedImage(img);
       setHistory((prev) => [img, ...prev].slice(0, 20));
-      setCtrAnalysis(null);
-      setShowResult(true);
       toast.success(t('aithumbs.toast.enhanced'));
-
       setTimeout(() => setImageRevealed(true), 100);
-
-      // Auto-analyze the enhanced image
-      analyzeMutation.mutate({
-        imageUrl: data.url,
-        prompt: 'Enhanced version',
-      });
     },
     onError: (err) => {
       setProgress(0);
       toast.error(err.message || t('aithumbs.toast.enhanceFailed'));
+    },
+  });
+
+  const suggestIdeas = trpc.aiThumbnails.suggestIdeas.useMutation({
+    onSuccess: (data) => {
+      if (data.ideas.length > 0) {
+        setAiIdeas(data.ideas);
+      } else {
+        toast.info(t('aithumbs.toast.noIdeas'));
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message || t('aithumbs.toast.ideasFailed'));
     },
   });
 
@@ -265,10 +214,10 @@ export function AiThumbnailsPage() {
     setProgress(0);
     const interval = setInterval(() => {
       setProgress((p) => {
-        if (p >= 95) return p; // pause at 95 until done
-        return Math.min(95, p + Math.random() * 8 + 2);
+        if (p >= 95) return p;
+        return Math.min(95, p + Math.random() * 4 + 1);
       });
-    }, 500);
+    }, 600);
     return () => clearInterval(interval);
   }, [isGenerating]);
 
@@ -302,16 +251,6 @@ export function AiThumbnailsPage() {
     });
   }, [selectedImage, generate, canUseAI, t, format]);
 
-  const handleEnhance = useCallback(() => {
-    if (!selectedImage || editMutation.isPending) return;
-    if (!canUseAI) { toast.error(t('aithumbs.toast.limitReached')); return; }
-    editMutation.mutate({
-      imageUrl: selectedImage.url,
-      instruction: 'Enhance this thumbnail: improve contrast, make colors more vibrant, increase visual impact for better CTR.',
-      generationId: selectedImage.id,
-    });
-  }, [selectedImage, editMutation, canUseAI, t]);
-
   const handleDownload = useCallback(async (img: GeneratedImage) => {
     try {
       const res = await fetch(img.url);
@@ -337,7 +276,6 @@ export function AiThumbnailsPage() {
       setYtTitle(null);
       return;
     }
-    setYtLoading(true);
     try {
       const res = await fetch(
         `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vid}`,
@@ -346,8 +284,6 @@ export function AiThumbnailsPage() {
       setYtTitle(data.title ?? null);
     } catch {
       setYtTitle(null);
-    } finally {
-      setYtLoading(false);
     }
   }, []);
 
@@ -363,7 +299,7 @@ export function AiThumbnailsPage() {
       toast.error(t('aithumbs.toast.noSpeech'));
       return;
     }
-    recognition.lang = 'en-US';
+    recognition.lang = 'ru-RU';
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (e: SpeechRecognitionEvent) => {
@@ -396,26 +332,15 @@ export function AiThumbnailsPage() {
     suggestIdeas.mutate({ topic: prompt.trim() || undefined });
   }, [suggestIdeas, prompt]);
 
-  const handleCopyTitle = useCallback((title: string) => {
-    navigator.clipboard.writeText(title).then(() => {
-      toast.success(t('aithumbs.toast.titleCopied'));
-    }).catch(() => {
-      // fallback
-    });
-  }, []);
-
   /* ── Helpers ─────────────────────────────────────── */
 
   const isLoading = generate.isPending;
-  const isAnalyzing = analyzeMutation.isPending;
   const disabled = !prompt.trim() || !canUseAI || isLoading;
 
-  // Suppress unused variable warnings
-  void tab;
-  void ytLoading;
+  const progressPct = Math.round(progress);
 
-  /* Style chip helper */
-  const styleChip = useMemo(
+  /* ── Memoized style chip ──── */
+  const chipStyle = useMemo(
     () =>
       (active: boolean): React.CSSProperties => ({
         display: 'inline-flex',
@@ -423,9 +348,9 @@ export function AiThumbnailsPage() {
         gap: 5,
         padding: '7px 14px',
         borderRadius: 8,
-        border: `1px solid ${active ? C.accent : C.border}`,
-        background: active ? C.accentDim : 'transparent',
-        color: active ? C.accent : C.sub,
+        border: `1px solid ${active ? LIME : C.border}`,
+        background: active ? LIME_DIM : 'transparent',
+        color: active ? LIME : C.sub,
         fontSize: 12,
         fontWeight: 600,
         cursor: 'pointer',
@@ -437,1092 +362,859 @@ export function AiThumbnailsPage() {
     [C],
   );
 
-  /* Score bar color */
-  const scoreColor = (v: number) => {
-    if (v >= 8) return C.green;
-    if (v >= 6) return C.accent;
-    if (v >= 4) return C.orange;
-    return C.red;
-  };
+  /* ── Gallery query (for modal) ── */
+  const galleryQuery = trpc.aiThumbnails.getGallery.useQuery(
+    { filter: 'all', limit: 30 },
+    { enabled: showGallery },
+  );
 
   /* ── Render ─────────────────────────────────────── */
 
   return (
-    <div
-      style={{
-        background: C.bg,
-        color: C.text,
-        fontFamily: 'inherit',
-      }}
-    >
-      {/* ── Tool area (full viewport height) ──────────── */}
+    <div style={{ background: DARK_BG, color: '#fff', fontFamily: 'inherit', minHeight: '100vh' }}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* ── Top Bar ────────────────────────────────────── */}
-      <div
-        className="tf-aithumbs-topbar"
-        style={{
-          height: 56,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 20px',
-          borderBottom: `1px solid ${C.border}`,
-          background: C.card,
-          flexShrink: 0,
-          gap: 12,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: C.accentDim,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-            </svg>
-          </div>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
-            {t('aithumbs.title')}
-          </span>
-        </div>
 
-        <button
-          onClick={() => { window.location.href = '/thumbnails'; }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-          style={{
-            padding: '6px 14px', borderRadius: 8,
-            border: `1px solid ${C.border}`, background: 'transparent',
-            color: C.sub, fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-            display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6,
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-          </svg>
-          {t('aithumbs.myWorks')}
-        </button>
-
-        {/* Credits badge */}
+        {/* ═══ TOP BAR ═══ */}
         <div
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '5px 12px', borderRadius: 20,
-            background: canUseAI ? C.accentDim : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${canUseAI ? C.accent + '26' : 'rgba(239,68,68,0.2)'}`,
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? C.accent : C.red} strokeWidth="2.5" strokeLinecap="round">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-          <span style={{ fontSize: 12, fontWeight: 700, color: canUseAI ? C.accent : C.red }}>
-            {remainingAI}
-          </span>
-        </div>
-      </div>
-
-      {/* ── Main Content ───────────────────────────────── */}
-      <div
-        className="tf-aithumbs-layout"
-        style={{
-          flex: 1, display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: 0, overflow: 'hidden', minHeight: 0,
-        }}
-      >
-        {/* LEFT PANEL (380px) */}
-        <div
-          className="tf-aithumbs-left"
-          style={{
-            width: isMobile ? '100%' : 380,
+            height: 56,
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 20px',
+            borderBottom: `1px solid rgba(255,255,255,0.06)`,
+            background: CARD_BG,
             flexShrink: 0,
-            background: C.card,
-            borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
-            borderBottom: isMobile ? `1px solid ${C.border}` : 'none',
-            padding: 20,
-            display: 'flex', flexDirection: 'column', gap: 14,
-            overflowY: 'auto',
-            maxHeight: isMobile ? 'none' : '100%',
+            gap: 12,
           }}
         >
-          {/* ── 1. Mode tabs: FROM SCRATCH / SWAP CHARACTER ── */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            {(['scratch', 'swap'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setTab(m)}
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '12px 14px', borderRadius: 12,
-                  background: tab === m ? C.surface : 'transparent',
-                  border: `1px solid ${tab === m ? C.borderActive : C.border}`,
-                  color: tab === m ? C.text : C.sub,
-                  cursor: 'pointer', fontSize: 11, fontWeight: 700,
-                  textTransform: 'uppercase', letterSpacing: 1,
-                  fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
-                }}
-              >
-                <div
-                  style={{
-                    width: 36, height: 36, borderRadius: 10,
-                    background: C.accentDim,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {m === 'scratch' ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                    </svg>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                      <path d="M16 3.13a4 4 0 010 7.75" />
-                    </svg>
-                  )}
-                </div>
-                {m === 'scratch' ? t('aithumbs.tab.scratch') : t('aithumbs.tab.swap')}
-              </button>
-            ))}
-          </div>
-
-          {/* ── 2. "Need an idea?" button + idea chips ────── */}
-          <button
-            onClick={handleGetIdeas}
-            disabled={suggestIdeas.isPending}
-            onMouseEnter={(e) => { if (!suggestIdeas.isPending) e.currentTarget.style.borderColor = C.accent + '60'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px', borderRadius: 10,
-              border: `1px solid ${C.border}`, background: 'transparent',
-              color: C.sub, cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
-              fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s ease',
-              fontSize: 13, fontWeight: 600,
-              opacity: suggestIdeas.isPending ? 0.6 : 1,
-            }}
-          >
-            {suggestIdeas.isPending ? (
-              <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}>
-                <circle cx="7" cy="7" r="5" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
-                <path d="M7 2a5 5 0 013.54 1.46" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            )}
-            {suggestIdeas.isPending ? t('aithumbs.generatingIdeas') : t('aithumbs.suggestIdea')}
-          </button>
-
-          {/* AI idea chips */}
-          {aiIdeas.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {aiIdeas.map((idea, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setPrompt(idea); setAiIdeas([]); }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.accent + '30'; }}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: 8,
-                    border: `1px solid ${C.accent}30`,
-                    background: C.accentDim,
-                    color: C.text,
-                    fontSize: 12,
-                    lineHeight: 1.4,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    transition: 'all 0.15s ease',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                  title={idea}
-                >
-                  {idea.length > 80 ? idea.slice(0, 80) + '...' : idea}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* ── 3. Prompt section ──────────────────────────── */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                {t('aithumbs.prompt.label')} <span style={{ color: C.accent }}>*</span>
-              </span>
-              <span style={{ fontSize: 11, color: prompt.length > 900 ? C.red : C.dim }}>
-                {prompt.length}/1000
-              </span>
-            </div>
-
-            {/* Action icons row */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-              {/* YouTube */}
-              <SmallIconBtn
-                C={C}
-                active={!!ytTitle}
-                onClick={() => {
-                  const url = window.prompt(t('aithumbs.ytUrl.prompt'));
-                  if (url) handleYtUrl(url);
-                }}
-                title={t('aithumbs.ytUrl.title')}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
-                </svg>
-              </SmallIconBtn>
-
-              {/* Upload */}
-              <SmallIconBtn
-                C={C}
-                active={!!uploadedPhoto}
-                onClick={() => fileInputRef.current?.click()}
-                title={t('aithumbs.upload.title')}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </SmallIconBtn>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
-
-              {/* My Photos placeholder */}
-              <SmallIconBtn C={C} active={false} onClick={() => toast.info(t('aithumbs.toast.galleryComingSoon'))} title={t('aithumbs.myPhotos')}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                </svg>
-              </SmallIconBtn>
-
-              {/* Voice */}
-              <SmallIconBtn
-                C={C}
-                active={isListening}
-                danger={isListening}
-                onClick={toggleVoice}
-                title={t('aithumbs.voice.title')}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                  <path d="M19 10v2a7 7 0 01-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
-                </svg>
-              </SmallIconBtn>
-            </div>
-
-            <textarea
-              className="tf-aithumbs-prompt"
-              value={prompt}
-              onChange={(e) => { if (e.target.value.length <= 1000) setPrompt(e.target.value); }}
-              placeholder={t('aithumbs.prompt.placeholder')}
-              rows={4}
-              style={{
-                width: '100%', minHeight: 90, padding: 14,
-                borderRadius: 12, border: `1px solid ${C.border}`,
-                background: C.surface, color: C.text,
-                fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
-                outline: 'none', transition: 'border-color 0.2s ease',
-                boxSizing: 'border-box', lineHeight: 1.5,
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-            />
-          </div>
-
-          {/* YouTube title chip */}
-          {ytTitle && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 12px', borderRadius: 10,
-              background: C.accentDim, border: `1px solid ${C.accent}20`,
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round">
-                <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z" />
-                <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-              </svg>
-              <span style={{ fontSize: 12, color: C.accent, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {ytTitle}
-              </span>
-              <button
-                onClick={() => { setYtUrl(''); setYtTitle(null); }}
-                style={{ width: 20, height: 20, borderRadius: 10, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Uploaded photo preview */}
-          {uploadedPhoto && (
-            <div style={{ position: 'relative' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={uploadedPhoto} alt="Uploaded reference" style={{ width: '100%', maxHeight: 100, objectFit: 'cover', borderRadius: 10, display: 'block', border: `1px solid ${C.border}` }} />
-              <button
-                onClick={() => setUploadedPhoto(null)}
-                style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 12, border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div style={{ height: 1, background: C.border }} />
-
-          {/* Count & Format row */}
-          <div style={{ display: 'flex', gap: 16 }}>
-            {/* Count */}
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                {t('aithumbs.section.count')}
-              </span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {COUNT_OPTIONS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCount(c as 1 | 2 | 3)}
-                    style={{
-                      position: 'relative', width: 40, height: 36, borderRadius: 8,
-                      border: `1px solid ${count === c ? C.accent : C.border}`,
-                      background: count === c ? C.accentDim : 'transparent',
-                      color: count === c ? C.accent : C.sub,
-                      fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none', padding: 0,
-                    }}
-                  >
-                    {c}
-                    {c > 1 && plan === 'FREE' && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
-                        PRO
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Format */}
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                {t('aithumbs.section.format')}
-              </span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {FORMAT_OPTIONS.map((f) => (
-                  <button
-                    key={f.id}
-                    onClick={() => setFormat(f.id)}
-                    style={{
-                      position: 'relative', padding: '7px 14px', borderRadius: 8,
-                      border: `1px solid ${format === f.id ? C.accent : C.border}`,
-                      background: format === f.id ? C.accentDim : 'transparent',
-                      color: format === f.id ? C.accent : C.sub,
-                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
-                    }}
-                  >
-                    {f.icon} {f.id}
-                    {f.pro && plan === 'FREE' && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
-                        PRO
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Credit cost */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: C.accentDim }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-            <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
-              {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
-            </span>
-          </div>
-
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
-
-          {/* ── 5. CTA Button ──────────────────────────────── */}
-          <div className="tf-aithumbs-generate-wrap">
-          <button
-            onClick={handleGenerate}
-            disabled={disabled}
-            aria-busy={isLoading || undefined}
-            onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.boxShadow = `0 6px 28px ${C.accent}40`; }}
-            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = disabled ? 'none' : `0 4px 20px ${C.accent}30`; }}
-            style={{
-              width: '100%', padding: '14px 0', borderRadius: 12,
-              background: disabled ? C.border : `linear-gradient(135deg, ${C.accent}, ${C.accent}cc)`,
-              color: disabled ? C.dim : '#fff',
-              fontSize: 15, fontWeight: 700, border: 'none',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: disabled ? 'none' : `0 4px 20px ${C.accent}30`,
-              transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none', flexShrink: 0,
-            }}
-          >
-            {isLoading && (
-              <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: 'spin 1s linear infinite' }}>
-                <circle cx="9" cy="9" r="7" stroke="rgba(255,255,255,.2)" strokeWidth="2" fill="none" />
-                <path d="M9 2a7 7 0 015.2 2.33" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-            )}
-            {isLoading ? t('aithumbs.generating') : t('aithumbs.createMagic')}
-          </button>
-
-          {/* Upgrade prompt */}
-          {!canUseAI && (
-            <a
-              href="/billing"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                padding: '10px 16px', borderRadius: 12,
-                background: C.accentDim, border: `1px solid ${C.accent}26`,
-                color: C.accent, fontSize: 13, fontWeight: 600,
-                textDecoration: 'none', textAlign: 'center', transition: 'all 0.2s ease',
-              }}
-            >
-              {t('aithumbs.upgrade')}
-            </a>
-          )}
-          </div>
-        </div>
-
-        {/* RIGHT PANEL (flex) */}
-        <div
-          className="tf-aithumbs-right"
-          style={{
-            flex: 1, minWidth: 0,
-            display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', padding: 20,
-          }}
-        >
-          {/* ── Header: Tab switcher / Preview pill + actions ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
-            {isGenerating || (selectedImage && showResult) ? (
-              <>
-                {/* Back button to return to tabs */}
-                {selectedImage && showResult && !isGenerating && (
-                  <button
-                    onClick={() => setShowResult(false)}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                      padding: '5px 12px', borderRadius: 8,
-                      border: `1px solid ${C.border}`, background: 'transparent',
-                      color: C.sub, fontSize: 12, fontWeight: 600,
-                      cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                      outline: 'none',
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                    {t('aithumbs.back')}
-                  </button>
-                )}
-                <span
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '5px 14px', borderRadius: 20,
-                    background: C.accentDim, border: `1px solid ${C.accent}1a`,
-                    fontSize: 11, fontWeight: 700, color: C.accent,
-                    textTransform: 'uppercase', letterSpacing: 1,
-                  }}
-                >
-                  {t('aithumbs.preview')} {format}
-                </span>
-
-                <div style={{ flex: 1 }} />
-
-                {selectedImage && !isLoading && (
-                  <div className="tf-aithumbs-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <ActionPill
-                      C={C}
-                      label={t('aithumbs.enhance')}
-                      icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" /></svg>}
-                      onClick={handleEnhance}
-                      loading={editMutation.isPending}
-                    />
-                    <ActionPill
-                      C={C}
-                      label={t('aithumbs.regenerate')}
-                      icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>}
-                      onClick={handleRegenerate}
-                    />
-                    <ActionPill
-                      C={C}
-                      label={t('aithumbs.action.download')}
-                      icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
-                      onClick={() => selectedImage && handleDownload(selectedImage)}
-                      accent
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              /* Tab switcher for How it works / History */
-              <>
-                <div className="tf-aithumbs-tabs" style={{ display: 'flex', gap: 6 }}>
-                  {([
-                    { id: 'howto' as const, label: t('aithumbs.tab.howItWorks'), icon: '\uD83C\uDFAC' },
-                    { id: 'history' as const, label: `${t('aithumbs.tab.history')}${history.length > 0 ? ` (${history.length})` : ''}`, icon: '\uD83D\uDCC1' },
-                  ] as const).map((t2) => (
-                    <button
-                      key={t2.id}
-                      onClick={() => setRightTab(t2.id)}
-                      onMouseEnter={(e) => { if (rightTab !== t2.id) e.currentTarget.style.borderColor = C.borderActive; }}
-                      onMouseLeave={(e) => { if (rightTab !== t2.id) e.currentTarget.style.borderColor = C.border; }}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '6px 14px', borderRadius: 8,
-                        border: `1px solid ${rightTab === t2.id ? C.accent : C.border}`,
-                        background: rightTab === t2.id ? C.accentDim : 'transparent',
-                        color: rightTab === t2.id ? C.accent : C.sub,
-                        fontSize: 12, fontWeight: 600,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                        outline: 'none',
-                      }}
-                    >
-                      <span style={{ fontSize: 14, lineHeight: 1 }}>{t2.icon}</span>
-                      {t2.label}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ flex: 1 }} />
-              </>
-            )}
-          </div>
-
-          {/* ── Preview / Content area ────────────────────── */}
-          <div
-            style={{
-              flex: 1, borderRadius: 12, background: C.card,
-              border: `1px solid ${C.border}`,
-              display: 'flex', flexDirection: 'column',
-              overflow: 'hidden', minHeight: 0,
-            }}
-          >
-            {isGenerating ? (
-              /* ── Loading animation with progress ──────── */
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, position: 'relative' }}>
-                <div style={{
-                  width: 80, height: 80, borderRadius: 20,
-                  background: `linear-gradient(135deg, ${C.accent}33, ${C.accent}0d)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  animation: 'pulse-glow 2s ease-in-out infinite',
-                }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill={C.accent} opacity="0.8" />
-                  </svg>
-                </div>
-
-                <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>
-                  {t('aithumbs.generating')} {Math.round(progress)}%
-                </div>
-
-                {/* Progress bar with percentage */}
-                <div style={{ width: 240, height: 6, borderRadius: 3, background: C.border, overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%', borderRadius: 3,
-                    width: `${Math.round(progress)}%`,
-                    background: `linear-gradient(90deg, ${C.accent}, ${C.accent}cc)`,
-                    transition: 'width 0.3s ease',
-                  }} />
-                </div>
-
-                <div style={{ fontSize: 13, color: C.dim, maxWidth: 300, textAlign: 'center', lineHeight: 1.5 }}>
-                  {progress < 30 ? t('aithumbs.progress.composing')
-                    : progress < 60 ? t('aithumbs.progress.lighting')
-                    : progress < 90 ? t('aithumbs.progress.optimizing')
-                    : t('aithumbs.progress.finalizing')}
-                </div>
-              </div>
-            ) : selectedImage && showResult ? (
-              /* ── Generated result with blur reveal ──── */
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                {/* Main image */}
-                <div style={{ padding: 16, flex: 1 }}>
-                  <div style={{
-                    width: '100%',
-                    aspectRatio: format === '16:9' ? '16/9' : '9/16',
-                    maxHeight: '60vh',
-                    position: 'relative', overflow: 'hidden', borderRadius: 12,
-                    background: C.bg,
-                    boxShadow: `0 0 20px ${C.accent}15, 0 4px 16px rgba(0,0,0,0.3)`,
-                    margin: '0 auto',
-                  }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={selectedImage.url}
-                      alt={selectedImage.prompt}
-                      className="thumbnail-reveal-img"
-                      style={{
-                        width: '100%', height: '100%', objectFit: 'contain', display: 'block',
-                        filter: imageRevealed ? 'blur(0px)' : 'blur(20px)',
-                        transform: imageRevealed ? 'scale(1)' : 'scale(1.05)',
-                        transition: 'filter 0.8s ease-out, transform 0.8s ease-out',
-                      }}
-                      onLoad={() => setImageRevealed(true)}
-                    />
-                  </div>
-                </div>
-
-                {/* ── CTR Score section ───────────────────── */}
-                <div className="tf-aithumbs-ctr" style={{ padding: '0 16px 16px' }}>
-                  {isAnalyzing ? (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '12px 16px', borderRadius: 12,
-                      background: C.surface, border: `1px solid ${C.border}`,
-                    }}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" style={{ animation: 'spin 1s linear infinite' }}>
-                        <circle cx="8" cy="8" r="6" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
-                        <path d="M8 2a6 6 0 014.24 1.76" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                      </svg>
-                      <span style={{ fontSize: 13, color: C.sub, fontWeight: 500 }}>{t('aithumbs.ctr.analyzing')}</span>
-                    </div>
-                  ) : ctrAnalysis ? (
-                    <div
-                      style={{
-                        borderRadius: 12, border: `1px solid ${C.border}`,
-                        background: C.surface, overflow: 'hidden',
-                      }}
-                    >
-                      {/* CTR header row */}
-                      <button
-                        onClick={() => setCtrExpanded(!ctrExpanded)}
-                        style={{
-                          width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '12px 16px', border: 'none', background: 'transparent',
-                          cursor: 'pointer', fontFamily: 'inherit', outline: 'none',
-                        }}
-                      >
-                        {/* Score circle */}
-                        <div style={{
-                          width: 48, height: 48, borderRadius: 24,
-                          background: `linear-gradient(135deg, ${scoreColor(animatedScore)}30, ${scoreColor(animatedScore)}10)`,
-                          border: `2px solid ${scoreColor(animatedScore)}60`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
-                        }}>
-                          <span style={{ fontSize: 18, fontWeight: 800, color: scoreColor(animatedScore) }}>
-                            {animatedScore.toFixed(1)}
-                          </span>
-                        </div>
-
-                        <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
-                            {t('aithumbs.ctr.score')}
-                          </div>
-                          <div style={{ fontSize: 13, color: C.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {ctrAnalysis.summary}
-                          </div>
-                        </div>
-
-                        <svg
-                          width="16" height="16" viewBox="0 0 24 24" fill="none"
-                          stroke={C.sub} strokeWidth="2" strokeLinecap="round"
-                          style={{ flexShrink: 0, transition: 'transform 0.2s ease', transform: ctrExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        >
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                      </button>
-
-                      {/* Expanded analytics panel */}
-                      {ctrExpanded && (
-                        <div style={{ borderTop: `1px solid ${C.border}` }}>
-                          {/* Tab bar */}
-                          <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}` }}>
-                            {([
-                              { id: 'scores' as const, label: t('aithumbs.ctr.tab.scores') },
-                              { id: 'strengths' as const, label: t('aithumbs.ctr.tab.strengths') },
-                              { id: 'improve' as const, label: `${t('aithumbs.ctr.tab.improve')}${ctrAnalysis.improvements.length ? ` (${ctrAnalysis.improvements.length})` : ''}` },
-                              { id: 'titles' as const, label: t('aithumbs.ctr.tab.titles') },
-                            ]).map((at) => (
-                              <button
-                                key={at.id}
-                                onClick={() => setAnalyticsTab(at.id)}
-                                style={{
-                                  flex: 1, padding: '10px 8px', border: 'none',
-                                  background: 'transparent', cursor: 'pointer',
-                                  fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
-                                  textTransform: 'uppercase', letterSpacing: '0.05em',
-                                  color: analyticsTab === at.id ? C.accent : C.dim,
-                                  borderBottom: analyticsTab === at.id ? `2px solid ${C.accent}` : '2px solid transparent',
-                                  transition: 'all 0.15s ease', outline: 'none',
-                                }}
-                              >
-                                {at.label}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Tab content */}
-                          <div style={{ padding: 16 }}>
-                            {analyticsTab === 'scores' && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {(['emotion', 'contrast', 'composition', 'clickability'] as const).map((key) => {
-                                  const val = ctrAnalysis.scores[key];
-                                  return (
-                                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                      <span style={{ width: 90, fontSize: 12, fontWeight: 600, color: C.sub, textTransform: 'capitalize' }}>
-                                        {key}
-                                      </span>
-                                      <div style={{ flex: 1, height: 6, borderRadius: 3, background: C.border, overflow: 'hidden' }}>
-                                        <div style={{ width: `${val * 10}%`, height: '100%', borderRadius: 3, background: scoreColor(val), transition: 'width 0.5s ease' }} />
-                                      </div>
-                                      <span style={{ width: 28, fontSize: 12, fontWeight: 700, color: scoreColor(val), textAlign: 'right' }}>
-                                        {val}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {analyticsTab === 'strengths' && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                {ctrAnalysis.strengths.map((s, i) => (
-                                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{ color: C.green, fontSize: 14, lineHeight: 1.5, flexShrink: 0 }}>+</span>
-                                    <span style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>{s}</span>
-                                  </div>
-                                ))}
-                                {ctrAnalysis.strengths.length === 0 && (
-                                  <span style={{ fontSize: 13, color: C.dim }}>{t('aithumbs.ctr.noStrengths')}</span>
-                                )}
-                              </div>
-                            )}
-
-                            {analyticsTab === 'improve' && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                {ctrAnalysis.improvements.map((s, i) => (
-                                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{ color: C.orange, fontSize: 14, lineHeight: 1.5, flexShrink: 0 }}>!</span>
-                                    <span style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>{s}</span>
-                                  </div>
-                                ))}
-                                {ctrAnalysis.improvements.length === 0 && (
-                                  <span style={{ fontSize: 13, color: C.dim }}>{t('aithumbs.ctr.noImprovements')}</span>
-                                )}
-                              </div>
-                            )}
-
-                            {analyticsTab === 'titles' && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                {ctrAnalysis.titleSuggestions.map((ts, i) => (
-                                  <div
-                                    key={i}
-                                    style={{
-                                      padding: '10px 12px', borderRadius: 10,
-                                      border: `1px solid ${C.border}`, background: C.bg,
-                                    }}
-                                  >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                      <span style={{ fontSize: 14, fontWeight: 700, color: C.text, flex: 1 }}>
-                                        {ts.title}
-                                      </span>
-                                      <span style={{ fontSize: 11, fontWeight: 700, color: scoreColor(ts.score), background: `${scoreColor(ts.score)}15`, padding: '2px 8px', borderRadius: 10 }}>
-                                        {ts.score}/10
-                                      </span>
-                                      <button
-                                        onClick={() => handleCopyTitle(ts.title)}
-                                        style={{
-                                          width: 28, height: 28, borderRadius: 6,
-                                          border: `1px solid ${C.border}`, background: 'transparent',
-                                          color: C.sub, cursor: 'pointer',
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                          padding: 0, flexShrink: 0, transition: 'all 0.15s ease',
-                                        }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.sub; }}
-                                      >
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                          <rect x="9" y="9" width="13" height="13" rx="2" />
-                                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                    <span style={{ fontSize: 12, color: C.dim, lineHeight: 1.4 }}>{ts.reason}</span>
-                                  </div>
-                                ))}
-                                {ctrAnalysis.titleSuggestions.length === 0 && (
-                                  <span style={{ fontSize: 13, color: C.dim }}>{t('aithumbs.ctr.noTitles')}</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* History row */}
-                {history.length > 1 && (
-                  <div className="tf-aithumbs-history-strip" style={{ padding: '0 16px 16px' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                      {t('aithumbs.tab.history')} ({history.length})
-                    </span>
-                    <div className="tf-aithumbs-history-row tf-hscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                      {history.map((img) => {
-                        const isActive = selectedImage?.id === img.id;
-                        return (
-                          <button
-                            key={img.id}
-                            onClick={() => {
-                              setSelectedImage(img);
-                              setShowResult(true);
-                              setImageRevealed(true);
-                              setCtrAnalysis(null);
-                              analyzeMutation.mutate({ imageUrl: img.url, prompt: img.prompt });
-                            }}
-                            style={{
-                              padding: 0, width: 80, height: 45, flexShrink: 0,
-                              border: isActive ? `2px solid ${C.accent}` : `1px solid ${C.border}`,
-                              borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
-                              background: C.bg, outline: 'none', transition: 'all 0.2s ease',
-                            }}
-                          >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={img.url} alt={img.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : rightTab === 'howto' ? (
-              /* ── How it works tab ────────────────────────── */
-              <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
-                <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
-                  {t('aithumbs.howto.heading')}
-                </h2>
-                <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
-                  {t('aithumbs.howto.subheading')}
-                </p>
-
-                <div className="tf-aithumbs-steps" style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-                  gap: 16,
-                }}>
-                  {/* Step 1 — Describe */}
-                  <div style={{
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 14, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        {t('aithumbs.howto.step1.title')}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        {t('aithumbs.howto.step1.desc')}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 2 — Choose Style */}
-                  <div style={{
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 14, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        {t('aithumbs.howto.step2.title')}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        {t('aithumbs.howto.step2.desc')}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3 — Get Thumbnail */}
-                  <div style={{
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 14, overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      aspectRatio: '16/10', background: C.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                    </div>
-                    <div style={{ padding: 14 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                        {t('aithumbs.howto.step3.title')}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                        {t('aithumbs.howto.step3.desc')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Video placeholder */}
-                {/* Video tutorial and example prompts removed for cleaner UX */}
-              </div>
-            ) : (
-              /* ── History tab ─────────────────────────────── */
-              <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
-                {history.length === 0 ? (
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 40, minHeight: 300 }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 16, background: C.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                      </svg>
-                    </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                      {t('aithumbs.history.empty')}
-                    </h3>
-                    <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                      {t('aithumbs.history.emptyDesc')}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                      {t('aithumbs.history.generated')} ({history.length})
-                    </div>
-                    <div className="tf-aithumbs-history-grid" style={{
-                      display: 'grid',
-                      gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-                      gap: 12,
-                    }}>
-                      {history.map((img) => {
-                        const isActive = selectedImage?.id === img.id;
-                        return (
-                          <button
-                            key={img.id}
-                            onClick={() => {
-                              setSelectedImage(img);
-                              setShowResult(true);
-                              setImageRevealed(true);
-                              setCtrAnalysis(null);
-                              analyzeMutation.mutate({ imageUrl: img.url, prompt: img.prompt });
-                            }}
-                            style={{
-                              padding: 0, width: '100%', aspectRatio: '16/9',
-                              border: isActive ? `2px solid ${C.accent}` : `1px solid ${C.border}`,
-                              borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
-                              background: C.bg, outline: 'none', transition: 'all 0.2s ease',
-                            }}
-                          >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={img.url} alt={img.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* ── Premium banner ──────────────────────────── */}
-          {plan === 'FREE' && (
+          {/* Logo + Title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
             <div
-              className="tf-aithumbs-banner"
               style={{
-                marginTop: 16, padding: '14px 20px',
-                borderRadius: 12, border: `1px solid ${C.accent}33`,
-                background: `linear-gradient(135deg, ${C.accent}14, transparent)`,
-                display: 'flex', alignItems: 'center', gap: 16,
+                width: 32, height: 32, borderRadius: 8,
+                background: LIME_DIM,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                  {t('aithumbs.banner.title')}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
+              TubeForge AI Thumbnails
+            </span>
+          </div>
+
+          {/* My Works button */}
+          <button
+            onClick={() => setShowGallery(true)}
+            style={{
+              padding: '6px 14px', borderRadius: 8,
+              border: `1px solid rgba(255,255,255,0.08)`, background: 'transparent',
+              color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
+              display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+            </svg>
+            {t('aithumbs.myWorks')}
+          </button>
+
+          {/* Credits badge */}
+          <div
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '5px 12px', borderRadius: 20,
+              background: canUseAI ? LIME_DIM : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${canUseAI ? LIME + '26' : 'rgba(239,68,68,0.2)'}`,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? LIME : '#ef4444'} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            <span style={{ fontSize: 12, fontWeight: 700, color: canUseAI ? LIME : '#ef4444' }}>
+              {remainingAI}
+            </span>
+          </div>
+        </div>
+
+        {/* ═══ MAIN CONTENT ═══ */}
+        <div
+          style={{
+            flex: 1, display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: 0, overflow: 'hidden', minHeight: 0,
+          }}
+        >
+          {/* ═══ LEFT PANEL (Settings) ═══ */}
+          <div
+            style={{
+              width: isMobile ? '100%' : 380,
+              flexShrink: 0,
+              background: CARD_BG,
+              borderRight: isMobile ? 'none' : `1px solid rgba(255,255,255,0.06)`,
+              borderBottom: isMobile ? `1px solid rgba(255,255,255,0.06)` : 'none',
+              padding: 20,
+              display: 'flex', flexDirection: 'column', gap: 14,
+              overflowY: 'auto',
+              maxHeight: isMobile ? 'none' : '100%',
+            }}
+          >
+            {/* 1. Mode tabs */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['scratch', 'swap'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setTab(m)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '12px 14px', borderRadius: 12,
+                    background: tab === m ? SURFACE_BG : 'transparent',
+                    border: `1px solid ${tab === m ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'}`,
+                    color: tab === m ? '#fff' : 'rgba(255,255,255,0.4)',
+                    cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                    textTransform: 'uppercase', letterSpacing: 1,
+                    fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      background: LIME_DIM,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {m === 'scratch' ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
+                      </svg>
+                    )}
+                  </div>
+                  {m === 'scratch' ? t('aithumbs.tab.scratch') : t('aithumbs.tab.swap')}
+                </button>
+              ))}
+            </div>
+
+            {/* Face swap gallery (when swap tab active) */}
+            {tab === 'swap' && (
+              <div style={{
+                padding: 12, borderRadius: 10,
+                border: `1px solid rgba(255,255,255,0.06)`,
+                background: SURFACE_BG,
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                  {t('aithumbs.myPhotos')}
                 </div>
-                <div style={{ fontSize: 12, color: C.sub }}>
-                  {t('aithumbs.banner.desc')}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {uploadedPhoto ? (
+                    <div style={{ position: 'relative', width: 56, height: 56 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={uploadedPhoto} alt="Face" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${LIME}` }} />
+                      <button
+                        onClick={() => setUploadedPhoto(null)}
+                        style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 9, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontSize: 10 }}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                      </button>
+                    </div>
+                  ) : null}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      width: 56, height: 56, borderRadius: 10,
+                      border: `1px dashed rgba(255,255,255,0.15)`,
+                      background: 'transparent', color: 'rgba(255,255,255,0.3)',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s ease', padding: 0,
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                  </button>
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
+              </div>
+            )}
+
+            {/* 2. Prompt section */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
+                  {t('aithumbs.prompt.label')} <span style={{ color: LIME }}>*</span>
+                </span>
+                <span style={{ fontSize: 11, color: prompt.length > 900 ? '#ef4444' : 'rgba(255,255,255,0.2)' }}>
+                  {prompt.length}/1000
+                </span>
+              </div>
+
+              <textarea
+                value={prompt}
+                onChange={(e) => { if (e.target.value.length <= 1000) setPrompt(e.target.value); }}
+                placeholder={t('aithumbs.prompt.placeholder')}
+                rows={4}
+                style={{
+                  width: '100%', minHeight: 90, padding: 14,
+                  borderRadius: 12, border: `1px solid rgba(255,255,255,0.08)`,
+                  background: SURFACE_BG, color: '#fff',
+                  fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
+                  outline: 'none', transition: 'border-color 0.2s ease',
+                  boxSizing: 'border-box', lineHeight: 1.5,
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = LIME + '60'; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              />
+
+              {/* Action icons row */}
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                {/* YouTube link */}
+                <SmallIconBtn
+                  active={!!ytTitle}
+                  onClick={() => {
+                    const url = window.prompt(t('aithumbs.ytUrl.prompt'));
+                    if (url) handleYtUrl(url);
+                  }}
+                  title={t('aithumbs.ytUrl.title')}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                  </svg>
+                </SmallIconBtn>
+
+                {/* Upload image */}
+                <SmallIconBtn
+                  active={!!uploadedPhoto}
+                  onClick={() => fileInputRef.current?.click()}
+                  title={t('aithumbs.upload.title')}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                </SmallIconBtn>
+                {tab !== 'swap' && (
+                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
+                )}
+
+                {/* Voice input */}
+                <SmallIconBtn
+                  active={isListening}
+                  danger={isListening}
+                  onClick={toggleVoice}
+                  title={t('aithumbs.voice.title')}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+                    <path d="M19 10v2a7 7 0 01-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                    <line x1="8" y1="23" x2="16" y2="23" />
+                  </svg>
+                </SmallIconBtn>
+              </div>
+            </div>
+
+            {/* YouTube title chip */}
+            {ytTitle && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', borderRadius: 10,
+                background: LIME_DIM, border: `1px solid ${LIME}20`,
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round">
+                  <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z" />
+                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                </svg>
+                <span style={{ fontSize: 12, color: LIME, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {ytTitle}
+                </span>
+                <button
+                  onClick={() => { setYtUrl(''); setYtTitle(null); }}
+                  style={{ width: 20, height: 20, borderRadius: 10, border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* 3. "Need an idea?" button + AI idea chips */}
+            <button
+              onClick={handleGetIdeas}
+              disabled={suggestIdeas.isPending}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', borderRadius: 10,
+                border: `1px solid rgba(255,255,255,0.06)`, background: 'transparent',
+                color: 'rgba(255,255,255,0.5)', cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
+                fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s ease',
+                fontSize: 13, fontWeight: 600,
+                opacity: suggestIdeas.isPending ? 0.6 : 1,
+              }}
+            >
+              {suggestIdeas.isPending ? (
+                <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'ait-spin 1s linear infinite', flexShrink: 0 }}>
+                  <circle cx="7" cy="7" r="5" stroke={LIME} strokeWidth="1.5" fill="none" opacity="0.3" />
+                  <path d="M7 2a5 5 0 013.54 1.46" stroke={LIME} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              )}
+              {suggestIdeas.isPending ? t('aithumbs.generatingIdeas') : t('aithumbs.suggestIdea')}
+            </button>
+
+            {aiIdeas.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {aiIdeas.map((idea, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setPrompt(idea); setAiIdeas([]); }}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: `1px solid ${LIME}30`,
+                      background: LIME_DIM,
+                      color: '#fff',
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      transition: 'all 0.15s ease',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={idea}
+                  >
+                    {idea.length > 80 ? idea.slice(0, 80) + '...' : idea}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+            {/* 4. Style chips */}
+            <div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                {t('aithumbs.section.style')}
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {STYLE_KEYS.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setStyle(s.id)}
+                    style={chipStyle(style === s.id)}
+                  >
+                    <span>{s.icon}</span> {t(s.key)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Count & Format row */}
+            <div style={{ display: 'flex', gap: 16 }}>
+              {/* Count */}
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                  {t('aithumbs.section.count')}
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {COUNT_OPTIONS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCount(c as 1 | 2 | 3)}
+                      style={{
+                        position: 'relative', width: 40, height: 36, borderRadius: 8,
+                        border: `1px solid ${count === c ? LIME : 'rgba(255,255,255,0.08)'}`,
+                        background: count === c ? LIME_DIM : 'transparent',
+                        color: count === c ? LIME : 'rgba(255,255,255,0.4)',
+                        fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none', padding: 0,
+                      }}
+                    >
+                      {c}
+                      {c > 1 && plan === 'FREE' && (
+                        <span style={{ fontSize: 8, fontWeight: 800, color: LIME, background: LIME_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                          PRO
+                        </span>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Format */}
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                  {t('aithumbs.section.format')}
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {FORMAT_OPTIONS.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setFormat(f.id)}
+                      style={{
+                        position: 'relative', padding: '7px 14px', borderRadius: 8,
+                        border: `1px solid ${format === f.id ? LIME : 'rgba(255,255,255,0.08)'}`,
+                        background: format === f.id ? LIME_DIM : 'transparent',
+                        color: format === f.id ? LIME : 'rgba(255,255,255,0.4)',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
+                      }}
+                    >
+                      {f.id === '16:9' ? '\uD83D\uDDA5' : '\uD83D\uDCF1'} {f.id}
+                      {f.pro && plan === 'FREE' && (
+                        <span style={{ fontSize: 8, fontWeight: 800, color: LIME, background: LIME_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                          PRO
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Credit cost */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: LIME_DIM }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="2.5" strokeLinecap="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span style={{ fontSize: 12, color: LIME, fontWeight: 600 }}>
+                {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
+              </span>
+            </div>
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* 5. CTA Button */}
+            <button
+              onClick={handleGenerate}
+              disabled={disabled}
+              aria-busy={isLoading || undefined}
+              style={{
+                width: '100%', padding: '14px 0', borderRadius: 12,
+                background: disabled ? 'rgba(255,255,255,0.06)' : `linear-gradient(135deg, ${LIME}, #8AE600)`,
+                color: disabled ? 'rgba(255,255,255,0.2)' : '#000',
+                fontSize: 15, fontWeight: 700, border: 'none',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: disabled ? 'none' : `0 4px 20px ${LIME_GLOW}`,
+                transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none', flexShrink: 0,
+              }}
+            >
+              {isLoading && (
+                <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: 'ait-spin 1s linear infinite' }}>
+                  <circle cx="9" cy="9" r="7" stroke="rgba(0,0,0,.2)" strokeWidth="2" fill="none" />
+                  <path d="M9 2a7 7 0 015.2 2.33" stroke="#000" strokeWidth="2" strokeLinecap="round" fill="none" />
+                </svg>
+              )}
+              {isLoading ? t('aithumbs.generating') : t('aithumbs.createMagic')}
+            </button>
+
+            {!canUseAI && (
               <a
                 href="/billing"
                 style={{
-                  padding: '8px 20px', borderRadius: 8,
-                  background: C.accent, color: '#fff',
-                  fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                  transition: 'all 0.2s ease',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '10px 16px', borderRadius: 12,
+                  background: LIME_DIM, border: `1px solid ${LIME}26`,
+                  color: LIME, fontSize: 13, fontWeight: 600,
+                  textDecoration: 'none', textAlign: 'center', transition: 'all 0.2s ease',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
               >
-                {t('aithumbs.banner.cta')}
+                {t('aithumbs.upgrade')}
               </a>
+            )}
+          </div>
+
+          {/* ═══ RIGHT PANEL (Result / Preview) ═══ */}
+          <div
+            style={{
+              flex: 1, minWidth: 0,
+              display: 'flex', flexDirection: 'column',
+              overflow: 'hidden', padding: 20,
+            }}
+          >
+            {/* Preview badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
+              <span
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px', borderRadius: 20,
+                  background: LIME_DIM, border: `1px solid ${LIME}1a`,
+                  fontSize: 11, fontWeight: 700, color: LIME,
+                  textTransform: 'uppercase', letterSpacing: 1,
+                }}
+              >
+                {t('aithumbs.preview')} {format}
+              </span>
+              <div style={{ flex: 1 }} />
+
+              {/* Post-generation actions */}
+              {selectedImage && !isGenerating && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <ActionPill
+                    label={t('aithumbs.action.download')}
+                    icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
+                    onClick={() => selectedImage && handleDownload(selectedImage)}
+                    accent
+                  />
+                  <ActionPill
+                    label={t('aithumbs.regenerate')}
+                    icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>}
+                    onClick={handleRegenerate}
+                  />
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Preview area */}
+            <div
+              style={{
+                flex: 1, borderRadius: 16, background: '#0A0A0A',
+                border: `1px solid rgba(255,255,255,0.06)`,
+                display: 'flex', flexDirection: 'column',
+                overflow: 'hidden', minHeight: 0,
+                position: 'relative',
+              }}
+            >
+              {isGenerating ? (
+                /* ═══ SCANNER ANIMATION ═══ */
+                <div style={{
+                  flex: 1, position: 'relative', overflow: 'hidden',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: '#080808',
+                }}>
+                  {/* Vertical scanning bar */}
+                  <div
+                    className="ait-scanner-bar"
+                    style={{
+                      position: 'absolute',
+                      top: 0, bottom: 0,
+                      width: 3,
+                      background: LIME,
+                      boxShadow: `0 0 30px 10px ${LIME_GLOW}, 0 0 60px 20px ${LIME_GLOW}`,
+                      animation: 'ait-scan 4s ease-in-out infinite',
+                      zIndex: 2,
+                    }}
+                  />
+
+                  {/* Horizontal lens flare lines */}
+                  <div
+                    className="ait-flare-top"
+                    style={{
+                      position: 'absolute',
+                      top: 0, left: 0, right: 0,
+                      height: 1,
+                      background: `linear-gradient(90deg, transparent 20%, ${LIME}40 50%, transparent 80%)`,
+                      boxShadow: `0 0 15px 3px ${LIME_GLOW}`,
+                      animation: 'ait-flare 3s ease-in-out infinite',
+                      zIndex: 1,
+                    }}
+                  />
+                  <div
+                    className="ait-flare-bottom"
+                    style={{
+                      position: 'absolute',
+                      bottom: 0, left: 0, right: 0,
+                      height: 1,
+                      background: `linear-gradient(90deg, transparent 20%, ${LIME}40 50%, transparent 80%)`,
+                      boxShadow: `0 0 15px 3px ${LIME_GLOW}`,
+                      animation: 'ait-flare 3s ease-in-out infinite reverse',
+                      zIndex: 1,
+                    }}
+                  />
+
+                  {/* Center content: percentage + stage */}
+                  <div style={{
+                    zIndex: 3, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 12,
+                  }}>
+                    <div style={{
+                      fontSize: 72, fontWeight: 800, color: '#fff',
+                      textShadow: `0 0 40px ${LIME_GLOW}, 0 0 80px ${LIME_GLOW}`,
+                      lineHeight: 1,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {progressPct}%
+                    </div>
+                    <div style={{
+                      fontSize: 14, fontWeight: 600,
+                      color: 'rgba(255,255,255,0.6)',
+                      textAlign: 'center',
+                    }}>
+                      {getProgressStage(progress, t)}
+                    </div>
+                  </div>
+
+                  {/* Subtle grid overlay */}
+                  <div style={{
+                    position: 'absolute', inset: 0, zIndex: 0,
+                    backgroundImage: `
+                      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '40px 40px',
+                  }} />
+                </div>
+              ) : selectedImage ? (
+                /* ═══ Generated result ═══ */
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ padding: 16, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{
+                      width: '100%',
+                      aspectRatio: format === '16:9' ? '16/9' : '9/16',
+                      maxHeight: '65vh',
+                      position: 'relative', overflow: 'hidden', borderRadius: 12,
+                      background: '#000',
+                      boxShadow: `0 0 20px ${LIME}10, 0 4px 16px rgba(0,0,0,0.3)`,
+                      margin: '0 auto',
+                    }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selectedImage.url}
+                        alt={selectedImage.prompt}
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                          filter: imageRevealed ? 'blur(0px)' : 'blur(20px)',
+                          transform: imageRevealed ? 'scale(1)' : 'scale(1.05)',
+                          transition: 'filter 0.8s ease-out, transform 0.8s ease-out',
+                        }}
+                        onLoad={() => setImageRevealed(true)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* History row */}
+                  {history.length > 1 && (
+                    <div style={{ padding: '0 16px 16px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                        {t('aithumbs.tab.history')} ({history.length})
+                      </span>
+                      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                        {history.map((img) => {
+                          const isActive = selectedImage?.id === img.id;
+                          return (
+                            <button
+                              key={img.id}
+                              onClick={() => {
+                                setSelectedImage(img);
+                                setImageRevealed(true);
+                              }}
+                              style={{
+                                padding: 0, width: 80, height: 45, flexShrink: 0,
+                                border: isActive ? `2px solid ${LIME}` : `1px solid rgba(255,255,255,0.08)`,
+                                borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
+                                background: '#000', outline: 'none', transition: 'all 0.2s ease',
+                              }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={img.url} alt={img.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ═══ Empty placeholder ═══ */
+                <div style={{
+                  flex: 1, display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  gap: 16, padding: 40,
+                }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: 20,
+                    background: LIME_DIM,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={LIME} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
+                      {t('aithumbs.empty.title')}
+                    </div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', maxWidth: 320, lineHeight: 1.5 }}>
+                      {t('aithumbs.empty.description')}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Premium banner */}
+            {plan === 'FREE' && (
+              <div
+                style={{
+                  marginTop: 16, padding: '14px 20px',
+                  borderRadius: 12, border: `1px solid ${LIME}33`,
+                  background: `linear-gradient(135deg, ${LIME}14, transparent)`,
+                  display: 'flex', alignItems: 'center', gap: 16,
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
+                    {t('aithumbs.banner.title')}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                    {t('aithumbs.banner.desc')}
+                  </div>
+                </div>
+                <a
+                  href="/billing"
+                  style={{
+                    padding: '8px 20px', borderRadius: 8,
+                    background: LIME, color: '#000',
+                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {t('aithumbs.banner.cta')}
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      </div>{/* end tool area */}
 
-      {/* CSS animations */}
+      {/* ═══ Gallery Modal ═══ */}
+      {showGallery && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowGallery(false); }}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: 900, maxHeight: '80vh',
+              background: CARD_BG, borderRadius: 20,
+              border: `1px solid rgba(255,255,255,0.08)`,
+              overflow: 'hidden', display: 'flex', flexDirection: 'column',
+            }}
+          >
+            {/* Modal header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', padding: '16px 20px',
+              borderBottom: `1px solid rgba(255,255,255,0.06)`,
+            }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', flex: 1 }}>
+                {t('aithumbs.myWorks')}
+              </span>
+              <button
+                onClick={() => setShowGallery(false)}
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: 'none',
+                  background: 'rgba(255,255,255,0.06)', color: '#fff',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 0,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Gallery grid */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              {galleryQuery.isLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'rgba(255,255,255,0.4)' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" style={{ animation: 'ait-spin 1s linear infinite', marginRight: 8 }}>
+                    <circle cx="10" cy="10" r="8" stroke={LIME} strokeWidth="1.5" fill="none" opacity="0.3" />
+                    <path d="M10 2a8 8 0 015.66 2.34" stroke={LIME} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  </svg>
+                  {t('aithumbs.generating')}
+                </div>
+              ) : galleryQuery.data?.items.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>
+                  {t('aithumbs.history.empty')}
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: 12,
+                }}>
+                  {galleryQuery.data?.items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedImage({
+                          id: item.id,
+                          url: item.imageUrl,
+                          prompt: item.prompt,
+                          style: (item.style as StyleId) || 'realistic',
+                        });
+                        setImageRevealed(true);
+                        setShowGallery(false);
+                      }}
+                      style={{
+                        padding: 0, width: '100%', aspectRatio: '16/9',
+                        border: `1px solid rgba(255,255,255,0.08)`,
+                        borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                        background: '#000', outline: 'none', transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.imageUrl} alt={item.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ CSS Animations ═══ */}
       <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+        @keyframes ait-scan {
+          0% { left: 0%; }
+          50% { left: calc(100% - 3px); }
+          100% { left: 0%; }
         }
-        @keyframes spin {
+        @keyframes ait-flare {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.8; }
+        }
+        @keyframes ait-spin {
           to { transform: rotate(360deg); }
         }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-        @keyframes pulse-glow {
-          0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 20px rgba(99,102,241,0.1); }
-          50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 40px rgba(99,102,241,0.2); }
+        @keyframes ait-pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px ${LIME_GLOW}; }
+          50% { box-shadow: 0 0 40px ${LIME_GLOW}; }
         }
       `}</style>
     </div>
@@ -1531,32 +1223,26 @@ export function AiThumbnailsPage() {
 
 /* ── Sub-components ─────────────────────────────────────────────────── */
 
-import type { Theme } from '@/lib/types';
-
 function SmallIconBtn({
-  C,
   active,
   danger,
   onClick,
   title,
   children,
 }: {
-  C: Theme;
   active: boolean;
   danger?: boolean;
   onClick: () => void;
   title: string;
   children: React.ReactNode;
 }) {
-  const borderColor = danger ? C.red : active ? C.accent + '66' : C.border;
-  const bg = danger ? C.red + '1f' : active ? C.accentDim : 'transparent';
-  const color = danger ? C.red : active ? C.accent : C.sub;
+  const borderColor = danger ? '#ef4444' : active ? LIME + '66' : 'rgba(255,255,255,0.08)';
+  const bg = danger ? 'rgba(239,68,68,0.12)' : active ? LIME_DIM : 'transparent';
+  const color = danger ? '#ef4444' : active ? LIME : 'rgba(255,255,255,0.4)';
   return (
     <button
       onClick={onClick}
       title={title}
-      onMouseEnter={(e) => { if (!active && !danger) e.currentTarget.style.borderColor = C.borderActive; }}
-      onMouseLeave={(e) => { if (!active && !danger) e.currentTarget.style.borderColor = C.border; }}
       style={{
         width: 34, height: 34, borderRadius: 8,
         border: `1px solid ${borderColor}`, background: bg, color,
@@ -1570,14 +1256,12 @@ function SmallIconBtn({
 }
 
 function ActionPill({
-  C,
   label,
   icon,
   onClick,
   accent,
   loading,
 }: {
-  C: Theme;
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
@@ -1588,24 +1272,12 @@ function ActionPill({
     <button
       onClick={onClick}
       disabled={loading}
-      onMouseEnter={(e) => {
-        if (!loading) {
-          e.currentTarget.style.borderColor = accent ? C.accent : C.borderActive;
-          if (!accent) e.currentTarget.style.background = C.surface;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!loading) {
-          e.currentTarget.style.borderColor = accent ? C.accent + '99' : C.border;
-          if (!accent) e.currentTarget.style.background = 'transparent';
-        }
-      }}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: '6px 14px', borderRadius: 8,
-        border: `1px solid ${accent ? C.accent + '99' : C.border}`,
-        background: accent ? C.accentDim : 'transparent',
-        color: accent ? C.accent : C.text,
+        border: `1px solid ${accent ? LIME + '99' : 'rgba(255,255,255,0.08)'}`,
+        background: accent ? LIME_DIM : 'transparent',
+        color: accent ? LIME : '#fff',
         fontSize: 12, fontWeight: 600,
         cursor: loading ? 'wait' : 'pointer',
         fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
@@ -1613,7 +1285,7 @@ function ActionPill({
       }}
     >
       {loading ? (
-        <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: 'spin 1s linear infinite' }}>
+        <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: 'ait-spin 1s linear infinite' }}>
           <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
           <path d="M6 2a4 4 0 012.83 1.17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
         </svg>
