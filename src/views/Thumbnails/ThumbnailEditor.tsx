@@ -26,17 +26,17 @@ import { toast } from '@/stores/useNotificationStore';
 export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const { step, tool, els, selIds, canvasBg, canvasBgImage, canvasBgGradient, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount, snapToGrid, showSafeZone } = useThumbnailStore(
+  const { step, tool, els, selIds, canvasBg, canvasBgImage, canvasBgGradient, drawing, drawPts, drawColor, drawSize, canvasW, canvasH, linePreview, guides, customGuides, zoom, panX, panY, contextMenu, resize, drag, historyCount, futureCount, snapToGrid } = useThumbnailStore(
     useShallow((s) => ({
       step: s.step, tool: s.tool, els: s.els, selIds: s.selIds, canvasBg: s.canvasBg,
       canvasBgImage: s.canvasBgImage,
       canvasBgGradient: s.canvasBgGradient,
       drawing: s.drawing, drawPts: s.drawPts, drawColor: s.drawColor, drawSize: s.drawSize,
       canvasW: s.canvasW, canvasH: s.canvasH, linePreview: s.linePreview, guides: s.guides,
+      customGuides: s.customGuides,
       zoom: s.zoom, panX: s.panX, panY: s.panY, contextMenu: s.contextMenu, resize: s.resize,
       drag: s.drag, historyCount: s.historyCount, futureCount: s.futureCount,
       snapToGrid: s.snapToGrid,
-      showSafeZone: s.showSafeZone,
     }))
   );
   const store = useThumbnailStore.getState;
@@ -158,15 +158,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     return () => window.removeEventListener('keydown', handler);
   }, [projectId]);
 
-  // Load snap-to-grid and safe zone preferences from localStorage
+  // Load snap-to-grid preference from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('tubeforge-snap-to-grid');
       if (saved !== null) store().setSnapToGrid(JSON.parse(saved));
-    } catch {}
-    try {
-      const savedSafe = localStorage.getItem('tubeforge-safe-zone');
-      if (savedSafe !== null) store().setShowSafeZone(JSON.parse(savedSafe));
     } catch {}
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -418,6 +414,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         if (Math.abs(dB - (other.y + other.h)) < snapThreshold) { ny = other.y + other.h - dragEl.h; gy.push(other.y + other.h); }
         // Center Y -> center Y
         if (Math.abs(dCy - oCy) < snapThreshold) { ny = oCy - dragEl.h / 2; gy.push(oCy); }
+      }
+      // Snap to custom user-placed guides
+      const cGuides = store().customGuides;
+      for (const cg of cGuides) {
+        if (cg.type === 'v') {
+          // Vertical guide — snap left/right/center X
+          if (Math.abs(nx - cg.position) < snapThreshold) { nx = cg.position; gx.push(cg.position); }
+          if (Math.abs(dR - cg.position) < snapThreshold) { nx = cg.position - dragEl.w; gx.push(cg.position); }
+          if (Math.abs(dCx - cg.position) < snapThreshold) { nx = cg.position - dragEl.w / 2; gx.push(cg.position); }
+        } else {
+          // Horizontal guide — snap top/bottom/center Y
+          if (Math.abs(ny - cg.position) < snapThreshold) { ny = cg.position; gy.push(cg.position); }
+          if (Math.abs(dB - cg.position) < snapThreshold) { ny = cg.position - dragEl.h; gy.push(cg.position); }
+          if (Math.abs(dCy - cg.position) < snapThreshold) { ny = cg.position - dragEl.h / 2; gy.push(cg.position); }
+        }
       }
       store().setGuides({ x: [...new Set(gx)], y: [...new Set(gy)] });
 
@@ -1239,31 +1250,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       );
     }
 
-    if (el.type === 'path') {
-      // Shape paths (pentagon, hexagon, etc.) have fill; freehand paths are stroke-only
-      const isShapePath = el.path?.includes('Z') && !el.strokeW;
-      const fillColor = isShapePath ? (el.color || '#ffffff') : 'none';
-      const strokeColor = isShapePath ? (el.borderColor || 'none') : (el.color || '#ffffff');
-      const sw = isShapePath ? (el.borderWidth || 0) : (el.strokeW || 3);
-      return (
+    if (el.type === 'path') return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
-        <path d={el.path} fill={fillColor} stroke={strokeColor} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity} />
+        <path d={el.path} fill="none" stroke={el.color} strokeWidth={el.strokeW} strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity} />
         {/* Invisible wider hit area for selection */}
-        <path d={el.path} fill="transparent" stroke="transparent" strokeWidth={Math.max(sw + 10, 14)} strokeLinecap="round" strokeLinejoin="round"
-          style={{ pointerEvents: isShapePath ? 'fill' : 'stroke', cursor: isSel ? 'move' : 'pointer' }}
+        <path d={el.path} fill="none" stroke="transparent" strokeWidth={Math.max((el.strokeW ?? 3) + 10, 14)} strokeLinecap="round" strokeLinejoin="round"
+          style={{ pointerEvents: 'stroke', cursor: isSel ? 'move' : 'pointer' }}
           onMouseDown={(e) => { e.stopPropagation(); store().setSelId(el.id); }} />
-        {isSel && (
-          <foreignObject x={el.x + el.w - 10} y={el.y - 10} width={24} height={24}>
-            <div
-              title={t('thumbs.editor.deleteTitle')}
-              onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().delEl(el.id); }}
-              style={{ width: 20, height: 20, background: '#e53935', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700, lineHeight: 1, boxShadow: '0 2px 6px rgba(0,0,0,.3)' }}
-            >&times;</div>
+        {isSel && deleteHandle && (
+          <foreignObject x={el.x + el.w - 10} y={el.y - 10} width={20} height={20}>
+            {deleteHandle}
           </foreignObject>
         )}
       </svg>
     );
-    }
 
     if (el.type === 'line' || el.type === 'arrow') return (
       <svg key={el.id} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox={`0 0 ${canvasW} ${canvasH}`}>
@@ -1597,6 +1597,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             {/* Smart alignment guides (purple) */}
             {guides.x.map((gx, i) => <div key={`gx-${i}`} style={{ position: 'absolute', left: gx / canvasW * 100 + '%', top: 0, bottom: 0, width: 1, background: '#6366f1', opacity: 0.85, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
             {guides.y.map((gy, i) => <div key={`gy-${i}`} style={{ position: 'absolute', top: gy / canvasH * 100 + '%', left: 0, right: 0, height: 1, background: '#6366f1', opacity: 0.85, pointerEvents: 'none', zIndex: Z_INDEX.GUIDES }} />)}
+            {/* Custom user-placed guides (magenta, draggable) */}
+            {customGuides.map((cg) => (
+              <CustomGuideLineView
+                key={cg.id}
+                guide={cg}
+                canvasW={canvasW}
+                canvasH={canvasH}
+                zoom={zoom}
+                C={C}
+              />
+            ))}
             {/* Smart spacing guides — equal distance indicators */}
             {spacingGuides.map((sg, i) => (
               <div key={`sg-${i}`} style={{ position: 'absolute', pointerEvents: 'none', zIndex: Z_INDEX.GUIDES, ...(sg.axis === 'h' ? { left: sg.x / canvasW * 100 + '%', top: sg.y / canvasH * 100 + '%', width: sg.length / canvasW * 100 + '%', height: 0, borderTop: '1px dashed #f59e0b', transform: 'translateY(-0.5px)' } : { left: sg.x / canvasW * 100 + '%', top: sg.y / canvasH * 100 + '%', height: sg.length / canvasH * 100 + '%', width: 0, borderLeft: '1px dashed #f59e0b', transform: 'translateX(-0.5px)' }) }}>
@@ -1612,24 +1623,6 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                   </pattern>
                 </defs>
                 <rect width={canvasW} height={canvasH} fill="url(#snapGrid20)" />
-              </svg>
-            )}
-            {/* Safe zone overlay — 10% inward from edges */}
-            {showSafeZone && (
-              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} viewBox={`0 0 ${canvasW} ${canvasH}`} preserveAspectRatio="none">
-                <rect
-                  x={canvasW * 0.1}
-                  y={canvasH * 0.1}
-                  width={canvasW * 0.8}
-                  height={canvasH * 0.8}
-                  fill="none"
-                  stroke="rgba(99,102,241,0.35)"
-                  strokeWidth="1.5"
-                  strokeDasharray="8 4"
-                  rx="2"
-                />
-                {/* Corner labels */}
-                <text x={canvasW * 0.1 + 6} y={canvasH * 0.1 - 4} fill="rgba(99,102,241,0.5)" fontSize="10" fontFamily="monospace" fontWeight="600">SAFE ZONE</text>
               </svg>
             )}
             {/* Selection rectangle */}
@@ -2147,15 +2140,6 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="3" x2="21" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
             V
           </button>
-          <div style={sepStyle} />
-          <button onClick={() => { const s = store(); const selected = s.els.filter((e) => selIds.includes(e.id)); if (selected.length < 2) return; s.pushHistory(); const maxW = Math.max(...selected.map((e) => e.w)); selIds.forEach((id) => s.updEl(id, { w: maxW })); }} title="Equal Width — resize all to widest" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="3" y2="18"/><line x1="21" y1="6" x2="21" y2="18"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="7 9 3 12 7 15"/><polyline points="17 9 21 12 17 15"/></svg>
-            =W
-          </button>
-          <button onClick={() => { const s = store(); const selected = s.els.filter((e) => selIds.includes(e.id)); if (selected.length < 2) return; s.pushHistory(); const maxH = Math.max(...selected.map((e) => e.h)); selIds.forEach((id) => s.updEl(id, { h: maxH })); }} title="Equal Height — resize all to tallest" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="6" y1="3" x2="18" y2="3"/><line x1="6" y1="21" x2="18" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/><polyline points="9 7 12 3 15 7"/><polyline points="9 17 12 21 15 17"/></svg>
-            =H
-          </button>
         </>
       )}
       {/* AI Auto Arrange */}
@@ -2305,6 +2289,112 @@ function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#333'; }}
         >Close Preview</button>
       </div>
+    </div>
+  );
+}
+
+/** Custom guide line — draggable magenta guide rendered on the canvas */
+function CustomGuideLineView({ guide, canvasW, canvasH, zoom, C }: {
+  guide: { id: string; type: 'h' | 'v'; position: number };
+  canvasW: number;
+  canvasH: number;
+  zoom: number;
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+}) {
+  const [dragging, setDragging] = useState(false);
+  const startRef = useRef({ clientVal: 0, pos: 0 });
+  const guideRef = useRef<HTMLDivElement>(null);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDragging(true);
+    startRef.current = {
+      clientVal: guide.type === 'h' ? e.clientY : e.clientX,
+      pos: guide.position,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [guide.type, guide.position]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging) return;
+    const delta = guide.type === 'h'
+      ? (e.clientY - startRef.current.clientVal) / zoom
+      : (e.clientX - startRef.current.clientVal) / zoom;
+    const newPos = Math.round(startRef.current.pos + delta);
+    const max = guide.type === 'h' ? canvasH : canvasW;
+    const clamped = Math.max(0, Math.min(max, newPos));
+    useThumbnailStore.getState().moveCustomGuide(guide.id, clamped);
+  }, [dragging, guide.type, guide.id, zoom, canvasW, canvasH]);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    setDragging(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  }, []);
+
+  const onDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    useThumbnailStore.getState().removeCustomGuide(guide.id);
+  }, [guide.id]);
+
+  const isH = guide.type === 'h';
+
+  return (
+    <div
+      ref={guideRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onDoubleClick={onDoubleClick}
+      title={`${isH ? 'H' : 'V'} Guide @ ${guide.position}px — drag to move, double-click to remove`}
+      style={{
+        position: 'absolute',
+        zIndex: Z_INDEX.GUIDES + 1,
+        ...(isH
+          ? {
+              top: (guide.position / canvasH) * 100 + '%',
+              left: 0,
+              right: 0,
+              height: 0,
+              borderTop: `1.5px ${dragging ? 'solid' : 'dashed'} #e040fb`,
+              cursor: 'ns-resize',
+              padding: '3px 0',
+              transform: 'translateY(-3.5px)',
+            }
+          : {
+              left: (guide.position / canvasW) * 100 + '%',
+              top: 0,
+              bottom: 0,
+              width: 0,
+              borderLeft: `1.5px ${dragging ? 'solid' : 'dashed'} #e040fb`,
+              cursor: 'ew-resize',
+              padding: '0 3px',
+              transform: 'translateX(-3.5px)',
+            }),
+        pointerEvents: 'auto',
+      }}
+    >
+      {/* Position label */}
+      <span style={{
+        position: 'absolute',
+        ...(isH
+          ? { left: 4, top: -14 }
+          : { top: 4, left: 4 }),
+        background: '#e040fb',
+        color: '#000',
+        fontSize: 9,
+        fontWeight: 700,
+        padding: '1px 4px',
+        borderRadius: 3,
+        whiteSpace: 'nowrap',
+        lineHeight: '14px',
+        fontFamily: "'JetBrains Mono', monospace",
+        pointerEvents: 'none',
+        opacity: dragging ? 1 : 0.7,
+      }}>
+        {guide.position}px
+      </span>
     </div>
   );
 }

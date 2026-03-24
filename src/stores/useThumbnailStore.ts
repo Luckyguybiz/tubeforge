@@ -60,8 +60,11 @@ interface ThumbnailState {
   canvasW: number;
   canvasH: number;
 
-  // Snap guides
+  // Snap guides (auto-generated during drag)
   guides: { x: number[]; y: number[] };
+
+  // Custom user-placed guides (magenta, draggable)
+  customGuides: Array<{ id: string; type: 'h' | 'v'; position: number }>;
 
   // Snap to grid
   snapToGrid: boolean;
@@ -141,6 +144,12 @@ interface ThumbnailState {
 
   // Guides
   setGuides: (g: { x: number[]; y: number[] }) => void;
+
+  // Custom user-placed guides
+  addCustomGuide: (type: 'h' | 'v') => void;
+  removeCustomGuide: (id: string) => void;
+  moveCustomGuide: (id: string, position: number) => void;
+  clearCustomGuides: () => void;
 
   // Element creators
   addText: () => void;
@@ -270,6 +279,9 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // Guides
   guides: { x: [], y: [] },
+
+  // Custom user-placed guides
+  customGuides: [],
 
   // Snap to grid
   snapToGrid: false,
@@ -568,6 +580,26 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
 
   // ===== Guides =====
   setGuides: (g) => set({ guides: g }),
+
+  // ===== Custom user-placed guides =====
+  addCustomGuide: (type) => {
+    const s = get();
+    const position = type === 'h' ? Math.round(s.canvasH / 2) : Math.round(s.canvasW / 2);
+    const guide = { id: uid(), type, position };
+    set({ customGuides: [...s.customGuides, guide] });
+  },
+
+  removeCustomGuide: (id) => {
+    set((s) => ({ customGuides: s.customGuides.filter((g) => g.id !== id) }));
+  },
+
+  moveCustomGuide: (id, position) => {
+    set((s) => ({
+      customGuides: s.customGuides.map((g) => (g.id === id ? { ...g, position } : g)),
+    }));
+  },
+
+  clearCustomGuides: () => set({ customGuides: [] }),
 
   // ===== Element creators =====
   addText: () => {
