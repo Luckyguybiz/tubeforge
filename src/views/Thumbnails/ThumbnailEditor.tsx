@@ -158,11 +158,15 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     return () => window.removeEventListener('keydown', handler);
   }, [projectId]);
 
-  // Load snap-to-grid preference from localStorage
+  // Load snap-to-grid and snap-to-pixel preferences from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('tubeforge-snap-to-grid');
       if (saved !== null) store().setSnapToGrid(JSON.parse(saved));
+    } catch {}
+    try {
+      const savedPixel = localStorage.getItem('tubeforge-snap-to-pixel');
+      if (savedPixel !== null) store().setSnapToPixel(JSON.parse(savedPixel));
     } catch {}
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -487,6 +491,11 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         }
       }
       setSpacingGuides(newSpacing);
+    }
+    // Snap to pixel — round to whole numbers to eliminate subpixel rendering
+    if (store().snapToPixel) {
+      nx = Math.round(nx);
+      ny = Math.round(ny);
     }
     store().updEl(curDrag.id, { x: nx, y: ny });
     // Show measurement tooltip during drag
@@ -1045,6 +1054,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (filters.length > 0) {
       styles.filter = filters.join(' ');
     }
+    // Opacity fade at edges via CSS mask-image
+    if (el.opacityFade && el.opacityFade !== 'none') {
+      const fadeMap: Record<string, string> = {
+        left: 'linear-gradient(to right, transparent 0%, black 20%, black 100%)',
+        right: 'linear-gradient(to left, transparent 0%, black 20%, black 100%)',
+        top: 'linear-gradient(to bottom, transparent 0%, black 20%, black 100%)',
+        bottom: 'linear-gradient(to top, transparent 0%, black 20%, black 100%)',
+      };
+      const maskVal = fadeMap[el.opacityFade];
+      if (maskVal) {
+        styles.maskImage = maskVal;
+        styles.WebkitMaskImage = maskVal;
+      }
+    }
     return styles;
   };
 
@@ -1255,6 +1278,69 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         );
       }
 
+      // Quick text toolbar — floating above element when selected (not in edit mode)
+      const quickTextToolbar = isSel && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', alignItems: 'center', gap: 3, padding: '3px 6px',
+            background: 'rgba(30,30,30,.92)', borderRadius: 8, marginBottom: 6,
+            boxShadow: '0 2px 12px rgba(0,0,0,.35)', border: '1px solid rgba(255,255,255,.1)',
+            whiteSpace: 'nowrap', zIndex: 10, backdropFilter: 'blur(8px)',
+            pointerEvents: 'auto',
+          }}>
+          {/* Bold toggle */}
+          <button
+            onClick={(e) => { e.stopPropagation(); store().updEl(el.id, { bold: !el.bold, fontWeight: el.bold ? 400 : 700 }); }}
+            title="Bold"
+            style={{ width: 26, height: 26, borderRadius: 5, border: 'none', background: el.bold ? C.accent + '33' : 'transparent', color: el.bold ? C.accent : '#aaa', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .1s' }}
+          >B</button>
+          {/* Font size -/+ */}
+          <button
+            onClick={(e) => { e.stopPropagation(); store().updEl(el.id, { size: Math.max(8, (el.size ?? 32) - 4) }); }}
+            title="Decrease font size"
+            style={{ width: 26, height: 26, borderRadius: 5, border: 'none', background: 'transparent', color: '#aaa', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >A-</button>
+          <span style={{ fontSize: 10, color: '#888', minWidth: 22, textAlign: 'center', fontWeight: 600, userSelect: 'none' }}>{el.size ?? 32}</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); store().updEl(el.id, { size: Math.min(300, (el.size ?? 32) + 4) }); }}
+            title="Increase font size"
+            style={{ width: 26, height: 26, borderRadius: 5, border: 'none', background: 'transparent', color: '#aaa', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >A+</button>
+          {/* Divider */}
+          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.12)' }} />
+          {/* Color picker */}
+          <div style={{ position: 'relative', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <input
+              type="color"
+              value={el.color ?? '#ffffff'}
+              onChange={(e) => { store().updEl(el.id, { color: e.target.value }); }}
+              title="Text color"
+              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+            />
+            <div style={{ width: 18, height: 18, borderRadius: 4, background: el.color ?? '#fff', border: '2px solid rgba(255,255,255,.2)', pointerEvents: 'none' }} />
+          </div>
+          {/* Divider */}
+          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.12)' }} />
+          {/* Alignment L/C/R */}
+          {(['left', 'center', 'right'] as const).map((align) => (
+            <button
+              key={align}
+              onClick={(e) => { e.stopPropagation(); store().updEl(el.id, { textAlign: align }); }}
+              title={`Align ${align}`}
+              style={{ width: 26, height: 26, borderRadius: 5, border: 'none', background: (el.textAlign ?? 'left') === align ? C.accent + '33' : 'transparent', color: (el.textAlign ?? 'left') === align ? C.accent : '#aaa', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                {align === 'left' && <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></>}
+                {align === 'center' && <><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></>}
+                {align === 'right' && <><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></>}
+              </svg>
+            </button>
+          ))}
+        </div>
+      );
+
       return (
         <div key={el.id} data-text-el={el.id} style={{ ...textStyle, ...entranceAnim, ...selectionFlashAnim }}
           contentEditable={false} suppressContentEditableWarning
@@ -1278,7 +1364,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             selection?.removeAllRanges();
             selection?.addRange(range);
           }}>
-          {el.text}{resizeHandles}{deleteHandle}
+          {el.text}{quickTextToolbar}{resizeHandles}{deleteHandle}
         </div>
       );
     }
@@ -1349,8 +1435,20 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         hexagon: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
       };
       const clipPath = (el.clipMask && el.clipMask !== 'none') ? clipMaskMap[el.clipMask] : undefined;
+      // Extract mask styles for the container (opacity fade needs to be on the wrapper, not just the img)
+      const imgFadeMask: React.CSSProperties = {};
+      if (el.opacityFade && el.opacityFade !== 'none') {
+        const fadeMap: Record<string, string> = {
+          left: 'linear-gradient(to right, transparent 0%, black 20%, black 100%)',
+          right: 'linear-gradient(to left, transparent 0%, black 20%, black 100%)',
+          top: 'linear-gradient(to bottom, transparent 0%, black 20%, black 100%)',
+          bottom: 'linear-gradient(to top, transparent 0%, black 20%, black 100%)',
+        };
+        const maskVal = fadeMap[el.opacityFade];
+        if (maskVal) { imgFadeMask.maskImage = maskVal; imgFadeMask.WebkitMaskImage = maskVal; }
+      }
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, clipPath, WebkitClipPath: clipPath, ...entranceAnim, ...selectionFlashAnim }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', transform: buildTransform(el), boxShadow: el.shapeShadow && el.shapeShadow !== 'none' ? el.shapeShadow : undefined, overflow: hasCrop ? 'hidden' : (fitMode === 'none' ? 'visible' : 'hidden'), mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined, clipPath, WebkitClipPath: clipPath, ...imgFadeMask, ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}
           onDoubleClick={(e) => {
             e.stopPropagation();
@@ -1443,7 +1541,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     }
 
     if (el.type === 'stickyNote') return (
-      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
+      <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', background: el.noteColor ?? STICKY_NOTE_COLOR, borderRadius: 4, padding: '8px 10px', boxShadow: '2px 2px 8px rgba(0,0,0,.15)', fontSize: `clamp(8px,${(el.size ?? 14) / canvasW * 100}vw,${(el.size ?? 14)}px)`, color: STICKY_NOTE_TEXT_COLOR, fontFamily: 'sans-serif', border: isSel ? `2px dashed ${C.accent}88` : 'none', cursor: 'move', boxSizing: 'border-box', overflow: 'hidden', opacity: el.opacity ?? 1, transform: buildTransform(el), ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
         contentEditable={isSel} suppressContentEditableWarning
         onBlur={(e) => store().updEl(el.id, { noteText: (e.target as HTMLElement).innerText })}
         onMouseDown={elDrag}
@@ -1456,7 +1554,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const rows = el.rows ?? 3, cols = el.cols ?? 3;
       const borderColor = el.tableBorderColor ?? el.strokeColor ?? 'rgba(255,255,255,.2)';
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : borderColor}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : borderColor}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el), ...getEffectStyles(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
           {Array.from({ length: rows * cols }, (_, i) => {
             const r = Math.floor(i / cols), c = i % cols;

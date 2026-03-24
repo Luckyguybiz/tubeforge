@@ -315,6 +315,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           {/* Shadow with custom option */}
           <ShadowControl C={C} value={sel.shadow} onChange={(v) => updEl(sel.id, { shadow: v })} inputStyle={inputStyle} labelStyle={labelStyle} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           {/* Text background swatches */}
           <div><div style={labelStyle}>{t('thumbs.props.textBg')}</div><div style={{ display: 'flex', gap: 4 }}>
             {BG_SWATCHES.map((bg) => {
@@ -453,6 +454,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             </div>
           )}
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={50} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}px</span></div></div>}
           {/* Border color + width + dash style */}
           <div>
@@ -563,6 +565,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           {/* AI Remove Background */}
           <AIRemoveBackgroundButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}</span></div></div>
           {/* Image Shadow */}
           <ShapeShadowControl C={C} value={sel.shapeShadow} onChange={(v) => updEl(sel.id, { shapeShadow: v })} labelStyle={labelStyle} />
@@ -593,6 +596,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           <ColorHarmony C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -660,6 +664,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             </div>
           )}
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -684,6 +689,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             <div style={{ flex: 1 }}><div style={labelStyle}>{t('thumbs.props.fontSize')}</div><input type="number" value={sel.size ?? 14} onChange={(e) => updEl(sel.id, { size: +e.target.value })} min={8} max={48} style={inputStyle} /></div>
           </div>
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -738,6 +744,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           {/* Table border color */}
           <ColorWithHex C={C} value={sel.tableBorderColor ?? ((sel.strokeColor ?? 'rgba(255,255,255,.2)').startsWith('rgba') ? '#ffffff' : sel.strokeColor ?? '#ffffff')} onChange={(c) => updEl(sel.id, { tableBorderColor: c, strokeColor: c })} label={t('thumbs.props.borderColor')} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
@@ -1335,6 +1342,31 @@ const OpacitySlider = memo(function OpacitySlider({ C, value, onChange }: { C: T
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <input type="range" min={0} max={1} step={0.05} value={value} onChange={(e) => onChange(+e.target.value)} style={{ flex: 1, accentColor: '#888' }} />
         <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{Math.round(value * 100)}%</span>
+      </div>
+    </div>
+  );
+});
+
+// Opacity Fade — pill buttons for edge fade direction
+const OpacityFadePills = memo(function OpacityFadePills({ C, value, onChange }: { C: Theme; value?: CanvasElement['opacityFade']; onChange: (v: CanvasElement['opacityFade']) => void }) {
+  const current = value ?? 'none';
+  const options: Array<{ val: CanvasElement['opacityFade']; label: string }> = [
+    { val: 'none', label: 'None' },
+    { val: 'left', label: '\u2190' },
+    { val: 'right', label: '\u2192' },
+    { val: 'top', label: '\u2191' },
+    { val: 'bottom', label: '\u2193' },
+  ];
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: C.sub, marginBottom: 4, fontWeight: 600 }}>Edge Fade</div>
+      <div style={{ display: 'flex', gap: 3 }}>
+        {options.map((opt) => {
+          const isActive = current === opt.val;
+          return (
+            <button key={opt.val} onClick={() => onChange(opt.val)} style={{ flex: 1, padding: '4px 0', borderRadius: 6, border: `1px solid ${isActive ? C.accent : C.border}`, background: isActive ? C.accent + '18' : 'transparent', color: isActive ? C.accent : C.sub, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .12s' }}>{opt.label}</button>
+          );
+        })}
       </div>
     </div>
   );

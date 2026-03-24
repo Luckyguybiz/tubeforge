@@ -193,6 +193,8 @@ export interface CanvasElement {
   autoFitText?: boolean;
   // element constraints — pin to canvas edges
   pin?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
+  // opacity fade at edges (CSS mask-image)
+  opacityFade?: 'none' | 'left' | 'right' | 'top' | 'bottom';
 }
 
 export interface AIResult {
