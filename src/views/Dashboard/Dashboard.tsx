@@ -10,6 +10,7 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
 import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
 import { ChannelAnalytics } from './ChannelAnalytics';
+import { UpgradePopupModal } from '@/components/ui/UpgradePopupModal';
 
 /* ── Tool icon definitions (static, no i18n needed) ──── */
 
@@ -307,6 +308,9 @@ export function Dashboard() {
 
   return (
     <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box', overflow: 'hidden' }}>
+
+      {/* ── Upgrade popup for free users (first visit only) ── */}
+      {user && <UpgradePopupModal userPlan={user.plan} />}
 
       {/* ── Welcome header ────────────────────────── */}
       <div style={{ marginBottom: 24 }}>
