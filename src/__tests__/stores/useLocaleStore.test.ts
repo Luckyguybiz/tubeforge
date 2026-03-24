@@ -3,8 +3,10 @@ import { useLocaleStore, loadLocale } from '@/stores/useLocaleStore';
 
 describe('useLocaleStore', () => {
   beforeEach(async () => {
-    // Reset store to default locale
-    useLocaleStore.setState({ locale: 'ru' });
+    // Pre-load Russian locale bundle so t() can translate ru keys
+    await loadLocale('ru');
+    // Reset store to Russian locale with working t function
+    useLocaleStore.getState().setLocale('ru');
   });
 
   describe('default state', () => {
@@ -22,7 +24,7 @@ describe('useLocaleStore', () => {
   describe('t() translation function', () => {
     it('should translate known Russian keys', () => {
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Обзор');
+      expect(t('nav.dashboard')).toBe('Мои работы');
     });
 
     it('should return the key when translation is not found', () => {
@@ -50,7 +52,7 @@ describe('useLocaleStore', () => {
       await loadLocale('en');
       useLocaleStore.getState().setLocale('en');
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Explore');
+      expect(t('nav.dashboard')).toBe('My Works');
     });
 
     it('should switch to Kazakh locale', async () => {
@@ -83,7 +85,7 @@ describe('useLocaleStore', () => {
       useLocaleStore.getState().setLocale('en');
       useLocaleStore.getState().setLocale('ru');
       const { t } = useLocaleStore.getState();
-      expect(t('nav.dashboard')).toBe('Обзор');
+      expect(t('nav.dashboard')).toBe('Мои работы');
     });
   });
 
