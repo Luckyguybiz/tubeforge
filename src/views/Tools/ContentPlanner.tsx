@@ -19,7 +19,7 @@ import {
 
 /* ── Constants ─────────────────────────────────────────────── */
 
-const GRADIENT: [string, string] = ['#06b6d4', '#8b5cf6'];
+const GRADIENT: [string, string] = ['#6366f1', '#8b5cf6'];
 
 const TAB_KEYS = ['Calendar', 'Content List', 'Ideas Bank', 'Templates'] as const;
 type Tab = (typeof TAB_KEYS)[number];
@@ -105,7 +105,7 @@ function isToday(year: number, month: number, day: number): boolean {
 
 /* ── Main Component ────────────────────────────────────────── */
 
-export function ContentPlanner() {
+export function ContentPlanner({ embedded }: { embedded?: boolean } = {}) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
 
@@ -418,12 +418,8 @@ export function ContentPlanner() {
 
   /* ── Render ────────────────────────────────────────────── */
 
-  return (
-    <ToolPageShell
-      title={t('contentPlanner.title')}
-      subtitle={t('contentPlanner.subtitle')}
-      gradient={GRADIENT}
-    >
+  const content = (
+    <>
       {/* ── Stats Bar ────────────────────────────────────── */}
       <div className="tf-planner-stats" style={{
         display: 'grid',
@@ -1547,6 +1543,18 @@ export function ContentPlanner() {
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <ToolPageShell
+      title={t('contentPlanner.title')}
+      subtitle={t('contentPlanner.subtitle')}
+      gradient={GRADIENT}
+    >
+      {content}
     </ToolPageShell>
   );
 }

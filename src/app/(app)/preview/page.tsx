@@ -103,7 +103,7 @@ function PublishContent() {
       <div className="tf-publish-content">
         {activeTab === 'preview' && <PreviewSave projectId={projectId} />}
         {activeTab === 'seo' && <Metadata projectId={projectId} />}
-        {activeTab === 'planner' && <ContentPlanner />}
+        {activeTab === 'planner' && <ContentPlanner embedded />}
       </div>
     </div>
   );
