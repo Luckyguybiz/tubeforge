@@ -620,7 +620,29 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               </div>
             </div>
           </div>
-          <ColorWithHex C={C} value={(sel.strokeColor ?? 'rgba(255,255,255,.2)').startsWith('rgba') ? '#ffffff' : sel.strokeColor ?? '#ffffff'} onChange={(c) => updEl(sel.id, { strokeColor: c })} label={t('thumbs.props.borderColor')} />
+          {/* Header row toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => updEl(sel.id, { headerRow: !sel.headerRow })}
+              style={{
+                ...btnSmall,
+                padding: '4px 8px',
+                background: sel.headerRow ? C.accentDim : 'transparent',
+                color: sel.headerRow ? C.accent : C.sub,
+                border: `1px solid ${sel.headerRow ? C.accent + '55' : C.border}`,
+              }}
+            >
+              {sel.headerRow ? '✓' : ''} {t('thumbs.props.headerRow')}
+            </button>
+          </div>
+          {/* Header color (only when header row enabled) */}
+          {sel.headerRow && (
+            <ColorWithHex C={C} value={sel.headerColor ?? '#3a7bfd'} onChange={(c) => updEl(sel.id, { headerColor: c })} label={t('thumbs.props.headerColor')} />
+          )}
+          {/* Cell background color */}
+          <ColorWithHex C={C} value={sel.tableCellBg ?? 'transparent'} onChange={(c) => updEl(sel.id, { tableCellBg: c })} label={t('thumbs.props.cellBg')} />
+          {/* Table border color */}
+          <ColorWithHex C={C} value={sel.tableBorderColor ?? ((sel.strokeColor ?? 'rgba(255,255,255,.2)').startsWith('rgba') ? '#ffffff' : sel.strokeColor ?? '#ffffff')} onChange={(c) => updEl(sel.id, { tableBorderColor: c, strokeColor: c })} label={t('thumbs.props.borderColor')} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
           <PositionInputs C={C} x={sel.x} y={sel.y} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />
           <SizeInputs C={C} w={sel.w} h={sel.h} proportionLocked={sel.proportionLocked} onChange={(p) => updEl(sel.id, p)} inputStyle={inputStyle} labelStyle={labelStyle} />

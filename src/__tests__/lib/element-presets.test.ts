@@ -7,6 +7,8 @@ import {
   ICON_PRESETS,
   COLOR_PRESETS,
   SHAPE_PATHS,
+  DEVICE_FRAME_PRESETS,
+  STAR_RATING_PRESETS,
 } from '@/lib/element-presets';
 import type { ElementPreset } from '@/lib/element-presets';
 
@@ -159,6 +161,49 @@ describe('Shape paths', () => {
     expect(SHAPE_PATHS).toHaveProperty('arrow');
     expect(SHAPE_PATHS).toHaveProperty('speechBubble');
     expect(SHAPE_PATHS).toHaveProperty('heart');
+  });
+});
+
+describe('Device frame presets', () => {
+  it('should have at least 3 device frames', () => {
+    expect(DEVICE_FRAME_PRESETS.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('all device frames should have valid structure', () => {
+    for (const preset of DEVICE_FRAME_PRESETS) {
+      validatePreset(preset);
+    }
+  });
+
+  it('all device frames should be rect type', () => {
+    for (const preset of DEVICE_FRAME_PRESETS) {
+      expect(preset.type).toBe('rect');
+    }
+  });
+
+  it('all device frames should have dimensions', () => {
+    for (const preset of DEVICE_FRAME_PRESETS) {
+      expect(Number(preset.props.w)).toBeGreaterThan(0);
+      expect(Number(preset.props.h)).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('Star rating presets', () => {
+  it('should have at least 2 star ratings', () => {
+    expect(STAR_RATING_PRESETS.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('all star ratings should be text type', () => {
+    for (const preset of STAR_RATING_PRESETS) {
+      expect(preset.type).toBe('text');
+    }
+  });
+
+  it('all star ratings should have star characters', () => {
+    for (const preset of STAR_RATING_PRESETS) {
+      expect(String(preset.props.text)).toMatch(/[★☆]/);
+    }
   });
 });
 

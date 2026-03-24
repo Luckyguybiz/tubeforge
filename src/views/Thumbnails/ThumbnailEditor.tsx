@@ -756,11 +756,33 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           (el.noteText ?? t('thumbs.editor.noteDefault')).split('\n').forEach((line, i) => ctx.fillText(line, el.x + 10, el.y + 20 + i * ((el.size ?? 14) + 4)));
         } else if (el.type === 'table') {
           const rows = el.rows ?? 3, cols = el.cols ?? 3, cw = el.w / cols, ch = el.h / rows;
-          ctx.strokeStyle = el.strokeColor ?? 'rgba(255,255,255,.2)'; ctx.lineWidth = 1;
+          const borderColor = el.tableBorderColor ?? el.strokeColor ?? 'rgba(255,255,255,.2)';
+          // Draw cell backgrounds
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const cellColor = el.cellColors?.[r]?.[c];
+              const isHeader = el.headerRow && r === 0;
+              const bgColor = cellColor ?? (isHeader ? (el.headerColor ?? '#3a7bfd') : el.tableCellBg);
+              if (bgColor && bgColor !== 'transparent') {
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(el.x + c * cw, el.y + r * ch, cw, ch);
+              }
+            }
+          }
+          // Draw grid lines
+          ctx.strokeStyle = borderColor; ctx.lineWidth = 1;
           for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(el.x, el.y + r * ch); ctx.lineTo(el.x + el.w, el.y + r * ch); ctx.stroke(); }
           for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(el.x + c * cw, el.y); ctx.lineTo(el.x + c * cw, el.y + el.h); ctx.stroke(); }
-          ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif';
-          for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const t = el.cellData?.[r]?.[c] ?? ''; if (t) ctx.fillText(t, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8); }
+          // Draw cell text
+          for (let r = 0; r < rows; r++) {
+            const isHeader = el.headerRow && r === 0;
+            ctx.fillStyle = isHeader ? '#fff' : '#fff';
+            ctx.font = isHeader ? 'bold 11px sans-serif' : '10px sans-serif';
+            for (let c = 0; c < cols; c++) {
+              const txt = el.cellData?.[r]?.[c] ?? '';
+              if (txt) ctx.fillText(txt, el.x + c * cw + 4, el.y + r * ch + 14, cw - 8);
+            }
+          }
         }
         ctx.filter = 'none'; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
         if (needsTransform) { ctx.restore(); }
@@ -1275,20 +1297,35 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 
     if (el.type === 'table') {
       const rows = el.rows ?? 3, cols = el.cols ?? 3;
+      const borderColor = el.tableBorderColor ?? el.strokeColor ?? 'rgba(255,255,255,.2)';
       return (
-        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : el.strokeColor ?? 'rgba(255,255,255,.2)'}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
+        <div key={el.id} style={{ position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', height: el.h / canvasH * 100 + '%', display: 'grid', gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)`, border: `1px solid ${isSel ? C.accent + '88' : borderColor}`, cursor: 'move', boxSizing: 'border-box', opacity: el.opacity ?? 1, transform: buildTransform(el), ...entranceAnim, ...selectionFlashAnim }}
           onMouseDown={elDrag}>
           {Array.from({ length: rows * cols }, (_, i) => {
             const r = Math.floor(i / cols), c = i % cols;
+            const isHeader = el.headerRow && r === 0;
+            const cellColor = el.cellColors?.[r]?.[c];
+            const bgColor = cellColor ?? (isHeader ? (el.headerColor ?? '#3a7bfd') : (el.tableCellBg ?? 'transparent'));
             return (
               <div key={i} contentEditable={isSel} suppressContentEditableWarning
-                style={{ border: `1px solid ${el.strokeColor ?? 'rgba(255,255,255,.15)'}`, padding: '2px 4px', fontSize: 10, color: '#fff', outline: 'none', overflow: 'hidden' }}
+                style={{
+                  border: `1px solid ${borderColor}`,
+                  padding: '2px 4px',
+                  fontSize: isHeader ? 11 : 10,
+                  fontWeight: isHeader ? 700 : 400,
+                  color: '#fff',
+                  outline: 'none',
+                  overflow: 'hidden',
+                  background: bgColor,
+                  cursor: isSel ? 'text' : 'move',
+                }}
                 onBlur={(ev) => {
-                  const data = JSON.parse(JSON.stringify(el.cellData ?? Array.from({ length: rows }, () => Array(cols).fill(''))));
+                  const data: string[][] = JSON.parse(JSON.stringify(el.cellData ?? Array.from({ length: rows }, () => Array(cols).fill(''))));
                   if (!data[r]) data[r] = Array(cols).fill('');
                   data[r][c] = (ev.target as HTMLElement).innerText;
                   store().updEl(el.id, { cellData: data });
-                }}>
+                }}
+                onDoubleClick={(ev) => { ev.stopPropagation(); (ev.currentTarget as HTMLElement).focus(); }}>
                 {el.cellData?.[r]?.[c] ?? ''}
               </div>
             );

@@ -141,6 +141,11 @@ export interface CanvasElement {
   cellData?: string[][];
   cellWidths?: number[];
   cellHeight?: number;
+  headerRow?: boolean;
+  headerColor?: string;
+  cellColors?: (string | null)[][];
+  tableBorderColor?: string;
+  tableCellBg?: string;
   // grouping / locking
   locked?: boolean;
   groupId?: string;

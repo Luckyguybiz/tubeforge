@@ -108,6 +108,22 @@ export const FRAME_PRESETS: ElementPreset[] = [
   { label: 'Neon', type: 'rect', icon: '✨', props: { w: 200, h: 200, color: 'transparent', opacity: 1, borderR: 12, border: '3px solid #00ff88' } },
 ];
 
+// ===== Device frame presets (CSS-based outlines) =====
+export const DEVICE_FRAME_PRESETS: ElementPreset[] = [
+  { label: 'iPhone', type: 'rect', icon: '📱', props: { w: 120, h: 240, borderR: 20, border: '4px solid #333', color: '#000', opacity: 1 } },
+  { label: 'Android', type: 'rect', icon: '📱', props: { w: 120, h: 230, borderR: 12, border: '3px solid #444', color: '#111', opacity: 1 } },
+  { label: 'Laptop', type: 'rect', icon: '💻', props: { w: 300, h: 200, borderR: 8, border: '6px solid #555', color: '#111', opacity: 1 } },
+  { label: 'Monitor', type: 'rect', icon: '🖥️', props: { w: 320, h: 210, borderR: 6, border: '8px solid #333', color: '#0a0a0a', opacity: 1 } },
+  { label: 'Tablet', type: 'rect', icon: '📲', props: { w: 180, h: 240, borderR: 14, border: '5px solid #444', color: '#0d0d0d', opacity: 1 } },
+];
+
+// ===== Star rating preset =====
+export const STAR_RATING_PRESETS: ElementPreset[] = [
+  { label: '5 Stars', type: 'text', icon: '⭐', props: { text: '★★★★★', size: 36, bold: false, color: '#f59e0b', bg: 'transparent' } },
+  { label: '4 Stars', type: 'text', icon: '⭐', props: { text: '★★★★☆', size: 36, bold: false, color: '#f59e0b', bg: 'transparent' } },
+  { label: '3 Stars', type: 'text', icon: '⭐', props: { text: '★★★☆☆', size: 36, bold: false, color: '#f59e0b', bg: 'transparent' } },
+];
+
 // ===== Shape SVG path definitions (normalized to 0-100 viewBox) =====
 export const SHAPE_PATHS: Record<string, string> = {
   pentagon: 'M50,0 L100,38 L81,100 L19,100 L0,38 Z',

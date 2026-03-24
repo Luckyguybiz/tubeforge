@@ -15,6 +15,8 @@ import {
   EMOJI_PRESETS,
   DIVIDER_PRESETS,
   FRAME_PRESETS,
+  DEVICE_FRAME_PRESETS,
+  STAR_RATING_PRESETS,
   type ElementPreset,
 } from '@/lib/element-presets';
 
@@ -199,6 +201,8 @@ export function ElementsPanel() {
       <PresetSection title={t('thumbs.elements.frames')} presets={FRAME_PRESETS} onAdd={addPreset} />
       <PresetSection title={t('thumbs.elements.stickers')} presets={STICKER_PRESETS} onAdd={addPreset} cols={2} />
       <PresetSection title={t('thumbs.elements.tables')} presets={TABLE_PRESETS} onAdd={addPreset} cols={2} />
+      <PresetSection title={t('thumbs.elements.deviceFrames')} presets={DEVICE_FRAME_PRESETS} onAdd={addPreset} cols={2} />
+      <PresetSection title={t('thumbs.elements.starRatings')} presets={STAR_RATING_PRESETS} onAdd={addPreset} />
     </div>
   );
 }
