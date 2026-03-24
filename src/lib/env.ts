@@ -90,6 +90,9 @@ export const env = {
   // fal.ai (Flux image generation — optional, falls back to DALL-E)
   FAL_KEY: process.env.FAL_KEY ?? '',
 
+  // Replicate (FLUX Schnell / face swap — optional, falls back to fal.ai / DALL-E)
+  REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN ?? '',
+
   // Error monitoring (Sentry) — disabled when not set
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
 } as const;

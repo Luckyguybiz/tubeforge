@@ -13,6 +13,115 @@ import { Prisma } from '@prisma/client';
 import { fal } from '@fal-ai/client';
 
 /* ────────────────────────────────────────────────────────
+   Replicate API helpers (FLUX Schnell + face swap)
+   ──────────────────────────────────────────────────────── */
+
+interface ReplicatePrediction {
+  id: string;
+  status: 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
+  output?: string | string[];
+  error?: string;
+}
+
+async function replicateCreate(
+  model: string,
+  input: Record<string, unknown>,
+  timeoutMs = 90_000,
+): Promise<string> {
+  const token = env.REPLICATE_API_TOKEN;
+  if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    // Create prediction
+    const createRes = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Prefer: 'wait',
+      },
+      body: JSON.stringify({ model, input }),
+      signal: controller.signal,
+    });
+
+    if (!createRes.ok) {
+      const err = await createRes.json().catch(() => ({})) as { detail?: string };
+      throw new Error(err.detail ?? `Replicate API error ${createRes.status}`);
+    }
+
+    let prediction = (await createRes.json()) as ReplicatePrediction;
+
+    // If "Prefer: wait" returned a completed prediction, use it
+    if (prediction.status === 'succeeded' && prediction.output) {
+      const out = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+      if (out) return out;
+    }
+
+    // Otherwise poll
+    const pollUrl = `https://api.replicate.com/v1/predictions/${prediction.id}`;
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const pollRes = await fetch(pollUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+      if (!pollRes.ok) throw new Error('Replicate poll error');
+      prediction = (await pollRes.json()) as ReplicatePrediction;
+
+      if (prediction.status === 'succeeded' && prediction.output) {
+        const out = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+        if (out) return out;
+      }
+      if (prediction.status === 'failed' || prediction.status === 'canceled') {
+        throw new Error(prediction.error ?? 'Replicate prediction failed');
+      }
+    }
+    throw new Error('Replicate prediction timed out');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Generate image via Replicate FLUX Schnell */
+async function replicateFluxSchnell(
+  prompt: string,
+  width: number,
+  height: number,
+): Promise<string> {
+  return replicateCreate(
+    'black-forest-labs/flux-schnell',
+    {
+      prompt: prompt.slice(0, 4000),
+      width,
+      height,
+      num_outputs: 1,
+      go_fast: true,
+    },
+    90_000,
+  );
+}
+
+/** Face swap via Replicate */
+async function replicateFaceSwap(
+  targetImage: string,
+  sourceImage: string,
+): Promise<string> {
+  return replicateCreate(
+    'lucataco/facefusion',
+    {
+      target_path: targetImage,
+      source_path: sourceImage,
+      face_enhancer_model: 'gfpgan_1.4',
+    },
+    120_000,
+  );
+}
+
+/* ────────────────────────────────────────────────────────
    Helpers
    ──────────────────────────────────────────────────────── */
 
@@ -207,9 +316,10 @@ export const aiThumbnailsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      const useFal = !!env.FAL_KEY;
+      const useReplicate = !!env.REPLICATE_API_TOKEN;
+      const useFal = !useReplicate && !!env.FAL_KEY;
 
-      if (!useFal && !env.OPENAI_API_KEY) {
+      if (!useReplicate && !useFal && !env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Image generation service is temporarily unavailable. Please try again later.',
@@ -273,7 +383,61 @@ export const aiThumbnailsRouter = router({
       const results: Array<{ url: string; id: string; revisedPrompt?: string }> = [];
       let failedCount = 0;
 
-      if (useFal) {
+      if (useReplicate) {
+        // ── Replicate FLUX Schnell ──
+        const repSize = input.format === '9:16'
+          ? { w: 768, h: 1344 }
+          : { w: 1344, h: 768 };
+
+        const fluxPrompt =
+          `Professional YouTube thumbnail photo. ${input.prompt}.${contextParts}
+
+Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
+Dramatic cinematic side lighting, strong contrast, deep shadows.
+Extremely vibrant saturated colors, color graded like a Hollywood movie.
+Single clear focal point with shallow depth of field and creamy bokeh background.
+Person showing intense emotional expression, looking directly at camera.
+Composition leaves empty space on the right side for text overlay.
+DO NOT include any text, letters, words, or watermarks in the image.
+${styleDesc}
+Professional YouTube thumbnail that would get millions of clicks.
+8K, hyper-detailed, magazine quality.`.slice(0, 4000);
+
+        for (let i = 0; i < actualCount; i++) {
+          try {
+            let imageUrl = await replicateFluxSchnell(fluxPrompt, repSize.w, repSize.h);
+
+            // Face swap if photo provided
+            if (input.photoUrl && imageUrl) {
+              try {
+                imageUrl = await replicateFaceSwap(imageUrl, input.photoUrl);
+              } catch {
+                // Face swap failed, use original image
+              }
+            }
+
+            if (!imageUrl) { failedCount++; continue; }
+
+            const gen = await ctx.db.thumbnailGeneration.create({
+              data: {
+                userId,
+                prompt: input.prompt,
+                style: input.style,
+                format: input.format,
+                imageUrl,
+                youtubeUrl: input.youtubeUrl ?? null,
+                photoUrl: input.photoUrl ?? null,
+              },
+              select: { id: true, imageUrl: true },
+            });
+
+            results.push({ url: gen.imageUrl, id: gen.id });
+          } catch {
+            failedCount++;
+            continue;
+          }
+        }
+      } else if (useFal) {
         // ── Flux via fal.ai ──
         fal.config({ credentials: env.FAL_KEY });
 
@@ -751,9 +915,10 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const useFal = !!env.FAL_KEY;
+      const useReplicate = !!env.REPLICATE_API_TOKEN;
+      const useFal = !useReplicate && !!env.FAL_KEY;
 
-      if (!useFal && !env.OPENAI_API_KEY) {
+      if (!useReplicate && !useFal && !env.OPENAI_API_KEY) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Image generation service is temporarily unavailable. Please try again later.',
@@ -864,7 +1029,18 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
 
       let imageUrl: string;
 
-      if (useFal) {
+      if (useReplicate) {
+        // ── Replicate FLUX Schnell ──
+        try {
+          imageUrl = await replicateFluxSchnell(editPrompt.slice(0, 4000), 1344, 768);
+        } catch {
+          await decrementAIUsage(userId, ctx.db);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'AI service error during image generation.',
+          });
+        }
+      } else if (useFal) {
         // ── Flux via fal.ai ──
         fal.config({ credentials: env.FAL_KEY });
         try {
