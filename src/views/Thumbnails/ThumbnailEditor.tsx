@@ -751,22 +751,27 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           if (el.textTransform === 'uppercase') displayText = displayText.toUpperCase();
           else if (el.textTransform === 'lowercase') displayText = displayText.toLowerCase();
           else if (el.textTransform === 'capitalize') displayText = displayText.replace(/\b\w/g, (c) => c.toUpperCase());
-          ctx.font = (el.italic ? 'italic ' : '') + (el.fontWeight ?? (el.bold ? 700 : 400)) + ' ' + (el.size ?? 32) + 'px ' + (el.font ?? 'sans-serif');
+          const resolvedWeight = el.fontWeight ?? (el.bold ? 700 : 400);
+          const resolvedFont = el.font ?? 'sans-serif';
+          // Auto-fit text: calculate size to fit bounding box
+          const exportAutoFitSize = el.autoFitText ? calculateAutoFitSize(displayText, el.w, el.h, resolvedFont, resolvedWeight, !!el.italic) : null;
+          const exportTextSize = exportAutoFitSize ?? (el.size ?? 32);
+          ctx.font = (el.italic ? 'italic ' : '') + resolvedWeight + ' ' + exportTextSize + 'px ' + resolvedFont;
           ctx.textAlign = el.textAlign ?? 'left';
           if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
           const textX = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
-          if ((el.textStrokeWidth ?? 0) > 0) { ctx.strokeStyle = el.textStroke ?? '#000'; ctx.lineWidth = el.textStrokeWidth ?? 0; ctx.strokeText(displayText, textX, el.y + (el.size ?? 32)); }
+          if ((el.textStrokeWidth ?? 0) > 0) { ctx.strokeStyle = el.textStroke ?? '#000'; ctx.lineWidth = el.textStrokeWidth ?? 0; ctx.strokeText(displayText, textX, el.y + exportTextSize); }
           ctx.fillStyle = el.color ?? '#fff';
           if ((el.letterSpacing ?? 0) !== 0 && displayText.length < 100) {
             const ls = el.letterSpacing ?? 0; let curX = textX;
-            for (const ch of displayText) { ctx.fillText(ch, curX, el.y + (el.size ?? 32)); curX += ctx.measureText(ch).width + ls; }
-          } else { ctx.fillText(displayText, textX, el.y + (el.size ?? 32)); }
+            for (const ch of displayText) { ctx.fillText(ch, curX, el.y + exportTextSize); curX += ctx.measureText(ch).width + ls; }
+          } else { ctx.fillText(displayText, textX, el.y + exportTextSize); }
           // Underline
           if (el.underline) {
             const tw = ctx.measureText(displayText).width;
-            const underlineY = el.y + (el.size ?? 32) + 3;
+            const underlineY = el.y + exportTextSize + 3;
             const ulStartX = el.textAlign === 'center' ? textX - tw / 2 : el.textAlign === 'right' ? textX - tw : textX;
-            ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = Math.max(1, (el.size ?? 32) / 20); ctx.beginPath(); ctx.moveTo(ulStartX, underlineY); ctx.lineTo(ulStartX + tw, underlineY); ctx.stroke();
+            ctx.strokeStyle = el.color ?? '#fff'; ctx.lineWidth = Math.max(1, exportTextSize / 20); ctx.beginPath(); ctx.moveTo(ulStartX, underlineY); ctx.lineTo(ulStartX + tw, underlineY); ctx.stroke();
           }
           ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0; ctx.textAlign = 'left';
         } else if (el.type === 'path') {
@@ -983,6 +988,28 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     document.addEventListener('mouseup', onUp);
   };
 
+  // ===== Auto-fit text sizing helper =====
+  const calculateAutoFitSize = useCallback((text: string, maxW: number, maxH: number, font: string, weight: number, italic: boolean): number => {
+    if (!text || maxW <= 0 || maxH <= 0) return 32;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return 32;
+    let size = 200; // start large
+    const padding = 16; // 8px padding each side
+    const effectiveW = maxW - padding;
+    const effectiveH = maxH - padding;
+    while (size > 8) {
+      ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px ${font}`;
+      const lines = text.split('\n');
+      const lineHeight = size * 1.2;
+      const totalHeight = lines.length * lineHeight;
+      const maxLineWidth = Math.max(...lines.map((line) => ctx.measureText(line).width));
+      if (maxLineWidth <= effectiveW && totalHeight <= effectiveH) return Math.round(size);
+      size -= 2;
+    }
+    return 8;
+  }, []);
+
   // ===== Effects helper =====
   const getEffectStyles = (el: CanvasElement): React.CSSProperties => {
     const styles: React.CSSProperties = {};
@@ -1166,9 +1193,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       const isEditingText = isSel && document.activeElement?.getAttribute('data-text-el') === el.id;
       const resolvedFontWeight = el.fontWeight ?? (el.bold ? 700 : 400);
       const hasCurve = el.curveAmount && el.curveAmount !== 0;
+      // Auto-fit: recalculate font size to fit bounding box
+      const autoFitSize = el.autoFitText ? calculateAutoFitSize(el.text ?? '', el.w, el.h, el.font ?? 'sans-serif', resolvedFontWeight, !!el.italic) : null;
+      const effectiveSize = autoFitSize ?? (el.size ?? 32);
       const textStyle: React.CSSProperties = {
         position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
-        fontSize: hasCurve ? undefined : `clamp(8px,${(el.size ?? 32) / canvasW * 100}vw,${(el.size ?? 32) * 0.8}px)`,
+        fontSize: hasCurve ? undefined : `clamp(8px,${effectiveSize / canvasW * 100}vw,${effectiveSize * 0.8}px)`,
         fontWeight: hasCurve ? undefined : resolvedFontWeight, fontStyle: hasCurve ? undefined : (el.italic ? 'italic' : 'normal'), fontFamily: hasCurve ? undefined : el.font, color: hasCurve ? undefined : (el.textGradient ? undefined : el.color), textAlign: hasCurve ? undefined : (el.textAlign ?? 'left'),
         textDecoration: hasCurve ? undefined : (el.underline ? 'underline' : 'none'),
         textShadow: hasCurve ? undefined : (el.shadow !== 'none' ? el.shadow : 'none'), opacity: el.opacity, background: hasCurve ? undefined : (el.textGradient ? undefined : el.bg), borderRadius: el.borderR,
@@ -2615,6 +2645,7 @@ const EDITOR_SHORTCUTS = [
     { keys: 'Ctrl+Shift+G', action: 'Ungroup' },
     { keys: 'Ctrl+C', action: 'Copy' },
     { keys: 'Ctrl+V', action: 'Paste' },
+    { keys: 'Ctrl+Shift+V', action: 'Paste in place' },
     { keys: 'Ctrl+X', action: 'Cut' },
   ]},
   { category: 'View', items: [
@@ -2843,6 +2874,7 @@ function ContextMenuOverlay({ contextMenu, els, C, t }: {
     { label: t('thumbs.editor.cut') || 'Cut', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>, shortcut: 'Ctrl+X', action: () => store().cutSelected() },
     { label: t('thumbs.editor.copy') || 'Copy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+C', action: () => store().copySelected() },
     { label: t('thumbs.editor.paste') || 'Paste', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>, shortcut: 'Ctrl+V', action: () => store().pasteClipboard() },
+    { label: 'Paste in Place', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><circle cx="12" cy="14" r="2" fill="currentColor"/></svg>, shortcut: 'Ctrl+Shift+V', action: () => store().pasteInPlace() },
     { label: t('thumbs.editor.duplicate'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>, shortcut: 'Ctrl+D', action: () => store().duplicateSelected() },
     // Replace Image — only shown for image elements
     ...(targetEl?.type === 'image' ? [
@@ -2874,10 +2906,18 @@ function ContextMenuOverlay({ contextMenu, els, C, t }: {
     { label: targetEl?.locked ? 'Unlock' : 'Lock', icon: targetEl?.locked ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>, action: () => { if (contextMenu.elId) store().updEl(contextMenu.elId, { locked: !targetEl?.locked }); } },
     { label: targetEl?.visible === false ? 'Show' : 'Hide', icon: targetEl?.visible === false ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>, action: () => { if (contextMenu.elId) store().updEl(contextMenu.elId, { visible: targetEl?.visible === false ? true : false }); } },
     'separator' as const,
+    // Select Similar submenu
+    { label: 'Select Similar Type', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>, action: () => { if (contextMenu.elId) store().selectSimilar(contextMenu.elId, 'type'); } },
+    { label: 'Select Similar Color', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>, action: () => { if (contextMenu.elId) store().selectSimilar(contextMenu.elId, 'color'); } },
+    ...(targetEl?.type === 'text' ? [
+      { label: 'Select Similar Font', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>, action: () => { if (contextMenu.elId) store().selectSimilar(contextMenu.elId, 'font'); } } as CtxItem,
+    ] : []),
+    'separator' as const,
     { label: t('thumbs.editor.delete'), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>, shortcut: 'Del', action: () => { if (contextMenu.elId) store().delEl(contextMenu.elId); }, danger: true },
   ] : [
     // Empty canvas context menu
     { label: t('thumbs.editor.paste') || 'Paste', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>, shortcut: 'Ctrl+V', action: () => store().pasteClipboard() },
+    { label: 'Paste in Place', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><circle cx="12" cy="14" r="2" fill="currentColor"/></svg>, shortcut: 'Ctrl+Shift+V', action: () => store().pasteInPlace() },
     { label: 'Select All', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>, shortcut: 'Ctrl+A', action: () => store().setSelIds(store().els.map((el) => el.id)) },
     'separator' as const,
     { label: 'Add Text', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>, action: () => store().addText() },

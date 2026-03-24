@@ -69,6 +69,14 @@ export function useCanvasKeyboard() {
         return;
       }
 
+      // Paste In Place: Ctrl+Shift+V — paste at original position
+      if (ctrl && e.shiftKey && e.key === 'v') {
+        e.preventDefault();
+        store.pasteInPlace();
+        useNotificationStore.getState().addToast('info', 'Pasted in place', 1500);
+        return;
+      }
+
       // Paste: Ctrl+V — check for clipboard image first, then fall back to element paste
       if (ctrl && e.key === 'v') {
         e.preventDefault();

@@ -245,6 +245,27 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               {FONT_SIZE_PRESETS.map((s) => <button key={s} onClick={() => updEl(sel.id, { size: s })} style={{ padding: '2px 5px', borderRadius: 4, border: `1px solid ${sel.size === s ? C.blue + '55' : C.border}`, background: sel.size === s ? C.blue + '14' : 'transparent', color: sel.size === s ? C.blue : C.dim, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>)}
             </div>
           </div>
+          {/* Auto-fit text toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => updEl(sel.id, { autoFitText: !sel.autoFitText })}
+              title="Auto-fit text to bounding box"
+              style={{
+                flex: 1, padding: '5px 8px', borderRadius: 5,
+                border: `1px solid ${sel.autoFitText ? C.blue + '55' : C.border}`,
+                background: sel.autoFitText ? C.blue + '14' : 'transparent',
+                color: sel.autoFitText ? C.blue : C.sub,
+                fontSize: 10, cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+              Auto-fit Text
+            </button>
+          </div>
           {/* Color with HEX + presets */}
           <ColorWithHex C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} label={t('thumbs.props.color')} />
           <ColorPresets C={C} value={sel.color} onChange={(c) => updEl(sel.id, { color: c })} />
@@ -764,6 +785,65 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           <RotationInput C={C} value={sel.rot} onChange={(v) => updEl(sel.id, { rot: v })} labelStyle={labelStyle} inputStyle={inputStyle} />
           <FlipButtons C={C} id={sel.id} flipX={sel.flipX} flipY={sel.flipY} flipHorizontal={flipHorizontal} flipVertical={flipVertical} />
           <OrderButtons C={C} id={sel.id} bringFront={bringFront} sendBack={sendBack} moveUp={moveUp} moveDown={moveDown} delEl={delEl} />
+        </div>
+      )}
+
+      {/* Element Constraints — Pin to edges */}
+      {sel && (
+        <div style={{ marginTop: 8, padding: 8, background: C.surface, borderRadius: 6, border: `1px solid ${C.border}` }}>
+          <div style={{ ...labelStyle, marginBottom: 6 }}>Pin to Edges</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: '1fr 1fr 1fr', gap: 3, width: 80, margin: '0 auto' }}>
+            {/* Row 1: top */}
+            <div />
+            <button
+              onClick={() => updEl(sel.id, { pin: { ...sel.pin, top: !sel.pin?.top } })}
+              title="Pin Top"
+              style={{
+                padding: '3px 0', borderRadius: 4, fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                border: `1px solid ${sel.pin?.top ? C.blue + '55' : C.border}`,
+                background: sel.pin?.top ? C.blue + '14' : 'transparent',
+                color: sel.pin?.top ? C.blue : C.dim,
+              }}
+            >T</button>
+            <div />
+            {/* Row 2: left + center + right */}
+            <button
+              onClick={() => updEl(sel.id, { pin: { ...sel.pin, left: !sel.pin?.left } })}
+              title="Pin Left"
+              style={{
+                padding: '3px 0', borderRadius: 4, fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                border: `1px solid ${sel.pin?.left ? C.blue + '55' : C.border}`,
+                background: sel.pin?.left ? C.blue + '14' : 'transparent',
+                color: sel.pin?.left ? C.blue : C.dim,
+              }}
+            >L</button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
+            </div>
+            <button
+              onClick={() => updEl(sel.id, { pin: { ...sel.pin, right: !sel.pin?.right } })}
+              title="Pin Right"
+              style={{
+                padding: '3px 0', borderRadius: 4, fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                border: `1px solid ${sel.pin?.right ? C.blue + '55' : C.border}`,
+                background: sel.pin?.right ? C.blue + '14' : 'transparent',
+                color: sel.pin?.right ? C.blue : C.dim,
+              }}
+            >R</button>
+            {/* Row 3: bottom */}
+            <div />
+            <button
+              onClick={() => updEl(sel.id, { pin: { ...sel.pin, bottom: !sel.pin?.bottom } })}
+              title="Pin Bottom"
+              style={{
+                padding: '3px 0', borderRadius: 4, fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                border: `1px solid ${sel.pin?.bottom ? C.blue + '55' : C.border}`,
+                background: sel.pin?.bottom ? C.blue + '14' : 'transparent',
+                color: sel.pin?.bottom ? C.blue : C.dim,
+              }}
+            >B</button>
+            <div />
+          </div>
         </div>
       )}
 

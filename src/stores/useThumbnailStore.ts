@@ -125,8 +125,14 @@ interface ThumbnailState {
   // Clipboard
   copySelected: () => void;
   pasteClipboard: () => void;
+  /** Paste at original position (same X, Y as copied element) */
+  pasteInPlace: () => void;
   cutSelected: () => void;
   duplicateSelected: () => void;
+
+  // Select Similar
+  /** Select all elements matching criteria relative to a target element */
+  selectSimilar: (targetId: string, by: 'type' | 'color' | 'font') => void;
 
   // Zoom
   setZoom: (z: number) => void;
@@ -456,13 +462,56 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
     const copies = selected.map((e) => ({
       ...JSON.parse(JSON.stringify(e)),
       id: uid(),
-      x: e.x + 20,
-      y: e.y + 20,
+      x: e.x + 10,
+      y: e.y + 10,
     }));
     set((s) => ({
       els: [...s.els, ...copies],
       selIds: copies.map((c) => c.id),
     }));
+  },
+
+  // ===== Paste In Place =====
+  pasteInPlace: () => {
+    const { clipboard } = get();
+    if (!clipboard || clipboard.length === 0) return;
+    get().pushHistory();
+    const copies = clipboard.map((e) => ({
+      ...JSON.parse(JSON.stringify(e)),
+      id: uid(),
+      // Keep original position — no offset
+    }));
+    set((s) => ({
+      els: [...s.els, ...copies],
+      selIds: copies.map((c) => c.id),
+    }));
+  },
+
+  // ===== Select Similar =====
+  selectSimilar: (targetId: string, by: 'type' | 'color' | 'font') => {
+    const { els } = get();
+    const target = els.find((e) => e.id === targetId);
+    if (!target) return;
+    let matchIds: string[];
+    switch (by) {
+      case 'type':
+        matchIds = els.filter((e) => e.type === target.type).map((e) => e.id);
+        break;
+      case 'color':
+        matchIds = els.filter((e) => {
+          // Compare primary color: text color for text, bg/noteColor for shapes, border for shapes
+          const tColor = target.type === 'text' ? target.color : (target.bg ?? target.noteColor ?? target.color);
+          const eColor = e.type === 'text' ? e.color : (e.bg ?? e.noteColor ?? e.color);
+          return tColor && eColor && tColor.toLowerCase() === eColor.toLowerCase();
+        }).map((e) => e.id);
+        break;
+      case 'font':
+        matchIds = els.filter((e) => e.type === 'text' && target.type === 'text' && (e.font ?? 'Inter') === (target.font ?? 'Inter')).map((e) => e.id);
+        break;
+      default:
+        matchIds = [targetId];
+    }
+    set({ selIds: matchIds });
   },
 
   // ===== Copy/Paste Style =====
@@ -557,14 +606,54 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   },
 
   // ===== Canvas size =====
-  setCanvasSize: (w, h) => set({ canvasW: w, canvasH: h }),
+  setCanvasSize: (w, h) => {
+    const s = get();
+    const oldW = s.canvasW;
+    const oldH = s.canvasH;
+    // Apply pin constraints: maintain distance from pinned edges
+    const pinnedEls = s.els.filter((el) => el.pin && (el.pin.top || el.pin.right || el.pin.bottom || el.pin.left));
+    if (pinnedEls.length > 0 && (w !== oldW || h !== oldH)) {
+      const updatedEls = s.els.map((el) => {
+        if (!el.pin) return el;
+        let newX = el.x, newY = el.y;
+        if (el.pin.right && !el.pin.left) {
+          const distFromRight = oldW - (el.x + el.w);
+          newX = w - el.w - distFromRight;
+        }
+        if (el.pin.bottom && !el.pin.top) {
+          const distFromBottom = oldH - (el.y + el.h);
+          newY = h - el.h - distFromBottom;
+        }
+        // If pinned both sides, stretch width/height
+        let newW = el.w, newH = el.h;
+        if (el.pin.left && el.pin.right) {
+          const distFromLeft = el.x;
+          const distFromRight = oldW - (el.x + el.w);
+          newX = distFromLeft;
+          newW = w - distFromLeft - distFromRight;
+        }
+        if (el.pin.top && el.pin.bottom) {
+          const distFromTop = el.y;
+          const distFromBottom = oldH - (el.y + el.h);
+          newY = distFromTop;
+          newH = h - distFromTop - distFromBottom;
+        }
+        return { ...el, x: Math.round(newX), y: Math.round(newY), w: Math.max(10, Math.round(newW)), h: Math.max(10, Math.round(newH)) };
+      });
+      set({ canvasW: w, canvasH: h, els: updatedEls });
+    } else {
+      set({ canvasW: w, canvasH: h });
+    }
+  },
 
   setCanvasSizeWithScale: (w, h, scaleElements) => {
     const s = get();
     get().pushHistory();
+    const oldW = s.canvasW;
+    const oldH = s.canvasH;
     if (scaleElements) {
-      const sx = w / s.canvasW;
-      const sy = h / s.canvasH;
+      const sx = w / oldW;
+      const sy = h / oldH;
       set({
         canvasW: w,
         canvasH: h,
@@ -579,7 +668,39 @@ export const useThumbnailStore = create<ThumbnailState>((set, get) => ({
         ...histCounts(),
       });
     } else {
-      set({ canvasW: w, canvasH: h, ...histCounts() });
+      // When not scaling, still respect pin constraints
+      const pinnedEls = s.els.filter((el) => el.pin && (el.pin.top || el.pin.right || el.pin.bottom || el.pin.left));
+      if (pinnedEls.length > 0) {
+        const updatedEls = s.els.map((el) => {
+          if (!el.pin) return el;
+          let newX = el.x, newY = el.y;
+          if (el.pin.right && !el.pin.left) {
+            const distFromRight = oldW - (el.x + el.w);
+            newX = w - el.w - distFromRight;
+          }
+          if (el.pin.bottom && !el.pin.top) {
+            const distFromBottom = oldH - (el.y + el.h);
+            newY = h - el.h - distFromBottom;
+          }
+          let newW = el.w, newH = el.h;
+          if (el.pin.left && el.pin.right) {
+            const distFromLeft = el.x;
+            const distFromRight = oldW - (el.x + el.w);
+            newX = distFromLeft;
+            newW = w - distFromLeft - distFromRight;
+          }
+          if (el.pin.top && el.pin.bottom) {
+            const distFromTop = el.y;
+            const distFromBottom = oldH - (el.y + el.h);
+            newY = distFromTop;
+            newH = h - distFromTop - distFromBottom;
+          }
+          return { ...el, x: Math.round(newX), y: Math.round(newY), w: Math.max(10, Math.round(newW)), h: Math.max(10, Math.round(newH)) };
+        });
+        set({ canvasW: w, canvasH: h, els: updatedEls, ...histCounts() });
+      } else {
+        set({ canvasW: w, canvasH: h, ...histCounts() });
+      }
     }
   },
 

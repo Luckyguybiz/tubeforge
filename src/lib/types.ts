@@ -189,6 +189,10 @@ export interface CanvasElement {
   arrowStartStyle?: 'none' | 'triangle' | 'circle' | 'diamond';
   arrowEndStyle?: 'none' | 'triangle' | 'circle' | 'diamond';
   arrowHeadSize?: 'small' | 'medium' | 'large';
+  // content-aware auto-fit text sizing
+  autoFitText?: boolean;
+  // element constraints — pin to canvas edges
+  pin?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
 }
 
 export interface AIResult {
