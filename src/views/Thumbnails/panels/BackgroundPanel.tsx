@@ -5,6 +5,12 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useThumbnailStore } from '@/stores/useThumbnailStore';
 
 /* ------------------------------------------------------------------ */
+/*  Constants                                                          */
+/* ------------------------------------------------------------------ */
+/** Magic value stored in canvasBg to represent transparent background */
+export const TRANSPARENT_BG = 'transparent';
+
+/* ------------------------------------------------------------------ */
 /*  Gradient Presets                                                   */
 /* ------------------------------------------------------------------ */
 const BG_PRESETS: { name: string; from: string; to: string; angle: number }[] = [
@@ -35,7 +41,10 @@ export function BackgroundPanel() {
   const setCanvasBg = useThumbnailStore((s) => s.setCanvasBg);
   const setCanvasBgGradient = useThumbnailStore((s) => s.setCanvasBgGradient);
 
-  const [mode, setMode] = useState<'solid' | 'gradient'>(canvasBgGradient ? 'gradient' : 'solid');
+  const isTransparent = canvasBg === TRANSPARENT_BG && !canvasBgGradient;
+  const [mode, setMode] = useState<'solid' | 'gradient' | 'transparent'>(
+    isTransparent ? 'transparent' : canvasBgGradient ? 'gradient' : 'solid',
+  );
   const [gradType, setGradType] = useState<'linear' | 'radial'>(canvasBgGradient?.type ?? 'linear');
   const [fromColor, setFromColor] = useState(canvasBgGradient?.from ?? '#6366f1');
   const [toColor, setToColor] = useState(canvasBgGradient?.to ?? '#ec4899');
@@ -62,11 +71,18 @@ export function BackgroundPanel() {
   const switchToSolid = () => {
     setMode('solid');
     setCanvasBgGradient(null);
+    if (canvasBg === TRANSPARENT_BG) setCanvasBg('#141414');
   };
 
   const switchToGradient = () => {
     setMode('gradient');
     applyGradient(fromColor, toColor, angle, gradType);
+  };
+
+  const switchToTransparent = () => {
+    setMode('transparent');
+    setCanvasBgGradient(null);
+    setCanvasBg(TRANSPARENT_BG);
   };
 
   return (
@@ -75,7 +91,23 @@ export function BackgroundPanel() {
       <div style={{ display: 'flex', gap: 4 }}>
         <button onClick={switchToSolid} style={btnStyle(mode === 'solid')}>Solid</button>
         <button onClick={switchToGradient} style={btnStyle(mode === 'gradient')}>Gradient</button>
+        <button onClick={switchToTransparent} style={btnStyle(mode === 'transparent')}>None</button>
       </div>
+
+      {/* Transparent mode */}
+      {mode === 'transparent' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '12px 0' }}>
+          <div style={{
+            width: '100%',
+            height: 48,
+            borderRadius: 8,
+            border: `1px solid ${C.border}`,
+            background: 'repeating-conic-gradient(#808080 0% 25%, #b0b0b0 0% 50%) 0 0 / 16px 16px',
+          }} />
+          <span style={{ fontSize: 10, color: C.sub }}>Transparent background</span>
+          <span style={{ fontSize: 9, color: C.dim }}>Exports as PNG with alpha channel</span>
+        </div>
+      )}
 
       {/* Solid mode */}
       {mode === 'solid' && (
@@ -83,7 +115,7 @@ export function BackgroundPanel() {
           <div style={labelStyle}>Solid Color</div>
           <input
             type="color"
-            value={canvasBg}
+            value={canvasBg === TRANSPARENT_BG ? '#141414' : canvasBg}
             onChange={(e) => setCanvasBg(e.target.value)}
             style={{ width: '100%', height: 32, border: `1px solid ${C.border}`, borderRadius: 6, padding: 2, cursor: 'pointer', background: C.surface }}
           />

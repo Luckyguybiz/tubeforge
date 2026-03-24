@@ -636,7 +636,10 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     const scaleX = targetW / canvasW;
     const scaleY = targetH / canvasH;
     ctx.scale(scaleX, scaleY);
-    ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
+    // Transparent bg: skip fill to preserve alpha channel in PNG export
+    if (canvasBg !== 'transparent') {
+      ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
+    }
 
     // Draw gradient background if set
     const bgGrad = useThumbnailStore.getState().canvasBgGradient;
@@ -769,7 +772,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           ctx.textAlign = el.textAlign ?? 'left';
           if (el.shadow && el.shadow !== 'none') { try { const parts = el.shadow.match(/([\d.-]+)/g); if (parts && parts.length >= 3) { ctx.shadowOffsetX = parseFloat(parts[0]); ctx.shadowOffsetY = parseFloat(parts[1]); ctx.shadowBlur = parseFloat(parts[2]); ctx.shadowColor = el.shadow.match(/rgba?\([^)]+\)/)?.[0] || 'rgba(0,0,0,.5)'; } else { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } } catch { ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.3)'; } }
           const textX = el.textAlign === 'center' ? el.x + el.w / 2 : el.textAlign === 'right' ? el.x + el.w - 8 : el.x + 8;
-          if ((el.textStrokeWidth ?? 0) > 0) { ctx.strokeStyle = el.textStroke ?? '#000'; ctx.lineWidth = el.textStrokeWidth ?? 0; ctx.strokeText(displayText, textX, el.y + exportTextSize); }
+          // Multi-stroke export: draw outermost strokes first, then inner
+          const exportStrokes = el.textStrokes && el.textStrokes.length > 0 ? el.textStrokes : (el.textStrokeWidth ?? 0) > 0 ? [{ color: el.textStroke ?? '#000', width: el.textStrokeWidth ?? 0 }] : [];
+          for (let si = exportStrokes.length - 1; si >= 0; si--) {
+            const st = exportStrokes[si];
+            ctx.strokeStyle = st.color; ctx.lineWidth = st.width * 2; ctx.lineJoin = 'round';
+            ctx.strokeText(displayText, textX, el.y + exportTextSize);
+          }
           ctx.fillStyle = el.color ?? '#fff';
           if ((el.letterSpacing ?? 0) !== 0 && displayText.length < 100) {
             const ls = el.letterSpacing ?? 0; let curX = textX;
@@ -1152,6 +1161,28 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     return parts.length > 0 ? parts.join(' ') : undefined;
   };
 
+  /** Build multi-stroke text-shadow CSS from textStrokes array.
+   *  Each stroke layer generates 8-direction shadows to simulate outline.
+   *  Layers are rendered outermost-first (reverse order) so inner layers paint on top. */
+  const buildMultiStrokeTextShadow = (el: CanvasElement): string => {
+    const strokes = el.textStrokes;
+    if (!strokes || strokes.length === 0) return '';
+    const parts: string[] = [];
+    // Render from outermost (last) to innermost (first) layer
+    for (let i = strokes.length - 1; i >= 0; i--) {
+      const { color, width: w } = strokes[i];
+      // 8 directions for a solid outline effect
+      const offsets = [
+        [-w, -w], [w, -w], [-w, w], [w, w],
+        [0, -w], [0, w], [-w, 0], [w, 0],
+      ];
+      for (const [ox, oy] of offsets) {
+        parts.push(`${ox}px ${oy}px 0 ${color}`);
+      }
+    }
+    return parts.join(', ');
+  };
+
   // ===== Render element =====
   const renderElement = (el: CanvasElement) => {
     if (el.visible === false) return null;
@@ -1162,6 +1193,12 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     // Selection highlight flash animation
     const isNewSel = recentlySelected.has(el.id);
     const selectionFlashAnim: React.CSSProperties = isNewSel ? { animation: 'selectionFlash 0.2s ease-out' } : {};
+    // Pulse animation (editor-only visual preview)
+    const pulseAnimGlobal: React.CSSProperties = (!isNewEl && !isNewSel && el.pulse) ? { animation: 'elementPulse 2s ease-in-out infinite' } : {};
+    // Merge entrance/selection/pulse — entrance and selection take priority
+    if (!isNewEl && !isNewSel && el.pulse) {
+      Object.assign(entranceAnim, pulseAnimGlobal);
+    }
     // 8-dot resize handles + rotation handle
     const handleDotStyle = (cursor: string, pos: React.CSSProperties): React.CSSProperties => ({
       position: 'absolute', width: 8, height: 8, background: '#fff', border: `1.5px solid ${C.accent}`, borderRadius: '50%', cursor, zIndex: 5, ...pos,
@@ -1219,22 +1256,29 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       // Auto-fit: recalculate font size to fit bounding box
       const autoFitSize = el.autoFitText ? calculateAutoFitSize(el.text ?? '', el.w, el.h, el.font ?? 'sans-serif', resolvedFontWeight, !!el.italic) : null;
       const effectiveSize = autoFitSize ?? (el.size ?? 32);
+      // Multi-stroke text-shadow generation
+      const multiStrokeShadow = buildMultiStrokeTextShadow(el);
+      const baseShadow = (!hasCurve && el.shadow && el.shadow !== 'none') ? el.shadow : '';
+      const combinedShadow = [baseShadow, multiStrokeShadow].filter(Boolean).join(', ') || 'none';
+      // Pulse animation
+      const pulseAnim: React.CSSProperties = el.pulse ? { animation: 'elementPulse 2s ease-in-out infinite' } : {};
       const textStyle: React.CSSProperties = {
         position: 'absolute', left: el.x / canvasW * 100 + '%', top: el.y / canvasH * 100 + '%', width: el.w / canvasW * 100 + '%', minHeight: el.h / canvasH * 100 + '%',
         fontSize: hasCurve ? undefined : `clamp(8px,${effectiveSize / canvasW * 100}vw,${effectiveSize * 0.8}px)`,
         fontWeight: hasCurve ? undefined : resolvedFontWeight, fontStyle: hasCurve ? undefined : (el.italic ? 'italic' : 'normal'), fontFamily: hasCurve ? undefined : el.font, color: hasCurve ? undefined : (el.textGradient ? undefined : el.color), textAlign: hasCurve ? undefined : (el.textAlign ?? 'left'),
         textDecoration: hasCurve ? undefined : (el.underline ? 'underline' : 'none'),
-        textShadow: hasCurve ? undefined : (el.shadow !== 'none' ? el.shadow : 'none'), opacity: el.opacity, background: hasCurve ? undefined : (el.textGradient ? undefined : el.bg), borderRadius: el.borderR,
+        textShadow: hasCurve ? undefined : combinedShadow, opacity: el.opacity, background: hasCurve ? undefined : (el.textGradient ? undefined : el.bg), borderRadius: el.borderR,
         padding: hasCurve ? undefined : '4px 8px', whiteSpace: hasCurve ? undefined : 'pre-wrap', wordBreak: hasCurve ? undefined : 'break-word',
         border: isSel ? `2px dashed ${C.accent}88` : '2px solid transparent', cursor: isEditingText ? 'text' : 'move', boxSizing: 'border-box', outline: 'none',
         transform: buildTransform(el),
         letterSpacing: (!hasCurve && el.letterSpacing) ? `${el.letterSpacing}px` : undefined,
         lineHeight: (!hasCurve && el.lineHeight) ? `${el.lineHeight}` : undefined,
         textTransform: (!hasCurve && el.textTransform && el.textTransform !== 'none') ? el.textTransform : undefined,
-        WebkitTextStroke: (!hasCurve && (el.textStrokeWidth ?? 0) > 0) ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
+        WebkitTextStroke: (!hasCurve && !multiStrokeShadow && (el.textStrokeWidth ?? 0) > 0) ? `${el.textStrokeWidth}px ${el.textStroke ?? '#000'}` : undefined,
         mixBlendMode: (el.blendMode && el.blendMode !== 'normal') ? el.blendMode as React.CSSProperties['mixBlendMode'] : undefined,
         ...effectStyles,
         ...(hasCurve ? {} : gradientStyles),
+        ...pulseAnim,
       };
 
       // Curved text rendering via SVG textPath
@@ -1603,7 +1647,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     canvas.width = canvasW; canvas.height = canvasH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
-    ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH);
+    if (canvasBg !== 'transparent') { ctx.fillStyle = canvasBg; ctx.fillRect(0, 0, canvasW, canvasH); }
     // Gradient background in fallback capture
     const capGrad = useThumbnailStore.getState().canvasBgGradient;
     if (capGrad && !useThumbnailStore.getState().canvasBgImage) {
@@ -1827,7 +1871,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           {/* D5: Removed redundant canvas size overlay — info is in top bar button */}
           <div style={{ transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`, transformOrigin: 'center center', transition: isPanning.current ? 'none' : smoothZoomRef.current ? 'transform .15s ease-out' : 'none' }}>
             <div ref={canvasAreaRef} data-canvas data-canvas-w={canvasW} data-canvas-h={canvasH} onMouseDown={onCanvasMouseDown} onMouseMove={onCanvasMouseMove} onMouseUp={onCanvasMouseUp} onMouseLeave={onCanvasMouseUp} onTouchStart={onCanvasTouchStart} onTouchMove={onCanvasTouchMove} onTouchEnd={onCanvasTouchEnd} onContextMenu={onCanvasContextMenu} onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}
-              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBgImage ? canvasBg : canvasBgGradient ? (canvasBgGradient.type === 'linear' ? `linear-gradient(${canvasBgGradient.angle}deg, ${canvasBgGradient.from}, ${canvasBgGradient.to})` : `radial-gradient(circle, ${canvasBgGradient.from}, ${canvasBgGradient.to})`) : canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none', transition: 'background 0.3s ease' }}>
+              style={{ width: '100%', aspectRatio: `${canvasW}/${canvasH}`, background: canvasBg === 'transparent' && !canvasBgGradient && !canvasBgImage ? 'repeating-conic-gradient(#808080 0% 25%, #b0b0b0 0% 50%) 0 0 / 16px 16px' : canvasBgImage ? canvasBg : canvasBgGradient ? (canvasBgGradient.type === 'linear' ? `linear-gradient(${canvasBgGradient.angle}deg, ${canvasBgGradient.from}, ${canvasBgGradient.to})` : `radial-gradient(circle, ${canvasBgGradient.from}, ${canvasBgGradient.to})`) : canvasBg, position: 'relative', overflow: 'hidden', cursor: tool === 'draw' || tool === 'line' || tool === 'arrow' ? 'crosshair' : tool === 'eraser' ? 'not-allowed' : isPanning.current ? 'grabbing' : 'default', userSelect: 'none', transition: 'background 0.3s ease' }}>
             {/* AI Background Image — rendered behind all elements */}
             {canvasBgImage && (
               <img src={canvasBgImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none', zIndex: 0 }} />
@@ -2678,8 +2722,7 @@ function HistorySnapshots({ C, t, canvasW, canvasH, onRestore }: {
       const sx = thumbW / canvasW;
       const sy = thumbH / canvasH;
       ctx.scale(sx, sy);
-      ctx.fillStyle = snap.canvasBg;
-      ctx.fillRect(0, 0, canvasW, canvasH);
+      if (snap.canvasBg !== 'transparent') { ctx.fillStyle = snap.canvasBg; ctx.fillRect(0, 0, canvasW, canvasH); }
       for (const el of snap.els) {
         if (el.visible === false) continue;
         ctx.globalAlpha = el.opacity ?? 1;

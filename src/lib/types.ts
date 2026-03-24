@@ -107,6 +107,10 @@ export interface CanvasElement {
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   textStroke?: string;
   textStrokeWidth?: number;
+  // Multiple stacked text strokes for 3D / YouTube-style outlines (up to 3)
+  textStrokes?: Array<{ color: string; width: number }>;
+  // Pulse animation (editor-only, not exported)
+  pulse?: boolean;
   // advanced text
   fontWeight?: number; // 100-900, default 400
   curveAmount?: number; // -100 to 100

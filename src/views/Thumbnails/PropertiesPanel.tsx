@@ -303,18 +303,12 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
               <span style={{ fontSize: 9, color: C.dim, minWidth: 24, textAlign: 'right' }}>{(sel.lineHeight ?? 1.2).toFixed(1)}</span>
             </div>
           </div>
-          {/* Text Outline/Stroke */}
-          <div>
-            <div style={labelStyle}>Text Stroke</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <InlineColorSwatch C={C} value={sel.textStroke ?? '#000000'} onChange={(c) => updEl(sel.id, { textStroke: c })} />
-              <input type="range" min={0} max={8} step={0.5} value={sel.textStrokeWidth ?? 0} onChange={(e) => updEl(sel.id, { textStrokeWidth: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
-              <span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.textStrokeWidth ?? 0}</span>
-            </div>
-          </div>
+          {/* Text Outline/Stroke — Multi-layer */}
+          <TextStrokeLayers C={C} el={sel} updEl={updEl} labelStyle={labelStyle} />
           {/* Shadow with custom option */}
           <ShadowControl C={C} value={sel.shadow} onChange={(v) => updEl(sel.id, { shadow: v })} inputStyle={inputStyle} labelStyle={labelStyle} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <PulseToggle C={C} value={!!sel.pulse} onChange={(v) => updEl(sel.id, { pulse: v })} labelStyle={labelStyle} />
           <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           {/* Text background swatches */}
           <div><div style={labelStyle}>{t('thumbs.props.textBg')}</div><div style={{ display: 'flex', gap: 4 }}>
@@ -454,6 +448,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
             </div>
           )}
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <PulseToggle C={C} value={!!sel.pulse} onChange={(v) => updEl(sel.id, { pulse: v })} labelStyle={labelStyle} />
           <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           {sel.type === 'rect' && <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={50} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}px</span></div></div>}
           {/* Border color + width + dash style */}
@@ -565,6 +560,7 @@ export function PropertiesPanel({ sel }: PropertiesPanelProps) {
           {/* AI Remove Background */}
           <AIRemoveBackgroundButton C={C} sel={sel} updEl={updEl} pushHistory={pushHistory} />
           <OpacitySlider C={C} value={sel.opacity ?? 1} onChange={(v) => updEl(sel.id, { opacity: v })} />
+          <PulseToggle C={C} value={!!sel.pulse} onChange={(v) => updEl(sel.id, { pulse: v })} labelStyle={labelStyle} />
           <OpacityFadePills C={C} value={sel.opacityFade} onChange={(v) => updEl(sel.id, { opacityFade: v })} />
           <div><div style={labelStyle}>{t('thumbs.props.rounding')}</div><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><input type="range" min={0} max={60} value={sel.borderR ?? 0} onChange={(e) => updEl(sel.id, { borderR: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} /><span style={{ fontSize: 9, color: C.dim, minWidth: 20, textAlign: 'right' }}>{sel.borderR ?? 0}</span></div></div>
           {/* Image Shadow */}
@@ -1186,10 +1182,100 @@ function ColorWithHex(props: { C: Theme; value: string | undefined; onChange: (c
   return <ColorPicker {...props} />;
 }
 
+// ===== Text Stroke Layers (up to 3 stacked outlines) =====
+function TextStrokeLayers({ C, el, updEl, labelStyle }: { C: Theme; el: CanvasElement; updEl: (id: string, patch: Partial<CanvasElement>) => void; labelStyle: React.CSSProperties }) {
+  const strokes = el.textStrokes ?? [];
+  // Backwards-compat: if legacy textStroke/textStrokeWidth exist but textStrokes is empty, show legacy as first layer
+  const effectiveStrokes: Array<{ color: string; width: number }> = strokes.length > 0
+    ? strokes
+    : (el.textStrokeWidth && el.textStrokeWidth > 0) ? [{ color: el.textStroke ?? '#000000', width: el.textStrokeWidth }] : [];
+
+  const updateStroke = (index: number, patch: Partial<{ color: string; width: number }>) => {
+    const updated = [...effectiveStrokes];
+    updated[index] = { ...updated[index], ...patch };
+    updEl(el.id, { textStrokes: updated, textStroke: updated[0]?.color, textStrokeWidth: updated[0]?.width ?? 0 });
+  };
+
+  const addStroke = () => {
+    if (effectiveStrokes.length >= 3) return;
+    const defaults = [
+      { color: '#000000', width: 2 },
+      { color: '#333333', width: 4 },
+      { color: '#666666', width: 6 },
+    ];
+    const newStroke = defaults[effectiveStrokes.length] ?? { color: '#000000', width: 3 };
+    const updated = [...effectiveStrokes, newStroke];
+    updEl(el.id, { textStrokes: updated, textStroke: updated[0]?.color, textStrokeWidth: updated[0]?.width ?? 0 });
+  };
+
+  const removeStroke = (index: number) => {
+    const updated = effectiveStrokes.filter((_, i) => i !== index);
+    updEl(el.id, {
+      textStrokes: updated.length > 0 ? updated : undefined,
+      textStroke: updated[0]?.color ?? '#000000',
+      textStrokeWidth: updated[0]?.width ?? 0,
+    });
+  };
+
+  return (
+    <div>
+      <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>Text Strokes</span>
+        <span style={{ fontSize: 8, color: C.dim }}>{effectiveStrokes.length}/3</span>
+      </div>
+      {effectiveStrokes.map((stroke, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+          <span style={{ fontSize: 8, color: C.dim, width: 10, textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
+          <InlineColorSwatch C={C} value={stroke.color} onChange={(c) => updateStroke(i, { color: c })} />
+          <input type="range" min={0.5} max={10} step={0.5} value={stroke.width} onChange={(e) => updateStroke(i, { width: +e.target.value })} style={{ flex: 1, accentColor: '#888' }} />
+          <span style={{ fontSize: 9, color: C.dim, minWidth: 18, textAlign: 'right' }}>{stroke.width}</span>
+          <button onClick={() => removeStroke(i)} style={{ background: 'transparent', border: 'none', color: C.dim, fontSize: 12, cursor: 'pointer', padding: '0 2px', lineHeight: 1, fontFamily: 'inherit' }} title="Remove stroke layer" aria-label="Remove stroke layer">x</button>
+        </div>
+      ))}
+      {effectiveStrokes.length < 3 && (
+        <button onClick={addStroke} style={{ width: '100%', padding: '4px 0', borderRadius: 5, border: `1px dashed ${C.border}`, background: 'transparent', color: C.sub, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit', marginTop: 2 }}>+ Add stroke layer</button>
+      )}
+      {effectiveStrokes.length === 0 && (
+        <div style={{ fontSize: 9, color: C.dim, textAlign: 'center', padding: '4px 0' }}>No strokes. Add a layer for outline effect.</div>
+      )}
+    </div>
+  );
+}
+
+// ===== Pulse Animation Toggle =====
+function PulseToggle({ C, value, onChange, labelStyle }: { C: Theme; value: boolean; onChange: (v: boolean) => void; labelStyle: React.CSSProperties }) {
+  return (
+    <div>
+      <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>Pulse</span>
+        <span style={{ fontSize: 8, color: C.dim }}>preview only</span>
+      </div>
+      <button
+        onClick={() => onChange(!value)}
+        style={{
+          width: '100%',
+          padding: '5px 0',
+          borderRadius: 6,
+          border: `1px solid ${value ? C.blue + '55' : C.border}`,
+          background: value ? C.blue + '14' : 'transparent',
+          color: value ? C.blue : C.sub,
+          fontSize: 9,
+          fontWeight: 600,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        {value ? 'Pulse ON' : 'Pulse OFF'}
+      </button>
+    </div>
+  );
+}
+
 // Compact inline color swatch with popover picker (replaces raw <input type="color">)
 function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C: Theme; value: string; onChange: (c: string) => void; width?: number; height?: number }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const projectColors = useThumbnailStore((s) => s.projectColors);
   const [recent, setRecent] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('tf-recent-colors') || '[]'); } catch { return []; }
   });
@@ -1207,6 +1293,7 @@ function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C:
     onChange(c);
     const updated = addToRecentColors(c);
     setRecent(updated);
+    useThumbnailStore.getState().addProjectColor(c);
   };
 
   return (
@@ -1218,6 +1305,21 @@ function InlineColorSwatch({ C, value, onChange, width = 28, height = 24 }: { C:
       {open && (
         <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 10, width: 190, boxShadow: '0 8px 32px rgba(0,0,0,.25)' }}>
           <input type="color" value={value} onChange={(e) => onChange(e.target.value)} onBlur={(e) => { handleCommit((e.target as HTMLInputElement).value); }} style={{ width: '100%', height: 28, border: `1px solid ${C.border}`, borderRadius: 5, padding: 1, cursor: 'pointer', background: C.surface }} />
+          {/* Project Colors */}
+          {projectColors.length > 0 && (
+            <>
+              <div style={{ fontSize: 9, color: C.dim, marginTop: 6, marginBottom: 3 }}>Project Colors</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                {projectColors.map((c) => (
+                  <button key={c} onClick={() => { onChange(c); }} style={{
+                    width: 24, height: 24, borderRadius: 3, background: c,
+                    border: value.toLowerCase() === c ? '2px solid #fff' : `1px solid ${C.border}`,
+                    cursor: 'pointer', padding: 0,
+                  }} />
+                ))}
+              </div>
+            </>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3, marginTop: 6 }}>
             {COLOR_PICKER_PRESETS.map((c) => (
               <button key={c} onClick={() => handleCommit(c)} style={{

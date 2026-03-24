@@ -402,7 +402,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
             width: 28,
             height: 28,
             borderRadius: 8,
-            background: canvasBg,
+            background: canvasBg === 'transparent' ? 'repeating-conic-gradient(#808080 0% 25%, #b0b0b0 0% 50%) 0 0 / 8px 8px' : canvasBg,
             border: `2px solid ${C.border}`,
             cursor: 'pointer',
             boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.08)',
@@ -414,7 +414,7 @@ export function ToolBar({ onFileChange, isMobile = false }: ToolBarProps) {
         <input
           ref={bgColorRef}
           type="color"
-          value={canvasBg}
+          value={canvasBg === 'transparent' ? '#141414' : canvasBg}
           onChange={(e) => setCanvasBg(e.target.value)}
           style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
         />
