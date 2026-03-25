@@ -91,7 +91,15 @@ export const youtubeRouter = router({
     const res = await fetchWithTimeout(`${API_ENDPOINTS.YOUTUBE_CHANNELS}?part=snippet,statistics&mine=true`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'YouTube API error' });
+    if (!res.ok) {
+      const errorBody = await res.text().catch(() => '');
+      let detail = `HTTP ${res.status}`;
+      try {
+        const parsed = JSON.parse(errorBody);
+        detail = parsed?.error?.message ?? detail;
+      } catch { /* use status code */ }
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `YouTube API error: ${detail}` });
+    }
     const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse YouTube API response' }); });
     // Sync channels to DB in a single transaction
     const items = data.items ?? [];
