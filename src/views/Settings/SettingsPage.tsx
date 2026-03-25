@@ -5,7 +5,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
-import { signOut, useSession } from 'next-auth/react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { usePushNotifications } from '@/components/PushNotificationManager';
 import QRCode from 'qrcode';
@@ -765,7 +765,7 @@ export function SettingsPage() {
               </div>
             ))}
             <button
-              disabled={true}
+              onClick={() => signIn('google', { callbackUrl: '/settings' })}
               style={{
                 ...btnBase,
                 background: 'transparent',
@@ -775,8 +775,6 @@ export function SettingsPage() {
                 borderRadius: 12,
                 fontSize: 13,
                 marginTop: 4,
-                opacity: 0.5,
-                cursor: 'not-allowed',
               }}
             >
               + {t('settings.connectChannel')}
@@ -814,14 +812,12 @@ export function SettingsPage() {
               {t('settings.noChannelsDesc')}
             </p>
             <button
-              disabled={true}
+              onClick={() => signIn('google', { callbackUrl: '/settings' })}
               style={{
                 ...btnBase,
                 background: C.surface,
                 color: C.text,
                 border: `1px solid ${C.border}`,
-                opacity: 0.5,
-                cursor: 'not-allowed',
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
