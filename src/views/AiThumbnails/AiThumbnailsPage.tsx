@@ -31,7 +31,7 @@ interface GeneratedImage {
 const COUNT_OPTIONS = [1, 2, 3] as const;
 const FORMAT_OPTIONS: { id: FormatId; label: string; pro: boolean }[] = [
   { id: '16:9', label: '16:9', pro: false },
-  { id: '9:16', label: '9:16', pro: true },
+  { id: '9:16', label: '9:16', pro: false },
 ];
 
 let _uid = 0;
@@ -146,7 +146,7 @@ export function AiThumbnailsPage() {
       setSelectedImage(imgs[0] || null);
       setHistory((prev) => [...imgs, ...prev].slice(0, 20));
       toast.success(t('aithumbs.toast.success'));
-      setTimeout(() => setImageRevealed(true), 100);
+      setTimeout(() => setImageRevealed(true), 700);
     },
     onError: (err) => {
       setProgress(0);
@@ -171,7 +171,7 @@ export function AiThumbnailsPage() {
       setSelectedImage(img);
       setHistory((prev) => [img, ...prev].slice(0, 20));
       toast.success(t('aithumbs.toast.enhanced'));
-      setTimeout(() => setImageRevealed(true), 100);
+      setTimeout(() => setImageRevealed(true), 700);
     },
     onError: (err) => {
       setProgress(0);

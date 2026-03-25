@@ -309,7 +309,7 @@ export const aiThumbnailsRouter = router({
           .default('realistic'),
         format: z.enum(['16:9', '9:16']).default('16:9'),
         count: z.number().min(1).max(3).default(1),
-        photoUrl: z.string().url().optional(),
+        photoUrl: z.string().optional(),
         youtubeUrl: z.string().url().optional(),
       }),
     )
@@ -335,14 +335,6 @@ export const aiThumbnailsRouter = router({
         select: { plan: true },
       });
       const plan = user?.plan ?? 'FREE';
-
-      // Check 9:16 format (PRO+ only)
-      if (input.format === '9:16' && plan === 'FREE') {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Vertical (9:16) format is available on Pro and Studio plans. Please upgrade.',
-        });
-      }
 
       // Check count limit per plan
       const maxCount = getAiThumbnailLimit('multiGen', plan);
@@ -376,7 +368,7 @@ export const aiThumbnailsRouter = router({
       // Photo reference
       if (input.photoUrl) {
         contextParts +=
-          ' Include a prominent person/face as the main subject, positioned prominently in the thumbnail.';
+          ' The thumbnail must prominently feature the person from the reference photo.';
       }
 
       // Generate images
@@ -390,18 +382,12 @@ export const aiThumbnailsRouter = router({
           : { w: 1344, h: 768 };
 
         const fluxPrompt =
-          `Professional YouTube thumbnail photo. ${input.prompt}.${contextParts}
-
-Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
-Dramatic cinematic side lighting, strong contrast, deep shadows.
-Extremely vibrant saturated colors, color graded like a Hollywood movie.
-Single clear focal point with shallow depth of field and creamy bokeh background.
-Person showing intense emotional expression, looking directly at camera.
-Composition leaves empty space on the right side for text overlay.
-DO NOT include any text, letters, words, or watermarks in the image.
+          `YouTube thumbnail: ${input.prompt}.${contextParts}
+Photorealistic, cinematic lighting, vibrant saturated colors, high contrast.
+Professional composition with empty space for text overlay.
+DO NOT include any text, letters, words, or watermarks.
 ${styleDesc}
-Professional YouTube thumbnail that would get millions of clicks.
-8K, hyper-detailed, magazine quality.`.slice(0, 4000);
+8K, hyper-detailed, professional quality.`.slice(0, 4000);
 
         for (let i = 0; i < actualCount; i++) {
           try {
@@ -446,18 +432,12 @@ Professional YouTube thumbnail that would get millions of clicks.
           : { width: 1344, height: 768 };
 
         const fluxPrompt =
-          `Professional YouTube thumbnail photo. ${input.prompt}.${contextParts}
-
-Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
-Dramatic cinematic side lighting, strong contrast, deep shadows.
-Extremely vibrant saturated colors, color graded like a Hollywood movie.
-Single clear focal point with shallow depth of field and creamy bokeh background.
-Person showing intense emotional expression, looking directly at camera.
-Composition leaves empty space on the right side for text overlay.
-DO NOT include any text, letters, words, or watermarks in the image.
+          `YouTube thumbnail: ${input.prompt}.${contextParts}
+Photorealistic, cinematic lighting, vibrant saturated colors, high contrast.
+Professional composition with empty space for text overlay.
+DO NOT include any text, letters, words, or watermarks.
 ${styleDesc}
-Professional YouTube thumbnail that would get millions of clicks.
-8K, hyper-detailed, magazine quality.`.slice(0, 4000);
+8K, hyper-detailed, professional quality.`.slice(0, 4000);
 
         for (let i = 0; i < actualCount; i++) {
           try {
@@ -502,23 +482,12 @@ Professional YouTube thumbnail that would get millions of clicks.
         const size = input.format === '16:9' ? '1792x1024' : '1024x1792';
 
         const fullPrompt =
-          `Professional YouTube video thumbnail photo. ${input.prompt}.${contextParts}
-
-CRITICAL REQUIREMENTS for YouTube thumbnail:
-- Photorealistic, ultra high quality, 8K detail
-- Dramatic cinematic lighting with strong contrast and shadows
-- Extremely vibrant, saturated colors that pop on small screens
-- Clear single focal point (usually a person's face showing strong emotion)
-- Composition leaves clear empty space on one side for text overlay
-- DO NOT include any text, letters, words, or watermarks in the image
-- Shot from slightly below eye level for power/authority feeling
-- Shallow depth of field with bokeh background
-- ${styleDesc}
-
-The image must look like a professional YouTube thumbnail that would get millions of clicks.`.slice(
-            0,
-            4000,
-          );
+          `YouTube thumbnail: ${input.prompt}.${contextParts}
+Photorealistic, cinematic lighting, vibrant saturated colors, high contrast.
+Professional composition with empty space for text overlay.
+DO NOT include any text, letters, words, or watermarks.
+${styleDesc}
+8K, hyper-detailed, professional quality.`.slice(0, 4000);
 
         for (let i = 0; i < actualCount; i++) {
           let res: Response;
