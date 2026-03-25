@@ -553,14 +553,37 @@ export function Dashboard() {
   const profile = trpc.user.getProfile.useQuery();
 
   /* ── Channel connection check ── */
+  // Primary source: channels already synced to DB (from profile query)
+  const profileChannels = profile.data?.channels ?? [];
+
+  // Secondary: live sync from YouTube API (may fail if API is down/disabled)
   const channelsQuery = trpc.youtube.getChannels.useQuery(undefined, {
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });
 
-  const channels = channelsQuery.data ?? [];
-  const isConnected = channelsQuery.isSuccess && channels.length > 0;
-  const isCheckingConnection = channelsQuery.isLoading;
+  const apiChannels = channelsQuery.data ?? [];
+  // Connected if DB has channels OR API returned channels
+  const isConnected = profileChannels.length > 0 || (channelsQuery.isSuccess && apiChannels.length > 0);
+  const isCheckingConnection = profile.isLoading || (channelsQuery.isLoading && profileChannels.length === 0);
+
+  /* ── Refetch profile when channel sync succeeds (updates DB channels) ── */
+  const prevSyncSuccess = useRef(false);
+  useEffect(() => {
+    if (channelsQuery.isSuccess && apiChannels.length > 0 && !prevSyncSuccess.current) {
+      prevSyncSuccess.current = true;
+      profile.refetch();
+    }
+  }, [channelsQuery.isSuccess, apiChannels.length, profile]);
+
+  /* ── Show error toast when YouTube API fails ── */
+  useEffect(() => {
+    if (channelsQuery.isError && !isConnected) {
+      const msg = channelsQuery.error?.message || 'Failed to load YouTube channels';
+      toast.error(msg);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelsQuery.isError]);
 
   /* ── Connect handler ── */
   const handleConnect = useCallback(() => {
