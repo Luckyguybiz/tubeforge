@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { signIn } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
@@ -12,28 +13,133 @@ import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
 import { ChannelAnalytics } from './ChannelAnalytics';
 import { UpgradePopupModal } from '@/components/ui/UpgradePopupModal';
 
-/* ── Tool icon definitions (static, no i18n needed) ──── */
+/* ================================================================
+   NEON & LOCKED STATE CSS
+   ================================================================ */
 
-const TOP_TOOL_ICONS = [
-  <svg key="ai" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" /></svg>,
-  <svg key="ve" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21" /></svg>,
-  <svg key="ds" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
-  <svg key="seo" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
-  <svg key="va" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>,
-  <svg key="an" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 11-6.2-8.6" /><path d="M21 3v6h-6" /></svg>,
-  <svg key="cp" width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+const NEON_CSS = `
+@keyframes tfNeonPulse {
+  0%, 100% { box-shadow: 0 0 8px var(--tf-neon, rgba(99,102,241,0.4)), 0 0 24px var(--tf-neon-soft, rgba(99,102,241,0.15)); }
+  50% { box-shadow: 0 0 16px var(--tf-neon, rgba(99,102,241,0.6)), 0 0 40px var(--tf-neon-soft, rgba(99,102,241,0.3)), 0 0 60px var(--tf-neon-dim, rgba(99,102,241,0.08)); }
+}
+@keyframes tfLockFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes tfBannerGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes tfBarGrow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.tf-neon-active {
+  animation: tfNeonPulse 3s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+.tf-neon-active:hover { transform: translateY(-2px); }
+.tf-feat-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.tf-feat-card:not(.tf-feat-locked):hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+}
+.tf-feat-locked { cursor: pointer; }
+.tf-feat-locked:hover { transform: translateY(-2px); }
+.tf-lock-icon { animation: tfLockFloat 2s ease-in-out infinite; }
+.tf-banner-glow { background-size: 200% 200%; animation: tfBannerGlow 6s ease infinite; }
+`;
+
+/* ================================================================
+   FEATURE CARD DEFINITIONS
+   ================================================================ */
+
+const FEATURE_CARDS = [
+  {
+    key: 'analytics',
+    titleKey: 'dashboard.tool.analytics',
+    descKey: 'dashboard.tool.analyticsDesc',
+    href: '/analytics',
+    from: '#8b5cf6', to: '#ec4899',
+    badge: null as string | null,
+  },
+  {
+    key: 'aiThumbnails',
+    titleKey: 'dashboard.tool.aiThumbnails',
+    descKey: 'dashboard.tool.aiThumbnailsDesc',
+    href: '/ai-thumbnails',
+    from: '#6366f1', to: '#8b5cf6',
+    badge: 'NEW' as string | null,
+  },
+  {
+    key: 'videoEditor',
+    titleKey: 'dashboard.tool.videoEditor',
+    descKey: 'dashboard.tool.videoEditorNavDesc',
+    href: '/editor',
+    from: '#3b82f6', to: '#06b6d4',
+    badge: null as string | null,
+  },
+  {
+    key: 'seoOptimizer',
+    titleKey: 'dashboard.tool.seoOptimizer',
+    descKey: 'dashboard.tool.seoOptimizerDesc',
+    href: '/preview?tab=seo',
+    from: '#10b981', to: '#34d399',
+    badge: null as string | null,
+  },
+  {
+    key: 'contentPlanner',
+    titleKey: 'dashboard.tool.contentPlanner',
+    descKey: 'dashboard.tool.publishPlanDesc',
+    href: '/preview?tab=planner',
+    from: '#f97316', to: '#ef4444',
+    badge: null as string | null,
+  },
+  {
+    key: 'designStudio',
+    titleKey: 'dashboard.tool.designStudio',
+    descKey: 'dashboard.tool.designStudioDesc',
+    href: '/thumbnails',
+    from: '#f59e0b', to: '#f97316',
+    badge: null as string | null,
+  },
 ];
 
-/* Static parts of top tools (no translated strings) */
-const TOP_TOOL_META = [
-  { titleKey: 'dashboard.tool.aiThumbnails', descKey: 'dashboard.tool.aiThumbnailsDesc', href: '/ai-thumbnails', from: '#6366f1', to: '#8b5cf6', badge: 'NEW' as const },
-  { titleKey: 'dashboard.tool.videoEditor', descKey: 'dashboard.tool.videoEditorNavDesc', href: '/editor', from: '#3b82f6', to: '#06b6d4', badge: null },
-  { titleKey: 'dashboard.tool.designStudio', descKey: 'dashboard.tool.designStudioDesc', href: '/thumbnails', from: '#f59e0b', to: '#f97316', badge: null },
-  { titleKey: 'dashboard.tool.seoOptimizer', descKey: 'dashboard.tool.seoOptimizerDesc', href: '/preview?tab=seo', from: '#10b981', to: '#34d399', badge: null },
-  { titleKey: 'dashboard.tool.videoAnalyzer', descKey: 'dashboard.tool.videoAnalyzerDesc', href: '/tools/youtube-downloader', from: '#14b8a6', to: '#22d3ee', badge: 'FREE' as const },
-  { titleKey: 'dashboard.tool.analytics', descKey: 'dashboard.tool.analyticsDesc', href: '/analytics', from: '#8b5cf6', to: '#ec4899', badge: null },
-  { titleKey: 'dashboard.tool.contentPlanner', descKey: 'dashboard.tool.publishPlanDesc', href: '/preview?tab=planner', from: '#f97316', to: '#ef4444', badge: null },
-];
+const FEATURE_ICONS: Record<string, React.ReactNode> = {
+  analytics: (
+    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a9 9 0 11-6.2-8.6" /><path d="M21 3v6h-6" />
+    </svg>
+  ),
+  aiThumbnails: (
+    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" />
+    </svg>
+  ),
+  videoEditor: (
+    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="5,3 19,12 5,21" />
+    </svg>
+  ),
+  seoOptimizer: (
+    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  contentPlanner: (
+    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  designStudio: (
+    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+    </svg>
+  ),
+};
 
 const FREE_TOOL_META = [
   { titleKey: 'dashboard.tool.titleGenerator', href: '/free-tools/title-generator' },
@@ -47,35 +153,29 @@ const FREE_TOOL_META = [
   { titleKey: 'dashboard.tool.thumbnailChecker', href: '/tools/youtube-thumbnail-size' },
 ];
 
-/* ── Activity icon helper ─────────────────────────────── */
+/* Mock bar heights for locked analytics preview */
+const MOCK_BARS = [55, 72, 48, 88, 64, 80, 52, 92, 68, 85, 44, 76, 60, 95];
+
+/* ================================================================
+   HELPERS
+   ================================================================ */
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return n.toLocaleString();
+}
 
 function activityIcon(type: string, color: string) {
   switch (type) {
     case 'project_created':
-      return (
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
-          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      );
+      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>);
     case 'video_generated':
-      return (
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="5,3 19,12 5,21" />
-        </svg>
-      );
+      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21" /></svg>);
     case 'project_exported':
-      return (
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-      );
+      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>);
     default:
-      return (
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-      );
+      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>);
   }
 }
 
@@ -104,9 +204,213 @@ function timeAgoShort(ts: number, t: (key: string) => string): string {
   return t('dashboard.time.monthsAgo').replace('{n}', String(Math.floor(days / 30)));
 }
 
-/* ── TopChoiceCard component ──────────────────────────── */
+/* ================================================================
+   SUB-COMPONENTS
+   ================================================================ */
 
-function TopChoiceCard({
+/* ── Frosted-glass lock overlay ── */
+function LockedOverlay({
+  C,
+  label,
+  onClick,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(10, 10, 10, 0.72)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        borderRadius: 'inherit',
+        zIndex: 2,
+        cursor: 'pointer',
+      }}
+    >
+      <div className="tf-lock-icon" style={{
+        width: 48, height: 48, borderRadius: 14,
+        background: `linear-gradient(135deg, ${C.accent}25, ${C.purple}25)`,
+        border: `1px solid ${C.accent}40`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+        </svg>
+      </div>
+      <span style={{
+        fontSize: 12, fontWeight: 700, color: C.accent,
+        letterSpacing: '.04em', textTransform: 'uppercase',
+      }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* ── Connection banner ── */
+function ConnectionBanner({
+  C,
+  t,
+  onConnect,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
+  onConnect: () => void;
+}) {
+  return (
+    <div
+      className="tf-banner-glow"
+      style={{
+        background: `linear-gradient(135deg, ${C.accent}12, ${C.purple}12, ${C.blue}12, ${C.accent}12)`,
+        border: `1px solid ${C.accent}30`,
+        borderRadius: 18,
+        padding: '28px 32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 20,
+        marginBottom: 28,
+        flexWrap: 'wrap',
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 200 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 12,
+            background: `${C.accent}20`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29.94 29.94 0 001 12a29.94 29.94 0 00.46 5.58A2.78 2.78 0 003.4 19.6C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 001.94-2A29.94 29.94 0 0023 12a29.94 29.94 0 00-.46-5.58z" />
+              <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+            </svg>
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
+            {t('dashboard.connectBanner.title')}
+          </h3>
+        </div>
+        <p style={{ fontSize: 13, color: C.sub, margin: '0 0 0 52px', lineHeight: 1.5 }}>
+          {t('dashboard.connectBanner.desc')}
+        </p>
+      </div>
+      <button
+        onClick={onConnect}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '12px 28px', borderRadius: 12,
+          background: `linear-gradient(135deg, ${C.accent}, ${C.purple})`,
+          color: '#fff', border: 'none', cursor: 'pointer',
+          fontSize: 14, fontWeight: 700,
+          transition: 'opacity 0.2s, transform 0.2s',
+          flexShrink: 0,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'scale(1.02)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
+      >
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fillOpacity=".9" />
+          <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fillOpacity=".7" />
+          <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fillOpacity=".5" />
+          <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fillOpacity=".6" />
+        </svg>
+        {t('dashboard.connectBanner.cta')}
+      </button>
+    </div>
+  );
+}
+
+/* ── Locked analytics preview (mock stats + chart) ── */
+function LockedAnalyticsPreview({
+  C,
+  connectLabel,
+  onConnect,
+}: {
+  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  connectLabel: string;
+  onConnect: () => void;
+}) {
+  return (
+    <div style={{
+      position: 'relative', borderRadius: 18, overflow: 'hidden',
+      marginBottom: 32, border: `1px solid ${C.border}`,
+    }}>
+      {/* Simulated analytics content behind the overlay */}
+      <div style={{ padding: 24, background: C.card }}>
+        {/* Mock quick stats */}
+        <div style={{
+          display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap',
+        }}>
+          {[
+            { label: 'Subscribers', value: '12.5K', color: '#3b82f6' },
+            { label: 'Views', value: '145K', color: '#10b981' },
+            { label: 'Videos', value: '89', color: '#f97316' },
+          ].map((stat) => (
+            <div key={stat.label} style={{
+              flex: '1 1 160px', padding: '18px 20px', borderRadius: 14,
+              background: C.surface, border: `1px solid ${C.border}`,
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 600, color: C.dim,
+                textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10,
+              }}>
+                {stat.label}
+              </div>
+              <div style={{
+                fontSize: 26, fontWeight: 800, color: C.text,
+                letterSpacing: '-.03em', filter: 'blur(5px)', userSelect: 'none',
+              }}>
+                {stat.value}
+              </div>
+              <div style={{
+                marginTop: 10, height: 4, borderRadius: 2, background: C.border,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: '65%', height: '100%', borderRadius: 2,
+                  background: `linear-gradient(90deg, ${stat.color}, ${stat.color}99)`,
+                  filter: 'blur(2px)',
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Mock chart */}
+        <div style={{
+          height: 180, borderRadius: 14, background: C.surface,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          gap: 8, padding: '20px 24px', overflow: 'hidden',
+        }}>
+          {MOCK_BARS.map((h, i) => (
+            <div key={i} style={{
+              flex: 1, maxWidth: 24, height: `${h}%`,
+              borderRadius: '4px 4px 0 0',
+              background: `linear-gradient(180deg, ${C.accent}, ${C.purple}88)`,
+              opacity: 0.4,
+              filter: 'blur(2px)',
+              transformOrigin: 'bottom',
+            }} />
+          ))}
+        </div>
+      </div>
+      {/* Full overlay */}
+      <LockedOverlay C={C} label={connectLabel} onClick={onConnect} />
+    </div>
+  );
+}
+
+/* ── Feature grid card ── */
+function FeatureGridCard({
   title,
   desc,
   href,
@@ -114,7 +418,10 @@ function TopChoiceCard({
   to,
   badge,
   icon,
+  locked,
+  connectLabel,
   C,
+  onConnect,
 }: {
   title: string;
   desc: string;
@@ -123,70 +430,73 @@ function TopChoiceCard({
   to: string;
   badge: string | null;
   icon: React.ReactNode;
+  locked: boolean;
+  connectLabel: string;
   C: ReturnType<typeof useThemeStore.getState>['theme'];
+  onConnect: () => void;
 }) {
-  return (
-    <Link
-      href={href}
-      className="tf-top-choice-card tf-top-choice-item"
+  const inner = (
+    <div
+      className={`tf-feat-card ${locked ? 'tf-feat-locked' : ''}`}
       style={{
-        width: 220,
-        flexShrink: 0,
-        borderRadius: 14,
-        overflow: 'visible',
-        textDecoration: 'none',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        scrollSnapAlign: 'start',
-        display: 'flex',
-        flexDirection: 'column',
-        border: `1px solid ${C.border}`,
+        position: 'relative',
+        borderRadius: 16,
+        overflow: 'hidden',
+        background: C.card,
+        border: `1px solid ${locked ? C.border : from + '30'}`,
+        height: '100%',
       }}
     >
-      {/* Visual area — gradient with icon */}
+      {/* Gradient header */}
       <div style={{
-        height: 160,
-        overflow: 'hidden',
+        height: 110,
         background: `linear-gradient(135deg, ${from}, ${to})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        opacity: locked ? 0.5 : 1,
       }}>
         {icon}
         {badge && (
           <span style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
+            position: 'absolute', top: 10, right: 10,
             background: badge === 'PRO' ? '#6366f1' : badge === 'NEW' ? '#84cc16' : '#22c55e',
             color: badge === 'PRO' ? '#fff' : '#000',
-            fontSize: 10,
-            fontWeight: 700,
-            padding: '3px 8px',
-            borderRadius: 6,
+            fontSize: 10, fontWeight: 700,
+            padding: '3px 8px', borderRadius: 6,
           }}>
             {badge}
           </span>
         )}
       </div>
-      {/* Title + description */}
-      <div style={{ padding: '12px 14px', background: C.card }}>
+      {/* Body */}
+      <div style={{ padding: '14px 16px' }}>
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{title}</span>
-          <span style={{ color: C.dim }}>&rarr;</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{title}</span>
+          {!locked && <span style={{ color: C.dim, fontSize: 16 }}>&rarr;</span>}
         </div>
-        <div style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>{desc}</div>
+        <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.4 }}>{desc}</div>
       </div>
+      {/* Lock overlay */}
+      {locked && <LockedOverlay C={C} label={connectLabel} onClick={onConnect} />}
+    </div>
+  );
+
+  if (locked) {
+    return <div onClick={onConnect} style={{ cursor: 'pointer' }}>{inner}</div>;
+  }
+
+  return (
+    <Link href={href} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+      {inner}
     </Link>
   );
 }
 
-/* ── FreeToolChip component ───────────────────────────── */
-
+/* ── Free tool chip ── */
 function FreeToolChip({
   title,
   href,
@@ -220,19 +530,15 @@ function FreeToolChip({
         whiteSpace: 'nowrap',
       }}
     >
-      <span style={{
-        fontSize: 14,
-        fontWeight: 600,
-        color: C.text,
-      }}>
-        {title}
-      </span>
+      <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{title}</span>
       <span style={{ color: C.dim, fontSize: 14 }}>&rarr;</span>
     </Link>
   );
 }
 
-/* ── Main Dashboard Component ──────────────────────────── */
+/* ================================================================
+   MAIN DASHBOARD COMPONENT
+   ================================================================ */
 
 export function Dashboard() {
   const C = useThemeStore((s) => s.theme);
@@ -241,19 +547,29 @@ export function Dashboard() {
 
   /* ── Recent activity ── */
   const [recentActivities, setRecentActivities] = useState<ActivityEntry[]>([]);
+  useEffect(() => { setRecentActivities(getRecentActivity(6)); }, []);
 
-  useEffect(() => {
-    setRecentActivities(getRecentActivity(6));
-  }, []);
-
-  /* ── tRPC queries ─────────────────────────────── */
+  /* ── tRPC queries ── */
   const profile = trpc.user.getProfile.useQuery();
 
-  /* ── Auto-trigger checkout when arriving from pricing CTA ── */
+  /* ── Channel connection check ── */
+  const channelsQuery = trpc.youtube.getChannels.useQuery(undefined, {
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const channels = channelsQuery.data ?? [];
+  const isConnected = channelsQuery.isSuccess && channels.length > 0;
+  const isCheckingConnection = channelsQuery.isLoading;
+
+  /* ── Connect handler ── */
+  const handleConnect = useCallback(() => {
+    signIn('google', { callbackUrl: '/dashboard' });
+  }, []);
+
+  /* ── Auto-trigger checkout from pricing CTA ── */
   const initCheckout = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url) window.location.href = data.url;
-    },
+    onSuccess: (data) => { if (data.url) window.location.href = data.url; },
     onError: (err) => toast.error(err.message),
   });
 
@@ -267,7 +583,7 @@ export function Dashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ── Show toast on successful plan upgrade ───── */
+  /* ── Show toast on successful upgrade ── */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('upgraded') === 'true') {
@@ -277,7 +593,7 @@ export function Dashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ── Horizontal wheel scroll for free tools ──── */
+  /* ── Horizontal wheel scroll for free tools ── */
   const handleFreeToolsWheel = useCallback((e: WheelEvent) => {
     if (!freeToolsScrollRef.current) return;
     if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
@@ -293,7 +609,7 @@ export function Dashboard() {
     return () => el.removeEventListener('wheel', handleFreeToolsWheel);
   }, [handleFreeToolsWheel]);
 
-  /* ── Error state ─────────────────────────────── */
+  /* ── Error state ── */
   if (profile.isError) {
     const err = profile.error;
     return (
@@ -305,14 +621,16 @@ export function Dashboard() {
   }
 
   const user = profile.data;
+  const connectLabel = t('dashboard.locked.connect');
 
   return (
     <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box', overflow: 'hidden' }}>
+      <style>{NEON_CSS}</style>
 
-      {/* ── Upgrade popup for free users (first visit only) ── */}
+      {/* ── Upgrade popup for free users ── */}
       {user && <UpgradePopupModal userPlan={user.plan} />}
 
-      {/* ── Welcome header ────────────────────────── */}
+      {/* ── Welcome header ── */}
       <div style={{ marginBottom: 24 }}>
         <h1 className="tf-dash-heading" style={{
           fontSize: 'clamp(18px, 4vw, 26px)', fontWeight: 600, margin: '0 0 4px',
@@ -331,169 +649,102 @@ export function Dashboard() {
         </p>
       </div>
 
-      {/* ── Channel Analytics ──────────────────────── */}
-      <div style={{ marginBottom: 32 }}>
-        <ChannelAnalytics />
-      </div>
+      {/* ── Connection banner (shown when not connected) ── */}
+      {!isConnected && !isCheckingConnection && (
+        <ConnectionBanner C={C} t={t} onConnect={handleConnect} />
+      )}
+      {isCheckingConnection && (
+        <Skeleton width="100%" height={100} style={{ borderRadius: 18, marginBottom: 28 }} />
+      )}
 
-      {/* ── Product showcase: "What will you create today?" ── */}
-      <div style={{
-        background: C.surface, borderRadius: 16, padding: 32,
-        marginBottom: 32, display: 'flex', gap: 32, alignItems: 'center',
-        overflow: 'hidden', boxSizing: 'border-box',
-      }} className="tf-dash-showcase">
-        {/* Left: headline + CTA */}
-        <div style={{ flexShrink: 0, minWidth: 200 }} className="tf-dash-showcase-left">
-          <h2 style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1.1, margin: 0 }}>
-            {t('dashboard.hero.title1')}<br />
-            <span style={{ color: C.accent }}>{t('dashboard.hero.title2')}</span>
-          </h2>
-          <p style={{ fontSize: 14, color: C.sub, marginTop: 12, maxWidth: 220, marginBottom: 0 }}>
-            {t('dashboard.hero.subtitle')}
-          </p>
-          <Link href="/free-tools" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            marginTop: 20, padding: '10px 20px',
-            background: C.accent, color: '#000',
-            borderRadius: 10, fontSize: 13, fontWeight: 700,
-            textDecoration: 'none',
-          }}>
-            {t('dashboard.hero.cta')} &#10022;
-          </Link>
+      {/* ── Channel Analytics (when connected) with neon glow ── */}
+      {isConnected && (
+        <div style={{ position: 'relative', marginBottom: 32 }}>
+          {/* Neon glow backdrop */}
+          <div style={{
+            position: 'absolute', inset: -2,
+            borderRadius: 20,
+            background: `linear-gradient(135deg, ${C.accent}10, ${C.purple}10, ${C.blue}10)`,
+            filter: 'blur(24px)',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }} />
+          <div
+            className="tf-neon-active"
+            style={{
+              position: 'relative', zIndex: 1,
+              borderRadius: 18,
+              border: `1px solid ${C.accent}25`,
+              padding: 2,
+              '--tf-neon': `${C.accent}50`,
+              '--tf-neon-soft': `${C.accent}20`,
+              '--tf-neon-dim': `${C.accent}08`,
+            } as React.CSSProperties}
+          >
+            <div style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <ChannelAnalytics />
+            </div>
+          </div>
         </div>
-        {/* Right: horizontal scroll of product cards */}
-        <div style={{
-          display: 'flex', gap: 14, overflowX: 'auto', overflowY: 'visible', flex: 1,
-          scrollSnapType: 'x mandatory', padding: '12px 4px',
-          msOverflowStyle: 'none', scrollbarWidth: 'none',
-          WebkitOverflowScrolling: 'touch', touchAction: 'pan-x',
-        }} className="tf-dash-showcase-scroll">
-          {([
-            { href: '/ai-thumbnails', titleKey: 'dashboard.tool.aiThumbnails', gradientFrom: '#6366f1', gradientTo: '#8b5cf6', badge: 'NEW', badgeColor: '#84cc16',
-              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" /></svg> },
-            { href: '/editor', titleKey: 'dashboard.tool.videoEditor', gradientFrom: '#3b82f6', gradientTo: '#06b6d4', badge: null, badgeColor: '',
-              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21" /></svg> },
-            { href: '/preview?tab=seo', titleKey: 'dashboard.tool.seoOptimizer', gradientFrom: '#10b981', gradientTo: '#34d399', badge: null, badgeColor: '',
-              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg> },
-            { href: '/thumbnails', titleKey: 'dashboard.tool.thumbnailEditor', gradientFrom: '#f59e0b', gradientTo: '#f97316', badge: null, badgeColor: '',
-              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
-            { href: '/free-tools', titleKey: 'dashboard.tool.freeToolsNav', gradientFrom: '#6366f1', gradientTo: '#ec4899', badge: 'FREE', badgeColor: '#22c55e',
-              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg> },
-            { href: '/tools/youtube-downloader', titleKey: 'dashboard.tool.videoAnalyzer', gradientFrom: '#14b8a6', gradientTo: '#22d3ee', badge: 'FREE', badgeColor: '#22c55e',
-              icon: <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg> },
-          ] as const).map((product) => (
-            <Link key={product.href} href={product.href} className="tf-dash-showcase-card tf-dash-product-card" style={{
-              width: 180, flexShrink: 0, scrollSnapAlign: 'start',
-              background: C.card, border: `1px solid ${C.border}`,
-              borderRadius: 14, overflow: 'hidden',
-              textDecoration: 'none', transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              display: 'flex', flexDirection: 'column',
-            }}>
-              <div style={{
-                height: 140, background: `linear-gradient(135deg, ${product.gradientFrom}, ${product.gradientTo})`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                position: 'relative',
-              }}>
-                {product.icon}
-                {product.badge && (
-                  <span style={{
-                    position: 'absolute', top: 8, right: 8,
-                    background: product.badgeColor, color: '#000',
-                    fontSize: 10, fontWeight: 700, padding: '2px 8px',
-                    borderRadius: 6, letterSpacing: '.03em',
-                  }}>
-                    {product.badge}
-                  </span>
-                )}
-              </div>
-              <div style={{
-                padding: '12px 14px', display: 'flex',
-                alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t(product.titleKey)}</span>
-                <span style={{ color: C.dim, fontSize: 16 }}>&rarr;</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* ── Top Choice — horizontal scroll ────────── */}
-      <div style={{ marginBottom: 40 }}>
+      {/* ── Locked analytics preview (when not connected) ── */}
+      {!isConnected && !isCheckingConnection && (
+        <LockedAnalyticsPreview C={C} connectLabel={connectLabel} onConnect={handleConnect} />
+      )}
+      {isCheckingConnection && (
+        <Skeleton width="100%" height={320} style={{ borderRadius: 18, marginBottom: 32 }} />
+      )}
+
+      {/* ── Feature grid: "Your Tools" ── */}
+      <div style={{ marginBottom: 36 }}>
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginBottom: 18,
         }}>
           <div>
             <h2 style={{
-              fontSize: 22,
-              fontWeight: 800,
-              color: C.text,
-              margin: 0,
-              textTransform: 'uppercase',
-              letterSpacing: '-0.02em',
+              fontSize: 22, fontWeight: 800, color: C.text,
+              margin: 0, letterSpacing: '-.02em', textTransform: 'uppercase',
             }}>
-              {t('dashboard.topChoice')}
+              {t('dashboard.yourTools')}
             </h2>
-            <p style={{
-              fontSize: 13,
-              color: C.sub,
-              margin: '4px 0 0',
-            }}>
-              {t('dashboard.topChoiceDesc')}
+            <p style={{ fontSize: 13, color: C.sub, margin: '4px 0 0' }}>
+              {t('dashboard.yourToolsDesc')}
             </p>
           </div>
           <Link href="/tools" style={{
-            fontSize: 13,
-            color: C.sub,
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
+            fontSize: 13, color: C.sub, textDecoration: 'none',
+            display: 'flex', alignItems: 'center', gap: 4,
           }}>
             {t('dashboard.seeAll')} <span>&rsaquo;</span>
           </Link>
         </div>
-        <div
-          onWheel={(e) => {
-            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-              e.currentTarget.scrollLeft += e.deltaY;
-              e.preventDefault();
-            }
-          }}
-          style={{
-            display: 'flex',
-            gap: 16,
-            overflowX: 'auto',
-            overflowY: 'visible',
-            scrollSnapType: 'x mandatory',
-            padding: '12px 4px',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-x',
-          }}
-          className="tf-top-choice-scroll"
-        >
-          {TOP_TOOL_META.map((tool, i) => (
-            <TopChoiceCard
-              key={tool.href}
-              title={t(tool.titleKey)}
-              desc={t(tool.descKey)}
-              href={tool.href}
-              from={tool.from}
-              to={tool.to}
-              badge={tool.badge}
-              icon={TOP_TOOL_ICONS[i]}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
+          gap: 16,
+        }}>
+          {FEATURE_CARDS.map((feature) => (
+            <FeatureGridCard
+              key={feature.key}
+              title={t(feature.titleKey)}
+              desc={t(feature.descKey)}
+              href={feature.href}
+              from={feature.from}
+              to={feature.to}
+              badge={feature.badge}
+              icon={FEATURE_ICONS[feature.key]}
+              locked={!isConnected && !isCheckingConnection}
+              connectLabel={connectLabel}
               C={C}
+              onConnect={handleConnect}
             />
           ))}
         </div>
       </div>
 
-      {/* ── Free YouTube Tools — horizontal scroll ── */}
+      {/* ── Free YouTube Tools (always available) ── */}
       <div style={{ marginBottom: 40 }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -516,30 +767,20 @@ export function Dashboard() {
           ref={freeToolsScrollRef}
           className="tf-free-tools-scroll"
           style={{
-            display: 'flex',
-            gap: 10,
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            paddingBottom: 24,
-            paddingTop: 8,
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-x',
+            display: 'flex', gap: 10,
+            overflowX: 'auto', scrollSnapType: 'x mandatory',
+            paddingBottom: 24, paddingTop: 8,
+            msOverflowStyle: 'none', scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch', touchAction: 'pan-x',
           }}
         >
           {FREE_TOOL_META.map((tool) => (
-            <FreeToolChip
-              key={tool.href}
-              title={t(tool.titleKey)}
-              href={tool.href}
-              C={C}
-            />
+            <FreeToolChip key={tool.href} title={t(tool.titleKey)} href={tool.href} C={C} />
           ))}
         </div>
       </div>
 
-      {/* ── Recent History (conditional) ─────────── */}
+      {/* ── Recent History ── */}
       {recentActivities.length > 0 && (
         <div style={{ marginBottom: 40 }}>
           <div style={{
@@ -562,13 +803,9 @@ export function Dashboard() {
               <div
                 key={activity.id}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  padding: '14px 16px',
-                  background: C.card,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 14,
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 16px', background: C.card,
+                  border: `1px solid ${C.border}`, borderRadius: 14,
                 }}
               >
                 <div style={{
