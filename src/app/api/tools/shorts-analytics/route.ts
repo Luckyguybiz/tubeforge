@@ -1,60 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { db } from '@/server/db';
 import { createLogger } from '@/lib/logger';
 
 const shortsLog = createLogger('shorts-analytics');
 
 const FETCH_TIMEOUT_MS = 10_000;
-
-/**
- * Promo codes loaded from env (mirrors the promo route logic).
- *
- * Intentionally simple for MVP: codes are validated server-side against the
- * PROMO_CODES env var (JSON). This avoids an extra DB round-trip on every
- * analytics request. A DB-backed promo activation table can be added later
- * to track per-user activation time and expiry if needed.
- */
-const PROMO_CODES: Record<string, { hours: number }> = (() => {
-  const raw = process.env.PROMO_CODES;
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as Record<string, { hours: number }>;
-  } catch {
-    return {};
-  }
-})();
-
-/**
- * Check if the user has access to analytics (PRO/STUDIO plan, or a valid promo code).
- * The `promoCode` query param is validated against the server-side promo list.
- */
-async function hasAnalyticsAccess(
-  userId: string,
-  plan: string,
-  promoCode?: string | null,
-): Promise<boolean> {
-  // PRO and STUDIO plans always have access
-  if (plan === 'PRO' || plan === 'STUDIO') return true;
-
-  // Check promo code server-side
-  if (promoCode) {
-    const normalized = promoCode.trim().toUpperCase();
-    if (Object.prototype.hasOwnProperty.call(PROMO_CODES, normalized)) {
-      return true;
-    }
-  }
-
-  // Double-check plan from DB in case session is stale
-  const dbUser = await db.user.findUnique({
-    where: { id: userId },
-    select: { plan: true },
-  });
-  if (dbUser?.plan === 'PRO' || dbUser?.plan === 'STUDIO') return true;
-
-  return false;
-}
 
 // In-memory cache: key = period+country+category, value = { data, timestamp }
 const cache = new Map<string, { data: unknown; ts: number }>();
@@ -108,22 +59,12 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
 
-  // Server-side plan/promo enforcement — FREE users get limited data (10 items, 7d period only)
-  const promoCode = sp.get('promoCode');
-  const hasPro = await hasAnalyticsAccess(session.user.id, session.user.plan, promoCode);
-
-  const FREE_LIMIT = 10;
-  const FREE_PERIOD = '7d';
-
-  const period = hasPro ? (sp.get('period') ?? '7d') : FREE_PERIOD;
+  const period = sp.get('period') ?? '7d';
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';
-  const game = sp.get('game') ?? '';
   const platformParam = sp.get('platform') ?? 'youtube';
   const limitParam = sp.get('limit');
-  const limit = hasPro
-    ? (limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50)
-    : FREE_LIMIT;
+  const limit = limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50;
 
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
@@ -139,7 +80,7 @@ export async function GET(req: NextRequest) {
   // TikTok analytics: use YouTube search for TikTok content (re-uploaded/viral TikToks)
   const isTiktok = platformParam === 'tiktok';
 
-  const cacheKey = `${platformParam}:${period}:${country}:${category}:${game}`;
+  const cacheKey = `${platformParam}:${period}:${country}:${category}`;
   cleanupCache();
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
@@ -155,10 +96,9 @@ export async function GET(req: NextRequest) {
       '24': 'entertainment', '25': 'news', '26': 'howto tutorial', '27': 'education', '28': 'science',
     };
     const catKeyword = category ? (catMap[category] ?? '') : '';
-    const gameKeyword = game ? game : '';
 
     // Strategy: run 2 parallel searches for better coverage, then merge & dedupe
-    const searchTerm = gameKeyword || catKeyword;
+    const searchTerm = catKeyword;
     const queries = isTiktok
       ? [
           `tiktok viral ${searchTerm}`.trim(),

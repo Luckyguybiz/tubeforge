@@ -27,7 +27,6 @@ interface Filters {
   country: string;
   category: string;
   hideIndian: boolean;
-  gameFilter: string;
 }
 
 /* ── Period config ───────────────────────────────────────────────── */
@@ -44,8 +43,6 @@ function getPeriods(t: (key: string) => string): { key: Period; label: string }[
     { key: 'all', label: t('shorts.period.all') },
   ];
 }
-
-const FREE_PERIOD: Period = '7d';
 
 function getCountries(t: (key: string) => string): { key: string; label: string }[] {
   return [
@@ -84,31 +81,7 @@ function getCategories(t: (key: string) => string): { key: string; label: string
 
 type Platform = 'youtube';
 
-const SHORTS_RPM: Record<string, number> = {
-  'minecraft': 0.07,
-  'minecraft ranking': 0.08,
-  'fortnite': 0.06,
-  'roblox': 0.05,
-  'ranking': 0.05,
-  'gta': 0.06,
-  'valorant': 0.06,
-  'brawl stars': 0.05,
-  '': 0.04,
-};
-
-function getGameFilters(_t: (key: string) => string): { key: string; label: string }[] {
-  return [
-    { key: '', label: _t('shorts.game.all') },
-    { key: 'ranking', label: 'Ranking Videos' },
-    { key: 'minecraft', label: 'Minecraft' },
-    { key: 'minecraft ranking', label: 'Minecraft Ranking' },
-    { key: 'fortnite', label: 'Fortnite' },
-    { key: 'roblox', label: 'Roblox' },
-    { key: 'gta', label: 'GTA' },
-    { key: 'valorant', label: 'Valorant' },
-    { key: 'brawl stars', label: 'Brawl Stars' },
-  ];
-}
+const SHORTS_RPM = 0.04;
 
 // Hindi/Devanagari script detection for "Hide Indian" filter
 const INDIAN_PATTERN = /[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]/;
@@ -489,7 +462,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const PERIODS = useMemo(() => getPeriods(t), [t]);
   const COUNTRIES = useMemo(() => getCountries(t), [t]);
   const CATEGORIES = useMemo(() => getCategories(t), [t]);
-  const GAME_FILTERS = useMemo(() => getGameFilters(t), [t]);
 
   /* ── Platform tab (YouTube Shorts / TikTok) ───────── */
   const [platform, setPlatform] = useState<Platform>('youtube');
@@ -588,7 +560,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
     country: '',
     category: '',
     hideIndian: false,
-    gameFilter: '',
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -597,28 +568,18 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
   const [isMock, setIsMock] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Period upgrade tooltip
-  const [periodTooltip, setPeriodTooltip] = useState<Period | null>(null);
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Debounce ref for country/category changes
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch data from API
-  const fetchData = useCallback(async (p: Period, country: string, category: string, pro: boolean, game?: string) => {
+  const fetchData = useCallback(async (p: Period, country: string, category: string) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({ period: p });
       if (country) params.set('country', country);
       if (category) params.set('category', category);
-      if (game) params.set('game', game);
-      if (!pro) params.set('limit', '10');
       params.set('platform', 'youtube');
-
-      const promoRaw = typeof window !== 'undefined' ? localStorage.getItem('tf-promo') : null;
-      const promoCode = promoRaw ? (JSON.parse(promoRaw) as { code?: string })?.code : '';
-      if (promoCode) params.set('promoCode', promoCode);
 
       const res = await fetch(`/api/tools/shorts-analytics?${params}`);
       if (!res.ok) {
@@ -658,66 +619,49 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
 
   // Fetch on mount and when period changes
   useEffect(() => {
-    fetchData(period, filters.country, filters.category, isPro, filters.gameFilter);
-  }, [period, isPro, platform, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchData(period, filters.country, filters.category);
+  }, [period, platform, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Debounced fetch when country/category/game changes
+  // Debounced fetch when country/category changes
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(period, filters.country, filters.category, isPro, filters.gameFilter);
+      fetchData(period, filters.country, filters.category);
     }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [filters.country, filters.category, filters.gameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters.country, filters.category]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePeriodChange = useCallback((p: Period) => {
-    if (!isPro && p !== FREE_PERIOD) {
-      // Show tooltip, auto-dismiss after 2.5s
-      setPeriodTooltip(p);
-      if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = setTimeout(() => setPeriodTooltip(null), 2500);
-      return;
-    }
-    setPeriodTooltip(null);
     setPeriod(p);
-  }, [isPro]);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
-    setFilters({ country: '', category: '', hideIndian: false, gameFilter: '' });
+    setFilters({ country: '', category: '', hideIndian: false });
   }, []);
 
   const dateRange = useMemo(() => getPeriodRange(period, locale, t), [period, locale, t]);
 
   /* ── Styles ──────────────────────────────────────────── */
 
-  // Free users: show max 10 rows
-  const FREE_ROW_LIMIT = 10;
-  // Client-side filters: hide Indian content, game sub-filter
+  // Client-side filters: hide Indian content
   const filteredData = useMemo(() => {
     let result = data;
     if (filters.hideIndian) {
       result = result.filter((item) => !INDIAN_PATTERN.test(item.title) && !INDIAN_PATTERN.test(item.channel));
     }
-    // Game filter is applied server-side via API 'game' param
-    // Only apply client-side if data came from mock (no server filtering)
-    if (filters.gameFilter && isMock) {
-      const q = filters.gameFilter.toLowerCase();
-      result = result.filter((item) => item.title.toLowerCase().includes(q) || item.channel.toLowerCase().includes(q));
-    }
     // Re-rank after filtering
     return result.map((item, i) => ({ ...item, rank: i + 1 }));
-  }, [data, filters.hideIndian, filters.gameFilter, isMock]);
+  }, [data, filters.hideIndian]);
 
   const exportCSV = useCallback(() => {
     const headers = ['Rank', 'Title', 'Views', 'Estimated Earnings', 'Channel', 'Uploaded'];
-    const rpm = SHORTS_RPM[filters.gameFilter] ?? 0.04;
     const rows = filteredData.map((item, i) => [
       i + 1,
       `"${item.title.replace(/"/g, '""')}"`,
       item.views,
-      `$${((item.views / 1000) * rpm).toFixed(2)}`,
+      `$${((item.views / 1000) * SHORTS_RPM).toFixed(2)}`,
       `"${item.channel.replace(/"/g, '""')}"`,
       item.uploaded,
     ]);
@@ -729,19 +673,17 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
     a.download = `shorts-analytics-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [filteredData, filters.gameFilter]);
+  }, [filteredData]);
 
-  const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
-  const showUpgradeOverlay = !isPro && !loading;
+  const visibleData = filteredData;
 
   // Niche stats: total views + estimated earnings
   const nicheStats = useMemo(() => {
     if (filteredData.length === 0) return null;
     const totalViews = filteredData.reduce((sum, item) => sum + (item.views || 0), 0);
-    const rpm = SHORTS_RPM[filters.gameFilter] ?? 0.04;
-    const estimatedEarnings = (totalViews / 1000) * rpm;
-    return { totalViews, estimatedEarnings, rpm, count: filteredData.length };
-  }, [filteredData, filters.gameFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+    const estimatedEarnings = (totalViews / 1000) * SHORTS_RPM;
+    return { totalViews, estimatedEarnings, rpm: SHORTS_RPM, count: filteredData.length };
+  }, [filteredData]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
@@ -922,7 +864,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 </div>
                 {PERIODS.map((p) => {
                   const isActive = period === p.key;
-                  const isLocked = !isPro && p.key !== FREE_PERIOD;
                   return (
                     <div key={p.key} style={{ position: 'relative' }}>
                       <button
@@ -939,9 +880,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           background: isActive
                             ? isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)'
                             : 'transparent',
-                          color: isLocked
-                            ? C.dim
-                            : isActive ? C.text : C.sub,
+                          color: isActive ? C.text : C.sub,
                           fontSize: 13,
                           fontWeight: isActive ? 600 : 400,
                           cursor: 'pointer',
@@ -949,20 +888,10 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
                           transition: 'all .15s ease',
                           marginBottom: 1,
-                          opacity: isLocked ? 0.65 : 1,
                         }}
                       >
                         <span>{p.label}</span>
-                        {isLocked && (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                            <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
-                            <path d="M7 11V7a5 5 0 0110 0v4" stroke={C.dim} strokeWidth="2" strokeLinecap="round" fill="none" />
-                          </svg>
-                        )}
                       </button>
-                      {periodTooltip === p.key && (
-                        <PeriodUpgradeTooltip accent={C.accent} pink={C.pink} isDark={isDark} t={t} />
-                      )}
                     </div>
                   );
                 })}
@@ -991,12 +920,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {t('shorts.filtersLabel')}
-                    {!isPro && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.6 }}>
-                        <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
-                        <path d="M7 11V7a5 5 0 0110 0v4" stroke={C.dim} strokeWidth="2" strokeLinecap="round" fill="none" />
-                      </svg>
-                    )}
                   </span>
                   <svg
                     width="12"
@@ -1020,30 +943,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                   }}
                 >
                   <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {/* Free tier filter lock message */}
-                    {!isPro && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: C.dim,
-                          padding: '6px 8px',
-                          borderRadius: 6,
-                          background: isDark ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.02)',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {t('shorts.filtersAvailableIn')}{' '}
-                        <a
-                          href="/billing"
-                          style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}
-                        >
-                          Pro
-                        </a>
-                      </div>
-                    )}
-
                     {/* Country */}
-                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                    <div>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         {t('shorts.countryLabel')}
                       </label>
@@ -1060,7 +961,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           fontSize: 12.5,
                           fontFamily: 'inherit',
                           outline: 'none',
-                          cursor: isPro ? 'pointer' : 'not-allowed',
+                          cursor: 'pointer',
                           appearance: 'none',
                           WebkitAppearance: 'none',
                         }}
@@ -1072,20 +973,13 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     </div>
 
                     {/* Category */}
-                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                    <div>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         {t('shorts.categoryLabel')}
                       </label>
                       <select
                         value={filters.category}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFilters((f) => ({
-                            ...f,
-                            category: val,
-                            gameFilter: val === '' || val === '20' ? f.gameFilter : '',
-                          }));
-                        }}
+                        onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
                         style={{
                           width: '100%',
                           padding: '7px 10px',
@@ -1096,7 +990,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           fontSize: 12.5,
                           fontFamily: 'inherit',
                           outline: 'none',
-                          cursor: isPro ? 'pointer' : 'not-allowed',
+                          cursor: 'pointer',
                           appearance: 'none',
                           WebkitAppearance: 'none',
                         }}
@@ -1118,40 +1012,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                       sub={C.sub}
                       text={C.text}
                     />
-
-                    {/* Game sub-filter (shown only when category = Gaming or All) */}
-                    {(filters.category === '' || filters.category === '20') && (
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, marginBottom: 6 }}>
-                        {t('shorts.gamesLabel')}
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {GAME_FILTERS.map((g) => (
-                          <button
-                            key={g.key}
-                            onClick={() => setFilters((f) => ({ ...f, gameFilter: f.gameFilter === g.key ? '' : g.key }))}
-                            style={{
-                              padding: '4px 10px',
-                              borderRadius: 8,
-                              border: `1px solid ${filters.gameFilter === g.key ? C.accent : C.border}`,
-                              background: filters.gameFilter === g.key ? `${C.accent}15` : 'transparent',
-                              color: filters.gameFilter === g.key ? C.accent : C.sub,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              fontFamily: 'inherit',
-                              transition: 'all .15s',
-                            }}
-                          >
-                            {g.label}
-                          </button>
-                        ))}
-                        <span style={{ fontSize: 10, color: C.dim, alignSelf: 'center', fontStyle: 'italic' }}>
-                          {t('shorts.moreSoon')}
-                        </span>
-                      </div>
-                    </div>
-                    )}
 
                     {/* Clear */}
                     <button
@@ -1383,7 +1243,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                 border: `1px solid ${C.border}`,
               }}>
                 <div style={{ fontSize: 11, color: C.dim, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {filters.gameFilter ? filters.gameFilter.charAt(0).toUpperCase() + filters.gameFilter.slice(1) : 'Shorts'} {t('shorts.rpmLabel')}
+                  Shorts {t('shorts.rpmLabel')}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.accent }}>
                   ${nicheStats.rpm.toFixed(2)}
@@ -1687,8 +1547,7 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           }}
                         >
                           {(() => {
-                            const rpm = SHORTS_RPM[filters.gameFilter] ?? 0.04;
-                            const earned = (item.views / 1000) * rpm;
+                            const earned = (item.views / 1000) * SHORTS_RPM;
                             if (earned >= 1000) return `~$${(earned / 1000).toFixed(1)}K`;
                             if (earned >= 1) return `~$${Math.round(earned)}`;
                             return `~$${earned.toFixed(2)}`;
@@ -1785,20 +1644,6 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                     );
                   })}
 
-                  {/* Upgrade overlay for free users */}
-                  {showUpgradeOverlay && (
-                    <UpgradeOverlay
-                      isDark={isDark}
-                      accent={C.accent}
-                      pink={C.pink}
-                      surface={C.surface}
-                      text={C.text}
-                      sub={C.sub}
-                      bg={C.bg}
-                      onPromoClick={handleOpenPromoFromOverlay}
-                      t={t}
-                    />
-                  )}
                 </>
               )}
             </tbody>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { db } from '@/server/db';
 
 /* ================================================================== *
  *  TikTok Analytics API                                               *
@@ -65,51 +64,6 @@ function cleanupCache() {
   }
 }
 
-/**
- * Promo codes loaded from env (mirrors the promo route logic).
- *
- * Intentionally simple for MVP: codes are validated server-side against the
- * PROMO_CODES env var (JSON). This avoids an extra DB round-trip on every
- * analytics request. A DB-backed promo activation table can be added later
- * to track per-user activation time and expiry if needed.
- */
-const PROMO_CODES: Record<string, { hours: number }> = (() => {
-  const raw = process.env.PROMO_CODES;
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as Record<string, { hours: number }>;
-  } catch {
-    return {};
-  }
-})();
-
-/**
- * Check if the user has access to analytics (PRO/STUDIO plan, or a valid promo code).
- */
-async function hasAnalyticsAccess(
-  userId: string,
-  plan: string,
-  promoCode?: string | null,
-): Promise<boolean> {
-  if (plan === 'PRO' || plan === 'STUDIO') return true;
-
-  if (promoCode) {
-    const normalized = promoCode.trim().toUpperCase();
-    if (Object.prototype.hasOwnProperty.call(PROMO_CODES, normalized)) {
-      return true;
-    }
-  }
-
-  // Double-check plan from DB in case session is stale
-  const dbUser = await db.user.findUnique({
-    where: { id: userId },
-    select: { plan: true },
-  });
-  if (dbUser?.plan === 'PRO' || dbUser?.plan === 'STUDIO') return true;
-
-  return false;
-}
-
 /* ── GET /api/tools/tiktok-analytics ─────────────────────────────── */
 
 export async function GET(req: NextRequest) {
@@ -133,21 +87,12 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
 
-  // Server-side plan/promo enforcement — FREE users get limited data (10 items, 7d period only)
-  const promoCode = sp.get('promoCode');
-  const hasPro = await hasAnalyticsAccess(session.user.id, session.user.plan, promoCode);
-
-  const FREE_LIMIT = 10;
-  const FREE_PERIOD = '7d';
-
-  const period = hasPro ? (sp.get('period') ?? '7d') : FREE_PERIOD;
+  const period = sp.get('period') ?? '7d';
   const country = sp.get('country') ?? '';
   const category = sp.get('category') ?? '';
   const hashtag = sp.get('hashtag') ?? '';
   const limitParam = sp.get('limit');
-  const limit = hasPro
-    ? (limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50)
-    : FREE_LIMIT;
+  const limit = limitParam ? Math.max(1, Math.min(50, parseInt(limitParam, 10) || 50)) : 50;
 
   const cacheKey = `tiktok:${period}:${country}:${category}:${hashtag}`;
   cleanupCache();

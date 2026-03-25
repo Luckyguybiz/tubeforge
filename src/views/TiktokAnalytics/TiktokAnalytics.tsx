@@ -50,8 +50,6 @@ function getPeriods(t: (key: string) => string): { key: Period; label: string }[
   ];
 }
 
-const FREE_PERIOD: Period = '7d';
-
 function getCountries(t: (key: string) => string): { key: string; label: string }[] {
   return [
     { key: '', label: t('shorts.country.all') },
@@ -591,15 +589,11 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
   const [isMock, setIsMock] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Period upgrade tooltip
-  const [periodTooltip, setPeriodTooltip] = useState<Period | null>(null);
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Debounce ref for country/category/hashtag changes
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch data from API
-  const fetchData = useCallback(async (p: Period, country: string, category: string, pro: boolean, hashtag?: string) => {
+  const fetchData = useCallback(async (p: Period, country: string, category: string, hashtag?: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -607,11 +601,6 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
       if (country) params.set('country', country);
       if (category) params.set('category', category);
       if (hashtag) params.set('hashtag', hashtag);
-      if (!pro) params.set('limit', '10');
-
-      const promoRaw = typeof window !== 'undefined' ? localStorage.getItem('tf-promo') : null;
-      const promoCode = promoRaw ? (JSON.parse(promoRaw) as { code?: string })?.code : '';
-      if (promoCode) params.set('promoCode', promoCode);
 
       const res = await fetch(`/api/tools/tiktok-analytics?${params}`);
       if (!res.ok) {
@@ -651,14 +640,14 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
 
   // Fetch on mount and when period changes
   useEffect(() => {
-    fetchData(period, filters.country, filters.category, isPro, filters.hashtag);
-  }, [period, isPro, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchData(period, filters.country, filters.category, filters.hashtag);
+  }, [period, fetchData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced fetch when country/category/hashtag changes
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(period, filters.country, filters.category, isPro, filters.hashtag);
+      fetchData(period, filters.country, filters.category, filters.hashtag);
     }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -666,16 +655,8 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
   }, [filters.country, filters.category, filters.hashtag]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePeriodChange = useCallback((p: Period) => {
-    if (!isPro && p !== FREE_PERIOD) {
-      // Show tooltip, auto-dismiss after 2.5s
-      setPeriodTooltip(p);
-      if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = setTimeout(() => setPeriodTooltip(null), 2500);
-      return;
-    }
-    setPeriodTooltip(null);
     setPeriod(p);
-  }, [isPro]);
+  }, []);
 
   const handleClearFilters = useCallback(() => {
     setFilters({ country: '', category: '', hashtag: '', trendingSounds: false, hideIndian: false });
@@ -685,8 +666,6 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
 
   /* ── Styles ──────────────────────────────────────────── */
 
-  // Free users: show max 10 rows
-  const FREE_ROW_LIMIT = 10;
   // Client-side filters: hide Indian content, hashtag sub-filter
   const filteredData = useMemo(() => {
     let result = data;
@@ -732,8 +711,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
     URL.revokeObjectURL(url);
   }, [filteredData, filters.category]);
 
-  const visibleData = isPro ? filteredData : filteredData.slice(0, FREE_ROW_LIMIT);
-  const showUpgradeOverlay = !isPro && !loading;
+  const visibleData = filteredData;
 
   // Niche stats: total views, total likes, estimated earnings, engagement rate
   const nicheStats = useMemo(() => {
@@ -928,7 +906,6 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                 </div>
                 {PERIODS.map((p) => {
                   const isActive = period === p.key;
-                  const isLocked = !isPro && p.key !== FREE_PERIOD;
                   return (
                     <div key={p.key} style={{ position: 'relative' }}>
                       <button
@@ -945,9 +922,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                           background: isActive
                             ? isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)'
                             : 'transparent',
-                          color: isLocked
-                            ? C.dim
-                            : isActive ? C.text : C.sub,
+                          color: isActive ? C.text : C.sub,
                           fontSize: 13,
                           fontWeight: isActive ? 600 : 400,
                           cursor: 'pointer',
@@ -955,20 +930,10 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                           borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
                           transition: 'all .15s ease',
                           marginBottom: 1,
-                          opacity: isLocked ? 0.65 : 1,
                         }}
                       >
                         <span>{p.label}</span>
-                        {isLocked && (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                            <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
-                            <path d="M7 11V7a5 5 0 0110 0v4" stroke={C.dim} strokeWidth="2" strokeLinecap="round" fill="none" />
-                          </svg>
-                        )}
                       </button>
-                      {periodTooltip === p.key && (
-                        <PeriodUpgradeTooltip accent={C.accent} pink={C.pink} isDark={isDark} t={t} />
-                      )}
                     </div>
                   );
                 })}
@@ -997,12 +962,6 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {t('tiktok.filtersLabel')}
-                    {!isPro && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.6 }}>
-                        <rect x="3" y="11" width="18" height="11" rx="2" stroke={C.dim} strokeWidth="2" fill="none" />
-                        <path d="M7 11V7a5 5 0 0110 0v4" stroke={C.dim} strokeWidth="2" strokeLinecap="round" fill="none" />
-                      </svg>
-                    )}
                   </span>
                   <svg
                     width="12"
@@ -1026,30 +985,8 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                   }}
                 >
                   <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {/* Free tier filter lock message */}
-                    {!isPro && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: C.dim,
-                          padding: '6px 8px',
-                          borderRadius: 6,
-                          background: isDark ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.02)',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {t('shorts.filtersAvailableIn')}{' '}
-                        <a
-                          href="/billing"
-                          style={{ color: C.accent, textDecoration: 'none', fontWeight: 600 }}
-                        >
-                          Pro
-                        </a>
-                      </div>
-                    )}
-
                     {/* Country */}
-                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                    <div>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         {t('tiktok.countryLabel')}
                       </label>
@@ -1066,7 +1003,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                           fontSize: 12.5,
                           fontFamily: 'inherit',
                           outline: 'none',
-                          cursor: isPro ? 'pointer' : 'not-allowed',
+                          cursor: 'pointer',
                           appearance: 'none',
                           WebkitAppearance: 'none',
                         }}
@@ -1078,7 +1015,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                     </div>
 
                     {/* Category */}
-                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                    <div>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         {t('tiktok.categoryLabel')}
                       </label>
@@ -1095,7 +1032,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                           fontSize: 12.5,
                           fontFamily: 'inherit',
                           outline: 'none',
-                          cursor: isPro ? 'pointer' : 'not-allowed',
+                          cursor: 'pointer',
                           appearance: 'none',
                           WebkitAppearance: 'none',
                         }}
@@ -1107,7 +1044,7 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                     </div>
 
                     {/* Hashtag input */}
-                    <div style={!isPro ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                    <div>
                       <label style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4, display: 'block' }}>
                         {t('tiktok.hashtagLabel')}
                       </label>
@@ -1843,20 +1780,6 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                     );
                   })}
 
-                  {/* Upgrade overlay for free users */}
-                  {showUpgradeOverlay && (
-                    <UpgradeOverlay
-                      isDark={isDark}
-                      accent={C.accent}
-                      pink={C.pink}
-                      surface={C.surface}
-                      text={C.text}
-                      sub={C.sub}
-                      bg={C.bg}
-                      onPromoClick={handleOpenPromoFromOverlay}
-                      t={t}
-                    />
-                  )}
                 </>
               )}
             </tbody>
