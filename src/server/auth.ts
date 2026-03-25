@@ -90,8 +90,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       const PLAN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+      // If account is present — OAuth sign-in just happened, update tokens in DB
+      if (account && account.provider === 'google' && account.access_token) {
+        try {
+          await db.account.update({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            data: {
+              access_token: account.access_token,
+              ...(account.refresh_token && { refresh_token: account.refresh_token }),
+              ...(account.expires_at && { expires_at: account.expires_at }),
+              ...(account.scope && { scope: account.scope }),
+            },
+            select: { id: true },
+          });
+        } catch (err) {
+          authLog.warn('Failed to update account tokens in jwt callback');
+        }
+      }
 
       if (user) {
         // Initial sign-in: populate plan/role from DB into the JWT token
