@@ -77,7 +77,6 @@ function getCategories(t: (key: string) => string): { key: string; label: string
     { key: 'fitness', label: t('tiktok.cat.fitness') },
     { key: 'music', label: t('tiktok.cat.music') },
     { key: 'gaming', label: t('tiktok.cat.gaming') },
-    { key: 'minecraft', label: t('tiktok.cat.minecraft') },
     { key: 'diy', label: t('tiktok.cat.diy') },
     { key: 'fashion', label: t('tiktok.cat.fashion') },
     { key: 'pets', label: t('tiktok.cat.pets') },
@@ -91,7 +90,6 @@ const TIKTOK_RPM: Record<string, number> = {
   dance: 0.02,
   comedy: 0.03,
   gaming: 0.05,
-  minecraft: 0.06,
   education: 0.04,
   food: 0.03,
   beauty: 0.03,
@@ -535,7 +533,8 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
     return () => clearInterval(timer);
   }, [promoExpires]);
 
-  const isPro = plan === 'PRO' || plan === 'STUDIO' || promoActive;
+  // All users get full analytics access - no plan gating
+  const isPro = true;
 
   const handlePromoSubmit = useCallback(async () => {
     if (!promoInput.trim()) return;
