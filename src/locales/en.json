@@ -1544,6 +1544,7 @@
   "referral.perMonth": "per month with 10–50 referrals",
   "referral.potentialEarnings": "Potential earnings",
   "referral.qrDesc": "Scan to open your referral link",
+  "referral.qrDownloadError": "Failed to download QR code",
   "referral.qrDownloaded": "QR code downloaded!",
   "referral.qrTitle": "QR code",
   "referral.retry": "Retry",

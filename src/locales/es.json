@@ -1517,6 +1517,7 @@
   "referral.perMonth": "al mes con 10–50 referidos",
   "referral.potentialEarnings": "Ganancias potenciales",
   "referral.qrDesc": "Escanea para abrir tu enlace de referido",
+  "referral.qrDownloadError": "Error al descargar el código QR",
   "referral.qrDownloaded": "Codigo QR descargado!",
   "referral.qrTitle": "Código QR",
   "referral.retry": "Reintentar",

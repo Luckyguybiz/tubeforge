@@ -149,26 +149,16 @@ function ReferralContent() {
     },
     onError: () => {
       setClaimingMilestone(null);
-      toast.error('Failed to claim reward');
-    },
-  });
-
-
-  const claimAllMutation = trpc.referral.claimReward.useMutation({
-    onSuccess: (data) => {
-      rewards.refetch();
-      toast.success(t('referral.claimSuccess').replace('{credits}', String(data.credits)));
-    },
-    onError: () => {
       toast.error(t('referral.claimError'));
     },
   });
+
+
   const referralCode = myReferral.data?.code ?? null;
   const referralLink = referralCode ? `https://tubeforge.co?ref=${referralCode}` : '';
   const invited = stats.data?.invited ?? 0;
   const paid = stats.data?.paid ?? 0;
   const earnings = stats.data?.earnings ?? 0;
-  const pending = (stats.data as { pending?: number } | undefined)?.pending ?? 0;
 
   /* ── Generate QR code when referral link is available ──── */
   useEffect(() => {
@@ -279,20 +269,9 @@ function ReferralContent() {
       document.body.removeChild(a);
       toast.success(t('referral.qrDownloaded'));
     } catch {
-      toast.error('Failed to download QR code');
+      toast.error(t('referral.qrDownloadError'));
     }
   }, [referralLink, referralCode, t]);
-
-  /* ── Save ref code from URL to localStorage on landing page ──── */
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const refCode = params.get('ref');
-      if (refCode) {
-        localStorage.setItem('tf-ref', refCode);
-      }
-    }
-  }, []);
 
   const isLoading = myReferral.isLoading;
 
@@ -421,6 +400,22 @@ function ReferralContent() {
   /* ── Render ─────────────────────────────────────────────────── */
   return (
     <div className="tf-referral-container" style={containerStyle}>
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 860px) {
+          .tf-referral-container { flex-direction: column !important; }
+          .tf-referral-left { width: 100% !important; min-width: 0 !important; padding: 36px 24px !important; }
+          .tf-referral-right { padding: 28px 20px !important; }
+          .tf-referral-input-row { flex-direction: column !important; }
+          .tf-referral-input-row input { width: 100% !important; }
+          .tf-referral-input-row button { width: 100% !important; }
+          .tf-referral-code-row { flex-direction: column !important; align-items: flex-start !important; }
+          .tf-referral-share-row { flex-wrap: wrap !important; }
+          .tf-referral-stats { grid-template-columns: 1fr !important; }
+          .tf-referral-qr { flex-direction: column !important; align-items: center !important; text-align: center !important; }
+          .tf-referral-how-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* ── Left Panel: Branding ──────────────────────────────── */}
       <div className="tf-referral-left" style={leftPanelStyle}>
         {/* Background decorative circles */}
@@ -954,7 +949,7 @@ function ReferralContent() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
                   {t('referral.statsTitle')}
                 </div>
-                <div className="tf-referral-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div className="tf-referral-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   <div style={statCardStyle}>
                     <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
                       {invited}
@@ -978,12 +973,6 @@ function ReferralContent() {
                       ${earnings.toFixed(0)}
                     </div>
                     <div style={{ fontSize: 11, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.statTotalEarned')}</div>
-                  </div>
-                  <div style={statCardStyle}>
-                    <div style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b', letterSpacing: '-.03em', lineHeight: 1 }}>
-                      ${pending.toFixed(0)}
-                    </div>
-                    <div style={{ fontSize: 11, color: C.sub, marginTop: 6, fontWeight: 500 }}>{t('referral.statPendingPayout')}</div>
                   </div>
                 </div>
               </div>
@@ -1097,7 +1086,7 @@ function ReferralContent() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
                   {t('referral.howItWorks')}
                 </div>
-                <div style={{
+                <div className="tf-referral-how-grid" style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
                   gap: 10,
