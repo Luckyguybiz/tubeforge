@@ -130,6 +130,8 @@
   "aithumbs.empty.description": "Describe an idea in the left panel and AI will create a professional, click-worthy thumbnail for you!",
   "aithumbs.empty.title": "Your thumbnail will appear here",
   "aithumbs.enhance": "Enhance",
+  "aithumbs.enhancedVersion": "Enhanced version",
+  "aithumbs.proBadge": "PRO",
   "aithumbs.format.landscape": "Landscape",
   "aithumbs.format.portrait": "Portrait",
   "aithumbs.generateBtn": "Generate Thumbnail",

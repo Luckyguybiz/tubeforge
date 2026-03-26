@@ -130,6 +130,8 @@
   "aithumbs.empty.description": "Describe una idea en el panel izquierdo y la IA creara una miniatura profesional!",
   "aithumbs.empty.title": "Tu miniatura aparecera aqui",
   "aithumbs.enhance": "Mejorar",
+  "aithumbs.enhancedVersion": "Version mejorada",
+  "aithumbs.proBadge": "PRO",
   "aithumbs.format.landscape": "Horizontal",
   "aithumbs.format.portrait": "Vertical",
   "aithumbs.generateBtn": "Generar miniatura",

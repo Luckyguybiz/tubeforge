@@ -165,7 +165,7 @@ export function AiThumbnailsPage() {
       const img: GeneratedImage = {
         id: data.id || uid(),
         url: data.url,
-        prompt: 'Enhanced version',
+        prompt: t('aithumbs.enhancedVersion'),
         style: 'realistic',
         parentId: selectedImage?.id,
       };
@@ -361,18 +361,17 @@ export function AiThumbnailsPage() {
   /* ── Render ─────────────────────────────────────── */
 
   return (
-    <div style={{ background: C.bg, color: C.text, fontFamily: 'inherit', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ background: DARK_BG, color: '#fff', fontFamily: 'inherit', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ═══ TOP BAR ═══ */}
         <div
           style={{
-            height: 56,
+            height: 48,
             display: 'flex',
             alignItems: 'center',
-            padding: '0 20px',
-            borderBottom: `1px solid ${C.border}`,
-            background: C.surface,
+            padding: '0 18px',
+            borderBottom: `1px solid rgba(255,255,255,0.06)`,
+            background: CARD_BG,
             flexShrink: 0,
             gap: 12,
           }}
@@ -391,8 +390,8 @@ export function AiThumbnailsPage() {
                 <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
               </svg>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
-              TubeForge AI Thumbnails
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
+              {t('aithumbs.title')}
             </span>
           </div>
 
@@ -442,13 +441,13 @@ export function AiThumbnailsPage() {
           {/* ═══ LEFT PANEL (Settings) ═══ */}
           <div
             style={{
-              width: isMobile ? '100%' : 380,
+              width: isMobile ? '100%' : 360,
               flexShrink: 0,
-              background: C.surface,
-              borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
-              borderBottom: isMobile ? `1px solid ${C.border}` : 'none',
-              padding: 20,
-              display: 'flex', flexDirection: 'column', gap: 14,
+              background: CARD_BG,
+              borderRight: isMobile ? 'none' : `1px solid rgba(255,255,255,0.06)`,
+              borderBottom: isMobile ? `1px solid rgba(255,255,255,0.06)` : 'none',
+              padding: '16px 18px',
+              display: 'flex', flexDirection: 'column', gap: 12,
               overflowY: 'auto',
               maxHeight: isMobile ? 'none' : '100%',
             }}
@@ -472,11 +471,11 @@ export function AiThumbnailsPage() {
                     }
                   }}
                   style={{
-                    flex: 1, display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '12px 14px', borderRadius: 12,
-                    background: tab === m ? C.card : 'transparent',
-                    border: `1px solid ${tab === m ? C.borderActive : C.border}`,
-                    color: tab === m ? C.text : C.sub,
+                    flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 12px', borderRadius: 10,
+                    background: tab === m ? SURFACE_BG : 'transparent',
+                    border: `1px solid ${tab === m ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'}`,
+                    color: tab === m ? '#fff' : 'rgba(255,255,255,0.4)',
                     cursor: 'pointer', fontSize: 11, fontWeight: 700,
                     textTransform: 'uppercase', letterSpacing: 1,
                     fontFamily: 'inherit', transition: 'all 0.3s ease', outline: 'none',
@@ -484,8 +483,8 @@ export function AiThumbnailsPage() {
                 >
                   <div
                     style={{
-                      width: 36, height: 36, borderRadius: 10,
-                      background: C.accentDim,
+                      width: 30, height: 30, borderRadius: 8,
+                      background: ACCENT_DIM,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}
@@ -565,9 +564,9 @@ export function AiThumbnailsPage() {
                 placeholder={t('aithumbs.prompt.placeholder')}
                 rows={4}
                 style={{
-                  width: '100%', minHeight: 90, padding: 14,
-                  borderRadius: 12, border: `1px solid ${C.border}`,
-                  background: C.card, color: C.text,
+                  width: '100%', minHeight: 80, padding: 12,
+                  borderRadius: 10, border: `1px solid rgba(255,255,255,0.08)`,
+                  background: SURFACE_BG, color: '#fff',
                   fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
                   outline: 'none', transition: 'border-color 0.2s ease',
                   boxSizing: 'border-box', lineHeight: 1.5,
@@ -742,8 +741,8 @@ export function AiThumbnailsPage() {
                     >
                       {c}
                       {c > 1 && plan === 'FREE' && (
-                        <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
-                          PRO
+                        <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                          {t('aithumbs.proBadge')}
                         </span>
                       )}
                     </button>
@@ -772,8 +771,8 @@ export function AiThumbnailsPage() {
                     >
                       {f.id === '16:9' ? '\uD83D\uDDA5' : '\uD83D\uDCF1'} {f.id}
                       {f.pro && plan === 'FREE' && (
-                        <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
-                          PRO
+                        <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                          {t('aithumbs.proBadge')}
                         </span>
                       )}
                     </button>
@@ -792,17 +791,7 @@ export function AiThumbnailsPage() {
               </span>
             </div>
 
-            {/* Spacer */}
-            <div style={{ flex: 1 }} />
-
-            {/* 5. CTA Button with animated border glow */}
-            <div style={{
-              position: 'relative', width: '100%', borderRadius: 14, padding: 2, flexShrink: 0,
-              background: disabled ? 'transparent' : `conic-gradient(from var(--ait-border-angle, 0deg), ${ACCENT}, #818cf8, ${ACCENT}40, ${ACCENT})`,
-              animation: disabled ? 'none' : 'ait-border-spin 3s linear infinite',
-            }}>
-            <style>{`@property --ait-border-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-              @keyframes ait-border-spin { to { --ait-border-angle: 360deg; } }`}</style>
+            {/* 5. CTA Button */}
             <button
               onClick={handleGenerate}
               disabled={disabled}
@@ -815,7 +804,8 @@ export function AiThumbnailsPage() {
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 boxShadow: disabled ? 'none' : `0 4px 20px ${ACCENT_GLOW}`,
-                transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none',
+                transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none', flexShrink: 0,
+                marginTop: 'auto',
               }}
             >
               {isLoading && (
@@ -835,12 +825,12 @@ export function AiThumbnailsPage() {
             style={{
               flex: 1, minWidth: 0, maxWidth: 1000,
               display: 'flex', flexDirection: 'column',
-              overflow: 'hidden', padding: 20,
-              margin: '0 auto',
+              overflow: 'hidden', padding: '12px 16px',
+              gap: 10,
             }}
           >
             {/* Preview badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <span
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1062,23 +1052,24 @@ export function AiThumbnailsPage() {
                   flex: 1, display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center',
                   gap: 16, padding: 40,
+                  animation: 'ait-fadeIn 0.4s ease-out',
                 }}>
                   <div style={{
-                    width: 80, height: 80, borderRadius: 20,
-                    background: C.accentDim,
+                    width: 64, height: 64, borderRadius: 16,
+                    background: ACCENT_DIM,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
                       <polyline points="21 15 16 10 5 21" />
                     </svg>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 6 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4 }}>
                       {t('aithumbs.empty.title')}
                     </div>
-                    <div style={{ fontSize: 14, color: C.sub, maxWidth: 320, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', maxWidth: 300, lineHeight: 1.5 }}>
                       {t('aithumbs.empty.description')}
                     </div>
                   </div>
@@ -1087,9 +1078,40 @@ export function AiThumbnailsPage() {
             </div>
 
             {/* Premium banner */}
+            {plan === 'FREE' && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: 12, border: `1px solid ${ACCENT}33`,
+                  background: `linear-gradient(135deg, ${ACCENT}14, transparent)`,
+                  display: 'flex', alignItems: 'center', gap: 16,
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
+                    {t('aithumbs.banner.title')}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                    {t('aithumbs.banner.desc')}
+                  </div>
+                </div>
+                <a
+                  href="/billing"
+                  style={{
+                    padding: '8px 20px', borderRadius: 8,
+                    background: ACCENT, color: '#fff',
+                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {t('aithumbs.banner.cta')}
+                </a>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
       {/* ═══ Gallery Modal ═══ */}
       {showGallery && (
@@ -1263,6 +1285,10 @@ export function AiThumbnailsPage() {
         @keyframes ait-pulse-glow {
           0%, 100% { box-shadow: 0 0 20px ${ACCENT_GLOW}; }
           50% { box-shadow: 0 0 40px ${ACCENT_GLOW}; }
+        }
+        @keyframes ait-fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
