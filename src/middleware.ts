@@ -24,8 +24,8 @@ const authRateLimitMap = new Map<string, RateLimitEntry>();
 
 /** Requests allowed per window per IP (page navigations + API calls) */
 const RATE_LIMIT_MAX = 600;
-/** Auth mutation endpoints: stricter limit (20 requests per minute) */
-const AUTH_RATE_LIMIT_MAX = 20;
+/** Auth endpoint: stricter limit (30 requests per minute — OAuth flow uses ~5 req per attempt) */
+const AUTH_RATE_LIMIT_MAX = 30;
 /** Window duration in ms (1 minute) */
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** Purge stale entries every N calls to keep the Map bounded */
@@ -176,20 +176,10 @@ export default function middleware(req: NextRequest) {
   // NOTE: Global IP rate limiting removed — was causing false 429 for normal usage.
   // API-level rate limiting (per-user, per-endpoint) is enforced in tRPC/route handlers.
 
-  // --- Stricter rate limiting for auth MUTATION endpoints only (brute-force protection) ---
-  // Read-only auth endpoints (session, csrf, providers, callback) are exempt:
-  //   - /api/auth/session is polled by SessionProvider on every page load
-  //   - /api/auth/csrf is fetched before every signIn call
-  //   - /api/auth/callback/* is the OAuth return (only happens once per login)
-  //   - /api/auth/providers is a static list
-  // Only rate-limit signin/signout POSTs which are brute-force targets.
-  const isAuthMutation =
-    pathname.startsWith('/api/auth/') &&
-    !pathname.startsWith('/api/auth/session') &&
-    !pathname.startsWith('/api/auth/csrf') &&
-    !pathname.startsWith('/api/auth/callback') &&
-    !pathname.startsWith('/api/auth/providers');
-  if (isAuthMutation) {
+  // --- Stricter rate limiting for auth endpoints only (brute-force protection) ---
+  // Exclude /api/auth/session from rate limit — session checks are frequent
+  // and not a brute-force vector (they just read the JWT cookie).
+  if (pathname.startsWith('/api/auth/') && pathname !== '/api/auth/session') {
     if (!checkRateLimit(ip, authRateLimitMap, AUTH_RATE_LIMIT_MAX)) {
       return new NextResponse('Too Many Requests', {
         status: 429,
