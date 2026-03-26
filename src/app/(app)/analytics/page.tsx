@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useCallback, useMemo, lazy } from 'react';
+import { Suspense, useCallback, useMemo, lazy } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -71,14 +71,11 @@ function AnalyticsInner() {
     [t],
   );
 
-  const initialTab = (searchParams.get('tab') as Tab) || 'shorts';
-  const [activeTab, setActiveTab] = useState<Tab>(
-    TAB_DEFS.some((td) => td.key === initialTab) ? initialTab : 'shorts',
-  );
+  const tabParam = (searchParams.get('tab') as Tab) || 'shorts';
+  const activeTab = TAB_DEFS.some((td) => td.key === tabParam) ? tabParam : 'shorts';
 
   const switchTab = useCallback(
     (tab: Tab) => {
-      setActiveTab(tab);
       router.replace(`/analytics?tab=${tab}`, { scroll: false });
     },
     [router],

@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState, useCallback } from 'react';
+import { Suspense, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -48,10 +48,9 @@ function PublishContent() {
   const projectId = searchParams.get('projectId');
   const tabParam = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<TabId>(isValidTab(tabParam) ? tabParam : 'preview');
+  const activeTab: TabId = isValidTab(tabParam) ? tabParam : 'preview';
 
   const switchTab = useCallback((tab: TabId) => {
-    setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tab);
     router.replace(`/preview?${params.toString()}`, { scroll: false });

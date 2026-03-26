@@ -285,7 +285,8 @@ export function AiThumbnailsPage() {
       toast.error(t('aithumbs.toast.noSpeech'));
       return;
     }
-    recognition.lang = 'ru-RU';
+    const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', es: 'es-ES', kk: 'kk-KZ' };
+    recognition.lang = localeMap[useLocaleStore.getState().locale] || 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (e: SpeechRecognitionEvent) => {
@@ -745,7 +746,7 @@ export function AiThumbnailsPage() {
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
               <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>
-                {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
+                {count > 1 && plan === 'FREE' ? 1 : count} {(count > 1 && plan === 'FREE' ? 1 : count) > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
               </span>
             </div>
 

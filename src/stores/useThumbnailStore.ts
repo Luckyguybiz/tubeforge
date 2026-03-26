@@ -23,7 +23,7 @@ interface ThumbnailState {
   els: CanvasElement[];
   selIds: string[];
   drag: { id: string; ox: number; oy: number } | null;
-  resize: { id: string } | null;
+  resize: { id: string; dir?: string } | null;
   canvasBg: string;
   drawing: boolean;
   drawPts: { x: number; y: number }[];
@@ -93,7 +93,7 @@ interface ThumbnailState {
   setSelIds: (ids: string[]) => void;
   addToSelection: (id: string) => void;
   setDrag: (d: { id: string; ox: number; oy: number } | null) => void;
-  setResize: (r: { id: string } | null) => void;
+  setResize: (r: { id: string; dir?: string } | null) => void;
   setCanvasBg: (c: string) => void;
   setDrawing: (d: boolean) => void;
   setDrawPts: (pts: { x: number; y: number }[] | ((prev: { x: number; y: number }[]) => { x: number; y: number }[])) => void;

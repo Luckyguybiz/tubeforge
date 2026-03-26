@@ -96,7 +96,7 @@ export function DashboardUpgradeModal() {
   const countdown = useCountdown(Date.now() + 24 * 60 * 60 * 1000); // 24h from now
 
   const createCheckout = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data: { url?: string }) => {
+    onSuccess: (data) => {
       if (data.url) window.location.href = data.url;
     },
   });

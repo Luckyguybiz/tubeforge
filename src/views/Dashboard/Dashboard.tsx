@@ -65,6 +65,7 @@ const FEATURE_CARDS = [
     href: '/analytics',
     from: '#8b5cf6', to: '#ec4899',
     badge: null as string | null,
+    requiresYoutube: true,
   },
   {
     key: 'aiThumbnails',
@@ -73,6 +74,7 @@ const FEATURE_CARDS = [
     href: '/ai-thumbnails',
     from: '#6366f1', to: '#8b5cf6',
     badge: 'NEW' as string | null,
+    requiresYoutube: false,
   },
   {
     key: 'videoEditor',
@@ -81,6 +83,7 @@ const FEATURE_CARDS = [
     href: '/editor',
     from: '#3b82f6', to: '#06b6d4',
     badge: null as string | null,
+    requiresYoutube: false,
   },
   {
     key: 'seoOptimizer',
@@ -89,6 +92,7 @@ const FEATURE_CARDS = [
     href: '/preview?tab=seo',
     from: '#10b981', to: '#34d399',
     badge: null as string | null,
+    requiresYoutube: false,
   },
   {
     key: 'contentPlanner',
@@ -97,6 +101,7 @@ const FEATURE_CARDS = [
     href: '/preview?tab=planner',
     from: '#f97316', to: '#ef4444',
     badge: null as string | null,
+    requiresYoutube: false,
   },
   {
     key: 'designStudio',
@@ -105,6 +110,7 @@ const FEATURE_CARDS = [
     href: '/thumbnails',
     from: '#f59e0b', to: '#f97316',
     badge: null as string | null,
+    requiresYoutube: false,
   },
 ];
 
@@ -758,7 +764,7 @@ export function Dashboard() {
               to={feature.to}
               badge={feature.badge}
               icon={FEATURE_ICONS[feature.key]}
-              locked={!isConnected && !isCheckingConnection}
+              locked={feature.requiresYoutube && !isConnected && !isCheckingConnection}
               connectLabel={connectLabel}
               C={C}
               onConnect={handleConnect}
