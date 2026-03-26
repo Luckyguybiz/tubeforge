@@ -375,7 +375,7 @@ export const aiThumbnailsRouter = router({
           .default('realistic'),
         format: z.enum(['16:9', '9:16']).default('16:9'),
         count: z.number().min(1).max(3).default(1),
-        photoUrl: z.string().url().optional(),
+        photoUrl: z.string().optional(),
         youtubeUrl: z.string().url().optional(),
       }),
     )
@@ -403,14 +403,6 @@ export const aiThumbnailsRouter = router({
         select: { plan: true },
       });
       const plan = user?.plan ?? 'FREE';
-
-      // 9:16 format — unlocked for all users during testing
-      if (false && input.format === '9:16' && plan === 'FREE') {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Vertical (9:16) format is available on Pro and Studio plans. Please upgrade.',
-        });
-      }
 
       // Check count limit per plan
       // Unlocked for testing — all users can generate 1-3
@@ -444,7 +436,7 @@ export const aiThumbnailsRouter = router({
       // Photo reference
       if (input.photoUrl) {
         contextParts +=
-          ' Include a prominent person/face as the main subject, positioned prominently in the thumbnail.';
+          ' The thumbnail must prominently feature the person from the reference photo.';
       }
 
       // Generate images
@@ -592,7 +584,12 @@ RULES:
           : { w: 1344, h: 768 };
 
         const fluxPrompt =
-          `${input.prompt}. ${styleDesc} Vibrant YouTube thumbnail, high contrast. No text or watermarks.`.slice(0, 2000);
+          `YouTube thumbnail: ${input.prompt}.${contextParts}
+Photorealistic, cinematic lighting, vibrant saturated colors, high contrast.
+Professional composition with empty space for text overlay.
+DO NOT include any text, letters, words, or watermarks.
+${styleDesc}
+8K, hyper-detailed, professional quality.`.slice(0, 4000);
 
         for (let i = 0; i < actualCount; i++) {
           try {
@@ -640,11 +637,13 @@ RULES:
           ? { width: 768, height: 1344 }
           : { width: 1344, height: 768 };
 
-        // Use Ideogram v3 for better text rendering and prompt following
-        const ideogramPrompt =
-          `${input.prompt}. ${styleDesc} Professional YouTube thumbnail, vibrant colors, high contrast, cinematic.`.slice(0, 2000);
-
-        const ideogramAspect = input.format === '9:16' ? '9:16' : '16:9';
+        const fluxPrompt =
+          `YouTube thumbnail: ${input.prompt}.${contextParts}
+Photorealistic, cinematic lighting, vibrant saturated colors, high contrast.
+Professional composition with empty space for text overlay.
+DO NOT include any text, letters, words, or watermarks.
+${styleDesc}
+8K, hyper-detailed, professional quality.`.slice(0, 4000);
 
         for (let i = 0; i < actualCount; i++) {
           try {
@@ -707,23 +706,12 @@ RULES:
         const size = input.format === '16:9' ? '1792x1024' : '1024x1792';
 
         const fullPrompt =
-          `Professional YouTube video thumbnail photo. ${input.prompt}.${contextParts}
-
-CRITICAL REQUIREMENTS for YouTube thumbnail:
-- Photorealistic, ultra high quality, 8K detail
-- Dramatic cinematic lighting with strong contrast and shadows
-- Extremely vibrant, saturated colors that pop on small screens
-- Clear single focal point (usually a person's face showing strong emotion)
-- Composition leaves clear empty space on one side for text overlay
-- DO NOT include any text, letters, words, or watermarks in the image
-- Shot from slightly below eye level for power/authority feeling
-- Shallow depth of field with bokeh background
-- ${styleDesc}
-
-The image must look like a professional YouTube thumbnail that would get millions of clicks.`.slice(
-            0,
-            4000,
-          );
+          `YouTube thumbnail: ${input.prompt}.${contextParts}
+Photorealistic, cinematic lighting, vibrant saturated colors, high contrast.
+Professional composition with empty space for text overlay.
+DO NOT include any text, letters, words, or watermarks.
+${styleDesc}
+8K, hyper-detailed, professional quality.`.slice(0, 4000);
 
         for (let i = 0; i < actualCount; i++) {
           let res: Response;

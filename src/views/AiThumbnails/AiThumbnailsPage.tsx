@@ -150,8 +150,8 @@ export function AiThumbnailsPage() {
       setLastBatch(imgs);
       setSelectedImage(imgs[0] || null);
       setHistory((prev) => [...imgs, ...prev].slice(0, 20));
-      toast.success(imgs.length > 1 ? `${imgs.length} ${t('aithumbs.toast.success')}` : t('aithumbs.toast.success'));
-      setTimeout(() => setImageRevealed(true), 100);
+      toast.success(t('aithumbs.toast.success'));
+      setTimeout(() => setImageRevealed(true), 700);
     },
     onError: (err) => {
       setProgress(0);
@@ -176,7 +176,7 @@ export function AiThumbnailsPage() {
       setSelectedImage(img);
       setHistory((prev) => [img, ...prev].slice(0, 20));
       toast.success(t('aithumbs.toast.enhanced'));
-      setTimeout(() => setImageRevealed(true), 100);
+      setTimeout(() => setImageRevealed(true), 700);
     },
     onError: (err) => {
       setProgress(0);
