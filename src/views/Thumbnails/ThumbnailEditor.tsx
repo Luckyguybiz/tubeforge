@@ -1782,17 +1782,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                 ) : (
                   <span style={{ color: C.green, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 6px', borderRadius: 6, transition: 'background 0.6s ease', background: saveFlashActive ? 'rgba(34,197,94,0.15)' : 'transparent' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.green, display: 'inline-block', transition: 'transform 0.3s ease', transform: saveFlashActive ? 'scale(1.3)' : 'scale(1)' }} />
-                    {lastSavedAt ? `Saved ${formatSavedAgo(lastSavedAt)}` : t('thumbs.editor.saved')}
+                    {lastSavedAt ? `${t('thumbs.editor.saved')} ${formatSavedAgo(lastSavedAt)}` : t('thumbs.editor.saved')}
                   </span>
                 )}
                 {autoSaveState === 'unsaved' && (
                   <button
                     onClick={() => window.dispatchEvent(new CustomEvent('tubeforge:manual-save'))}
-                    title="Save Now (Ctrl+S)"
+                    title={`${t('thumbs.editor.saveNow')} (Ctrl+S)`}
                     style={{ fontSize: 10, fontWeight: 600, color: C.accent, background: 'transparent', border: `1px solid ${C.accent}44`, borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', marginLeft: 2 }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '15'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >Save Now</button>
+                  >{t('thumbs.editor.saveNow')}</button>
                 )}
               </span>
             )}
@@ -1830,16 +1830,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             )}
           </div>
           {/* Duplicate as new size */}
-          <button onClick={() => { setShowDuplicateAs(!showDuplicateAs); setShowSizeMenu(false); setShowDownloadMenu(false); }} title="Duplicate design at a different size" style={{ ...headerBtn, padding: '7px 10px', fontSize: 11 }}>
+          <button onClick={() => { setShowDuplicateAs(!showDuplicateAs); setShowSizeMenu(false); setShowDownloadMenu(false); }} title={t('thumbs.editor.duplicateAs')} style={{ ...headerBtn, padding: '7px 10px', fontSize: 11 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            Duplicate as...
+            {t('thumbs.editor.duplicateAs')}
           </button>
           {/* Export button */}
           <button onClick={() => { setShowExportModal(true); setShowSizeMenu(false); setShowDownloadMenu(false); }} title={t('thumbs.editor.downloadTitle')} style={{ ...headerBtn, padding: '7px 14px' }}>{downloadIcon} {t('thumbs.export.title')}</button>
           {/* YouTube Preview button */}
-          <button onClick={() => { renderToCanvas(canvasW, canvasH).then((cvs) => { setYoutubePreviewUrl(cvs.toDataURL('image/png')); setShowYouTubePreview(true); }).catch(() => { const fallback = captureCanvas(); if (fallback) { setYoutubePreviewUrl(fallback); setShowYouTubePreview(true); } }); }} title="Preview on YouTube" style={{ ...headerBtn, padding: '7px 12px' }}>
+          <button onClick={() => { renderToCanvas(canvasW, canvasH).then((cvs) => { setYoutubePreviewUrl(cvs.toDataURL('image/png')); setShowYouTubePreview(true); }).catch(() => { const fallback = captureCanvas(); if (fallback) { setYoutubePreviewUrl(fallback); setShowYouTubePreview(true); } }); }} title={t('thumbs.editor.previewOnYT')} style={{ ...headerBtn, padding: '7px 12px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Preview
+            {t('thumbs.editor.preview')}
           </button>
           {/* History panel toggle */}
           {historyCount > 0 && (
@@ -1849,7 +1849,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
             </button>
           )}
           {/* Keyboard shortcuts help */}
-          <button onClick={() => setShowShortcutsHelp(true)} title="Keyboard Shortcuts (?)" style={{ ...headerBtn, padding: '7px 8px', fontSize: 13, fontWeight: 700, minWidth: 30 }}>?</button>
+          <button onClick={() => setShowShortcutsHelp(true)} title={`${t('thumbs.editor.keyboardShortcuts')} (?)`} style={{ ...headerBtn, padding: '7px 8px', fontSize: 13, fontWeight: 700, minWidth: 30 }}>?</button>
           <div style={{ width: 1, height: 20, background: C.border, margin: '0 2px' }} />
           {/* AI reference + AI generate */}
           <button onClick={() => { const img = captureCanvas(); if (img) { store().setAiReferenceImage(img); store().setStep('ai'); } }} style={{ ...headerBtn, padding: '7px 12px' }}>{cameraIcon} {t('thumbs.editor.byPhoto')}</button>
@@ -1886,17 +1886,17 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                     <line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                   <span style={{ fontSize: 15, fontWeight: 700, color: C.text, letterSpacing: '-0.01em' }}>
-                    {t('thumbs.editor.emptyTitle') || 'Start creating'}
+                    {t('thumbs.editor.emptyTitle')}
                   </span>
                   <span style={{ fontSize: 12, color: C.sub, maxWidth: 240, textAlign: 'center', lineHeight: '1.4' }}>
-                    {t('thumbs.editor.emptyDesc') || 'Add elements to your canvas to get started'}
+                    {t('thumbs.editor.emptyDesc')}
                   </span>
                   <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
                     {[
-                      { label: '+ Text', action: () => store().addText() },
-                      { label: '+ Shape', action: () => store().addRect() },
-                      { label: '+ Image', action: () => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = () => { const file = input.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') store().addImage(result); }; reader.readAsDataURL(file); }; input.click(); } },
-                      { label: '+ Template', action: () => store().setLeftPanel('templates') },
+                      { label: t('thumbs.editor.addText'), action: () => store().addText() },
+                      { label: t('thumbs.editor.addShape'), action: () => store().addRect() },
+                      { label: t('thumbs.editor.addImage'), action: () => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = () => { const file = input.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') store().addImage(result); }; reader.readAsDataURL(file); }; input.click(); } },
+                      { label: t('thumbs.editor.addTemplate'), action: () => store().setLeftPanel('templates') },
                     ].map((btn) => (
                       <button
                         key={btn.label}
@@ -1950,7 +1950,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                       position: 'absolute', top: -14, left: 4, fontSize: 8, fontWeight: 700,
                       color: C.accent, background: C.card, padding: '1px 4px', borderRadius: 3,
                       lineHeight: '12px', letterSpacing: '0.03em', opacity: 0.8,
-                    }}>Group</span>
+                    }}>{t('thumbs.editor.groupLabel')}</span>
                   </div>
                 );
               });
@@ -2034,7 +2034,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                 <button onClick={() => { smoothZoomRef.current = true; store().zoomToSelection(); }} title="Zoom to Selection (Ctrl+1)" style={{ padding: '4px 8px', height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: C.sub, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, transition: 'all .12s' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; (e.currentTarget as HTMLElement).style.color = C.text; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.sub; }}
-                ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/></svg> Sel</button>
+                ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/></svg> {t('thumbs.editor.zoomToSel')}</button>
               </>
             )}
           </div>
@@ -2300,24 +2300,24 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       {resizeDialog && (
         <div onClick={() => setResizeDialog(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: Z_INDEX.MODAL_BACKDROP, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, minWidth: 340, maxWidth: 420, boxShadow: '0 12px 40px rgba(0,0,0,.4)' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: C.text }}>Resize Canvas</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: C.text }}>{t('thumbs.editor.resizeCanvas')}</h3>
             <p style={{ fontSize: 12, color: C.sub, marginBottom: 16 }}>
               {canvasW}x{canvasH} &rarr; {resizeDialog.w}x{resizeDialog.h}
             </p>
             <p style={{ fontSize: 11, color: C.dim, marginBottom: 16 }}>
-              Your design has {els.length} element{els.length !== 1 ? 's' : ''}. How should they be handled?
+              {t('thumbs.editor.resizeQuestion').replace('{count}', String(els.length))}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, true); setResizeDialog(null); toast.success('Canvas resized — elements scaled'); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.blue}44`, background: C.blue + '14', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, marginBottom: 2 }}>Scale all elements</div>
-                <div style={{ fontSize: 10, opacity: 0.8, fontWeight: 400 }}>Proportionally resize and reposition everything</div>
+              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, true); setResizeDialog(null); toast.success(t('thumbs.editor.canvasResizedScaled')); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.blue}44`, background: C.blue + '14', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>{t('thumbs.editor.scaleAll')}</div>
+                <div style={{ fontSize: 10, opacity: 0.8, fontWeight: 400 }}>{t('thumbs.editor.scaleAllDesc')}</div>
               </button>
-              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, false); setResizeDialog(null); toast.info('Canvas resized — elements unchanged'); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, marginBottom: 2 }}>Keep positions</div>
-                <div style={{ fontSize: 10, color: C.dim, fontWeight: 400 }}>Just change the canvas, elements stay where they are</div>
+              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, false); setResizeDialog(null); toast.info(t('thumbs.editor.canvasResizedUnchanged')); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>{t('thumbs.editor.keepPositions')}</div>
+                <div style={{ fontSize: 10, color: C.dim, fontWeight: 400 }}>{t('thumbs.editor.keepPositionsDesc')}</div>
               </button>
               <button onClick={() => setResizeDialog(null)} style={{ width: '100%', padding: '8px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: C.dim, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
-                Cancel
+                {t('thumbs.editor.cancel')}
               </button>
             </div>
           </div>
@@ -2327,9 +2327,9 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
       {showDuplicateAs && (
         <div onClick={() => setShowDuplicateAs(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: Z_INDEX.MODAL_BACKDROP, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, minWidth: 340, maxWidth: 420, boxShadow: '0 12px 40px rgba(0,0,0,.4)' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: C.text }}>Duplicate as New Size</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: C.text }}>{t('thumbs.editor.duplicateAsNewSize')}</h3>
             <p style={{ fontSize: 12, color: C.sub, marginBottom: 16 }}>
-              Create a copy of this design at a different size. All elements will be scaled proportionally.
+              {t('thumbs.editor.duplicateAsNewSizeDesc')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {SIZE_PRESETS.filter((p) => !(p.w === canvasW && p.h === canvasH)).map((p) => (
@@ -2354,7 +2354,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
                     canvasH: p.h,
                   });
                   setShowDuplicateAs(false);
-                  toast.success(`Duplicated as ${p.label} (${p.w}x${p.h})`);
+                  toast.success(`${t('thumbs.editor.duplicateAsNewSize')}: ${p.label} (${p.w}x${p.h})`);
                 }} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background .1s' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.surface; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
@@ -2364,7 +2364,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               ))}
             </div>
             <button onClick={() => setShowDuplicateAs(false)} style={{ width: '100%', padding: '8px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: C.dim, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
-              Cancel
+              {t('thumbs.editor.cancel')}
             </button>
           </div>
         </div>
@@ -2376,13 +2376,13 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
 function getSizePresets(t: (key: string) => string) {
   return [
     { label: t('thumbs.editor.sizeYoutube'), w: 1280, h: 720 },
-    { label: 'YouTube Shorts', w: 1080, h: 1920 },
+    { label: t('thumbs.editor.sizeYouTubeShorts'), w: 1080, h: 1920 },
     { label: t('thumbs.editor.sizeInstagramPost'), w: 1080, h: 1080 },
     { label: t('thumbs.editor.sizeInstagramStory'), w: 1080, h: 1920 },
-    { label: 'Twitter Post', w: 1200, h: 675 },
+    { label: t('thumbs.editor.sizeTwitterPost'), w: 1200, h: 675 },
     { label: t('thumbs.editor.sizeTwitterBanner'), w: 1500, h: 500 },
     { label: t('thumbs.editor.sizeFacebookCover'), w: 820, h: 312 },
-    { label: 'HD 1920x1080', w: 1920, h: 1080 },
+    { label: t('thumbs.editor.sizeHD'), w: 1920, h: 1080 },
   ];
 }
 
@@ -2407,6 +2407,7 @@ function hitTestElement(els: CanvasElement[], x: number, y: number): CanvasEleme
 
 /** Quick Actions Toolbar — shown when elements are selected */
 function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.getState>['theme']; selIds: string[] }) {
+  const t = useLocaleStore((s) => s.t);
   const store = useThumbnailStore.getState;
   const hasGroup = selIds.length > 1;
   const [batchColor, setBatchColor] = useState('#ffffff');
@@ -2422,12 +2423,12 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
       {/* Duplicate */}
       <button onClick={() => store().duplicateSelected()} title="Duplicate (Ctrl+D)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-        Duplicate
+        {t('thumbs.editor.quickDuplicate')}
       </button>
       {/* Delete */}
-      <button onClick={() => store().delSelected()} title="Delete" style={{ ...btnStyle, color: C.accent + 'aa' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; (e.currentTarget as HTMLElement).style.color = C.accent; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.accent + 'aa'; }}>
+      <button onClick={() => store().delSelected()} title={t('thumbs.editor.quickDelete')} style={{ ...btnStyle, color: C.accent + 'aa' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.accent + '0a'; (e.currentTarget as HTMLElement).style.color = C.accent; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = C.accent + 'aa'; }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        Delete
+        {t('thumbs.editor.quickDelete')}
       </button>
       <div style={sepStyle} />
       {/* Layer ordering */}
@@ -2453,18 +2454,18 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
         <>
           {/* Batch color */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>Color</label>
+            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>{t('thumbs.editor.quickColor')}</label>
             <input type="color" value={batchColor} onChange={(e) => { setBatchColor(e.target.value); store().batchUpdateSelected({ color: e.target.value }); }} title="Batch color change" style={{ width: 24, height: 24, border: `1px solid ${C.border}`, borderRadius: 4, padding: 0, cursor: 'pointer', background: 'transparent' }} />
           </div>
           {/* Batch opacity */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>Opacity</label>
+            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600 }}>{t('thumbs.editor.quickOpacity')}</label>
             <input type="range" min={0} max={100} value={batchOpacity} onChange={(e) => { const v = Number(e.target.value); setBatchOpacity(v); store().batchUpdateSelected({ opacity: v / 100 }); }} title="Batch opacity" style={{ width: 60, height: 4, accentColor: C.accent, cursor: 'pointer' }} />
             <span style={{ fontSize: 9, color: C.dim, minWidth: 24 }}>{batchOpacity}%</span>
           </div>
           {/* Batch resize */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600, marginRight: 2 }}>Scale</label>
+            <label style={{ fontSize: 9, color: C.dim, fontWeight: 600, marginRight: 2 }}>{t('thumbs.editor.quickScale')}</label>
             {[50, 100, 150, 200].map((pct) => (
               <button key={pct} onClick={() => store().batchResizeSelected(pct)} title={`Scale to ${pct}%`} style={{ ...btnStyle, padding: '0 5px', fontSize: 9 }} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
                 {pct}%
@@ -2479,10 +2480,10 @@ function QuickActionsBar({ C, selIds }: { C: ReturnType<typeof useThemeStore.get
         <>
           <button onClick={() => store().groupSelected()} title="Group (Ctrl+G)" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M10 6h4m-4 12h4M6 10v4m12-4v4"/></svg>
-            Group
+            {t('thumbs.editor.quickGroup')}
           </button>
-          <button onClick={() => store().ungroupSelected()} title="Ungroup" style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
-            Ungroup
+          <button onClick={() => store().ungroupSelected()} title={t('thumbs.editor.quickUngroup')} style={btnStyle} onMouseEnter={(e) => hover(e, true)} onMouseLeave={(e) => hover(e, false)}>
+            {t('thumbs.editor.quickUngroup')}
           </button>
           <div style={sepStyle} />
         </>
@@ -2532,6 +2533,7 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
   btnStyle: React.CSSProperties;
   hover: (e: React.MouseEvent, on: boolean) => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [isArranging, setIsArranging] = useState(false);
 
   const autoLayoutMutation = trpc.ai.autoLayout.useMutation({
@@ -2545,14 +2547,14 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
             s.updEl(pos.id, { x: pos.x, y: pos.y, w: pos.w, h: pos.h });
           }
         });
-        toast.success('Layout optimized');
+        toast.success(t('thumbs.editor.layoutOptimized'));
       } else {
-        toast.info('No layout suggestions');
+        toast.info(t('thumbs.editor.noLayoutSuggestions'));
       }
       setIsArranging(false);
     },
     onError: (err) => {
-      toast.error(err.message || 'Auto layout failed');
+      toast.error(err.message || t('thumbs.editor.autoLayoutFailed'));
       setIsArranging(false);
     },
   });
@@ -2561,7 +2563,7 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
     const s = useThumbnailStore.getState();
     const { els, canvasW, canvasH } = s;
     if (els.length === 0) {
-      toast.info('Add some elements first');
+      toast.info(t('thumbs.editor.addElementsFirst'));
       return;
     }
     setIsArranging(true);
@@ -2600,25 +2602,26 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
       ) : (
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       )}
-      Auto Arrange
+      {t('thumbs.editor.quickAutoArrange')}
     </button>
   );
 }
 
 /** YouTube Preview Overlay — shows thumbnail in YouTube search/suggested mockup */
 function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl: string; onClose: () => void }) {
+  const t = useLocaleStore((s) => s.t);
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 800, width: '90%', cursor: 'default' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>YouTube Preview</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{t('thumbs.editor.ytPreviewTitle')}</div>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit' }}>&times;</button>
         </div>
 
         {/* YouTube search result mockup */}
         <div style={{ marginBottom: 12, padding: 4, background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>Search Result</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>{t('thumbs.editor.ytSearchResult')}</div>
           <div style={{ display: 'flex', gap: 12, padding: 12, background: '#0f0f0f', borderRadius: 12 }}>
             <img src={thumbnailDataUrl} alt="Thumbnail preview" style={{ width: 360, height: 202, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
@@ -2635,7 +2638,7 @@ function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl
 
         {/* YouTube suggested video sidebar mockup */}
         <div style={{ marginBottom: 12, padding: 4, background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>Suggested Video (Sidebar)</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>{t('thumbs.editor.ytSuggested')}</div>
           <div style={{ display: 'flex', gap: 8, padding: 12, background: '#0f0f0f', borderRadius: 12 }}>
             <img src={thumbnailDataUrl} alt="Thumbnail preview" style={{ width: 168, height: 94, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
@@ -2647,7 +2650,7 @@ function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl
 
         {/* YouTube home feed card mockup */}
         <div style={{ padding: 4, background: 'rgba(255,255,255,.03)', borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>Home Feed Card</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingLeft: 12 }}>{t('thumbs.editor.ytHomeFeed')}</div>
           <div style={{ maxWidth: 360, padding: 12, background: '#0f0f0f', borderRadius: 12 }}>
             <img src={thumbnailDataUrl} alt="Thumbnail preview" style={{ width: '100%', aspectRatio: '16/9', borderRadius: 8, objectFit: 'cover', marginBottom: 10 }} />
             <div style={{ display: 'flex', gap: 10 }}>
@@ -2664,7 +2667,7 @@ function YouTubePreviewOverlay({ thumbnailDataUrl, onClose }: { thumbnailDataUrl
         <button onClick={onClose} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 8, background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'background .15s' }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#444'; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#333'; }}
-        >Close Preview</button>
+        >{t('thumbs.editor.closePreview')}</button>
       </div>
     </div>
   );
@@ -2686,6 +2689,7 @@ function ZoomPresetsDropdown({ zoom, C, smoothZoomRef }: {
   C: ReturnType<typeof useThemeStore.getState>['theme'];
   smoothZoomRef: React.MutableRefObject<boolean>;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -2773,7 +2777,7 @@ function ZoomPresetsDropdown({ zoom, C, smoothZoomRef }: {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
             </svg>
-            Fit to Screen
+            {t('thumbs.editor.fitToScreenLabel')}
           </button>
         </div>
       )}
@@ -2948,8 +2952,8 @@ function HistorySnapshots({ C, t, canvasW, canvasH, onRestore }: {
             style={{ borderRadius: 4, flexShrink: 0, width: 120, height: Math.round(120 * (canvasH / canvasW)) }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Version {snapshots.length - idx}</div>
-            <div style={{ fontSize: 10, color: C.dim }}>{snap.els.length} {snap.els.length === 1 ? 'element' : 'elements'}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>{t('thumbs.editor.version')} {snapshots.length - idx}</div>
+            <div style={{ fontSize: 10, color: C.dim }}>{snap.els.length} el.</div>
             <div style={{ fontSize: 9, color: C.accent, marginTop: 4 }}>{t('thumbs.export.restoreVersion')}</div>
           </div>
         </div>
@@ -2999,6 +3003,7 @@ function EditorShortcutsHelpModal({ C, onClose }: {
   C: ReturnType<typeof useThemeStore.getState>['theme'];
   onClose: () => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === '?') {
@@ -3064,7 +3069,7 @@ function EditorShortcutsHelpModal({ C, onClose }: {
                 <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8" />
               </svg>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Keyboard Shortcuts</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{t('thumbs.editor.keyboardShortcuts')}</span>
           </div>
           <button
             onClick={onClose}
