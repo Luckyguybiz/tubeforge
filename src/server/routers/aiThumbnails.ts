@@ -432,7 +432,8 @@ Professional YouTube thumbnail that would get millions of clicks.
             });
 
             results.push({ url: gen.imageUrl, id: gen.id });
-          } catch {
+          } catch (err) {
+            console.error('[aiThumbnails] Replicate generation error:', err instanceof Error ? err.message : err);
             failedCount++;
             continue;
           }
@@ -492,7 +493,8 @@ Professional YouTube thumbnail that would get millions of clicks.
             });
 
             results.push({ url: gen.imageUrl, id: gen.id });
-          } catch {
+          } catch (err) {
+            console.error('[aiThumbnails] fal.ai generation error:', err instanceof Error ? err.message : err);
             failedCount++;
             continue;
           }
@@ -541,12 +543,15 @@ The image must look like a professional YouTube thumbnail that would get million
               },
               60000,
             );
-          } catch {
+          } catch (err) {
+            console.error('[aiThumbnails] DALL-E request error:', err instanceof Error ? err.message : err);
             failedCount++;
             continue;
           }
 
           if (!res.ok) {
+            const errBody = await res.text().catch(() => '');
+            console.error('[aiThumbnails] DALL-E API error:', res.status, errBody.slice(0, 200));
             failedCount++;
             continue;
           }

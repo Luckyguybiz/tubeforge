@@ -136,7 +136,12 @@ export const youtubeRouter = router({
         `${API_ENDPOINTS.YOUTUBE_SEARCH}?part=snippet&channelId=${input.channelId}&maxResults=${input.maxResults}&order=date&type=video`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!searchRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'YouTube API video search error' });
+      if (!searchRes.ok) {
+        const errBody = await searchRes.text().catch(() => '');
+        let detail = `HTTP ${searchRes.status}`;
+        try { const p = JSON.parse(errBody); detail = p?.error?.message ?? detail; } catch { /* use status code */ }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `YouTube video search error: ${detail}` });
+      }
       const searchData = await searchRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse YouTube API response' }); });
       const videoIds = (searchData.items ?? []).map((i: { id: { videoId?: string } }) => i.id.videoId).filter(Boolean).join(',');
       if (!videoIds) return [];
@@ -144,7 +149,12 @@ export const youtubeRouter = router({
         `${API_ENDPOINTS.YOUTUBE_VIDEOS}?part=statistics,snippet&id=${videoIds}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!statsRes.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'YouTube API statistics error' });
+      if (!statsRes.ok) {
+        const errBody = await statsRes.text().catch(() => '');
+        let detail = `HTTP ${statsRes.status}`;
+        try { const p = JSON.parse(errBody); detail = p?.error?.message ?? detail; } catch { /* use status code */ }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `YouTube statistics error: ${detail}` });
+      }
       const statsData = await statsRes.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse YouTube API response' }); });
       return statsData.items ?? [];
     }),
@@ -163,7 +173,30 @@ export const youtubeRouter = router({
         `${API_ENDPOINTS.YOUTUBE_ANALYTICS}?ids=channel==${input.channelId}&startDate=${startDate}&endDate=${endDate}&metrics=views,subscribersGained,estimatedMinutesWatched,averageViewPercentage&dimensions=day`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!res.ok) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Analytics API error' });
+      if (!res.ok) {
+        const errorBody = await res.text().catch(() => '');
+        let detail = `HTTP ${res.status}`;
+        try {
+          const parsed = JSON.parse(errorBody);
+          detail = parsed?.error?.message ?? detail;
+        } catch { /* use status code */ }
+
+        // 403 usually means the YouTube Analytics API is not enabled or the OAuth scope is missing
+        if (res.status === 403) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `YouTube Analytics access denied: ${detail}. Please reconnect your Google account with Analytics permissions.`,
+          });
+        }
+        // 401 means token is invalid/expired despite our refresh attempt
+        if (res.status === 401) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'YouTube Analytics token expired. Please reconnect your Google account.',
+          });
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Analytics API error: ${detail}` });
+      }
       return res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Analytics API response' }); });
     }),
 
