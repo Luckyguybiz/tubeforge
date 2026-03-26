@@ -344,22 +344,29 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
     if (curResize) {
       const el = els.find((e) => e.id === curResize.id);
       if (!el) return;
-      let nw = x - el.x, nh = y - el.y;
-      if (nw < 20) nw = 20; if (nh < 20) nh = 20;
+      const dir = curResize.dir || 'se';
+      let nx = el.x, ny = el.y, nw = el.w, nh = el.h;
+      // Compute new bounds based on handle direction
+      if (dir.includes('e')) { nw = Math.max(20, x - el.x); }
+      if (dir.includes('w')) { nw = Math.max(20, el.x + el.w - x); nx = Math.min(x, el.x + el.w - 20); }
+      if (dir.includes('s')) { nh = Math.max(20, y - el.y); }
+      if (dir.includes('n')) { nh = Math.max(20, el.y + el.h - y); ny = Math.min(y, el.y + el.h - 20); }
       // Lock aspect ratio: default true for images, false for others
       const shouldLock = el.lockAspect ?? (el.type === 'image');
       if (shouldLock && el.w > 0 && el.h > 0) {
         const ratio = el.w / el.h;
-        // Use the dominant axis (larger delta) to drive the other
         const dw = Math.abs(nw - el.w);
         const dh = Math.abs(nh - el.h);
         if (dw >= dh) { nh = Math.round(nw / ratio); }
         else { nw = Math.round(nh * ratio); }
         if (nw < 20) { nw = 20; nh = Math.round(20 / ratio); }
         if (nh < 20) { nh = 20; nw = Math.round(20 * ratio); }
+        // Adjust position for nw/n/w directions with aspect lock
+        if (dir.includes('w')) nx = el.x + el.w - nw;
+        if (dir.includes('n')) ny = el.y + el.h - nh;
       }
-      store().updEl(curResize.id, { w: Math.round(nw), h: Math.round(nh) });
-      setMeasureTooltip({ mx: e.clientX, my: e.clientY, ex: Math.round(el.x), ey: Math.round(el.y), ew: Math.round(nw), eh: Math.round(nh) });
+      store().updEl(curResize.id, { x: Math.round(nx), y: Math.round(ny), w: Math.round(nw), h: Math.round(nh) });
+      setMeasureTooltip({ mx: e.clientX, my: e.clientY, ex: Math.round(nx), ey: Math.round(ny), ew: Math.round(nw), eh: Math.round(nh) });
       return;
     }
     const curDrag = store().drag;
@@ -895,7 +902,7 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
           // Draw cell text
           for (let r = 0; r < rows; r++) {
             const isHeader = el.headerRow && r === 0;
-            ctx.fillStyle = isHeader ? '#fff' : '#fff';
+            ctx.fillStyle = isHeader ? '#fff' : '#ccc';
             ctx.font = isHeader ? 'bold 11px sans-serif' : '10px sans-serif';
             for (let c = 0; c < cols; c++) {
               const txt = el.cellData?.[r]?.[c] ?? '';
@@ -1213,21 +1220,21 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
         {/* Rotation connector line */}
         <div style={{ position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50%)', width: 1, height: 16, background: C.accent, opacity: 0.5, zIndex: 4, pointerEvents: 'none' }} />
         {/* 8 resize dots */}
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'se' }); }}
           style={handleDotStyle('nwse-resize', { bottom: -4, right: -4 })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'nw' }); }}
           style={handleDotStyle('nw-resize', { top: -4, left: -4 })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'ne' }); }}
           style={handleDotStyle('ne-resize', { top: -4, right: -4 })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'sw' }); }}
           style={handleDotStyle('sw-resize', { bottom: -4, left: -4 })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'n' }); }}
           style={handleDotStyle('n-resize', { top: -4, left: '50%', transform: 'translateX(-50%)' })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 's' }); }}
           style={handleDotStyle('s-resize', { bottom: -4, left: '50%', transform: 'translateX(-50%)' })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'w' }); }}
           style={handleDotStyle('w-resize', { top: '50%', left: -4, transform: 'translateY(-50%)' })} />
-        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id }); }}
+        <div onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); store().pushHistoryDebounced(); store().setResize({ id: el.id, dir: 'e' }); }}
           style={handleDotStyle('e-resize', { top: '50%', right: -4, transform: 'translateY(-50%)' })} />
       </>
     );

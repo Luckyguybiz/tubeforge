@@ -80,16 +80,12 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
   const modalRef = useRef<HTMLDivElement>(null);
   const C = useThemeStore((s) => s.theme);
 
-  /* ── Determine deadline (persisted to localStorage) ── */
-  const [deadline] = useState<number>(() => {
-    const stored = safeGetItem(COUNTDOWN_KEY);
-    if (stored) {
-      const parsed = Number(stored);
-      if (!isNaN(parsed) && parsed > Date.now()) return parsed;
-    }
-    const newDeadline = Date.now() + 24 * 60 * 60 * 1000;
-    safeSetItem(COUNTDOWN_KEY, String(newDeadline));
-    return newDeadline;
+  const countdown = useCountdown(Date.now() + 24 * 60 * 60 * 1000); // 24h from now
+
+  const createCheckout = trpc.billing.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) window.location.href = data.url;
+    },
   });
 
   const countdown = useCountdown(deadline);

@@ -559,6 +559,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     return () => window.removeEventListener('beforeunload', handler);
   }, [autoSaveDirty]);
 
+
   useEffect(() => {
     if (!leftModelsOpen) return;
     const handler = (e: MouseEvent) => {
@@ -666,6 +667,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   const isGenerating = videoGen.isGenerating;
   const progress = videoGen.progress;
+
+  // Show result when video generation completes (videoUrl appears)
+  const prevVideoUrl = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (sel?.videoUrl && sel.videoUrl !== prevVideoUrl.current && !isGenerating) {
+      setShowResult(true);
+      setVideoRevealed(false);
+    }
+    prevVideoUrl.current = sel?.videoUrl;
+  }, [sel?.videoUrl, isGenerating]);
 
   const selectedStyle = useMemo(() => ANIMATION_STYLES.find((s) => s.id === selectedStyleId) || ANIMATION_STYLES[0], [selectedStyleId]);
   const selCol = sel ? gc(sel.ck) : C.accent;

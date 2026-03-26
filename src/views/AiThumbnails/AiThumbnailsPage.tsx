@@ -325,7 +325,8 @@ export function AiThumbnailsPage() {
       toast.error(t('aithumbs.toast.noSpeech'));
       return;
     }
-    recognition.lang = LOCALE_TO_SPEECH_LANG[locale] || 'en-US';
+    const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', es: 'es-ES', kk: 'kk-KZ' };
+    recognition.lang = localeMap[useLocaleStore.getState().locale] || 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (e: SpeechRecognitionEvent) => {
@@ -826,8 +827,8 @@ export function AiThumbnailsPage() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
-              <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
-                {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
+              <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>
+                {count > 1 && plan === 'FREE' ? 1 : count} {(count > 1 && plan === 'FREE' ? 1 : count) > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
               </span>
             </div>
 
