@@ -49,10 +49,10 @@ export const light: Theme = {
 export const PK: ColorKey[] = ['accent', 'blue', 'purple', 'green', 'orange', 'cyan', 'pink'];
 
 export const MODELS: Model[] = [
-  { id: 'runway-gen3-turbo', name: 'Runway Gen-3 Turbo', desc: 'Fast preview', speed: '~10s', icon: '🚀', tokens: '50 tokens' },
-  { id: 'runway-gen3', name: 'Runway Gen-3 Alpha', desc: 'High quality', speed: '~45s', icon: '🎬', tokens: '100 tokens' },
-  { id: 'kling-v1', name: 'Kling v1.0', desc: 'Fast & creative', speed: '~20s', icon: '⚡', tokens: '75 tokens' },
-  { id: 'kling-v1-pro', name: 'Kling v1.0 Pro', desc: 'Max quality', speed: '~60s', icon: '✦', tokens: '150 tokens' },
+  { id: 'runway-gen3', name: 'Runway Gen-3 Alpha', desc: 'Fast, high quality', speed: '~15s', icon: '🚀', tokens: 50, quality: 'High' },
+  { id: 'runway-gen3-turbo', name: 'Runway Gen-3 Turbo', desc: 'Fastest generation', speed: '~8s', icon: '⚡', tokens: 25, quality: 'Good' },
+  { id: 'kling-v1', name: 'Kling v1.0', desc: 'Balanced quality & speed', speed: '~30s', icon: '🎥', tokens: 40, quality: 'High' },
+  { id: 'kling-v1-pro', name: 'Kling v1.0 Pro', desc: 'Best quality, cinematic', speed: '~60s', icon: '🎬', tokens: 80, quality: 'Ultra' },
 ];
 
 export const STATUS: Record<string, StatusInfo> = {

@@ -180,9 +180,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional, aspectRatio
         onDrop={handleDrop}
         style={{
           width: '100%',
-          height: aspectRatio === '9:16' ? 'auto' : aspectRatio === '1:1' ? 'auto' : 100,
-          aspectRatio: aspectRatio === '9:16' ? '9/16' : aspectRatio === '1:1' ? '1/1' : undefined,
-          maxHeight: aspectRatio === '9:16' ? 150 : aspectRatio === '1:1' ? 130 : undefined,
+          height: 100,
           borderRadius: 12,
           border: value ? `1.5px solid ${accentCol}30` : `1.5px dashed ${C.border}`,
           background: value ? '#000' : C.bg,
@@ -340,7 +338,7 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
    ═══════════════════════════════════════════════════════════════════ */
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
-    <div style={{ display: 'flex', height: '100%', background: C.bg, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flex: 1, background: C.bg, overflow: 'hidden' }}>
       <div style={{ width: 380, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Skeleton width="100%" height={80} style={{ borderRadius: 12 }} />
         <div style={{ display: 'flex', gap: 10 }}>
@@ -398,6 +396,18 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   // AI ideas
   const [aiIdeas, setAiIdeas] = useState<string[]>([]);
+
+  // Multi-shot mode
+  const [multiShot, setMultiShot] = useState(false);
+
+  // Sound toggle
+  const [soundOn, setSoundOn] = useState(true);
+
+  // Uploaded elements (images referenced via @)
+  const [uploadedElements, setUploadedElements] = useState<{ id: string; name: string; dataUrl: string }[]>([]);
+  const [showAtMenu, setShowAtMenu] = useState(false);
+  const [atMenuPos, setAtMenuPos] = useState(0);
+  const elemInputRef = useRef<HTMLInputElement>(null);
 
   // Scene management state
   const [leftModelsOpen, setLeftModelsOpen] = useState(false);
@@ -580,11 +590,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
     const activeStyle = ANIMATION_STYLES.find((s) => s.id === selectedStyleId);
     const stylePrefix = activeStyle ? `[Style: ${activeStyle.name}] ` : '';
-    const fullPrompt = stylePrefix + currentSel.prompt;
+    const soundTag = soundOn ? '' : '[No audio] ';
+    const fullPrompt = soundTag + stylePrefix + currentSel.prompt;
 
-    trackEvent('video_generate', { model: currentSel.model, duration: currentSel.duration, style: selectedStyleId });
+    trackEvent('video_generate', { model: currentSel.model, duration: currentSel.duration, style: selectedStyleId, multiShot, soundOn });
     videoGen.start(fullPrompt, currentSel.model, currentSel.duration);
-  }, [videoGen, selectedStyleId, canUseAI]);
+  }, [videoGen, selectedStyleId, canUseAI, soundOn, multiShot]);
 
   // Keyboard shortcut: Ctrl+Enter to generate
   useEffect(() => {
@@ -700,7 +711,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
      ═══════════════════════════════════════════════════════════════ */
   if (projectId && sync.isError) {
     return (
-      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+      <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: C.accent }}>!</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('editor.loadError')}</div>
@@ -732,9 +743,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         background: C.bg,
         color: C.text,
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+        display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0,
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         {/* ── Top Bar (same as AiThumbnails) ─────────────── */}
         <div
           className="tf-editor-topbar"
@@ -895,38 +907,35 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </span>
             </div>
 
-            {/* ── Multi-shot toggle ── */}
+            {/* ── 2a. Multi-shot toggle ── */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.multiShot')}</span>
-                <span style={{ fontSize: 10, color: C.dim, fontWeight: 500 }}>
-                  {multiShot ? t('editor.multiShot.on') : t('editor.multiShot.off')}
-                </span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>Multi-shot</span>
+                <span style={{ fontSize: 10, color: C.dim }}>Multiple scenes</span>
               </div>
               <button
                 onClick={() => {
                   setMultiShot(!multiShot);
-                  // Clear end frame when enabling multi-shot
                   if (!multiShot && sel) updScene(sel.id, { ef: null });
                 }}
                 style={{
-                  width: 40, height: 22, borderRadius: 11, border: 'none',
+                  width: 40, height: 22, borderRadius: 11,
+                  border: 'none', cursor: 'pointer',
                   background: multiShot ? C.accent : C.border,
-                  position: 'relative', cursor: 'pointer',
-                  transition: 'background 0.2s ease',
+                  position: 'relative', transition: 'background .2s',
+                  flexShrink: 0,
                 }}
               >
                 <div style={{
-                  width: 18, height: 18, borderRadius: '50%',
+                  width: 16, height: 16, borderRadius: '50%',
                   background: '#fff', position: 'absolute',
-                  top: 2, left: multiShot ? 20 : 2,
-                  transition: 'left 0.2s ease',
-                  boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+                  top: 3, left: multiShot ? 21 : 3,
+                  transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.3)',
                 }} />
               </button>
             </div>
 
-            {/* ── 2. Frame upload slots ── */}
+            {/* ── 2b. Frame upload slots ── */}
             <div className="tf-editor-frames" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <FrameSlot
                 label={t('editor.frame.startFrame')}
@@ -936,32 +945,15 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 onChange={(v) => { if (sel) updScene(sel.id, { sf: v }); }}
                 aspectRatio={aspectRatio}
               />
-              <div style={{
-                flex: 1, minWidth: 0,
-                opacity: multiShot ? 0.35 : 1,
-                pointerEvents: multiShot ? 'none' : 'auto',
-                transition: 'opacity 0.2s ease',
-                position: 'relative',
-              }}>
+              <div style={{ flex: 1, minWidth: 0, opacity: multiShot ? 0.35 : 1, pointerEvents: multiShot ? 'none' : 'auto', transition: 'opacity .2s' }}>
                 <FrameSlot
                   label={t('editor.frame.endFrame')}
-                  value={sel?.ef ?? null}
+                  value={multiShot ? null : (sel?.ef ?? null)}
                   C={C}
                   accentCol={selCol}
-                  onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
+                  onChange={(v) => { if (sel && !multiShot) updScene(sel.id, { ef: v }); }}
                   optional
-                  aspectRatio={aspectRatio}
                 />
-                {multiShot && (
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 600, color: C.dim,
-                    textAlign: 'center', paddingTop: 14,
-                  }}>
-                    {t('editor.multiShot.disabledHint')}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -976,36 +968,187 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </span>
               </div>
 
-              <textarea
-                className="tf-editor-prompt"
-                ref={promptRef}
-                value={sel?.prompt || ''}
-                rows={4}
-                onChange={(e) => {
-                  if (!sel) return;
-                  updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
-                  autoResize(e.target);
-                  useEditorStore.getState().pushHistoryDebounced();
+              <div style={{ position: 'relative' }}>
+                <textarea
+                  className="tf-editor-prompt"
+                  ref={promptRef}
+                  value={sel?.prompt || ''}
+                  rows={4}
+                  onChange={(e) => {
+                    if (!sel) return;
+                    updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
+                    autoResize(e.target);
+                    useEditorStore.getState().pushHistoryDebounced();
+
+                    // Check for @ trigger
+                    const val = e.target.value;
+                    const curPos = e.target.selectionStart || 0;
+                    if (val[curPos - 1] === '@' && uploadedElements.length > 0) {
+                      setShowAtMenu(true);
+                      setAtMenuPos(curPos);
+                    } else if (showAtMenu && (val[curPos - 1] === ' ' || !val.includes('@'))) {
+                      setShowAtMenu(false);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                    if (e.key === 'Escape' && showAtMenu) {
+                      setShowAtMenu(false);
+                    }
+                  }}
+                  placeholder={t('editor.prompt.placeholder') !== 'editor.prompt.placeholder' ? t('editor.prompt.placeholder') : 'Describe your video, e.g. "A kitten floating down a river". Use @ to reference uploaded images'}
+                  maxLength={2000}
+                  style={{
+                    width: '100%', minHeight: 90, padding: 14,
+                    borderRadius: 12, border: `1px solid ${C.border}`,
+                    background: C.surface, color: C.text,
+                    fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
+                    outline: 'none', transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box', lineHeight: 1.5,
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                  onBlur={(e) => { setTimeout(() => { e.currentTarget.style.borderColor = C.border; setShowAtMenu(false); }, 150); }}
+                />
+
+                {/* @ mention dropdown */}
+                {showAtMenu && uploadedElements.length > 0 && (
+                  <div style={{
+                    position: 'absolute', bottom: '100%', left: 0, right: 0,
+                    marginBottom: 4, background: C.card, border: `1px solid ${C.border}`,
+                    borderRadius: 10, padding: 4, zIndex: 60,
+                    boxShadow: '0 4px 20px rgba(0,0,0,.4)', maxHeight: 180, overflowY: 'auto',
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.dim, padding: '4px 8px', textTransform: 'uppercase' }}>
+                      Uploaded images
+                    </div>
+                    {uploadedElements.map((el) => (
+                      <button
+                        key={el.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          if (!sel || !promptRef.current) return;
+                          const before = (sel.prompt || '').slice(0, atMenuPos);
+                          const after = (sel.prompt || '').slice(atMenuPos);
+                          const newPrompt = before + el.name + ' ' + after;
+                          updScene(sel.id, { prompt: newPrompt });
+                          setShowAtMenu(false);
+                          setTimeout(() => promptRef.current?.focus(), 50);
+                        }}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '6px 8px', borderRadius: 6, border: 'none',
+                          background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
+                          textAlign: 'left', transition: 'background .1s',
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        <img src={el.dataUrl} alt={el.name} style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, color: C.text, fontWeight: 500 }}>{el.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── 3b. Sound toggle + Elements bar ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Sound toggle */}
+              <button
+                onClick={() => {
+                  setSoundOn(!soundOn);
+                  if (sel) updScene(sel.id, { snd: !soundOn });
                 }}
-                onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    handleGenerate();
-                  }
-                }}
-                placeholder={t('editor.describeVideo')}
-                maxLength={2000}
                 style={{
-                  width: '100%', minHeight: 90, padding: 14,
-                  borderRadius: 12, border: `1px solid ${C.border}`,
-                  background: C.surface, color: C.text,
-                  fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
-                  outline: 'none', transition: 'border-color 0.2s ease',
-                  boxSizing: 'border-box', lineHeight: 1.5,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', borderRadius: 8,
+                  border: `1px solid ${soundOn ? C.accent + '40' : C.border}`,
+                  background: soundOn ? C.accentDim : 'transparent',
+                  color: soundOn ? C.accent : C.dim,
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: 'inherit', transition: 'all .15s', outline: 'none',
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+              >
+                {soundOn ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                )}
+                {soundOn ? 'Sound On' : 'Sound Off'}
+              </button>
+
+              {/* Elements button (upload image for @ reference) */}
+              <button
+                onClick={() => elemInputRef.current?.click()}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', borderRadius: 8,
+                  border: `1px solid ${C.border}`,
+                  background: 'transparent',
+                  color: C.sub, fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all .15s', outline: 'none',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent + '55'; e.currentTarget.style.color = C.accent; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.sub; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                Elements{uploadedElements.length > 0 ? ` (${uploadedElements.length})` : ''}
+              </button>
+              <input
+                ref={elemInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) { toast.error('Invalid image format'); e.target.value = ''; return; }
+                  if (file.size > MAX_IMAGE_SIZE) { toast.error('Image too large (max 10MB)'); e.target.value = ''; return; }
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const id = Date.now().toString(36);
+                    const name = file.name.replace(/\.[^/.]+$/, '');
+                    setUploadedElements((prev) => [...prev, { id, name, dataUrl: reader.result as string }]);
+                    toast.success(`Image "${name}" added. Use @ in prompt to reference it.`);
+                  };
+                  reader.readAsDataURL(file);
+                  e.target.value = '';
+                }}
               />
+
+              {/* Show uploaded element chips */}
+              {uploadedElements.length > 0 && (
+                <div style={{ display: 'flex', gap: 4, flex: 1, overflow: 'hidden' }}>
+                  {uploadedElements.slice(-3).map((el) => (
+                    <div
+                      key={el.id}
+                      style={{
+                        width: 24, height: 24, borderRadius: 4,
+                        overflow: 'hidden', border: `1px solid ${C.border}`, flexShrink: 0,
+                      }}
+                      title={`@${el.name}`}
+                    >
+                      <img src={el.dataUrl} alt={el.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* ── 4. "Need an idea?" button + idea chips ── */}
@@ -1166,8 +1309,13 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         <span style={{ fontSize: 14 }}>{m.icon}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 11, fontWeight: 600, color: m.id === sel?.model ? ACCENT_LIME : C.text }}>{m.name}</div>
-                          <div style={{ fontSize: 9, color: C.sub }}>{m.desc} · {m.speed}{m.tokens ? ` · ${m.tokens}` : ''}</div>
+                          <div style={{ fontSize: 9, color: C.sub }}>{m.desc} · {m.speed}{m.quality ? ` · ${m.quality}` : ''}</div>
                         </div>
+                        {m.tokens && (
+                          <span style={{ fontSize: 9, fontWeight: 700, color: C.orange, background: C.orange + '15', padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                            {m.tokens} tokens
+                          </span>
+                        )}
                         {m.id === sel?.model && (
                           <span style={{ fontSize: 10, color: ACCENT_LIME, fontWeight: 700 }}>&#10003;</span>
                         )}
@@ -1214,7 +1362,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     key={res}
                     onClick={() => setResolution(res)}
                     style={{
-                      position: 'relative', flex: 1, padding: '7px 14px', borderRadius: 8,
+                      flex: 1, padding: '7px 14px', borderRadius: 8,
                       border: `1px solid ${resolution === res ? C.accent : C.border}`,
                       background: resolution === res ? C.accentDim : 'transparent',
                       color: resolution === res ? C.accent : C.sub,
@@ -1779,7 +1927,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                    {t('editor.banner.title')}
+                    Want longer videos and unlimited presets?
                   </div>
                   <div style={{ fontSize: 12, color: C.sub }}>
                     {t('editor.banner.desc')}

@@ -29,7 +29,8 @@ export interface Model {
   desc: string;
   speed: string;
   icon: string;
-  tokens?: string;
+  tokens?: number;
+  quality?: string;
 }
 
 export interface StatusInfo {

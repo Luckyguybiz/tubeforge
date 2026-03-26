@@ -199,7 +199,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="tf-sidebar"><Sidebar /></div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
-              <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: isEditor ? 0 : 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
+              {isEditor ? (
+                <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>{children}</main>
+              ) : (
+                <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
+              )}
             </div>
           </div>
 
