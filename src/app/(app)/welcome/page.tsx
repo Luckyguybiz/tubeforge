@@ -292,7 +292,9 @@ function WelcomeInner() {
 
       <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
         <a
-          href="#"
+          href="https://t.me/tubeforge_support"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
             ...primaryBtn,
             width: 'auto',
