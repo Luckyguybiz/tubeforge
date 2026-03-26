@@ -19,6 +19,17 @@ vi.mock('@/stores/useThemeStore', () => ({
     }),
 }));
 
+const mockTranslations: Record<string, string> = {
+  'toast.close': 'Закрыть уведомление',
+};
+
+vi.mock('@/stores/useLocaleStore', () => ({
+  useLocaleStore: (selector: (s: unknown) => unknown) =>
+    selector({
+      t: (key: string) => mockTranslations[key] ?? key,
+    }),
+}));
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Toast } from '@/components/ui/Toast';

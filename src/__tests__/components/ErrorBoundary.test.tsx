@@ -19,6 +19,19 @@ vi.mock('@/stores/useThemeStore', () => ({
   }),
 }));
 
+const mockTranslations: Record<string, string> = {
+  'errorBoundary.failedToRender': 'Не удалось отобразить компонент',
+  'errorBoundary.retry': 'Повторить',
+};
+
+vi.mock('@/stores/useLocaleStore', () => ({
+  useLocaleStore: {
+    getState: () => ({
+      t: (key: string) => mockTranslations[key] ?? key,
+    }),
+  },
+}));
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
