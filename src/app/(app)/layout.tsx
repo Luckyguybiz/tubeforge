@@ -104,9 +104,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-tools-cats{justify-content:flex-start!important;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important;padding-bottom:8px!important}
           .tf-editor-scene-panel{display:none!important}
           .tf-editor-topbar>*{flex-shrink:0}
+          .tf-editor-layout{flex-direction:column!important}
+          .tf-editor-left{width:100%!important;max-height:45vh!important;border-right:none!important;border-bottom:1px solid rgba(128,128,128,.15)!important}
+          .tf-editor-right{min-height:0!important}
+          .tf-editor-gen-btn{position:sticky!important;bottom:0!important;z-index:5!important}
+          .tf-editor-title-label{font-size:13px!important}
+          .tf-editor-save-status{display:none!important}
+          .tf-editor-undo-redo{display:none!important}
+          .tf-editor-frames{flex-wrap:wrap!important}
+          .tf-editor-tabs{overflow-x:auto!important;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important}
+          .tf-editor-style-card{min-height:60px!important}
+          .tf-keywords-layout{grid-template-columns:1fr!important}
+          .tf-keywords-search-bar{flex-direction:column!important}
+          .tf-keywords-tabs{width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+          .tf-keywords-right-panel{order:-1!important}
+          .tf-keywords-stat-grid{grid-template-columns:1fr!important;gap:10px!important}
+          .tf-keywords-table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
           .tf-shorts-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
           .tf-topbar-breadcrumb{font-size:12px!important}
           .tf-topbar-breadcrumb span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
+          .tf-dash-connect-banner{padding:16px 14px!important;gap:12px!important}
+          .tf-dash-connect-banner h3{font-size:15px!important}
+          .tf-dash-connect-banner p{margin-left:0!important}
+          .tf-dash-feature-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
+          .tf-history-grid{grid-template-columns:1fr!important}
+          .tf-free-tools-scroll{padding-bottom:12px!important}
         }
         @media(max-width:480px){
           .tf-tools-grid{grid-template-columns:1fr!important}
@@ -117,6 +139,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-dash-stat-value{font-size:18px!important}
           .tf-billing-inner{padding:10px 8px 24px!important}
           .tf-billing-heading{font-size:20px!important}
+          .tf-dash-feature-grid{grid-template-columns:1fr!important}
+          .tf-editor-left{max-height:40vh!important;padding:12px!important}
+          .tf-keywords-layout{gap:12px!important}
         }
         @media(max-width:320px){
           .tf-main-content{padding:4px!important}

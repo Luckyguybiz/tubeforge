@@ -270,7 +270,7 @@ function ConnectionBanner({
 }) {
   return (
     <div
-      className="tf-banner-glow"
+      className="tf-banner-glow tf-dash-connect-banner"
       style={{
         background: `linear-gradient(135deg, ${C.accent}12, ${C.purple}12, ${C.blue}12, ${C.accent}12)`,
         border: `1px solid ${C.accent}30`,
@@ -743,7 +743,7 @@ export function Dashboard() {
             {t('dashboard.seeAll')} <span>&rsaquo;</span>
           </Link>
         </div>
-        <div style={{
+        <div className="tf-dash-feature-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
           gap: 16,
