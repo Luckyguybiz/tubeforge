@@ -99,6 +99,7 @@ export function AiThumbnailsPage() {
   /* Progress */
   const [progress, setProgress] = useState(0);
   const [imageRevealed, setImageRevealed] = useState(false);
+  const pendingRevealRef = useRef<(() => void) | null>(null);
 
   /* YouTube context */
   const [ytUrl, setYtUrl] = useState('');
@@ -141,12 +142,13 @@ export function AiThumbnailsPage() {
           revisedPrompt: img.revisedPrompt,
         }),
       );
-      setProgress(100);
-      setLastBatch(imgs);
-      setSelectedImage(imgs[0] || null);
-      setHistory((prev) => [...imgs, ...prev].slice(0, 20));
       toast.success(t('aithumbs.toast.success'));
-      setTimeout(() => setImageRevealed(true), 700);
+      pendingRevealRef.current = () => {
+        setSelectedImage(imgs[0] || null);
+        setHistory((prev) => [...imgs, ...prev].slice(0, 20));
+        setImageRevealed(true);
+      };
+      setProgress((p) => (p >= 100 ? 100 : p));
     },
     onError: (err) => {
       setProgress(0);
@@ -167,11 +169,13 @@ export function AiThumbnailsPage() {
         style: 'realistic',
         parentId: selectedImage?.id,
       };
-      setProgress(100);
-      setSelectedImage(img);
-      setHistory((prev) => [img, ...prev].slice(0, 20));
       toast.success(t('aithumbs.toast.enhanced'));
-      setTimeout(() => setImageRevealed(true), 700);
+      pendingRevealRef.current = () => {
+        setSelectedImage(img);
+        setHistory((prev) => [img, ...prev].slice(0, 20));
+        setImageRevealed(true);
+      };
+      setProgress((p) => (p >= 100 ? 100 : p));
     },
     onError: (err) => {
       setProgress(0);
@@ -198,6 +202,7 @@ export function AiThumbnailsPage() {
   useEffect(() => {
     if (!isGenerating) return;
     setProgress(0);
+    pendingRevealRef.current = null;
     const interval = setInterval(() => {
       setProgress((p) => {
         if (p >= 95) return p;
@@ -206,6 +211,24 @@ export function AiThumbnailsPage() {
     }, 600);
     return () => clearInterval(interval);
   }, [isGenerating]);
+
+  /* Fast animation to 100% once result is ready, then reveal */
+  useEffect(() => {
+    if (isGenerating || !pendingRevealRef.current) return;
+    if (progress >= 100) {
+      const reveal = pendingRevealRef.current;
+      pendingRevealRef.current = null;
+      reveal();
+      return;
+    }
+    const interval = setInterval(() => {
+      setProgress((p) => {
+        const next = Math.min(100, p + 8);
+        return next;
+      });
+    }, 30);
+    return () => clearInterval(interval);
+  }, [isGenerating, progress]);
 
   /* ── Handlers ───────────────────────────────────── */
 
