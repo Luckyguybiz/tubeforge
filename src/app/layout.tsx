@@ -52,11 +52,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=2', sizes: '32x32' },
+      { url: '/favicon.svg?v=2', type: 'image/svg+xml' },
     ],
-    shortcut: '/favicon.svg',
-    apple: '/apple-touch-icon.png',
+    shortcut: '/favicon.svg?v=2',
+    apple: '/apple-touch-icon.png?v=2',
   },
 };
 
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="TubeForge" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
         {/* Preconnect to external origins for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
