@@ -132,6 +132,7 @@
   "aithumbs.format.landscape": "Landscape",
   "aithumbs.format.portrait": "Portrait",
   "aithumbs.generateBtn": "Generate Thumbnail",
+  "aithumbs.gallery.loading": "Loading your works...",
   "aithumbs.generating": "Generating...",
   "aithumbs.generatingIdeas": "Generating ideas...",
   "aithumbs.history.empty": "No thumbnails yet",
