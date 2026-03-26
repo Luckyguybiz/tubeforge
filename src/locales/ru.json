@@ -1398,6 +1398,7 @@
   "referral.perMonth": "в месяц при 10–50 рефералах",
   "referral.potentialEarnings": "Потенциальный доход",
   "referral.qrDesc": "Сканируйте для перехода по реферальной ссылке",
+  "referral.qrDownloadError": "Не удалось скачать QR-код",
   "referral.qrDownloaded": "QR-код скачан!",
   "referral.qrTitle": "QR-код",
   "referral.retry": "Повторить",

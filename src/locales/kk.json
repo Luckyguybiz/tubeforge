@@ -1371,6 +1371,7 @@
   "referral.perMonth": "10–50 реферал кезінде айына",
   "referral.potentialEarnings": "Болжамды табыс",
   "referral.qrDesc": "Реферал сілтемеңізді ашу үшін сканерлеңіз",
+  "referral.qrDownloadError": "QR-кодты жүктеу мүмкін болмады",
   "referral.qrDownloaded": "QR-код жүктелді!",
   "referral.qrTitle": "QR-код",
   "referral.retry": "Қайталау",
