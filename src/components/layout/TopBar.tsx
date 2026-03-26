@@ -9,6 +9,8 @@ import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useMobileMenuStore } from '@/stores/useMobileMenuStore';
 import type { Notification } from '@/stores/useNotificationStore';
 import { WhatsNewBadge, WhatsNewModal } from '@/components/ui/WhatsNew';
+import { trpc } from '@/lib/trpc';
+import { useNotificationSync } from '@/hooks/useNotificationSync';
 
 /** Translation keys for extra page labels not in NAV */
 const PAGE_LABEL_KEYS: Record<string, string> = {
@@ -94,8 +96,33 @@ export const TopBar = memo(function TopBar() {
   const isEditor = current === 'editor';
 
   const notifications = useNotificationStore((s) => s.notifications);
-  const markRead = useNotificationStore((s) => s.markRead);
-  const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const storeMarkRead = useNotificationStore((s) => s.markRead);
+  const storeMarkAllRead = useNotificationStore((s) => s.markAllRead);
+  const showShortcuts = useNotificationStore((s) => s.showShortcuts);
+  const setShowShortcuts = useNotificationStore((s) => s.setShowShortcuts);
+
+  const storeClearAll = useNotificationStore((s) => s.clearAll);
+
+  // Sync notifications from server
+  useNotificationSync();
+  const markReadMut = trpc.notification.markRead.useMutation();
+  const markAllReadMut = trpc.notification.markAllRead.useMutation();
+  const clearAllMut = trpc.notification.clearAll.useMutation();
+
+  const markRead = useCallback((id: string) => {
+    storeMarkRead(id);
+    markReadMut.mutate({ id });
+  }, [storeMarkRead, markReadMut]);
+
+  const markAllRead = useCallback(() => {
+    storeMarkAllRead();
+    markAllReadMut.mutate();
+  }, [storeMarkAllRead, markAllReadMut]);
+
+  const clearAll = useCallback(() => {
+    storeClearAll();
+    clearAllMut.mutate();
+  }, [storeClearAll, clearAllMut]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -356,6 +383,24 @@ export const TopBar = memo(function TopBar() {
                 </div>
               ))}
             </div>
+            {/* Footer: Clear all */}
+            {notifications.length > 0 && (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px 14px', borderTop: `1px solid ${C.border}`,
+              }}>
+                <button
+                  onClick={() => clearAll()}
+                  style={{
+                    background: 'none', border: 'none', color: C.dim,
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    padding: '2px 6px', borderRadius: 4,
+                  }}
+                >
+                  {t('topbar.clearAll')}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

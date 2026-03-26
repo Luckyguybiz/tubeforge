@@ -137,6 +137,13 @@ export async function POST(req: NextRequest) {
                 data: { plan },
               }),
             ]);
+            // Notify user about plan upgrade
+            const user = await db.user.findFirst({ where: { stripeId: session.customer as string }, select: { id: true } });
+            if (user) {
+              await db.notification.create({
+                data: { userId: user.id, type: 'success', title: 'Plan upgraded', message: `Your plan has been upgraded to ${plan}` },
+              }).catch(() => {});
+            }
           } catch (err) {
             const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
             if (isPrismaUnique) {
@@ -169,6 +176,12 @@ export async function POST(req: NextRequest) {
               data: { plan: 'FREE' },
             }),
           ]);
+          const user = await db.user.findFirst({ where: { stripeId: sub.customer as string }, select: { id: true } });
+          if (user) {
+            await db.notification.create({
+              data: { userId: user.id, type: 'warning', title: 'Subscription cancelled', message: 'Your subscription has been cancelled. You are now on the Free plan.' },
+            }).catch(() => {});
+          }
         } catch (err) {
           const isPrismaUnique = err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002';
           if (isPrismaUnique) {

@@ -25,6 +25,7 @@ interface NotificationState {
   removeToast: (id: string) => void;
 
   notifications: Notification[];
+  setNotifications: (items: Notification[]) => void;
   addNotification: (type: Notification['type'], title: string, message: string) => void;
   markRead: (id: string) => void;
   markAsRead: (id: string) => void;
@@ -60,6 +61,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   /* ── Persistent notifications ────────────────────── */
 
   notifications: [],
+
+  setNotifications: (items) => {
+    set({ notifications: items });
+  },
 
   addNotification: (type, title, message) => {
     const n: Notification = { id: uid(), type, title, message, read: false, createdAt: Date.now() };

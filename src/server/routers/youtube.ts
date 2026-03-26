@@ -105,6 +105,14 @@ export const youtubeRouter = router({
     // Sync channels to DB in a single transaction
     const items = data.items ?? [];
     if (items.length > 0) {
+      // Check which channels are new before upsert
+      const existingIds = new Set(
+        (await ctx.db.channel.findMany({
+          where: { id: { in: items.map((ch: { id: string }) => ch.id) } },
+          select: { id: true },
+        })).map((c) => c.id)
+      );
+
       await ctx.db.$transaction(
         items.map((ch: { id: string; snippet: { title: string; thumbnails?: { default?: { url?: string } } }; statistics: { subscriberCount?: string } }) =>
           ctx.db.channel.upsert({
@@ -124,6 +132,19 @@ export const youtubeRouter = router({
           })
         )
       );
+
+      // Notify about newly connected channels
+      const newChannels = items.filter((ch: { id: string }) => !existingIds.has(ch.id));
+      if (newChannels.length > 0) {
+        await ctx.db.notification.createMany({
+          data: newChannels.map((ch: { snippet: { title: string } }) => ({
+            userId: ctx.session.user.id,
+            type: 'success',
+            title: 'Channel connected',
+            message: `YouTube channel "${ch.snippet.title}" has been connected`,
+          })),
+        }).catch(() => {}); // non-critical
+      }
     }
     return data.items ?? [];
   }),

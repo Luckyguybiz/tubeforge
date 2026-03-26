@@ -285,6 +285,20 @@ async function checkAndIncrementAIUsage(userId: string, db: PrismaClient) {
         data: { aiUsage: { increment: 1 } },
         select: { id: true },
       });
+
+      // Warn when usage hits 80% of plan limit
+      const newUsage = user.aiUsage + 1;
+      const threshold = Math.floor(planLimits.aiGenerations * 0.8);
+      if (newUsage === threshold) {
+        await tx.notification.create({
+          data: {
+            userId,
+            type: 'warning',
+            title: 'AI limit approaching',
+            message: `You have used ${newUsage} of ${planLimits.aiGenerations} AI generations this month`,
+          },
+        }).catch(() => {});
+      }
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
   );
@@ -779,6 +793,16 @@ The image must look like a professional YouTube thumbnail that would get million
           message: 'All image generations failed. Please try again.',
         });
       }
+
+      // Create notification for completed generation
+      await ctx.db.notification.create({
+        data: {
+          userId,
+          type: 'success',
+          title: 'Thumbnail ready',
+          message: `Generated ${results.length} thumbnail${results.length > 1 ? 's' : ''} for "${input.prompt.slice(0, 60)}"`,
+        },
+      }).catch(() => {}); // non-critical
 
       return {
         images: results,

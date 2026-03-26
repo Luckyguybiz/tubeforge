@@ -2793,6 +2793,7 @@
   "topbar.clearSearch": "Clear search",
   "topbar.close": "Close",
   "topbar.logout": "Sign Out",
+  "topbar.clearAll": "Clear all",
   "topbar.markAllRead": "Mark all read",
   "topbar.newProject": "New Project",
   "topbar.newProjectLabel": "Create new project",

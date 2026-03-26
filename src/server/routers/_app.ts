@@ -22,6 +22,7 @@ import { commentRouter } from './comment';
 import { aiThumbnailsRouter } from './aiThumbnails';
 import { keywordsRouter } from './keywords';
 import { toolHistoryRouter } from './toolHistory';
+import { notificationRouter } from './notification';
 
 export const appRouter = router({
   user: userRouter,
@@ -47,6 +48,7 @@ export const appRouter = router({
   aiThumbnails: aiThumbnailsRouter,
   keywords: keywordsRouter,
   toolHistory: toolHistoryRouter,
+  notification: notificationRouter,
 });
 
 export type AppRouter = typeof appRouter;
