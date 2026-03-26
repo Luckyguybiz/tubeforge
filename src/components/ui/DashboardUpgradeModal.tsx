@@ -97,7 +97,7 @@ export function DashboardUpgradeModal() {
 
   const createCheckout = trpc.billing.createCheckout.useMutation({
     onSuccess: (data) => {
-      if (data?.url) window.location.href = data.url;
+      if (data.url) window.location.href = data.url;
     },
   });
 

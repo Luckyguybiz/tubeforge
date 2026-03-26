@@ -4,6 +4,12 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('auth-route');
 
+/** Known Auth.js v5 actions — anything else is a bot/scanner probe */
+const KNOWN_AUTH_ACTIONS = new Set([
+  'signin', 'signout', 'callback', 'session', 'csrf',
+  'providers', 'error', 'verify-request',
+]);
+
 /**
  * Ensure the request is a proper NextRequest with nextUrl.
  * Next.js 16 may pass different request types to route handlers,
@@ -23,6 +29,13 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
 
   const safeReq = ensureNextRequest(req);
   const url = new URL(req.url);
+
+  // Guard: reject unknown auth actions early to avoid Auth.js UnknownAction errors from bot probes
+  const pathAfterAuth = url.pathname.replace(/^\/api\/auth\/?/, '');
+  const action = pathAfterAuth.split('/')[0];
+  if (action && !KNOWN_AUTH_ACTIONS.has(action)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   const isCallback = url.pathname.includes('/callback/');
 
   // Log domain info on callbacks so we can verify cookie domain matches
