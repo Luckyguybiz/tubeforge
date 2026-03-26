@@ -30,9 +30,12 @@ button {
   font-family: inherit;
   transition: all 0.2s ease;
 }
+button:hover:not(:disabled):not([data-no-scale]) {
+  transform: scale(1.02);
+}
 button:active:not(:disabled) {
-  transform: scale(0.97);
-  opacity: 0.85;
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 input, textarea, select {
@@ -131,11 +134,42 @@ input:focus, textarea:focus, select:focus {
 
 /* Page transition fade-in */
 @keyframes tf-page-fade-in {
-  from { opacity: 0.8; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .tf-main-content {
-  animation: tf-page-fade-in 0.2s ease-out;
+  animation: tf-page-fade-in 0.3s ease-out;
+}
+
+/* Icon hover micro-interaction */
+.tf-icon-hover { transition: transform 0.2s ease; }
+.tf-icon-hover:hover { transform: scale(1.15) rotate(3deg); }
+
+/* Modal backdrop blur + scale-in */
+@keyframes tf-modal-backdrop-in {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+@keyframes tf-modal-scale-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.92); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.tf-modal-backdrop {
+  animation: tf-modal-backdrop-in 0.25s ease-out forwards;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.tf-modal-dialog {
+  animation: tf-modal-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Count-up number reveal */
+@keyframes tf-number-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tf-count-up {
+  animation: tf-number-reveal 0.4s ease-out both;
 }
 
 /* Glassmorphism for headers */

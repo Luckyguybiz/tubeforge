@@ -16,8 +16,8 @@ export function ToastProvider() {
     <>
       <style>{`
         @keyframes toastSlideIn {
-          from { transform: translateX(40px); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
         @media (max-width: 640px) {
           .tf-toast-container {
