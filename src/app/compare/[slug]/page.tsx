@@ -24,6 +24,7 @@ interface ComparisonData {
     competitor: string;
   };
   advantages: string[];
+  considerations: string[];
   faq: FaqItem[];
 }
 
@@ -46,6 +47,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Free tools: video downloads, converter, compression',
       'Built-in AI SEO for metadata optimization',
       'More affordable pricing with a free plan',
+    ],
+    considerations: [
+      'InVideo has a larger stock media library',
+      'InVideo offers more pre-built video templates',
+      'InVideo supports direct export to more social platforms',
     ],
     faq: [
       { q: 'Is TubeForge better than InVideo for YouTube?', a: 'TubeForge is purpose-built for YouTube creators with native SEO tools, YouTube analytics, and direct publishing. InVideo is a general video creation platform without YouTube-specific optimizations.' },
@@ -71,6 +77,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Built-in video downloader',
       'Referral program with 20% commission',
     ],
+    considerations: [
+      'CapCut has a more mature mobile editing app',
+      'CapCut offers more visual effects and filters',
+      'CapCut is more popular for TikTok content creation',
+    ],
     faq: [
       { q: 'Is TubeForge better than CapCut for YouTube?', a: 'TubeForge is specifically designed for YouTube with built-in SEO, analytics, and publishing tools. CapCut is a general video editor that works well for short-form content but lacks YouTube-specific features.' },
       { q: 'Does CapCut have YouTube SEO tools?', a: 'No. CapCut focuses on video editing only. TubeForge includes AI-powered SEO optimization for titles, descriptions, tags, and thumbnails to help your videos rank higher.' },
@@ -94,6 +105,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Free plan to get started',
       'More built-in YouTube tools',
       'Lower prices on paid plans',
+    ],
+    considerations: [
+      'Pictory specializes in blog-to-video conversion',
+      'Pictory has a more extensive stock footage library',
+      'Pictory offers longer AI-generated videos on paid plans',
     ],
     faq: [
       { q: 'Is TubeForge cheaper than Pictory?', a: 'Yes. TubeForge starts free with a generous plan, while Pictory starts at $23/mo. Even TubeForge Pro at $12/mo is significantly cheaper with more YouTube-specific features.' },
@@ -119,6 +135,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Built-in SEO and analytics',
       'Significantly cheaper for individual creators',
     ],
+    considerations: [
+      'Synthesia has AI avatars for corporate presentations',
+      'Synthesia supports 120+ languages for voiceover',
+      'Synthesia is better suited for training and enterprise video',
+    ],
     faq: [
       { q: 'Is TubeForge better than Synthesia?', a: 'They serve different purposes. Synthesia specializes in AI avatar-based videos for corporate training. TubeForge is built for YouTube creators with SEO, analytics, and publishing tools.' },
       { q: 'Does TubeForge have AI avatars like Synthesia?', a: 'No. TubeForge focuses on AI video generation from text prompts, scene-based editing, and YouTube-specific tools rather than avatar-based presentations.' },
@@ -142,6 +163,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Free utilities for creators',
       'Full multi-language support',
       'More affordable pricing',
+    ],
+    considerations: [
+      'Fliki excels at text-to-speech with 2000+ realistic voices',
+      'Fliki supports more TTS languages than TubeForge',
+      'Fliki is better for voiceover-heavy content creation',
     ],
     faq: [
       { q: 'Is TubeForge better than Fliki?', a: 'TubeForge offers a broader YouTube-focused toolkit including SEO, analytics, and free tools, while Fliki specializes in text-to-speech video creation. TubeForge is also more affordable with a free plan.' },
@@ -171,6 +197,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'All-in-one platform — no extension required',
       'Multi-language interface and AI support',
     ],
+    considerations: [
+      'TubeBuddy has deeper YouTube Studio integration via extension',
+      'TubeBuddy offers bulk processing tools for cards and end screens',
+      'TubeBuddy has a longer track record with large YouTube channels',
+    ],
     faq: [
       { q: 'Is TubeForge a TubeBuddy alternative?', a: 'Yes. TubeForge includes keyword research and SEO optimization like TubeBuddy, plus full AI video creation, thumbnail generation, and editing tools that TubeBuddy does not offer.' },
       { q: 'Does TubeForge require a browser extension?', a: 'No. TubeForge is a web application that works in any browser without installing extensions. TubeBuddy requires a Chrome extension to function.' },
@@ -199,6 +230,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Free tools for titles, descriptions, and tags',
       'Multi-language support for global creators',
     ],
+    considerations: [
+      'vidIQ has a deeper keyword research database',
+      'vidIQ offers daily AI-generated video ideas',
+      'vidIQ provides competitor channel tracking and benchmarking',
+    ],
     faq: [
       { q: 'Is TubeForge better than vidIQ?', a: 'TubeForge offers video creation plus SEO tools, while vidIQ focuses solely on YouTube analytics and keyword research. If you need both content creation and optimization, TubeForge is the better all-in-one choice.' },
       { q: 'Does vidIQ offer AI video creation?', a: 'No. vidIQ is an analytics and SEO tool only. TubeForge combines AI video creation, thumbnail generation, and editing with YouTube SEO tools in one platform.' },
@@ -225,6 +261,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI thumbnail generation not available in VEED',
       'Generous free plan without watermarks',
       'Purpose-built for YouTube creators, not generic video editing',
+    ],
+    considerations: [
+      'VEED has a more advanced timeline-based editor',
+      'VEED offers built-in screen recording',
+      'VEED has more social media templates for non-YouTube platforms',
     ],
     faq: [
       { q: 'Is TubeForge better than VEED for YouTube?', a: 'TubeForge is purpose-built for YouTube with SEO, analytics, and AI thumbnails. VEED is a general-purpose online video editor without YouTube-specific optimization tools.' },
@@ -254,6 +295,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI thumbnail generation for better click-through rates',
       'Free plan with no credit card required',
     ],
+    considerations: [
+      'Opus Clip is best-in-class for extracting viral clips from long videos',
+      'Opus Clip has AI virality scoring for short-form content',
+      'Opus Clip supports more platforms for direct clip publishing',
+    ],
     faq: [
       { q: 'Is TubeForge better than Opus Clip?', a: 'They serve different purposes. Opus Clip excels at extracting short clips from long videos. TubeForge is a full video creation platform with AI editing, SEO, analytics, and thumbnail generation.' },
       { q: 'Can TubeForge extract clips like Opus Clip?', a: 'TubeForge focuses on AI video creation from scratch rather than clip extraction. If you need both creation and clipping, TubeForge covers the creation side with its full editing suite.' },
@@ -281,6 +327,11 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'AI thumbnail generation for higher click-through rates',
       'Free tools suite for titles, descriptions, and tags',
       'Generous free plan — Descript starts at $24/mo for full features',
+    ],
+    considerations: [
+      'Descript has industry-leading text-based video editing',
+      'Descript offers automatic filler word removal',
+      'Descript has a full podcast production suite',
     ],
     faq: [
       { q: 'Is TubeForge better than Descript?', a: 'They serve different audiences. Descript excels at text-based editing and podcast production. TubeForge is built for YouTube creators with AI video generation, SEO tools, and analytics.' },
@@ -600,6 +651,57 @@ export default async function ComparePage({
           </ul>
         </div>
 
+        {/* Considerations */}
+        {data.considerations.length > 0 && (
+          <div style={{
+            background: '#1a1a1a',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 16,
+            padding: '32px',
+            marginBottom: 32,
+          }}>
+            <h2 style={{
+              fontSize: 22,
+              fontWeight: 800,
+              margin: '0 0 20px',
+              letterSpacing: '-.02em',
+              color: '#ffffff',
+            }}>
+              Where {data.name} Has the Edge
+            </h2>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {data.considerations.map((con, i) => (
+                <li key={i} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  color: 'rgba(255,255,255,0.55)',
+                }}>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    background: 'rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.4)',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                    marginTop: 2,
+                  }}>
+                    {'\u2022'}
+                  </span>
+                  {con}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* FAQ */}
         {data.faq.length > 0 && (
           <div style={{
@@ -673,7 +775,7 @@ export default async function ComparePage({
               transition: 'all .2s',
             }}
           >
-            Get Started Free
+            Try TubeForge for Free
           </Link>
         </div>
 
