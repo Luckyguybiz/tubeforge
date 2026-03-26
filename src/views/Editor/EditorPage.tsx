@@ -338,7 +338,7 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
    ═══════════════════════════════════════════════════════════════════ */
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
-    <div style={{ display: 'flex', flex: 1, background: C.bg, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', background: C.bg, overflow: 'hidden' }}>
       <div style={{ width: 380, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Skeleton width="100%" height={80} style={{ borderRadius: 12 }} />
         <div style={{ display: 'flex', gap: 10 }}>
@@ -746,7 +746,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0,
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* ── Top Bar (same as AiThumbnails) ─────────────── */}
         <div
           className="tf-editor-topbar"
