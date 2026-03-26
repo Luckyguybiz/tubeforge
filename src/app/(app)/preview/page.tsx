@@ -12,6 +12,11 @@ const PreviewSave = dynamic(
   { loading: () => <Skeleton width="100%" height="80vh" />, ssr: false },
 );
 
+const PreviewAnalytics = dynamic(
+  () => import('@/views/Preview/PreviewAnalytics').then((m) => ({ default: m.PreviewAnalytics })),
+  { loading: () => <Skeleton width="100%" height="40vh" />, ssr: false },
+);
+
 const Metadata = dynamic(
   () => import('@/views/Metadata/Metadata').then((m) => ({ default: m.Metadata })),
   { loading: () => <Skeleton width="100%" height="80vh" />, ssr: false },
@@ -114,7 +119,14 @@ function PublishContent() {
 
       {/* Tab content */}
       <div className="tf-publish-content">
-        {activeTab === 'preview' && <PreviewSave projectId={projectId} />}
+        {activeTab === 'preview' && (
+          <>
+            <PreviewSave projectId={projectId} />
+            <div style={{ marginTop: isMobile ? 20 : 32 }}>
+              <PreviewAnalytics />
+            </div>
+          </>
+        )}
         {activeTab === 'seo' && <Metadata projectId={projectId} />}
         {activeTab === 'planner' && <ContentPlanner />}
       </div>
