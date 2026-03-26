@@ -35,7 +35,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'creation',
     route: '/editor',
     available: true,
-    badge: t('toolshub.popular'),
+    badge: 'PRO',
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -46,7 +46,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'creation',
     route: '/thumbnails',
     available: true,
-    gradient: ['#ec4899', '#f43f5e'],
+    badge: 'PRO',
+    gradient: ['#7c3aed', '#a78bfa'],
   },
   {
     id: 'metadata',
@@ -56,7 +57,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'optimization',
     route: '/preview?tab=seo',
     available: true,
-    gradient: ['#14b8a6', '#06b6d4'],
+    badge: 'FREE',
+    gradient: ['#4f46e5', '#818cf8'],
   },
   {
     id: 'preview',
@@ -66,7 +68,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'publishing',
     route: '/preview',
     available: true,
-    gradient: ['#f59e0b', '#f97316'],
+    badge: 'FREE',
+    gradient: ['#5b21b6', '#7c3aed'],
   },
 
   /* ── AI Tools ──────────────────────────────────────── */
@@ -78,7 +81,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/image-generator',
     available: true,
-    gradient: ['#6366f1', '#8b5cf6'],
+    badge: 'PRO',
+    gradient: ['#6366f1', '#a78bfa'],
   },
   {
     id: 'voiceover-generator',
@@ -88,7 +92,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/voiceover-generator',
     available: true,
-    gradient: ['#3b82f6', '#6366f1'],
+    badge: 'PRO',
+    gradient: ['#4338ca', '#7c3aed'],
   },
   {
     id: 'speech-enhancer',
@@ -98,7 +103,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/speech-enhancer',
     available: false,
-    gradient: ['#10b981', '#06b6d4'],
+    gradient: ['#5b21b6', '#818cf8'],
   },
   {
     id: 'veo3-generator',
@@ -108,7 +113,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/veo3-generator',
     available: false,
-    gradient: ['#ef4444', '#f97316'],
+    gradient: ['#7c3aed', '#c084fc'],
   },
   {
     id: 'brainstormer',
@@ -128,7 +133,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/vocal-remover',
     available: false,
-    gradient: ['#d946ef', '#c026d3'],
+    gradient: ['#6d28d9', '#a78bfa'],
   },
   {
     id: 'ai-creator',
@@ -138,7 +143,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/ai-creator',
     available: false,
-    gradient: ['#f59e0b', '#f97316'],
+    gradient: ['#4338ca', '#8b5cf6'],
   },
 
   /* ── Video Tools ───────────────────────────────────── */
@@ -150,8 +155,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/autoclip',
     available: false,
-    badge: t('toolshub.popular'),
-    gradient: ['#6366f1', '#ec4899'],
+    badge: 'PRO',
+    gradient: ['#6366f1', '#c084fc'],
   },
   {
     id: 'cut-crop',
@@ -161,7 +166,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/cut-crop',
     available: true,
-    gradient: ['#3b82f6', '#06b6d4'],
+    badge: 'FREE',
+    gradient: ['#4f46e5', '#7c3aed'],
   },
   {
     id: 'subtitle-editor',
@@ -171,6 +177,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/subtitle-editor',
     available: true,
+    badge: 'FREE',
     gradient: ['#6366f1', '#8b5cf6'],
   },
   {
@@ -181,7 +188,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/subtitle-remover',
     available: false,
-    gradient: ['#ef4444', '#f97316'],
+    gradient: ['#7c3aed', '#a78bfa'],
   },
   {
     id: 'mp4-to-gif',
@@ -191,6 +198,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/mp4-to-gif',
     available: true,
+    badge: 'FREE',
     gradient: ['#8b5cf6', '#6366f1'],
   },
   {
@@ -201,7 +209,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/reddit-video',
     available: false,
-    gradient: ['#f97316', '#ef4444'],
+    gradient: ['#5b21b6', '#8b5cf6'],
   },
   {
     id: 'fake-texts',
@@ -211,7 +219,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'video',
     route: '/tools/fake-texts',
     available: false,
-    gradient: ['#8b5cf6', '#6366f1'],
+    gradient: ['#4338ca', '#6366f1'],
   },
 
   /* ── Optimization ─────────────────────────────────── */
@@ -223,7 +231,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'optimization',
     route: '/tools/youtube-downloader',
     available: true,
-    gradient: ['#6366f1', '#8b5cf6'],
+    badge: 'FREE',
+    gradient: ['#6366f1', '#818cf8'],
   },
   {
     id: 'tiktok-downloader',
@@ -233,7 +242,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'downloaders',
     route: '/tools/tiktok-downloader',
     available: false,
-    gradient: ['#010101', '#333333'],
+    gradient: ['#3730a3', '#6366f1'],
   },
 
   /* ── Free Tools ────────────────────────────────────── */
@@ -245,7 +254,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'free',
     route: '/tools/audio-balancer',
     available: false,
-    gradient: ['#3b82f6', '#6366f1'],
+    badge: 'FREE',
+    gradient: ['#4f46e5', '#6366f1'],
   },
   {
     id: 'video-compressor',
@@ -255,7 +265,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'free',
     route: '/tools/video-compressor',
     available: true,
-    gradient: ['#06b6d4', '#0ea5e9'],
+    badge: 'FREE',
+    gradient: ['#4338ca', '#818cf8'],
   },
   {
     id: 'mp3-converter',
@@ -265,7 +276,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'free',
     route: '/tools/mp3-converter',
     available: true,
-    gradient: ['#10b981', '#059669'],
+    badge: 'FREE',
+    gradient: ['#5b21b6', '#6366f1'],
   },
 
   /* ── More Tools ────────────────────────────────────── */
@@ -277,7 +289,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/background-remover',
     available: true,
-    badge: 'Beta',
+    badge: 'NEW',
     gradient: ['#8b5cf6', '#7c3aed'],
   },
   {
@@ -288,7 +300,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'audio',
     route: '/tools/voice-changer',
     available: false,
-    gradient: ['#d946ef', '#a855f7'],
+    gradient: ['#6d28d9', '#a78bfa'],
   },
   {
     id: 'face-swap',
@@ -298,7 +310,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/face-swap',
     available: false,
-    gradient: ['#f97316', '#ef4444'],
+    gradient: ['#7c3aed', '#c084fc'],
   },
 
   /* ── New Tools ────────────────────────────────────── */
@@ -311,7 +323,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/content-planner',
     available: true,
     badge: 'NEW',
-    gradient: ['#06b6d4', '#8b5cf6'],
+    gradient: ['#4f46e5', '#8b5cf6'],
   },
   {
     id: 'multi-publisher',
@@ -322,7 +334,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/multi-publisher',
     available: true,
     badge: 'NEW',
-    gradient: ['#0ea5e9', '#6366f1'],
+    gradient: ['#4338ca', '#6366f1'],
   },
   {
     id: 'ai-video-generator',
@@ -333,7 +345,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/ai-video-generator',
     available: true,
     badge: 'NEW',
-    gradient: ['#8b5cf6', '#ec4899'],
+    gradient: ['#8b5cf6', '#c084fc'],
   },
 
   /* ── Coming Soon ───────────────────────────────────── */
@@ -344,7 +356,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.scenario.description'),
     category: 'creation',
     available: false,
-    gradient: ['#8b5cf6', '#a78bfa'],
+    gradient: ['#5b21b6', '#a78bfa'],
   },
   {
     id: 'video-translator',
@@ -354,8 +366,8 @@ function getTools(t: (key: string) => string): ToolDef[] {
     category: 'ai',
     route: '/tools/video-translator',
     available: true,
-    badge: 'Beta',
-    gradient: ['#06b6d4', '#0ea5e9'],
+    badge: 'NEW',
+    gradient: ['#6366f1', '#7c3aed'],
   },
   {
     id: 'analytics',
@@ -364,7 +376,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.analytics.description'),
     category: 'optimization',
     available: false,
-    gradient: ['#f43f5e', '#fb7185'],
+    gradient: ['#7c3aed', '#818cf8'],
   },
   {
     id: 'scheduler',
@@ -373,7 +385,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     description: t('toolshub.tool.scheduler.description'),
     category: 'publishing',
     available: false,
-    gradient: ['#0ea5e9', '#38bdf8'],
+    gradient: ['#4338ca', '#a78bfa'],
   },
   ];
 }
@@ -696,17 +708,17 @@ const ToolCard = memo(function ToolCard({
         flexDirection: 'column',
         padding: 0,
         borderRadius: 14,
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${hovered && tool.available ? tool.gradient[0] + '60' : C.border}`,
         background: C.card,
         cursor: tool.available ? 'pointer' : 'default',
-        transition: 'all .25s ease',
-        transform: hovered && tool.available ? 'translateY(-3px)' : 'none',
+        transition: 'all .3s cubic-bezier(.4,0,.2,1)',
+        transform: hovered && tool.available ? 'scale(1.03)' : 'scale(1)',
         boxShadow: hovered && tool.available
-          ? `0 8px 24px ${tool.gradient[0]}20, 0 4px 12px rgba(0,0,0,0.2)`
-          : 'none',
+          ? `0 0 20px ${tool.gradient[0]}40, 0 0 40px ${tool.gradient[1]}20, 0 8px 32px rgba(0,0,0,0.25)`
+          : '0 1px 3px rgba(0,0,0,0.1)',
         overflow: 'visible',
-        opacity: tool.available ? 1 : 0.5,
-        filter: tool.available ? 'none' : 'grayscale(0.6)',
+        opacity: tool.available ? 1 : 0.55,
+        filter: tool.available ? 'none' : 'grayscale(0.5)',
       }}
     >
       {/* Gradient visual area with illustration */}
@@ -722,17 +734,26 @@ const ToolCard = memo(function ToolCard({
         overflow: 'hidden',
         borderRadius: '14px 14px 0 0',
       }}>
+        {/* Decorative dots pattern */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)',
+          backgroundSize: '16px 16px',
+          pointerEvents: 'none',
+        }} />
         {/* Fallback icon (behind illustration) */}
         <div style={{
-          width: 48,
-          height: 48,
+          width: 52,
+          height: 52,
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.15)',
+          background: 'rgba(255,255,255,0.18)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'transform .2s',
-          transform: hovered && tool.available ? 'scale(1.1)' : 'none',
+          transition: 'transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s',
+          transform: hovered && tool.available ? 'scale(1.15)' : 'scale(1)',
+          boxShadow: hovered && tool.available ? '0 0 16px rgba(255,255,255,0.25)' : 'none',
           position: 'relative',
           zIndex: 0,
         }}>
@@ -769,15 +790,20 @@ const ToolCard = memo(function ToolCard({
             borderRadius: 6,
             background: tool.badge === 'NEW'
               ? '#84cc16'
-              : tool.badge === 'Beta'
-                ? 'rgba(255,255,255,0.2)'
-                : tool.badge === 'Free'
+              : tool.badge === 'PRO'
+                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                : tool.badge === 'FREE'
                   ? '#22c55e'
-                  : '#84cc16',
-            color: tool.badge === 'Beta' ? '#fff' : '#000',
+                  : tool.badge === 'Beta'
+                    ? 'rgba(255,255,255,0.2)'
+                    : '#84cc16',
+            color: tool.badge === 'PRO' || tool.badge === 'Beta' ? '#fff' : '#000',
             fontSize: 10,
             fontWeight: 700,
-            letterSpacing: '.03em',
+            letterSpacing: '.05em',
+            textTransform: 'uppercase' as const,
+            backdropFilter: tool.badge === 'PRO' ? 'blur(4px)' : undefined,
+            boxShadow: tool.badge === 'PRO' ? '0 2px 8px rgba(99,102,241,0.4)' : undefined,
           }}>
             {tool.badge}
           </div>
