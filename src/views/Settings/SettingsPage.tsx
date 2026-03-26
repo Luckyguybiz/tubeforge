@@ -322,7 +322,7 @@ export function SettingsPage() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB'); return; }
+                    if (file.size > 5 * 1024 * 1024) { toast.error(t('settings.maxFileSize')); return; }
                     const formData = new FormData();
                     formData.append('file', file);
                     try {
@@ -330,8 +330,8 @@ export function SettingsPage() {
                       if (!res.ok) throw new Error('Upload failed');
                       const data = await res.json();
                       updateProfile.mutate({ image: data.url });
-                      toast.success('Avatar updated');
-                    } catch { toast.error('Failed to upload'); }
+                      toast.success(t('settings.avatarUpdated'));
+                    } catch { toast.error(t('settings.uploadFailed')); }
                   }}
                 />
                 <button
@@ -2718,7 +2718,7 @@ function ApiKeysSection({
 
   const revokeKey = trpc.apikey.revoke.useMutation({
     onSuccess: () => {
-      toast.success('API key revoked');
+      toast.success(t('settings.apiKeyRevoked'));
       apiKeys.refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -2734,7 +2734,7 @@ function ApiKeysSection({
   return (
     <div className="tf-settings-section" style={sectionStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>API Keys</h2>
+        <h2 style={{ ...sectionHeaderStyle, marginBottom: 0 }}>{t('settings.apiKeys')}</h2>
         <a
           href="/api-docs"
           style={{
@@ -2747,11 +2747,11 @@ function ApiKeysSection({
             background: `${C.blue}10`,
           }}
         >
-          Docs
+          {t('settings.apiDocs')}
         </a>
       </div>
       <p style={sectionDescStyle}>
-        Manage API keys for programmatic access. Keys are shown only once after generation.
+        {t('settings.apiKeysDesc')}
       </p>
 
       {/* API Usage */}
@@ -2834,7 +2834,7 @@ function ApiKeysSection({
               textDecoration: 'underline',
             }}
           >
-            Dismiss
+            {t('settings.dismiss')}
           </button>
         </div>
       )}
@@ -2850,7 +2850,7 @@ function ApiKeysSection({
           type="text"
           value={newKeyLabel}
           onChange={(e) => setNewKeyLabel(e.target.value)}
-          placeholder="Key label (e.g. 'Production')"
+          placeholder={t('settings.keyLabelPlaceholder')}
           maxLength={50}
           style={{ ...inputStyle, flex: 1, minWidth: 180 }}
         />

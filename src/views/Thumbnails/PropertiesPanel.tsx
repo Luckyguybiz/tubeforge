@@ -2455,6 +2455,7 @@ function AIEnhanceTextButton({ C, sel, updEl, pushHistory }: {
   updEl: (id: string, patch: Partial<CanvasElement>) => void;
   pushHistory: () => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -2463,17 +2464,17 @@ function AIEnhanceTextButton({ C, sel, updEl, pushHistory }: {
       if (data.suggestions.length > 0) {
         setSuggestions(data.suggestions);
       } else {
-        toast.info('No suggestions generated');
+        toast.info(t('thumbs.noSuggestions'));
       }
     },
     onError: (err) => {
-      toast.error(err.message || 'Failed to enhance text');
+      toast.error(err.message || t('thumbs.enhanceFailed'));
     },
   });
 
   const handleEnhance = () => {
     if (!sel.text?.trim()) {
-      toast.info('Enter some text first');
+      toast.info(t('thumbs.enterTextFirst'));
       return;
     }
     setOpen(true);
@@ -2485,7 +2486,7 @@ function AIEnhanceTextButton({ C, sel, updEl, pushHistory }: {
     updEl(sel.id, { text: newText });
     setOpen(false);
     setSuggestions([]);
-    toast.success('Text updated');
+    toast.success(t('thumbs.textUpdated'));
   };
 
   return (
@@ -2569,22 +2570,23 @@ function AIRemoveBackgroundButton({ C, sel, updEl, pushHistory }: {
   updEl: (id: string, patch: Partial<CanvasElement>) => void;
   pushHistory: () => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const removeBgMutation = trpc.ai.removeBackground.useMutation({
     onSuccess: (data) => {
       if (data.url) {
         pushHistory();
         updEl(sel.id, { src: data.url });
-        toast.success('Background removed');
+        toast.success(t('thumbs.bgRemoved'));
       }
     },
     onError: (err) => {
-      toast.error(err.message || 'Failed to remove background');
+      toast.error(err.message || t('thumbs.removeBgFailed'));
     },
   });
 
   const handleRemoveBg = () => {
     if (!sel.src) {
-      toast.info('No image source');
+      toast.info(t('thumbs.noImageSource'));
       return;
     }
     removeBgMutation.mutate({ imageUrl: sel.src });

@@ -424,11 +424,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       if (data.ideas.length > 0) {
         setAiIdeas(data.ideas);
       } else {
-        toast.info('No ideas generated. Try a different topic.');
+        toast.info(t('editor.noIdeasGenerated'));
       }
     },
     onError: (err) => {
-      toast.error(err.message || 'Failed to generate ideas.');
+      toast.error(err.message || t('editor.failedGenerateIdeas'));
     },
   });
 
@@ -549,7 +549,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     const store = useEditorStore.getState();
     const currentSel = store.scenes.find((s) => s.id === store.selId);
     if (!currentSel || !currentSel.prompt.trim() || videoGen.isGenerating) return;
-    if (!canUseAI) { toast.error('AI credits exhausted. Upgrade your plan.'); return; }
+    if (!canUseAI) { toast.error(t('editor.aiCreditsExhausted')); return; }
 
     const activeStyle = ANIMATION_STYLES.find((s) => s.id === selectedStyleId);
     const stylePrefix = activeStyle ? `[Style: ${activeStyle.name}] ` : '';
@@ -916,7 +916,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     handleGenerate();
                   }
                 }}
-                placeholder="Describe your video, like 'A woman walking through a neon-lit city'. Add elements using @"
+                placeholder={t('editor.describeVideo')}
                 maxLength={2000}
                 style={{
                   width: '100%', minHeight: 90, padding: 14,
@@ -1640,7 +1640,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       <input
                         value={styleSearch}
                         onChange={(e) => setStyleSearch(e.target.value)}
-                        placeholder="Search styles..."
+                        placeholder={t('editor.searchStyles')}
                         style={{
                           padding: '6px 12px 6px 28px', borderRadius: 8,
                           border: `1px solid ${C.border}`, background: C.surface,
@@ -1680,8 +1680,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
                   {filteredStyles.length === 0 && (
                     <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No styles found</div>
-                      <div style={{ fontSize: 12 }}>Try a different filter or search term</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{t('editor.noStylesFound')}</div>
+                      <div style={{ fontSize: 12 }}>{t('editor.tryDifferentFilter')}</div>
                     </div>
                   )}
                 </div>

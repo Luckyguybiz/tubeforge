@@ -483,7 +483,7 @@ export function AiThumbnailsPage() {
                   {uploadedPhoto ? (
                     <div style={{ position: 'relative', width: 56, height: 56 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={uploadedPhoto} alt="Face" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${ACCENT}` }} />
+                      <img src={uploadedPhoto} alt={t('aithumbs.faceAlt')} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${ACCENT}` }} />
                       <button
                         onClick={() => setUploadedPhoto(null)}
                         style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 9, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontSize: 10 }}
