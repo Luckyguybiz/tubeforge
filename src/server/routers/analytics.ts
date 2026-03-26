@@ -266,4 +266,233 @@ export const analyticsRouter = router({
         rejected: invalidTools.length,
       };
     }),
+
+  /**
+   * SEO score calculation for a project's metadata.
+   * Analyzes title, description, and tags against YouTube best practices.
+   * Returns a breakdown of scores and actionable suggestions.
+   */
+  getSeoScore: protectedProcedure
+    .input(z.object({
+      projectId: z.string().min(1).max(100),
+    }))
+    .query(async ({ ctx, input }) => {
+      await checkAnalyticsRate(ctx.session.user.id);
+
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id: input.projectId,
+          OR: [
+            { userId: ctx.session.user.id },
+            { team: { members: { some: { userId: ctx.session.user.id } } } },
+          ],
+        },
+        select: {
+          title: true,
+          description: true,
+          tags: true,
+          thumbnailUrl: true,
+          thumbnailData: true,
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Project not found' });
+      }
+
+      const title = project.title ?? '';
+      const description = project.description ?? '';
+      const tags = project.tags ?? [];
+      const hasThumbnail = !!(project.thumbnailUrl || project.thumbnailData);
+
+      // --- Title scoring (0-25) ---
+      let titleScore = 0;
+      const titleSuggestions: string[] = [];
+
+      if (title.length >= 30 && title.length <= 70) {
+        titleScore += 10; // Optimal length
+      } else if (title.length >= 20 && title.length <= 100) {
+        titleScore += 6;
+        titleSuggestions.push('Title should be 30-70 characters for optimal CTR');
+      } else {
+        titleScore += 2;
+        titleSuggestions.push('Title is too short or too long. Aim for 30-70 characters');
+      }
+
+      // Check for power words / emotional triggers
+      const powerWords = ['how to', 'best', 'top', 'ultimate', 'guide', 'review', 'secret', 'tips', 'tutorial', 'free', 'new', 'complete'];
+      const hasPowerWord = powerWords.some((w) => title.toLowerCase().includes(w));
+      if (hasPowerWord) {
+        titleScore += 8;
+      } else {
+        titleScore += 2;
+        titleSuggestions.push('Add engaging words like "How to", "Best", "Guide", "Tips" to your title');
+      }
+
+      // Number in title bonus
+      if (/\d/.test(title)) {
+        titleScore += 4;
+      } else {
+        titleScore += 1;
+        titleSuggestions.push('Titles with numbers (e.g., "5 Tips...") tend to perform better');
+      }
+
+      // Brackets bonus
+      if (/[\[\(]/.test(title)) {
+        titleScore += 3;
+      } else {
+        titleSuggestions.push('Adding brackets like [2026] or (Tutorial) can boost CTR');
+      }
+
+      // --- Description scoring (0-25) ---
+      let descScore = 0;
+      const descSuggestions: string[] = [];
+
+      if (description.length >= 200) {
+        descScore += 8;
+      } else if (description.length >= 100) {
+        descScore += 5;
+        descSuggestions.push('Descriptions over 200 characters perform better for SEO');
+      } else if (description.length > 0) {
+        descScore += 2;
+        descSuggestions.push('Your description is too short. Aim for 200+ characters');
+      } else {
+        descSuggestions.push('Add a description! It is critical for YouTube SEO');
+      }
+
+      // Timestamps check
+      const hasTimestamps = /\d{1,2}:\d{2}/.test(description);
+      if (hasTimestamps) {
+        descScore += 5;
+      } else if (description.length > 0) {
+        descSuggestions.push('Add timestamps (e.g., 0:00 Intro, 1:30 Main topic) for better engagement');
+      }
+
+      // Links/CTA check
+      const hasLink = /https?:\/\//.test(description) || /subscribe|follow|like|comment/i.test(description);
+      if (hasLink) {
+        descScore += 5;
+      } else if (description.length > 0) {
+        descSuggestions.push('Include a call-to-action (Subscribe, Like) and relevant links');
+      }
+
+      // Hashtags in description
+      const hasHashtags = /#\w+/.test(description);
+      if (hasHashtags) {
+        descScore += 4;
+      } else if (description.length > 0) {
+        descSuggestions.push('Add 3-5 hashtags at the end of your description');
+      }
+
+      // Line breaks / structure
+      const lineBreaks = (description.match(/\n/g) ?? []).length;
+      if (lineBreaks >= 3) {
+        descScore += 3;
+      } else if (description.length > 100) {
+        descSuggestions.push('Structure your description with line breaks and sections');
+      }
+
+      // --- Tags scoring (0-25) ---
+      let tagsScore = 0;
+      const tagsSuggestions: string[] = [];
+
+      if (tags.length >= 8 && tags.length <= 15) {
+        tagsScore += 12;
+      } else if (tags.length >= 5) {
+        tagsScore += 8;
+        tagsSuggestions.push('Add more tags (8-15 is optimal)');
+      } else if (tags.length >= 1) {
+        tagsScore += 4;
+        tagsSuggestions.push('You need more tags. Aim for 8-15 relevant tags');
+      } else {
+        tagsSuggestions.push('Add tags! They help YouTube understand your video content');
+      }
+
+      // Tag variety (mix of short and long-tail)
+      const shortTags = tags.filter((t) => t.split(' ').length <= 2);
+      const longTags = tags.filter((t) => t.split(' ').length >= 3);
+      if (shortTags.length > 0 && longTags.length > 0) {
+        tagsScore += 8;
+      } else if (tags.length > 0) {
+        tagsScore += 3;
+        tagsSuggestions.push('Mix short tags ("tutorial") with long-tail tags ("how to edit video 2026")');
+      }
+
+      // Tag-title relevance
+      const titleWords = new Set(title.toLowerCase().split(/\s+/).filter((w) => w.length > 3));
+      const tagOverlap = tags.filter((tag) =>
+        tag.toLowerCase().split(/\s+/).some((w) => titleWords.has(w)),
+      ).length;
+      if (tagOverlap >= 2) {
+        tagsScore += 5;
+      } else if (tags.length > 0) {
+        tagsScore += 1;
+        tagsSuggestions.push('Include your title keywords in your tags for better SEO');
+      }
+
+      // --- Thumbnail scoring (0-25) ---
+      let thumbnailScore = 0;
+      const thumbnailSuggestions: string[] = [];
+
+      if (hasThumbnail) {
+        thumbnailScore += 20;
+        // Bonus for custom thumbnail data (not just URL)
+        if (project.thumbnailData) {
+          thumbnailScore += 5;
+        } else {
+          thumbnailScore += 2;
+          thumbnailSuggestions.push('Consider customizing your thumbnail with text overlay and branding');
+        }
+      } else {
+        thumbnailSuggestions.push('Upload a custom thumbnail! Videos with custom thumbnails get 90% more clicks');
+      }
+
+      const totalScore = Math.min(titleScore, 25) + Math.min(descScore, 25) + Math.min(tagsScore, 25) + Math.min(thumbnailScore, 25);
+
+      return {
+        totalScore,
+        maxScore: 100,
+        grade: totalScore >= 80 ? 'A' : totalScore >= 60 ? 'B' : totalScore >= 40 ? 'C' : totalScore >= 20 ? 'D' : 'F',
+        breakdown: {
+          title: { score: Math.min(titleScore, 25), max: 25, suggestions: titleSuggestions },
+          description: { score: Math.min(descScore, 25), max: 25, suggestions: descSuggestions },
+          tags: { score: Math.min(tagsScore, 25), max: 25, suggestions: tagsSuggestions },
+          thumbnail: { score: Math.min(thumbnailScore, 25), max: 25, suggestions: thumbnailSuggestions },
+        },
+      };
+    }),
+
+  /**
+   * Get publish history for the current user.
+   * Returns recent projects with their publish timestamps and status.
+   */
+  getPublishHistory: protectedProcedure
+    .input(z.object({
+      limit: z.number().min(1).max(50).default(20),
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      await checkAnalyticsRate(ctx.session.user.id);
+      const userId = ctx.session.user.id;
+      const limit = input?.limit ?? 20;
+
+      const projects = await ctx.db.project.findMany({
+        where: {
+          userId,
+          status: 'PUBLISHED',
+          NOT: { title: { startsWith: '__tf_' } },
+        },
+        select: {
+          id: true,
+          title: true,
+          thumbnailUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: { select: { scenes: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+      });
+
+      return { items: projects };
+    }),
 });

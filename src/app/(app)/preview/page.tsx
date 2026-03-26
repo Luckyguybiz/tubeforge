@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState, useCallback } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -49,6 +49,14 @@ function PublishContent() {
   const tabParam = searchParams.get('tab');
 
   const [activeTab, setActiveTab] = useState<TabId>(isValidTab(tabParam) ? tabParam : 'preview');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const switchTab = useCallback((tab: TabId) => {
     setActiveTab(tab);
@@ -64,13 +72,15 @@ function PublishContent() {
         className="tf-publish-tabs"
         style={{
           display: 'flex',
-          gap: 6,
-          marginBottom: 24,
+          gap: isMobile ? 4 : 6,
+          marginBottom: isMobile ? 16 : 24,
           padding: 4,
           borderRadius: 12,
           background: C.surface,
           border: `1px solid ${C.border}`,
-          width: 'fit-content',
+          width: isMobile ? '100%' : 'fit-content',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch' as const,
         }}
       >
         {TABS.map((tab) => {
@@ -80,17 +90,20 @@ function PublishContent() {
               key={tab.id}
               onClick={() => switchTab(tab.id)}
               style={{
-                padding: '8px 20px',
+                padding: isMobile ? '8px 14px' : '8px 20px',
                 borderRadius: 9,
                 border: isActive ? 'none' : `1px solid transparent`,
                 background: isActive ? '#6366f1' : 'transparent',
                 color: isActive ? '#fff' : C.dim,
-                fontSize: 13,
+                fontSize: isMobile ? 12 : 13,
                 fontWeight: isActive ? 600 : 500,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 transition: 'all .2s ease',
                 letterSpacing: '-.01em',
+                whiteSpace: 'nowrap',
+                flex: isMobile ? 1 : undefined,
+                minWidth: 0,
               }}
             >
               {tab.icon} {t(TAB_LABEL_KEYS[tab.id])}

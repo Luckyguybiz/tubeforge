@@ -1932,6 +1932,11 @@ export function Metadata({ projectId }: { projectId: string | null }) {
               thumbnailUrl={project.data?.thumbnailUrl || null}
             />
           </SectionCard>
+
+          {/* ─── Server SEO Analysis ─────────────────── */}
+          {projectId && (
+            <ServerSEOScore C={C} projectId={projectId} />
+          )}
         </div>
       </div>
     </div>
@@ -2138,5 +2143,94 @@ function SEOChecklist({
         ))}
       </div>
     </div>
+  );
+}
+
+/* ─── Server-side SEO Score ──────────────────────────── */
+function ServerSEOScore({ C, projectId }: { C: Theme; projectId: string }) {
+  const t = useLocaleStore((s) => s.t);
+  const seoQuery = trpc.analytics.getSeoScore.useQuery(
+    { projectId },
+    { staleTime: 10_000, refetchOnWindowFocus: false },
+  );
+
+  if (seoQuery.isLoading) {
+    return (
+      <SectionCard C={C}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Skeleton width={44} height={44} rounded />
+          <div>
+            <Skeleton width={100} height={14} />
+            <div style={{ marginTop: 4 }}><Skeleton width={60} height={11} /></div>
+          </div>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  if (seoQuery.isError || !seoQuery.data) return null;
+
+  const { totalScore, grade, breakdown } = seoQuery.data;
+  const gradeColor = grade === 'A' ? C.green : grade === 'B' ? '#3b82f6' : grade === 'C' ? C.accent : C.red;
+
+  const categories = [
+    { key: 'title' as const, label: t('metadata.seo.titleFilled') || 'Title', icon: 'T' },
+    { key: 'description' as const, label: t('metadata.seo.descFilled') || 'Description', icon: 'D' },
+    { key: 'tags' as const, label: t('metadata.seo.tagsAdded') || 'Tags', icon: '#' },
+    { key: 'thumbnail' as const, label: t('metadata.seo.thumbnailUploaded') || 'Thumbnail', icon: 'I' },
+  ];
+
+  return (
+    <SectionCard C={C}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+        <span style={{ fontSize: 14 }}>&#x1F3AF;</span>
+        SEO Analysis
+      </div>
+
+      {/* Grade circle + total */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+        <div style={{
+          width: 52, height: 52, borderRadius: '50%',
+          border: `3px solid ${gradeColor}`, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 20, fontWeight: 800, color: gradeColor }}>{grade}</span>
+        </div>
+        <div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: C.text }}>{totalScore}<span style={{ fontSize: 13, fontWeight: 500, color: C.dim }}>/100</span></div>
+          <div style={{ fontSize: 11, color: C.dim }}>Overall SEO Score</div>
+        </div>
+      </div>
+
+      {/* Category breakdown */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {categories.map((cat) => {
+          const data = breakdown[cat.key];
+          const pct = Math.round((data.score / data.max) * 100);
+          const barColor = pct >= 80 ? C.green : pct >= 50 ? '#3b82f6' : pct >= 25 ? C.accent : C.red;
+
+          return (
+            <div key={cat.key}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{cat.label}</span>
+                <span style={{ fontSize: 11, color: C.dim, fontVariantNumeric: 'tabular-nums' }}>{data.score}/{data.max}</span>
+              </div>
+              <div style={{ height: 6, borderRadius: 3, background: `${C.dim}15`, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, borderRadius: 3, background: barColor, transition: 'width 0.4s ease' }} />
+              </div>
+              {data.suggestions.length > 0 && (
+                <div style={{ marginTop: 3 }}>
+                  {data.suggestions.slice(0, 2).map((s, i) => (
+                    <div key={i} style={{ fontSize: 10, color: C.dim, lineHeight: 1.4 }}>
+                      &bull; {s}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
   );
 }

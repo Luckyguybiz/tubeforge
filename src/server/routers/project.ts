@@ -77,6 +77,8 @@ export const projectRouter = router({
           { userId: ctx.session.user.id },
           { team: { members: { some: { userId: ctx.session.user.id } } } },
         ],
+        // Exclude internal sentinel projects (e.g. content planner state)
+        NOT: { title: { startsWith: '__tf_' } },
       };
       if (search) {
         where.title = { contains: search, mode: 'insensitive' };

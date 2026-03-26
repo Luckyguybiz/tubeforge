@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
 import { ToolPageShell, ActionButton } from './ToolPageShell';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { trpc } from '@/lib/trpc';
+import { toast } from '@/stores/useNotificationStore';
 import {
   useContentPlannerStore,
   type ContentStatus,
@@ -166,6 +169,11 @@ export function ContentPlanner() {
   const [formTags, setFormTags] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
+  /* Thumbnail upload */
+  const [formThumbnailUrl, setFormThumbnailUrl] = useState<string | null>(null);
+  const [isUploadingThumb, setIsUploadingThumb] = useState(false);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
+
   /* Ideas Bank */
   const [ideaText, setIdeaText] = useState('');
   const [ideaCategory, setIdeaCategory] = useState('General');
@@ -176,6 +184,95 @@ export function ContentPlanner() {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
+
+  /* ── Backend sync ──────────────────────────────────────── */
+
+  const serverState = trpc.contentPlanner.getState.useQuery(undefined, {
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const saveToServer = trpc.contentPlanner.saveState.useMutation();
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasSyncedRef = useRef(false);
+
+  // Hydrate store from backend on first successful load
+  useEffect(() => {
+    if (!serverState.data || hasSyncedRef.current) return;
+    const { contentItems: serverItems, ideas: serverIdeas } = serverState.data as {
+      contentItems: ContentItem[];
+      ideas: IdeaItem[];
+    };
+
+    // Only hydrate if server has data and local is empty (first visit) or server is newer
+    const localItems = useContentPlannerStore.getState().contentItems;
+    if (serverItems.length > 0 && localItems.length === 0) {
+      // Replace local store with server data
+      const storeState = useContentPlannerStore.getState();
+      for (const item of serverItems) {
+        // Check if item already exists locally
+        if (!storeState.contentItems.find((i) => i.id === item.id)) {
+          storeState.addContentItem({
+            ...item,
+            thumbnailUrl: item.thumbnailUrl ?? null,
+          });
+        }
+      }
+      for (const idea of serverIdeas) {
+        if (!storeState.ideas.find((i) => i.id === idea.id)) {
+          storeState.addIdea(idea.text, idea.category, idea.priority);
+        }
+      }
+    }
+    hasSyncedRef.current = true;
+  }, [serverState.data]);
+
+  // Debounced save to backend when store changes
+  useEffect(() => {
+    if (!hasSyncedRef.current) return;
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      saveToServer.mutate(
+        { contentItems, ideas },
+        { onError: () => toast.error('Failed to sync to server') },
+      );
+    }, 2000);
+    return () => {
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentItems, ideas]);
+
+  /* ── Thumbnail upload handler ──────────────────────────── */
+
+  const handleThumbnailUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File too large (max 10 MB)');
+      return;
+    }
+
+    setIsUploadingThumb(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Upload failed' }));
+        toast.error(data.error || 'Upload failed');
+        return;
+      }
+      const { url } = await res.json();
+      setFormThumbnailUrl(url);
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setIsUploadingThumb(false);
+      if (thumbInputRef.current) thumbInputRef.current.value = '';
+    }
+  }, []);
 
   /* ── Derived data ──────────────────────────────────────── */
 
@@ -226,6 +323,7 @@ export function ContentPlanner() {
     setFormStatus('Idea');
     setFormTags(template?.hashtags?.join(', ') ?? '');
     setFormNotes('');
+    setFormThumbnailUrl(null);
     setModalOpen(true);
   }, []);
 
@@ -240,6 +338,7 @@ export function ContentPlanner() {
     setFormStatus(item.status);
     setFormTags(item.tags.join(', '));
     setFormNotes(item.notes);
+    setFormThumbnailUrl(item.thumbnailUrl ?? null);
     setModalOpen(true);
   }, []);
 
@@ -268,6 +367,7 @@ export function ContentPlanner() {
         status: formStatus,
         tags,
         notes: formNotes,
+        thumbnailUrl: formThumbnailUrl,
       });
     } else {
       addContentItem({
@@ -281,13 +381,14 @@ export function ContentPlanner() {
         tags,
         notes: formNotes,
         thumbnailColor: null,
+        thumbnailUrl: formThumbnailUrl,
       });
     }
     closeModal();
   }, [
     editingItem, formTitle, formDescription, formScript, formPlatforms,
     formContentType, formScheduledDate, formStatus, formTags, formNotes,
-    addContentItem, updateContentItem, closeModal,
+    formThumbnailUrl, addContentItem, updateContentItem, closeModal,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -699,10 +800,20 @@ export function ContentPlanner() {
                       onMouseEnter={(e) => { e.currentTarget.style.background = C.cardHover; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = C.surface; }}
                     >
-                      <div style={{
-                        width: 10, height: 10, borderRadius: '50%',
-                        background: STATUS_COLORS[item.status], flexShrink: 0,
-                      }} />
+                      {item.thumbnailUrl ? (
+                        <Image
+                          src={item.thumbnailUrl}
+                          alt=""
+                          width={48}
+                          height={28}
+                          style={{ objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 10, height: 10, borderRadius: '50%',
+                          background: STATUS_COLORS[item.status], flexShrink: 0,
+                        }} />
+                      )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
                           fontSize: 14, fontWeight: 600, color: C.text,
@@ -868,6 +979,23 @@ export function ContentPlanner() {
                     e.currentTarget.style.transform = 'none';
                   }}
                 >
+                  {/* Thumbnail Preview */}
+                  {item.thumbnailUrl && (
+                    <div style={{
+                      width: '100%', borderRadius: 10, overflow: 'hidden',
+                      aspectRatio: '16/9', position: 'relative',
+                      background: C.surface,
+                    }}>
+                      <Image
+                        src={item.thumbnailUrl}
+                        alt={item.title}
+                        fill
+                        sizes="260px"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </div>
+                  )}
+
                   {/* Title + Status Badge */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                     <h3 style={{
@@ -1493,6 +1621,72 @@ export function ContentPlanner() {
                   onFocus={(e) => { e.currentTarget.style.borderColor = GRADIENT[0]; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
                 />
+              </div>
+
+              {/* Thumbnail Upload */}
+              <div>
+                <label style={labelStyle}>Thumbnail</label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  {formThumbnailUrl ? (
+                    <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+                      <Image
+                        src={formThumbnailUrl}
+                        alt="Thumbnail"
+                        width={160}
+                        height={90}
+                        style={{ objectFit: 'cover', borderRadius: 10, display: 'block' }}
+                      />
+                      <button
+                        onClick={() => setFormThumbnailUrl(null)}
+                        style={{
+                          position: 'absolute', top: 4, right: 4,
+                          width: 24, height: 24, borderRadius: 6,
+                          background: 'rgba(0,0,0,0.7)', border: 'none',
+                          color: '#fff', cursor: 'pointer', display: 'flex',
+                          alignItems: 'center', justifyContent: 'center',
+                          fontSize: 12, fontWeight: 700,
+                        }}
+                        aria-label="Remove thumbnail"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => thumbInputRef.current?.click()}
+                      disabled={isUploadingThumb}
+                      style={{
+                        width: 160, height: 90, borderRadius: 10,
+                        border: `2px dashed ${C.border}`, background: C.surface,
+                        color: C.dim, cursor: 'pointer', display: 'flex',
+                        flexDirection: 'column', alignItems: 'center',
+                        justifyContent: 'center', gap: 4,
+                        transition: 'all 0.2s ease', fontFamily: 'inherit',
+                        fontSize: 12, opacity: isUploadingThumb ? 0.5 : 1,
+                      }}
+                    >
+                      {isUploadingThumb ? (
+                        <span>Uploading...</span>
+                      ) : (
+                        <>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                          <span>Upload image</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  <input
+                    ref={thumbInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleThumbnailUpload}
+                    style={{ display: 'none' }}
+                  />
+                </div>
               </div>
             </div>
 
