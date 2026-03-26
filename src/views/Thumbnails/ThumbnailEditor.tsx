@@ -2305,16 +2305,16 @@ export function ThumbnailEditor({ projectId }: { projectId: string | null }) {
               {canvasW}x{canvasH} &rarr; {resizeDialog.w}x{resizeDialog.h}
             </p>
             <p style={{ fontSize: 11, color: C.dim, marginBottom: 16 }}>
-              Your design has {els.length} element{els.length !== 1 ? 's' : ''}. How should they be handled?
+              {t('thumbs.resizeElementsHint')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, true); setResizeDialog(null); toast.success('Canvas resized — elements scaled'); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.blue}44`, background: C.blue + '14', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, marginBottom: 2 }}>Scale all elements</div>
-                <div style={{ fontSize: 10, opacity: 0.8, fontWeight: 400 }}>Proportionally resize and reposition everything</div>
+              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, true); setResizeDialog(null); toast.success(t('thumbs.canvasResizedScaled')); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.blue}44`, background: C.blue + '14', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>{t('thumbs.scaleAllElements')}</div>
+                <div style={{ fontSize: 10, opacity: 0.8, fontWeight: 400 }}>{t('thumbs.scaleAllDesc')}</div>
               </button>
-              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, false); setResizeDialog(null); toast.info('Canvas resized — elements unchanged'); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, marginBottom: 2 }}>Keep positions</div>
-                <div style={{ fontSize: 10, color: C.dim, fontWeight: 400 }}>Just change the canvas, elements stay where they are</div>
+              <button onClick={() => { store().setCanvasSizeWithScale(resizeDialog.w, resizeDialog.h, false); setResizeDialog(null); toast.info(t('thumbs.canvasResizedUnchanged')); }} style={{ width: '100%', padding: '10px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: 2 }}>{t('thumbs.keepPositions')}</div>
+                <div style={{ fontSize: 10, color: C.dim, fontWeight: 400 }}>{t('thumbs.keepPositionsDesc')}</div>
               </button>
               <button onClick={() => setResizeDialog(null)} style={{ width: '100%', padding: '8px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: C.dim, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
                 Cancel
@@ -2532,6 +2532,7 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
   btnStyle: React.CSSProperties;
   hover: (e: React.MouseEvent, on: boolean) => void;
 }) {
+  const t = useLocaleStore((s) => s.t);
   const [isArranging, setIsArranging] = useState(false);
 
   const autoLayoutMutation = trpc.ai.autoLayout.useMutation({
@@ -2545,14 +2546,14 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
             s.updEl(pos.id, { x: pos.x, y: pos.y, w: pos.w, h: pos.h });
           }
         });
-        toast.success('Layout optimized');
+        toast.success(t('thumbs.layoutOptimized'));
       } else {
-        toast.info('No layout suggestions');
+        toast.info(t('thumbs.noLayoutSuggestions'));
       }
       setIsArranging(false);
     },
     onError: (err) => {
-      toast.error(err.message || 'Auto layout failed');
+      toast.error(err.message || t('thumbs.autoLayoutFailed'));
       setIsArranging(false);
     },
   });
@@ -2561,7 +2562,7 @@ function AutoArrangeButton({ C, btnStyle, hover }: {
     const s = useThumbnailStore.getState();
     const { els, canvasW, canvasH } = s;
     if (els.length === 0) {
-      toast.info('Add some elements first');
+      toast.info(t('thumbs.addElementsFirst'));
       return;
     }
     setIsArranging(true);

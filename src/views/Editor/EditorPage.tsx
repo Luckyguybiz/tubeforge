@@ -441,11 +441,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
       if (data.ideas.length > 0) {
         setAiIdeas(data.ideas);
       } else {
-        toast.info('No ideas generated. Try a different topic.');
+        toast.info(t('editor.noIdeasGenerated'));
       }
     },
     onError: (err) => {
-      toast.error(err.message || 'Failed to generate ideas.');
+      toast.error(err.message || t('editor.failedGenerateIdeas'));
     },
   });
 
@@ -576,7 +576,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     const store = useEditorStore.getState();
     const currentSel = store.scenes.find((s) => s.id === store.selId);
     if (!currentSel || !currentSel.prompt.trim() || videoGen.isGenerating) return;
-    if (!canUseAI) { toast.error('AI credits exhausted. Upgrade your plan.'); return; }
+    if (!canUseAI) { toast.error(t('editor.aiCreditsExhausted')); return; }
 
     const activeStyle = ANIMATION_STYLES.find((s) => s.id === selectedStyleId);
     const stylePrefix = activeStyle ? `[Style: ${activeStyle.name}] ` : '';
@@ -976,254 +976,36 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 </span>
               </div>
 
-              <div style={{ position: 'relative' }}>
-                <textarea
-                  className="tf-editor-prompt"
-                  ref={promptRef}
-                  value={sel?.prompt || ''}
-                  rows={4}
-                  onChange={(e) => {
-                    if (!sel) return;
-                    const val = e.target.value;
-                    updScene(sel.id, { prompt: val, status: sel.status === 'empty' ? 'editing' : sel.status });
-                    autoResize(e.target);
-                    useEditorStore.getState().pushHistoryDebounced();
-
-                    // Check for @ trigger
-                    const cursorPos = e.target.selectionStart;
-                    const textBeforeCursor = val.slice(0, cursorPos);
-                    const atIndex = textBeforeCursor.lastIndexOf('@');
-                    if (atIndex !== -1 && uploadedElements.length > 0) {
-                      const textAfterAt = textBeforeCursor.slice(atIndex + 1);
-                      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
-                        const rect = e.target.getBoundingClientRect();
-                        setAtDropdownPos({ top: rect.bottom + 4, left: rect.left });
-                        setShowAtDropdown(true);
-                      } else {
-                        setShowAtDropdown(false);
-                      }
-                    } else {
-                      setShowAtDropdown(false);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                      e.preventDefault();
-                      handleGenerate();
-                    }
-                  }}
-                  placeholder={'\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u0430\u0448\u0435 \u0432\u0438\u0434\u0435\u043E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 "\u043A\u043E\u0442\u0438\u043A \u043F\u043B\u044B\u0432\u0451\u0442 \u043F\u043E \u0440\u0435\u0447\u043A\u0435". \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 @ \u0434\u043B\u044F \u0441\u0441\u044B\u043B\u043A\u0438 \u043D\u0430 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043D\u044B\u0435 \u0444\u043E\u0442\u043E'}
-                  maxLength={2000}
-                  style={{
-                    width: '100%', minHeight: 90, padding: 14,
-                    borderRadius: 12, border: `1px solid ${C.border}`,
-                    background: C.surface, color: C.text,
-                    fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
-                    outline: 'none', transition: 'border-color 0.2s ease',
-                    boxSizing: 'border-box', lineHeight: 1.5,
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = C.border;
-                    // Delay hiding @ dropdown so clicks on it register
-                    setTimeout(() => setShowAtDropdown(false), 200);
-                  }}
-                />
-
-                {/* @ mention dropdown */}
-                {showAtDropdown && uploadedElements.length > 0 && (
-                  <div style={{
-                    position: 'absolute', bottom: '100%', left: 0, right: 0,
-                    marginBottom: 4, background: C.card, border: `1px solid ${C.border}`,
-                    borderRadius: 10, padding: 4, zIndex: 70,
-                    boxShadow: '0 4px 20px rgba(0,0,0,.4)',
-                    maxHeight: 160, overflowY: 'auto',
-                  }}>
-                    <div style={{ padding: '4px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase' }}>
-                      {t('editor.elements.insertRef')}
-                    </div>
-                    {uploadedElements.map((el) => (
-                      <div
-                        key={el.id}
-                        onClick={() => {
-                          if (!sel || !promptRef.current) return;
-                          const textarea = promptRef.current;
-                          const cursorPos = textarea.selectionStart;
-                          const text = sel.prompt;
-                          const atIndex = text.lastIndexOf('@', cursorPos - 1);
-                          if (atIndex !== -1) {
-                            const newText = text.slice(0, atIndex) + `@${el.name} ` + text.slice(cursorPos);
-                            updScene(sel.id, { prompt: newText });
-                            setShowAtDropdown(false);
-                            setTimeout(() => {
-                              const newCursorPos = atIndex + el.name.length + 2;
-                              textarea.focus();
-                              textarea.setSelectionRange(newCursorPos, newCursorPos);
-                            }, 0);
-                          }
-                        }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 8,
-                          padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
-                          transition: 'background .1s',
-                        }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                      >
-                        <img src={el.dataUrl} alt={el.name} style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} />
-                        <span style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{el.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* ── Buttons below prompt: Sound toggle + Elements ── */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                {/* Sound On/Off toggle */}
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  title={soundEnabled ? 'Sound On' : 'Sound Off'}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '6px 12px', borderRadius: 8,
-                    border: `1px solid ${soundEnabled ? C.accent + '40' : C.border}`,
-                    background: soundEnabled ? C.accentDim : 'transparent',
-                    color: soundEnabled ? C.accent : C.sub,
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
-                  }}
-                >
-                  {soundEnabled ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <line x1="23" y1="9" x2="17" y2="15" />
-                      <line x1="17" y1="9" x2="23" y2="15" />
-                    </svg>
-                  )}
-                  {soundEnabled ? t('editor.sound.on') : t('editor.sound.muted')}
-                </button>
-
-                {/* Elements button */}
-                <button
-                  onClick={() => setShowElementsPanel(!showElementsPanel)}
-                  title={t('editor.elements')}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '6px 12px', borderRadius: 8,
-                    border: `1px solid ${showElementsPanel ? C.accent + '40' : C.border}`,
-                    background: showElementsPanel ? C.accentDim : 'transparent',
-                    color: showElementsPanel ? C.accent : C.sub,
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                  {t('editor.elements')}{uploadedElements.length > 0 ? ` (${uploadedElements.length})` : ''}
-                </button>
-              </div>
-
-              {/* Elements panel - upload + show uploaded images */}
-              {showElementsPanel && (
-                <div style={{
-                  padding: 12, borderRadius: 10,
-                  border: `1px solid ${C.border}`, background: C.surface,
-                  marginTop: 4,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      {t('editor.elements.uploadedPhotos')}
-                    </span>
-                    <button
-                      onClick={() => elementsInputRef.current?.click()}
-                      style={{
-                        padding: '4px 10px', borderRadius: 6,
-                        border: `1px solid ${C.accent}40`, background: C.accentDim,
-                        color: C.accent, fontSize: 11, fontWeight: 600,
-                        cursor: 'pointer', fontFamily: 'inherit',
-                      }}
-                    >
-                      + {t('editor.frame.upload')}
-                    </button>
-                    <input
-                      ref={elementsInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = e.target.files;
-                        if (!files) return;
-                        Array.from(files).forEach((file) => {
-                          if (!ACCEPTED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_SIZE) return;
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            const name = file.name.replace(/\.[^.]+$/, '').replace(/\s+/g, '_').slice(0, 20);
-                            setUploadedElements((prev) => [...prev, {
-                              id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
-                              name,
-                              dataUrl: reader.result as string,
-                            }]);
-                          };
-                          reader.readAsDataURL(file);
-                        });
-                        e.target.value = '';
-                      }}
-                      style={{ display: 'none' }}
-                    />
-                  </div>
-
-                  {uploadedElements.length === 0 ? (
-                    <div style={{ fontSize: 12, color: C.dim, textAlign: 'center', padding: '12px 0' }}>
-                      {t('editor.elements.empty')}
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {uploadedElements.map((el) => (
-                        <div key={el.id} style={{ position: 'relative', width: 56, height: 56 }}>
-                          <img
-                            src={el.dataUrl}
-                            alt={el.name}
-                            style={{
-                              width: '100%', height: '100%', objectFit: 'cover',
-                              borderRadius: 8, border: `1px solid ${C.border}`,
-                            }}
-                          />
-                          <button
-                            onClick={() => setUploadedElements((prev) => prev.filter((p) => p.id !== el.id))}
-                            style={{
-                              position: 'absolute', top: -4, right: -4, width: 16, height: 16,
-                              borderRadius: '50%', border: 'none', background: 'rgba(239,68,68,.9)',
-                              color: '#fff', fontSize: 9, cursor: 'pointer', display: 'flex',
-                              alignItems: 'center', justifyContent: 'center', lineHeight: 1,
-                            }}
-                          >
-                            &#10005;
-                          </button>
-                          <div style={{
-                            position: 'absolute', bottom: 0, left: 0, right: 0,
-                            background: 'rgba(0,0,0,.6)', borderRadius: '0 0 8px 8px',
-                            padding: '1px 4px', fontSize: 8, color: '#fff',
-                            textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}>
-                            @{el.name}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              <textarea
+                className="tf-editor-prompt"
+                ref={promptRef}
+                value={sel?.prompt || ''}
+                rows={4}
+                onChange={(e) => {
+                  if (!sel) return;
+                  updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
+                  autoResize(e.target);
+                  useEditorStore.getState().pushHistoryDebounced();
+                }}
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleGenerate();
+                  }
+                }}
+                placeholder={t('editor.describeVideo')}
+                maxLength={2000}
+                style={{
+                  width: '100%', minHeight: 90, padding: 14,
+                  borderRadius: 12, border: `1px solid ${C.border}`,
+                  background: C.surface, color: C.text,
+                  fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
+                  outline: 'none', transition: 'border-color 0.2s ease',
+                  boxSizing: 'border-box', lineHeight: 1.5,
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
+              />
             </div>
 
             {/* ── 4. "Need an idea?" button + idea chips ── */}
@@ -1935,7 +1717,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       <input
                         value={styleSearch}
                         onChange={(e) => setStyleSearch(e.target.value)}
-                        placeholder="Search styles..."
+                        placeholder={t('editor.searchStyles')}
                         style={{
                           padding: '6px 12px 6px 28px', borderRadius: 8,
                           border: `1px solid ${C.border}`, background: C.surface,
@@ -1975,8 +1757,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
                   {filteredStyles.length === 0 && (
                     <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No styles found</div>
-                      <div style={{ fontSize: 12 }}>Try a different filter or search term</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{t('editor.noStylesFound')}</div>
+                      <div style={{ fontSize: 12 }}>{t('editor.tryDifferentFilter')}</div>
                     </div>
                   )}
                 </div>

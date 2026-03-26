@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { signIn } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCountUp } from '@/hooks/useCountUp';
@@ -31,8 +32,8 @@ function formatNumber(n: number): string {
 }
 
 /* ── Tab definitions ─────────────────────────────────── */
-const TABS = ['All', 'Optimization', 'Research', 'Analytics', 'Achievements'] as const;
-type Tab = (typeof TABS)[number];
+const TAB_KEYS = ['all', 'optimization', 'research', 'analytics', 'achievements'] as const;
+type Tab = (typeof TAB_KEYS)[number];
 
 /* ── Mock keyword data (backend placeholder) ─────────── */
 function generateTrendData() {
@@ -71,11 +72,13 @@ function ChannelSelector({
   selectedId,
   onSelect,
   C,
+  t,
 }: {
   channels: Array<{ id: string; snippet: { title: string; thumbnails?: { default?: { url?: string } } } }>;
   selectedId: string | null;
   onSelect: (id: string) => void;
   C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const selected = channels.find((ch) => ch.id === selectedId);
@@ -102,7 +105,7 @@ function ChannelSelector({
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.surface }} />
         )}
         <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selected?.snippet.title ?? 'Select channel'}
+          {selected?.snippet.title ?? t('channel.selectChannel')}
         </span>
         <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
           <path d="M3 5l3 3 3-3" stroke={C.sub} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -214,10 +217,12 @@ function TrendingKeywordCard({
   data,
   C,
   recharts,
+  t,
 }: {
   data: typeof MOCK_KEYWORD;
   C: ReturnType<typeof useThemeStore.getState>['theme'];
   recharts: typeof import('recharts') | null;
+  t: (key: string) => string;
 }) {
   return (
     <div style={{
@@ -240,13 +245,13 @@ function TrendingKeywordCard({
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0110 0v4" />
                 </svg>
-                Unlock
+                {t('channel.unlock')}
               </span>
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 13, color: C.sub }}>
-              {formatNumber(data.searches)} searches
+              {formatNumber(data.searches)} {t('channel.searches')}
             </span>
             <span style={{
               fontSize: 12, fontWeight: 600, color: C.green,
@@ -311,9 +316,11 @@ function TrendingKeywordCard({
 function CompetitorsCard({
   competitors,
   C,
+  t,
 }: {
   competitors: typeof MOCK_COMPETITORS;
   C: ReturnType<typeof useThemeStore.getState>['theme'];
+  t: (key: string) => string;
 }) {
   return (
     <div style={{
@@ -321,7 +328,7 @@ function CompetitorsCard({
       padding: '20px 24px',
     }}>
       <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>
-        Suggested Competitors
+        {t('channel.suggestedCompetitors')}
       </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {competitors.map((comp) => (
@@ -343,7 +350,7 @@ function CompetitorsCard({
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{comp.name}</div>
-              <div style={{ fontSize: 11, color: C.sub }}>{comp.subscribers} subscribers</div>
+              <div style={{ fontSize: 11, color: C.sub }}>{comp.subscribers} {t('channel.subscribersLabel')}</div>
             </div>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
@@ -360,9 +367,10 @@ function CompetitorsCard({
 /* ── Main export ─────────────────────────────────────── */
 export function ChannelAnalytics() {
   const C = useThemeStore((s) => s.theme);
+  const t = useLocaleStore((s) => s.t);
   const recharts = useRecharts();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>('All');
+  const [activeTab, setActiveTab] = useState<Tab>('all');
 
   /* ── Fetch channels ── */
   const channelsQuery = trpc.youtube.getChannels.useQuery(undefined, {
@@ -436,12 +444,12 @@ export function ChannelAnalytics() {
           <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
         </svg>
         <p style={{ color: C.sub, fontSize: 14, margin: '0 0 4px' }}>
-          {isUnauthorized ? 'Connect your YouTube channel' : 'Failed to load YouTube channels'}
+          {isUnauthorized ? t('channel.connectYoutube') : t('channel.failedToLoad')}
         </p>
         <p style={{ color: C.dim, fontSize: 12, margin: '0 0 16px' }}>
           {isUnauthorized
-            ? 'Link your Google account to see channel analytics'
-            : (channelsQuery.error?.message || 'YouTube API is unavailable. Please try again.')}
+            ? t('channel.linkGoogleAccount')
+            : (channelsQuery.error?.message || t('channel.apiUnavailable'))}
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           {!isUnauthorized && (
@@ -456,7 +464,7 @@ export function ChannelAnalytics() {
               onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
               onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
             >
-              Retry
+              {t('channel.retry')}
             </button>
           )}
           <button
@@ -473,7 +481,7 @@ export function ChannelAnalytics() {
             onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
           >
-            {isUnauthorized ? 'Connect YouTube Channel' : 'Reconnect Account'}
+            {isUnauthorized ? t('channel.connectYoutubeChannel') : t('channel.reconnectAccount')}
           </button>
         </div>
       </div>
@@ -498,8 +506,8 @@ export function ChannelAnalytics() {
         padding: '40px 24px', borderRadius: 16, background: C.card,
         border: `1px solid ${C.border}`, textAlign: 'center',
       }}>
-        <p style={{ color: C.sub, fontSize: 14, margin: '0 0 4px' }}>No YouTube channels found</p>
-        <p style={{ color: C.dim, fontSize: 12, margin: '0 0 16px' }}>Make sure your Google account has a YouTube channel, or reconnect your account.</p>
+        <p style={{ color: C.sub, fontSize: 14, margin: '0 0 4px' }}>{t('channel.noChannelsFound')}</p>
+        <p style={{ color: C.dim, fontSize: 12, margin: '0 0 16px' }}>{t('channel.noChannelsHint')}</p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => channelsQuery.refetch()}
@@ -512,7 +520,7 @@ export function ChannelAnalytics() {
             onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
           >
-            Retry
+            {t('channel.retry')}
           </button>
           <button
             onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
@@ -525,7 +533,7 @@ export function ChannelAnalytics() {
             onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
           >
-            Reconnect Google Account
+            {t('channel.reconnectGoogle')}
           </button>
         </div>
       </div>
@@ -537,20 +545,21 @@ export function ChannelAnalytics() {
       {/* ── Channel selector ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-.02em' }}>
-          Channel Analytics
+          {t('channel.title')}
         </h2>
         <ChannelSelector
           channels={channels}
           selectedId={selectedChannel}
           onSelect={setSelectedChannel}
           C={C}
+          t={t}
         />
       </div>
 
       {/* ── Stat widgets ── */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <StatWidget
-          label="Subscribers"
+          label={t('channel.subscribers')}
           value={stats.subscribers}
           min={stats.subsMin}
           max={stats.subsMax}
@@ -566,7 +575,7 @@ export function ChannelAnalytics() {
           C={C}
         />
         <StatWidget
-          label="Views"
+          label={t('channel.views')}
           value={stats.views}
           min={stats.viewsMin}
           max={stats.viewsMax}
@@ -586,7 +595,7 @@ export function ChannelAnalytics() {
         display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4,
         scrollbarWidth: 'none', msOverflowStyle: 'none',
       }}>
-        {TABS.map((tab) => (
+        {TAB_KEYS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -598,18 +607,18 @@ export function ChannelAnalytics() {
               color: activeTab === tab ? '#fff' : C.sub,
             }}
           >
-            {tab}
+            {t(`channel.tab.${tab}`)}
           </button>
         ))}
       </div>
 
       {/* ── Content based on tab ── */}
-      {(activeTab === 'All' || activeTab === 'Research') && (
-        <TrendingKeywordCard data={MOCK_KEYWORD} C={C} recharts={recharts} />
+      {(activeTab === 'all' || activeTab === 'research') && (
+        <TrendingKeywordCard data={MOCK_KEYWORD} C={C} recharts={recharts} t={t} />
       )}
 
-      {(activeTab === 'All' || activeTab === 'Analytics') && (
-        <CompetitorsCard competitors={MOCK_COMPETITORS} C={C} />
+      {(activeTab === 'all' || activeTab === 'analytics') && (
+        <CompetitorsCard competitors={MOCK_COMPETITORS} C={C} t={t} />
       )}
     </div>
   );
