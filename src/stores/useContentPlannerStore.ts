@@ -20,6 +20,7 @@ export interface ContentItem {
   tags: string[];
   notes: string;
   thumbnailColor: string | null;
+  thumbnailUrl: string | null; // uploaded thumbnail image URL
   createdAt: string;
   updatedAt: string;
 }
@@ -249,6 +250,7 @@ export const useContentPlannerStore = create<ContentPlannerState>()(
           tags: idea.category !== 'General' ? [idea.category] : [],
           notes: '',
           thumbnailColor: null,
+          thumbnailUrl: null,
         });
         state.deleteIdea(id);
         return contentId;
