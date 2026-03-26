@@ -6,6 +6,7 @@ import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@/stores/useNotificationStore';
+import type { Locale } from '@/stores/useLocaleStore';
 
 /* ── Constants ──────────────────────────────────────────────────────── */
 
@@ -13,6 +14,17 @@ const ACCENT_GLOW = 'rgba(99,102,241,0.4)';
 
 type TabId = 'scratch' | 'swap';
 type FormatId = '16:9' | '9:16';
+type StyleId = 'realistic' | 'anime' | 'cinematic' | 'minimalist' | '3d' | 'popart';
+
+const STYLE_OPTIONS: StyleId[] = ['realistic', 'cinematic', 'anime', 'minimalist', '3d', 'popart'];
+
+/** Map locale code to BCP-47 speech recognition language tag */
+const LOCALE_TO_SPEECH_LANG: Record<Locale, string> = {
+  en: 'en-US',
+  ru: 'ru-RU',
+  kk: 'kk-KZ',
+  es: 'es-ES',
+};
 
 interface GeneratedImage {
   id: string;
@@ -80,12 +92,13 @@ function getProgressStage(p: number, t: (k: string) => string): string {
 
 export function AiThumbnailsPage() {
   const t = useLocaleStore((s) => s.t);
-  const { plan } = usePlanLimits();
-  const C = useThemeStore((s) => s.theme);
+  const locale = useLocaleStore((s) => s.locale);
+  const { canUseAI, remainingAI, plan } = usePlanLimits();
 
   /* ── State ──────────────────────────────────────── */
   const [tab, setTab] = useState<TabId>('scratch');
   const [prompt, setPrompt] = useState('');
+  const [style, setStyle] = useState<StyleId>('realistic');
   const [count, setCount] = useState<1 | 2 | 3>(1);
   const [format, setFormat] = useState<FormatId>('16:9');
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
@@ -165,8 +178,8 @@ export function AiThumbnailsPage() {
       const img: GeneratedImage = {
         id: data.id || uid(),
         url: data.url,
-        prompt: t('aithumbs.enhancedVersion'),
-        style: 'realistic',
+        prompt: t('aithumbs.enhance'),
+        style: selectedImage?.style || style,
         parentId: selectedImage?.id,
       };
       toast.success(t('aithumbs.toast.enhanced'));
@@ -236,23 +249,23 @@ export function AiThumbnailsPage() {
     if (!prompt.trim() || generate.isPending) return;
     generate.mutate({
       prompt: prompt.trim(),
-      style: 'realistic',
-      count,
+      style,
+      count: countToUse,
       format,
       youtubeUrl: ytUrl || undefined,
       photoUrl: uploadedPhoto || undefined,
     });
-  }, [prompt, count, format, generate, ytUrl, uploadedPhoto]);
+  }, [prompt, count, format, style, plan, generate, canUseAI, t, ytUrl, uploadedPhoto]);
 
   const handleRegenerate = useCallback(() => {
     if (!selectedImage || generate.isPending) return;
     generate.mutate({
       prompt: selectedImage.prompt,
-      style: 'realistic',
+      style: selectedImage.style as StyleId || style,
       count: 1,
       format,
     });
-  }, [selectedImage, generate, format]);
+  }, [selectedImage, generate, canUseAI, t, format, style]);
 
   const handleDownload = useCallback(async (img: GeneratedImage) => {
     try {
@@ -312,7 +325,7 @@ export function AiThumbnailsPage() {
       toast.error(t('aithumbs.toast.noSpeech'));
       return;
     }
-    recognition.lang = 'ru-RU';
+    recognition.lang = LOCALE_TO_SPEECH_LANG[locale] || 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (e: SpeechRecognitionEvent) => {
@@ -324,7 +337,7 @@ export function AiThumbnailsPage() {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening, t]);
+  }, [isListening, t, locale]);
 
   /* ── Photo upload ───────────────────────────────── */
   const handlePhotoUpload = useCallback(
@@ -361,7 +374,8 @@ export function AiThumbnailsPage() {
   /* ── Render ─────────────────────────────────────── */
 
   return (
-    <div style={{ background: DARK_BG, color: '#fff', fontFamily: 'inherit', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ background: DARK_BG, color: '#fff', fontFamily: 'inherit', minHeight: '100vh', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
         {/* ═══ TOP BAR ═══ */}
         <div
@@ -446,7 +460,7 @@ export function AiThumbnailsPage() {
               background: CARD_BG,
               borderRight: isMobile ? 'none' : `1px solid rgba(255,255,255,0.06)`,
               borderBottom: isMobile ? `1px solid rgba(255,255,255,0.06)` : 'none',
-              padding: '16px 18px',
+              padding: isMobile ? '16px 14px' : '18px 20px',
               display: 'flex', flexDirection: 'column', gap: 12,
               overflowY: 'auto',
               maxHeight: isMobile ? 'none' : '100%',
@@ -781,6 +795,32 @@ export function AiThumbnailsPage() {
               </div>
             </div>
 
+            {/* Style */}
+            <div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                {t('aithumbs.section.style')}
+              </span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {STYLE_OPTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStyle(s)}
+                    style={{
+                      padding: '6px 12px', borderRadius: 8,
+                      border: `1px solid ${style === s ? ACCENT : 'rgba(255,255,255,0.08)'}`,
+                      background: style === s ? ACCENT_DIM : 'transparent',
+                      color: style === s ? ACCENT : 'rgba(255,255,255,0.4)',
+                      fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {t(`aithumbs.style.${s}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Credit cost */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: C.accentDim }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
@@ -825,12 +865,11 @@ export function AiThumbnailsPage() {
             style={{
               flex: 1, minWidth: 0, maxWidth: 1000,
               display: 'flex', flexDirection: 'column',
-              overflow: 'hidden', padding: '12px 16px',
-              gap: 10,
+              overflow: 'hidden', padding: isMobile ? '12px 14px' : 20,
             }}
           >
             {/* Preview badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexShrink: 0 }}>
               <span
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -1163,7 +1202,7 @@ export function AiThumbnailsPage() {
                     <circle cx="10" cy="10" r="8" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
                     <path d="M10 2a8 8 0 015.66 2.34" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
                   </svg>
-                  {t('aithumbs.generating')}
+                  {t('aithumbs.gallery.loading')}
                 </div>
               ) : galleryQuery.data?.items.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>

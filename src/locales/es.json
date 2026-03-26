@@ -135,6 +135,7 @@
   "aithumbs.format.landscape": "Horizontal",
   "aithumbs.format.portrait": "Vertical",
   "aithumbs.generateBtn": "Generar miniatura",
+  "aithumbs.gallery.loading": "Cargando tus trabajos...",
   "aithumbs.generating": "Generando...",
   "aithumbs.generatingIdeas": "Generando ideas...",
   "aithumbs.history.empty": "Aún no hay miniaturas",
