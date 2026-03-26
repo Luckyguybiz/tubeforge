@@ -11,7 +11,7 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { toast } from '@/stores/useNotificationStore';
 import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
 import { ChannelAnalytics } from './ChannelAnalytics';
-import { UpgradePopupModal } from '@/components/ui/UpgradePopupModal';
+import { DashboardUpgradeModal } from '@/components/ui/DashboardUpgradeModal';
 
 /* ================================================================
    NEON & LOCKED STATE CSS
@@ -765,9 +765,76 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Free YouTube Tools section removed by CEO request */}
+      {/* ── Recent History (conditional) ─────────── */}
+      {recentActivities.length > 0 && (
+        <div style={{ marginBottom: 40 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginBottom: 16,
+          }}>
+            <h2 style={{
+              fontSize: 22, fontWeight: 700, color: C.text,
+              margin: 0, letterSpacing: '-.02em',
+            }}>
+              {t('dashboard.recentHistory')}
+            </h2>
+          </div>
+          <div className="tf-history-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
+            gap: 10,
+          }}>
+            {recentActivities.map((activity) => (
+              <div
+                key={activity.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: '14px 16px',
+                  background: C.card,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 14,
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: C.surface,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {activityIcon(activity.type, C.accent)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 600, color: C.text,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {activityLabel(activity.type, t)}
+                  </div>
+                  {activity.label && (
+                    <div style={{
+                      fontSize: 12, color: C.sub, marginTop: 2,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {activity.label}
+                    </div>
+                  )}
+                </div>
+                <span style={{
+                  fontSize: 11, color: C.dim, fontWeight: 500,
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}>
+                  {timeAgoShort(activity.timestamp, t)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Recent History section removed by CEO request */}
+      {/* ── Upgrade modal for new FREE users ──────── */}
+      {user && <DashboardUpgradeModal userPlan={user.plan} />}
     </div>
   );
 }
