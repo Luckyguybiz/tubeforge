@@ -93,7 +93,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/voiceover-generator',
     available: true,
     badge: 'PRO',
-    gradient: ['#4338ca', '#7c3aed'],
+    gradient: ['#4338ca', '#9333ea'],
   },
   {
     id: 'speech-enhancer',
@@ -167,7 +167,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/cut-crop',
     available: true,
     badge: 'FREE',
-    gradient: ['#4f46e5', '#7c3aed'],
+    gradient: ['#3b82f6', '#6366f1'],
   },
   {
     id: 'subtitle-editor',
@@ -178,7 +178,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/subtitle-editor',
     available: true,
     badge: 'FREE',
-    gradient: ['#6366f1', '#8b5cf6'],
+    gradient: ['#8b5cf6', '#3b82f6'],
   },
   {
     id: 'subtitle-remover',
@@ -199,7 +199,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/mp4-to-gif',
     available: true,
     badge: 'FREE',
-    gradient: ['#8b5cf6', '#6366f1'],
+    gradient: ['#f97316', '#8b5cf6'],
   },
   {
     id: 'reddit-video',
@@ -232,7 +232,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/youtube-downloader',
     available: true,
     badge: 'FREE',
-    gradient: ['#6366f1', '#818cf8'],
+    gradient: ['#ef4444', '#6366f1'],
   },
   {
     id: 'tiktok-downloader',
@@ -266,7 +266,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/video-compressor',
     available: true,
     badge: 'FREE',
-    gradient: ['#4338ca', '#818cf8'],
+    gradient: ['#0ea5e9', '#6366f1'],
   },
   {
     id: 'mp3-converter',
@@ -277,7 +277,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/mp3-converter',
     available: true,
     badge: 'FREE',
-    gradient: ['#5b21b6', '#6366f1'],
+    gradient: ['#f59e0b', '#8b5cf6'],
   },
 
   /* ── More Tools ────────────────────────────────────── */
@@ -290,7 +290,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/background-remover',
     available: true,
     badge: 'NEW',
-    gradient: ['#8b5cf6', '#7c3aed'],
+    gradient: ['#ec4899', '#8b5cf6'],
   },
   {
     id: 'voice-changer',
@@ -323,7 +323,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/content-planner',
     available: true,
     badge: 'NEW',
-    gradient: ['#4f46e5', '#8b5cf6'],
+    gradient: ['#10b981', '#6366f1'],
   },
   {
     id: 'multi-publisher',
@@ -334,7 +334,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/multi-publisher',
     available: true,
     badge: 'NEW',
-    gradient: ['#4338ca', '#6366f1'],
+    gradient: ['#6366f1', '#ec4899'],
   },
   {
     id: 'ai-video-generator',
@@ -345,7 +345,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/ai-video-generator',
     available: true,
     badge: 'NEW',
-    gradient: ['#8b5cf6', '#c084fc'],
+    gradient: ['#7c3aed', '#f43f5e'],
   },
 
   /* ── Coming Soon ───────────────────────────────────── */
@@ -367,7 +367,7 @@ function getTools(t: (key: string) => string): ToolDef[] {
     route: '/tools/video-translator',
     available: true,
     badge: 'NEW',
-    gradient: ['#6366f1', '#7c3aed'],
+    gradient: ['#06b6d4', '#8b5cf6'],
   },
   {
     id: 'analytics',
@@ -679,10 +679,12 @@ const ToolCard = memo(function ToolCard({
   tool,
   C,
   onOpen,
+  index,
 }: {
   tool: ToolDef;
   C: Theme;
   onOpen: (tool: ToolDef) => void;
+  index: number;
 }) {
   const t = useLocaleStore((s) => s.t);
   const [hovered, setHovered] = useState(false);
@@ -690,6 +692,7 @@ const ToolCard = memo(function ToolCard({
 
   return (
     <div
+      className="tf-tools-card"
       role="button"
       tabIndex={tool.available ? 0 : -1}
       aria-label={tool.available ? `${t('toolshub.openTool')} ${tool.name}` : `${tool.name} — ${t('toolshub.comingSoon')}`}
@@ -714,11 +717,12 @@ const ToolCard = memo(function ToolCard({
         transition: 'all .3s cubic-bezier(.4,0,.2,1)',
         transform: hovered && tool.available ? 'scale(1.03)' : 'scale(1)',
         boxShadow: hovered && tool.available
-          ? `0 0 20px ${tool.gradient[0]}40, 0 0 40px ${tool.gradient[1]}20, 0 8px 32px rgba(0,0,0,0.25)`
+          ? `0 0 24px ${tool.gradient[0]}50, 0 0 48px ${tool.gradient[1]}25, 0 8px 32px rgba(0,0,0,0.3)`
           : '0 1px 3px rgba(0,0,0,0.1)',
         overflow: 'visible',
         opacity: tool.available ? 1 : 0.55,
         filter: tool.available ? 'none' : 'grayscale(0.5)',
+        animationDelay: `${index * 0.06}s`,
       }}
     >
       {/* Gradient visual area with illustration */}
@@ -742,6 +746,10 @@ const ToolCard = memo(function ToolCard({
           backgroundSize: '16px 16px',
           pointerEvents: 'none',
         }} />
+        {/* Bottom curve overlay for depth */}
+        <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 24, pointerEvents: 'none', zIndex: 2 }} viewBox="0 0 400 24" preserveAspectRatio="none">
+          <path d="M0 24 Q200 0 400 24 Z" fill={C.card} />
+        </svg>
         {/* Fallback icon (behind illustration) */}
         <div style={{
           width: 52,
@@ -782,29 +790,37 @@ const ToolCard = memo(function ToolCard({
 
         {/* Badge */}
         {tool.badge && tool.available && (
-          <div style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            padding: '3px 10px',
-            borderRadius: 6,
-            background: tool.badge === 'NEW'
-              ? '#84cc16'
-              : tool.badge === 'PRO'
-                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                : tool.badge === 'FREE'
-                  ? '#22c55e'
-                  : tool.badge === 'Beta'
-                    ? 'rgba(255,255,255,0.2)'
-                    : '#84cc16',
-            color: tool.badge === 'PRO' || tool.badge === 'Beta' ? '#fff' : '#000',
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '.05em',
-            textTransform: 'uppercase' as const,
-            backdropFilter: tool.badge === 'PRO' ? 'blur(4px)' : undefined,
-            boxShadow: tool.badge === 'PRO' ? '0 2px 8px rgba(99,102,241,0.4)' : undefined,
-          }}>
+          <div
+            className={
+              tool.badge === 'PRO' ? 'tf-tools-badge-pro'
+              : tool.badge === 'NEW' ? 'tf-tools-badge-new'
+              : tool.badge === 'FREE' ? 'tf-tools-badge-free'
+              : undefined
+            }
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              padding: '3px 10px',
+              borderRadius: 6,
+              background: tool.badge === 'NEW'
+                ? '#84cc16'
+                : tool.badge === 'PRO'
+                  ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                  : tool.badge === 'FREE'
+                    ? '#22c55e'
+                    : tool.badge === 'Beta'
+                      ? 'rgba(255,255,255,0.2)'
+                      : '#84cc16',
+              color: tool.badge === 'PRO' || tool.badge === 'Beta' ? '#fff' : '#fff',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '.05em',
+              textTransform: 'uppercase' as const,
+              backdropFilter: 'blur(4px)',
+              zIndex: 2,
+            }}
+          >
             {tool.badge}
           </div>
         )}
@@ -1213,12 +1229,13 @@ export function ToolsHub() {
           gap: 16,
           paddingBottom: 60,
         }}>
-          {filtered.map((tool) => (
+          {filtered.map((tool, i) => (
             <ToolCard
               key={tool.id}
               tool={tool}
               C={C}
               onOpen={handleOpen}
+              index={i}
             />
           ))}
         </div>
