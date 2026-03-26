@@ -9,9 +9,6 @@ import { toast } from '@/stores/useNotificationStore';
 
 /* ── Constants ──────────────────────────────────────────────────────── */
 
-/** Brand accent used throughout the AI thumbnails page */
-const ACCENT = '#6366f1';
-const ACCENT_DIM = 'rgba(99,102,241,0.1)';
 const ACCENT_GLOW = 'rgba(99,102,241,0.4)';
 
 type TabId = 'scratch' | 'swap';
@@ -83,10 +80,8 @@ function getProgressStage(p: number, t: (k: string) => string): string {
 
 export function AiThumbnailsPage() {
   const t = useLocaleStore((s) => s.t);
-  const locale = useLocaleStore((s) => s.locale);
-  const { canUseAI, remainingAI, plan } = usePlanLimits();
-  const theme = useThemeStore((s) => s.theme);
-  const isDark = useThemeStore((s) => s.isDark);
+  const { plan } = usePlanLimits();
+  const C = useThemeStore((s) => s.theme);
 
   /* ── State ──────────────────────────────────────── */
   const [tab, setTab] = useState<TabId>('scratch');
@@ -216,31 +211,25 @@ export function AiThumbnailsPage() {
 
   const handleGenerate = useCallback(() => {
     if (!prompt.trim() || generate.isPending) return;
-    if (!canUseAI) {
-      toast.error(t('aithumbs.toast.limitReached'));
-      return;
-    }
-    const countToUse = count; // Unlocked for testing — all users can generate 1-3
     generate.mutate({
       prompt: prompt.trim(),
       style: 'realistic',
-      count: countToUse,
+      count,
       format,
       youtubeUrl: ytUrl || undefined,
       photoUrl: uploadedPhoto || undefined,
     });
-  }, [prompt, count, format, plan, generate, canUseAI, t, ytUrl, uploadedPhoto]);
+  }, [prompt, count, format, generate, ytUrl, uploadedPhoto]);
 
   const handleRegenerate = useCallback(() => {
     if (!selectedImage || generate.isPending) return;
-    if (!canUseAI) { toast.error(t('aithumbs.toast.limitReached')); return; }
     generate.mutate({
       prompt: selectedImage.prompt,
       style: 'realistic',
       count: 1,
       format,
     });
-  }, [selectedImage, generate, canUseAI, t, format]);
+  }, [selectedImage, generate, format]);
 
   const handleDownload = useCallback(async (img: GeneratedImage) => {
     try {
@@ -336,7 +325,7 @@ export function AiThumbnailsPage() {
   /* ── Helpers ─────────────────────────────────────── */
 
   const isLoading = generate.isPending;
-  const disabled = !prompt.trim() || !canUseAI || isLoading;
+  const disabled = !prompt.trim() || isLoading;
 
   const progressPct = Math.round(progress);
 
@@ -349,8 +338,8 @@ export function AiThumbnailsPage() {
   /* ── Render ─────────────────────────────────────── */
 
   return (
-    <div style={{ background: theme.bg, color: theme.text, fontFamily: 'inherit', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+    <div style={{ background: C.bg, color: C.text, fontFamily: 'inherit', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
         {/* ═══ TOP BAR ═══ */}
         <div
@@ -359,8 +348,8 @@ export function AiThumbnailsPage() {
             display: 'flex',
             alignItems: 'center',
             padding: '0 20px',
-            borderBottom: `1px solid ${theme.border}`,
-            background: theme.surface,
+            borderBottom: `1px solid ${C.border}`,
+            background: C.surface,
             flexShrink: 0,
             gap: 12,
           }}
@@ -370,16 +359,16 @@ export function AiThumbnailsPage() {
             <div
               style={{
                 width: 32, height: 32, borderRadius: 8,
-                background: ACCENT_DIM,
+                background: C.accentDim,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
               </svg>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: theme.text, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
               TubeForge AI Thumbnails
             </span>
           </div>
@@ -389,8 +378,8 @@ export function AiThumbnailsPage() {
             onClick={() => setShowGallery(true)}
             style={{
               padding: '6px 14px', borderRadius: 8,
-              border: `1px solid ${theme.border}`, background: 'transparent',
-              color: theme.sub, fontSize: 12, fontWeight: 600,
+              border: `1px solid ${C.border}`, background: 'transparent',
+              color: C.sub, fontSize: 12, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
               display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 6,
             }}
@@ -406,15 +395,15 @@ export function AiThumbnailsPage() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
               padding: '5px 12px', borderRadius: 20,
-              background: canUseAI ? ACCENT_DIM : 'rgba(239,68,68,0.1)',
-              border: `1px solid ${canUseAI ? ACCENT + '26' : 'rgba(239,68,68,0.2)'}`,
+              background: C.accentDim,
+              border: `1px solid ${C.accent}26`,
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={canUseAI ? ACCENT : '#ef4444'} strokeWidth="2.5" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
-            <span style={{ fontSize: 12, fontWeight: 700, color: canUseAI ? ACCENT : '#ef4444' }}>
-              {remainingAI}
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>
+              ∞
             </span>
           </div>
         </div>
@@ -432,9 +421,9 @@ export function AiThumbnailsPage() {
             style={{
               width: isMobile ? '100%' : 380,
               flexShrink: 0,
-              background: theme.surface,
-              borderRight: isMobile ? 'none' : `1px solid ${theme.border}`,
-              borderBottom: isMobile ? `1px solid ${theme.border}` : 'none',
+              background: C.surface,
+              borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
+              borderBottom: isMobile ? `1px solid ${C.border}` : 'none',
               padding: 20,
               display: 'flex', flexDirection: 'column', gap: 14,
               overflowY: 'auto',
@@ -462,10 +451,9 @@ export function AiThumbnailsPage() {
                   style={{
                     flex: 1, display: 'flex', alignItems: 'center', gap: 10,
                     padding: '12px 14px', borderRadius: 12,
-                    background: tab === m ? theme.card : 'transparent',
-                    border: `1px solid ${tab === m ? theme.borderActive : theme.border}`,
-                    boxShadow: tab === m ? `0 0 12px ${ACCENT_GLOW}` : 'none',
-                    color: tab === m ? theme.text : theme.sub,
+                    background: tab === m ? C.card : 'transparent',
+                    border: `1px solid ${tab === m ? C.borderActive : C.border}`,
+                    color: tab === m ? C.text : C.sub,
                     cursor: 'pointer', fontSize: 11, fontWeight: 700,
                     textTransform: 'uppercase', letterSpacing: 1,
                     fontFamily: 'inherit', transition: 'all 0.3s ease', outline: 'none',
@@ -474,17 +462,17 @@ export function AiThumbnailsPage() {
                   <div
                     style={{
                       width: 36, height: 36, borderRadius: 10,
-                      background: ACCENT_DIM,
+                      background: C.accentDim,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}
                   >
                     {m === 'scratch' ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
                       </svg>
                     ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                         <path d="M23 21v-2a4 4 0 00-3-3.87" />
@@ -501,17 +489,17 @@ export function AiThumbnailsPage() {
             {tab === 'swap' && (
               <div style={{
                 padding: 12, borderRadius: 10,
-                border: `1px solid ${theme.border}`,
-                background: theme.card,
+                border: `1px solid ${C.border}`,
+                background: C.card,
               }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: theme.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
                   {t('aithumbs.myPhotos')}
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {uploadedPhoto ? (
                     <div style={{ position: 'relative', width: 56, height: 56 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={uploadedPhoto} alt={t('aithumbs.faceAlt')} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${ACCENT}` }} />
+                      <img src={uploadedPhoto} alt="Face" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${C.accent}` }} />
                       <button
                         onClick={() => setUploadedPhoto(null)}
                         style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 9, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, fontSize: 10 }}
@@ -524,8 +512,8 @@ export function AiThumbnailsPage() {
                     onClick={() => fileInputRef.current?.click()}
                     style={{
                       width: 56, height: 56, borderRadius: 10,
-                      border: `1px dashed ${theme.borderActive}`,
-                      background: 'transparent', color: theme.dim,
+                      border: `1px dashed ${C.borderActive}`,
+                      background: 'transparent', color: C.dim,
                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all 0.2s ease', padding: 0,
                     }}
@@ -540,10 +528,10 @@ export function AiThumbnailsPage() {
             {/* 2. Prompt section */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: theme.text }}>
-                  {t('aithumbs.prompt.label')} <span style={{ color: ACCENT }}>*</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  {t('aithumbs.prompt.label')} <span style={{ color: C.accent }}>*</span>
                 </span>
-                <span style={{ fontSize: 11, color: prompt.length > 900 ? '#ef4444' : theme.dim }}>
+                <span style={{ fontSize: 11, color: prompt.length > 900 ? C.red : C.dim }}>
                   {prompt.length}/1000
                 </span>
               </div>
@@ -555,14 +543,14 @@ export function AiThumbnailsPage() {
                 rows={4}
                 style={{
                   width: '100%', minHeight: 90, padding: 14,
-                  borderRadius: 12, border: `1px solid ${theme.border}`,
-                  background: theme.card, color: theme.text,
+                  borderRadius: 12, border: `1px solid ${C.border}`,
+                  background: C.card, color: C.text,
                   fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
                   outline: 'none', transition: 'border-color 0.2s ease',
                   boxSizing: 'border-box', lineHeight: 1.5,
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = ACCENT + '60'; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = theme.border; }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = C.accent + '60'; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
               />
 
               <p style={{ margin: '6px 0 0', fontSize: 11, color: theme.dim, lineHeight: 1.4 }}>
@@ -624,18 +612,18 @@ export function AiThumbnailsPage() {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '8px 12px', borderRadius: 10,
-                background: ACCENT_DIM, border: `1px solid ${ACCENT}20`,
+                background: C.accentDim, border: `1px solid ${C.accent}20`,
               }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round">
                   <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z" />
                   <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
                 </svg>
-                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, color: C.accent, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {ytTitle}
                 </span>
                 <button
                   onClick={() => { setYtUrl(''); setYtTitle(null); }}
-                  style={{ width: 20, height: 20, borderRadius: 10, border: 'none', background: 'transparent', color: theme.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}
+                  style={{ width: 20, height: 20, borderRadius: 10, border: 'none', background: 'transparent', color: C.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -651,8 +639,8 @@ export function AiThumbnailsPage() {
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 14px', borderRadius: 10,
-                border: `1px solid ${theme.border}`, background: 'transparent',
-                color: theme.sub, cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
+                border: `1px solid ${C.border}`, background: 'transparent',
+                color: C.sub, cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
                 fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s ease',
                 fontSize: 13, fontWeight: 600,
                 opacity: suggestIdeas.isPending ? 0.6 : 1,
@@ -660,11 +648,11 @@ export function AiThumbnailsPage() {
             >
               {suggestIdeas.isPending ? (
                 <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'ait-spin 1s linear infinite', flexShrink: 0 }}>
-                  <circle cx="7" cy="7" r="5" stroke={ACCENT} strokeWidth="1.5" fill="none" opacity="0.3" />
-                  <path d="M7 2a5 5 0 013.54 1.46" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  <circle cx="7" cy="7" r="5" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
+                  <path d="M7 2a5 5 0 013.54 1.46" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
                 </svg>
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <circle cx="12" cy="12" r="10" />
                   <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
                   <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -676,70 +664,43 @@ export function AiThumbnailsPage() {
             {aiIdeas.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {aiIdeas.map((idea, i) => (
-                  <div key={i} style={{ position: 'relative' }}>
-                    <button
-                      onClick={() => { setPrompt(idea); setAiIdeas([]); }}
-                      onMouseEnter={(e) => {
-                        const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (tooltip) tooltip.style.display = 'block';
-                      }}
-                      onMouseLeave={(e) => {
-                        const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (tooltip) tooltip.style.display = 'none';
-                      }}
-                      style={{
-                        padding: '6px 12px', width: '100%',
-                        borderRadius: 8,
-                        border: `1px solid ${ACCENT}30`,
-                        background: ACCENT_DIM,
-                        color: theme.text,
-                        fontSize: 12,
-                        lineHeight: 1.4,
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        outline: 'none',
-                        transition: 'all 0.15s ease',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {idea}
-                    </button>
-                    <div
-                      onMouseEnter={(e) => { e.currentTarget.style.display = 'block'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.display = 'none'; }}
-                      onClick={() => { setPrompt(idea); setAiIdeas([]); }}
-                      style={{
-                        display: 'none',
-                        position: 'absolute', left: 0, top: '100%', zIndex: 50,
-                        width: '100%', padding: '8px 12px',
-                        borderRadius: 8, marginTop: 2,
-                        border: `1px solid ${ACCENT}`,
-                        background: theme.bg,
-                        color: theme.text,
-                        fontSize: 12, lineHeight: 1.5,
-                        boxShadow: `0 8px 24px rgba(0,0,0,0.3)`,
-                        cursor: 'pointer',
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {idea}
-                    </div>
-                  </div>
+                  <button
+                    key={i}
+                    onClick={() => { setPrompt(idea); setAiIdeas([]); }}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: `1px solid ${C.accent}30`,
+                      background: C.accentDim,
+                      color: C.text,
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      transition: 'all 0.15s ease',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={idea}
+                  >
+                    {idea.length > 80 ? idea.slice(0, 80) + '...' : idea}
+                  </button>
                 ))}
               </div>
             )}
 
             {/* Divider */}
-            <div style={{ height: 1, background: theme.border }} />
+            <div style={{ height: 1, background: C.border }} />
 
             {/* Count & Format row */}
             <div style={{ display: 'flex', gap: 16 }}>
               {/* Count */}
               <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: theme.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
                   {t('aithumbs.section.count')}
                 </span>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -749,15 +710,19 @@ export function AiThumbnailsPage() {
                       onClick={() => setCount(c as 1 | 2 | 3)}
                       style={{
                         position: 'relative', width: 40, height: 36, borderRadius: 8,
-                        border: `1px solid ${count === c ? ACCENT : theme.border}`,
-                        background: count === c ? ACCENT_DIM : 'transparent',
-                        color: count === c ? ACCENT : theme.sub,
+                        border: `1px solid ${count === c ? C.accent : C.border}`,
+                        background: count === c ? C.accentDim : 'transparent',
+                        color: count === c ? C.accent : C.sub,
                         fontSize: 14, fontWeight: 700, cursor: 'pointer',
                         fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none', padding: 0,
                       }}
                     >
                       {c}
-                      {/* PRO badge removed for testing */}
+                      {c > 1 && plan === 'FREE' && (
+                        <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                          PRO
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -765,7 +730,7 @@ export function AiThumbnailsPage() {
 
               {/* Format */}
               <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: theme.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
                   {t('aithumbs.section.format')}
                 </span>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -775,16 +740,16 @@ export function AiThumbnailsPage() {
                       onClick={() => setFormat(f.id)}
                       style={{
                         position: 'relative', padding: '7px 14px', borderRadius: 8,
-                        border: `1px solid ${format === f.id ? ACCENT : theme.border}`,
-                        background: format === f.id ? ACCENT_DIM : 'transparent',
-                        color: format === f.id ? ACCENT : theme.sub,
+                        border: `1px solid ${format === f.id ? C.accent : C.border}`,
+                        background: format === f.id ? C.accentDim : 'transparent',
+                        color: format === f.id ? C.accent : C.sub,
                         fontSize: 12, fontWeight: 700, cursor: 'pointer',
                         fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
                       }}
                     >
                       {f.id === '16:9' ? '\uD83D\uDDA5' : '\uD83D\uDCF1'} {f.id}
                       {f.pro && plan === 'FREE' && (
-                        <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
+                        <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
                           PRO
                         </span>
                       )}
@@ -795,11 +760,11 @@ export function AiThumbnailsPage() {
             </div>
 
             {/* Credit cost */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: ACCENT_DIM }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: C.accentDim }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
-              <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>
+              <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
                 {count} {count > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
               </span>
             </div>
@@ -821,8 +786,8 @@ export function AiThumbnailsPage() {
               aria-busy={isLoading || undefined}
               style={{
                 width: '100%', padding: '14px 0', borderRadius: 12,
-                background: disabled ? theme.border : `linear-gradient(135deg, ${ACCENT}, #818cf8)`,
-                color: disabled ? theme.dim : '#fff',
+                background: disabled ? C.border : `linear-gradient(135deg, ${C.accent}, #818cf8)`,
+                color: disabled ? C.dim : '#fff',
                 fontSize: 15, fontWeight: 700, border: 'none',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -840,20 +805,6 @@ export function AiThumbnailsPage() {
             </button>
             </div>
 
-            {!canUseAI && (
-              <a
-                href="/billing"
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '10px 16px', borderRadius: 12,
-                  background: ACCENT_DIM, border: `1px solid ${ACCENT}26`,
-                  color: ACCENT, fontSize: 13, fontWeight: 600,
-                  textDecoration: 'none', textAlign: 'center', transition: 'all 0.2s ease',
-                }}
-              >
-                {t('aithumbs.upgrade')}
-              </a>
-            )}
           </div>
 
           {/* ═══ RIGHT PANEL (Result / Preview) ═══ */}
@@ -871,8 +822,8 @@ export function AiThumbnailsPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '5px 14px', borderRadius: 20,
-                  background: ACCENT_DIM, border: `1px solid ${ACCENT}1a`,
-                  fontSize: 11, fontWeight: 700, color: ACCENT,
+                  background: C.accentDim, border: `1px solid ${C.accent}1a`,
+                  fontSize: 11, fontWeight: 700, color: C.accent,
                   textTransform: 'uppercase', letterSpacing: 1,
                 }}
               >
@@ -901,8 +852,8 @@ export function AiThumbnailsPage() {
             {/* Preview area */}
             <div
               style={{
-                flex: 1, borderRadius: 16, background: isDark ? '#0A0A0A' : '#f0f0f5',
-                border: `1px solid ${theme.border}`,
+                flex: 1, borderRadius: 16, background: C.bg,
+                border: `1px solid ${C.border}`,
                 display: 'flex', flexDirection: 'column',
                 overflow: 'hidden', minHeight: 0,
                 position: 'relative',
@@ -913,19 +864,16 @@ export function AiThumbnailsPage() {
                 <div style={{
                   position: 'relative', overflow: 'hidden',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isDark ? '#080808' : '#e8e8ed',
-                  aspectRatio: format === '16:9' ? '16/9' : '9/16',
-                  width: '100%', maxHeight: format === '9:16' ? '70vh' : undefined,
+                  background: C.bg,
                 }}>
                   {/* Scanning bar — horizontal for 16:9, vertical for 9:16 */}
                   <div
                     className="ait-scanner-bar"
                     style={{
                       position: 'absolute',
-                      ...(format === '9:16'
-                        ? { left: 0, right: 0, height: 3, width: '100%' }
-                        : { top: 0, bottom: 0, width: 3 }),
-                      background: ACCENT,
+                      top: 0, bottom: 0,
+                      width: 3,
+                      background: C.accent,
                       boxShadow: `0 0 30px 10px ${ACCENT_GLOW}, 0 0 60px 20px ${ACCENT_GLOW}`,
                       animation: format === '9:16' ? 'ait-scan-v 4s ease-in-out infinite' : 'ait-scan 4s ease-in-out infinite',
                       zIndex: 2,
@@ -939,7 +887,7 @@ export function AiThumbnailsPage() {
                       position: 'absolute',
                       top: 0, left: 0, right: 0,
                       height: 1,
-                      background: `linear-gradient(90deg, transparent 20%, ${ACCENT}40 50%, transparent 80%)`,
+                      background: `linear-gradient(90deg, transparent 20%, ${C.accent}40 50%, transparent 80%)`,
                       boxShadow: `0 0 15px 3px ${ACCENT_GLOW}`,
                       animation: 'ait-flare 3s ease-in-out infinite',
                       zIndex: 1,
@@ -951,7 +899,7 @@ export function AiThumbnailsPage() {
                       position: 'absolute',
                       bottom: 0, left: 0, right: 0,
                       height: 1,
-                      background: `linear-gradient(90deg, transparent 20%, ${ACCENT}40 50%, transparent 80%)`,
+                      background: `linear-gradient(90deg, transparent 20%, ${C.accent}40 50%, transparent 80%)`,
                       boxShadow: `0 0 15px 3px ${ACCENT_GLOW}`,
                       animation: 'ait-flare 3s ease-in-out infinite reverse',
                       zIndex: 1,
@@ -964,7 +912,7 @@ export function AiThumbnailsPage() {
                     alignItems: 'center', gap: 12,
                   }}>
                     <div style={{
-                      fontSize: 72, fontWeight: 800, color: theme.text,
+                      fontSize: 72, fontWeight: 800, color: C.text,
                       textShadow: `0 0 40px ${ACCENT_GLOW}, 0 0 80px ${ACCENT_GLOW}`,
                       lineHeight: 1,
                       fontVariantNumeric: 'tabular-nums',
@@ -973,7 +921,7 @@ export function AiThumbnailsPage() {
                     </div>
                     <div style={{
                       fontSize: 14, fontWeight: 600,
-                      color: theme.sub,
+                      color: C.sub,
                       textAlign: 'center',
                     }}>
                       {getProgressStage(progress, t)}
@@ -1003,8 +951,8 @@ export function AiThumbnailsPage() {
                       aspectRatio: format === '16:9' ? '16/9' : '9/16',
                       maxHeight: '65vh',
                       position: 'relative', overflow: 'hidden', borderRadius: 12,
-                      background: isDark ? '#000' : '#e8e8ed',
-                      boxShadow: `0 0 20px ${ACCENT}10, 0 4px 16px rgba(0,0,0,0.3)`,
+                      background: '#000',
+                      boxShadow: `0 0 20px ${C.accent}10, 0 4px 16px rgba(0,0,0,0.3)`,
                       margin: '0 auto',
                     }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1056,7 +1004,7 @@ export function AiThumbnailsPage() {
                   {/* History row */}
                   {history.length > 1 && (
                     <div style={{ padding: '0 16px 16px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: theme.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
                         {t('aithumbs.tab.history')} ({history.length})
                       </span>
                       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
@@ -1071,7 +1019,7 @@ export function AiThumbnailsPage() {
                               }}
                               style={{
                                 padding: 0, width: 80, height: 45, flexShrink: 0,
-                                border: isActive ? `2px solid ${ACCENT}` : `1px solid ${theme.border}`,
+                                border: isActive ? `2px solid ${C.accent}` : `1px solid ${C.border}`,
                                 borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
                                 background: isDark ? '#000' : '#e8e8ed', outline: 'none', transition: 'all 0.2s ease',
                               }}
@@ -1094,20 +1042,20 @@ export function AiThumbnailsPage() {
                 }}>
                   <div style={{
                     width: 80, height: 80, borderRadius: 20,
-                    background: ACCENT_DIM,
+                    background: C.accentDim,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
                       <polyline points="21 15 16 10 5 21" />
                     </svg>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: theme.text, marginBottom: 6 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 6 }}>
                       {t('aithumbs.empty.title')}
                     </div>
-                    <div style={{ fontSize: 14, color: theme.sub, maxWidth: 320, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 14, color: C.sub, maxWidth: 320, lineHeight: 1.5 }}>
                       {t('aithumbs.empty.description')}
                     </div>
                   </div>
@@ -1116,38 +1064,6 @@ export function AiThumbnailsPage() {
             </div>
 
             {/* Premium banner */}
-            {plan === 'FREE' && (
-              <div
-                style={{
-                  marginTop: 16, padding: '14px 20px',
-                  borderRadius: 12, border: `1px solid ${ACCENT}33`,
-                  background: `linear-gradient(135deg, ${ACCENT}14, transparent)`,
-                  display: 'flex', alignItems: 'center', gap: 16,
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: theme.text, marginBottom: 2 }}>
-                    {t('aithumbs.banner.title')}
-                  </div>
-                  <div style={{ fontSize: 12, color: theme.sub }}>
-                    {t('aithumbs.banner.desc')}
-                  </div>
-                </div>
-                <a
-                  href="/billing"
-                  style={{
-                    padding: '8px 20px', borderRadius: 8,
-                    background: ACCENT, color: '#fff',
-                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                    whiteSpace: 'nowrap', flexShrink: 0,
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {t('aithumbs.banner.cta')}
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1166,24 +1082,24 @@ export function AiThumbnailsPage() {
           <div
             style={{
               width: '100%', maxWidth: 900, maxHeight: '80vh',
-              background: theme.surface, borderRadius: 20,
-              border: `1px solid ${theme.border}`,
+              background: C.surface, borderRadius: 20,
+              border: `1px solid ${C.border}`,
               overflow: 'hidden', display: 'flex', flexDirection: 'column',
             }}
           >
             {/* Modal header */}
             <div style={{
               display: 'flex', alignItems: 'center', padding: '16px 20px',
-              borderBottom: `1px solid ${theme.border}`,
+              borderBottom: `1px solid ${C.border}`,
             }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: theme.text, flex: 1 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: C.text, flex: 1 }}>
                 {t('aithumbs.myWorks')}
               </span>
               <button
                 onClick={() => setShowGallery(false)}
                 style={{
                   width: 32, height: 32, borderRadius: 8, border: 'none',
-                  background: theme.border, color: theme.text,
+                  background: C.border, color: C.text,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   padding: 0,
                 }}
@@ -1197,15 +1113,15 @@ export function AiThumbnailsPage() {
             {/* Gallery grid */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
               {galleryQuery.isLoading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: theme.sub }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: C.sub }}>
                   <svg width="20" height="20" viewBox="0 0 20 20" style={{ animation: 'ait-spin 1s linear infinite', marginRight: 8 }}>
-                    <circle cx="10" cy="10" r="8" stroke={ACCENT} strokeWidth="1.5" fill="none" opacity="0.3" />
-                    <path d="M10 2a8 8 0 015.66 2.34" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                    <circle cx="10" cy="10" r="8" stroke={C.accent} strokeWidth="1.5" fill="none" opacity="0.3" />
+                    <path d="M10 2a8 8 0 015.66 2.34" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
                   </svg>
                   {t('aithumbs.generating')}
                 </div>
               ) : galleryQuery.data?.items.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: theme.dim }}>
+                <div style={{ textAlign: 'center', padding: 40, color: C.dim }}>
                   {t('aithumbs.history.empty')}
                 </div>
               ) : (
@@ -1229,7 +1145,7 @@ export function AiThumbnailsPage() {
                       }}
                       style={{
                         padding: 0, width: '100%', aspectRatio: '16/9',
-                        border: `1px solid ${theme.border}`,
+                        border: `1px solid ${C.border}`,
                         borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
                         background: isDark ? '#000' : '#e8e8ed', outline: 'none', transition: 'all 0.2s ease',
                       }}
@@ -1345,10 +1261,10 @@ function SmallIconBtn({
   title: string;
   children: React.ReactNode;
 }) {
-  const th = useThemeStore((s) => s.theme);
-  const borderColor = danger ? '#ef4444' : active ? ACCENT + '66' : th.border;
-  const bg = danger ? 'rgba(239,68,68,0.12)' : active ? ACCENT_DIM : 'transparent';
-  const color = danger ? '#ef4444' : active ? ACCENT : th.sub;
+  const C = useThemeStore((s) => s.theme);
+  const borderColor = danger ? C.red : active ? C.accent + '66' : C.border;
+  const bg = danger ? C.red + '1e' : active ? C.accentDim : 'transparent';
+  const color = danger ? C.red : active ? C.accent : C.sub;
   return (
     <button
       onClick={onClick}
@@ -1378,7 +1294,7 @@ function ActionPill({
   accent?: boolean;
   loading?: boolean;
 }) {
-  const th = useThemeStore((s) => s.theme);
+  const C = useThemeStore((s) => s.theme);
   return (
     <button
       onClick={onClick}
@@ -1386,9 +1302,9 @@ function ActionPill({
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: '6px 14px', borderRadius: 8,
-        border: `1px solid ${accent ? ACCENT + '99' : th.border}`,
-        background: accent ? ACCENT_DIM : 'transparent',
-        color: accent ? ACCENT : th.text,
+        border: `1px solid ${accent ? C.accent + '99' : C.border}`,
+        background: accent ? C.accentDim : 'transparent',
+        color: accent ? C.accent : C.text,
         fontSize: 12, fontWeight: 600,
         cursor: loading ? 'wait' : 'pointer',
         fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
