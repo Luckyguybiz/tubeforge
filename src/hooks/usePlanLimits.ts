@@ -1,8 +1,8 @@
 import { trpc } from '@/lib/trpc';
 
 const LIMITS: Record<string, { projects: number; ai: number }> = {
-  FREE: { projects: 3, ai: 5 },
-  PRO: { projects: 25, ai: 100 },
+  FREE: { projects: 3, ai: 99999 },
+  PRO: { projects: 25, ai: 99999 },
   STUDIO: { projects: Infinity, ai: Infinity },
 };
 

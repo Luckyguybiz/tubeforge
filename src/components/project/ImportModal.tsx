@@ -184,7 +184,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         label: scene.label ?? '',
         duration: scene.duration ?? 5,
         order: scene.order ?? 0,
-        model: (scene.model as 'standard') ?? 'standard',
+        model: (scene.model as 'runway-gen3-turbo') ?? 'runway-gen3-turbo',
         metadata: scene.metadata as Record<string, string | number | boolean | null> | null | undefined,
       })),
     });

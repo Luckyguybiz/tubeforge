@@ -31,7 +31,7 @@ const importedSceneSchema = z.object({
   label: z.string().max(100).default(''),
   duration: z.number().min(1).max(60).default(5),
   order: z.number().min(0),
-  model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).default('standard'),
+  model: z.enum(['turbo', 'standard', 'pro', 'cinematic', 'runway-gen3-turbo', 'runway-gen3', 'kling-v1', 'kling-v1-pro']).default('runway-gen3-turbo'),
   metadata: thumbnailDataSchema.nullish(),
 });
 

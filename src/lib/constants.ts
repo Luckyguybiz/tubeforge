@@ -49,10 +49,10 @@ export const light: Theme = {
 export const PK: ColorKey[] = ['accent', 'blue', 'purple', 'green', 'orange', 'cyan', 'pink'];
 
 export const MODELS: Model[] = [
-  { id: 'turbo', name: 'Turbo', desc: 'Fast', speed: '~10s', icon: '⚡' },
-  { id: 'standard', name: 'Standard', desc: 'Balanced', speed: '~30s', icon: '◆' },
-  { id: 'pro', name: 'Pro', desc: 'Max quality', speed: '~60s', icon: '✦' },
-  { id: 'cinematic', name: 'Cinematic', desc: 'Cinema effects', speed: '~90s', icon: '🎬' },
+  { id: 'runway-gen3-turbo', name: 'Runway Gen-3 Turbo', desc: 'Fast preview', speed: '~10s', icon: '🚀', tokens: '50 tokens' },
+  { id: 'runway-gen3', name: 'Runway Gen-3 Alpha', desc: 'High quality', speed: '~45s', icon: '🎬', tokens: '100 tokens' },
+  { id: 'kling-v1', name: 'Kling v1.0', desc: 'Fast & creative', speed: '~20s', icon: '⚡', tokens: '75 tokens' },
+  { id: 'kling-v1-pro', name: 'Kling v1.0 Pro', desc: 'Max quality', speed: '~60s', icon: '✦', tokens: '150 tokens' },
 ];
 
 export const STATUS: Record<string, StatusInfo> = {
@@ -133,16 +133,16 @@ export const Z_INDEX = {
 export const PLAN_LIMITS = {
   FREE: {
     projects: 3,
-    aiGenerations: 5,
+    aiGenerations: 99999,
     scenes: 10,
     teamMembers: 0,
     storageMB: 500,
     storageBytes: 500 * 1024 * 1024,
     ttsGenerations: 3,
     videoTranslations: 1,
-    aiThumbnails: 3,
-    aiThumbnailMultiGen: 1,
-    facesLimit: 3,
+    aiThumbnails: 99999,
+    aiThumbnailMultiGen: 3,
+    facesLimit: 20,
     maxVideoLengthSec: 60,
   },
   PRO: {
@@ -185,15 +185,15 @@ export function getPlanLimits(plan: string) {
 
 export const AI_THUMBNAIL_LIMITS = {
   /** Max thumbnail generations per day */
-  dailyGenerations: { FREE: 3, PRO: 100, STUDIO: Infinity },
+  dailyGenerations: { FREE: 99999, PRO: 99999, STUDIO: Infinity },
   /** Max images per single generation request */
-  multiGen: { FREE: 1, PRO: 2, STUDIO: 3 },
+  multiGen: { FREE: 3, PRO: 3, STUDIO: 3 },
   /** Max saved face photos */
-  faces: { FREE: 3, PRO: 10, STUDIO: 20 },
-  /** Max edits per day (FREE gets 1 total, PRO+ unlimited) */
-  dailyEdits: { FREE: 1, PRO: Infinity, STUDIO: Infinity },
+  faces: { FREE: 20, PRO: 20, STUDIO: 20 },
+  /** Max edits per day (FREE gets unlimited for testing) */
+  dailyEdits: { FREE: Infinity, PRO: Infinity, STUDIO: Infinity },
   /** Idea suggestion rate limit per day */
-  dailySuggestions: { FREE: 3, PRO: 20, STUDIO: 20 },
+  dailySuggestions: { FREE: 99999, PRO: 99999, STUDIO: 99999 },
 } as const;
 
 export function getAiThumbnailLimit(

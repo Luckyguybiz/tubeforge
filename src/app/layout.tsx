@@ -52,11 +52,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=2', sizes: '32x32' },
+      { url: '/favicon.svg?v=2', type: 'image/svg+xml' },
     ],
-    shortcut: '/favicon.svg',
-    apple: '/apple-touch-icon.png',
+    shortcut: '/favicon.svg?v=2',
+    apple: '/apple-touch-icon.png?v=2',
   },
 };
 

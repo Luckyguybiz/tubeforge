@@ -107,7 +107,7 @@ export function useVideoGeneration(sceneId: string | null) {
     updScene(sceneId, { status: 'generating' });
     generateVideo.mutate({
       prompt,
-      model: model as 'turbo' | 'standard' | 'pro' | 'cinematic',
+      model: model as 'turbo' | 'standard' | 'pro' | 'cinematic' | 'runway-gen3-turbo' | 'runway-gen3' | 'kling-v1' | 'kling-v1-pro',
       duration,
     });
   };

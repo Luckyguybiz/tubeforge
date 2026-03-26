@@ -28,11 +28,12 @@ a { transition: color 0.2s ease, opacity 0.2s ease; }
 button {
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
 }
 button:active:not(:disabled) {
-  transform: scale(0.97);
-  opacity: 0.85;
+  transform: scale(0.96);
+  opacity: 0.9;
+  transition-duration: 0.1s;
 }
 
 input, textarea, select {
@@ -115,27 +116,188 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Card hover lift */
+.tf-card-hover {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 0.25s ease;
+}
 .tf-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* Universal card lift micro-animation */
 .tf-card-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 0.25s ease;
 }
 .tf-card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* ── Dropdown / Popover entrance ─────────────── */
+@keyframes tf-dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tf-dropdown-enter {
+  animation: tf-dropdown-in 0.18s cubic-bezier(0.2, 0.8, 0.4, 1);
+  transform-origin: top center;
+}
+
+/* ── Popover from bottom (profile dropdowns) ── */
+@keyframes tf-popover-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tf-popover-up {
+  animation: tf-popover-up 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
+  transform-origin: bottom center;
+}
+
+/* ── Toast exit animation ───────────────────── */
+@keyframes toastSlideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(40px); opacity: 0; }
+}
+
+/* ── Notification badge bounce ──────────────── */
+@keyframes tf-badge-bounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.25); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.tf-badge-enter {
+  animation: tf-badge-bounce 0.35s cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+/* ── Staggered entrance for list items ─────── */
+@keyframes tf-stagger-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tf-stagger-in > * {
+  animation: tf-stagger-in 0.3s cubic-bezier(0.2, 0.8, 0.4, 1) both;
+}
+.tf-stagger-in > *:nth-child(1) { animation-delay: 0s; }
+.tf-stagger-in > *:nth-child(2) { animation-delay: 0.04s; }
+.tf-stagger-in > *:nth-child(3) { animation-delay: 0.08s; }
+.tf-stagger-in > *:nth-child(4) { animation-delay: 0.12s; }
+.tf-stagger-in > *:nth-child(5) { animation-delay: 0.16s; }
+.tf-stagger-in > *:nth-child(6) { animation-delay: 0.20s; }
+.tf-stagger-in > *:nth-child(7) { animation-delay: 0.24s; }
+.tf-stagger-in > *:nth-child(8) { animation-delay: 0.28s; }
+
+/* ── Active nav indicator slide ────────────── */
+@keyframes tf-indicator-in {
+  from { transform: translateY(-50%) scaleY(0); opacity: 0; }
+  to { transform: translateY(-50%) scaleY(1); opacity: 1; }
+}
+.tf-nav-indicator {
+  animation: tf-indicator-in 0.25s cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+/* ── Tooltip entrance ──────────────────────── */
+@keyframes tf-tooltip-in {
+  from { opacity: 0; transform: translateY(-50%) translateX(-4px) scale(0.95); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+}
+
+/* ── Subtle glow on hover for dark cards ───── */
+.tf-card-glow {
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 0.25s ease;
+}
+.tf-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99,102,241,0.06), transparent 40%);
+  pointer-events: none;
+}
+.tf-card-glow:hover::after {
+  opacity: 1;
+}
+.tf-card-glow:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 0 1px rgba(99,102,241,0.08);
+}
+
+/* ── Smooth content reveal ─────────────────── */
+@keyframes tf-content-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tf-content-reveal {
+  animation: tf-content-reveal 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) 0.05s both;
+}
+
+/* ── Button press spring effect ────────────── */
+@keyframes tf-press {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* ── Sidebar collapse/expand ───────────────── */
+@keyframes tf-sidebar-text-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.tf-sidebar-text-enter {
+  animation: tf-sidebar-text-in 0.2s ease-out 0.05s both;
+}
+
+/* ── Modal overlay improvements ────────────── */
+@keyframes tf-overlay-in {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+@keyframes tf-modal-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ── Scroll reveal (IntersectionObserver) ──── */
+.tf-scroll-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.4, 1), transform 0.5s cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+.tf-scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Tab indicator slide ───────────────────── */
+.tf-tab-indicator {
+  transition: left 0.25s cubic-bezier(0.2, 0.8, 0.4, 1), width 0.25s cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+/* ── Focus ring pulse for accessibility ────── */
+@keyframes tf-focus-pulse {
+  0% { box-shadow: 0 0 0 2px var(--focus-bg, #0a0a0a), 0 0 0 4px #6366f1; }
+  50% { box-shadow: 0 0 0 2px var(--focus-bg, #0a0a0a), 0 0 0 6px rgba(99,102,241,0.4); }
+  100% { box-shadow: 0 0 0 2px var(--focus-bg, #0a0a0a), 0 0 0 4px #6366f1; }
+}
+
+/* ── Progress bar fill animation ───────────── */
+@keyframes tf-progress-fill {
+  from { width: 0; }
+}
+.tf-progress-animate {
+  animation: tf-progress-fill 0.6s cubic-bezier(0.2, 0.8, 0.4, 1);
 }
 
 /* Page transition fade-in */
 @keyframes tf-page-fade-in {
-  from { opacity: 0.8; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .tf-main-content {
-  animation: tf-page-fade-in 0.2s ease-out;
+  animation: tf-page-fade-in 0.25s cubic-bezier(0.2, 0.8, 0.4, 1);
 }
 
 /* Glassmorphism for headers */

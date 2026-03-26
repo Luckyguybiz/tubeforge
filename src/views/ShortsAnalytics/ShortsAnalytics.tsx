@@ -1347,96 +1347,51 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                             {/* Thumbnail */}
                             {item.thumbnail ? (
-                              isPro ? (
-                                <a
-                                  href={`https://youtube.com/shorts/${item.videoId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                              <a
+                                href={`https://youtube.com/shorts/${item.videoId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  width: 120,
+                                  height: 68,
+                                  borderRadius: 8,
+                                  flexShrink: 0,
+                                  position: 'relative',
+                                  overflow: 'hidden',
+                                  display: 'block',
+                                }}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={item.thumbnail}
+                                  alt={item.title}
+                                  loading="lazy"
                                   style={{
-                                    width: 120,
-                                    height: 68,
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
                                     borderRadius: 8,
-                                    flexShrink: 0,
-                                    position: 'relative',
-                                    overflow: 'hidden',
                                     display: 'block',
                                   }}
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={item.thumbnail}
-                                    alt={item.title}
-                                    loading="lazy"
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                      borderRadius: 8,
-                                      display: 'block',
-                                    }}
-                                  />
-                                  {/* Shorts badge */}
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: 4,
-                                      right: 4,
-                                      padding: '2px 5px',
-                                      borderRadius: 4,
-                                      background: 'rgba(255,0,0,.85)',
-                                      color: '#fff',
-                                      fontSize: 8,
-                                      fontWeight: 700,
-                                      letterSpacing: '.03em',
-                                    }}
-                                  >
-                                    SHORTS
-                                  </div>
-                                </a>
-                              ) : (
+                                />
+                                {/* Shorts badge */}
                                 <div
                                   style={{
-                                    width: 120,
-                                    height: 68,
-                                    borderRadius: 8,
-                                    flexShrink: 0,
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    display: 'block',
+                                    position: 'absolute',
+                                    bottom: 4,
+                                    right: 4,
+                                    padding: '2px 5px',
+                                    borderRadius: 4,
+                                    background: 'rgba(255,0,0,.85)',
+                                    color: '#fff',
+                                    fontSize: 8,
+                                    fontWeight: 700,
+                                    letterSpacing: '.03em',
                                   }}
                                 >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={item.thumbnail}
-                                    alt={item.title}
-                                    loading="lazy"
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                      borderRadius: 8,
-                                      display: 'block',
-                                    }}
-                                  />
-                                  {/* Shorts badge */}
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: 4,
-                                      right: 4,
-                                      padding: '2px 5px',
-                                      borderRadius: 4,
-                                      background: 'rgba(255,0,0,.85)',
-                                      color: '#fff',
-                                      fontSize: 8,
-                                      fontWeight: 700,
-                                      letterSpacing: '.03em',
-                                    }}
-                                  >
-                                    SHORTS
-                                  </div>
+                                  SHORTS
                                 </div>
-                              )
+                              </a>
                             ) : (
                               <div
                                 style={{
@@ -1476,48 +1431,29 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                               </div>
                             )}
 
-                            {/* Title - clickable only for Pro */}
-                            {isPro ? (
-                              <a
-                                href={`https://youtube.com/shorts/${item.videoId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  fontSize: 13.5,
-                                  fontWeight: 500,
-                                  color: C.text,
-                                  lineHeight: 1.4,
-                                  maxWidth: 280,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                  textDecoration: 'none',
-                                }}
-                                onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
-                                onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
-                              >
-                                {item.title}
-                              </a>
-                            ) : (
-                              <span
-                                style={{
-                                  fontSize: 13.5,
-                                  fontWeight: 500,
-                                  color: C.text,
-                                  lineHeight: 1.4,
-                                  maxWidth: 280,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                }}
-                              >
-                                {item.title}
-                              </span>
-                            )}
+                            {/* Title */}
+                            <a
+                              href={`https://youtube.com/shorts/${item.videoId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: 13.5,
+                                fontWeight: 500,
+                                color: C.text,
+                                lineHeight: 1.4,
+                                maxWidth: 280,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                textDecoration: 'none',
+                              }}
+                              onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                              onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+                            >
+                              {item.title}
+                            </a>
                           </div>
                         </td>
 
@@ -1602,8 +1538,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
                                 {item.channel[0]}
                               </div>
                             )}
-                            {/* Channel name - clickable only for Pro */}
-                            {isPro && item.channelId ? (
+                            {/* Channel name */}
+                            {item.channelId ? (
                               <a
                                 href={`https://youtube.com/channel/${item.channelId}`}
                                 target="_blank"

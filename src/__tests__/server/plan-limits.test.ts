@@ -21,8 +21,8 @@ const PROJECT_LIMITS: Record<string, number> = {
 };
 
 const AI_LIMITS: Record<string, number> = {
-  FREE: 5,
-  PRO: 100,
+  FREE: 99999,
+  PRO: 99999,
   STUDIO: Infinity,
 };
 
@@ -149,36 +149,36 @@ describe('Plan limits', () => {
   /* ── AI limits ─────────────────────────────────────────── */
 
   describe('AI generation limits', () => {
-    describe('FREE plan (limit: 5)', () => {
+    describe('FREE plan (limit: 99999)', () => {
       it('allows 1st generation', () => {
         expect(checkAILimit('FREE', 0, now).allowed).toBe(true);
-        expect(checkAILimit('FREE', 0, now).remaining).toBe(5);
+        expect(checkAILimit('FREE', 0, now).remaining).toBe(99999);
       });
 
-      it('allows 5th generation (4 used)', () => {
-        expect(checkAILimit('FREE', 4, now).allowed).toBe(true);
-        expect(checkAILimit('FREE', 4, now).remaining).toBe(1);
+      it('allows generation near limit (99998 used)', () => {
+        expect(checkAILimit('FREE', 99998, now).allowed).toBe(true);
+        expect(checkAILimit('FREE', 99998, now).remaining).toBe(1);
       });
 
-      it('blocks 6th generation (5 used)', () => {
-        const result = checkAILimit('FREE', 5, now);
+      it('blocks at limit (99999 used)', () => {
+        const result = checkAILimit('FREE', 99999, now);
         expect(result.allowed).toBe(false);
         expect(result.remaining).toBe(0);
       });
 
-      it('blocks at 10 used', () => {
-        expect(checkAILimit('FREE', 10, now).allowed).toBe(false);
+      it('blocks over limit (100000 used)', () => {
+        expect(checkAILimit('FREE', 100000, now).allowed).toBe(false);
       });
     });
 
-    describe('PRO plan (limit: 100)', () => {
-      it('allows up to 100th generation (99 used)', () => {
-        expect(checkAILimit('PRO', 99, now).allowed).toBe(true);
-        expect(checkAILimit('PRO', 99, now).remaining).toBe(1);
+    describe('PRO plan (limit: 99999)', () => {
+      it('allows up to limit (99998 used)', () => {
+        expect(checkAILimit('PRO', 99998, now).allowed).toBe(true);
+        expect(checkAILimit('PRO', 99998, now).remaining).toBe(1);
       });
 
-      it('blocks 101st generation (100 used)', () => {
-        expect(checkAILimit('PRO', 100, now).allowed).toBe(false);
+      it('blocks at limit (99999 used)', () => {
+        expect(checkAILimit('PRO', 99999, now).allowed).toBe(false);
       });
     });
 
@@ -196,7 +196,7 @@ describe('Plan limits', () => {
         const result = checkAILimit('FREE', 999, lastMonth);
         expect(result.allowed).toBe(true);
         expect(result.shouldReset).toBe(true);
-        expect(result.remaining).toBe(5);
+        expect(result.remaining).toBe(99999);
       });
 
       it('clears AI usage when year changes', () => {
@@ -212,18 +212,18 @@ describe('Plan limits', () => {
         const sameMonth = new Date(now);
         sameMonth.setDate(1); // first of same month
 
-        const result = checkAILimit('FREE', 5, sameMonth);
+        const result = checkAILimit('FREE', 99999, sameMonth);
         expect(result.shouldReset).toBe(false);
         expect(result.allowed).toBe(false);
       });
 
-      it('resets PRO user to full 100 limit', () => {
+      it('resets PRO user to full 99999 limit', () => {
         const lastMonth = new Date(now);
         lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-        const result = checkAILimit('PRO', 100, lastMonth);
+        const result = checkAILimit('PRO', 99999, lastMonth);
         expect(result.allowed).toBe(true);
-        expect(result.remaining).toBe(100);
+        expect(result.remaining).toBe(99999);
       });
 
       it('resets STUDIO to Infinity', () => {
@@ -280,8 +280,8 @@ describe('Plan limits', () => {
       expect(PROJECT_LIMITS).toEqual({ FREE: 3, PRO: 25, STUDIO: Infinity });
     });
 
-    it('AI_LIMITS: FREE=5, PRO=100, STUDIO=Infinity', () => {
-      expect(AI_LIMITS).toEqual({ FREE: 5, PRO: 100, STUDIO: Infinity });
+    it('AI_LIMITS: FREE=99999, PRO=99999, STUDIO=Infinity', () => {
+      expect(AI_LIMITS).toEqual({ FREE: 99999, PRO: 99999, STUDIO: Infinity });
     });
 
     it('ASSET_LIMITS: FREE=50, PRO=500, STUDIO=undefined', () => {
@@ -297,10 +297,10 @@ describe('Plan limits', () => {
       }
     });
 
-    it('limits are strictly increasing: FREE < PRO < STUDIO', () => {
+    it('limits are non-decreasing: FREE <= PRO <= STUDIO', () => {
       expect(PROJECT_LIMITS.FREE).toBeLessThan(PROJECT_LIMITS.PRO);
       expect(PROJECT_LIMITS.PRO).toBeLessThan(PROJECT_LIMITS.STUDIO);
-      expect(AI_LIMITS.FREE).toBeLessThan(AI_LIMITS.PRO);
+      expect(AI_LIMITS.FREE).toBeLessThanOrEqual(AI_LIMITS.PRO);
       expect(AI_LIMITS.PRO).toBeLessThan(AI_LIMITS.STUDIO);
     });
   });

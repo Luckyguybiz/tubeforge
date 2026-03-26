@@ -12,7 +12,7 @@ import { fmtDur } from '@/lib/utils';
 import { useProjectSync } from '@/hooks/useProjectSync';
 import { useVideoGeneration } from '@/hooks/useVideoGeneration';
 import { useCollaboration, useSceneEditLock } from '@/hooks/useCollaboration';
-import { useUndoHint } from '@/hooks/useUndoHint';
+
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -91,12 +91,13 @@ interface FrameSlotProps {
   accentCol: string;
   onChange: (dataUrl: string | null) => void;
   optional?: boolean;
+  aspectRatio?: string;
 }
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 
-function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlotProps) {
+function FrameSlot({ label, value, C, accentCol, onChange, optional, aspectRatio }: FrameSlotProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,10 +180,12 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
         onDrop={handleDrop}
         style={{
           width: '100%',
-          height: 80,
+          height: aspectRatio === '9:16' ? 'auto' : aspectRatio === '1:1' ? 'auto' : 100,
+          aspectRatio: aspectRatio === '9:16' ? '9/16' : aspectRatio === '1:1' ? '1/1' : undefined,
+          maxHeight: aspectRatio === '9:16' ? 150 : aspectRatio === '1:1' ? 130 : undefined,
           borderRadius: 12,
           border: value ? `1.5px solid ${accentCol}30` : `1.5px dashed ${C.border}`,
-          background: value ? 'transparent' : C.bg,
+          background: value ? '#000' : C.bg,
           position: 'relative',
           cursor: 'pointer',
           overflow: 'hidden',
@@ -221,7 +224,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
           </div>
         ) : value ? (
           <>
-            <img src={value} alt={label} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+            <img src={value} alt={label} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 6, background: '#000' }} />
             <button
               onClick={(e) => { e.stopPropagation(); onChange(null); setError(null); }}
               style={{
@@ -257,7 +260,7 @@ function FrameSlot({ label, value, C, accentCol, onChange, optional }: FrameSlot
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
             <span style={{ fontSize: 22, color: error ? C.accent : C.dim, lineHeight: 1 }}>{error ? '!' : '+'}</span>
             <span style={{ fontSize: 8, color: error ? C.accent : C.dim, fontWeight: 500, textAlign: 'center', padding: '0 4px' }}>
-              {error || (optional ? 'Optional' : useLocaleStore.getState().t('editor.frame.upload'))}
+              {error || (optional ? useLocaleStore.getState().t('editor.frame.optional') : useLocaleStore.getState().t('editor.frame.upload'))}
             </span>
           </div>
         )}
@@ -337,7 +340,7 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
    ═══════════════════════════════════════════════════════════════════ */
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
-    <div style={{ display: 'flex', height: '100dvh', background: C.bg, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', background: C.bg, overflow: 'hidden' }}>
       <div style={{ width: 380, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Skeleton width="100%" height={80} style={{ borderRadius: 12 }} />
         <div style={{ display: 'flex', gap: 10 }}>
@@ -365,6 +368,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const sync = useProjectSync(projectId);
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
+  const locale = useLocaleStore((s) => s.locale);
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const { canUseAI, remainingAI, plan } = usePlanLimits();
@@ -407,6 +411,19 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const [showCaptionsModal, setShowCaptionsModal] = useState(false);
   const [captionsSrt, setCaptionsSrt] = useState<string | null>(null);
   const [showShortsModal, setShowShortsModal] = useState(false);
+
+  // Multi-shot mode
+  const [multiShot, setMultiShot] = useState(false);
+
+  // Sound toggle
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Uploaded elements (photos that can be referenced with @)
+  const [uploadedElements, setUploadedElements] = useState<{ id: string; name: string; dataUrl: string }[]>([]);
+  const [showElementsPanel, setShowElementsPanel] = useState(false);
+  const [showAtDropdown, setShowAtDropdown] = useState(false);
+  const [atDropdownPos, setAtDropdownPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const elementsInputRef = useRef<HTMLInputElement>(null);
 
   // Progress & result
   const [showResult, setShowResult] = useState(false);
@@ -468,6 +485,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   // Suppress unused variable warnings
   void generateCaptions;
+
+  // Initialize default scene for standalone editor (no project)
+  useEffect(() => {
+    if (!projectId) {
+      const store = useEditorStore.getState();
+      if (store.scenes.length === 0) {
+        store.addScene();
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-save
   useEffect(() => {
@@ -574,7 +601,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   // Undo / Redo
   const historyLen = useEditorStore((s) => s.historyCount);
   const futureLen = useEditorStore((s) => s.futureCount);
-  useUndoHint(historyLen);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -620,7 +646,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const handleGetIdeas = useCallback(() => {
     if (suggestIdeas.isPending) return;
     const currentPrompt = useEditorStore.getState().scenes.find((s) => s.id === useEditorStore.getState().selId)?.prompt || '';
-    suggestIdeas.mutate({ topic: currentPrompt.trim() || undefined });
+    suggestIdeas.mutate({ topic: currentPrompt.trim() || undefined, locale });
   }, [suggestIdeas]);
 
   /* --- Computed --- */
@@ -632,7 +658,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
 
   const selectedStyle = useMemo(() => ANIMATION_STYLES.find((s) => s.id === selectedStyleId) || ANIMATION_STYLES[0], [selectedStyleId]);
   const selCol = sel ? gc(sel.ck) : C.accent;
-  const selMod = sel ? (MODELS.find((m) => m.id === sel.model) || MODELS[1]) : MODELS[1];
+  const selMod = sel ? (MODELS.find((m) => m.id === sel.model) || MODELS[0]) : MODELS[0];
 
   // Filter styles based on category and search
   const filteredStyles = useMemo(() => {
@@ -674,7 +700,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
      ═══════════════════════════════════════════════════════════════ */
   if (projectId && sync.isError) {
     return (
-      <div style={{ display: 'flex', height: '100dvh', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 40 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: C.accent }}>!</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{t('editor.loadError')}</div>
@@ -708,7 +734,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* ── Top Bar (same as AiThumbnails) ─────────────── */}
         <div
           className="tf-editor-topbar"
@@ -738,7 +764,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </svg>
             </div>
             <span className="tf-editor-title-label" style={{ fontSize: 15, fontWeight: 700, color: C.text, whiteSpace: 'nowrap' }}>
-              Video Editor
+              {t('editor.title')}
             </span>
             <OnlineUsers />
           </div>
@@ -859,7 +885,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   backdropFilter: 'blur(4px)',
                 }}
               >
-                Change
+                {t('editor.style.change')}
               </span>
               <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.04em', textShadow: '0 1px 4px rgba(0,0,0,.3)' }}>
                 {selectedStyle.name}
@@ -867,6 +893,37 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               <span style={{ fontSize: 10, color: '#ffffffaa', marginTop: 2, fontWeight: 500 }}>
                 {selMod.icon} {selMod.name}
               </span>
+            </div>
+
+            {/* ── Multi-shot toggle ── */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{t('editor.multiShot')}</span>
+                <span style={{ fontSize: 10, color: C.dim, fontWeight: 500 }}>
+                  {multiShot ? t('editor.multiShot.on') : t('editor.multiShot.off')}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setMultiShot(!multiShot);
+                  // Clear end frame when enabling multi-shot
+                  if (!multiShot && sel) updScene(sel.id, { ef: null });
+                }}
+                style={{
+                  width: 40, height: 22, borderRadius: 11, border: 'none',
+                  background: multiShot ? C.accent : C.border,
+                  position: 'relative', cursor: 'pointer',
+                  transition: 'background 0.2s ease',
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%',
+                  background: '#fff', position: 'absolute',
+                  top: 2, left: multiShot ? 20 : 2,
+                  transition: 'left 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+                }} />
+              </button>
             </div>
 
             {/* ── 2. Frame upload slots ── */}
@@ -877,58 +934,296 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 C={C}
                 accentCol={selCol}
                 onChange={(v) => { if (sel) updScene(sel.id, { sf: v }); }}
+                aspectRatio={aspectRatio}
               />
-              <FrameSlot
-                label={t('editor.frame.endFrame')}
-                value={sel?.ef ?? null}
-                C={C}
-                accentCol={selCol}
-                onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
-                optional
-              />
+              <div style={{
+                flex: 1, minWidth: 0,
+                opacity: multiShot ? 0.35 : 1,
+                pointerEvents: multiShot ? 'none' : 'auto',
+                transition: 'opacity 0.2s ease',
+                position: 'relative',
+              }}>
+                <FrameSlot
+                  label={t('editor.frame.endFrame')}
+                  value={sel?.ef ?? null}
+                  C={C}
+                  accentCol={selCol}
+                  onChange={(v) => { if (sel) updScene(sel.id, { ef: v }); }}
+                  optional
+                  aspectRatio={aspectRatio}
+                />
+                {multiShot && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 600, color: C.dim,
+                    textAlign: 'center', paddingTop: 14,
+                  }}>
+                    {t('editor.multiShot.disabledHint')}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ── 3. Prompt section ── */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                  Describe your video <span style={{ color: C.accent }}>*</span>
+                  {'\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u0430\u0448\u0435 \u0432\u0438\u0434\u0435\u043E'} <span style={{ color: C.accent }}>*</span>
                 </span>
                 <span style={{ fontSize: 11, color: (sel?.prompt?.length || 0) > 1800 ? C.red : C.dim }}>
                   {sel?.prompt?.length || 0}/2000
                 </span>
               </div>
 
-              <textarea
-                className="tf-editor-prompt"
-                ref={promptRef}
-                value={sel?.prompt || ''}
-                rows={4}
-                onChange={(e) => {
-                  if (!sel) return;
-                  updScene(sel.id, { prompt: e.target.value, status: sel.status === 'empty' ? 'editing' : sel.status });
-                  autoResize(e.target);
-                  useEditorStore.getState().pushHistoryDebounced();
-                }}
-                onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    handleGenerate();
-                  }
-                }}
-                placeholder="Describe your video, like 'A woman walking through a neon-lit city'. Add elements using @"
-                maxLength={2000}
-                style={{
-                  width: '100%', minHeight: 90, padding: 14,
-                  borderRadius: 12, border: `1px solid ${C.border}`,
-                  background: C.surface, color: C.text,
-                  fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
-                  outline: 'none', transition: 'border-color 0.2s ease',
-                  boxSizing: 'border-box', lineHeight: 1.5,
-                }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-              />
+              <div style={{ position: 'relative' }}>
+                <textarea
+                  className="tf-editor-prompt"
+                  ref={promptRef}
+                  value={sel?.prompt || ''}
+                  rows={4}
+                  onChange={(e) => {
+                    if (!sel) return;
+                    const val = e.target.value;
+                    updScene(sel.id, { prompt: val, status: sel.status === 'empty' ? 'editing' : sel.status });
+                    autoResize(e.target);
+                    useEditorStore.getState().pushHistoryDebounced();
+
+                    // Check for @ trigger
+                    const cursorPos = e.target.selectionStart;
+                    const textBeforeCursor = val.slice(0, cursorPos);
+                    const atIndex = textBeforeCursor.lastIndexOf('@');
+                    if (atIndex !== -1 && uploadedElements.length > 0) {
+                      const textAfterAt = textBeforeCursor.slice(atIndex + 1);
+                      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                        const rect = e.target.getBoundingClientRect();
+                        setAtDropdownPos({ top: rect.bottom + 4, left: rect.left });
+                        setShowAtDropdown(true);
+                      } else {
+                        setShowAtDropdown(false);
+                      }
+                    } else {
+                      setShowAtDropdown(false);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                  placeholder={'\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u0430\u0448\u0435 \u0432\u0438\u0434\u0435\u043E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 "\u043A\u043E\u0442\u0438\u043A \u043F\u043B\u044B\u0432\u0451\u0442 \u043F\u043E \u0440\u0435\u0447\u043A\u0435". \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439\u0442\u0435 @ \u0434\u043B\u044F \u0441\u0441\u044B\u043B\u043A\u0438 \u043D\u0430 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043D\u044B\u0435 \u0444\u043E\u0442\u043E'}
+                  maxLength={2000}
+                  style={{
+                    width: '100%', minHeight: 90, padding: 14,
+                    borderRadius: 12, border: `1px solid ${C.border}`,
+                    background: C.surface, color: C.text,
+                    fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
+                    outline: 'none', transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box', lineHeight: 1.5,
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = C.borderActive; }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = C.border;
+                    // Delay hiding @ dropdown so clicks on it register
+                    setTimeout(() => setShowAtDropdown(false), 200);
+                  }}
+                />
+
+                {/* @ mention dropdown */}
+                {showAtDropdown && uploadedElements.length > 0 && (
+                  <div style={{
+                    position: 'absolute', bottom: '100%', left: 0, right: 0,
+                    marginBottom: 4, background: C.card, border: `1px solid ${C.border}`,
+                    borderRadius: 10, padding: 4, zIndex: 70,
+                    boxShadow: '0 4px 20px rgba(0,0,0,.4)',
+                    maxHeight: 160, overflowY: 'auto',
+                  }}>
+                    <div style={{ padding: '4px 8px', fontSize: 10, color: C.dim, fontWeight: 600, textTransform: 'uppercase' }}>
+                      {t('editor.elements.insertRef')}
+                    </div>
+                    {uploadedElements.map((el) => (
+                      <div
+                        key={el.id}
+                        onClick={() => {
+                          if (!sel || !promptRef.current) return;
+                          const textarea = promptRef.current;
+                          const cursorPos = textarea.selectionStart;
+                          const text = sel.prompt;
+                          const atIndex = text.lastIndexOf('@', cursorPos - 1);
+                          if (atIndex !== -1) {
+                            const newText = text.slice(0, atIndex) + `@${el.name} ` + text.slice(cursorPos);
+                            updScene(sel.id, { prompt: newText });
+                            setShowAtDropdown(false);
+                            setTimeout(() => {
+                              const newCursorPos = atIndex + el.name.length + 2;
+                              textarea.focus();
+                              textarea.setSelectionRange(newCursorPos, newCursorPos);
+                            }, 0);
+                          }
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                          transition: 'background .1s',
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = C.cardHover; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        <img src={el.dataUrl} alt={el.name} style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} />
+                        <span style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{el.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Buttons below prompt: Sound toggle + Elements ── */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                {/* Sound On/Off toggle */}
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  title={soundEnabled ? 'Sound On' : 'Sound Off'}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 8,
+                    border: `1px solid ${soundEnabled ? C.accent + '40' : C.border}`,
+                    background: soundEnabled ? C.accentDim : 'transparent',
+                    color: soundEnabled ? C.accent : C.sub,
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
+                  }}
+                >
+                  {soundEnabled ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <line x1="23" y1="9" x2="17" y2="15" />
+                      <line x1="17" y1="9" x2="23" y2="15" />
+                    </svg>
+                  )}
+                  {soundEnabled ? t('editor.sound.on') : t('editor.sound.muted')}
+                </button>
+
+                {/* Elements button */}
+                <button
+                  onClick={() => setShowElementsPanel(!showElementsPanel)}
+                  title={t('editor.elements')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 8,
+                    border: `1px solid ${showElementsPanel ? C.accent + '40' : C.border}`,
+                    background: showElementsPanel ? C.accentDim : 'transparent',
+                    color: showElementsPanel ? C.accent : C.sub,
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.15s ease', outline: 'none',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  {t('editor.elements')}{uploadedElements.length > 0 ? ` (${uploadedElements.length})` : ''}
+                </button>
+              </div>
+
+              {/* Elements panel - upload + show uploaded images */}
+              {showElementsPanel && (
+                <div style={{
+                  padding: 12, borderRadius: 10,
+                  border: `1px solid ${C.border}`, background: C.surface,
+                  marginTop: 4,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      {t('editor.elements.uploadedPhotos')}
+                    </span>
+                    <button
+                      onClick={() => elementsInputRef.current?.click()}
+                      style={{
+                        padding: '4px 10px', borderRadius: 6,
+                        border: `1px solid ${C.accent}40`, background: C.accentDim,
+                        color: C.accent, fontSize: 11, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      + {t('editor.frame.upload')}
+                    </button>
+                    <input
+                      ref={elementsInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        Array.from(files).forEach((file) => {
+                          if (!ACCEPTED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_SIZE) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const name = file.name.replace(/\.[^.]+$/, '').replace(/\s+/g, '_').slice(0, 20);
+                            setUploadedElements((prev) => [...prev, {
+                              id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+                              name,
+                              dataUrl: reader.result as string,
+                            }]);
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                        e.target.value = '';
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+
+                  {uploadedElements.length === 0 ? (
+                    <div style={{ fontSize: 12, color: C.dim, textAlign: 'center', padding: '12px 0' }}>
+                      {t('editor.elements.empty')}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {uploadedElements.map((el) => (
+                        <div key={el.id} style={{ position: 'relative', width: 56, height: 56 }}>
+                          <img
+                            src={el.dataUrl}
+                            alt={el.name}
+                            style={{
+                              width: '100%', height: '100%', objectFit: 'cover',
+                              borderRadius: 8, border: `1px solid ${C.border}`,
+                            }}
+                          />
+                          <button
+                            onClick={() => setUploadedElements((prev) => prev.filter((p) => p.id !== el.id))}
+                            style={{
+                              position: 'absolute', top: -4, right: -4, width: 16, height: 16,
+                              borderRadius: '50%', border: 'none', background: 'rgba(239,68,68,.9)',
+                              color: '#fff', fontSize: 9, cursor: 'pointer', display: 'flex',
+                              alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+                            }}
+                          >
+                            &#10005;
+                          </button>
+                          <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            background: 'rgba(0,0,0,.6)', borderRadius: '0 0 8px 8px',
+                            padding: '1px 4px', fontSize: 8, color: '#fff',
+                            textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            @{el.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── 4. "Need an idea?" button + idea chips ── */}
@@ -959,7 +1254,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
               )}
-              {suggestIdeas.isPending ? 'Generating ideas...' : 'Need an idea?'}
+              {suggestIdeas.isPending ? t('editor.ideas.generating') : t('editor.ideas.btn')}
             </button>
 
             {/* AI idea chips */}
@@ -988,13 +1283,12 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       outline: 'none',
                       transition: 'all 0.15s ease',
                       maxWidth: '100%',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
                     }}
                     title={idea}
                   >
-                    {idea.length > 80 ? idea.slice(0, 80) + '...' : idea}
+                    {idea}
                   </button>
                 ))}
               </div>
@@ -1009,7 +1303,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Duration
+                  {t('editor.duration')}
                 </span>
                 <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, fontFamily: "'JetBrains Mono', monospace" }}>
                   {durationValue}s
@@ -1039,7 +1333,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             {/* Model dropdown */}
             <div>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Model
+                {t('editor.settingsModel')}
               </span>
               <div style={{ position: 'relative' }} ref={leftModDropRef}>
                 <button
@@ -1090,7 +1384,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         <span style={{ fontSize: 14 }}>{m.icon}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 11, fontWeight: 600, color: m.id === sel?.model ? ACCENT_LIME : C.text }}>{m.name}</div>
-                          <div style={{ fontSize: 9, color: C.sub }}>{m.desc} · {m.speed}</div>
+                          <div style={{ fontSize: 9, color: C.sub }}>{m.desc} · {m.speed}{m.tokens ? ` · ${m.tokens}` : ''}</div>
                         </div>
                         {m.id === sel?.model && (
                           <span style={{ fontSize: 10, color: ACCENT_LIME, fontWeight: 700 }}>&#10003;</span>
@@ -1105,7 +1399,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             {/* Aspect Ratio pills */}
             <div>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Aspect Ratio
+                {t('editor.aspectRatio')}
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 {['16:9', '9:16', '1:1'].map((ar) => (
@@ -1130,10 +1424,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
             {/* Resolution pills */}
             <div>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Resolution
+                {t('editor.resolution')}
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
-                {['720p', '1080p', '4K'].map((res) => (
+                {['720p', '1080p'].map((res) => (
                   <button
                     key={res}
                     onClick={() => setResolution(res)}
@@ -1147,11 +1441,6 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                     }}
                   >
                     {res}
-                    {res === '4K' && plan === 'FREE' && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: C.accent, background: C.accentDim, padding: '1px 5px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -6 }}>
-                        PRO
-                      </span>
-                    )}
                   </button>
                 ))}
               </div>
@@ -1163,7 +1452,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
               <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
-                1 credit
+                {t('editor.creditCost')}
               </span>
             </div>
 
@@ -1214,7 +1503,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   textDecoration: 'none', textAlign: 'center', transition: 'all 0.2s ease',
                 }}
               >
-                Upgrade for more credits
+                {t('editor.upgradeCredits')}
               </a>
             )}
           </div>
@@ -1249,7 +1538,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="15 18 9 12 15 6" />
                       </svg>
-                      Back
+                      {t('common.back')}
                     </button>
                   )}
                   <span
@@ -1261,7 +1550,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       textTransform: 'uppercase', letterSpacing: 1,
                     }}
                   >
-                    PREVIEW {aspectRatio}
+                    {t('editor.preview')} {aspectRatio}
                   </span>
                   <div style={{ flex: 1 }} />
                 </>
@@ -1269,8 +1558,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <>
                   <div className="tf-editor-tabs tf-hscroll" style={{ display: 'flex', gap: 6 }}>
                     {([
-                      { id: 'howto' as const, label: 'How it works', icon: '\uD83C\uDFAC' },
-                      { id: 'history' as const, label: `History${scenes.length > 0 ? ` (${scenes.length})` : ''}`, icon: '\uD83D\uDCC1' },
+                      { id: 'howto' as const, label: t('editor.howItWorks'), icon: '\uD83C\uDFAC' },
+                      { id: 'history' as const, label: `${t('editor.history')}${scenes.length > 0 ? ` (${scenes.length})` : ''}`, icon: '\uD83D\uDCC1' },
                     ] as const).map((t2) => (
                       <button
                         key={t2.id}
@@ -1307,7 +1596,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         }}
                       >
                         <span style={{ fontSize: 14, lineHeight: 1 }}>{'\uD83C\uDFA8'}</span>
-                        Styles
+                        {t('editor.styles')}
                       </button>
                     )}
                   </div>
@@ -1340,7 +1629,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
 
                   <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>
-                    Generating... {Math.round(progress || 0)}%
+                    {t('editor.generating')} {Math.round(progress || 0)}%
                   </div>
 
                   <div style={{ width: 240, height: 6, borderRadius: 3, background: C.border, overflow: 'hidden' }}>
@@ -1353,10 +1642,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   </div>
 
                   <div style={{ fontSize: 13, color: C.dim, maxWidth: 300, textAlign: 'center', lineHeight: 1.5 }}>
-                    {(progress || 0) < 30 ? 'AI is composing the perfect shot...'
-                      : (progress || 0) < 60 ? 'Generating frames and adding motion...'
-                      : (progress || 0) < 90 ? 'Encoding video and optimizing quality...'
-                      : 'Almost there, finalizing details...'}
+                    {(progress || 0) < 30 ? t('editor.gen.stage1')
+                      : (progress || 0) < 60 ? t('editor.gen.stage2')
+                      : (progress || 0) < 90 ? t('editor.gen.stage3')
+                      : t('editor.gen.stage4')}
                   </div>
                 </div>
               ) : sel?.videoUrl && showResult ? (
@@ -1393,10 +1682,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
                   {/* Preview videos for styles that have them */}
                   {(() => {
-                    const STYLE_PREVIEWS: Record<string, { videos: string[]; labels: string[] }> = {
+                    const STYLE_PREVIEWS: Record<string, { videos: string[]; labelKeys: number[] }> = {
                       '2d-cats': {
                         videos: ['/demo/2d-cats.mp4', '/demo/2d-cats-2.mp4', '/demo/2d-cats-3.mp4'],
-                        labels: ['Scene 1', 'Scene 2', 'Scene 3'],
+                        labelKeys: [1, 2, 3],
                       },
                     };
                     const preview = STYLE_PREVIEWS[selectedStyleId];
@@ -1406,21 +1695,27 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                           <h2 style={{ fontSize: 20, fontWeight: 800, color: C.text, margin: '0 0 4px', textTransform: 'uppercase' }}>
                             {selectedStyle.name}
                           </h2>
-                          <p style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Preview videos</p>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                          <p style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>{t('editor.previewVideos')}</p>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                             {preview.videos.map((src, i) => (
-                              <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#000' }}>
+                              <div key={i} style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}`, background: '#000' }}>
                                 <video
                                   src={src}
                                   autoPlay muted loop playsInline
-                                  style={{ width: '100%', display: 'block', aspectRatio: '9/16', objectFit: 'cover' }}
+                                  style={{ width: '100%', display: 'block', aspectRatio: '9/16', objectFit: 'cover', maxHeight: 220 }}
                                 />
                                 <div style={{ padding: '8px 10px', background: C.surface, borderTop: `1px solid ${C.border}` }}>
-                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{preview.labels[i]}</div>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{t('editor.scene.one')} {i + 1}</div>
+                                  <div style={{ fontSize: 10, color: C.dim, marginTop: 2 }}>
+                                    {i === 0 ? t('editor.preset.step1') : i === 1 ? t('editor.preset.step2') : t('editor.preset.step3')}
+                                  </div>
                                 </div>
                               </div>
                             ))}
                           </div>
+                          <p style={{ fontSize: 12, color: C.dim, marginTop: 12, lineHeight: 1.5 }}>
+                            {t('editor.preset.instruction')}
+                          </p>
                         </>
                       );
                     }
@@ -1431,10 +1726,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   {!['2d-cats'].includes(selectedStyleId) && (
                   <>
                   <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, margin: '0 0 6px' }}>
-                    MAKE VIDEOS IN ONE CLICK
+                    {t('editor.makeVideos')}
                   </h2>
                   <p style={{ fontSize: 14, color: C.sub, marginBottom: 24, maxWidth: 520 }}>
-                    250+ presets for camera control, framing, and high-quality VFX
+                    {t('editor.presetsDesc')}
                   </p>
 
                   <div className="tf-editor-steps" style={{
@@ -1463,10 +1758,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       </div>
                       <div style={{ padding: 14 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          Add Image
+                          {t('editor.step1.title')}
                         </div>
                         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          Upload or generate an image to start your animation
+                          {t('editor.step1.desc')}
                         </div>
                       </div>
                     </div>
@@ -1492,10 +1787,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       </div>
                       <div style={{ padding: 14 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          Choose Preset
+                          {t('editor.step2.title')}
                         </div>
                         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          Pick from 250+ animation presets for camera, framing, and VFX
+                          {t('editor.step2.desc')}
                         </div>
                       </div>
                     </div>
@@ -1523,10 +1818,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                       </div>
                       <div style={{ padding: 14 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'uppercase', marginBottom: 4 }}>
-                          Get Video
+                          {t('editor.step3.title')}
                         </div>
                         <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.4 }}>
-                          Click generate and download your high-quality video
+                          {t('editor.step3.desc')}
                         </div>
                       </div>
                     </div>
@@ -1546,16 +1841,16 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         </svg>
                       </div>
                       <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                        No generations yet
+                        {t('editor.noGenerations')}
                       </h3>
                       <p style={{ fontSize: 13, color: C.sub, maxWidth: 300, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                        Generate your first video and it will appear here
+                        {t('editor.noGenerationsDesc')}
                       </p>
                     </div>
                   ) : (
                     <>
                       <div style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                        Generated scenes ({scenes.length})
+                        {t('editor.generatedScenes')} ({scenes.length})
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {scenes.map((sc) => (
@@ -1702,10 +1997,10 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>
-                    Want 4K, longer videos, and unlimited presets?
+                    {t('editor.banner.title')}
                   </div>
                   <div style={{ fontSize: 12, color: C.sub }}>
-                    Upgrade to Pro for unlimited creative power.
+                    {t('editor.banner.desc')}
                   </div>
                 </div>
                 <a
@@ -1720,7 +2015,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
                 >
-                  Upgrade to Pro
+                  {t('editor.banner.cta')}
                 </a>
               </div>
             )}

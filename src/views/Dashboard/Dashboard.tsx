@@ -651,7 +651,7 @@ export function Dashboard() {
       <style>{NEON_CSS}</style>
 
       {/* ── Upgrade popup for free users ── */}
-      {user && <UpgradePopupModal userPlan={user.plan} />}
+      {/* Upgrade popup disabled for testing */}
 
       {/* ── Welcome header ── */}
       <div style={{ marginBottom: 24 }}>
@@ -711,10 +711,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* ── Locked analytics preview (when not connected) ── */}
-      {!isConnected && !isCheckingConnection && (
-        <LockedAnalyticsPreview C={C} connectLabel={connectLabel} onConnect={handleConnect} />
-      )}
+      {/* ── Locked analytics preview — disabled for testing ── */}
       {isCheckingConnection && (
         <Skeleton width="100%" height={320} style={{ borderRadius: 18, marginBottom: 32 }} />
       )}
@@ -758,7 +755,7 @@ export function Dashboard() {
               to={feature.to}
               badge={feature.badge}
               icon={FEATURE_ICONS[feature.key]}
-              locked={!isConnected && !isCheckingConnection}
+              locked={false /* unlocked for testing */}
               connectLabel={connectLabel}
               C={C}
               onConnect={handleConnect}
@@ -767,105 +764,9 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* ── Free YouTube Tools (always available) ── */}
-      <div style={{ marginBottom: 40 }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: 16,
-        }}>
-          <h2 style={{
-            fontSize: 22, fontWeight: 700, color: C.text,
-            margin: 0, letterSpacing: '-.02em',
-          }}>
-            {t('dashboard.freeYoutubeTools')}
-          </h2>
-          <Link href="/free-tools" style={{
-            fontSize: 13, fontWeight: 600, color: C.accent,
-            textDecoration: 'none',
-          }}>
-            {t('dashboard.viewAll')} &rarr;
-          </Link>
-        </div>
-        <div
-          ref={freeToolsScrollRef}
-          className="tf-free-tools-scroll"
-          style={{
-            display: 'flex', gap: 10,
-            overflowX: 'auto', scrollSnapType: 'x mandatory',
-            paddingBottom: 24, paddingTop: 8,
-            msOverflowStyle: 'none', scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch', touchAction: 'pan-x',
-          }}
-        >
-          {FREE_TOOL_META.map((tool) => (
-            <FreeToolChip key={tool.href} title={t(tool.titleKey)} href={tool.href} C={C} />
-          ))}
-        </div>
-      </div>
+      {/* Free YouTube Tools section removed by CEO request */}
 
-      {/* ── Recent History ── */}
-      {recentActivities.length > 0 && (
-        <div style={{ marginBottom: 40 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 16,
-          }}>
-            <h2 style={{
-              fontSize: 22, fontWeight: 700, color: C.text,
-              margin: 0, letterSpacing: '-.02em',
-            }}>
-              {t('dashboard.recentHistory')}
-            </h2>
-          </div>
-          <div className="tf-history-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
-            gap: 10,
-          }}>
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 16px', background: C.card,
-                  border: `1px solid ${C.border}`, borderRadius: 14,
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: C.surface,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {activityIcon(activity.type, C.accent)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 13, fontWeight: 600, color: C.text,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {activityLabel(activity.type, t)}
-                  </div>
-                  {activity.label && (
-                    <div style={{
-                      fontSize: 12, color: C.sub, marginTop: 2,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {activity.label}
-                    </div>
-                  )}
-                </div>
-                <span style={{
-                  fontSize: 11, color: C.dim, fontWeight: 500,
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}>
-                  {timeAgoShort(activity.timestamp, t)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Recent History section removed by CEO request */}
     </div>
   );
 }

@@ -26,8 +26,8 @@ describe('PLAN_LIMITS', () => {
     expect(pro.projects).toBeGreaterThan(free.projects);
     expect(studio.projects).toBeGreaterThan(pro.projects);
 
-    // aiGenerations
-    expect(pro.aiGenerations).toBeGreaterThan(free.aiGenerations);
+    // aiGenerations (FREE and PRO both set to 99999 for testing)
+    expect(pro.aiGenerations).toBeGreaterThanOrEqual(free.aiGenerations);
     expect(studio.aiGenerations).toBeGreaterThan(pro.aiGenerations);
 
     // scenes

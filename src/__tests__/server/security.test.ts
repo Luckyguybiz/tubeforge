@@ -63,7 +63,7 @@ async function checkRate(prefix: string, userId: string, limit = 60) {
 
 /* ── AI limit constants ──────────────────────────────────────── */
 
-const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
+const AI_LIMITS: Record<string, number> = { FREE: 99999, PRO: 99999, STUDIO: Infinity };
 
 /* ── Router replicas (minimal) ───────────────────────────────── */
 
@@ -386,37 +386,37 @@ describe('Security invariants', () => {
   /* ── S5: AI limit enforcement ──────────────────────────── */
 
   describe('AI limit enforcement', () => {
-    it('FREE user with 4 uses can generate (under limit of 5)', async () => {
-      db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 4, aiResetAt: new Date() });
+    it('FREE user with 99998 uses can generate (under limit of 99999)', async () => {
+      db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 99998, aiResetAt: new Date() });
       const caller = createCaller(db, makeSession());
       const result = await caller.checkAI();
       expect(result.allowed).toBe(true);
       expect(result.remaining).toBe(1);
     });
 
-    it('FREE user with 5 uses is blocked (at limit)', async () => {
-      db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 5, aiResetAt: new Date() });
+    it('FREE user with 99999 uses is blocked (at limit)', async () => {
+      db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 99999, aiResetAt: new Date() });
       const caller = createCaller(db, makeSession());
 
       await expect(caller.checkAI()).rejects.toMatchObject({ code: 'FORBIDDEN' });
     });
 
-    it('FREE user with 6 uses is blocked (over limit)', async () => {
-      db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 6, aiResetAt: new Date() });
+    it('FREE user with 100000 uses is blocked (over limit)', async () => {
+      db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 100000, aiResetAt: new Date() });
       const caller = createCaller(db, makeSession());
 
       await expect(caller.checkAI()).rejects.toMatchObject({ code: 'FORBIDDEN' });
     });
 
-    it('PRO user with 99 uses is allowed', async () => {
-      db.user.findUnique.mockResolvedValue({ plan: 'PRO', aiUsage: 99, aiResetAt: new Date() });
+    it('PRO user with 99998 uses is allowed', async () => {
+      db.user.findUnique.mockResolvedValue({ plan: 'PRO', aiUsage: 99998, aiResetAt: new Date() });
       const caller = createCaller(db, makeSession());
       const result = await caller.checkAI();
       expect(result.allowed).toBe(true);
     });
 
-    it('PRO user with 100 uses is blocked', async () => {
-      db.user.findUnique.mockResolvedValue({ plan: 'PRO', aiUsage: 100, aiResetAt: new Date() });
+    it('PRO user with 99999 uses is blocked', async () => {
+      db.user.findUnique.mockResolvedValue({ plan: 'PRO', aiUsage: 99999, aiResetAt: new Date() });
       const caller = createCaller(db, makeSession());
 
       await expect(caller.checkAI()).rejects.toMatchObject({ code: 'FORBIDDEN' });

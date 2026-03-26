@@ -31,6 +31,7 @@ export function Toast({
   onClose: (id: string) => void;
 }) {
   const C = useThemeStore((s) => s.theme);
+  const isDark = useThemeStore((s) => s.isDark);
   const t = useLocaleStore((s) => s.t);
 
   const color = TYPE_COLORS[type];
@@ -43,20 +44,34 @@ export function Toast({
         alignItems: 'center',
         gap: 10,
         padding: '14px 18px',
-        background: '#fff',
-        border: `1px solid rgba(0,0,0,0.06)`,
+        background: isDark ? 'rgba(24,24,32,0.95)' : '#fff',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
         borderLeft: `3px solid ${color}`,
         borderRadius: 14,
         minWidth: 0,
         width: 'calc(100vw - 32px)',
         maxWidth: 400,
-        boxShadow: '0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04)',
+        boxShadow: isDark
+          ? '0 4px 24px rgba(0,0,0,.3), 0 1px 4px rgba(0,0,0,.2)'
+          : '0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04)',
         animation: 'toastSlideIn .3s cubic-bezier(.2,.8,.4,1)',
         fontFamily: 'var(--font-sans), sans-serif',
         backdropFilter: 'blur(20px)',
       }}
     >
-      <span style={{ color, fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+      <span style={{
+        color,
+        fontSize: 14,
+        fontWeight: 700,
+        flexShrink: 0,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        background: `${color}15`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
         {ICONS[type]}
       </span>
       <span style={{ color: C.text, fontSize: 13, flex: 1, lineHeight: 1.4, wordBreak: 'break-word', overflow: 'hidden' }}>
@@ -78,7 +93,11 @@ export function Toast({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          borderRadius: 8,
+          transition: 'background 0.15s ease',
         }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
       >
         {'\u2715'}
       </button>

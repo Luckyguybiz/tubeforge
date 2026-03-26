@@ -24,6 +24,7 @@ async function getYouTubeToken(userId: string, db: PrismaClient) {
   const account = await db.account.findFirst({
     where: { userId, provider: 'google' },
     select: { id: true, access_token: true, refresh_token: true, expires_at: true },
+    orderBy: { expires_at: 'desc' },
   });
   if (!account?.access_token) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'YouTube is not connected' });
 

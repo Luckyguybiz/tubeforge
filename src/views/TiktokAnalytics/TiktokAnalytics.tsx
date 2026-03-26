@@ -1444,96 +1444,51 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                             {/* Thumbnail */}
                             {item.thumbnail ? (
-                              isPro ? (
-                                <a
-                                  href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                              <a
+                                href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  width: 120,
+                                  height: 68,
+                                  borderRadius: 8,
+                                  flexShrink: 0,
+                                  position: 'relative',
+                                  overflow: 'hidden',
+                                  display: 'block',
+                                }}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={item.thumbnail}
+                                  alt={item.title}
+                                  loading="lazy"
                                   style={{
-                                    width: 120,
-                                    height: 68,
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
                                     borderRadius: 8,
-                                    flexShrink: 0,
-                                    position: 'relative',
-                                    overflow: 'hidden',
                                     display: 'block',
                                   }}
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={item.thumbnail}
-                                    alt={item.title}
-                                    loading="lazy"
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                      borderRadius: 8,
-                                      display: 'block',
-                                    }}
-                                  />
-                                  {/* TikTok badge */}
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: 4,
-                                      right: 4,
-                                      padding: '2px 5px',
-                                      borderRadius: 4,
-                                      background: 'linear-gradient(135deg, #00f2ea, #ff0050)',
-                                      color: '#fff',
-                                      fontSize: 8,
-                                      fontWeight: 700,
-                                      letterSpacing: '.03em',
-                                    }}
-                                  >
-                                    TIKTOK
-                                  </div>
-                                </a>
-                              ) : (
+                                />
+                                {/* TikTok badge */}
                                 <div
                                   style={{
-                                    width: 120,
-                                    height: 68,
-                                    borderRadius: 8,
-                                    flexShrink: 0,
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    display: 'block',
+                                    position: 'absolute',
+                                    bottom: 4,
+                                    right: 4,
+                                    padding: '2px 5px',
+                                    borderRadius: 4,
+                                    background: 'linear-gradient(135deg, #00f2ea, #ff0050)',
+                                    color: '#fff',
+                                    fontSize: 8,
+                                    fontWeight: 700,
+                                    letterSpacing: '.03em',
                                   }}
                                 >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={item.thumbnail}
-                                    alt={item.title}
-                                    loading="lazy"
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                      borderRadius: 8,
-                                      display: 'block',
-                                    }}
-                                  />
-                                  {/* TikTok badge */}
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: 4,
-                                      right: 4,
-                                      padding: '2px 5px',
-                                      borderRadius: 4,
-                                      background: 'linear-gradient(135deg, #00f2ea, #ff0050)',
-                                      color: '#fff',
-                                      fontSize: 8,
-                                      fontWeight: 700,
-                                      letterSpacing: '.03em',
-                                    }}
-                                  >
-                                    TIKTOK
-                                  </div>
+                                  TIKTOK
                                 </div>
-                              )
+                              </a>
                             ) : (
                               <div
                                 style={{
@@ -1577,47 +1532,28 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
 
                             {/* Title + hashtags */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                              {isPro ? (
-                                <a
-                                  href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontSize: 13.5,
-                                    fontWeight: 500,
-                                    color: C.text,
-                                    lineHeight: 1.4,
-                                    maxWidth: 280,
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                    textDecoration: 'none',
-                                  }}
-                                  onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
-                                  onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
-                                >
-                                  {item.title}
-                                </a>
-                              ) : (
-                                <span
-                                  style={{
-                                    fontSize: 13.5,
-                                    fontWeight: 500,
-                                    color: C.text,
-                                    lineHeight: 1.4,
-                                    maxWidth: 280,
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                  }}
-                                >
-                                  {item.title}
-                                </span>
-                              )}
+                              <a
+                                href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}/video/${item.videoId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: 13.5,
+                                  fontWeight: 500,
+                                  color: C.text,
+                                  lineHeight: 1.4,
+                                  maxWidth: 280,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  textDecoration: 'none',
+                                }}
+                                onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                                onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+                              >
+                                {item.title}
+                              </a>
                               {/* Sound name */}
                               {item.soundName && (
                                 <span style={{ fontSize: 10.5, color: C.dim, display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -1738,42 +1674,26 @@ export const TiktokAnalytics = memo(function TiktokAnalytics() {
                                 {item.creator[0]?.toUpperCase() ?? '?'}
                               </div>
                             )}
-                            {/* Creator name - clickable only for Pro */}
-                            {isPro ? (
-                              <a
-                                href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  fontSize: 12.5,
-                                  fontWeight: 500,
-                                  color: C.text,
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: 140,
-                                  textDecoration: 'none',
-                                }}
-                                onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
-                                onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
-                              >
-                                @{item.creator}
-                              </a>
-                            ) : (
-                              <span
-                                style={{
-                                  fontSize: 12.5,
-                                  fontWeight: 500,
-                                  color: C.text,
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: 140,
-                                }}
-                              >
-                                @{item.creator}
-                              </span>
-                            )}
+                            {/* Creator name */}
+                            <a
+                              href={isMock ? '#' : `https://www.tiktok.com/@${item.creator}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: 12.5,
+                                fontWeight: 500,
+                                color: C.text,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: 140,
+                                textDecoration: 'none',
+                              }}
+                              onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
+                              onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
+                            >
+                              @{item.creator}
+                            </a>
                           </div>
                         </td>
                       </tr>

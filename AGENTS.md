@@ -23,11 +23,28 @@ TubeForge (https://tubeforge.co/) - PRODUCTION платформа для YouTube
 
 ## SAFETY RULES (ОБЯЗАТЕЛЬНО)
 
-1. **НИКОГДА не запускай `pm2 restart`, `pm2 stop`, или деплой-скрипты** - прод работает, не трогай
+1. **Деплой ОБЯЗАТЕЛЕН после мержа:** `cd /home/ubuntu/tubeforge-next && npm run build && pm2 restart tubeforge`. Без этого изменения не появятся на сайте. Git hook post-merge делает это автоматически, но проверь что билд прошёл без ошибок.
 2. **НИКОГДА не меняй `prisma/schema.prisma` без явного указания CEO** - это база данных прода
 3. **НИКОГДА не меняй `.env`, `.env.local`, `.env.production`** - там ключи и секреты
 4. **НИКОГДА не удаляй существующие файлы** - только добавляй или модифицируй
 5. **НИКОГДА не меняй `next.config.ts` CSP headers** - они настроены и протестированы
+
+## ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА ПЕРЕД МЕРЖЕМ
+
+**КАЖДЫЙ раз перед мержем выполни:**
+```bash
+cd /home/ubuntu/tubeforge-next && npm run build
+```
+Если билд падает — ИСПРАВЬ ошибки. НЕ мержь код с ошибками. Это КРИТИЧЕСКОЕ правило.
+
+### Частые ошибки которые ЗАПРЕЩЕНО допускать:
+- **TypeScript типы в tRPC:** НЕ указывай явные типы в `onSuccess`, `onError` — используй автовывод: `onSuccess: (data) => {}` вместо `onSuccess: (data: { url?: string }) => {}`
+- **null vs undefined:** в TypeScript strict mode `null` ≠ `undefined`. Проверяй совместимость типов.
+- **Import несуществующих модулей:** перед импортом убедись что файл/модуль существует.
+- **Забытые зависимости:** если добавил новый пакет — запусти `npm install`.
+
+### Прочитай перед каждой задачей:
+- `tasks/lessons.md` — список ошибок и правила чтобы их не повторять
 6. **НИКОГДА не меняй auth конфигурацию** - Google OAuth работает, не ломай
 7. **НИКОГДА не меняй Stripe webhook handler** - платежи работают
 8. **Работай ТОЛЬКО в своей git ветке** - не push в main
@@ -113,9 +130,11 @@ public/              - Static assets
 
 ### Before starting any task:
 1. `cd /home/ubuntu/tubeforge-next`
-2. `git checkout -b feature/your-task-name`
-3. Read relevant files before changing them
-4. Run `npx tsc --noEmit` to verify no type errors
+2. Прочитай `tasks/lessons.md` - там ошибки прошлых задач, НЕ повторяй их
+3. `git checkout -b feature/your-task-name`
+4. Read relevant files before changing them
+5. Run `npx tsc --noEmit` to verify no type errors
+6. Run `npm run build` before merging - если билд падает, ИСПРАВЬ ошибки
 
 ### For new free tools:
 - Add to `src/app/free-tools/[tool]/page.tsx`

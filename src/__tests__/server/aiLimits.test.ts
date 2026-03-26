@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 
 // Replicated from ai.ts
-const AI_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
+const AI_LIMITS: Record<string, number> = { FREE: 99999, PRO: 99999, STUDIO: Infinity };
 
 function checkAILimitLogic(plan: string, aiUsage: number, aiResetAt: Date): {
   allowed: boolean;
@@ -29,11 +29,11 @@ function checkAILimitLogic(plan: string, aiUsage: number, aiResetAt: Date): {
 describe('AI limits', () => {
   describe('AI_LIMITS map', () => {
     it('should have correct FREE limit', () => {
-      expect(AI_LIMITS.FREE).toBe(5);
+      expect(AI_LIMITS.FREE).toBe(99999);
     });
 
     it('should have correct PRO limit', () => {
-      expect(AI_LIMITS.PRO).toBe(100);
+      expect(AI_LIMITS.PRO).toBe(99999);
     });
 
     it('should have unlimited STUDIO', () => {
@@ -51,19 +51,19 @@ describe('AI limits', () => {
     });
 
     it('should deny usage when at limit', () => {
-      const result = checkAILimitLogic('FREE', 5, now);
+      const result = checkAILimitLogic('FREE', 99999, now);
       expect(result.allowed).toBe(false);
     });
 
     it('should deny usage when over limit', () => {
-      const result = checkAILimitLogic('FREE', 10, now);
+      const result = checkAILimitLogic('FREE', 100000, now);
       expect(result.allowed).toBe(false);
     });
 
     it('should allow and reset when month changed', () => {
       const lastMonth = new Date(now);
       lastMonth.setMonth(lastMonth.getMonth() - 1);
-      const result = checkAILimitLogic('FREE', 5, lastMonth);
+      const result = checkAILimitLogic('FREE', 99999, lastMonth);
       expect(result.allowed).toBe(true);
       expect(result.shouldReset).toBe(true);
     });
@@ -77,13 +77,13 @@ describe('AI limits', () => {
     });
 
     it('should respect PRO plan limits', () => {
-      const result = checkAILimitLogic('PRO', 99, now);
+      const result = checkAILimitLogic('PRO', 99998, now);
       expect(result.allowed).toBe(true);
-      expect(result.limit).toBe(100);
+      expect(result.limit).toBe(99999);
     });
 
     it('should deny PRO at limit', () => {
-      const result = checkAILimitLogic('PRO', 100, now);
+      const result = checkAILimitLogic('PRO', 99999, now);
       expect(result.allowed).toBe(false);
     });
 
@@ -95,11 +95,11 @@ describe('AI limits', () => {
     it('should fallback to FREE for unknown plan', () => {
       const result = checkAILimitLogic('UNKNOWN', 4, now);
       expect(result.allowed).toBe(true);
-      expect(result.limit).toBe(5);
+      expect(result.limit).toBe(99999);
     });
 
     it('should deny unknown plan at FREE limit', () => {
-      const result = checkAILimitLogic('UNKNOWN', 5, now);
+      const result = checkAILimitLogic('UNKNOWN', 99999, now);
       expect(result.allowed).toBe(false);
     });
   });

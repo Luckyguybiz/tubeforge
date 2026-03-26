@@ -6,8 +6,8 @@ import { describe, it, expect } from 'vitest';
 
 // Replicated from usePlanLimits.ts to test the limits calculation logic
 const LIMITS: Record<string, { projects: number; ai: number }> = {
-  FREE: { projects: 3, ai: 5 },
-  PRO: { projects: 25, ai: 100 },
+  FREE: { projects: 3, ai: 99999 },
+  PRO: { projects: 25, ai: 99999 },
   STUDIO: { projects: Infinity, ai: Infinity },
 };
 
@@ -46,13 +46,13 @@ describe('Plan limits logic', () => {
     });
 
     it('should allow AI usage when under limit', () => {
-      const result = computeLimits('FREE', 0, 4);
+      const result = computeLimits('FREE', 0, 99998);
       expect(result.canUseAI).toBe(true);
       expect(result.remainingAI).toBe(1);
     });
 
     it('should deny AI usage when at limit', () => {
-      const result = computeLimits('FREE', 0, 5);
+      const result = computeLimits('FREE', 0, 99999);
       expect(result.canUseAI).toBe(false);
       expect(result.remainingAI).toBe(0);
     });
@@ -66,13 +66,13 @@ describe('Plan limits logic', () => {
     });
 
     it('should have higher AI limit', () => {
-      const result = computeLimits('PRO', 0, 99);
+      const result = computeLimits('PRO', 0, 99998);
       expect(result.canUseAI).toBe(true);
       expect(result.remainingAI).toBe(1);
     });
 
     it('should deny at PRO limit', () => {
-      const result = computeLimits('PRO', 25, 100);
+      const result = computeLimits('PRO', 25, 99999);
       expect(result.canCreateProject).toBe(false);
       expect(result.canUseAI).toBe(false);
     });
@@ -97,7 +97,7 @@ describe('Plan limits logic', () => {
       const result = computeLimits('ENTERPRISE', 0, 0);
       expect(result.limits).toEqual(LIMITS.FREE);
       expect(result.remainingProjects).toBe(3);
-      expect(result.remainingAI).toBe(5);
+      expect(result.remainingAI).toBe(99999);
     });
   });
 
@@ -107,7 +107,7 @@ describe('Plan limits logic', () => {
       expect(result.canCreateProject).toBe(true);
       expect(result.canUseAI).toBe(true);
       expect(result.remainingProjects).toBe(3);
-      expect(result.remainingAI).toBe(5);
+      expect(result.remainingAI).toBe(99999);
     });
 
     it('should return correct plan value', () => {

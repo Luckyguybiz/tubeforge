@@ -96,8 +96,6 @@ export const TopBar = memo(function TopBar() {
   const notifications = useNotificationStore((s) => s.notifications);
   const markRead = useNotificationStore((s) => s.markRead);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
-  const showShortcuts = useNotificationStore((s) => s.showShortcuts);
-  const setShowShortcuts = useNotificationStore((s) => s.setShowShortcuts);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -136,7 +134,7 @@ export const TopBar = memo(function TopBar() {
   const navItem = NAV.find((n) => n.id === current);
   const pageLabel = pageLabelKey ? t(pageLabelKey) : navItem ? t(`nav.${navItem.id}`) : '';
 
-  const btnBase: React.CSSProperties = { width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: 18, border: 'none', background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s ease', flexShrink: 0 };
+  const btnBase: React.CSSProperties = { width: 36, height: 36, minWidth: 36, minHeight: 36, borderRadius: 18, border: 'none', background: 'transparent', color: C.sub, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', position: 'relative', transition: 'background 0.15s cubic-bezier(0.2,0.8,0.4,1), transform 0.15s ease', flexShrink: 0 };
 
   const handleBtnHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, entering: boolean) => {
     (e.currentTarget as HTMLButtonElement).style.background = entering ? C.border : 'transparent';
@@ -264,19 +262,6 @@ export const TopBar = memo(function TopBar() {
         {'\uD83D\uDCB0'} {t('topbar.referralCta')}
       </button>
 
-      {/* Keyboard shortcuts hint button */}
-      <button
-        className="tf-topbar-shortcuts"
-        title={t('topbar.shortcutsLabel')}
-        aria-label={t('topbar.shortcuts')}
-        onClick={() => setShowShortcuts(!showShortcuts)}
-        onMouseEnter={(e) => handleBtnHover(e, true)}
-        onMouseLeave={(e) => handleBtnHover(e, false)}
-        style={{ ...btnBase, fontSize: 13, fontWeight: 700 }}
-      >
-        ?
-      </button>
-
       {/* What's New badge */}
       <span className="tf-topbar-whatsnew">
         <WhatsNewBadge onClick={() => setShowWhatsNew(true)} />
@@ -297,7 +282,7 @@ export const TopBar = memo(function TopBar() {
         >
           <BellIcon size={14} color={C.sub} />
           {unreadCount > 0 && (
-            <span style={{
+            <span className="tf-badge-enter" style={{
               position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16,
               borderRadius: 8, background: C.accent, color: '#fff', fontSize: 9,
               fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -310,11 +295,12 @@ export const TopBar = memo(function TopBar() {
 
         {/* Notification dropdown */}
         {bellOpen && (
-          <div style={{
+          <div className="tf-dropdown-enter" style={{
             position: 'absolute', top: 48, right: 0, width: 320,
             maxWidth: 'calc(100vw - 32px)',
-            background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
-            boxShadow: `0 8px 32px ${C.overlay}`, zIndex: Z_INDEX.DROPDOWN, overflow: 'hidden',
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+            boxShadow: `0 12px 40px ${C.overlay}, 0 0 0 1px rgba(255,255,255,0.04)`, zIndex: Z_INDEX.DROPDOWN, overflow: 'hidden',
+            transformOrigin: 'top right',
           }}>
             {/* Header */}
             <div style={{

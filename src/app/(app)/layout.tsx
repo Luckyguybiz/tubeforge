@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const pathname = usePathname();
-  const isEditor = pathname === '/editor';
+  const isEditor = pathname === '/editor' || pathname === '/ai-thumbnails';
   const isOnboarding = pathname === '/onboarding';
 
   const mobileMenuOpen = useMobileMenuStore((s) => s.open);
@@ -73,10 +73,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .tf-sidebar-nav::-webkit-scrollbar-thumb{background:rgba(128,128,128,.18);border-radius:3px}
         .tf-sidebar-nav::-webkit-scrollbar-thumb:hover{background:rgba(128,128,128,.32)}
         .tf-sidebar-nav{scrollbar-gutter:stable}
-        .sc-row{transition:all .12s}.sc-row:hover{background:${C.cardHover}!important}
+        .sc-row{transition:all .15s cubic-bezier(.2,.8,.4,1)}.sc-row:hover{background:${C.cardHover}!important}
         .gen-shimmer{background-image:linear-gradient(90deg,${C.card},${C.borderActive},${C.card});background-size:200% 100%;animation:shimmer 1.8s linear infinite}
         textarea:focus,input:focus{border-color:${C.borderActive}!important}
-        .tf-stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.15);transform:translateY(-1px)}
+        .tf-stat-card{transition:transform .25s cubic-bezier(.2,.8,.4,1),box-shadow .25s ease}
+        .tf-stat-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.18);transform:translateY(-2px)}
+        .tf-project-row{transition:background .15s ease}
         .tf-project-row:hover{background:${C.surface}}
         @media(max-width:768px){
           .tf-sidebar{display:none!important}
@@ -104,6 +106,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .tf-tools-cats{justify-content:flex-start!important;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important;padding-bottom:8px!important}
           .tf-editor-scene-panel{display:none!important}
           .tf-editor-topbar>*{flex-shrink:0}
+          .tf-editor-layout{flex-direction:column!important}
+          .tf-editor-left{width:100%!important;max-height:none!important;border-right:none!important;border-bottom:1px solid ${C.border}!important}
+          .tf-editor-right{min-height:300px!important}
           .tf-shorts-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
           .tf-topbar-breadcrumb{font-size:12px!important}
           .tf-topbar-breadcrumb span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
@@ -124,13 +129,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
         .tf-mobile-backdrop{
           position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;
-          opacity:0;transition:opacity .25s ease;pointer-events:none;
+          opacity:0;transition:opacity .3s ease;pointer-events:none;
+          backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);
         }
-        .tf-mobile-backdrop.open{opacity:1;pointer-events:auto}
+        .tf-mobile-backdrop.open{opacity:1;pointer-events:auto;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
         .tf-mobile-drawer{
           position:fixed;top:0;left:0;bottom:0;width:260px;z-index:9999;
-          transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
-          overflow-y:auto;
+          transform:translateX(-100%);transition:transform .3s cubic-bezier(.2,.8,.4,1);
+          overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,.3);
         }
         .tf-mobile-drawer.open{transform:translateX(0)}
         .tf-bottom-tabs{display:none}
@@ -150,12 +156,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
             gap:2px;border:none;background:transparent;cursor:pointer;
             color:${C.dim};font-size:10px;font-weight:600;font-family:inherit;
-            padding:4px 0;transition:color .15s;
+            padding:4px 0;transition:color .2s cubic-bezier(.2,.8,.4,1),transform .15s ease;
             -webkit-tap-highlight-color:transparent;
             min-height:44px;
           }
+          .tf-bottom-tab:active{transform:scale(0.92)}
           .tf-bottom-tab.active{color:${C.accent}}
-          .tf-bottom-tab svg{transition:color .15s;display:block;vertical-align:middle}
+          .tf-bottom-tab svg{transition:color .2s,transform .2s cubic-bezier(.2,.8,.4,1);display:block;vertical-align:middle}
+          .tf-bottom-tab.active svg{transform:scale(1.1)}
           .tf-main-content{padding-bottom:80px!important}
         }
       `}</style>
@@ -166,57 +174,51 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <>
           <a href="#main-content" className="skip-to-content">{t('a11y.skipToContent')}</a>
           <div style={{ width: '100%', height: '100dvh', background: C.bg, fontFamily: 'var(--font-sans),sans-serif', color: C.text, display: 'flex', overflow: 'hidden' }}>
-            {!isEditor && <div className="tf-sidebar"><Sidebar /></div>}
+            <div className="tf-sidebar"><Sidebar /></div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <TopBar />
-              {isEditor ? (
-                <main id="main-content" role="main" tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</main>
-              ) : (
-                <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
-              )}
+              <main id="main-content" role="main" tabIndex={-1} className="tf-main-content" style={{ flex: 1, overflow: 'auto', padding: isEditor ? 0 : 28, minHeight: 0, transition: 'padding 0.2s ease', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>{children}</main>
             </div>
           </div>
 
           {/* Mobile sidebar drawer */}
-          {!isEditor && (
-            <>
-              <div
-                className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
-                onClick={handleBackdropClick}
-                aria-hidden="true"
-              />
-              <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
-                {/* Close button */}
-                <button
-                  aria-label="Close menu"
-                  onClick={closeMobileMenu}
-                  style={{
-                    position: 'absolute',
-                    top: 12,
-                    right: 12,
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    border: 'none',
-                    background: 'rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontSize: 18,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                  }}
-                >
-                  &times;
-                </button>
-                <Sidebar />
-              </div>
-            </>
-          )}
+          <>
+            <div
+              className={`tf-mobile-backdrop${mobileMenuOpen ? ' open' : ''}`}
+              onClick={handleBackdropClick}
+              aria-hidden="true"
+            />
+            <div className={`tf-mobile-drawer${mobileMenuOpen ? ' open' : ''}`}>
+              {/* Close button */}
+              <button
+                aria-label="Close menu"
+                onClick={closeMobileMenu}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10,
+                }}
+              >
+                &times;
+              </button>
+              <Sidebar />
+            </div>
+          </>
 
           {/* Mobile bottom tab bar */}
-          {!isEditor && <MobileBottomTabs pathname={pathname} C={C} t={t} />}
+          <MobileBottomTabs pathname={pathname} C={C} t={t} />
         </>
       )}
 

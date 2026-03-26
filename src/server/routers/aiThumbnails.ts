@@ -11,6 +11,58 @@ import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { fal } from '@fal-ai/client';
+import sharp from 'sharp';
+import fsPromises from 'node:fs/promises';
+import pathModule from 'node:path';
+
+/* ────────────────────────────────────────────────────────
+   Text overlay helper — renders text on image via Sharp
+   ──────────────────────────────────────────────────────── */
+
+async function overlayTextOnImage(imageUrl: string, text: string, format: '16:9' | '9:16'): Promise<Buffer> {
+  // Download image
+  const imgRes = await fetch(imageUrl);
+  const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+
+  const meta = await sharp(imgBuf).metadata();
+  const w = meta.width || (format === '16:9' ? 1792 : 1024);
+  const h = meta.height || (format === '16:9' ? 1024 : 1792);
+
+  // Calculate font size based on image dimensions and text length
+  const maxFontSize = Math.round(w * 0.08);
+  const minFontSize = Math.round(w * 0.04);
+  const fontSize = Math.max(minFontSize, Math.min(maxFontSize, Math.round(w * 0.07 * (12 / Math.max(text.length, 1)))));
+
+  // Escape XML entities
+  const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // SVG with bold text, outline stroke, and drop shadow
+  const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.7"/>
+      </filter>
+    </defs>
+    <text
+      x="50%" y="${Math.round(h * 0.82)}"
+      text-anchor="middle"
+      font-family="Arial Black, Impact, sans-serif"
+      font-size="${fontSize}"
+      font-weight="900"
+      fill="#FFFFFF"
+      stroke="#000000"
+      stroke-width="${Math.round(fontSize * 0.08)}"
+      paint-order="stroke"
+      filter="url(#shadow)"
+      letter-spacing="2"
+    >${safeText}</text>
+  </svg>`;
+
+  return sharp(imgBuf)
+    .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+    .png()
+    .toBuffer();
+}
 
 /* ────────────────────────────────────────────────────────
    Replicate API helpers (FLUX Schnell + face swap)
@@ -316,10 +368,12 @@ export const aiThumbnailsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      const useReplicate = !!env.REPLICATE_API_TOKEN;
-      const useFal = !useReplicate && !!env.FAL_KEY;
+      // DALL-E 3 is primary — best text rendering + prompt adherence for YouTube thumbnails
+      const useDallE = !!env.OPENAI_API_KEY;
+      const useReplicate = !useDallE && !!env.REPLICATE_API_TOKEN;
+      const useFal = !useDallE && !useReplicate && !!env.FAL_KEY;
 
-      if (!useReplicate && !useFal && !env.OPENAI_API_KEY) {
+      if (!useDallE && !useReplicate && !useFal) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Image generation service is temporarily unavailable. Please try again later.',
@@ -336,8 +390,8 @@ export const aiThumbnailsRouter = router({
       });
       const plan = user?.plan ?? 'FREE';
 
-      // Check 9:16 format (PRO+ only)
-      if (input.format === '9:16' && plan === 'FREE') {
+      // 9:16 format — unlocked for all users during testing
+      if (false && input.format === '9:16' && plan === 'FREE') {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Vertical (9:16) format is available on Pro and Studio plans. Please upgrade.',
@@ -345,8 +399,8 @@ export const aiThumbnailsRouter = router({
       }
 
       // Check count limit per plan
-      const maxCount = getAiThumbnailLimit('multiGen', plan);
-      const actualCount = Math.min(input.count, maxCount);
+      // Unlocked for testing — all users can generate 1-3
+      const actualCount = Math.min(input.count, 3);
 
       // Check daily generation limit
       const todayCount = await countTodayGenerations(userId, ctx.db);
@@ -383,25 +437,148 @@ export const aiThumbnailsRouter = router({
       const results: Array<{ url: string; id: string; revisedPrompt?: string }> = [];
       let failedCount = 0;
 
-      if (useReplicate) {
+      // Extract text overlay from prompt (text in «», "", ** **, or after "текст:", "text:")
+      const textOverlayMatches = input.prompt.match(/[«""]([^»""]+)[»""]|\*\*([^*]+)\*\*|(?:текст|text)[:\s]+['"]?([^'".,!]+)['"]?/gi);
+      let overlayText = '';
+      if (textOverlayMatches) {
+        // Get the text content from the first match
+        const raw = textOverlayMatches[0];
+        overlayText = raw.replace(/[«»""**]/g, '').replace(/^(?:текст|text)[:\s]+['"]?/i, '').replace(/['"]?$/, '').trim();
+      }
+
+      // Remove text instructions from prompt for image gen (DALL-E can't render text well)
+      let cleanPrompt = input.prompt;
+      if (overlayText) {
+        cleanPrompt = cleanPrompt
+          .replace(/[«""][^»""]+[»""]|\*\*[^*]+\*\*/g, '')
+          .replace(/(?:текст|text)[:\s]+['"]?[^'".,!]+['"]?/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+      }
+
+      const useNanoBanana = !!env.GOOGLE_AI_API_KEY;
+
+      if (useNanoBanana) {
+        // ── Nano Banana 2 (Gemini Image Generation) ──
+        const formatInstruction = input.format === '9:16'
+          ? 'Generate in VERTICAL 9:16 portrait format (1080x1920 pixels). The image MUST be taller than wide.'
+          : 'Generate in HORIZONTAL 16:9 landscape format (1920x1080 pixels). The image MUST be wider than tall.';
+
+        const nanoBananaPrompt =
+          `Generate a professional YouTube thumbnail image.
+
+USER REQUEST: ${input.prompt}
+
+STYLE: ${styleDesc || 'Professional, cinematic'}
+
+RULES:
+1. ${formatInstruction}
+2. If the user's text contains words in quotes, bold (**text**), or explicitly asks for text on the image — render that EXACT text as large, bold, stylish 3D typography with shadows, glow, and perspective effects. The text is part of the image, NOT an overlay.
+3. DO NOT translate any text from the prompt. If text is in Russian — write it in Russian. If in English — in English. Render EXACTLY as written.
+4. Follow the EXACT art style requested. 2D/cartoon → 2D style. Realistic → photorealistic. Anime → anime style.
+5. Vibrant saturated colors, strong contrast, cinematic lighting, clear focal point.
+6. Ultra high quality, eye-catching, click-worthy YouTube thumbnail.`;
+
+        for (let i = 0; i < actualCount; i++) {
+          try {
+            // Build multimodal parts: text prompt + optional photo reference
+            const contentParts: any[] = [{ text: nanoBananaPrompt }];
+
+            // If user uploaded a photo for face/style reference — include it
+            if (input.photoUrl) {
+              try {
+                console.log('[aiThumbnails] Fetching user photo for Gemini multimodal input...');
+                const photoRes = await fetch(input.photoUrl);
+                if (photoRes.ok) {
+                  const photoBuf = Buffer.from(await photoRes.arrayBuffer());
+                  const photoMime = photoRes.headers.get('content-type') || 'image/jpeg';
+                  contentParts.unshift({
+                    inlineData: {
+                      mimeType: photoMime,
+                      data: photoBuf.toString('base64'),
+                    },
+                  });
+                  contentParts.push({
+                    text: 'Use the face and style from the uploaded photo above. The generated person should have THIS EXACT face. If the photo is in 2D/cartoon style, generate the thumbnail in the SAME 2D/cartoon style.',
+                  });
+                }
+              } catch (photoErr) {
+                console.error('[aiThumbnails] Failed to fetch user photo:', photoErr);
+              }
+            }
+
+            console.log('[aiThumbnails] Generating with Nano Banana 2, format:', input.format, 'hasPhoto:', !!input.photoUrl);
+            const nbRes = await fetchWithTimeout(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${env.GOOGLE_AI_API_KEY}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: contentParts }],
+                  generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE'],
+                  },
+                }),
+              },
+              120000,
+            );
+
+            if (!nbRes.ok) {
+              const errText = await nbRes.text().catch(() => 'unknown');
+              console.error('[aiThumbnails] Nano Banana error:', nbRes.status, errText);
+              failedCount++;
+              continue;
+            }
+
+            const nbJson = await nbRes.json() as any;
+            const parts = nbJson?.candidates?.[0]?.content?.parts || [];
+            const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/'));
+
+            if (!imagePart?.inlineData?.data) {
+              console.error('[aiThumbnails] Nano Banana returned no image, parts:', parts.map((p: any) => Object.keys(p)));
+              failedCount++;
+              continue;
+            }
+
+            // Save image to file and serve via API route
+            const thumbsDir = pathModule.join(process.cwd(), '.gen-thumbs');
+            await fsPromises.mkdir(thumbsDir, { recursive: true });
+            const fileName = `nb_${Date.now()}_${i}.png`;
+            await fsPromises.writeFile(
+              pathModule.join(thumbsDir, fileName),
+              Buffer.from(imagePart.inlineData.data, 'base64'),
+            );
+            const imageUrl = `/api/gen-thumbs?id=${fileName}`;
+            console.log('[aiThumbnails] Nano Banana generated successfully');
+
+            const gen = await ctx.db.thumbnailGeneration.create({
+              data: {
+                userId,
+                prompt: input.prompt,
+                style: input.style,
+                format: input.format,
+                imageUrl,
+                photoUrl: input.photoUrl ?? null,
+              },
+              select: { id: true, imageUrl: true },
+            });
+
+            // Face/style is already handled by Gemini multimodal input — no separate face swap needed
+
+            results.push({ url: gen.imageUrl, id: gen.id });
+          } catch (err) {
+            console.error('[aiThumbnails] Nano Banana exception:', err);
+            failedCount++;
+          }
+        }
+      } else if (useReplicate) {
         // ── Replicate FLUX Schnell ──
         const repSize = input.format === '9:16'
           ? { w: 768, h: 1344 }
           : { w: 1344, h: 768 };
 
         const fluxPrompt =
-          `Professional YouTube thumbnail photo. ${input.prompt}.${contextParts}
-
-Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
-Dramatic cinematic side lighting, strong contrast, deep shadows.
-Extremely vibrant saturated colors, color graded like a Hollywood movie.
-Single clear focal point with shallow depth of field and creamy bokeh background.
-Person showing intense emotional expression, looking directly at camera.
-Composition leaves empty space on the right side for text overlay.
-DO NOT include any text, letters, words, or watermarks in the image.
-${styleDesc}
-Professional YouTube thumbnail that would get millions of clicks.
-8K, hyper-detailed, magazine quality.`.slice(0, 4000);
+          `${input.prompt}. ${styleDesc} Vibrant YouTube thumbnail, high contrast. No text or watermarks.`.slice(0, 2000);
 
         for (let i = 0; i < actualCount; i++) {
           try {
@@ -410,8 +587,11 @@ Professional YouTube thumbnail that would get millions of clicks.
             // Face swap if photo provided
             if (input.photoUrl && imageUrl) {
               try {
+                console.log('[aiThumbnails] Attempting face swap with photo:', input.photoUrl.slice(0, 80));
                 imageUrl = await replicateFaceSwap(imageUrl, input.photoUrl);
-              } catch {
+                console.log('[aiThumbnails] Face swap succeeded');
+              } catch (faceErr) {
+                console.error('[aiThumbnails] Face swap FAILED:', faceErr);
                 // Face swap failed, use original image
               }
             }
@@ -445,33 +625,42 @@ Professional YouTube thumbnail that would get millions of clicks.
           ? { width: 768, height: 1344 }
           : { width: 1344, height: 768 };
 
-        const fluxPrompt =
-          `Professional YouTube thumbnail photo. ${input.prompt}.${contextParts}
+        // Use Ideogram v3 for better text rendering and prompt following
+        const ideogramPrompt =
+          `${input.prompt}. ${styleDesc} Professional YouTube thumbnail, vibrant colors, high contrast, cinematic.`.slice(0, 2000);
 
-Ultra photorealistic, shot on Canon EOS R5 with 85mm f/1.4 lens.
-Dramatic cinematic side lighting, strong contrast, deep shadows.
-Extremely vibrant saturated colors, color graded like a Hollywood movie.
-Single clear focal point with shallow depth of field and creamy bokeh background.
-Person showing intense emotional expression, looking directly at camera.
-Composition leaves empty space on the right side for text overlay.
-DO NOT include any text, letters, words, or watermarks in the image.
-${styleDesc}
-Professional YouTube thumbnail that would get millions of clicks.
-8K, hyper-detailed, magazine quality.`.slice(0, 4000);
+        const ideogramAspect = input.format === '9:16' ? '9:16' : '16:9';
 
         for (let i = 0; i < actualCount; i++) {
           try {
-            const falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
-              input: {
-                prompt: fluxPrompt,
-                image_size: falSize,
-                num_images: 1,
-                safety_tolerance: '5',
-              },
-              timeout: 90_000,
-            }) as { data: { images: Array<{ url: string }> } };
+            // Try Ideogram first (better text + prompt adherence)
+            let falResult: any;
+            try {
+              falResult = await fal.subscribe('fal-ai/ideogram/v3', {
+                input: {
+                  prompt: ideogramPrompt,
+                  aspect_ratio: ideogramAspect,
+                  style: 'realistic' as any,
+                  ...(input.photoUrl ? { image_url: input.photoUrl, strength: 0.6 } : {}),
+                } as any,
+                timeout: 120_000,
+              });
+            } catch (ideogramErr) {
+              console.error('[aiThumbnails] Ideogram failed, falling back to FLUX:', ideogramErr);
+              // Fallback to FLUX Pro
+              falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
+                input: {
+                  prompt: ideogramPrompt,
+                  image_size: falSize,
+                  num_images: 1,
+                  safety_tolerance: '5',
+                  ...(input.photoUrl ? { image_url: input.photoUrl, strength: 0.65 } : {}),
+                } as any,
+                timeout: 90_000,
+              });
+            }
 
-            const imageUrl = falResult.data?.images?.[0]?.url;
+            const imageUrl = falResult?.data?.images?.[0]?.url || falResult?.images?.[0]?.url;
             if (!imageUrl) {
               failedCount++;
               continue;
@@ -790,6 +979,7 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       z.object({
         topic: z.string().max(500).optional(),
         youtubeUrl: z.string().url().optional(),
+        locale: z.enum(['en', 'ru', 'kk', 'es']).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -813,17 +1003,25 @@ Be specific and actionable. Score realistically — most thumbnails are 5-8.`,
       }
 
       const topicText = input.topic || context || 'trending YouTube content';
+      const locale = input.locale ?? 'en';
+      const langInstruction = locale === 'ru'
+        ? 'Respond in Russian (русский язык). '
+        : locale === 'kk'
+        ? 'Respond in Kazakh (қазақ тілі). '
+        : locale === 'es'
+        ? 'Respond in Spanish (español). '
+        : '';
       const systemPrompt =
-        'You are an expert YouTube thumbnail designer who understands what makes thumbnails go viral. ' +
-        'You generate creative, specific, and actionable thumbnail concepts. Respond with a JSON array of strings.';
+        'You are an expert YouTube thumbnail designer who understands what makes thumbnails get millions of clicks. ' +
+        `You generate creative, specific visual descriptions for YouTube thumbnail images. ${langInstruction}Respond with a JSON object.`;
       const userPrompt =
-        `Generate 5 creative and viral YouTube thumbnail concepts for: "${topicText}".${context ? ` Video context: ${context}` : ''}\n\n` +
-        'Each concept should include:\n' +
-        '- A brief visual description (what the thumbnail shows)\n' +
-        '- Suggested text overlay (if any)\n' +
-        '- Color scheme suggestion\n' +
-        '- Emotional hook (what makes it click-worthy)\n\n' +
-        'Return ONLY a JSON object: { "ideas": ["concept 1", "concept 2", ...] }';
+        `Generate 5 creative YouTube THUMBNAIL (preview image/обложка) ideas for: "${topicText}".${context ? ` Video context: ${context}` : ''}\n\n` +
+        'Each idea must be a ready-to-use prompt for an AI image generator to create a YouTube thumbnail. ' +
+        'Describe: person/character (expression, pose, clothing), background (colors, setting), text overlay (exact words to show on thumbnail), composition. ' +
+        'Every idea MUST include bold text overlay suggestion for the thumbnail. ' +
+        'Focus on what the THUMBNAIL IMAGE looks like — high contrast, vibrant, clickable. NOT video content. ' +
+        `${langInstruction}` +
+        'Return ONLY a JSON object: { "ideas": ["idea 1", "idea 2", ...] }';
 
       let res: Response;
       try {

@@ -93,6 +93,9 @@ export const env = {
   // Replicate (FLUX Schnell / face swap — optional, falls back to fal.ai / DALL-E)
   REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN ?? '',
 
+  // Google AI Studio (Nano Banana 2 — image generation)
+  GOOGLE_AI_API_KEY: process.env.GOOGLE_AI_API_KEY ?? '',
+
   // Error monitoring (Sentry) — disabled when not set
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
 } as const;

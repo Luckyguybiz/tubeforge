@@ -323,6 +323,7 @@ const Tooltip = memo(function Tooltip({
           boxShadow: `0 4px 16px rgba(0,0,0,.3), 0 0 0 1px ${TC.border}`,
           backdropFilter: 'blur(12px)',
           letterSpacing: '-.01em',
+          animation: 'tf-tooltip-in 0.15s cubic-bezier(0.2, 0.8, 0.4, 1)',
         }}
       >
         {label}
@@ -382,7 +383,7 @@ function UsageProgressBar({
           borderRadius: 2,
           width: isInfinite ? '0%' : `${pct}%`,
           background: barColor,
-          transition: 'width .4s ease, background .3s ease',
+          transition: 'width .5s cubic-bezier(.2,.8,.4,1), background .3s ease',
         }} />
       </div>
     </div>
@@ -560,7 +561,7 @@ function ProfileDropdown({
           : '0 8px 32px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)',
         zIndex: Z_INDEX.DROPDOWN,
         overflow: 'hidden',
-        animation: 'none',
+        animation: 'tf-popover-up 0.2s cubic-bezier(0.2, 0.8, 0.4, 1)',
       }}
     >
       {/* User name + email */}
@@ -846,7 +847,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
           textAlign: 'left',
           fontFamily: 'inherit',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          transition: 'all .2s ease',
+          transition: 'all .2s cubic-bezier(0.2, 0.8, 0.4, 1)',
           letterSpacing: isActive ? '-.01em' : '0',
           overflow: 'visible',
         }}
@@ -854,6 +855,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
         {/* Active indicator bar */}
         {isActive && !collapsed && (
           <div
+            className="tf-nav-indicator"
             style={{
               position: 'absolute',
               left: 0,
@@ -863,7 +865,6 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
               height: 20,
               borderRadius: 2,
               background: '#6366f1',
-              transition: 'all .2s ease',
             }}
           />
         )}
@@ -887,6 +888,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
 
         {!collapsed && (
           <span
+            className="tf-sidebar-text-enter"
             style={{
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -997,7 +999,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
         height: '100%',
         minHeight: 0,
         overflow: 'hidden',
-        transition: 'width 0.2s ease',
+        transition: 'width 0.25s cubic-bezier(0.2, 0.8, 0.4, 1)',
         position: 'relative',
       }}
     >
@@ -1044,7 +1046,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
             TF
           </div>
           {!collapsed && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div className="tf-sidebar-text-enter" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <span
                 style={{
                   fontWeight: 700,

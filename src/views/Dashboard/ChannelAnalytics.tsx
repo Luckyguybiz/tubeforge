@@ -53,7 +53,7 @@ const MOCK_KEYWORD = {
   growth: 153,
   vph: 2400,
   trend: generateTrendData(),
-  isPro: true,
+  isPro: false, // Unlocked for testing
 };
 
 const MOCK_COMPETITORS = [

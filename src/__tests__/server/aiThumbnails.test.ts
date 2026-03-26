@@ -17,16 +17,16 @@ vi.mock('@/lib/constants', () => ({
   },
   getAiThumbnailLimit: (key: string, plan: string) => {
     const limits: Record<string, Record<string, number>> = {
-      dailyGenerations: { FREE: 3, PRO: 100, STUDIO: Infinity },
-      multiGen: { FREE: 1, PRO: 2, STUDIO: 3 },
-      faces: { FREE: 3, PRO: 10, STUDIO: 20 },
+      dailyGenerations: { FREE: 99999, PRO: 99999, STUDIO: Infinity },
+      multiGen: { FREE: 3, PRO: 3, STUDIO: 3 },
+      faces: { FREE: 20, PRO: 20, STUDIO: 20 },
     };
     return limits[key]?.[plan] ?? limits[key]?.FREE ?? 1;
   },
   getPlanLimits: (plan: string) => {
     const plans: Record<string, { aiGenerations: number }> = {
-      FREE: { aiGenerations: 5 },
-      PRO: { aiGenerations: 100 },
+      FREE: { aiGenerations: 99999 },
+      PRO: { aiGenerations: 99999 },
       STUDIO: { aiGenerations: Infinity },
     };
     return plans[plan] ?? plans.FREE;
@@ -66,7 +66,7 @@ async function checkRate(userId: string, endpoint: string, limit: number) {
   if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: RATE_LIMIT_ERROR });
 }
 
-const AI_PLAN_LIMITS: Record<string, number> = { FREE: 5, PRO: 100, STUDIO: Infinity };
+const AI_PLAN_LIMITS: Record<string, number> = { FREE: 99999, PRO: 99999, STUDIO: Infinity };
 
 const aiThumbnailsRouter = t.router({
   generate: protectedProcedure
@@ -237,8 +237,8 @@ describe('aiThumbnails router', () => {
   });
 
   it('generate enforces plan limits', async () => {
-    // User at FREE plan with 5 AI usages (at limit)
-    db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 5, aiResetAt: new Date() });
+    // User at FREE plan with 99999 AI usages (at limit)
+    db.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 99999, aiResetAt: new Date() });
 
     await expect(
       caller.generate({ prompt: 'test thumbnail concept' }),
@@ -247,7 +247,7 @@ describe('aiThumbnails router', () => {
       createCaller(
         (() => {
           const d = makeDb();
-          d.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 5, aiResetAt: new Date() });
+          d.user.findUnique.mockResolvedValue({ plan: 'FREE', aiUsage: 99999, aiResetAt: new Date() });
           return d;
         })(),
         makeSession(),

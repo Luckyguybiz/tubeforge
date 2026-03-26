@@ -54,7 +54,7 @@ function sceneToCreatePayload(projectId: string, scene: Scene) {
     projectId,
     prompt: scene.prompt,
     label: scene.label,
-    model: scene.model as 'turbo' | 'standard' | 'pro' | 'cinematic',
+    model: scene.model as 'turbo' | 'standard' | 'pro' | 'cinematic' | 'runway-gen3-turbo' | 'runway-gen3' | 'kling-v1' | 'kling-v1-pro',
     duration: scene.duration,
     metadata: { ck: scene.ck, sf: scene.sf, ef: scene.ef, enh: scene.enh, snd: scene.snd, chars: scene.chars, transition: scene.transition, voiceoverUrl: scene.voiceoverUrl, voiceoverStatus: scene.voiceoverStatus },
   };

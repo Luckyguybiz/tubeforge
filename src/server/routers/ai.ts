@@ -398,7 +398,7 @@ Return ONLY valid JSON, no markdown.`,
   generateVideo: protectedProcedure
     .input(z.object({
       prompt: z.string().min(1).max(1000),
-      model: z.enum(['turbo', 'standard', 'pro', 'cinematic']).default('standard'),
+      model: z.enum(['turbo', 'standard', 'pro', 'cinematic', 'runway-gen3-turbo', 'runway-gen3', 'kling-v1', 'kling-v1-pro']).default('runway-gen3-turbo'),
       duration: z.number().min(1).max(30).default(5),
     }))
     .mutation(async ({ ctx, input }) => {
