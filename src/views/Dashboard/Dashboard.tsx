@@ -399,6 +399,7 @@ function LockedAnalyticsPreview({
               opacity: 0.4,
               filter: 'blur(2px)',
               transformOrigin: 'bottom',
+              animation: `tfBarGrow 0.6s ease-out ${i * 0.05}s both`,
             }} />
           ))}
         </div>

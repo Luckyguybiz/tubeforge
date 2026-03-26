@@ -818,6 +818,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
         aria-label={label}
         aria-current={isActive ? 'page' : undefined}
         data-tour={tourId}
+        data-no-scale
         onClick={() => navigate(id)}
         onMouseEnter={() => handleMouseEnter(id)}
         onMouseLeave={handleMouseLeave}
@@ -853,7 +854,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
         }}
       >
         {/* Active indicator bar */}
-        {isActive && !collapsed && (
+        {!collapsed && (
           <div
             className="tf-nav-indicator"
             style={{
@@ -862,15 +863,18 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
               top: '50%',
               transform: 'translateY(-50%)',
               width: 3,
-              height: 20,
+              height: isActive ? 20 : 0,
               borderRadius: 2,
               background: '#6366f1',
+              transition: 'height .25s cubic-bezier(.4,0,.2,1), opacity .25s ease',
+              opacity: isActive ? 1 : 0,
             }}
           />
         )}
 
         {/* Icon container */}
         <span
+          className="tf-icon-hover"
           style={{
             width: 32,
             height: 32,

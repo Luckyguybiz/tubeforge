@@ -122,12 +122,12 @@ export function UpgradePopupModal({ userPlan }: { userPlan: string }) {
       {/* Backdrop */}
       <div
         onClick={handleClose}
+        className="tf-modal-backdrop"
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.6)',
           zIndex: Z_INDEX.MODAL_BACKDROP,
-          animation: 'tf-popup-fade-in 0.25s ease-out',
         }}
       />
 
@@ -135,6 +135,7 @@ export function UpgradePopupModal({ userPlan }: { userPlan: string }) {
       <div
         role="dialog"
         aria-modal="true"
+        className="tf-modal-dialog"
         style={{
           position: 'fixed',
           top: '50%',
@@ -150,7 +151,6 @@ export function UpgradePopupModal({ userPlan }: { userPlan: string }) {
           padding: '32px 24px 24px',
           boxSizing: 'border-box',
           color: '#fff',
-          animation: 'tf-popup-slide-up 0.3s ease-out',
           boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
         }}
       >

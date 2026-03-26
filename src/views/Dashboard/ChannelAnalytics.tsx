@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useCountUp } from '@/hooks/useCountUp';
 
 /* ── Lazy-load recharts ─────────────────────────────── */
 let rechartsCache: typeof import('recharts') | null = null;
@@ -144,6 +145,16 @@ function ChannelSelector({
   );
 }
 
+/* ── Animated stat number ───────────────────────────── */
+function AnimatedStatValue({ value, color }: { value: number; color: string }) {
+  const animated = useCountUp(value, 900);
+  return (
+    <span className="tf-count-up" style={{ fontSize: 28, fontWeight: 800, color, letterSpacing: '-.03em', lineHeight: 1 }}>
+      {formatNumber(animated)}
+    </span>
+  );
+}
+
 /* ── Progress bar stat card ──────────────────────────── */
 function StatWidget({
   label,
@@ -182,9 +193,7 @@ function StatWidget({
           {label}
         </span>
       </div>
-      <span style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-.03em', lineHeight: 1 }}>
-        {formatNumber(value)}
-      </span>
+      <AnimatedStatValue value={value} color={C.text} />
       <div style={{ width: '100%', height: 6, borderRadius: 3, background: C.surface, overflow: 'hidden' }}>
         <div style={{
           width: `${pct}%`, height: '100%', borderRadius: 3,

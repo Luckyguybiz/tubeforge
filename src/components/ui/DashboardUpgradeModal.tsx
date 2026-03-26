@@ -130,17 +130,19 @@ export function DashboardUpgradeModal() {
       {/* Overlay */}
       <div
         data-testid="modal-overlay"
+        className="tf-modal-backdrop"
         onClick={handleClose}
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.6)',
           zIndex: 9998,
         }}
       />
       {/* Modal */}
       <div
         data-testid="upgrade-modal"
+        className="tf-modal-dialog"
         role="dialog"
         aria-modal="true"
         style={{

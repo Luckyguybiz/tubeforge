@@ -320,6 +320,7 @@ function MobileBottomTabs({
           <button
             key={tab.id}
             className={`tf-bottom-tab${isActive ? ' active' : ''}`}
+            data-no-scale
             onClick={() => router.push(tab.href)}
             aria-current={isActive ? 'page' : undefined}
           >
