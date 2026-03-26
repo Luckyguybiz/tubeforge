@@ -516,7 +516,8 @@ export const ShortsAnalytics = memo(function ShortsAnalytics() {
     return () => clearInterval(timer);
   }, [promoExpires]);
 
-  const isPro = plan === 'PRO' || plan === 'STUDIO' || promoActive;
+  // All users get full analytics access - no plan gating
+  const isPro = true;
 
   const handlePromoSubmit = useCallback(async () => {
     if (!promoInput.trim()) return;
