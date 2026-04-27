@@ -15,7 +15,6 @@ const BrandOrbShowcase = dynamic(() => import('./BrandOrbShowcase'), {
       style={{
         width: '100%',
         height: '100%',
-        minHeight: 200,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -23,12 +22,12 @@ const BrandOrbShowcase = dynamic(() => import('./BrandOrbShowcase'), {
     >
       <div
         style={{
-          width: 140,
-          height: 140,
-          borderRadius: 28,
+          width: '70%',
+          height: '70%',
+          borderRadius: '50%',
           background:
             'radial-gradient(ellipse at center, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0) 70%)',
-          filter: 'blur(18px)',
+          filter: 'blur(14px)',
         }}
       />
     </div>

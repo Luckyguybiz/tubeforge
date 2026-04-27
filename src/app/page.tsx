@@ -313,15 +313,15 @@ export default function LandingPage() {
       <section style={{ padding: "72px 24px 56px", background: BG_PRIMARY, borderTop: `1px solid ${BORDER_SUBTLE}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
           {/* Animated brand eye orb — iridescent eyeball that tracks the
-              cursor across the page. Sits above the social-proof numbers
-              as the section's visual anchor. Margin sized so the violet
-              floor glow doesn't reach the headline below. */}
+              cursor across the page. Square container so the canvas
+              aspect matches the sphere; floor glow stays bounded
+              inside the canvas. */}
           <div
             aria-hidden
             style={{
               width: 96,
-              height: 110,
-              margin: "0 auto 28px",
+              height: 96,
+              margin: "0 auto 32px",
               padding: 0,
             }}
           >

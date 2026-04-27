@@ -60,7 +60,7 @@ function EyeOrb() {
   });
 
   return (
-    <group ref={eye} position={[0, 0.35, 0]}>
+    <group ref={eye} position={[0, 0.15, 0]}>
       {/* Eyeball — indigo-tinted iridescent surface. Body colour set to
           a pale indigo so the iridescence ramps through the brand
           family (indigo → violet → soft pink) instead of the full
@@ -142,11 +142,10 @@ export default function BrandOrbShowcase() {
       style={{
         width: '100%',
         height: '100%',
-        minHeight: 200,
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 9], fov: 22 }}
+        camera={{ position: [0, 0, 6.2], fov: 22 }}
         shadows
         gl={{ alpha: true, antialias: true }}
         dpr={[1, 2]}
@@ -154,15 +153,15 @@ export default function BrandOrbShowcase() {
       >
         <ambientLight intensity={0.2} />
         <EyeOrb />
-        {/* Tighter floor shadow — pushed up close to the sphere so the
-            violet glow stays bounded inside the canvas and never bleeds
-            into the headline below it. */}
+        {/* Tighter floor shadow — kept close under the sphere with a
+            small footprint so the violet glow doesn't extend past the
+            canvas edges or leak into surrounding text. */}
         <ContactShadows
-          opacity={0.35}
-          scale={2.2}
+          opacity={0.3}
+          scale={1.9}
           blur={2.6}
-          far={1.4}
-          position={[0, -0.7, 0]}
+          far={1.2}
+          position={[0, -0.95, 0]}
           color="#7c3aed"
         />
         {/* Lighting tuned for iridescence — many small angled lights
