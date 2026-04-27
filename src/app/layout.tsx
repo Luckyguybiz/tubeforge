@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: 'AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer, analytics, and free tools.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://tubeforge.co'),
   applicationName: 'TubeForge',
-  keywords: ['YouTube', 'AI video editor', 'thumbnail generator', 'YouTube SEO', 'video creator', 'TubeForge', 'YouTube tools'],
+  keywords: ['YouTube', 'AI video editor', 'thumbnail generator', 'YouTube SEO', 'video creator', 'TubeForge', 'YouTube tools', 'AI video generation', 'Kling AI', 'Sora video', 'image to video', 'text to video', 'YouTube thumbnail maker'],
   authors: [{ name: 'TubeForge', url: 'https://tubeforge.co' }],
   creator: 'TubeForge',
   publisher: 'TubeForge',
@@ -52,11 +52,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/favicon.ico?v=2', sizes: '32x32' },
-      { url: '/favicon.svg?v=2', type: 'image/svg+xml' },
+      { url: '/favicon.ico?v=4', sizes: '32x32' },
+      { url: '/favicon.svg?v=4', type: 'image/svg+xml' },
     ],
-    shortcut: '/favicon.svg?v=2',
-    apple: '/apple-touch-icon.png?v=2',
+    shortcut: '/favicon.svg?v=4',
+    apple: '/apple-touch-icon.png?v=4',
   },
 };
 
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="TubeForge" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" />
         {/* Preconnect to external origins for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -90,6 +90,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://images.pexels.com" />
         <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  name: 'TubeForge',
+                  url: 'https://tubeforge.co',
+                  logo: 'https://tubeforge.co/favicon.svg',
+                  description: 'AI-powered platform for YouTube creators',
+                  foundingDate: '2024',
+                },
+                {
+                  '@type': 'SoftwareApplication',
+                  name: 'TubeForge',
+                  url: 'https://tubeforge.co',
+                  applicationCategory: 'MultimediaApplication',
+                  operatingSystem: 'Web',
+                  offers: [
+                    { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
+                    { '@type': 'Offer', name: 'Pro', price: '12', priceCurrency: 'USD', billingIncrement: 'P1M' },
+                    { '@type': 'Offer', name: 'Studio', price: '30', priceCurrency: 'USD', billingIncrement: 'P1M' },
+                  ],
+                  featureList: 'AI Video Generation, AI Thumbnails, SEO Metadata, YouTube Upload, 7 AI Video Models, Image-to-Video',
+                },
+              ],
+            }),
+          }}
+        />
         {/* Prevent flash of wrong theme: read persisted mode before paint */}
         <script
           dangerouslySetInnerHTML={{

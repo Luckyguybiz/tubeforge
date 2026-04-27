@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import PlatformGlobeIconMount from './PlatformGlobeIconMount';
 
 /* ── Mockup Components ─────────────────────────────────────────── */
 
@@ -322,7 +323,7 @@ const PRODUCTS = [
     label: 'Video Editor',
     icon: '\u{1F3AC}',
     title: 'AI-Powered Video Creation',
-    desc: 'Scene-based video editor with 24+ animation presets. Upload an image, choose a style, and generate animated content for YouTube and TikTok.',
+    desc: 'Scene-based video editor with 7 AI models. Upload an image, choose a style, and generate animated content with Kling, Sora, Runway, Veo.',
     href: '/editor',
     mockup: 'editor',
   },
@@ -339,8 +340,8 @@ const PRODUCTS = [
     id: 'analytics',
     label: 'Analytics',
     icon: '\u{1F4CA}',
-    title: 'YouTube & TikTok Analytics',
-    desc: 'Track your Shorts and TikTok performance. View engagement metrics, trending content, and growth insights.',
+    title: 'YouTube Shorts Analytics',
+    desc: 'Track your Shorts performance. View engagement metrics, trending content, and growth insights.',
     href: '/analytics',
     mockup: 'analytics',
   },
@@ -383,6 +384,18 @@ export function ProductDemo() {
 
   return (
     <section style={{ padding: '80px 20px', maxWidth: 1100, margin: '0 auto' }}>
+      {/* Animated platform globe — visual anchor that introduces the
+          tab-switcher demo, in the spirit of Resend's marketing icons */}
+      <div
+        aria-hidden
+        style={{
+          width: 130,
+          height: 130,
+          margin: '0 auto 24px',
+        }}
+      >
+        <PlatformGlobeIconMount />
+      </div>
       <h2 style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 800, color: '#fff', textAlign: 'center', marginBottom: 8 }}>
         One Platform for Everything YouTube
       </h2>

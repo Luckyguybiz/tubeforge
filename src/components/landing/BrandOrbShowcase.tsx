@@ -20,22 +20,29 @@ import { ContactShadows, Environment, Lightformer } from '@react-three/drei';
 import { useEffect, useRef } from 'react';
 
 const IRIS_DEPTH = 0.96; // distance from eye centre — sits on front surface
-const MAX_LOOK_X = 0.45; // rad, vertical look limit
-const MAX_LOOK_Y = 0.6; // rad, horizontal look limit
-const TRACK_LERP = 0.12; // smoothing factor — lower = lazier eye
+const MAX_LOOK_X = 0.55; // rad, vertical look limit (~31 deg)
+const MAX_LOOK_Y = 0.7; // rad, horizontal look limit (~40 deg)
+const TRACK_LERP = 0.18; // smoothing factor — higher = snappier eye
 
 function EyeOrb() {
   const eye = useRef<THREE.Group>(null!);
-  const target = useRef({ x: 0, y: 0 });
+  const targetWorld = useRef(new THREE.Vector3(0, 0, 5));
+  const smoothedTarget = useRef(new THREE.Vector3(0, 0, 5));
+  const tmpQuat = useRef(new THREE.Quaternion());
+  const tmpEuler = useRef(new THREE.Euler());
 
   useEffect(() => {
     const onPointer = (e: PointerEvent) => {
-      // Normalise to [-1, 1] across the entire viewport so the eye
-      // tracks the cursor anywhere on the page, not just over the canvas.
-      const nx = (e.clientX / window.innerWidth) * 2 - 1;
-      const ny = -((e.clientY / window.innerHeight) * 2 - 1);
-      target.current.x = THREE.MathUtils.clamp(-ny * 0.7, -MAX_LOOK_X, MAX_LOOK_X);
-      target.current.y = THREE.MathUtils.clamp(nx * 1.0, -MAX_LOOK_Y, MAX_LOOK_Y);
+      // Normalise the cursor position to clip-space (-1..1) over the
+      // whole viewport, then project onto a plane in front of the eye.
+      // Using a real world point (not just an Euler magnitude) means the
+      // iris actually points AT the cursor instead of approximating with
+      // independent X/Y rotations.
+      const ndcX = (e.clientX / window.innerWidth) * 2 - 1;
+      const ndcY = -((e.clientY / window.innerHeight) * 2 - 1);
+      // Wide horizontal/vertical span (12 x 7 world units at z = 5)
+      // gives the eye plenty of "reach" before the lookAt clamp kicks in.
+      targetWorld.current.set(ndcX * 12, ndcY * 7, 5);
     };
     window.addEventListener('pointermove', onPointer);
     return () => window.removeEventListener('pointermove', onPointer);
@@ -43,16 +50,19 @@ function EyeOrb() {
 
   useFrame(() => {
     if (!eye.current) return;
-    eye.current.rotation.x = THREE.MathUtils.lerp(
-      eye.current.rotation.x,
-      target.current.x,
-      TRACK_LERP,
-    );
-    eye.current.rotation.y = THREE.MathUtils.lerp(
-      eye.current.rotation.y,
-      target.current.y,
-      TRACK_LERP,
-    );
+    // Smoothly chase the world-space target (lerp on the target, not the
+    // rotation, so we maintain proper 3D angles end-to-end).
+    smoothedTarget.current.lerp(targetWorld.current, TRACK_LERP);
+    // Build a lookAt rotation from the eye centre toward the smoothed
+    // target, then clamp via Euler decomposition so the iris never rolls
+    // past anatomical limits.
+    eye.current.lookAt(smoothedTarget.current);
+    tmpQuat.current.copy(eye.current.quaternion);
+    tmpEuler.current.setFromQuaternion(tmpQuat.current, 'YXZ');
+    tmpEuler.current.x = THREE.MathUtils.clamp(tmpEuler.current.x, -MAX_LOOK_X, MAX_LOOK_X);
+    tmpEuler.current.y = THREE.MathUtils.clamp(tmpEuler.current.y, -MAX_LOOK_Y, MAX_LOOK_Y);
+    tmpEuler.current.z = 0; // never roll the eye
+    eye.current.quaternion.setFromEuler(tmpEuler.current);
   });
 
   return (
@@ -142,7 +152,7 @@ export default function BrandOrbShowcase() {
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 4.6], fov: 28 }}
+        camera={{ position: [0, 0, 6.2], fov: 26 }}
         shadows
         gl={{ alpha: true, antialias: true }}
         dpr={[1, 2]}

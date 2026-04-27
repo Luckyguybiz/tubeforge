@@ -318,9 +318,9 @@ export default function LandingPage() {
           <div
             aria-hidden
             style={{
-              width: 180,
-              height: 180,
-              margin: "0 auto 32px",
+              width: 140,
+              height: 140,
+              margin: "0 auto 44px",
             }}
           >
             <BrandOrbShowcaseMount />

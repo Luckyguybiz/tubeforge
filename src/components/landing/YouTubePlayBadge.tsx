@@ -244,7 +244,7 @@ export default function YouTubePlayBadge({
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 6.5], fov: 32 }}
+        camera={{ position: [0, 0, 7.6], fov: 30 }}
         shadows
         gl={{ alpha: true, antialias: true, preserveDrawingBuffer: false }}
         dpr={[1, 2]}
