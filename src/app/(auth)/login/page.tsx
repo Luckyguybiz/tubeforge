@@ -1,33 +1,42 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
-import Link from 'next/link';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 
-/* ---------- Google "G" logo (official multi-color) ---------- */
-const GoogleLogo = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
-    <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-    <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-    <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-    <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-  </svg>
-);
+const RESEND_COOLDOWN_SECONDS = 60;
+const CODE_LENGTH = 6;
+
+type LoginStep = 'email' | 'code';
+
+function isValidEmail(s: string): boolean {
+  // Liberal client-side check; server uses Zod's email validator.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
 
 function LoginContent() {
   const t = useLocaleStore((s) => s.t);
+  const locale = useLocaleStore((s) => s.locale);
   const { status } = useSession();
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+
+  const [step, setStep] = useState<LoginStep>('email');
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeDigits, setCodeDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(''));
+  const [resendIn, setResendIn] = useState(0);
+  const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
-    if (status === 'authenticated') window.location.href = '/dashboard';
-  }, [status]);
+    if (status === 'authenticated') window.location.href = callbackUrl;
+  }, [status, callbackUrl]);
 
-  // Capture referral code from URL to localStorage
+  // Capture referral code from URL to localStorage (existing behavior preserved).
   useEffect(() => {
     try {
       const refCode = searchParams.get('ref');
@@ -35,15 +44,162 @@ function LoginContent() {
     } catch { /* localStorage unavailable */ }
   }, [searchParams]);
 
-  const errorMessage = error
-    ? error === 'OAuthAccountNotLinked'
-      ? t('auth.login.errorLinked')
-      : error === 'OAuthSignin'
-        ? t('auth.login.errorSignin')
-        : error === 'OAuthCallback'
-          ? t('auth.login.errorGeneric')
-          : t('auth.login.errorGeneric')
-    : null;
+  // Resend cooldown countdown.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setInterval(() => {
+      setResendIn((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendIn]);
+
+  // Auto-focus first code input when entering code step.
+  useEffect(() => {
+    if (step === 'code') {
+      const id = setTimeout(() => codeRefs.current[0]?.focus(), 50);
+      return () => clearTimeout(id);
+    }
+  }, [step]);
+
+  const sendCode = useCallback(
+    async (forResend = false) => {
+      const trimmed = email.trim();
+      if (!isValidEmail(trimmed)) {
+        setEmailError(t('auth.login.email.invalid'));
+        return;
+      }
+      setEmailError(null);
+      setSending(true);
+      try {
+        const res = await fetch('/api/auth/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmed, locale }),
+        });
+        if (res.status === 429) {
+          const data = await res.json().catch(() => ({}));
+          const wait = data.retryAt ? Math.max(0, Math.ceil((data.retryAt - Date.now()) / 1000)) : 60;
+          setEmailError(t('auth.login.email.rateLimit'));
+          setResendIn(wait);
+          return;
+        }
+        if (!res.ok) {
+          setEmailError(t('auth.login.email.serverError'));
+          return;
+        }
+        if (!forResend) setStep('code');
+        setCodeDigits(Array(CODE_LENGTH).fill(''));
+        setCodeError(null);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
+      } catch {
+        setEmailError(t('auth.login.email.serverError'));
+      } finally {
+        setSending(false);
+      }
+    },
+    [email, locale, t],
+  );
+
+  const submitCode = useCallback(async () => {
+    const code = codeDigits.join('');
+    if (code.length !== CODE_LENGTH) {
+      setCodeError(t('auth.login.code.incomplete'));
+      return;
+    }
+    setVerifying(true);
+    setCodeError(null);
+    try {
+      // Pre-validate with /verify so we can show a clear error before letting
+      // signIn() consume the code. signIn re-runs the same check server-side.
+      const pre = await fetch('/api/auth/email/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), code }),
+      });
+      if (!pre.ok) {
+        const data = await pre.json().catch(() => ({}));
+        if (pre.status === 429) {
+          setCodeError(t('auth.login.code.tooMany'));
+        } else if (data.error === 'expired_code') {
+          setCodeError(t('auth.login.code.expired'));
+        } else {
+          setCodeError(t('auth.login.code.invalid'));
+        }
+        setVerifying(false);
+        return;
+      }
+      // Hand off to NextAuth. The Credentials provider re-checks the code,
+      // creates/updates the user, and sets the session cookie.
+      const result = await signIn('email-code', {
+        email: email.trim(),
+        code,
+        redirect: false,
+      });
+      if (result?.error) {
+        setCodeError(t('auth.login.code.invalid'));
+        setVerifying(false);
+        return;
+      }
+      window.location.href = callbackUrl;
+    } catch {
+      setCodeError(t('auth.login.code.serverError'));
+      setVerifying(false);
+    }
+  }, [codeDigits, email, callbackUrl, t]);
+
+  const handleDigitChange = (idx: number, value: string) => {
+    // Accept only the last digit if multiple are pasted into a single box.
+    const digits = value.replace(/\D/g, '');
+    if (!digits.length) {
+      const next = [...codeDigits];
+      next[idx] = '';
+      setCodeDigits(next);
+      return;
+    }
+    if (digits.length === 1) {
+      const next = [...codeDigits];
+      next[idx] = digits;
+      setCodeDigits(next);
+      if (idx < CODE_LENGTH - 1) codeRefs.current[idx + 1]?.focus();
+      return;
+    }
+    // Multi-digit paste — distribute starting at this index.
+    const next = [...codeDigits];
+    for (let i = 0; i < digits.length && idx + i < CODE_LENGTH; i++) {
+      next[idx + i] = digits[i];
+    }
+    setCodeDigits(next);
+    const lastFilled = Math.min(idx + digits.length, CODE_LENGTH - 1);
+    codeRefs.current[lastFilled]?.focus();
+  };
+
+  const handleDigitKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !codeDigits[idx] && idx > 0) {
+      codeRefs.current[idx - 1]?.focus();
+    } else if (e.key === 'ArrowLeft' && idx > 0) {
+      codeRefs.current[idx - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && idx < CODE_LENGTH - 1) {
+      codeRefs.current[idx + 1]?.focus();
+    } else if (e.key === 'Enter') {
+      void submitCode();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (/^\d+$/.test(text.replace(/\s/g, ''))) {
+      e.preventDefault();
+      handleDigitChange(0, text);
+    }
+  };
+
+  // Auto-submit when all 6 digits are entered (only if not already verifying).
+  useEffect(() => {
+    if (codeDigits.every((d) => d) && !verifying) {
+      void submitCode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeDigits.join('')]);
 
   if (status === 'loading' || status === 'authenticated') {
     return (
@@ -55,7 +211,6 @@ function LoginContent() {
 
   return (
     <main style={styles.page}>
-      {/* Logo */}
       <div style={styles.logoWrap}>
         <div style={styles.logoIcon}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -65,51 +220,164 @@ function LoginContent() {
         <span style={styles.logoText}>TubeForge</span>
       </div>
 
-      {/* Card */}
       <div style={styles.card}>
-        <h1 style={styles.heading}>{t('auth.login.title')}</h1>
-        <p style={styles.subtitle}>{t('auth.login.subtitle')}</p>
+        {step === 'email' ? (
+          <>
+            <h1 style={styles.heading}>{t('auth.login.title')}</h1>
+            <p style={styles.subtitle}>{t('auth.login.subtitle')}</p>
 
-        {/* Error */}
-        {errorMessage && (
-          <div style={styles.errorBanner}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <circle cx="8" cy="8" r="8" fill="#ff3b30" fillOpacity="0.12" />
-              <path d="M8 4.5v4M8 10.5v.5" stroke="#ff3b30" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span>{errorMessage}</span>
-          </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void sendCode();
+              }}
+            >
+              <label htmlFor="login-email" style={styles.label}>
+                {t('auth.login.email.label')}
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                placeholder={t('auth.login.email.placeholder')}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(null);
+                }}
+                disabled={sending}
+                style={{
+                  ...styles.input,
+                  borderColor: emailError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
+                }}
+                aria-invalid={!!emailError}
+              />
+              {emailError && <p style={styles.fieldError}>{emailError}</p>}
+
+              <button
+                type="submit"
+                disabled={sending}
+                style={{
+                  ...styles.primaryBtn,
+                  opacity: sending ? 0.6 : 1,
+                  cursor: sending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {sending ? <ButtonSpinner /> : t('auth.login.email.send')}
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            <h1 style={styles.heading}>{t('auth.login.code.title')}</h1>
+            <p style={styles.subtitle}>
+              {t('auth.login.code.subtitle')} <strong style={{ color: '#ffffff' }}>{email}</strong>
+            </p>
+
+            {codeError && (
+              <div style={styles.errorBanner} role="alert">
+                <ErrorIcon />
+                <span>{codeError}</span>
+              </div>
+            )}
+
+            <div style={styles.codeRow}>
+              {codeDigits.map((digit, idx) => (
+                <input
+                  key={idx}
+                  ref={(el) => { codeRefs.current[idx] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete={idx === 0 ? 'one-time-code' : 'off'}
+                  pattern="\d*"
+                  maxLength={CODE_LENGTH /* allow paste; we filter in handler */}
+                  value={digit}
+                  onChange={(e) => handleDigitChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleDigitKeyDown(idx, e)}
+                  onPaste={handlePaste}
+                  disabled={verifying}
+                  aria-label={`${t('auth.login.code.digit')} ${idx + 1}`}
+                  style={{
+                    ...styles.codeInput,
+                    borderColor: codeError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
+                  }}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() => void submitCode()}
+              disabled={verifying || codeDigits.some((d) => !d)}
+              style={{
+                ...styles.primaryBtn,
+                marginTop: 20,
+                opacity: verifying || codeDigits.some((d) => !d) ? 0.6 : 1,
+                cursor: verifying || codeDigits.some((d) => !d) ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {verifying ? <ButtonSpinner /> : t('auth.login.code.verify')}
+            </button>
+
+            <div style={styles.codeFooter}>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('email');
+                  setCodeError(null);
+                  setCodeDigits(Array(CODE_LENGTH).fill(''));
+                }}
+                style={styles.linkBtn}
+              >
+                {t('auth.login.code.changeEmail')}
+              </button>
+              <button
+                type="button"
+                onClick={() => void sendCode(true)}
+                disabled={resendIn > 0 || sending}
+                style={{
+                  ...styles.linkBtn,
+                  opacity: resendIn > 0 || sending ? 0.5 : 1,
+                  cursor: resendIn > 0 || sending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {resendIn > 0
+                  ? `${t('auth.login.code.resendIn')} ${resendIn}s`
+                  : t('auth.login.code.resend')}
+              </button>
+            </div>
+          </>
         )}
-
-        {/* Google OAuth */}
-        <button
-          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-          style={styles.googleBtn}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-          }}
-        >
-          <GoogleLogo />
-          {t('auth.login.google')}
-        </button>
       </div>
 
-      {/* Below-card link */}
-      <p style={styles.switchText}>
-        {t('auth.login.noAccount')}{' '}
-        <Link href="/register" style={styles.switchLink}>
-          {t('auth.login.register')}
-        </Link>
-      </p>
-
-      {/* Legal */}
       <p style={styles.legal}>{t('auth.login.consent')}</p>
     </main>
+  );
+}
+
+function ErrorIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }} aria-hidden="true">
+      <circle cx="8" cy="8" r="8" fill="#ff3b30" fillOpacity="0.12" />
+      <path d="M8 4.5v4M8 10.5v.5" stroke="#ff3b30" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ButtonSpinner() {
+  return (
+    <span
+      style={{
+        width: 16,
+        height: 16,
+        border: '2px solid rgba(255,255,255,0.25)',
+        borderTopColor: '#ffffff',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+        display: 'inline-block',
+      }}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -163,7 +431,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 20,
     border: '1px solid rgba(255,255,255,0.06)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-    padding: 40,
+    padding: 'clamp(20px, 5vw, 40px)',
     boxSizing: 'border-box' as const,
     textAlign: 'center' as const,
   },
@@ -194,6 +462,72 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.4,
     textAlign: 'left' as const,
   },
+  label: {
+    display: 'block',
+    fontSize: 13,
+    fontWeight: 500,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 8,
+    textAlign: 'left' as const,
+  },
+  input: {
+    width: '100%',
+    height: 48,
+    padding: '0 16px',
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#ffffff',
+    fontSize: 15,
+    fontFamily: 'inherit',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    transition: 'border-color 0.15s, background 0.15s',
+  },
+  fieldError: {
+    color: '#f87171',
+    fontSize: 12,
+    margin: '6px 0 0',
+    textAlign: 'left' as const,
+  },
+  primaryBtn: {
+    width: '100%',
+    height: 48,
+    marginTop: 16,
+    padding: '0 20px',
+    borderRadius: 12,
+    border: 'none',
+    background: '#6366f1',
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    transition: 'background 0.15s, transform 0.05s',
+    outline: 'none',
+  },
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    margin: '20px 0',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    background: 'rgba(255,255,255,0.08)',
+  },
+  dividerText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: 500,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+  },
   googleBtn: {
     width: '100%',
     height: 48,
@@ -212,6 +546,43 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     transition: 'background 0.2s, border-color 0.2s',
     outline: 'none',
+  },
+  codeRow: {
+    display: 'flex',
+    gap: 8,
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  codeInput: {
+    width: 44,
+    height: 56,
+    textAlign: 'center' as const,
+    fontSize: 22,
+    fontWeight: 600,
+    color: '#ffffff',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    fontFamily: "'SF Mono', 'Menlo', 'Consolas', monospace",
+    outline: 'none',
+    transition: 'border-color 0.15s, background 0.15s',
+  },
+  codeFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    fontSize: 13,
+  },
+  linkBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#a5b4fc',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+    padding: 4,
+    fontFamily: 'inherit',
   },
   switchText: {
     color: 'rgba(255,255,255,0.5)',
