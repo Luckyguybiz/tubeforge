@@ -60,77 +60,143 @@ function EyeOrb() {
   });
 
   return (
-    <group ref={eye} position={[0, 0.15, 0]}>
-      {/* Eyeball — indigo-tinted iridescent surface. Body colour set to
-          a pale indigo so the iridescence ramps through the brand
-          family (indigo → violet → soft pink) instead of the full
-          rainbow. This locks the eye to the same colour story as the
-          hero play badge. */}
+    <group ref={eye} position={[0, 0, 0]}>
+      {/* ===== Eyeball ===== */}
+      {/* Sclera-equivalent: indigo-tinted iridescent dome. Higher poly
+          (256x256) for a perfectly smooth silhouette at this small
+          render size — at 96px any faceting along the rim is visible.
+          Iridescence is dialled into a tight thickness range so the
+          colour shift stays inside the brand palette (indigo → violet →
+          pearl) instead of wandering into greens/yellows. */}
       <mesh>
-        <sphereGeometry args={[1.0, 128, 128]} />
+        <sphereGeometry args={[1.0, 256, 256]} />
         <meshPhysicalMaterial
-          color="#c7d2fe"
-          metalness={0.3}
-          roughness={0.15}
+          color="#d6dcff"
+          metalness={0.18}
+          roughness={0.08}
+          clearcoat={1}
+          clearcoatRoughness={0.02}
+          iridescence={0.75}
+          iridescenceIOR={1.4}
+          iridescenceThicknessRange={[260, 540]}
+          envMapIntensity={2.4}
+          reflectivity={0.6}
+          sheen={0.55}
+          sheenColor="#a5b4fc"
+          transmission={0.05}
+          thickness={0.4}
+          ior={1.42}
+        />
+      </mesh>
+
+      {/* ===== Limbal ring ===== */}
+      {/* Anatomical detail: a subtle dark ring at the iris perimeter,
+          about 1px wide on a real eye, that defines where iris meets
+          sclera. Gives the iris a "punched in" look instead of looking
+          like a printed sticker. */}
+      <mesh position={[0, 0, IRIS_DEPTH - 0.05]}>
+        <ringGeometry args={[0.44, 0.5, 96]} />
+        <meshPhysicalMaterial
+          color="#1e1b4b"
+          metalness={0.6}
+          roughness={0.4}
+          envMapIntensity={1.2}
+        />
+      </mesh>
+
+      {/* ===== Iris base ===== */}
+      {/* Indigo iris disc — slightly recessed (z behind limbal ring's
+          z) gives anatomical depth. Higher metalness so the iris
+          glints under the key Lightformer. */}
+      <mesh position={[0, 0, IRIS_DEPTH - 0.045]}>
+        <circleGeometry args={[0.44, 96]} />
+        <meshPhysicalMaterial
+          color="#312e81"
+          metalness={0.75}
+          roughness={0.18}
           clearcoat={1}
           clearcoatRoughness={0.05}
-          iridescence={0.85}
-          iridescenceIOR={1.42}
-          iridescenceThicknessRange={[200, 620]}
-          envMapIntensity={2.2}
-          reflectivity={0.55}
-          sheen={0.5}
-          sheenColor="#a5b4fc"
+          envMapIntensity={2}
         />
       </mesh>
-      {/* Iris — deep brand indigo, slightly recessed gives it an
-          anatomical "lens" look rather than a flat decal. Larger than
-          v1 so it dominates the front face the way a real iris does. */}
-      <mesh position={[0, 0, IRIS_DEPTH - 0.04]}>
-        <circleGeometry args={[0.46, 64]} />
+
+      {/* ===== Iris striation rings ===== */}
+      {/* Three concentric rings of varying brightness and opacity
+          fake the radial fibres of a real iris. Cheap geometry,
+          big visual win. */}
+      <mesh position={[0, 0, IRIS_DEPTH - 0.034]}>
+        <ringGeometry args={[0.36, 0.42, 96]} />
         <meshPhysicalMaterial
-          color="#3730a3"
-          metalness={0.7}
-          roughness={0.2}
-          clearcoat={1}
-          clearcoatRoughness={0.06}
-          envMapIntensity={1.8}
+          color="#6366f1"
+          metalness={0.6}
+          roughness={0.32}
+          transparent
+          opacity={0.55}
+          envMapIntensity={1.6}
         />
       </mesh>
-      {/* Iris ring detail — lighter indigo for the iris striations */}
-      <mesh position={[0, 0, IRIS_DEPTH - 0.02]}>
-        <ringGeometry args={[0.28, 0.44, 64]} />
+      <mesh position={[0, 0, IRIS_DEPTH - 0.028]}>
+        <ringGeometry args={[0.28, 0.34, 96]} />
         <meshPhysicalMaterial
           color="#818cf8"
           metalness={0.5}
-          roughness={0.3}
+          roughness={0.35}
           transparent
-          opacity={0.45}
+          opacity={0.5}
+          envMapIntensity={1.5}
+        />
+      </mesh>
+      <mesh position={[0, 0, IRIS_DEPTH - 0.022]}>
+        <ringGeometry args={[0.2, 0.26, 96]} />
+        <meshPhysicalMaterial
+          color="#c7d2fe"
+          metalness={0.4}
+          roughness={0.4}
+          transparent
+          opacity={0.4}
           envMapIntensity={1.4}
         />
       </mesh>
-      {/* Pupil — pure black with clearcoat so it still picks up the
-          catch-light from the key Lightformer */}
-      <mesh position={[0, 0, IRIS_DEPTH]}>
+
+      {/* ===== Pupil ===== */}
+      {/* Pupil sits ON the iris surface — slightly inset for depth.
+          Pure black clearcoat material picks up the catch-light cleanly
+          so the iris always reads as "alive". */}
+      <mesh position={[0, 0, IRIS_DEPTH - 0.012]}>
         <circleGeometry args={[0.18, 64]} />
         <meshPhysicalMaterial
-          color="#04040a"
-          metalness={0.4}
-          roughness={0.15}
+          color="#02020a"
+          metalness={0.6}
+          roughness={0.05}
           clearcoat={1}
-          clearcoatRoughness={0.04}
+          clearcoatRoughness={0.02}
+          envMapIntensity={1.2}
         />
       </mesh>
-      {/* Catch-light — primary white dot offset up-left, the "alive"
-          sparkle every cartoon eye has */}
-      <mesh position={[-0.12, 0.13, IRIS_DEPTH + 0.005]}>
-        <circleGeometry args={[0.07, 32]} />
+
+      {/* ===== Catch-lights ===== */}
+      {/* Primary catch-light, offset up-left to mimic a top-front key
+          light. Slight glow halo behind it via a larger faint disc
+          gives a subsurface-scattered sparkle without needing SSS. */}
+      <mesh position={[-0.13, 0.14, IRIS_DEPTH + 0.005]}>
+        <circleGeometry args={[0.1, 48]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.18} />
+      </mesh>
+      <mesh position={[-0.13, 0.14, IRIS_DEPTH + 0.008]}>
+        <circleGeometry args={[0.07, 48]} />
         <meshBasicMaterial color="#ffffff" />
       </mesh>
-      {/* Secondary catch-light — smaller, lower-right for extra dimension */}
-      <mesh position={[0.08, -0.1, IRIS_DEPTH + 0.003]}>
-        <circleGeometry args={[0.028, 24]} />
+      {/* Hot-spot inside the primary catch-light — even brighter pixel
+          centre for that "pricked light" point. */}
+      <mesh position={[-0.13, 0.14, IRIS_DEPTH + 0.011]}>
+        <circleGeometry args={[0.022, 24]} />
         <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      {/* Secondary catch-light — smaller, opposite quadrant, gives the
+          eye dimensional believability instead of looking like a sticker. */}
+      <mesh position={[0.1, -0.11, IRIS_DEPTH + 0.003]}>
+        <circleGeometry args={[0.03, 24]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.85} />
       </mesh>
     </group>
   );
@@ -145,82 +211,96 @@ export default function BrandOrbShowcase() {
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 6.2], fov: 22 }}
+        camera={{ position: [0, 0, 5.4], fov: 24 }}
         shadows
-        gl={{ alpha: true, antialias: true }}
+        gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         dpr={[1, 2]}
         style={{ background: 'transparent' }}
       >
-        <ambientLight intensity={0.2} />
+        <ambientLight intensity={0.15} />
         <EyeOrb />
-        {/* Tighter floor shadow — kept close under the sphere with a
-            small footprint so the violet glow doesn't extend past the
-            canvas edges or leak into surrounding text. */}
+        {/* Floor contact shadow — small, soft, brand-violet. Tucked
+            close under the sphere so it doesn't bleed into copy. */}
         <ContactShadows
-          opacity={0.3}
-          scale={1.9}
-          blur={2.6}
+          opacity={0.32}
+          scale={1.8}
+          blur={2.8}
           far={1.2}
-          position={[0, -0.95, 0]}
+          position={[0, -1.02, 0]}
           color="#7c3aed"
         />
-        {/* Lighting tuned for iridescence — many small angled lights
-            give the shell more chromatic shift than a single big key. */}
-        <Environment resolution={512} background={false}>
-          {/* Top key */}
+        {/* ===== Studio lighting tuned for iridescence =====
+            Eight area lights wrap the sphere with a calibrated colour
+            ramp. The trick with iridescence is that the rainbow shift
+            comes from the *angle between view, normal, and incident
+            light* — so multiple medium-intensity sources at different
+            angles produce a richer ramp than one bright key. */}
+        <Environment resolution={1024} background={false}>
+          {/* Primary top key — broad and white, defines the main shape */}
           <Lightformer
-            intensity={2.4}
+            intensity={3}
             color="#ffffff"
             position={[0, 5, 3]}
             rotation={[-Math.PI / 2, 0, 0]}
-            scale={[6, 6, 1]}
+            scale={[7, 7, 1]}
           />
-          {/* Upper-left violet wrap */}
+          {/* Upper-left brand violet wrap */}
           <Lightformer
-            intensity={2.6}
+            intensity={2.4}
             color="#a78bfa"
-            position={[-3, 2.5, 3]}
+            position={[-3, 2, 3]}
             rotation={[0, Math.PI / 4, 0]}
             scale={[4, 5, 1]}
           />
-          {/* Upper-right indigo wrap */}
+          {/* Upper-right brand indigo wrap */}
           <Lightformer
             intensity={2.4}
             color="#6366f1"
-            position={[3, 2.5, 3]}
+            position={[3, 2, 3]}
             rotation={[0, -Math.PI / 4, 0]}
             scale={[4, 5, 1]}
           />
-          {/* Cyan grazing light from the side — adds a turquoise edge
-              to the iridescence ramp */}
+          {/* Cool cyan grazing light — adds a turquoise micro-band to
+              the iridescent ramp at certain viewing angles */}
           <Lightformer
-            intensity={1.6}
+            intensity={1.5}
             color="#67e8f9"
-            position={[-4, -0.5, 1]}
+            position={[-4, -0.5, 2]}
             rotation={[0, Math.PI / 2, 0]}
             scale={[3, 3, 1]}
           />
-          {/* Magenta accent on the opposite side */}
+          {/* Warm magenta opposite — closes the colour wheel for full
+              iridescence range */}
           <Lightformer
-            intensity={1.6}
+            intensity={1.5}
             color="#f0abfc"
-            position={[4, -0.5, 1]}
+            position={[4, -0.5, 2]}
             rotation={[0, -Math.PI / 2, 0]}
             scale={[3, 3, 1]}
           />
-          {/* Bottom violet bounce */}
+          {/* Bottom violet bounce — gives the sphere weight so it
+              doesn't read as floating */}
           <Lightformer
-            intensity={1.6}
+            intensity={1.4}
             color="#8b5cf6"
-            position={[0, -3, 2]}
+            position={[0, -2.5, 2]}
             rotation={[Math.PI / 4, 0, 0]}
             scale={[5, 1.5, 1]}
           />
-          {/* Back rim — keeps the dark side from going completely flat */}
+          {/* Back-rim accent — a thin violet crescent on the dark side */}
           <Lightformer
             intensity={1.4}
             color="#c4b5fd"
             position={[0, 0, -3.5]}
+            scale={[4, 4, 1]}
+          />
+          {/* Subtle ground bounce — flat panel below adds a soft
+              violet up-light into the underside of the iris */}
+          <Lightformer
+            intensity={0.8}
+            color="#4c1d95"
+            position={[0, -1.8, 0]}
+            rotation={[Math.PI / 2, 0, 0]}
             scale={[4, 4, 1]}
           />
         </Environment>
