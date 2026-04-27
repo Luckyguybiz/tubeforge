@@ -17,6 +17,7 @@ import type { Plan, Role } from '@prisma/client';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { consumeCode, normalizeEmail } from '@/lib/email-code';
+import { verifyPassword } from '@/lib/password';
 
 // Capture last auth error for diagnostics
 let _lastAuthError: unknown = null;
@@ -78,6 +79,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           select: { id: true, email: true, name: true, image: true },
         });
         return user;
+      },
+    }),
+    // Email + password. Optional alternative to OTP for return users
+    // who set a password via /api/auth/set-password. Constant-time
+    // verify in lib/password.ts; returns null on any failure (no leaked
+    // distinction between "no account" and "wrong password").
+    Credentials({
+      id: 'email-password',
+      name: 'Email Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const rawEmail = credentials?.email;
+        const rawPassword = credentials?.password;
+        if (typeof rawEmail !== 'string' || typeof rawPassword !== 'string') {
+          return null;
+        }
+        const email = normalizeEmail(rawEmail);
+        const user = await db.user.findUnique({
+          where: { email },
+          select: { id: true, email: true, name: true, image: true, passwordHash: true },
+        });
+        // Always run verifyPassword even if the user is missing or has
+        // no password set — keeps timing uniform between cases.
+        const valid = await verifyPassword(rawPassword, user?.passwordHash ?? null);
+        if (!user || !valid) {
+          authLog.warn('email-password authorize rejected', { email });
+          return null;
+        }
+        return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),
     // DEV-ONLY: email-based login without OAuth (disabled in production)

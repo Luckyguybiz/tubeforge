@@ -7,8 +7,10 @@ import { useLocaleStore } from '@/stores/useLocaleStore';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 const CODE_LENGTH = 6;
+const MODE_STORAGE_KEY = 'tf-login-mode';
 
 type LoginStep = 'email' | 'code';
+type LoginMode = 'code' | 'password';
 
 function isValidEmail(s: string): boolean {
   // Liberal client-side check; server uses Zod's email validator.
@@ -22,6 +24,10 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
 
+  // OTP mode is the default for first-time visitors. Returning users
+  // who set a password and chose "password" last time get persisted via
+  // localStorage so their preference sticks across sessions.
+  const [mode, setMode] = useState<LoginMode>('code');
   const [step, setStep] = useState<LoginStep>('email');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -30,7 +36,27 @@ function LoginContent() {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeDigits, setCodeDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(''));
   const [resendIn, setResendIn] = useState(0);
+  // Password-mode state
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [signingInPassword, setSigningInPassword] = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  // Restore mode preference on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(MODE_STORAGE_KEY);
+      if (saved === 'password' || saved === 'code') setMode(saved);
+    } catch { /* ignore */ }
+  }, []);
+
+  const switchMode = useCallback((next: LoginMode) => {
+    setMode(next);
+    setEmailError(null);
+    setPasswordError(null);
+    setCodeError(null);
+    try { localStorage.setItem(MODE_STORAGE_KEY, next); } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (status === 'authenticated') window.location.href = callbackUrl;
@@ -147,6 +173,40 @@ function LoginContent() {
     }
   }, [codeDigits, email, callbackUrl, t]);
 
+  const submitPassword = useCallback(async () => {
+    const trimmedEmail = email.trim();
+    if (!isValidEmail(trimmedEmail)) {
+      setEmailError(t('auth.login.email.invalid'));
+      return;
+    }
+    if (password.length < 8) {
+      setPasswordError(t('auth.login.password.tooShort'));
+      return;
+    }
+    setEmailError(null);
+    setPasswordError(null);
+    setSigningInPassword(true);
+    try {
+      const result = await signIn('email-password', {
+        email: trimmedEmail,
+        password,
+        redirect: false,
+      });
+      if (result?.error) {
+        // NextAuth credentials returns generic CredentialsSignin on
+        // any failure — we deliberately don't distinguish "no account"
+        // from "wrong password" client-side either.
+        setPasswordError(t('auth.login.password.invalid'));
+        setSigningInPassword(false);
+        return;
+      }
+      window.location.href = callbackUrl;
+    } catch {
+      setPasswordError(t('auth.login.password.serverError'));
+      setSigningInPassword(false);
+    }
+  }, [email, password, callbackUrl, t]);
+
   const handleDigitChange = (idx: number, value: string) => {
     // Accept only the last digit if multiple are pasted into a single box.
     const digits = value.replace(/\D/g, '');
@@ -226,10 +286,39 @@ function LoginContent() {
             <h1 style={styles.heading}>{t('auth.login.title')}</h1>
             <p style={styles.subtitle}>{t('auth.login.subtitle')}</p>
 
+            {/* Mode toggle: Email Code (OTP) vs Password */}
+            <div style={styles.modeTabs} role="tablist">
+              <button
+                role="tab"
+                type="button"
+                aria-selected={mode === 'code'}
+                onClick={() => switchMode('code')}
+                style={{
+                  ...styles.modeTab,
+                  ...(mode === 'code' ? styles.modeTabActive : null),
+                }}
+              >
+                {t('auth.login.tab.code')}
+              </button>
+              <button
+                role="tab"
+                type="button"
+                aria-selected={mode === 'password'}
+                onClick={() => switchMode('password')}
+                style={{
+                  ...styles.modeTab,
+                  ...(mode === 'password' ? styles.modeTabActive : null),
+                }}
+              >
+                {t('auth.login.tab.password')}
+              </button>
+            </div>
+
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void sendCode();
+                if (mode === 'code') void sendCode();
+                else void submitPassword();
               }}
             >
               <label htmlFor="login-email" style={styles.label}>
@@ -246,7 +335,7 @@ function LoginContent() {
                   setEmail(e.target.value);
                   if (emailError) setEmailError(null);
                 }}
-                disabled={sending}
+                disabled={sending || signingInPassword}
                 style={{
                   ...styles.input,
                   borderColor: emailError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
@@ -255,16 +344,51 @@ function LoginContent() {
               />
               {emailError && <p style={styles.fieldError}>{emailError}</p>}
 
+              {mode === 'password' && (
+                <>
+                  <label
+                    htmlFor="login-password"
+                    style={{ ...styles.label, marginTop: 16 }}
+                  >
+                    {t('auth.login.password.label')}
+                  </label>
+                  <input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder={t('auth.login.password.placeholder')}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError(null);
+                    }}
+                    disabled={signingInPassword}
+                    style={{
+                      ...styles.input,
+                      borderColor: passwordError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
+                    }}
+                    aria-invalid={!!passwordError}
+                  />
+                  {passwordError && <p style={styles.fieldError}>{passwordError}</p>}
+                </>
+              )}
+
               <button
                 type="submit"
-                disabled={sending}
+                disabled={mode === 'code' ? sending : signingInPassword}
                 style={{
                   ...styles.primaryBtn,
-                  opacity: sending ? 0.6 : 1,
-                  cursor: sending ? 'not-allowed' : 'pointer',
+                  opacity: (mode === 'code' ? sending : signingInPassword) ? 0.6 : 1,
+                  cursor: (mode === 'code' ? sending : signingInPassword) ? 'not-allowed' : 'pointer',
                 }}
               >
-                {sending ? <ButtonSpinner /> : t('auth.login.email.send')}
+                {mode === 'code'
+                  ? sending
+                    ? <ButtonSpinner />
+                    : t('auth.login.email.send')
+                  : signingInPassword
+                    ? <ButtonSpinner />
+                    : t('auth.login.password.signIn')}
               </button>
             </form>
           </>
@@ -408,6 +532,33 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     marginBottom: 32,
+  },
+  modeTabs: {
+    display: 'flex',
+    gap: 4,
+    padding: 4,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  modeTab: {
+    flex: 1,
+    height: 36,
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 8,
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'background 0.15s, color 0.15s',
+    outline: 'none',
+  },
+  modeTabActive: {
+    background: 'rgba(99,102,241,0.16)',
+    color: '#c7d2fe',
   },
   logoIcon: {
     width: 36,

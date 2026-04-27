@@ -51,6 +51,10 @@ model User {
   email          String?      @unique
   emailVerified  DateTime?
   image          String?
+  /// Optional bcrypt hash. Set after the user opts into password-based
+  /// sign-in alongside the email-OTP path. NULL for users who only use
+  /// the OTP flow. Hash includes salt; verify with bcrypt.compare.
+  passwordHash   String?
   plan           Plan         @default(FREE)
   role           Role         @default(USER)
   stripeId       String?      @unique
