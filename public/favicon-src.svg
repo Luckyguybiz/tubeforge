@@ -5,10 +5,17 @@
       <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
   </defs>
-  <!-- Rounded square background with indigo gradient -->
-  <rect width="512" height="512" rx="96" ry="96" fill="url(#bg)"/>
-  <!-- Letter T -->
-  <path d="M72 120 h168 v48 h-60 v224 h-48 v-224 h-60 z" fill="#fff"/>
-  <!-- Letter F -->
-  <path d="M272 120 h168 v48 h-120 v76 h100 v48 h-100 v100 h-48 z" fill="#fff"/>
+  <!-- Rounded square background with indigo->violet gradient (matches hero badge + manifest theme) -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+  <!-- White play triangle, centred and slightly offset right for visual balance,
+       with rounded corners so it reads cleanly even at 16x16 -->
+  <path
+    d="M 198 132
+       L 198 380
+       Q 198 408 222 394
+       L 388 270
+       Q 412 256 388 242
+       L 222 118
+       Q 198 104 198 132 Z"
+    fill="#ffffff"/>
 </svg>

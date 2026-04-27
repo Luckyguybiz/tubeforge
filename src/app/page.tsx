@@ -312,14 +312,15 @@ export default function LandingPage() {
       {/* ===== TRUSTED BY CREATORS (Social Proof) ===== */}
       <section style={{ padding: "72px 24px 56px", background: BG_PRIMARY, borderTop: `1px solid ${BORDER_SUBTLE}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
-          {/* Animated brand orb — visual anchor above the social-proof
-              numbers, in the spirit of Resend's marketing icons */}
+          {/* Animated brand eye orb — iridescent eyeball that tracks the
+              cursor across the page. Sits above the social-proof numbers
+              as the section's visual anchor. */}
           <div
             aria-hidden
             style={{
-              width: 240,
-              height: 240,
-              margin: "0 auto 28px",
+              width: 180,
+              height: 180,
+              margin: "0 auto 32px",
             }}
           >
             <BrandOrbShowcaseMount />
