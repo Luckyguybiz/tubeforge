@@ -20,22 +20,22 @@ const ProductDemo = lazy(() =>
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "TubeForge — AI Studio for YouTube Creators",
+  title: "TubeForge — AI Thumbnails That Beat Your Niche",
   description:
-    "AI-powered platform for YouTube creators. Video editor, thumbnail generator, metadata optimizer, VPN, analytics, and free tools.",
+    "GPT-4o analyses what's working in your YouTube niche, then generates thumbnails in that style. Lift CTR from your first upload.",
   openGraph: {
-    title: "TubeForge — AI Studio for YouTube Creators",
+    title: "TubeForge — AI Thumbnails That Beat Your Niche",
     description:
-      "Create professional YouTube content with AI. Thumbnail generation, metadata optimization, video editing, analytics.",
+      "GPT-4o analyses what's working in your niche, then generates thumbnails in that style. Designed to lift CTR from the first upload.",
     type: "website",
     locale: "en_US",
-    images: [{ url: "/api/og", width: 1200, height: 630, alt: "TubeForge — AI Studio for YouTube Creators" }],
+    images: [{ url: "/api/og", width: 1200, height: 630, alt: "TubeForge — AI Thumbnails That Beat Your Niche" }],
   },
   alternates: { canonical: "https://tubeforge.co" },
   twitter: {
     card: "summary_large_image",
-    title: "TubeForge — AI Studio for YouTube Creators",
-    description: "Create professional YouTube content with AI. Thumbnails, SEO, video editing, and free tools.",
+    title: "TubeForge — AI Thumbnails That Beat Your Niche",
+    description: "GPT-4o analyses your niche, generates thumbnails that lift CTR. 3 free per month, no credit card.",
     images: ["/api/og"],
   },
 };
@@ -45,24 +45,24 @@ export const metadata: Metadata = {
 const KEY_FEATURES = [
   {
     icon: "thumbnail",
-    title: "AI Thumbnail Generator",
-    desc: "Create viral thumbnails with AI in seconds. Professional Canva-style editor with A/B testing built in.",
-    href: "/ai-thumbnails",
-    cta: "Try it",
+    title: "Niche-aware AI",
+    desc: "GPT-4o reads top-performing thumbnails in your niche and generates new ones in that exact style — not generic stock-photo collages.",
+    href: "/thumbnails",
+    cta: "Generate one",
   },
   {
     icon: "video",
-    title: "Video Editor",
-    desc: "Scene-based AI video creation for YouTube. Generate scripts, storyboards, and full video content.",
-    href: "/editor",
-    cta: "Try it",
+    title: "Canvas editor built in",
+    desc: "Refine the AI output, swap elements, layer text, or start from scratch in a Figma-style canvas — all inside the same tool.",
+    href: "/thumbnails",
+    cta: "Open editor",
   },
   {
     icon: "tools",
-    title: "Free YouTube Tools",
-    desc: "10+ free tools for titles, tags, descriptions, SEO optimization, and thumbnail sizing.",
-    href: "/free-tools",
-    cta: "Try it",
+    title: "A/B test before you upload",
+    desc: "Generate variants, preview them at YouTube sizes (sidebar, mobile, full), and pick the one your viewers will actually click.",
+    href: "/thumbnails",
+    cta: "See preview",
   },
 ];
 
@@ -150,17 +150,16 @@ const PLANS = [
     name: "Free",
     price: "$0",
     period: "",
-    desc: "Get started with the platform",
+    desc: "Try it before you commit",
     features: [
-      "3 projects",
-      "5 AI generations / month",
-      "500 MB storage",
-      "Thumbnail generation",
-      "SEO optimization",
-      "720p export",
+      "3 thumbnails / month",
+      "Niche-aware AI",
+      "Built-in canvas editor",
+      "1080p downloads",
+      "Free YouTube tools",
     ],
     popular: false,
-    href: "/register",
+    href: "/thumbnails",
   },
   {
     name: "Pro",
@@ -168,13 +167,12 @@ const PLANS = [
     period: "/mo",
     desc: "For active creators",
     features: [
-      "25 projects",
-      "100 AI generations / month",
-      "5 GB storage",
-      "All AI tools",
-      "A/B thumbnail testing",
-      "1080p export",
-      "Priority support",
+      "100 thumbnails / month",
+      "A/B testing & multi-size preview",
+      "Higher-quality models (DALL-E 3 HD)",
+      "Style library across niches",
+      "Priority generation queue",
+      "All Free tools included",
     ],
     popular: true,
     href: "/billing?plan=PRO",
@@ -185,11 +183,10 @@ const PLANS = [
     period: "/mo",
     desc: "For teams and agencies",
     features: [
-      "Unlimited projects",
-      "Unlimited AI generations",
-      "50 GB storage",
+      "Unlimited thumbnails",
       "Team up to 10 members",
-      "4K export",
+      "Brand kit (locked colours / fonts / logos)",
+      "Commercial license",
       "API access",
       "Dedicated support",
     ],
@@ -354,10 +351,10 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
-              Everything to grow your channel.
+              Built for thumbnails that click.
             </h2>
-            <p style={{ fontSize: 18, color: TEXT_MUTED, maxWidth: 480, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
-              Three powerful products. One platform.
+            <p style={{ fontSize: 18, color: TEXT_MUTED, maxWidth: 520, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
+              Three pieces of one tool, designed around a single goal: a thumbnail that wins the impression.
             </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }} className="features-grid">
