@@ -314,13 +314,15 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
           {/* Animated brand eye orb — iridescent eyeball that tracks the
               cursor across the page. Sits above the social-proof numbers
-              as the section's visual anchor. */}
+              as the section's visual anchor. Margin sized so the violet
+              floor glow doesn't reach the headline below. */}
           <div
             aria-hidden
             style={{
-              width: 110,
+              width: 96,
               height: 110,
-              margin: "0 auto 48px",
+              margin: "0 auto 28px",
+              padding: 0,
             }}
           >
             <BrandOrbShowcaseMount />

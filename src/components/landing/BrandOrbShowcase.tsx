@@ -60,26 +60,26 @@ function EyeOrb() {
   });
 
   return (
-    <group ref={eye}>
-      {/* Eyeball — pearl-iridescent surface. We dropped the outer
-          transmission shell from v1 because it hid the iris and pupil
-          behind milky glass. Iridescence applied directly to the
-          eyeball gives the same rainbow shimmer while keeping the
-          interior fully readable. */}
+    <group ref={eye} position={[0, 0.35, 0]}>
+      {/* Eyeball — indigo-tinted iridescent surface. Body colour set to
+          a pale indigo so the iridescence ramps through the brand
+          family (indigo → violet → soft pink) instead of the full
+          rainbow. This locks the eye to the same colour story as the
+          hero play badge. */}
       <mesh>
         <sphereGeometry args={[1.0, 128, 128]} />
         <meshPhysicalMaterial
-          color="#f5f5fb"
-          metalness={0.2}
-          roughness={0.12}
+          color="#c7d2fe"
+          metalness={0.3}
+          roughness={0.15}
           clearcoat={1}
-          clearcoatRoughness={0.04}
-          iridescence={1}
-          iridescenceIOR={1.45}
-          iridescenceThicknessRange={[160, 760]}
-          envMapIntensity={2.4}
+          clearcoatRoughness={0.05}
+          iridescence={0.85}
+          iridescenceIOR={1.42}
+          iridescenceThicknessRange={[200, 620]}
+          envMapIntensity={2.2}
           reflectivity={0.55}
-          sheen={0.4}
+          sheen={0.5}
           sheenColor="#a5b4fc"
         />
       </mesh>
@@ -146,7 +146,7 @@ export default function BrandOrbShowcase() {
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 6.2], fov: 26 }}
+        camera={{ position: [0, 0, 9], fov: 22 }}
         shadows
         gl={{ alpha: true, antialias: true }}
         dpr={[1, 2]}
@@ -154,13 +154,15 @@ export default function BrandOrbShowcase() {
       >
         <ambientLight intensity={0.2} />
         <EyeOrb />
-        {/* Violet floor contact shadow — anchors the orb visually */}
+        {/* Tighter floor shadow — pushed up close to the sphere so the
+            violet glow stays bounded inside the canvas and never bleeds
+            into the headline below it. */}
         <ContactShadows
-          opacity={0.5}
-          scale={3.4}
-          blur={2.5}
-          far={2.5}
-          position={[0, -1.25, 0]}
+          opacity={0.35}
+          scale={2.2}
+          blur={2.6}
+          far={1.4}
+          position={[0, -0.7, 0]}
           color="#7c3aed"
         />
         {/* Lighting tuned for iridescence — many small angled lights
