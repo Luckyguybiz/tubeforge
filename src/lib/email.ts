@@ -59,12 +59,24 @@ export async function sendEmail({ to, template, data }: SendEmailOpts): Promise<
   const from = process.env.EMAIL_FROM || 'TubeForge <noreply@tubeforge.co>';
 
   try {
-    await resend.emails.send({
+    // Resend SDK v3+ returns { data, error } instead of throwing on API
+    // rejections (4xx). We have to inspect the result explicitly — without
+    // this, things like "domain not verified" or "invalid recipient" are
+    // silently swallowed and the user wonders why no email arrived.
+    const result = await resend.emails.send({
       from,
       to,
       subject,
       html,
     });
+    if (result.error) {
+      console.error('[email] Resend rejected send:', {
+        from,
+        to,
+        template,
+        error: result.error,
+      });
+    }
   } catch (err) {
     console.error('[email] Failed to send:', err);
   }
