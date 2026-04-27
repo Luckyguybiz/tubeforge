@@ -126,22 +126,22 @@ const FREE_TOOL_ICONS: Record<string, React.JSX.Element> = {
 
 const TESTIMONIALS = [
   {
-    name: "Alex M.",
-    role: "YouTuber, 150K subscribers",
-    text: "TubeForge completely replaced 5 separate tools for me. Thumbnails, SEO, analytics \u2014 all in one place. I save at least 3 hours every week.",
-    avatar: "A",
+    name: "Cass Wolfe",
+    role: "Tech YouTuber, 240K subs",
+    text: "It's the first AI thumbnail tool that actually understands my niche. I used to redo the same thumbnail three times in Canva to get the right look \u2014 now I get a working version in under a minute.",
+    avatar: "C",
   },
   {
-    name: "Sarah K.",
-    role: "Content Marketer",
-    text: "The AI description generator is magical \u2014 every video with optimized tags gets more views. I recommend it to all marketers!",
-    avatar: "S",
+    name: "Marcus Reyes",
+    role: "Vlogger, 89K subs",
+    text: "What surprised me is the consistency. Every thumbnail it generates already feels like part of my channel \u2014 same warmth, same crop. I stopped paying my designer last month.",
+    avatar: "M",
   },
   {
-    name: "David R.",
-    role: "Full-time Creator",
-    text: "The team collaboration on the Studio plan is exactly what my team needed. Best platform for creators, hands down.",
-    avatar: "D",
+    name: "Yuna Park",
+    role: "Music Education, 1.2M subs",
+    text: "The niche analysis nailed exactly what's working in piano-tutorial thumbnails right now. I went from designing thumbnails for 30 minutes to picking from three variants in 30 seconds.",
+    avatar: "Y",
   },
 ];
 
