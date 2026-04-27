@@ -586,14 +586,14 @@ export default function LandingPage() {
       <section className="tf-reveal" style={{ padding: "80px 24px 100px", textAlign: "center", background: BG_ALT }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", color: TEXT_PRIMARY, margin: "0 0 12px", lineHeight: 1.1 }}>
-            Ready to create?
+            Your next thumbnail is one prompt away.
           </h2>
           <p style={{ fontSize: 18, color: TEXT_MUTED, margin: "0 0 36px", lineHeight: 1.5 }}>
-            Join 10,000+ creators using TubeForge to grow their channels.
+            3 free thumbnails per month. No credit card. Niche-aware AI.
           </p>
-          <Link href="/register" className="tf-cta-primary" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ACCENT, color: "#fff", fontSize: 17, fontWeight: 500, padding: "12px 28px", borderRadius: 12, textDecoration: "none", border: "none", cursor: "pointer", transition: "all 0.3s ease", minHeight: 48, boxShadow: "0 0 30px rgba(99,102,241,0.4)" }}>
-            Start Free
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+          <Link href="/ai-thumbnails" className="tf-cta-primary" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ACCENT, color: "#fff", fontSize: 17, fontWeight: 500, padding: "12px 28px", borderRadius: 12, textDecoration: "none", border: "none", cursor: "pointer", transition: "all 0.3s ease", minHeight: 48, boxShadow: "0 0 30px rgba(99,102,241,0.4)" }}>
+            Generate your first thumbnail
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
           </Link>
         </div>
       </section>
