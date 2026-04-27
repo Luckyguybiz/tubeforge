@@ -94,7 +94,7 @@ export function LandingHero() {
             }}
           >
             <Link
-              href="/thumbnails"
+              href="/ai-thumbnails"
               className="tf-cta-primary"
               style={{
                 display: 'inline-flex',

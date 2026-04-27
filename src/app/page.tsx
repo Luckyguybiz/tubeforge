@@ -47,21 +47,21 @@ const KEY_FEATURES = [
     icon: "thumbnail",
     title: "Niche-aware AI",
     desc: "GPT-4o reads top-performing thumbnails in your niche and generates new ones in that exact style — not generic stock-photo collages.",
-    href: "/thumbnails",
+    href: "/ai-thumbnails",
     cta: "Generate one",
   },
   {
     icon: "video",
     title: "Canvas editor built in",
     desc: "Refine the AI output, swap elements, layer text, or start from scratch in a Figma-style canvas — all inside the same tool.",
-    href: "/thumbnails",
+    href: "/ai-thumbnails",
     cta: "Open editor",
   },
   {
     icon: "tools",
     title: "A/B test before you upload",
     desc: "Generate variants, preview them at YouTube sizes (sidebar, mobile, full), and pick the one your viewers will actually click.",
-    href: "/thumbnails",
+    href: "/ai-thumbnails",
     cta: "See preview",
   },
 ];
@@ -159,7 +159,7 @@ const PLANS = [
       "Free YouTube tools",
     ],
     popular: false,
-    href: "/thumbnails",
+    href: "/ai-thumbnails",
   },
   {
     name: "Pro",
