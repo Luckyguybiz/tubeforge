@@ -21,14 +21,14 @@ const YouTubePlayBadge = dynamic(() => import('./YouTubePlayBadge'), {
         justifyContent: 'center',
       }}
     >
-      {/* Subtle red glow placeholder while bundle hydrates */}
+      {/* Subtle brand-indigo glow placeholder while the 3D bundle hydrates */}
       <div
         style={{
           width: 220,
           height: 150,
           borderRadius: 32,
           background:
-            'radial-gradient(ellipse at center, rgba(255,0,51,0.18) 0%, rgba(255,0,51,0) 70%)',
+            'radial-gradient(ellipse at center, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0) 70%)',
           filter: 'blur(20px)',
         }}
       />

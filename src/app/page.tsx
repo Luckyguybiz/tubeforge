@@ -10,6 +10,7 @@ import {
   StickyMobileCTA,
   ReferralCapture,
 } from "@/components/landing";
+import BrandOrbShowcaseMount from "@/components/landing/BrandOrbShowcaseMount";
 
 /* Lazy-load heavy below-fold client component to avoid blocking hero LCP */
 const ProductDemo = lazy(() =>
@@ -309,8 +310,20 @@ export default function LandingPage() {
       <LandingHero />
 
       {/* ===== TRUSTED BY CREATORS (Social Proof) ===== */}
-      <section style={{ padding: "48px 24px", background: BG_PRIMARY, borderTop: `1px solid ${BORDER_SUBTLE}` }}>
+      <section style={{ padding: "72px 24px 56px", background: BG_PRIMARY, borderTop: `1px solid ${BORDER_SUBTLE}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+          {/* Animated brand orb — visual anchor above the social-proof
+              numbers, in the spirit of Resend's marketing icons */}
+          <div
+            aria-hidden
+            style={{
+              width: 240,
+              height: 240,
+              margin: "0 auto 28px",
+            }}
+          >
+            <BrandOrbShowcaseMount />
+          </div>
           <p style={{ fontSize: 13, fontWeight: 500, color: TEXT_DIM, letterSpacing: "0.05em", textTransform: "uppercase", margin: "0 0 24px" }}>
             Trusted by creators worldwide
           </p>
