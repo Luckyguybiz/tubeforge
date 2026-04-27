@@ -197,32 +197,32 @@ const PLANS = [
 
 const FAQ_ITEMS = [
   {
-    q: "What is TubeForge?",
-    a: "TubeForge is an AI-powered platform for YouTube creators that combines video editing, AI tools, thumbnail generation, SEO optimization, and analytics \u2014 all in one place.",
+    q: "What makes TubeForge different from a generic AI image generator?",
+    a: "TubeForge is built specifically for YouTube thumbnails. GPT-4o reads the top-performing thumbnails in your niche and generates new ones in that exact style \u2014 bold text overlays, niche-typical compositions, the lighting that's working right now. A generic image generator gives you stock-photo collages; we give you thumbnails creators in your niche actually click on.",
   },
   {
     q: "Is TubeForge really free?",
-    a: "Yes. The Free plan includes 3 projects, 5 AI generations per month, thumbnail generation, and SEO optimization. No credit card required, free forever.",
+    a: "Yes. The Free plan gives you 3 thumbnails per month, niche-aware AI, the built-in canvas editor, and 1080p downloads. No credit card required.",
   },
   {
-    q: "What AI tools are included?",
-    a: "TubeForge integrates with 10+ AI providers including OpenAI and Google. Generate titles, descriptions, scripts, thumbnails, tags, and video ideas \u2014 all optimized for YouTube.",
+    q: "How does the niche analysis work?",
+    a: "When you describe your video \u2014 or paste a YouTube URL \u2014 GPT-4o pulls the visual patterns from top thumbnails in that niche right now: dominant colours, face placement, text density, background style. The generator then composes a thumbnail using those patterns combined with your prompt.",
   },
   {
-    q: "Can I use the free tools without signing up?",
-    a: "Yes. All tools on the Free Tools page (title generator, tag generator, description generator, and more) are completely free to use without an account.",
+    q: "Can I edit the AI's output?",
+    a: "Yes. Every generation opens directly in our canvas editor \u2014 swap elements, layer text, change the composition, or start from scratch. The AI is a starting point, not a constraint.",
+  },
+  {
+    q: "How many thumbnails do I get per month?",
+    a: "Free: 3/month. Pro ($12/mo): 100/month with A/B testing and the higher-quality DALL-E 3 HD model. Studio ($30/mo): unlimited, plus brand kit, team seats, and commercial license.",
   },
   {
     q: "Can I cancel my subscription?",
-    a: "Yes, cancel anytime from your account settings \u2014 no questions asked. Access to paid features remains until the end of your billing period.",
+    a: "Yes \u2014 cancel anytime from your account settings. Access to paid features remains until the end of your billing period.",
   },
   {
     q: "Is my data safe?",
-    a: "Yes. Our servers are located in the EU, and all data is encrypted in transit and at rest. We comply with GDPR and CCPA.",
-  },
-  {
-    q: "Is there an API?",
-    a: "Yes, API access is available on the Studio plan. Integrate TubeForge tools into your applications and automate workflows.",
+    a: "Yes. Our servers are located in the EU and all data is encrypted in transit and at rest. We comply with GDPR and CCPA.",
   },
 ];
 
