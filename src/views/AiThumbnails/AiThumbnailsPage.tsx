@@ -43,10 +43,12 @@ const FORMAT_OPTIONS: { id: FormatId; label: string; pro: boolean }[] = [
 ];
 
 /**
- * Starter prompt keys shown as quick-fill chips when the textarea is
- * empty. Designed to remove the blank-page paralysis on first visit and
- * to demonstrate the prompt format that produces good thumbnails (subject
- * + style + emotion). Translations live in `aithumbs.starter.*` keys.
+ * Niche-shaped starter chips shown when the textarea is empty. Removes
+ * the blank-page paralysis on first visit AND reinforces the
+ * "niche-aware AI" pitch from the landing — clicking a niche chip
+ * pre-fills a prompt that already includes the visual style YouTube
+ * creators in that niche use. Translations live in
+ * `aithumbs.starter.*` keys.
  */
 const STARTER_PROMPT_KEYS = [
   'aithumbs.starter.tutorial',
@@ -54,6 +56,9 @@ const STARTER_PROMPT_KEYS = [
   'aithumbs.starter.gaming',
   'aithumbs.starter.unboxing',
   'aithumbs.starter.cooking',
+  'aithumbs.starter.fitness',
+  'aithumbs.starter.music',
+  'aithumbs.starter.education',
 ] as const;
 
 let _uid = 0;
@@ -163,6 +168,7 @@ export function AiThumbnailsPage() {
   /* Upload photo */
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* Gallery modal */
   const [showGallery, setShowGallery] = useState(false);
@@ -566,6 +572,7 @@ export function AiThumbnailsPage() {
               </span>
             </div>
             <textarea
+              ref={promptTextareaRef}
               value={prompt}
               onChange={(e) => { if (e.target.value.length <= 1000) setPrompt(e.target.value); }}
               placeholder={t('aithumbs.prompt.placeholder')}
@@ -616,7 +623,17 @@ export function AiThumbnailsPage() {
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setPrompt(phrase)}
+                      onClick={() => {
+                        setPrompt(phrase);
+                        // Focus textarea so the user can immediately edit /
+                        // extend the chip's prompt.
+                        requestAnimationFrame(() => {
+                          promptTextareaRef.current?.focus();
+                          // Move cursor to end (selection at end-of-input)
+                          const len = phrase.length;
+                          promptTextareaRef.current?.setSelectionRange(len, len);
+                        });
+                      }}
                       style={{
                         padding: '5px 10px',
                         borderRadius: 8,
