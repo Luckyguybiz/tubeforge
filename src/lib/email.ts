@@ -52,9 +52,15 @@ export async function sendEmail({ to, template, data }: SendEmailOpts): Promise<
   const { getTemplate } = await import('@/lib/email-templates');
   const { subject, html } = getTemplate(template, data);
 
+  // EMAIL_FROM lets us flip to Resend's onboarding sender during initial
+  // setup before our domain's SPF/DKIM/DMARC are verified, then back to
+  // noreply@tubeforge.co once DNS propagates. Hardcoded fallback keeps the
+  // happy path env-free.
+  const from = process.env.EMAIL_FROM || 'TubeForge <noreply@tubeforge.co>';
+
   try {
     await resend.emails.send({
-      from: 'TubeForge <noreply@tubeforge.co>',
+      from,
       to,
       subject,
       html,
