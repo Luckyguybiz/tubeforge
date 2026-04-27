@@ -859,10 +859,52 @@ function contactFormTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Authentication
+// ---------------------------------------------------------------------------
+
+function emailVerificationTemplate(data: TemplateData): TemplateResult {
+  const locale = String(data.locale || 'en');
+  const code = String(data.code || '');
+  const ttlMinutes = Number(data.ttlMinutes || 15);
+
+  const isRu = locale === 'ru';
+  const subject = isRu
+    ? `Код для входа в TubeForge: ${code}`
+    : `Your TubeForge sign-in code: ${code}`;
+  const heading = isRu ? 'Код для входа' : 'Your sign-in code';
+  const intro = isRu
+    ? 'Введите этот код, чтобы продолжить вход в TubeForge:'
+    : 'Enter this code to finish signing in to TubeForge:';
+  const expiry = isRu
+    ? `Код действителен ${ttlMinutes} минут. После использования он перестаёт работать.`
+    : `This code is valid for ${ttlMinutes} minutes and works only once.`;
+  const ignoreNote = isRu
+    ? 'Если вы не запрашивали этот код — просто проигнорируйте письмо. Никто не сможет войти без доступа к вашей почте.'
+    : 'Did not request this? You can safely ignore this email — your account stays secure.';
+
+  const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;">
+    <tr><td style="background:#f4f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:20px 32px;">
+      <div style="font-family:'SF Mono','Menlo','Consolas',monospace;font-size:36px;font-weight:700;letter-spacing:8px;color:#4c1d95;text-align:center;">${code}</div>
+    </td></tr>
+  </table>`;
+
+  return {
+    subject,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;text-align:center;">${heading}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 8px;text-align:center;">${intro}</p>
+      ${codeBlock}
+      <p class="text-secondary" style="color:#888;font-size:14px;line-height:1.5;margin:0 0 12px;text-align:center;">${expiry}</p>
+      <p class="text-secondary" style="color:#888;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center;">${ignoreNote}</p>
+    `, locale),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed' | 'contact-form';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed' | 'contact-form' | 'email-verification';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -879,6 +921,7 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'comment-mention': commentMentionTemplate,
   'payment-failed': paymentFailedTemplate,
   'contact-form': contactFormTemplate,
+  'email-verification': emailVerificationTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {

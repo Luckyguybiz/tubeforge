@@ -16,6 +16,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import type { Plan, Role } from '@prisma/client';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
+import { consumeCode, normalizeEmail } from '@/lib/email-code';
 
 // Capture last auth error for diagnostics
 let _lastAuthError: unknown = null;
@@ -44,6 +45,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           access_type: 'offline',
           prompt: 'consent',
         },
+      },
+    }),
+    // Email + 6-digit code (OTP). Codes are issued by /api/auth/email/send
+    // and stored hashed in the VerificationToken table. consumeCode() runs a
+    // constant-time comparison and atomically deletes the token on success.
+    Credentials({
+      id: 'email-code',
+      name: 'Email Code',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        code: { label: 'Code', type: 'text' },
+      },
+      async authorize(credentials) {
+        const rawEmail = credentials?.email;
+        const rawCode = credentials?.code;
+        if (typeof rawEmail !== 'string' || typeof rawCode !== 'string') {
+          return null;
+        }
+        const email = normalizeEmail(rawEmail);
+        const result = await consumeCode(email, rawCode);
+        if (!result.ok) {
+          authLog.warn('email-code authorize rejected', { email, reason: result.reason });
+          return null;
+        }
+        // Find or create the user. New users have emailVerified set immediately
+        // since the OTP delivery proves they control the inbox.
+        const user = await db.user.upsert({
+          where: { email },
+          update: { emailVerified: new Date() },
+          create: { email, emailVerified: new Date() },
+          select: { id: true, email: true, name: true, image: true },
+        });
+        return user;
       },
     }),
     // DEV-ONLY: email-based login without OAuth (disabled in production)
