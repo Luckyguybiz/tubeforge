@@ -87,18 +87,18 @@ const KEY_FEATURE_ICONS: Record<string, React.JSX.Element> = {
 const HOW_IT_WORKS = [
   {
     step: "1",
-    title: "Describe Your Idea",
-    desc: "Tell the AI what video you want to create — topic, style, and target audience.",
+    title: "Pick a niche, describe your video",
+    desc: "Choose your niche from the picker or paste a YouTube URL. Add a one-line description of the video — that's all the AI needs.",
   },
   {
     step: "2",
-    title: "AI Creates Content",
-    desc: "The platform generates scripts, thumbnails, descriptions, and tags — all optimized for YouTube.",
+    title: "AI reads your niche, generates 3 variants",
+    desc: "GPT-4o pulls the visual patterns from top-performing thumbnails in your niche right now and composes 3 thumbnails that match — colours, text density, face placement, all niche-typical.",
   },
   {
     step: "3",
-    title: "Publish on YouTube",
-    desc: "Your content is ready — upload to your channel and watch your views grow.",
+    title: "Refine in the canvas, download, ship",
+    desc: "Open any variant in the built-in canvas editor to tweak text or swap an element. Download in YouTube sizes (1280×720) and upload to your channel.",
   },
 ];
 
@@ -397,10 +397,10 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
             <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
-              Three simple steps.
+              Idea to thumbnail in three steps.
             </h2>
-            <p style={{ fontSize: 18, color: TEXT_MUTED, maxWidth: 420, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
-              From idea to publication in minutes.
+            <p style={{ fontSize: 18, color: TEXT_MUTED, maxWidth: 460, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
+              Under a minute, every time. No design skills required.
             </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }} className="how-it-works-grid">
