@@ -127,7 +127,8 @@ const componentAvailable = true;
 
 /** Render helper */
 function renderModal(props: Record<string, any> = {}) {
-  return render(<DashboardUpgradeModal {...props} />);
+  // userPlan default: FREE; callers may override by passing { userPlan: "PRO" } etc.
+  return render(<DashboardUpgradeModal userPlan="FREE" {...props} />);
 }
 
 // ── Test Suites ──────────────────────────────────────────────
@@ -283,7 +284,7 @@ describeIfAvailable('DashboardUpgradeModal', () => {
     });
 
     it('timer survives component re-render without resetting', () => {
-      const { rerender } = render(<DashboardUpgradeModal />);
+      const { rerender } = render(<DashboardUpgradeModal userPlan="FREE" />);
 
       act(() => { vi.advanceTimersByTime(5000); });
       const beforeRerender = (
@@ -291,7 +292,7 @@ describeIfAvailable('DashboardUpgradeModal', () => {
           ?? document.querySelector('[data-testid="countdown-timer"]')
       )?.textContent ?? '';
 
-      rerender(<DashboardUpgradeModal />);
+      rerender(<DashboardUpgradeModal userPlan="FREE" />);
       const afterRerender = (
         screen.getByTestId?.('countdown-timer')
           ?? document.querySelector('[data-testid="countdown-timer"]')
