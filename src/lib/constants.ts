@@ -48,11 +48,20 @@ export const light: Theme = {
 
 export const PK: ColorKey[] = ['accent', 'blue', 'purple', 'green', 'orange', 'cyan', 'pink'];
 
+// Token pricing: 1 token ≈ $0.005 our cost. Tokens are per 5 seconds of video.
 export const MODELS: Model[] = [
-  { id: 'runway-gen3', name: 'Runway Gen-3 Alpha', desc: 'Fast, high quality', speed: '~15s', icon: '🚀', tokens: 50, quality: 'High' },
-  { id: 'runway-gen3-turbo', name: 'Runway Gen-3 Turbo', desc: 'Fastest generation', speed: '~8s', icon: '⚡', tokens: 25, quality: 'Good' },
-  { id: 'kling-v1', name: 'Kling v1.0', desc: 'Balanced quality & speed', speed: '~30s', icon: '🎥', tokens: 40, quality: 'High' },
-  { id: 'kling-v1-pro', name: 'Kling v1.0 Pro', desc: 'Best quality, cinematic', speed: '~60s', icon: '🎬', tokens: 80, quality: 'Ultra' },
+  // Featured — best value
+  { id: 'minimax-hailuo', name: 'Minimax Hailuo', desc: '768p, быстрый и доступный', speed: '~2 мин', icon: '⚡', tokens: 10, quality: 'High' },
+  { id: 'wan', name: 'Wan 2.5', desc: '720p, качественный', speed: '~2 мин', icon: '📹', tokens: 15, quality: 'High' },
+  { id: 'seedance', name: 'Seedance 1.5 Pro', desc: '720p, кинематографичный + звук', speed: '~3 мин', icon: '🎞️', tokens: 20, quality: 'High' },
+  // Premium
+  { id: 'kling-2.5-turbo', name: 'Kling 2.5 Turbo', desc: '1080p, 5-10s', speed: '~1 мин', icon: '🎥', tokens: 25, quality: 'High' },
+  { id: 'kling-3.0', name: 'Kling 3.0', desc: '1080p, лучшее качество', speed: '~2 мин', icon: '🎬', tokens: 35, quality: 'Ultra' },
+  { id: 'kling-motion', name: 'Kling Motion', desc: '1080p, контроль движения', speed: '~2 мин', icon: '🎯', tokens: 35, quality: 'Ultra' },
+  { id: 'runway-gen3', name: 'Runway Gen-3 Alpha', desc: '1080p, быстрый', speed: '~30s', icon: '🚀', tokens: 30, quality: 'High' },
+  { id: 'google-veo', name: 'Google Veo 3', desc: '1080p, точное видео', speed: '~2 мин', icon: '🔮', tokens: 50, quality: 'Ultra' },
+  // Ultra
+  { id: 'sora-2', name: 'OpenAI Sora 2', desc: '1080p, мульти-шот + звук', speed: '~3 мин', icon: '🌀', tokens: 75, quality: 'Ultra' },
 ];
 
 export const STATUS: Record<string, StatusInfo> = {
@@ -133,14 +142,14 @@ export const Z_INDEX = {
 export const PLAN_LIMITS = {
   FREE: {
     projects: 3,
-    aiGenerations: 99999,
+    aiGenerations: 3,
     scenes: 10,
     teamMembers: 0,
     storageMB: 500,
     storageBytes: 500 * 1024 * 1024,
     ttsGenerations: 3,
     videoTranslations: 1,
-    aiThumbnails: 99999,
+    aiThumbnails: 3,
     aiThumbnailMultiGen: 3,
     facesLimit: 20,
     maxVideoLengthSec: 60,
@@ -218,4 +227,6 @@ export const API_ENDPOINTS = {
   YOUTUBE_ANALYTICS: 'https://youtubeanalytics.googleapis.com/v2/reports',
   YOUTUBE_UPLOAD: 'https://www.googleapis.com/upload/youtube/v3/videos',
   RUNWAY_TASKS: 'https://api.runwayml.com/v1/tasks',
+  KLING_TEXT2VIDEO: 'https://api-singapore.klingai.com/v1/videos/text2video',
+  KLING_IMAGE2VIDEO: 'https://api-singapore.klingai.com/v1/videos/image2video',
 } as const;

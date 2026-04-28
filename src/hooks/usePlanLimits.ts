@@ -1,9 +1,17 @@
 import { trpc } from '@/lib/trpc';
+import { PLAN_LIMITS } from '@/lib/constants';
 
+/**
+ * Frontend-visible plan limits derived from the single source of truth
+ * in `lib/constants.ts`. Previously the hook hard-coded `99999` for both
+ * FREE and PRO, which meant the dashboard sidebar showed "AI generations
+ * 2/99999" — wildly off from the real 50-credit FREE budget and left
+ * PRO looking identical to FREE (no upgrade incentive in the UI).
+ */
 const LIMITS: Record<string, { projects: number; ai: number }> = {
-  FREE: { projects: 3, ai: 99999 },
-  PRO: { projects: 25, ai: 99999 },
-  STUDIO: { projects: Infinity, ai: Infinity },
+  FREE: { projects: PLAN_LIMITS.FREE.projects, ai: PLAN_LIMITS.FREE.aiGenerations },
+  PRO: { projects: PLAN_LIMITS.PRO.projects, ai: PLAN_LIMITS.PRO.aiGenerations },
+  STUDIO: { projects: PLAN_LIMITS.STUDIO.projects, ai: PLAN_LIMITS.STUDIO.aiGenerations },
 };
 
 export function usePlanLimits() {
