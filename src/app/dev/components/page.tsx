@@ -30,6 +30,26 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { SonnerDemo } from './SonnerDemo';
 
 export default function ComponentsShowcasePage() {
@@ -238,6 +258,140 @@ export default function ComponentsShowcasePage() {
           <h2 className="text-xl font-semibold">Toast (Sonner)</h2>
           <p className="text-sm text-muted-foreground">Toaster is mounted in root layout. Click to fire.</p>
           <SonnerDemo />
+        </section>
+
+        {/* Tabs */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Tabs</h2>
+          <Tabs defaultValue="overview" className="max-w-md">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="text-sm text-muted-foreground py-3">
+              Overview content — replace with your dashboard widgets.
+            </TabsContent>
+            <TabsContent value="analytics" className="text-sm text-muted-foreground py-3">
+              Analytics charts and metrics live here.
+            </TabsContent>
+            <TabsContent value="settings" className="text-sm text-muted-foreground py-3">
+              User settings & preferences panel.
+            </TabsContent>
+          </Tabs>
+        </section>
+
+        {/* Tooltip */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Tooltip</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline">Hover me</Button>
+              </TooltipTrigger>
+              <TooltipContent>This is a helpful hint</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" aria-label="Info">
+                  <PlayIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">On the right</TooltipContent>
+            </Tooltip>
+          </div>
+        </section>
+
+        {/* Select */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Select</h2>
+          <div className="max-w-xs">
+            <Select defaultValue="16:9">
+              <SelectTrigger>
+                <SelectValue placeholder="Aspect ratio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="16:9">16:9 — YouTube horizontal</SelectItem>
+                <SelectItem value="9:16">9:16 — Shorts / Reels / TikTok</SelectItem>
+                <SelectItem value="1:1">1:1 — Square</SelectItem>
+                <SelectItem value="4:5">4:5 — Instagram portrait</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
+        {/* Dropdown Menu */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Dropdown Menu</h2>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Open menu</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Billing</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive">Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </section>
+
+        {/* Switch */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Switch</h2>
+          <div className="flex items-center gap-3">
+            <Switch id="notifs" defaultChecked />
+            <Label htmlFor="notifs">Email notifications</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch id="beta" />
+            <Label htmlFor="beta">Enable beta features</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch id="disabled" disabled />
+            <Label htmlFor="disabled" className="opacity-50">
+              Disabled toggle
+            </Label>
+          </div>
+        </section>
+
+        {/* Separator */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Separator</h2>
+          <div className="max-w-md space-y-3">
+            <p className="text-sm text-muted-foreground">Above the line.</p>
+            <Separator />
+            <p className="text-sm text-muted-foreground">Below the line.</p>
+          </div>
+          <div className="flex h-12 items-center gap-3">
+            <span className="text-sm">Left</span>
+            <Separator orientation="vertical" />
+            <span className="text-sm">Middle</span>
+            <Separator orientation="vertical" />
+            <span className="text-sm">Right</span>
+          </div>
+        </section>
+
+        {/* Popover */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Popover</h2>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">Open popover</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Quick edit</h4>
+                <p className="text-sm text-muted-foreground">
+                  Popovers carry richer content than tooltips and can hold inputs.
+                </p>
+                <Input placeholder="Enter a value" />
+              </div>
+            </PopoverContent>
+          </Popover>
         </section>
 
         {/* Tokens preview */}
