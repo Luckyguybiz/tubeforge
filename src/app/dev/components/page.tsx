@@ -50,6 +50,34 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+} from '@/components/ui/table';
 import { SonnerDemo } from './SonnerDemo';
 
 export default function ComponentsShowcasePage() {
@@ -392,6 +420,170 @@ export default function ComponentsShowcasePage() {
               </div>
             </PopoverContent>
           </Popover>
+        </section>
+
+        {/* Sheet */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Sheet</h2>
+          <div className="flex flex-wrap gap-3">
+            {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
+              <Sheet key={side}>
+                <SheetTrigger asChild>
+                  <Button variant="outline">From {side}</Button>
+                </SheetTrigger>
+                <SheetContent side={side}>
+                  <SheetHeader>
+                    <SheetTitle>Side panel — {side}</SheetTitle>
+                    <SheetDescription>
+                      Sheets slide in from any edge — useful for filters, settings, mobile nav.
+                    </SheetDescription>
+                  </SheetHeader>
+                </SheetContent>
+              </Sheet>
+            ))}
+          </div>
+        </section>
+
+        {/* Textarea */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Textarea</h2>
+          <div className="max-w-md space-y-1.5">
+            <Label htmlFor="feedback-demo">Feedback</Label>
+            <Textarea id="feedback-demo" rows={4} placeholder="Tell us what you think…" />
+          </div>
+        </section>
+
+        {/* Checkbox */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Checkbox</h2>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Checkbox id="terms" defaultChecked />
+              <Label htmlFor="terms">Accept terms and conditions</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="newsletter" />
+              <Label htmlFor="newsletter">Subscribe to weekly newsletter</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="locked" disabled />
+              <Label htmlFor="locked" className="opacity-50">
+                Disabled option
+              </Label>
+            </div>
+          </div>
+        </section>
+
+        {/* Radio Group */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Radio Group</h2>
+          <RadioGroup defaultValue="pro" className="max-w-sm space-y-2">
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="free" id="plan-free" />
+              <Label htmlFor="plan-free">Free — 3 thumbnails / month</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="pro" id="plan-pro" />
+              <Label htmlFor="plan-pro">Pro — 100 / month</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="studio" id="plan-studio" />
+              <Label htmlFor="plan-studio">Studio — Unlimited</Label>
+            </div>
+          </RadioGroup>
+        </section>
+
+        {/* Slider */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Slider</h2>
+          <div className="max-w-md space-y-3">
+            <div className="space-y-1.5">
+              <Label>Quality (single)</Label>
+              <Slider defaultValue={[60]} max={100} step={1} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Range (paired)</Label>
+              <Slider defaultValue={[20, 80]} max={100} step={1} />
+            </div>
+          </div>
+        </section>
+
+        {/* Progress */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Progress</h2>
+          <div className="max-w-md space-y-3">
+            <Progress value={15} />
+            <Progress value={45} />
+            <Progress value={75} />
+            <Progress value={100} />
+          </div>
+        </section>
+
+        {/* Accordion */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Accordion</h2>
+          <Accordion type="single" collapsible className="max-w-md">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>What is TubeForge?</AccordionTrigger>
+              <AccordionContent>
+                AI-powered platform for YouTube creators — thumbnails, metadata, analytics.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger>How does the free plan work?</AccordionTrigger>
+              <AccordionContent>
+                3 AI thumbnails per month, no credit card required.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+              <AccordionTrigger>Can I cancel anytime?</AccordionTrigger>
+              <AccordionContent>
+                Yes — cancel from your billing page in two clicks. No questions asked.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
+
+        {/* Table */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Table</h2>
+          <Table>
+            <TableCaption>Recent thumbnail generations</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Style</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Cost</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>10 AI Tools You Need in 2026</TableCell>
+                <TableCell>Bold</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">Generating</Badge>
+                </TableCell>
+                <TableCell className="text-right">/bin/zsh.04</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Why I Quit My 9-5</TableCell>
+                <TableCell>Cinematic</TableCell>
+                <TableCell>
+                  <Badge>Done</Badge>
+                </TableCell>
+                <TableCell className="text-right">/bin/zsh.04</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Crypto Trading Strategy</TableCell>
+                <TableCell>Minimal</TableCell>
+                <TableCell>
+                  <Badge variant="destructive">Failed</Badge>
+                </TableCell>
+                <TableCell className="text-right">—</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </section>
 
         {/* Tokens preview */}
