@@ -1,9 +1,26 @@
 'use client';
 
+/**
+ * Login — pilot migration to Tailwind v4 + shadcn primitives.
+ *
+ * Logic preserved 1:1 from the inline-styled predecessor:
+ *   - Two modes (email-code OTP / email + password), persisted in localStorage
+ *   - Code mode: email step → 6-digit step with paste/auto-advance/auto-submit
+ *   - Password mode: email + password single-step
+ *   - All error/loading states; rate-limit, expired-code, invalid distinctions
+ *   - Referral code captured from URL → localStorage
+ *
+ * What changed: ~470 lines of inline styles replaced by Tailwind utility
+ * classes + Button/Input primitives. Pure visual / structural refactor.
+ */
+
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 const CODE_LENGTH = 6;
@@ -13,7 +30,6 @@ type LoginStep = 'email' | 'code';
 type LoginMode = 'code' | 'password';
 
 function isValidEmail(s: string): boolean {
-  // Liberal client-side check; server uses Zod's email validator.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
@@ -24,9 +40,6 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
 
-  // OTP mode is the default for first-time visitors. Returning users
-  // who set a password and chose "password" last time get persisted via
-  // localStorage so their preference sticks across sessions.
   const [mode, setMode] = useState<LoginMode>('code');
   const [step, setStep] = useState<LoginStep>('email');
   const [email, setEmail] = useState('');
@@ -34,20 +47,23 @@ function LoginContent() {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
-  const [codeDigits, setCodeDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(''));
+  const [codeDigits, setCodeDigits] = useState<string[]>(() =>
+    Array(CODE_LENGTH).fill(''),
+  );
   const [resendIn, setResendIn] = useState(0);
-  // Password-mode state
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [signingInPassword, setSigningInPassword] = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  // Restore mode preference on mount
+  // Restore mode preference
   useEffect(() => {
     try {
       const saved = localStorage.getItem(MODE_STORAGE_KEY);
       if (saved === 'password' || saved === 'code') setMode(saved);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const switchMode = useCallback((next: LoginMode) => {
@@ -55,22 +71,29 @@ function LoginContent() {
     setEmailError(null);
     setPasswordError(null);
     setCodeError(null);
-    try { localStorage.setItem(MODE_STORAGE_KEY, next); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(MODE_STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
+  // Already-authenticated → redirect to dashboard
   useEffect(() => {
     if (status === 'authenticated') window.location.href = callbackUrl;
   }, [status, callbackUrl]);
 
-  // Capture referral code from URL to localStorage (existing behavior preserved).
+  // Capture referral code from URL
   useEffect(() => {
     try {
       const refCode = searchParams.get('ref');
       if (refCode) localStorage.setItem('tf-ref', refCode);
-    } catch { /* localStorage unavailable */ }
+    } catch {
+      /* ignore */
+    }
   }, [searchParams]);
 
-  // Resend cooldown countdown.
+  // Resend cooldown countdown
   useEffect(() => {
     if (resendIn <= 0) return;
     const timer = setInterval(() => {
@@ -79,7 +102,7 @@ function LoginContent() {
     return () => clearInterval(timer);
   }, [resendIn]);
 
-  // Auto-focus first code input when entering code step.
+  // Auto-focus first code box
   useEffect(() => {
     if (step === 'code') {
       const id = setTimeout(() => codeRefs.current[0]?.focus(), 50);
@@ -104,7 +127,9 @@ function LoginContent() {
         });
         if (res.status === 429) {
           const data = await res.json().catch(() => ({}));
-          const wait = data.retryAt ? Math.max(0, Math.ceil((data.retryAt - Date.now()) / 1000)) : 60;
+          const wait = data.retryAt
+            ? Math.max(0, Math.ceil((data.retryAt - Date.now()) / 1000))
+            : 60;
           setEmailError(t('auth.login.email.rateLimit'));
           setResendIn(wait);
           return;
@@ -135,8 +160,6 @@ function LoginContent() {
     setVerifying(true);
     setCodeError(null);
     try {
-      // Pre-validate with /verify so we can show a clear error before letting
-      // signIn() consume the code. signIn re-runs the same check server-side.
       const pre = await fetch('/api/auth/email/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,8 +177,6 @@ function LoginContent() {
         setVerifying(false);
         return;
       }
-      // Hand off to NextAuth. The Credentials provider re-checks the code,
-      // creates/updates the user, and sets the session cookie.
       const result = await signIn('email-code', {
         email: email.trim(),
         code,
@@ -193,9 +214,6 @@ function LoginContent() {
         redirect: false,
       });
       if (result?.error) {
-        // NextAuth credentials returns generic CredentialsSignin on
-        // any failure — we deliberately don't distinguish "no account"
-        // from "wrong password" client-side either.
         setPasswordError(t('auth.login.password.invalid'));
         setSigningInPassword(false);
         return;
@@ -208,7 +226,6 @@ function LoginContent() {
   }, [email, password, callbackUrl, t]);
 
   const handleDigitChange = (idx: number, value: string) => {
-    // Accept only the last digit if multiple are pasted into a single box.
     const digits = value.replace(/\D/g, '');
     if (!digits.length) {
       const next = [...codeDigits];
@@ -223,7 +240,6 @@ function LoginContent() {
       if (idx < CODE_LENGTH - 1) codeRefs.current[idx + 1]?.focus();
       return;
     }
-    // Multi-digit paste — distribute starting at this index.
     const next = [...codeDigits];
     for (let i = 0; i < digits.length && idx + i < CODE_LENGTH; i++) {
       next[idx + i] = digits[i];
@@ -233,7 +249,10 @@ function LoginContent() {
     codeRefs.current[lastFilled]?.focus();
   };
 
-  const handleDigitKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleDigitKeyDown = (
+    idx: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === 'Backspace' && !codeDigits[idx] && idx > 0) {
       codeRefs.current[idx - 1]?.focus();
     } else if (e.key === 'ArrowLeft' && idx > 0) {
@@ -253,7 +272,7 @@ function LoginContent() {
     }
   };
 
-  // Auto-submit when all 6 digits are entered (only if not already verifying).
+  // Auto-submit on full code
   useEffect(() => {
     if (codeDigits.every((d) => d) && !verifying) {
       void submitCode();
@@ -261,57 +280,67 @@ function LoginContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeDigits.join('')]);
 
+  // Loading / already-authenticated splash
   if (status === 'loading' || status === 'authenticated') {
     return (
-      <main style={styles.page}>
-        <div style={styles.spinner} />
+      <main className="flex min-h-dvh items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-foreground" />
       </main>
     );
   }
 
   return (
-    <main style={styles.page}>
-      <div style={styles.logoWrap}>
-        <div style={styles.logoIcon}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-5 py-10">
+      {/* Logo */}
+      <div className="mb-8 flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
             <path d="M8 5v14l11-7L8 5z" fill="#fff" />
           </svg>
         </div>
-        <span style={styles.logoText}>TubeForge</span>
+        <span className="text-xl font-bold tracking-tight text-foreground">
+          TubeForge
+        </span>
       </div>
 
-      <div style={styles.card}>
+      {/* Card */}
+      <section
+        className="w-full max-w-[400px] rounded-2xl border border-border bg-card p-6 shadow-xl sm:p-8"
+        aria-labelledby="login-title"
+      >
         {step === 'email' ? (
           <>
-            <h1 style={styles.heading}>{t('auth.login.title')}</h1>
-            <p style={styles.subtitle}>{t('auth.login.subtitle')}</p>
+            <h1
+              id="login-title"
+              className="mb-1.5 text-center text-2xl font-semibold tracking-tight text-foreground"
+            >
+              {t('auth.login.title')}
+            </h1>
+            <p className="mb-6 text-center text-sm text-muted-foreground">
+              {t('auth.login.subtitle')}
+            </p>
 
-            {/* Mode toggle: Email Code (OTP) vs Password */}
-            <div style={styles.modeTabs} role="tablist">
-              <button
-                role="tab"
-                type="button"
-                aria-selected={mode === 'code'}
+            {/* Mode toggle */}
+            <div
+              role="tablist"
+              className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1"
+            >
+              <ModeTabButton
+                active={mode === 'code'}
                 onClick={() => switchMode('code')}
-                style={{
-                  ...styles.modeTab,
-                  ...(mode === 'code' ? styles.modeTabActive : null),
-                }}
-              >
-                {t('auth.login.tab.code')}
-              </button>
-              <button
-                role="tab"
-                type="button"
-                aria-selected={mode === 'password'}
+                label={t('auth.login.tab.code')}
+              />
+              <ModeTabButton
+                active={mode === 'password'}
                 onClick={() => switchMode('password')}
-                style={{
-                  ...styles.modeTab,
-                  ...(mode === 'password' ? styles.modeTabActive : null),
-                }}
-              >
-                {t('auth.login.tab.password')}
-              </button>
+                label={t('auth.login.tab.password')}
+              />
             </div>
 
             <form
@@ -320,39 +349,41 @@ function LoginContent() {
                 if (mode === 'code') void sendCode();
                 else void submitPassword();
               }}
+              className="space-y-4"
             >
-              <label htmlFor="login-email" style={styles.label}>
-                {t('auth.login.email.label')}
-              </label>
-              <input
-                id="login-email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                placeholder={t('auth.login.email.placeholder')}
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (emailError) setEmailError(null);
-                }}
-                disabled={sending || signingInPassword}
-                style={{
-                  ...styles.input,
-                  borderColor: emailError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
-                }}
-                aria-invalid={!!emailError}
-              />
-              {emailError && <p style={styles.fieldError}>{emailError}</p>}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="login-email"
+                  className="block text-xs font-medium text-muted-foreground"
+                >
+                  {t('auth.login.email.label')}
+                </label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder={t('auth.login.email.placeholder')}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError(null);
+                  }}
+                  disabled={sending || signingInPassword}
+                  aria-invalid={!!emailError}
+                />
+                {emailError && <FieldError>{emailError}</FieldError>}
+              </div>
 
               {mode === 'password' && (
-                <>
+                <div className="space-y-1.5">
                   <label
                     htmlFor="login-password"
-                    style={{ ...styles.label, marginTop: 16 }}
+                    className="block text-xs font-medium text-muted-foreground"
                   >
                     {t('auth.login.password.label')}
                   </label>
-                  <input
+                  <Input
                     id="login-password"
                     type="password"
                     autoComplete="current-password"
@@ -363,87 +394,86 @@ function LoginContent() {
                       if (passwordError) setPasswordError(null);
                     }}
                     disabled={signingInPassword}
-                    style={{
-                      ...styles.input,
-                      borderColor: passwordError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
-                    }}
                     aria-invalid={!!passwordError}
                   />
-                  {passwordError && <p style={styles.fieldError}>{passwordError}</p>}
-                </>
+                  {passwordError && <FieldError>{passwordError}</FieldError>}
+                </div>
               )}
 
-              <button
+              <Button
                 type="submit"
-                disabled={mode === 'code' ? sending : signingInPassword}
-                style={{
-                  ...styles.primaryBtn,
-                  opacity: (mode === 'code' ? sending : signingInPassword) ? 0.6 : 1,
-                  cursor: (mode === 'code' ? sending : signingInPassword) ? 'not-allowed' : 'pointer',
-                }}
+                className="w-full"
+                size="lg"
+                loading={mode === 'code' ? sending : signingInPassword}
               >
                 {mode === 'code'
-                  ? sending
-                    ? <ButtonSpinner />
-                    : t('auth.login.email.send')
-                  : signingInPassword
-                    ? <ButtonSpinner />
-                    : t('auth.login.password.signIn')}
-              </button>
+                  ? t('auth.login.email.send')
+                  : t('auth.login.password.signIn')}
+              </Button>
             </form>
           </>
         ) : (
           <>
-            <h1 style={styles.heading}>{t('auth.login.code.title')}</h1>
-            <p style={styles.subtitle}>
-              {t('auth.login.code.subtitle')} <strong style={{ color: '#ffffff' }}>{email}</strong>
+            <h1
+              id="login-title"
+              className="mb-1.5 text-center text-2xl font-semibold tracking-tight text-foreground"
+            >
+              {t('auth.login.code.title')}
+            </h1>
+            <p className="mb-6 text-center text-sm text-muted-foreground">
+              {t('auth.login.code.subtitle')}{' '}
+              <strong className="text-foreground">{email}</strong>
             </p>
 
             {codeError && (
-              <div style={styles.errorBanner} role="alert">
+              <div
+                role="alert"
+                className="mb-5 flex items-center gap-2.5 rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm text-error"
+              >
                 <ErrorIcon />
                 <span>{codeError}</span>
               </div>
             )}
 
-            <div style={styles.codeRow}>
+            <div className="flex justify-center gap-2">
               {codeDigits.map((digit, idx) => (
                 <input
                   key={idx}
-                  ref={(el) => { codeRefs.current[idx] = el; }}
+                  ref={(el) => {
+                    codeRefs.current[idx] = el;
+                  }}
                   type="text"
                   inputMode="numeric"
                   autoComplete={idx === 0 ? 'one-time-code' : 'off'}
                   pattern="\d*"
-                  maxLength={CODE_LENGTH /* allow paste; we filter in handler */}
+                  maxLength={CODE_LENGTH}
                   value={digit}
                   onChange={(e) => handleDigitChange(idx, e.target.value)}
                   onKeyDown={(e) => handleDigitKeyDown(idx, e)}
                   onPaste={handlePaste}
                   disabled={verifying}
                   aria-label={`${t('auth.login.code.digit')} ${idx + 1}`}
-                  style={{
-                    ...styles.codeInput,
-                    borderColor: codeError ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)',
-                  }}
+                  aria-invalid={!!codeError}
+                  className={cn(
+                    'h-14 w-11 rounded-lg border bg-input text-center font-mono text-xl font-semibold text-foreground',
+                    'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    codeError ? 'border-error/40' : 'border-border',
+                  )}
                 />
               ))}
             </div>
 
-            <button
+            <Button
               onClick={() => void submitCode()}
               disabled={verifying || codeDigits.some((d) => !d)}
-              style={{
-                ...styles.primaryBtn,
-                marginTop: 20,
-                opacity: verifying || codeDigits.some((d) => !d) ? 0.6 : 1,
-                cursor: verifying || codeDigits.some((d) => !d) ? 'not-allowed' : 'pointer',
-              }}
+              loading={verifying}
+              className="mt-5 w-full"
+              size="lg"
             >
-              {verifying ? <ButtonSpinner /> : t('auth.login.code.verify')}
-            </button>
+              {t('auth.login.code.verify')}
+            </Button>
 
-            <div style={styles.codeFooter}>
+            <div className="mt-5 flex items-center justify-between text-sm">
               <button
                 type="button"
                 onClick={() => {
@@ -451,7 +481,7 @@ function LoginContent() {
                   setCodeError(null);
                   setCodeDigits(Array(CODE_LENGTH).fill(''));
                 }}
-                style={styles.linkBtn}
+                className="font-medium text-brand-300 transition-colors hover:text-brand-200"
               >
                 {t('auth.login.code.changeEmail')}
               </button>
@@ -459,11 +489,12 @@ function LoginContent() {
                 type="button"
                 onClick={() => void sendCode(true)}
                 disabled={resendIn > 0 || sending}
-                style={{
-                  ...styles.linkBtn,
-                  opacity: resendIn > 0 || sending ? 0.5 : 1,
-                  cursor: resendIn > 0 || sending ? 'not-allowed' : 'pointer',
-                }}
+                className={cn(
+                  'font-medium transition-colors',
+                  resendIn > 0 || sending
+                    ? 'cursor-not-allowed text-muted-foreground/60'
+                    : 'text-brand-300 hover:text-brand-200',
+                )}
               >
                 {resendIn > 0
                   ? `${t('auth.login.code.resendIn')} ${resendIn}s`
@@ -472,297 +503,79 @@ function LoginContent() {
             </div>
           </>
         )}
-      </div>
+      </section>
 
-      <p style={styles.legal}>{t('auth.login.consent')}</p>
+      <p className="mt-4 max-w-[360px] text-center text-xs leading-relaxed text-muted-foreground/70">
+        {t('auth.login.consent')}
+      </p>
     </main>
   );
 }
 
+/* — Sub-components — */
+
+function ModeTabButton({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      role="tab"
+      type="button"
+      aria-selected={active}
+      onClick={onClick}
+      className={cn(
+        'h-9 rounded-md text-xs font-medium transition-colors',
+        active
+          ? 'bg-brand-500/15 text-brand-200'
+          : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FieldError({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs text-error">{children}</p>;
+}
+
 function ErrorIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }} aria-hidden="true">
-      <circle cx="8" cy="8" r="8" fill="#ff3b30" fillOpacity="0.12" />
-      <path d="M8 4.5v4M8 10.5v.5" stroke="#ff3b30" strokeWidth="1.5" strokeLinecap="round" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="8" fill="currentColor" fillOpacity="0.12" />
+      <path
+        d="M8 4.5v4M8 10.5v.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-function ButtonSpinner() {
-  return (
-    <span
-      style={{
-        width: 16,
-        height: 16,
-        border: '2px solid rgba(255,255,255,0.25)',
-        borderTopColor: '#ffffff',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-        display: 'inline-block',
-      }}
-      aria-hidden="true"
-    />
-  );
-}
-
-/* ---------- Dark design tokens ---------- */
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    width: '100%',
-    minHeight: '100dvh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#0a0a0a',
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Instrument Sans', 'Helvetica Neue', sans-serif",
-    padding: '40px 20px',
-    boxSizing: 'border-box',
-  },
-  spinner: {
-    width: 24,
-    height: 24,
-    border: '2.5px solid rgba(255,255,255,0.1)',
-    borderTopColor: '#ffffff',
-    borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite',
-  },
-  logoWrap: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 32,
-  },
-  modeTabs: {
-    display: 'flex',
-    gap: 4,
-    padding: 4,
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.06)',
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  modeTab: {
-    flex: 1,
-    height: 36,
-    background: 'transparent',
-    border: 'none',
-    borderRadius: 8,
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'background 0.15s, color 0.15s',
-    outline: 'none',
-  },
-  modeTabActive: {
-    background: 'rgba(99,102,241,0.16)',
-    color: '#c7d2fe',
-  },
-  logoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    background: '#6366f1',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    fontWeight: 700,
-    fontSize: 20,
-    letterSpacing: '-0.02em',
-    color: '#ffffff',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 400,
-    background: '#1a1a1a',
-    borderRadius: 20,
-    border: '1px solid rgba(255,255,255,0.06)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-    padding: 'clamp(20px, 5vw, 40px)',
-    boxSizing: 'border-box' as const,
-    textAlign: 'center' as const,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 600,
-    color: '#ffffff',
-    margin: '0 0 6px 0',
-    letterSpacing: '-0.01em',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.5)',
-    margin: '0 0 28px 0',
-    lineHeight: 1.5,
-  },
-  errorBanner: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    background: 'rgba(239,68,68,0.1)',
-    border: '1px solid rgba(239,68,68,0.2)',
-    borderRadius: 12,
-    padding: '12px 16px',
-    marginBottom: 20,
-    color: '#f87171',
-    fontSize: 13,
-    lineHeight: 1.4,
-    textAlign: 'left' as const,
-  },
-  label: {
-    display: 'block',
-    fontSize: 13,
-    fontWeight: 500,
-    color: 'rgba(255,255,255,0.7)',
-    marginBottom: 8,
-    textAlign: 'left' as const,
-  },
-  input: {
-    width: '100%',
-    height: 48,
-    padding: '0 16px',
-    borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
-    color: '#ffffff',
-    fontSize: 15,
-    fontFamily: 'inherit',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-    transition: 'border-color 0.15s, background 0.15s',
-  },
-  fieldError: {
-    color: '#f87171',
-    fontSize: 12,
-    margin: '6px 0 0',
-    textAlign: 'left' as const,
-  },
-  primaryBtn: {
-    width: '100%',
-    height: 48,
-    marginTop: 16,
-    padding: '0 20px',
-    borderRadius: 12,
-    border: 'none',
-    background: '#6366f1',
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    transition: 'background 0.15s, transform 0.05s',
-    outline: 'none',
-  },
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    margin: '20px 0',
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: 'rgba(255,255,255,0.08)',
-  },
-  dividerText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: 500,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.06em',
-  },
-  googleBtn: {
-    width: '100%',
-    height: 48,
-    padding: '0 20px',
-    borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'transparent',
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    transition: 'background 0.2s, border-color 0.2s',
-    outline: 'none',
-  },
-  codeRow: {
-    display: 'flex',
-    gap: 8,
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  codeInput: {
-    width: 44,
-    height: 56,
-    textAlign: 'center' as const,
-    fontSize: 22,
-    fontWeight: 600,
-    color: '#ffffff',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 10,
-    fontFamily: "'SF Mono', 'Menlo', 'Consolas', monospace",
-    outline: 'none',
-    transition: 'border-color 0.15s, background 0.15s',
-  },
-  codeFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
-    fontSize: 13,
-  },
-  linkBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: '#a5b4fc',
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: 'pointer',
-    padding: 4,
-    fontFamily: 'inherit',
-  },
-  switchText: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 14,
-    marginTop: 24,
-    marginBottom: 0,
-  },
-  switchLink: {
-    color: '#6366f1',
-    textDecoration: 'none',
-    fontWeight: 600,
-  },
-  legal: {
-    color: 'rgba(255,255,255,0.45)',
-    fontSize: 12,
-    marginTop: 16,
-    textAlign: 'center' as const,
-    maxWidth: 360,
-    lineHeight: 1.5,
-  },
-};
-
 export default function LoginPage() {
   return (
-    <>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      <Suspense fallback={<div style={{ width: '100%', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}><div style={styles.spinner} /></div>}>
-        <LoginContent />
-      </Suspense>
-    </>
+    <Suspense
+      fallback={
+        <main className="flex min-h-dvh items-center justify-center bg-background">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-foreground" />
+        </main>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
