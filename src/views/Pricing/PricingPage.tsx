@@ -45,7 +45,6 @@ const PLANS: PlanDef[] = [
       "pricing.feat.100ai",
       "pricing.feat.allAiTools",
       "pricing.feat.vpn",
-      "pricing.feat.unlimitedThumbs",
       "pricing.feat.abTesting",
       "pricing.feat.storage50gb",
       "pricing.feat.prioritySupport",
