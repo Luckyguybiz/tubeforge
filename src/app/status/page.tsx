@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useThemeStore } from '@/stores/useThemeStore';
-import { useEffect, useState, useCallback } from 'react';
+import Link from "next/link";
+import { useEffect, useState, useCallback } from "react";
+import { Card } from "@/components/ui/card";
 
 interface HealthData {
-  status: 'ok' | 'degraded';
+  status: "ok" | "degraded";
   version: string;
-  db: 'connected' | 'disconnected';
+  db: "connected" | "disconnected";
   dbLatencyMs: number | null;
   uptime: number;
   memory: {
@@ -19,7 +19,7 @@ interface HealthData {
   timestamp: string;
 }
 
-type ServiceStatus = 'operational' | 'degraded' | 'outage' | 'loading';
+type ServiceStatus = "operational" | "degraded" | "outage" | "loading";
 
 interface SystemService {
   name: string;
@@ -29,10 +29,10 @@ interface SystemService {
 }
 
 const STATUS_CONFIG = {
-  operational: { label: 'Operational', color: '#2dd4a0' },
-  degraded: { label: 'Degraded', color: '#f59e0b' },
-  outage: { label: 'Outage', color: '#ef4444' },
-  loading: { label: 'Checking...', color: '#94a3b8' },
+  operational: { label: "Operational", color: "#2dd4a0" },
+  degraded: { label: "Degraded", color: "#f59e0b" },
+  outage: { label: "Outage", color: "#ef4444" },
+  loading: { label: "Checking...", color: "#94a3b8" },
 } as const;
 
 function formatBytes(bytes: number): string {
@@ -50,14 +50,13 @@ function formatUptime(seconds: number): string {
 }
 
 export default function StatusPage() {
-  const C = useThemeStore((s) => s.theme);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [error, setError] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   const fetchHealth = useCallback(async () => {
     try {
-      const res = await fetch('/api/health', { cache: 'no-store' });
+      const res = await fetch("/api/health", { cache: "no-store" });
       const data = (await res.json()) as HealthData;
       setHealth(data);
       setError(false);
@@ -75,256 +74,199 @@ export default function StatusPage() {
 
   const services: SystemService[] = [
     {
-      name: 'Application',
-      description: 'TubeForge platform core',
-      status: error ? 'outage' : health ? 'operational' : 'loading',
-      detail: health ? `v${health.version} | uptime ${formatUptime(health.uptime)}` : '',
+      name: "Application",
+      description: "TubeForge platform core",
+      status: error ? "outage" : health ? "operational" : "loading",
+      detail: health ? `v${health.version} | uptime ${formatUptime(health.uptime)}` : "",
     },
     {
-      name: 'Database',
-      description: 'PostgreSQL / Prisma',
+      name: "Database",
+      description: "PostgreSQL / Prisma",
       status: error
-        ? 'outage'
+        ? "outage"
         : health
-          ? health.db === 'connected'
-            ? 'operational'
-            : 'outage'
-          : 'loading',
-      detail: health?.dbLatencyMs != null ? `Latency ${health.dbLatencyMs}ms` : '',
+          ? health.db === "connected"
+            ? "operational"
+            : "outage"
+          : "loading",
+      detail: health?.dbLatencyMs != null ? `Latency ${health.dbLatencyMs}ms` : "",
     },
     {
-      name: 'AI Generation',
-      description: 'OpenAI, Anthropic, Runway',
-      status: error ? 'outage' : health ? 'operational' : 'loading',
-      detail: 'Via external APIs',
+      name: "AI Generation",
+      description: "OpenAI, Anthropic, Runway",
+      status: error ? "outage" : health ? "operational" : "loading",
+      detail: "Via external APIs",
     },
     {
-      name: 'Payments',
-      description: 'Stripe Payments',
-      status: error ? 'outage' : health ? 'operational' : 'loading',
-      detail: 'Via Stripe',
+      name: "Payments",
+      description: "Stripe Payments",
+      status: error ? "outage" : health ? "operational" : "loading",
+      detail: "Via Stripe",
     },
     {
-      name: 'CDN / Media',
-      description: 'File upload and storage',
-      status: error ? 'outage' : health ? 'operational' : 'loading',
-      detail: '',
+      name: "CDN / Media",
+      description: "File upload and storage",
+      status: error ? "outage" : health ? "operational" : "loading",
+      detail: "",
     },
   ];
 
-  const overallOk = !error && health?.status === 'ok';
+  const overallOk = !error && health?.status === "ok";
   const isLoading = !health && !error;
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
-      {/* Header */}
-      <header
-        style={{
-          borderBottom: `1px solid ${C.border}`,
-          background: C.surface,
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Link
-          href="/"
-          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}
-        >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: 12,
-            }}
-          >
+    <div className="min-h-dvh bg-background text-foreground">
+      <header className="border-b border-border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 py-4 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5 no-underline">
+          <div className="size-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-extrabold text-xs">
             TF
           </div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: C.text }}>TubeForge</span>
+          <span className="text-lg font-bold text-foreground">TubeForge</span>
         </Link>
         <Link
           href="/"
-          style={{
-            textDecoration: 'none',
-            color: C.sub,
-            fontSize: 14,
-            fontWeight: 500,
-          }}
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground no-underline"
         >
-          &larr; Back to Home
+          ← Back to Home
         </Link>
       </header>
 
-      <div className="tf-status-container" style={{ maxWidth: 680, margin: '0 auto', padding: '48px 24px 64px' }}>
+      <div className="mx-auto max-w-2xl px-6 py-12 pb-16">
         {/* Overall status */}
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '32px 24px',
-            background: isLoading
-              ? 'rgba(148,163,184,0.08)'
+        <Card
+          className={`text-center px-6 py-8 mb-8 border ${
+            isLoading
+              ? "border-slate-400/20 bg-slate-400/5"
               : overallOk
-                ? 'rgba(45,212,160,0.08)'
-                : 'rgba(239,68,68,0.08)',
-            border: `1px solid ${
-              isLoading
-                ? 'rgba(148,163,184,0.2)'
-                : overallOk
-                  ? 'rgba(45,212,160,0.2)'
-                  : 'rgba(239,68,68,0.2)'
-            }`,
-            borderRadius: 16,
-            marginBottom: 32,
-          }}
+                ? "border-emerald-400/20 bg-emerald-400/5"
+                : "border-red-500/20 bg-red-500/5"
+          }`}
         >
           <div
+            className="mx-auto mb-4 size-12 rounded-full flex items-center justify-center text-white"
             style={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: isLoading ? '#94a3b8' : overallOk ? '#2dd4a0' : '#ef4444',
-              margin: '0 auto 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              background: isLoading ? "#94a3b8" : overallOk ? "#2dd4a0" : "#ef4444",
             }}
           >
             {overallOk ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             )}
           </div>
-          <h1 style={{ fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-            {isLoading ? 'Checking systems...' : overallOk ? 'All Systems Operational' : 'Issues Detected'}
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight m-0">
+            {isLoading
+              ? "Checking systems..."
+              : overallOk
+                ? "All Systems Operational"
+                : "Issues Detected"}
           </h1>
-          <p className="tf-status-refresh" style={{ color: C.sub, fontSize: 14, marginTop: 8 }}>
+          <p className="text-muted-foreground text-sm mt-2">
             {lastChecked
-              ? `Last checked: ${lastChecked.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
-              : 'Checking...'}
-            {' | Auto-refreshes every 30s'}
+              ? `Last checked: ${lastChecked.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+              : "Checking..."}
+            {" | Auto-refreshes every 30s"}
           </p>
-        </div>
+        </Card>
 
         {/* Services list */}
-        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Services</h2>
-        <div className="tf-status-grid" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <h2 className="text-lg font-bold mb-4">Services</h2>
+        <div className="flex flex-col gap-2">
           {services.map((service) => {
             const cfg = STATUS_CONFIG[service.status];
             return (
-              <div
+              <Card
                 key={service.name}
-                className="tf-status-service"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '16px 20px',
-                  background: C.card,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 12,
-                }}
+                className="flex flex-row items-center justify-between px-5 py-4 gap-4"
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{service.name}</div>
-                  <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[15px] font-semibold text-foreground">
+                    {service.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     {service.description}
                     {service.detail && (
-                      <span style={{ marginLeft: 8, opacity: 0.7 }}>
-                        — {service.detail}
-                      </span>
+                      <span className="ml-2 opacity-70">— {service.detail}</span>
                     )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <div className="flex items-center gap-1.5 shrink-0">
                   <div
+                    className="size-2 rounded-full"
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
                       background: cfg.color,
                       boxShadow: `0 0 8px ${cfg.color}40`,
                     }}
                   />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: cfg.color }}>
+                  <span
+                    className="text-[13px] font-semibold"
+                    style={{ color: cfg.color }}
+                  >
                     {cfg.label}
                   </span>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
 
         {/* Memory / system stats */}
         {health && (
-          <div style={{ marginTop: 32 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>System</h2>
-            <div
-              className="tf-status-stats"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: 12,
-              }}
-            >
+          <div className="mt-8">
+            <h2 className="text-lg font-bold mb-4">System</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Uptime', value: formatUptime(health.uptime) },
-                { label: 'Memory (RSS)', value: formatBytes(health.memory.rss) },
-                { label: 'Heap Used', value: formatBytes(health.memory.heapUsed) },
-                { label: 'DB Latency', value: health.dbLatencyMs != null ? `${health.dbLatencyMs}ms` : 'N/A' },
+                { label: "Uptime", value: formatUptime(health.uptime) },
+                { label: "Memory (RSS)", value: formatBytes(health.memory.rss) },
+                { label: "Heap Used", value: formatBytes(health.memory.heapUsed) },
+                {
+                  label: "DB Latency",
+                  value: health.dbLatencyMs != null ? `${health.dbLatencyMs}ms` : "N/A",
+                },
               ].map((stat) => (
-                <div
-                  key={stat.label}
-                  style={{
-                    padding: '16px 20px',
-                    background: C.card,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 12,
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: 12, color: C.dim, marginBottom: 4 }}>{stat.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{stat.value}</div>
-                </div>
+                <Card key={stat.label} className="px-5 py-4 text-center">
+                  <div className="text-xs text-muted-foreground mb-1">{stat.label}</div>
+                  <div className="text-xl font-extrabold text-foreground">{stat.value}</div>
+                </Card>
               ))}
             </div>
           </div>
         )}
 
         {/* Footer note */}
-        <div
-          className="tf-status-footer"
-          style={{
-            marginTop: 32,
-            padding: '20px 24px',
-            background: C.card,
-            border: `1px solid ${C.border}`,
-            borderRadius: 14,
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ fontSize: 13, color: C.dim, margin: 0 }}>
-            Monitoring runs 24/7. If you experience issues, please contact{' '}
-            <Link href="/contact" style={{ color: C.accent, textDecoration: 'none' }}>
+        <Card className="mt-8 px-6 py-5 text-center">
+          <p className="text-[13px] text-muted-foreground m-0">
+            Monitoring runs 24/7. If you experience issues, please contact{" "}
+            <Link href="/contact" className="text-brand-500 hover:underline underline-offset-4">
               support
             </Link>
             .
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   );
