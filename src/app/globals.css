@@ -1,5 +1,115 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────────
+ * Design tokens — Tailwind v4 @theme block
+ * Single source of truth shared between web (CSS vars) and mobile
+ * (JSON in @tubeforge/core/tokens.ts, Phase 1 to be added).
+ *
+ * Token-naming follows shadcn convention so `bg-background`,
+ * `text-foreground`, `bg-card` etc. resolve correctly without
+ * a custom Tailwind plugin.
+ *
+ * Dark theme is the default (no media query); light theme
+ * activates via `[data-theme="light"]` on root.
+ * ──────────────────────────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-brand-50:  oklch(0.97 0.02 280);
+  --color-brand-100: oklch(0.93 0.05 280);
+  --color-brand-200: oklch(0.86 0.10 280);
+  --color-brand-300: oklch(0.78 0.14 280);
+  --color-brand-400: oklch(0.69 0.18 280);
+  --color-brand-500: oklch(0.62 0.22 280); /* #6366f1 indigo */
+  --color-brand-600: oklch(0.55 0.22 280); /* #4f46e5 */
+  --color-brand-700: oklch(0.47 0.20 280);
+  --color-brand-800: oklch(0.38 0.16 280);
+  --color-brand-900: oklch(0.30 0.12 280);
+
+  /* Accent (violet) */
+  --color-accent-50:  oklch(0.97 0.02 305);
+  --color-accent-300: oklch(0.78 0.14 305);
+  --color-accent-500: oklch(0.66 0.22 305); /* #8b5cf6 */
+  --color-accent-700: oklch(0.50 0.20 305);
+  --color-accent-900: oklch(0.32 0.13 305);
+
+  /* Neutrals — 50-950 scale on near-true black */
+  --color-neutral-50:  oklch(0.985 0 0);
+  --color-neutral-100: oklch(0.96  0 0);
+  --color-neutral-200: oklch(0.91  0 0);
+  --color-neutral-300: oklch(0.83  0 0);
+  --color-neutral-400: oklch(0.66  0 0);
+  --color-neutral-500: oklch(0.50  0 0);
+  --color-neutral-600: oklch(0.40  0 0);
+  --color-neutral-700: oklch(0.30  0 0);
+  --color-neutral-800: oklch(0.22  0 0);
+  --color-neutral-900: oklch(0.15  0 0);
+  --color-neutral-950: oklch(0.05  0 0); /* #0a0a0a hero bg */
+
+  /* Semantic */
+  --color-success: oklch(0.70 0.18 152);
+  --color-warning: oklch(0.79 0.16 79);
+  --color-error:   oklch(0.66 0.22 25);
+  --color-info:    oklch(0.69 0.16 232);
+
+  /* Surface tokens (resolved by data-theme) */
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--fg-primary);
+  --color-card:       var(--bg-secondary);
+  --color-card-foreground: var(--fg-primary);
+  --color-muted:      var(--bg-tertiary);
+  --color-muted-foreground: var(--fg-tertiary);
+  --color-border:     var(--border-default);
+  --color-input:      var(--bg-tertiary);
+  --color-ring:       var(--color-brand-500);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius:    8px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.10), 0 4px 6px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.10), 0 10px 10px rgba(0,0,0,0.04);
+  --shadow-glow: 0 0 30px rgba(99,102,241,0.40);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Theme variables — dark (default) and light. Update one line of
+ * vars, all `bg-background`, `text-foreground` etc tokens flip.
+ * ──────────────────────────────────────────────────────────────── */
+:root {
+  /* Dark theme defaults */
+  --bg-primary:    oklch(0.05 0 0);   /* #0a0a0a */
+  --bg-secondary:  oklch(0.10 0 0);   /* #1a1a1a card */
+  --bg-tertiary:   oklch(0.15 0 0);   /* #262626 elevated */
+  --fg-primary:    oklch(1 0 0);      /* #ffffff */
+  --fg-secondary:  oklch(0.85 0 0);
+  --fg-tertiary:   oklch(0.55 0 0);   /* muted */
+  --fg-disabled:   oklch(0.30 0 0);
+  --border-default: oklch(1 0 0 / 0.08);
+  --border-subtle:  oklch(1 0 0 / 0.04);
+  --border-strong:  oklch(1 0 0 / 0.16);
+}
+
+[data-theme="light"] {
+  --bg-primary:    oklch(1 0 0);
+  --bg-secondary:  oklch(0.985 0 0);
+  --bg-tertiary:   oklch(0.96 0 0);
+  --fg-primary:    oklch(0.13 0 0);
+  --fg-secondary:  oklch(0.30 0 0);
+  --fg-tertiary:   oklch(0.50 0 0);
+  --fg-disabled:   oklch(0.70 0 0);
+  --border-default: oklch(0.13 0 0 / 0.10);
+  --border-subtle:  oklch(0.13 0 0 / 0.04);
+  --border-strong:  oklch(0.13 0 0 / 0.20);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -2049,6 +2159,19 @@ img {
   height: 100%;
   min-height: 0;
   overflow: hidden;
+}
+.tf-thumb-editor-root input[type="text"]:focus,
+.tf-thumb-editor-root input[type="number"]:focus,
+.tf-thumb-editor-root textarea:focus,
+.tf-thumb-editor-root select:focus {
+  border-color: #6366f1 !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+.tf-thumb-editor-root input[type="range"] {
+  height: 4px;
+  cursor: pointer;
+  border-radius: 4px;
 }
 
 .tf-thumb-header {

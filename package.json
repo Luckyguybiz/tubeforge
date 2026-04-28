@@ -27,6 +27,7 @@
     "@distube/ytdl-core": "^4.16.12",
     "@fal-ai/client": "^1.9.4",
     "@prisma/client": "^6.9.0",
+    "@radix-ui/react-slot": "^1.2.4",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
     "@react-three/rapier": "^2.2.0",

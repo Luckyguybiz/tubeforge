@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
  * Generate a cryptographically secure unique ID suitable for filenames.
@@ -18,8 +19,18 @@ export const fmtTime = (s: number) => {
 /** Short duration: "5s" for ≤59s, "1:30" for ≥60s */
 export const fmtDur = (s: number) => (s < 60 ? `${s}s` : fmtTime(s));
 
+/**
+ * Compose Tailwind class names with conflict resolution.
+ *
+ * Wraps `clsx` (conditionals + arrays) with `tailwind-merge` so the
+ * last conflicting utility wins:
+ *   cn("px-2 py-1", "px-4")  →  "py-1 px-4"
+ *
+ * This is the shadcn-style standard; required so that variant +
+ * caller `className` overrides resolve cleanly.
+ */
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
 
 /**
