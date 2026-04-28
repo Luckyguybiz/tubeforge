@@ -22,11 +22,11 @@ const ProductDemo = lazy(() =>
 export const metadata: Metadata = {
   title: "TubeForge — AI Thumbnails That Beat Your Niche",
   description:
-    "GPT-4o analyses what's working in your YouTube niche, then generates thumbnails in that style. Lift CTR from your first upload.",
+    "AI analyses what's working in your YouTube niche, then generates thumbnails in that style. Lift CTR from your first upload.",
   openGraph: {
     title: "TubeForge — AI Thumbnails That Beat Your Niche",
     description:
-      "GPT-4o analyses what's working in your niche, then generates thumbnails in that style. Designed to lift CTR from the first upload.",
+      "AI analyses what's working in your niche, then generates thumbnails in that style. Designed to lift CTR from the first upload.",
     type: "website",
     locale: "en_US",
     images: [{ url: "/api/og", width: 1200, height: 630, alt: "TubeForge — AI Thumbnails That Beat Your Niche" }],
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "TubeForge — AI Thumbnails That Beat Your Niche",
-    description: "GPT-4o analyses your niche, generates thumbnails that lift CTR. 3 free per month, no credit card.",
+    description: "AI analyses your niche, generates thumbnails that lift CTR. 3 free per month, no credit card.",
     images: ["/api/og"],
   },
 };
@@ -46,7 +46,7 @@ const KEY_FEATURES = [
   {
     icon: "thumbnail",
     title: "Niche-aware AI",
-    desc: "GPT-4o reads top-performing thumbnails in your niche and generates new ones in that exact style — not generic stock-photo collages.",
+    desc: "AI reads top-performing thumbnails in your niche and generates new ones in that exact style — not generic stock-photo collages.",
     href: "/ai-thumbnails",
     cta: "Generate one",
   },
@@ -93,7 +93,7 @@ const HOW_IT_WORKS = [
   {
     step: "2",
     title: "AI reads your niche, generates 3 variants",
-    desc: "GPT-4o pulls the visual patterns from top-performing thumbnails in your niche right now and composes 3 thumbnails that match — colours, text density, face placement, all niche-typical.",
+    desc: "AI pulls the visual patterns from top-performing thumbnails in your niche right now and composes 3 thumbnails that match — colours, text density, face placement, all niche-typical.",
   },
   {
     step: "3",
@@ -169,7 +169,7 @@ const PLANS = [
     features: [
       "100 thumbnails / month",
       "A/B testing & multi-size preview",
-      "Higher-quality models (DALL-E 3 HD)",
+      "Higher-quality AI model",
       "Style library across niches",
       "Priority generation queue",
       "All Free tools included",
@@ -198,7 +198,7 @@ const PLANS = [
 const FAQ_ITEMS = [
   {
     q: "What makes TubeForge different from a generic AI image generator?",
-    a: "TubeForge is built specifically for YouTube thumbnails. GPT-4o reads the top-performing thumbnails in your niche and generates new ones in that exact style \u2014 bold text overlays, niche-typical compositions, the lighting that's working right now. A generic image generator gives you stock-photo collages; we give you thumbnails creators in your niche actually click on.",
+    a: "TubeForge is built specifically for YouTube thumbnails. AI reads the top-performing thumbnails in your niche and generates new ones in that exact style \u2014 bold text overlays, niche-typical compositions, the lighting that's working right now. A generic image generator gives you stock-photo collages; we give you thumbnails creators in your niche actually click on.",
   },
   {
     q: "Is TubeForge really free?",
@@ -206,7 +206,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How does the niche analysis work?",
-    a: "When you describe your video \u2014 or paste a YouTube URL \u2014 GPT-4o pulls the visual patterns from top thumbnails in that niche right now: dominant colours, face placement, text density, background style. The generator then composes a thumbnail using those patterns combined with your prompt.",
+    a: "When you describe your video \u2014 or paste a YouTube URL \u2014 AI pulls the visual patterns from top thumbnails in that niche right now: dominant colours, face placement, text density, background style. The generator then composes a thumbnail using those patterns combined with your prompt.",
   },
   {
     q: "Can I edit the AI's output?",
@@ -214,7 +214,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How many thumbnails do I get per month?",
-    a: "Free: 3/month. Pro ($12/mo): 100/month with A/B testing and the higher-quality DALL-E 3 HD model. Studio ($30/mo): unlimited, plus brand kit, team seats, and commercial license.",
+    a: "Free: 3/month. Pro ($12/mo): 100/month with A/B testing and our higher-quality AI model. Studio ($30/mo): unlimited, plus brand kit, team seats, and commercial license.",
   },
   {
     q: "Can I cancel my subscription?",

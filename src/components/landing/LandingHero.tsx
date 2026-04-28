@@ -80,7 +80,7 @@ export function LandingHero() {
               fontWeight: 400,
             }}
           >
-            GPT-4o analyses what&rsquo;s working in your niche, then generates thumbnails in that style. No more guessing — designed to lift CTR from the first upload.
+            AI analyses what&rsquo;s working in your niche, then generates thumbnails in that style. No more guessing — designed to lift CTR from the first upload.
           </p>
 
           {/* CTA */}
