@@ -17,6 +17,20 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { SonnerDemo } from './SonnerDemo';
 
 export default function ComponentsShowcasePage() {
   if (process.env.NODE_ENV === 'production') notFound();
@@ -143,6 +157,87 @@ export default function ComponentsShowcasePage() {
               </CardHeader>
             </Card>
           </div>
+        </section>
+
+        {/* Badge */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Badge</h2>
+          <div className="flex flex-wrap gap-3">
+            <Badge>Default</Badge>
+            <Badge variant="secondary">Secondary</Badge>
+            <Badge variant="destructive">Destructive</Badge>
+            <Badge variant="outline">Outline</Badge>
+            <Badge variant="ghost">Ghost</Badge>
+            <Badge variant="link">Link</Badge>
+          </div>
+        </section>
+
+        {/* Avatar */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Avatar</h2>
+          <div className="flex flex-wrap items-center gap-4">
+            <Avatar>
+              <AvatarImage src="https://i.pravatar.cc/64?img=12" alt="User" />
+              <AvatarFallback>NB</AvatarFallback>
+            </Avatar>
+            <Avatar className="size-12">
+              <AvatarImage src="/no-such-image.png" alt="User" />
+              <AvatarFallback>TF</AvatarFallback>
+            </Avatar>
+            <Avatar className="size-16">
+              <AvatarFallback>?</AvatarFallback>
+            </Avatar>
+          </div>
+        </section>
+
+        {/* Dialog */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Dialog</h2>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Open dialog</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm action</DialogTitle>
+                <DialogDescription>
+                  This is a sample dialog showing how a Dialog primitive looks. Press Escape or click outside to close.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <Label htmlFor="sample-input">Sample field</Label>
+                <Input id="sample-input" placeholder="Type something…" />
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="ghost">Cancel</Button>
+                </DialogClose>
+                <Button>Confirm</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </section>
+
+        {/* Label + Form fields */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Label</h2>
+          <div className="max-w-sm space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="email-demo">Email</Label>
+              <Input id="email-demo" type="email" placeholder="you@example.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pw-demo">Password</Label>
+              <Input id="pw-demo" type="password" placeholder="••••••••" />
+            </div>
+          </div>
+        </section>
+
+        {/* Sonner */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Toast (Sonner)</h2>
+          <p className="text-sm text-muted-foreground">Toaster is mounted in root layout. Click to fire.</p>
+          <SonnerDemo />
         </section>
 
         {/* Tokens preview */}

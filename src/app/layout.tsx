@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Analytics } from '@/components/Analytics';
 import { WebVitals } from '@/components/WebVitals';
+import { Toaster } from '@/components/ui/sonner';
 
 const instrumentSans = Instrument_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin', 'cyrillic'], variable: '--font-mono', display: 'swap' });
@@ -132,7 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`} style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, var(--font-sans), sans-serif", backgroundColor: '#0a0a0a', color: '#ffffff' }}>
         <Analytics />
         <WebVitals />
-        <Providers>{children}</Providers>
+        <Providers>{children}<Toaster /></Providers>
       </body>
     </html>
   );

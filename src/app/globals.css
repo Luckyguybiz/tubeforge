@@ -61,6 +61,18 @@
   --color-border:     var(--border-default);
   --color-input:      var(--bg-tertiary);
   --color-ring:       var(--color-brand-500);
+  /* Semantic shadcn aliases (Wave 1 — for shadcn-CLI generated primitives) */
+  --color-primary:              var(--color-brand-500);
+  --color-primary-foreground:   oklch(1 0 0);
+  --color-secondary:            var(--bg-secondary);
+  --color-secondary-foreground: var(--fg-primary);
+  --color-destructive:          var(--color-error);
+  --color-destructive-foreground: oklch(1 0 0);
+  --color-popover:              var(--bg-secondary);
+  --color-popover-foreground:   var(--fg-primary);
+  --color-accent:               var(--bg-tertiary);
+  --color-accent-foreground:    var(--fg-primary);
+
 
   /* Radii */
   --radius-sm: 4px;
