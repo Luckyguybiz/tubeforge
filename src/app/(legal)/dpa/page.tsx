@@ -1,41 +1,25 @@
-'use client';
-
-import { useThemeStore } from '@/stores/useThemeStore';
 
 export default function DpaPage() {
-  const C = useThemeStore((s) => s.theme);
 
-  const sectionStyle: React.CSSProperties = { marginBottom: 36 };
-  const headingStyle: React.CSSProperties = { fontSize: 20, fontWeight: 700, marginBottom: 12, color: C.text };
-  const paraStyle: React.CSSProperties = { fontSize: 14, lineHeight: 1.8, color: C.sub, marginBottom: 12 };
-  const listStyle: React.CSSProperties = { fontSize: 14, lineHeight: 2, color: C.sub, paddingLeft: 24, margin: '8px 0 12px' };
 
-  const cellStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: `1px solid ${C.border}` };
 
   return (
     <div>
-      <h1
-        style={{
-          fontSize: 32,
-          fontWeight: 800,
-          letterSpacing: '-.02em',
-          marginBottom: 8,
-        }}
-      >
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-2">
         Data Processing Agreement (DPA)
       </h1>
-      <p style={{ fontSize: 13, color: C.dim, marginBottom: 40 }}>
+      <p className="text-xs text-muted-foreground mb-4">
         Effective Date: March 20, 2026
       </p>
 
       {/* 1. Purposes of Processing */}
-      <div style={sectionStyle}>
-        <h2 id="purposes" style={headingStyle}>1. Purposes of Data Processing</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="purposes" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">1. Purposes of Data Processing</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           TubeForge (hereinafter the &quot;Data Processor&quot;) processes personal data on behalf of
           users (hereinafter the &quot;Data Controller&quot;) for the following purposes:
         </p>
-        <ul style={listStyle}>
+        <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
           <li>Providing a SaaS platform for YouTube content creation</li>
           <li>User authentication and account management</li>
           <li>AI content generation (thumbnails, text, metadata)</li>
@@ -44,16 +28,16 @@ export default function DpaPage() {
           <li>Sending transactional email notifications</li>
           <li>Improving service quality and resolving technical issues</li>
         </ul>
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           Data processing is carried out solely in accordance with the Data Controller&apos;s instructions
           and in compliance with this Agreement, the Terms of Service, and TubeForge&apos;s Privacy Policy.
         </p>
       </div>
 
       {/* 2. Types of Personal Data */}
-      <div style={sectionStyle}>
-        <h2 id="data-types" style={headingStyle}>2. Types of Personal Data</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="data-types" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">2. Types of Personal Data</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Processor processes the following categories of personal data:
         </p>
 
@@ -63,61 +47,61 @@ export default function DpaPage() {
             borderCollapse: 'collapse',
             fontSize: 13,
             lineHeight: 1.7,
-            color: C.sub,
+            color: 'var(--color-muted-foreground)',
             marginBottom: 16,
           }}
         >
           <thead>
-            <tr style={{ borderBottom: `2px solid ${C.border}`, textAlign: 'left' }}>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Category</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Data</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Legal Basis</th>
+            <tr style={{ borderBottom: `2px solid ${'var(--color-border)'}`, textAlign: 'left' }}>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Category</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Data</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Legal Basis</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={cellStyle}>Identification</td>
-              <td style={cellStyle}>Name, email, profile photo, Google ID</td>
-              <td style={cellStyle}>Contract performance</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Identification</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Name, email, profile photo, Google ID</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Contract performance</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Payment</td>
-              <td style={cellStyle}>Stripe Customer ID, transaction history, subscription plan</td>
-              <td style={cellStyle}>Contract performance</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Payment</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Stripe Customer ID, transaction history, subscription plan</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Contract performance</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Content</td>
-              <td style={cellStyle}>Projects, thumbnails, metadata, text</td>
-              <td style={cellStyle}>Contract performance</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Content</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Projects, thumbnails, metadata, text</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Contract performance</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Technical</td>
-              <td style={cellStyle}>IP address, User-Agent, session data</td>
-              <td style={cellStyle}>Legitimate interest</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Technical</td>
+              <td className="px-3 py-2 border-b border-border text-sm">IP address, User-Agent, session data</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Legitimate interest</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Analytics</td>
-              <td style={cellStyle}>Platform activity, page views</td>
-              <td style={cellStyle}>Consent</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Analytics</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Platform activity, page views</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Consent</td>
             </tr>
             <tr>
-              <td style={cellStyle}>YouTube</td>
-              <td style={cellStyle}>Channel statistics, video metrics</td>
-              <td style={cellStyle}>Consent</td>
+              <td className="px-3 py-2 border-b border-border text-sm">YouTube</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Channel statistics, video metrics</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Consent</td>
             </tr>
           </tbody>
         </table>
 
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Processor does not process special categories of personal data (race,
           health, biometrics, etc.).
         </p>
       </div>
 
       {/* 3. Sub-processors */}
-      <div style={sectionStyle}>
-        <h2 id="sub-processors" style={headingStyle}>3. Sub-processors</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="sub-processors" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">3. Sub-processors</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Processor engages the following sub-processors for personal data processing:
         </p>
 
@@ -127,53 +111,53 @@ export default function DpaPage() {
             borderCollapse: 'collapse',
             fontSize: 13,
             lineHeight: 1.7,
-            color: C.sub,
+            color: 'var(--color-muted-foreground)',
             marginBottom: 16,
           }}
         >
           <thead>
-            <tr style={{ borderBottom: `2px solid ${C.border}`, textAlign: 'left' }}>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Sub-processor</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Purpose</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Location</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Data</th>
+            <tr style={{ borderBottom: `2px solid ${'var(--color-border)'}`, textAlign: 'left' }}>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Sub-processor</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Purpose</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Location</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Data</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={cellStyle}><strong style={{ color: C.text }}>Stripe, Inc.</strong></td>
-              <td style={cellStyle}>Payment processing</td>
-              <td style={cellStyle}>US / EU</td>
-              <td style={cellStyle}>Payment data, email</td>
+              <td className="px-3 py-2 border-b border-border text-sm"><strong className="text-foreground font-semibold">Stripe, Inc.</strong></td>
+              <td className="px-3 py-2 border-b border-border text-sm">Payment processing</td>
+              <td className="px-3 py-2 border-b border-border text-sm">US / EU</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Payment data, email</td>
             </tr>
             <tr>
-              <td style={cellStyle}><strong style={{ color: C.text }}>Google LLC</strong></td>
-              <td style={cellStyle}>OAuth authentication, YouTube API</td>
-              <td style={cellStyle}>US / EU</td>
-              <td style={cellStyle}>Name, email, YouTube data</td>
+              <td className="px-3 py-2 border-b border-border text-sm"><strong className="text-foreground font-semibold">Google LLC</strong></td>
+              <td className="px-3 py-2 border-b border-border text-sm">OAuth authentication, YouTube API</td>
+              <td className="px-3 py-2 border-b border-border text-sm">US / EU</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Name, email, YouTube data</td>
             </tr>
             <tr>
-              <td style={cellStyle}><strong style={{ color: C.text }}>OpenAI, Inc.</strong></td>
-              <td style={cellStyle}>AI content generation</td>
-              <td style={cellStyle}>US</td>
-              <td style={cellStyle}>Project content (no personal data)</td>
+              <td className="px-3 py-2 border-b border-border text-sm"><strong className="text-foreground font-semibold">OpenAI, Inc.</strong></td>
+              <td className="px-3 py-2 border-b border-border text-sm">AI content generation</td>
+              <td className="px-3 py-2 border-b border-border text-sm">US</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Project content (no personal data)</td>
             </tr>
             <tr>
-              <td style={cellStyle}><strong style={{ color: C.text }}>Resend, Inc.</strong></td>
-              <td style={cellStyle}>Email notification delivery</td>
-              <td style={cellStyle}>US</td>
-              <td style={cellStyle}>Email address, message content</td>
+              <td className="px-3 py-2 border-b border-border text-sm"><strong className="text-foreground font-semibold">Resend, Inc.</strong></td>
+              <td className="px-3 py-2 border-b border-border text-sm">Email notification delivery</td>
+              <td className="px-3 py-2 border-b border-border text-sm">US</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Email address, message content</td>
             </tr>
             <tr>
-              <td style={cellStyle}><strong style={{ color: C.text }}>OVHcloud</strong></td>
-              <td style={cellStyle}>Server and database hosting</td>
-              <td style={cellStyle}>EU (France)</td>
-              <td style={cellStyle}>All platform data</td>
+              <td className="px-3 py-2 border-b border-border text-sm"><strong className="text-foreground font-semibold">OVHcloud</strong></td>
+              <td className="px-3 py-2 border-b border-border text-sm">Server and database hosting</td>
+              <td className="px-3 py-2 border-b border-border text-sm">EU (France)</td>
+              <td className="px-3 py-2 border-b border-border text-sm">All platform data</td>
             </tr>
           </tbody>
         </table>
 
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           Each sub-processor is bound by contractual obligations ensuring a level of data
           protection no less than that provided by this Agreement. We will notify you of
           any changes to the sub-processor list at least 30 days in advance.
@@ -181,8 +165,8 @@ export default function DpaPage() {
       </div>
 
       {/* 4. Data Retention */}
-      <div style={sectionStyle}>
-        <h2 id="data-retention" style={headingStyle}>4. Data Retention Periods</h2>
+      <div className="mb-9">
+        <h2 id="data-retention" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">4. Data Retention Periods</h2>
 
         <table
           style={{
@@ -190,65 +174,65 @@ export default function DpaPage() {
             borderCollapse: 'collapse',
             fontSize: 13,
             lineHeight: 1.7,
-            color: C.sub,
+            color: 'var(--color-muted-foreground)',
             marginBottom: 16,
           }}
         >
           <thead>
-            <tr style={{ borderBottom: `2px solid ${C.border}`, textAlign: 'left' }}>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Data Category</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Retention Period</th>
-              <th style={{ ...cellStyle, color: C.text, fontWeight: 600 }}>Legal Basis</th>
+            <tr style={{ borderBottom: `2px solid ${'var(--color-border)'}`, textAlign: 'left' }}>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Data Category</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Retention Period</th>
+              <th className="px-3 py-2 text-sm font-semibold text-foreground border border-border">Legal Basis</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={cellStyle}>Account data</td>
-              <td style={cellStyle}>Duration of use + 30 days after deletion</td>
-              <td style={cellStyle}>Contract performance</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Account data</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Duration of use + 30 days after deletion</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Contract performance</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Content and projects</td>
-              <td style={cellStyle}>Duration of use + 30 days after deletion</td>
-              <td style={cellStyle}>Contract performance</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Content and projects</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Duration of use + 30 days after deletion</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Contract performance</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Payment records</td>
-              <td style={cellStyle}>Up to 7 years after transaction</td>
-              <td style={cellStyle}>Legal requirement</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Payment records</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Up to 7 years after transaction</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Legal requirement</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Analytics data</td>
-              <td style={cellStyle}>Up to 26 months</td>
-              <td style={cellStyle}>Consent</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Analytics data</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Up to 26 months</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Consent</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Security logs</td>
-              <td style={cellStyle}>Up to 12 months</td>
-              <td style={cellStyle}>Legitimate interest</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Security logs</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Up to 12 months</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Legitimate interest</td>
             </tr>
             <tr>
-              <td style={cellStyle}>Backups</td>
-              <td style={cellStyle}>Up to 90 days</td>
-              <td style={cellStyle}>Legitimate interest</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Backups</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Up to 90 days</td>
+              <td className="px-3 py-2 border-b border-border text-sm">Legitimate interest</td>
             </tr>
           </tbody>
         </table>
 
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           Upon expiration of these retention periods, data is automatically deleted or anonymized.
         </p>
       </div>
 
       {/* 5. Security Measures */}
-      <div style={sectionStyle}>
-        <h2 id="security-measures" style={headingStyle}>5. Technical and Organizational Security Measures</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="security-measures" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">5. Technical and Organizational Security Measures</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Processor implements the following measures to ensure the security of personal data:
         </p>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Technical measures:</p>
-        <ul style={listStyle}>
+        <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">Technical measures:</p>
+        <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
           <li>Data encryption in transit (TLS 1.3) and at rest (AES-256)</li>
           <li>OAuth 2.0 authentication (no passwords stored)</li>
           <li>Protection against CSRF, XSS, and SQL injection attacks</li>
@@ -258,8 +242,8 @@ export default function DpaPage() {
           <li>VPN for internal communications (WireGuard)</li>
         </ul>
 
-        <p style={{ ...paraStyle, fontWeight: 600, color: C.text }}>Organizational measures:</p>
-        <ul style={listStyle}>
+        <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">Organizational measures:</p>
+        <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
           <li>Principle of least privilege</li>
           <li>Regular security and dependency audits</li>
           <li>24/7 infrastructure monitoring</li>
@@ -269,33 +253,33 @@ export default function DpaPage() {
       </div>
 
       {/* 6. Data Subject Rights */}
-      <div style={sectionStyle}>
-        <h2 id="data-subject-rights" style={headingStyle}>6. Data Subject Rights</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="data-subject-rights" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">6. Data Subject Rights</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Processor assists the Controller in ensuring the following data subject rights
           in accordance with GDPR:
         </p>
-        <ul style={listStyle}>
-          <li><strong style={{ color: C.text }}>Right of access (Art. 15 GDPR)</strong> — provision of a copy of personal data</li>
-          <li><strong style={{ color: C.text }}>Right to rectification (Art. 16 GDPR)</strong> — correction of inaccurate data</li>
-          <li><strong style={{ color: C.text }}>Right to erasure (Art. 17 GDPR)</strong> — deletion of personal data</li>
-          <li><strong style={{ color: C.text }}>Right to restriction (Art. 18 GDPR)</strong> — restriction of processing</li>
-          <li><strong style={{ color: C.text }}>Right to data portability (Art. 20 GDPR)</strong> — export of data in a machine-readable format</li>
-          <li><strong style={{ color: C.text }}>Right to object (Art. 21 GDPR)</strong> — objection to processing</li>
+        <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
+          <li><strong className="text-foreground font-semibold">Right of access (Art. 15 GDPR)</strong> — provision of a copy of personal data</li>
+          <li><strong className="text-foreground font-semibold">Right to rectification (Art. 16 GDPR)</strong> — correction of inaccurate data</li>
+          <li><strong className="text-foreground font-semibold">Right to erasure (Art. 17 GDPR)</strong> — deletion of personal data</li>
+          <li><strong className="text-foreground font-semibold">Right to restriction (Art. 18 GDPR)</strong> — restriction of processing</li>
+          <li><strong className="text-foreground font-semibold">Right to data portability (Art. 20 GDPR)</strong> — export of data in a machine-readable format</li>
+          <li><strong className="text-foreground font-semibold">Right to object (Art. 21 GDPR)</strong> — objection to processing</li>
         </ul>
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Processor commits to responding to data subject requests within 30 days
           and assisting the Controller in fulfilling its obligations.
         </p>
       </div>
 
       {/* 7. Incident Notification */}
-      <div style={sectionStyle}>
-        <h2 id="incidents" style={headingStyle}>7. Incident Notification</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="incidents" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">7. Incident Notification</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           In the event of a security incident affecting personal data, the Processor commits to:
         </p>
-        <ul style={listStyle}>
+        <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
           <li>Notify the Controller within 72 hours of discovering the incident</li>
           <li>Provide a description of the incident, affected data categories, and approximate number of data subjects</li>
           <li>Describe potential consequences and measures taken to mitigate them</li>
@@ -304,9 +288,9 @@ export default function DpaPage() {
       </div>
 
       {/* 8. Audit */}
-      <div style={sectionStyle}>
-        <h2 id="audit" style={headingStyle}>8. Right to Audit</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="audit" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">8. Right to Audit</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           The Controller has the right to audit compliance with this Agreement. The Processor
           commits to providing the necessary information and access for conducting an audit,
           subject to at least 30 days prior notice.
@@ -314,20 +298,20 @@ export default function DpaPage() {
       </div>
 
       {/* 9. Contact */}
-      <div style={sectionStyle}>
-        <h2 id="contact" style={headingStyle}>9. Contact Information</h2>
-        <p style={paraStyle}>
+      <div className="mb-9">
+        <h2 id="contact" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">9. Contact Information</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           For all questions related to data processing and this Agreement:
         </p>
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           Email:{' '}
-          <a href="mailto:dpa@tubeforge.co" style={{ color: C.accent }}>
+          <a href="mailto:dpa@tubeforge.co" className="text-brand-500">
             dpa@tubeforge.co
           </a>
         </p>
-        <p style={paraStyle}>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           Data Protection Officer:{' '}
-          <a href="mailto:privacy@tubeforge.co" style={{ color: C.accent }}>
+          <a href="mailto:privacy@tubeforge.co" className="text-brand-500">
             privacy@tubeforge.co
           </a>
         </p>
