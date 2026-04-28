@@ -221,6 +221,7 @@ export default function middleware(req: NextRequest) {
     '/api/stripe/webhook',
     '/api/webhooks',
     '/api/health',
+    '/api/analytics/vitals',
     '/api/free-tools',
     '/privacy',
     '/terms',
