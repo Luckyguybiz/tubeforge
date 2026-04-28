@@ -62,3 +62,6 @@ blob-report/
 # Vercel
 .vercel/
 tsconfig.tsbuildinfo
+
+# Local thumbnail generation cache (Gemini, FAL, etc)
+.gen-thumbs/
