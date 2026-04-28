@@ -462,7 +462,11 @@ export const aiThumbnailsRouter = router({
           .trim();
       }
 
-      const useNanoBanana = !!env.GOOGLE_AI_API_KEY;
+      // TEMPORARY: Nano Banana free-tier quota hits before DALL-E fallback can
+      // engage; the if/else-if chain below has no try/catch fallback when one
+      // provider fails. Re-enable by removing the " && false" once the chain
+      // is refactored to retry the next provider on failure.
+      const useNanoBanana = !!env.GOOGLE_AI_API_KEY && false;
 
       if (useNanoBanana) {
         // ── Nano Banana 2 (Gemini Image Generation) ──
@@ -662,8 +666,8 @@ ${styleDesc}
             try {
               falResult = await fal.subscribe('fal-ai/ideogram/v3', {
                 input: {
-                  prompt: ideogramPrompt,
-                  aspect_ratio: ideogramAspect,
+                  prompt: fluxPrompt,
+                  aspect_ratio: input.format === '9:16' ? '9:16' : '16:9',
                   style: 'realistic' as any,
                   ...(input.photoUrl ? { image_url: input.photoUrl, strength: 0.6 } : {}),
                 } as any,
@@ -674,7 +678,7 @@ ${styleDesc}
               // Fallback to FLUX Pro
               falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
                 input: {
-                  prompt: ideogramPrompt,
+                  prompt: fluxPrompt,
                   image_size: falSize,
                   num_images: 1,
                   safety_tolerance: '5',
