@@ -65,9 +65,7 @@ const PLANS: PlanDef[] = [
       "pricing.feat.team10",
       "pricing.feat.api",
       "pricing.feat.storage500gb",
-      "pricing.feat.brandedTemplates",
       "pricing.feat.dedicatedSupport",
-      "pricing.feat.multiChannel",
     ],
     popular: false,
     href: "/billing?plan=STUDIO",
@@ -90,9 +88,9 @@ interface CompareRow {
 
 const COMPARE_ROWS: CompareRow[] = [
   { labelKey: "pricing.compare.projects", free: "3", pro: "25", studio: "\u221E" },
-  { labelKey: "pricing.compare.aiGenerations", free: "5/day", pro: "100/day", studio: "\u221E" },
-  { labelKey: "pricing.compare.storage", free: "1 GB", pro: "50 GB", studio: "500 GB" },
-  { labelKey: "pricing.compare.thumbnails", free: "3/day", pro: "\u221E", studio: "\u221E" },
+  { labelKey: "pricing.compare.aiGenerations", free: "3/mo", pro: "100/mo", studio: "∞" },
+  { labelKey: "pricing.compare.storage", free: "500 MB", pro: "5 GB", studio: "50 GB" },
+  { labelKey: "pricing.compare.thumbnails", free: "3/mo", pro: "100/mo", studio: "∞" },
   { labelKey: "pricing.compare.videoEditor", free: true, pro: true, studio: true },
   { labelKey: "pricing.compare.seoTools", free: true, pro: true, studio: true },
   { labelKey: "pricing.compare.abTesting", free: false, pro: true, studio: true },
@@ -100,8 +98,6 @@ const COMPARE_ROWS: CompareRow[] = [
   { labelKey: "pricing.compare.export", free: "720p", pro: "1080p", studio: "4K" },
   { labelKey: "pricing.compare.teamMembers", free: false, pro: false, studio: "10" },
   { labelKey: "pricing.compare.api", free: false, pro: false, studio: true },
-  { labelKey: "pricing.compare.brandedTemplates", free: false, pro: false, studio: true },
-  { labelKey: "pricing.compare.multiChannel", free: false, pro: false, studio: true },
   { labelKey: "pricing.compare.support", free: "Email", pro: "Priority", studio: "Dedicated" },
 ];
 
@@ -242,7 +238,7 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <section style={{ padding: "0 24px 80px" }}>
-        <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, maxWidth: 1020, margin: "0 auto" }}>
+        <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, maxWidth: 1020, margin: "0 auto", boxSizing: "border-box" }}>
           {PLANS.map((plan) => {
             const price = isAnnual ? plan.priceAnnual : plan.priceMonthly;
             const displayPrice = plan.priceMonthly === 0 ? "$0" : `$${price}`;
@@ -470,7 +466,7 @@ export default function PricingPage() {
               style={{
                 width: "100%",
                 borderCollapse: "collapse",
-                minWidth: 600,
+                minWidth: 480,
               }}
             >
               <thead>
@@ -613,13 +609,22 @@ export default function PricingPage() {
         .tf-cta-secondary:hover {
           background: rgba(99,102,241,0.08) !important;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 960px) {
           .pricing-grid {
             grid-template-columns: 1fr !important;
             gap: 16px !important;
           }
           .pricing-cta-btn {
             width: 100%;
+          }
+        }
+        @media (max-width: 640px) {
+          .tf-pricing-card {
+            padding: 24px 18px !important;
+          }
+          section {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
           }
         }
       `}</style>
