@@ -16,7 +16,8 @@ function fmtDuration(seconds: number): string {
   return `${h}h ${m}m`;
 }
 
-function shortDate(iso: string): string {
+function shortDate(iso: string | Date): string {
+  if (iso instanceof Date) iso = iso.toISOString();
   const d = new Date(iso);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
@@ -268,7 +269,7 @@ function StatusBreakdown({
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '8px 16px' }}>
         {items.map((item) => (
           <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span

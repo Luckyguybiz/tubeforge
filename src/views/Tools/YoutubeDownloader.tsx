@@ -38,23 +38,10 @@ interface FullAnalysisResult {
   description: string;
   tags: string[];
   isShorts: boolean;
-  scores: {
-    overall: number;
-    title: number;
-    description: number;
-    tags: number;
-    thumbnail: number;
-    engagement: number;
-    seo: number;
-  };
   metrics: {
     likeRate: number;
     commentRate: number;
-    viewsPerDay: number;
-    estimatedCTR: 'high' | 'medium' | 'low';
-    benchmarkComparison: 'above_average' | 'average' | 'below_average';
   };
-  suggestions: string[];
   structure: {
     hasTimestamps: boolean;
     hasLinks: boolean;
@@ -74,12 +61,7 @@ interface FallbackAnalysisResult {
   thumbnail: string;
   watchUrl: string;
   analysis: {
-    overall: number;
-    titleOptimization: number;
-    keywordUsage: number;
-    engagementPotential: number;
     titleLength: number;
-    suggestions: string[];
   };
   apiSource: 'oembed-fallback';
   note: string;
@@ -943,54 +925,12 @@ export function YoutubeDownloader() {
       {/* ── Full Analysis Results (YouTube Data API v3) ─────────── */}
       {analysis && isFullAnalysis(analysis) && (
         <>
-          {/* Score Gauges */}
-          <div
-            style={{
-              padding: 24,
-              borderRadius: 16,
-              background: '#f5f5f7',
-              marginBottom: 16,
-            }}
-          >
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 20, textAlign: 'center' }}>
-              {t('tools.ytdl.overallScore')}
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: 20,
-                flexWrap: 'wrap',
-                marginBottom: 8,
-              }}
-            >
-              <CircularGauge score={analysis.scores.overall} label="Overall" size={100} />
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: 16,
-                flexWrap: 'wrap',
-                marginTop: 20,
-              }}
-            >
-              <CircularGauge score={analysis.scores.title} label={t('tools.ytdl.titleOptimization')} size={80} />
-              <CircularGauge score={analysis.scores.description} label="Description" size={80} />
-              <CircularGauge score={analysis.scores.tags} label="Tags" size={80} />
-              <CircularGauge score={analysis.scores.thumbnail} label="Thumbnail" size={80} />
-              <CircularGauge score={analysis.scores.engagement} label={t('tools.ytdl.engagementPotential')} size={80} />
-              <CircularGauge score={analysis.scores.seo} label="SEO" size={80} />
-            </div>
-          </div>
-
           {/* Statistics Cards */}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
             <StatCard
               icon={viewsIcon}
               label="Views"
               value={formatNumber(analysis.statistics.views)}
-              sub={`${formatNumber(analysis.metrics.viewsPerDay)}/day`}
             />
             <StatCard
               icon={likesIcon}
@@ -1003,18 +943,6 @@ export function YoutubeDownloader() {
               label="Comments"
               value={formatNumber(analysis.statistics.comments)}
               sub={`${analysis.metrics.commentRate}% rate`}
-            />
-            <StatCard
-              icon={rateIcon}
-              label="Benchmark"
-              value={
-                analysis.metrics.benchmarkComparison === 'above_average'
-                  ? 'Above Avg'
-                  : analysis.metrics.benchmarkComparison === 'average'
-                    ? 'Average'
-                    : 'Below Avg'
-              }
-              sub={`CTR: ${analysis.metrics.estimatedCTR}`}
             />
           </div>
 
@@ -1080,53 +1008,6 @@ export function YoutubeDownloader() {
           )}
 
           {/* Suggestions */}
-          {analysis.suggestions.length > 0 && (
-            <div
-              style={{
-                padding: 20,
-                borderRadius: 16,
-                background: '#f5f5f7',
-                marginBottom: 24,
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>
-                {t('tools.ytdl.suggestions')}
-              </div>
-              {analysis.suggestions.map((s, i) => {
-                // Positive suggestions (contains "excellent", "great", "above")
-                const isPositive = /excellent|great|above|well-optimized/i.test(s);
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 10,
-                      padding: '10px 14px',
-                      borderRadius: 10,
-                      background: '#ffffff',
-                      marginBottom: 6,
-                      fontSize: 13,
-                      color: '#1d1d1f',
-                      lineHeight: 1.5,
-                      border: '1px solid rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    {isPositive ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg>
-                    )}
-                    {s}
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </>
       )}
 
@@ -1164,70 +1045,12 @@ export function YoutubeDownloader() {
             </div>
           )}
 
-          {/* Overall Score */}
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.sub, marginBottom: 8 }}>
-              {t('tools.ytdl.overallScore')}
-            </div>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                border: `4px solid ${scoreColor(analysis.analysis.overall)}`,
-                fontSize: 28,
-                fontWeight: 800,
-                color: scoreColor(analysis.analysis.overall),
-              }}
-            >
-              {analysis.analysis.overall}
-            </div>
-          </div>
-
-          {/* Score Bars */}
-          <ScoreBar label={t('tools.ytdl.titleOptimization')} score={analysis.analysis.titleOptimization} C={C} />
-          <ScoreBar label={t('tools.ytdl.keywordUsage')} score={analysis.analysis.keywordUsage} C={C} />
-          <ScoreBar label={t('tools.ytdl.engagementPotential')} score={analysis.analysis.engagementPotential} C={C} />
 
           {/* Title Length */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, marginBottom: 4 }}>
             <span style={{ fontSize: 13, color: C.sub }}>{t('tools.ytdl.titleLength')}</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{analysis.analysis.titleLength} chars</span>
           </div>
-
-          {/* Suggestions */}
-          {analysis.analysis.suggestions.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 10 }}>
-                {t('tools.ytdl.suggestions')}
-              </div>
-              {analysis.analysis.suggestions.map((s, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 8,
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    background: C.surface,
-                    marginBottom: 6,
-                    fontSize: 13,
-                    color: C.text,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
-                  </svg>
-                  {s}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
 

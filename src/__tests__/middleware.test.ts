@@ -36,7 +36,6 @@ describe('src/middleware — consolidated middleware', () => {
     '/team',
     '/admin',
     '/tools',
-    '/shorts-analytics',
     '/referral',
   ];
 

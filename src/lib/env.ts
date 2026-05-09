@@ -87,6 +87,10 @@ export const env = {
   // ElevenLabs (voice cloning — optional)
   ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY ?? '',
 
+  // Kling AI (video generation — optional)
+  KLING_ACCESS_KEY: process.env.KLING_ACCESS_KEY ?? '',
+  KLING_SECRET_KEY: process.env.KLING_SECRET_KEY ?? '',
+
   // fal.ai (Flux image generation — optional, falls back to DALL-E)
   FAL_KEY: process.env.FAL_KEY ?? '',
 

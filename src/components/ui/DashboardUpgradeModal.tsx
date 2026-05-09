@@ -88,8 +88,6 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
     },
   });
 
-  const countdown = useCountdown(deadline);
-
   /* ── Show logic: only FREE users, only once ────────── */
   useEffect(() => {
     if (userPlan !== 'FREE') return;
@@ -139,19 +137,6 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
     return () => document.removeEventListener('keydown', trapFocus);
   }, [visible]);
 
-  /* ── Stripe checkout mutation ──────────────────────── */
-  const createCheckout = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url && data.url.startsWith('https://')) {
-        window.location.href = data.url;
-      } else if (data.updated) {
-        toast.success('Plan updated!');
-        dismiss();
-      }
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
   /* ── Dismiss logic (sets flag) ─────────────────────── */
   const dismiss = useCallback(() => {
     safeSetItem(STORAGE_KEY, '1');
@@ -200,11 +185,11 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
           maxWidth: 440,
           maxHeight: '90vh',
           overflowY: 'auto',
-          background: '#1a1a2e',
+          background: C.card,
           borderRadius: 20,
           padding: '28px 24px',
           boxSizing: 'border-box',
-          color: '#fff',
+          color: C.text,
           boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
         }}
       >
@@ -216,7 +201,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
             position: 'absolute',
             top: 14,
             right: 14,
-            background: 'rgba(255,255,255,0.1)',
+            background: C.border,
             border: 'none',
             borderRadius: '50%',
             width: 32,
@@ -225,7 +210,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            color: '#fff',
+            color: C.text,
             fontSize: 16,
             fontFamily: 'inherit',
             lineHeight: 1,
@@ -237,10 +222,10 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>&#x1F680;</div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px', color: '#fff' }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px', color: C.text }}>
             Upgrade to Pro
           </h2>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: C.sub, margin: 0, lineHeight: 1.5 }}>
             Unlock all premium features and grow your channel faster
           </p>
         </div>
@@ -254,7 +239,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
         }}>
           <div style={{
             display: 'flex',
-            background: 'rgba(255,255,255,0.06)',
+            background: C.border,
             borderRadius: 10,
             padding: 3,
           }}>
@@ -267,7 +252,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
                   borderRadius: 8,
                   border: 'none',
                   background: interval === opt ? '#3b82f6' : 'transparent',
-                  color: interval === opt ? '#fff' : 'rgba(255,255,255,0.5)',
+                  color: interval === opt ? '#fff' : C.sub,
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -297,18 +282,18 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
         {/* Pricing */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8 }}>
-            <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.35)', fontSize: 18 }}>
+            <span style={{ textDecoration: 'line-through', color: C.dim, fontSize: 18 }}>
               ${price.original}
             </span>
-            <span style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>
+            <span style={{ fontSize: 36, fontWeight: 800, color: C.text }}>
               ${price.discounted}
             </span>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+            <span style={{ color: C.sub, fontSize: 14 }}>
               /{interval === 'monthly' ? 'mo' : 'yr'}
             </span>
           </div>
           {interval === 'yearly' && (
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '4px 0 0' }}>
+            <p style={{ fontSize: 12, color: C.sub, margin: '4px 0 0' }}>
               ${(price.discounted / 12).toFixed(2)}/mo billed annually
             </p>
           )}
@@ -335,7 +320,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: '#fff',
+                color: C.text,
                 background: 'rgba(59,130,246,0.2)',
                 padding: '3px 8px',
                 borderRadius: 6,
@@ -350,19 +335,19 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
         {/* Feature comparison */}
         <div style={{
           borderRadius: 12,
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: `1px solid ${C.border}`,
           overflow: 'hidden',
           marginBottom: 20,
         }}>
           {/* Header row */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 50px 50px',
+            gridTemplateColumns: '1fr 44px 44px',
             padding: '10px 14px',
-            background: 'rgba(255,255,255,0.03)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            background: C.border,
+            borderBottom: `1px solid ${C.border}`,
           }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '.05em' }}>
               Feature
             </span>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: 'center' }}>
@@ -378,7 +363,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
               key={feat.name}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 50px 50px',
+                gridTemplateColumns: '1fr 44px 44px',
                 padding: '9px 14px',
                 borderBottom: i < FEATURES.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               }}

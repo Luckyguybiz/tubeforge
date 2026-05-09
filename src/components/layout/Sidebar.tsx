@@ -251,7 +251,6 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'tools', label: t('nav.tools') },
         { id: 'keywords', label: t('nav.keywords') },
         { id: 'thumbnails', label: t('nav.designStudio') },
-        { id: 'analytics', label: t('nav.analytics') },
       ],
     },
     {

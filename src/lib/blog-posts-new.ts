@@ -57,7 +57,7 @@ export const NEW_BLOG_POSTS: BlogPost[] = [
 <p>YouTube Studio is the official analytics dashboard and it is completely free. It provides data on views, watch time, audience retention, traffic sources, demographics, revenue, and more. In 2026, YouTube Studio has improved significantly with real-time Shorts analytics and funnel visualizations. Every creator should spend at least 15 minutes per week studying their Studio data.</p>
 
 <h3>TubeForge Analytics Dashboard</h3>
-<p><a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a> aggregates your YouTube data into a unified dashboard alongside your TubeForge project metrics. You can track thumbnails tested, metadata scores, content calendar adherence, and AI usage across all your projects. The dashboard is especially useful if you manage multiple channels or want to correlate tool usage with performance improvements.</p>
+<p>TubeForge Analytics aggregates your YouTube data into a unified dashboard alongside your TubeForge project metrics. You can track thumbnails tested, metadata scores, content calendar adherence, and AI usage across all your projects. The dashboard is especially useful if you manage multiple channels or want to correlate tool usage with performance improvements.</p>
 
 <h3>Social Blade</h3>
 <p>Social Blade is a free tool for tracking channel growth trends over time. It is particularly useful for competitive analysis: you can look up any public channel and see their subscriber and view count history, estimated earnings, and growth trajectory. Use it to benchmark yourself against competitors in your niche.</p>
@@ -215,7 +215,7 @@ export const NEW_BLOG_POSTS: BlogPost[] = [
 </ul>
 
 <h2>Measuring Thumbnail Performance</h2>
-<p>How do you know if your thumbnail is working? Focus on these metrics in YouTube Studio and <a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a>:</p>
+<p>How do you know if your thumbnail is working? Focus on these metrics in YouTube Studio and TubeForge Analytics:</p>
 <ul>
 <li><strong>Click-through rate (CTR):</strong> The percentage of impressions that result in a click. Average CTR varies by niche, but 4-10% is typical. Above 10% is excellent.</li>
 <li><strong>Impressions:</strong> How many times your thumbnail is shown. A high impression count with low CTR suggests the thumbnail needs improvement.</li>
@@ -356,7 +356,7 @@ export const NEW_BLOG_POSTS: BlogPost[] = [
 <li><strong>Traffic sources:</strong> The breakdown between Search, Suggested, Browse, External, and Direct tells you which SEO strategies are working.</li>
 <li><strong>Search terms report:</strong> YouTube Studio shows which queries drive traffic to your videos. Use this data to identify new keyword opportunities.</li>
 </ul>
-<p>Combine YouTube Studio data with <a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a> for a comprehensive view of your optimization efforts and their impact on growth.</p>
+<p>Combine YouTube Studio data with TubeForge Analytics for a comprehensive view of your optimization efforts and their impact on growth.</p>
 
 <h3>Conclusion</h3>
 <p>YouTube SEO in 2026 is a blend of traditional keyword optimization and modern engagement-driven ranking. The creators who succeed are those who optimize every element, from title and description to thumbnail and retention, while keeping the viewer's experience at the center. Use the tools and strategies in this guide consistently, and your videos will be positioned to capture a growing share of organic YouTube traffic.</p>
@@ -638,7 +638,7 @@ export const NEW_BLOG_POSTS: BlogPost[] = [
 <p>As more new viewers discover your content, your channel page becomes a critical conversion point. Organize your content into themed sections, feature your best-performing videos prominently, and ensure your channel trailer clearly communicates your value proposition. A well-organized channel page can increase your visitor-to-subscriber conversion rate by 20-40%.</p>
 
 <h3>Analyze and Adapt</h3>
-<p>Use <a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a> alongside YouTube Studio to maintain a clear picture of your growth trajectory. Track not just subscriber count, but the leading indicators that predict future growth:</p>
+<p>Use TubeForge Analytics alongside YouTube Studio to maintain a clear picture of your growth trajectory. Track not just subscriber count, but the leading indicators that predict future growth:</p>
 <ul>
 <li><strong>Subscriber conversion rate:</strong> What percentage of viewers subscribe? If this is declining, your content may be reaching less targeted audiences.</li>
 <li><strong>Unique viewers:</strong> A rising unique viewer count indicates growing reach, even if subscriber growth temporarily plateaus.</li>

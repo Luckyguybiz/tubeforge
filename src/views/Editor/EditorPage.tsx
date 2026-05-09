@@ -339,7 +339,7 @@ const StyleCard = memo(function StyleCard({ style: s, isSelected, C, onSelect }:
 function EditorSkeleton({ C }: { C: Theme }) {
   return (
     <div style={{ display: 'flex', height: '100%', background: C.bg, overflow: 'hidden' }}>
-      <div style={{ width: 380, flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="tf-editor-left" style={{ width: 380, maxWidth: '100%', flexShrink: 0, background: C.card, borderRight: `1px solid ${C.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 14, boxSizing: 'border-box' }}>
         <Skeleton width="100%" height={80} style={{ borderRadius: 12 }} />
         <div style={{ display: 'flex', gap: 10 }}>
           <Skeleton width="50%" height={80} style={{ borderRadius: 12 }} />
@@ -422,14 +422,9 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const [captionsSrt, setCaptionsSrt] = useState<string | null>(null);
   const [showShortsModal, setShowShortsModal] = useState(false);
 
-  // Multi-shot mode
-  const [multiShot, setMultiShot] = useState(false);
-
   // Sound toggle
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Uploaded elements (photos that can be referenced with @)
-  const [uploadedElements, setUploadedElements] = useState<{ id: string; name: string; dataUrl: string }[]>([]);
   const [showElementsPanel, setShowElementsPanel] = useState(false);
   const [showAtDropdown, setShowAtDropdown] = useState(false);
   const [atDropdownPos, setAtDropdownPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -594,8 +589,8 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
     const soundTag = soundOn ? '' : '[No audio] ';
     const fullPrompt = soundTag + stylePrefix + currentSel.prompt;
 
-    trackEvent('video_generate', { model: currentSel.model, duration: currentSel.duration, style: selectedStyleId, multiShot, soundOn });
-    videoGen.start(fullPrompt, currentSel.model, currentSel.duration);
+    trackEvent('video_generate', { model: currentSel.model, duration: currentSel.duration, style: selectedStyleId, multiShot, soundOn, hasImage: !!currentSel.sf });
+    videoGen.start(fullPrompt, currentSel.model, currentSel.duration, currentSel.sf);
   }, [videoGen, selectedStyleId, canUseAI, soundOn, multiShot]);
 
   // Keyboard shortcut: Ctrl+Enter to generate
@@ -681,6 +676,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
   const selectedStyle = useMemo(() => ANIMATION_STYLES.find((s) => s.id === selectedStyleId) || ANIMATION_STYLES[0], [selectedStyleId]);
   const selCol = sel ? gc(sel.ck) : C.accent;
   const selMod = sel ? (MODELS.find((m) => m.id === sel.model) || MODELS[0]) : MODELS[0];
+  const estimatedTokens = useMemo(() => Math.round((selMod.tokens || 0) * durationValue / 5), [selMod.tokens, durationValue]);
 
   // Filter styles based on category and search
   const filteredStyles = useMemo(() => {
@@ -1241,8 +1237,11 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {t('editor.duration')}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, fontFamily: "'JetBrains Mono', monospace" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, fontFamily: "'JetBrains Mono', monospace", display: 'flex', alignItems: 'center', gap: 6 }}>
                   {durationValue}s
+                  <span style={{ fontSize: 10, color: C.orange, background: C.orange + '15', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>
+                    {estimatedTokens} tok
+                  </span>
                 </span>
               </div>
               <input
@@ -1324,7 +1323,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                         </div>
                         {m.tokens && (
                           <span style={{ fontSize: 9, fontWeight: 700, color: C.orange, background: C.orange + '15', padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap' }}>
-                            {m.tokens} tokens
+                            {Math.round(m.tokens * durationValue / 5)} tok
                           </span>
                         )}
                         {m.id === sel?.model && (
@@ -1387,14 +1386,25 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
               </div>
             </div>
 
-            {/* Credit cost */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: C.accentDim }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
-              <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>
-                {t('editor.creditCost')}
-              </span>
+            {/* Token cost breakdown */}
+            <div style={{ padding: '10px 12px', borderRadius: 8, background: C.accentDim, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.orange} strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                  <span style={{ fontSize: 11, color: C.sub, fontWeight: 600 }}>
+                    {selMod.name} · {durationValue}s
+                  </span>
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 800, color: C.orange, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {estimatedTokens} tokens
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: C.dim, display: 'flex', justifyContent: 'space-between' }}>
+                <span>{selMod.tokens} tok/5s × {durationValue}s</span>
+                <span style={{ color: C.accent }}>1 credit</span>
+              </div>
             </div>
 
             {/* Spacer */}
@@ -1428,7 +1438,7 @@ export function EditorPage({ projectId = null }: { projectId?: string | null }) 
                   {t('editor.generating')}
                 </>
               ) : (
-                <>{`${t('editor.generateBtn')} \u26A1 1`}</>
+                <>{`${sel?.sf ? '🖼️ Image → Video' : t('editor.generateBtn')} \u26A1 ${estimatedTokens} tok`}</>
               )}
             </button>
 

@@ -52,12 +52,21 @@ export function useVideoGeneration(sceneId: string | null) {
 
   const generateVideo = trpc.ai.generateVideo.useMutation({
     onSuccess: (data) => {
-      if (sceneId) {
-        setActiveTaskId(data.taskId);
-        updScene(sceneId, { status: 'generating', taskId: data.taskId });
-        // Persist taskId to DB so polling survives page refresh
-        updateSceneRef.current.mutate({ id: sceneId, taskId: data.taskId, status: 'GENERATING' });
+      if (!sceneId) return;
+
+      // fal.ai models return completed video directly (fal-done:URL)
+      if (data.taskId.startsWith('fal-done:')) {
+        const videoUrl = data.taskId.slice(9);
+        updScene(sceneId, { status: 'ready', videoUrl, taskId: null });
+        updateSceneRef.current.mutate({ id: sceneId, videoUrl, status: 'READY', taskId: null });
+        toast.success(useLocaleStore.getState().t('videoGen.success'));
+        return;
       }
+
+      // Async models (Kling, Runway) need polling
+      setActiveTaskId(data.taskId);
+      updScene(sceneId, { status: 'generating', taskId: data.taskId });
+      updateSceneRef.current.mutate({ id: sceneId, taskId: data.taskId, status: 'GENERATING' });
     },
     onError: (err) => {
       if (sceneId) updScene(sceneId, { status: 'error' });
@@ -101,14 +110,15 @@ export function useVideoGeneration(sceneId: string | null) {
     }
   }, [taskStatus.data, sceneId, updScene]);
 
-  const start = (prompt: string, model: string, duration: number) => {
+  const start = (prompt: string, model: string, duration: number, imageDataUrl?: string | null) => {
     if (!sceneId) return;
     setLastError(null);
     updScene(sceneId, { status: 'generating' });
     generateVideo.mutate({
       prompt,
-      model: model as 'turbo' | 'standard' | 'pro' | 'cinematic' | 'runway-gen3-turbo' | 'runway-gen3' | 'kling-v1' | 'kling-v1-pro',
+      model: model as 'turbo' | 'standard' | 'pro' | 'cinematic' | 'runway-gen3-turbo' | 'runway-gen3' | 'kling-v1' | 'kling-v1-pro' | 'kling-3.0' | 'kling-2.5-turbo' | 'kling-motion' | 'sora-2' | 'minimax-hailuo' | 'google-veo' | 'seedance' | 'wan',
       duration,
+      ...(imageDataUrl ? { imageUrl: imageDataUrl } : {}),
     });
   };
 

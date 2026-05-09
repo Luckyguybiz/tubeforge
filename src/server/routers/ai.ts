@@ -7,6 +7,7 @@ import { env } from '@/lib/env';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { fal } from '@fal-ai/client';
+import jwt from 'jsonwebtoken';
 
 /** Fetch wrapper with AbortController timeout */
 async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 60000): Promise<Response> {
@@ -17,6 +18,34 @@ async function fetchWithTimeout(url: string, options?: RequestInit, timeoutMs = 
   } finally {
     clearTimeout(timer);
   }
+}
+
+/* ── Kling JWT auth ── */
+let _klingToken: string | null = null;
+let _klingTokenExp = 0;
+
+function getKlingJWT(): string {
+  const now = Math.floor(Date.now() / 1000);
+  if (_klingToken && now < _klingTokenExp - 60) return _klingToken;
+  const payload = {
+    iss: env.KLING_ACCESS_KEY,
+    exp: now + 1800,
+    nbf: now - 5,
+  };
+  _klingToken = jwt.sign(payload, env.KLING_SECRET_KEY, { algorithm: 'HS256', header: { alg: 'HS256', typ: 'JWT' } });
+  _klingTokenExp = now + 1800;
+  return _klingToken;
+}
+
+const KLING_MODELS = new Set(['kling-v1', 'kling-v1-pro', 'kling-3.0', 'kling-2.5-turbo', 'kling-motion']);
+const FAL_VIDEO_MODELS = new Set(['minimax-hailuo', 'wan', 'seedance', 'google-veo', 'sora-2']);
+
+function isKlingModel(model: string): boolean {
+  return KLING_MODELS.has(model);
+}
+
+function isFalVideoModel(model: string): boolean {
+  return FAL_VIDEO_MODELS.has(model);
 }
 
 async function checkRateLimit(userId: string, endpoint: string = 'ai-gen', limit: number = 10) {
@@ -398,21 +427,180 @@ Return ONLY valid JSON, no markdown.`,
   generateVideo: protectedProcedure
     .input(z.object({
       prompt: z.string().min(1).max(1000),
-      model: z.enum(['turbo', 'standard', 'pro', 'cinematic', 'runway-gen3-turbo', 'runway-gen3', 'kling-v1', 'kling-v1-pro']).default('runway-gen3-turbo'),
+      model: z.enum(['turbo', 'standard', 'pro', 'cinematic', 'runway-gen3-turbo', 'runway-gen3', 'kling-v1', 'kling-v1-pro', 'kling-3.0', 'kling-2.5-turbo', 'kling-motion', 'sora-2', 'minimax-hailuo', 'google-veo', 'seedance', 'wan']).default('runway-gen3-turbo'),
       duration: z.number().min(1).max(30).default(5),
+      imageUrl: z.string().max(5_000_000).optional(), // base64 data URL for image-to-video
     }))
     .mutation(async ({ ctx, input }) => {
-      if (!env.RUNWAY_API_KEY) {
-        throw new TRPCError({
-          code: 'PRECONDITION_FAILED',
-          message: 'Video generation service is temporarily unavailable. Please try again later.',
-        });
+      const useKling = isKlingModel(input.model);
+      const useFalVideo = isFalVideoModel(input.model);
+
+      // Check provider availability
+      if (useKling && !env.KLING_ACCESS_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Kling AI service is temporarily unavailable.' });
+      }
+      if (useFalVideo && !env.FAL_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Video generation service is temporarily unavailable.' });
+      }
+      if (!useKling && !useFalVideo && !env.RUNWAY_API_KEY) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Video generation service is temporarily unavailable.' });
       }
 
       await checkRateLimit(ctx.session.user.id, 'ai-video', 10);
       await checkAndIncrementAIUsage(ctx.session.user.id, ctx.db);
 
-      // Runway ML Gen-3 Alpha API
+      /* ── Kling AI ── */
+      if (useKling) {
+        const klingModelMap: Record<string, { model_name: string; mode: string }> = {
+          'kling-v1':        { model_name: 'kling-v1',       mode: 'std' },
+          'kling-v1-pro':    { model_name: 'kling-v1',       mode: 'pro' },
+          'kling-3.0':       { model_name: 'kling-v2-6',     mode: 'pro' },
+          'kling-2.5-turbo': { model_name: 'kling-v2-5-turbo', mode: 'std' },
+          'kling-motion':    { model_name: 'kling-v2-6',     mode: 'pro' },
+        };
+        const cfg = klingModelMap[input.model] ?? { model_name: 'kling-v2-6', mode: 'pro' };
+        const klingDuration = input.duration <= 7 ? '5' : '10';
+
+        // Determine text2video or image2video
+        const isImg2Vid = !!input.imageUrl;
+        const klingEndpoint = isImg2Vid ? API_ENDPOINTS.KLING_IMAGE2VIDEO : API_ENDPOINTS.KLING_TEXT2VIDEO;
+
+        // Build request body
+        const klingBody: Record<string, unknown> = {
+          model_name: cfg.model_name,
+          prompt: input.prompt,
+          mode: cfg.mode,
+          aspect_ratio: '16:9',
+          duration: klingDuration,
+        };
+        if (isImg2Vid && input.imageUrl) {
+          // Extract raw base64 from data URL
+          const base64 = input.imageUrl.replace(/^data:image\/\w+;base64,/, '');
+          klingBody.image = base64;
+        }
+
+        let res: Response;
+        try {
+          res = await fetchWithTimeout(klingEndpoint, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${getKlingJWT()}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(klingBody),
+          }, 60000);
+        } catch {
+          await decrementAIUsage(ctx.session.user.id, ctx.db);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Kling AI service error' });
+        }
+
+        if (!res.ok) {
+          await decrementAIUsage(ctx.session.user.id, ctx.db);
+          const errBody = await res.text().catch(() => '');
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Kling API error: ${res.status} ${errBody.slice(0, 200)}` });
+        }
+
+        const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Kling response' }); });
+        if (data.code !== 0 || !data.data?.task_id) {
+          await decrementAIUsage(ctx.session.user.id, ctx.db);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Kling error: ${data.message || 'Unknown'}` });
+        }
+
+        const klingPrefix = isImg2Vid ? 'kling-i2v' : 'kling';
+        return { taskId: `${klingPrefix}:${data.data.task_id}`, status: 'processing' };
+      }
+
+      /* ── Fal.ai models (Minimax Hailuo, Wan, Seedance, Google Veo) ── */
+      if (useFalVideo) {
+        fal.config({ credentials: env.FAL_KEY });
+
+        const isImg2Vid = !!input.imageUrl;
+
+        const falT2VMap: Record<string, string> = {
+          'minimax-hailuo': 'fal-ai/minimax/hailuo-02/standard/text-to-video',
+          'wan':            'fal-ai/wan-25-preview/text-to-video',
+          'seedance':       'fal-ai/bytedance/seedance/v1.5/pro/text-to-video',
+          'google-veo':     'fal-ai/veo3/fast',
+          'sora-2':         'fal-ai/sora-2/text-to-video',
+        };
+        const falI2VMap: Record<string, string> = {
+          'minimax-hailuo': 'fal-ai/minimax/hailuo-02/standard/image-to-video',
+          'wan':            'fal-ai/wan-25-preview/image-to-video',
+          'seedance':       'fal-ai/bytedance/seedance/v1.5/pro/image-to-video',
+          'google-veo':     'fal-ai/veo3/fast', // Veo doesn't have i2v, fallback to t2v
+          'sora-2':         'fal-ai/sora-2/image-to-video',
+        };
+        const modelMap = isImg2Vid ? falI2VMap : falT2VMap;
+        const falModelId = modelMap[input.model] ?? falT2VMap['minimax-hailuo'];
+        const falDuration = input.duration <= 7 ? '5' : '10';
+
+        // Build model-specific input
+        let falInput: Record<string, unknown>;
+        if (input.model === 'minimax-hailuo') {
+          falInput = {
+            prompt: input.prompt,
+            duration: input.duration <= 7 ? '6' : '10',
+            prompt_optimizer: true,
+          };
+          if (isImg2Vid) falInput.first_frame_image = input.imageUrl;
+        } else if (input.model === 'wan') {
+          falInput = {
+            prompt: input.prompt,
+            resolution: '720p',
+            duration: falDuration,
+            aspect_ratio: '16:9',
+          };
+          if (isImg2Vid) falInput.image_url = input.imageUrl;
+        } else if (input.model === 'seedance') {
+          falInput = {
+            prompt: input.prompt,
+            resolution: '720p',
+            duration: falDuration,
+            aspect_ratio: '16:9',
+            generate_audio: true,
+          };
+          if (isImg2Vid) falInput.image_url = input.imageUrl;
+        } else if (input.model === 'sora-2') {
+          const soraDuration = input.duration <= 5 ? 4 : input.duration <= 10 ? 8 : input.duration <= 18 ? 16 : 20;
+          falInput = {
+            prompt: input.prompt,
+            duration: soraDuration,
+            aspect_ratio: '16:9',
+            resolution: '720p',
+          };
+          if (isImg2Vid) falInput.image_url = input.imageUrl;
+        } else {
+          // Google Veo
+          falInput = {
+            prompt: input.prompt,
+            duration: falDuration,
+            aspect_ratio: '16:9',
+          };
+        }
+
+        try {
+          const result = await fal.subscribe(falModelId, {
+            input: falInput,
+            timeout: 300_000, // 5 min timeout for video gen
+          }) as { data: { video: { url: string } }; requestId: string };
+
+          const videoUrl = result.data?.video?.url;
+          if (!videoUrl) {
+            await decrementAIUsage(ctx.session.user.id, ctx.db);
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No video URL in response' });
+          }
+
+          // fal.subscribe waits for completion, so return result directly
+          // Use special prefix so polling knows it's already done
+          return { taskId: `fal-done:${videoUrl}`, status: 'completed' };
+        } catch (err) {
+          await decrementAIUsage(ctx.session.user.id, ctx.db);
+          const msg = err instanceof Error ? err.message : 'Fal.ai service error';
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg });
+        }
+      }
+
+      /* ── Runway ML Gen-3 Alpha API (default) ── */
       const runwayModelMap: Record<string, string> = {
         turbo: 'gen3a_turbo',
         standard: 'gen3a',
@@ -432,9 +620,10 @@ Return ONLY valid JSON, no markdown.`,
             model: runwayModelMap[input.model] ?? 'gen3a_turbo',
             duration: input.duration,
             ratio: '16:9',
+            ...(input.imageUrl ? { imageBase64: input.imageUrl.replace(/^data:image\/\w+;base64,/, '') } : {}),
           }),
         });
-      } catch (e) {
+      } catch {
         await decrementAIUsage(ctx.session.user.id, ctx.db);
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service error' });
       }
@@ -445,7 +634,7 @@ Return ONLY valid JSON, no markdown.`,
       }
 
       const data = await res.json().catch(() => { throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to parse Runway API response' }); });
-      return { taskId: data.id, status: 'processing' };
+      return { taskId: `runway:${data.id}`, status: 'processing' };
     }),
 
   /* ═══════════════════════════════════════════════════════════════

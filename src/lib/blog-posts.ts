@@ -149,7 +149,7 @@ const ORIGINAL_POSTS: BlogPost[] = [
 <li><strong>Weekdays:</strong> 12:00-2:00 PM and 6:00-9:00 PM in your audience's time zone</li>
 <li><strong>Weekends:</strong> 10:00 AM-12:00 PM and 5:00-8:00 PM</li>
 </ul>
-<p>Track publishing performance through <a href="/shorts-analytics" style="color: #3a7bfd">TubeForge Shorts Analytics</a>.</p>
+<p>Track publishing performance through TubeForge Shorts Analytics.</p>
 
 <h2>9. Serialized Content Boosts Subscriptions</h2>
 <p>Create Shorts series: "Fact of the Day #1," "Weekly Hack #5." Serialized content motivates viewers to subscribe so they don't miss the next episode. This is one of the most effective strategies for converting views into subscribers.</p>
@@ -283,7 +283,7 @@ const ORIGINAL_POSTS: BlogPost[] = [
 <li><strong>50,000-200,000 subscribers:</strong> $1,000-5,000 per integration</li>
 <li><strong>200,000+ subscribers:</strong> $5,000-50,000+ per integration</li>
 </ul>
-<p>To attract sponsors, create a media kit with channel analytics. Use <a href="/analytics" style="color: #3a7bfd">TubeForge Analytics</a> to generate a professional report about your audience.</p>
+<p>To attract sponsors, create a media kit with channel analytics. Use TubeForge Analytics to generate a professional report about your audience.</p>
 
 <h2>Step 4: Creating and Selling Your Own Products</h2>
 <p>Your own products are the most scalable income source:</p>

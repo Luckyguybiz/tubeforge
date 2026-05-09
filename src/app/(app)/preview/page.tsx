@@ -1,11 +1,17 @@
 'use client';
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
+
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(false);
+  useEffect(() => { const c = () => setM(window.innerWidth < bp); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, [bp]);
+  return m;
+}
 
 const PreviewSave = dynamic(
   () => import('@/views/Preview/PreviewSave').then((m) => ({ default: m.PreviewSave })),
@@ -53,6 +59,7 @@ function PublishContent() {
   const projectId = searchParams.get('projectId');
   const tabParam = searchParams.get('tab');
 
+  const isMobile = useIsMobile();
   const activeTab: TabId = isValidTab(tabParam) ? tabParam : 'preview';
 
   const switchTab = useCallback((tab: TabId) => {

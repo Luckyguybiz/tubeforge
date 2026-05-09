@@ -133,7 +133,6 @@ describe('Auth flow', () => {
       '/team',
       '/admin',
       '/tools',
-      '/shorts-analytics',
       '/referral',
     ];
 
