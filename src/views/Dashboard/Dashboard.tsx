@@ -59,15 +59,6 @@ const NEON_CSS = `
 
 const FEATURE_CARDS = [
   {
-    key: 'analytics',
-    titleKey: 'dashboard.tool.analytics',
-    descKey: 'dashboard.tool.analyticsDesc',
-    href: '/analytics',
-    from: '#8b5cf6', to: '#ec4899',
-    badge: null as string | null,
-    requiresYoutube: true,
-  },
-  {
     key: 'aiThumbnails',
     titleKey: 'dashboard.tool.aiThumbnails',
     descKey: 'dashboard.tool.aiThumbnailsDesc',

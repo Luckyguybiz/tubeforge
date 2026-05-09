@@ -207,253 +207,29 @@ const CTA_PHRASES = [
   'check out', 'link in', 'sign up', 'download', 'join',
 ];
 
-/* ── Title score (0-100) ─────────────────────────────────────────── */
-function computeTitleScore(title: string): number {
-  const len = title.length;
-  const lower = title.toLowerCase();
-  let score = 0;
-
-  // Length: optimal 40-70
-  if (len >= 40 && len <= 70) score += 90;
-  else if (len >= 30 && len <= 80) score += 75;
-  else score += 50;
-
-  // Power words (+10 each, max 30)
-  const pwCount = POWER_WORDS.filter((w) => lower.includes(w)).length;
-  score += Math.min(30, pwCount * 10);
-
-  // Emotional hooks (+8 each, max 24)
-  const emCount = EMOTIONAL_WORDS.filter((w) => lower.includes(w)).length;
-  score += Math.min(24, emCount * 8);
-
-  // Numbers in title (+10)
-  if (/\d/.test(title)) score += 10;
-
-  // Question / exclamation (+5 each)
-  if (title.includes('?')) score += 5;
-  if (title.includes('!')) score += 5;
-
-  // ALL CAPS penalty
-  if (title === title.toUpperCase() && len > 5) score -= 20;
-
-  return Math.max(0, Math.min(100, Math.round(score * 100 / 164)));
-}
-
 /* ── Description score (0-100) ───────────────────────────────────── */
 function computeDescriptionScore(description: string): {
-  score: number;
   hasTimestamps: boolean;
   hasLinks: boolean;
   hasHashtags: boolean;
   hasCTA: boolean;
   descriptionLength: number;
 } {
-  const len = description.length;
+  // Returns ONLY factual structure of the description text.
+  // Per YouTube ToS Policy III.E.4h, no derived scoring metric is computed or returned.
   const lower = description.toLowerCase();
-  let score = 0;
-
-  // Length
-  if (len >= 500) score += 90;
-  else if (len >= 200) score += 70;
-  else score += 40;
-
-  // Timestamps (e.g. 0:00, 1:23:45)
-  const hasTimestamps = /\d{1,2}:\d{2}/.test(description);
-  if (hasTimestamps) score += 15;
-
-  // Links
-  const hasLinks = /https?:\/\//.test(description);
-  if (hasLinks) score += 10;
-
-  // Hashtags
-  const hasHashtags = /#\w+/.test(description);
-  if (hasHashtags) score += 10;
-
-  // CTA phrases
-  const hasCTA = CTA_PHRASES.some((p) => lower.includes(p));
-  if (hasCTA) score += 10;
-
   return {
-    score: Math.max(0, Math.min(100, Math.round(score * 100 / 135))),
-    hasTimestamps,
-    hasLinks,
-    hasHashtags,
-    hasCTA,
-    descriptionLength: len,
+    hasTimestamps: /\d{1,2}:\d{2}/.test(description),
+    hasLinks: /https?:\/\//.test(description),
+    hasHashtags: /#\w+/.test(description),
+    hasCTA: CTA_PHRASES.some((p) => lower.includes(p)),
+    descriptionLength: description.length,
   };
 }
 
-/* ── Tags score (0-100) ──────────────────────────────────────────── */
-function computeTagsScore(tags: string[] | undefined, title: string): number {
-  if (!tags || tags.length === 0) return 10;
 
-  let score = 0;
-  const count = tags.length;
 
-  // Tag count
-  if (count >= 8 && count <= 15) score += 90;
-  else if (count >= 3 && count <= 7) score += 70;
-  else if (count > 15) score += 60;
-  else score += 40;
 
-  // Tag relevance: overlap with title words
-  const titleWords = new Set(title.toLowerCase().split(/\W+/).filter(Boolean));
-  const tagWords = new Set(tags.flatMap((t) => t.toLowerCase().split(/\W+/).filter(Boolean)));
-  let overlap = 0;
-  for (const w of titleWords) {
-    if (tagWords.has(w) && w.length > 2) overlap++;
-  }
-  const relevance = titleWords.size > 0 ? overlap / titleWords.size : 0;
-  score += Math.round(relevance * 30);
-
-  return Math.max(0, Math.min(100, Math.round(score * 100 / 120)));
-}
-
-/* ── Thumbnail score (0-100) ─────────────────────────────────────── */
-async function computeThumbnailScore(videoId: string, thumbnails: Record<string, { url?: string; width?: number; height?: number }> | undefined): Promise<number> {
-  let score = 50; // base
-
-  // Check maxres thumbnail
-  const maxres = thumbnails?.maxres;
-  if (maxres?.url) {
-    score += 30; // has high-res custom thumbnail
-  } else {
-    // Try HEAD request for maxresdefault
-    try {
-      const headRes = await fetch(`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`, {
-        method: 'HEAD',
-        signal: AbortSignal.timeout(3000),
-      });
-      if (headRes.ok) score += 25;
-    } catch {
-      // ignore
-    }
-  }
-
-  // Resolution check
-  const width = maxres?.width ?? thumbnails?.high?.width ?? 0;
-  const height = maxres?.height ?? thumbnails?.high?.height ?? 0;
-  if (width >= 1280 && height >= 720) score += 20;
-  else if (width >= 480) score += 10;
-
-  return Math.max(0, Math.min(100, score));
-}
-
-/* ── Engagement score (0-100) ────────────────────────────────────── */
-function computeEngagementScore(
-  views: number,
-  likes: number,
-  comments: number,
-  publishedAt: string,
-): { score: number; likeRate: number; commentRate: number; viewsPerDay: number } {
-  const daysSincePublish = Math.max(1, (Date.now() - new Date(publishedAt).getTime()) / 86_400_000);
-  const likeRate = views > 0 ? (likes / views) * 100 : 0;
-  const commentRate = views > 0 ? (comments / views) * 100 : 0;
-  const viewsPerDay = Math.round(views / daysSincePublish);
-
-  let score = 0;
-
-  // Like rate
-  if (likeRate >= 4) score += 40;
-  else if (likeRate >= 2) score += 28;
-  else if (likeRate >= 1) score += 18;
-  else score += 8;
-
-  // Comment rate
-  if (commentRate >= 0.5) score += 25;
-  else if (commentRate >= 0.2) score += 18;
-  else if (commentRate >= 0.05) score += 10;
-  else score += 4;
-
-  // Views velocity
-  if (viewsPerDay >= 10000) score += 35;
-  else if (viewsPerDay >= 1000) score += 28;
-  else if (viewsPerDay >= 100) score += 18;
-  else if (viewsPerDay >= 10) score += 10;
-  else score += 4;
-
-  return {
-    score: Math.max(0, Math.min(100, score)),
-    likeRate: Math.round(likeRate * 100) / 100,
-    commentRate: Math.round(commentRate * 1000) / 1000,
-    viewsPerDay,
-  };
-}
-
-/* ── Suggestion generator ────────────────────────────────────────── */
-function generateSuggestions(
-  title: string,
-  description: string,
-  tags: string[] | undefined,
-  engagement: { likeRate: number; commentRate: number; viewsPerDay: number },
-  descMeta: { hasTimestamps: boolean; hasLinks: boolean; hasHashtags: boolean; hasCTA: boolean; descriptionLength: number },
-): string[] {
-  const suggestions: string[] = [];
-  const titleLen = title.length;
-  const titleLower = title.toLowerCase();
-
-  // Title suggestions
-  if (titleLen < 30) suggestions.push('Title is too short. Aim for 40-70 characters for better CTR.');
-  if (titleLen > 80) suggestions.push('Title is too long. Keep it under 70 characters so it doesn\'t get truncated.');
-  if (title === title.toUpperCase() && titleLen > 5) suggestions.push('Avoid ALL CAPS titles -- they can look spammy and reduce click-through rate.');
-  if (POWER_WORDS.filter((w) => titleLower.includes(w)).length === 0) {
-    suggestions.push('Add power words (e.g., "Ultimate", "Best", "Guide") to improve discoverability.');
-  }
-  if (!/\d/.test(title)) suggestions.push('Consider adding numbers to your title -- listicles and numbered tips perform well.');
-
-  // Description suggestions
-  if (!descMeta.hasTimestamps) suggestions.push('Add timestamps to your description for better SEO and viewer navigation.');
-  if (!descMeta.hasLinks) suggestions.push('Include relevant links in your description (social media, resources, related videos).');
-  if (!descMeta.hasHashtags) suggestions.push('Add 3-5 hashtags to your description to improve discoverability.');
-  if (!descMeta.hasCTA) suggestions.push('Include a call-to-action in your description (e.g., "Subscribe for more...").');
-  if (descMeta.descriptionLength < 200) suggestions.push('Write a longer description (500+ characters) to improve SEO ranking.');
-
-  // Tags suggestions
-  if (!tags || tags.length === 0) suggestions.push('Add relevant tags to your video -- this significantly improves search discoverability.');
-  else if (tags.length < 5) suggestions.push(`You only have ${tags.length} tags. Add 8-15 tags for optimal discoverability.`);
-  else if (tags.length > 15) suggestions.push('You have many tags. Focus on the 8-15 most relevant ones for best results.');
-
-  // Engagement feedback
-  if (engagement.likeRate >= 4) suggestions.push(`Your like rate (${engagement.likeRate}%) is excellent -- above the 4% benchmark.`);
-  else if (engagement.likeRate < 2) suggestions.push(`Your like rate (${engagement.likeRate}%) is below average. Ask viewers to like the video.`);
-  if (engagement.commentRate < 0.05) suggestions.push('Low comment rate. Ask questions or encourage discussion to boost comments.');
-
-  // Ensure at least one suggestion
-  if (suggestions.length === 0) suggestions.push('Great job! Your video is well-optimized. Consider A/B testing with variations.');
-
-  return suggestions;
-}
-
-/* ── Fallback: oEmbed-only analysis ──────────────────────────────── */
-function computeFallbackScores(title: string, channel: string) {
-  const titleLen = title.length;
-  const titleLower = title.toLowerCase();
-  let titleScore = 50;
-  if (titleLen >= 40 && titleLen <= 70) titleScore = 90;
-  else if (titleLen >= 30 && titleLen <= 80) titleScore = 75;
-  else if (titleLen >= 20 && titleLen <= 100) titleScore = 60;
-  else if (titleLen < 10) titleScore = 20;
-
-  const pwCount = POWER_WORDS.filter((w) => titleLower.includes(w)).length;
-  const keywordScore = Math.min(95, 40 + pwCount * 15);
-  const emCount = EMOTIONAL_WORDS.filter((w) => titleLower.includes(w)).length;
-  const engagementScore = Math.min(95, 35 + emCount * 12 + (title.includes('?') ? 10 : 0) + (title.includes('!') ? 5 : 0));
-  const seoScore = Math.round(titleScore * 0.4 + keywordScore * 0.35 + engagementScore * 0.25);
-
-  void channel;
-
-  const suggestions: string[] = [];
-  if (titleLen < 30) suggestions.push('Title is too short. Aim for 40-70 characters for better CTR.');
-  if (titleLen > 80) suggestions.push('Title is too long. Keep it under 70 characters so it doesn\'t get truncated.');
-  if (pwCount === 0) suggestions.push('Add power words (e.g., "Ultimate", "Best", "Guide") to improve discoverability.');
-  if (emCount === 0) suggestions.push('Consider adding emotional hooks or questions to boost engagement.');
-  if (title === title.toUpperCase() && titleLen > 5) suggestions.push('Avoid ALL CAPS titles -- they can look spammy and reduce click-through rate.');
-  if (suggestions.length === 0) suggestions.push('Title looks well-optimized! Consider A/B testing with variations.');
-
-  return { overall: seoScore, titleOptimization: titleScore, keywordUsage: keywordScore, engagementPotential: engagementScore, titleLength: titleLen, suggestions };
-}
-
-/* ── YouTube Data API v3 types ───────────────────────────────────── */
 interface YTSnippet {
   title: string;
   description: string;
@@ -568,52 +344,12 @@ export async function POST(req: NextRequest) {
       const durationSeconds = parseDuration(contentDetails.duration ?? 'PT0S');
       const isShorts = durationSeconds > 0 && durationSeconds <= 60;
 
-      // Compute all scores
-      const titleScore = computeTitleScore(snippet.title);
+      // Compliance (YouTube ToS, Policy III.E.4h): only API-direct fields.
+      // Description structure analysis is factual (timestamps/links/hashtags/CTA presence).
+      // Like rate & comment rate are mathematical % of API-provided counts (not derived).
       const descResult = computeDescriptionScore(snippet.description);
-      const tagsScore = computeTagsScore(snippet.tags, snippet.title);
-      const thumbnailScore = await computeThumbnailScore(videoId, snippet.thumbnails);
-      const engagementResult = computeEngagementScore(views, likes, comments, snippet.publishedAt);
-
-      // SEO is weighted combination
-      const seoScore = Math.round(
-        titleScore * 0.2 +
-        descResult.score * 0.15 +
-        tagsScore * 0.1 +
-        thumbnailScore * 0.15 +
-        engagementResult.score * 0.2 +
-        // Remaining 20% from combined factors
-        ((titleScore + descResult.score + tagsScore) / 3) * 0.2,
-      );
-
-      const overall = Math.round(
-        titleScore * 0.20 +
-        descResult.score * 0.15 +
-        tagsScore * 0.10 +
-        thumbnailScore * 0.15 +
-        engagementResult.score * 0.20 +
-        seoScore * 0.20,
-      );
-
-      // Estimated CTR
-      let estimatedCTR: 'high' | 'medium' | 'low';
-      if (overall >= 75) estimatedCTR = 'high';
-      else if (overall >= 50) estimatedCTR = 'medium';
-      else estimatedCTR = 'low';
-
-      // Benchmark comparison
-      let benchmarkComparison: 'above_average' | 'average' | 'below_average';
-      if (engagementResult.likeRate >= 4) benchmarkComparison = 'above_average';
-      else if (engagementResult.likeRate >= 2) benchmarkComparison = 'average';
-      else benchmarkComparison = 'below_average';
-
-      const suggestions = generateSuggestions(
-        snippet.title,
-        snippet.description,
-        snippet.tags,
-        engagementResult,
-        descResult,
-      );
+      const likeRate = views > 0 ? Number(((likes / views) * 100).toFixed(2)) : 0;
+      const commentRate = views > 0 ? Number(((comments / views) * 100).toFixed(2)) : 0;
 
       const category = snippet.categoryId ? (CATEGORY_MAP[snippet.categoryId] ?? 'Unknown') : 'Unknown';
       const language = snippet.defaultAudioLanguage ?? snippet.defaultLanguage ?? 'unknown';
@@ -636,23 +372,10 @@ export async function POST(req: NextRequest) {
         description: snippet.description.slice(0, 500),
         tags: snippet.tags ?? [],
         isShorts,
-        scores: {
-          overall,
-          title: titleScore,
-          description: descResult.score,
-          tags: tagsScore,
-          thumbnail: thumbnailScore,
-          engagement: engagementResult.score,
-          seo: seoScore,
-        },
         metrics: {
-          likeRate: engagementResult.likeRate,
-          commentRate: engagementResult.commentRate,
-          viewsPerDay: engagementResult.viewsPerDay,
-          estimatedCTR,
-          benchmarkComparison,
+          likeRate,
+          commentRate,
         },
-        suggestions,
         structure: {
           hasTimestamps: descResult.hasTimestamps,
           hasLinks: descResult.hasLinks,
@@ -690,8 +413,6 @@ export async function POST(req: NextRequest) {
     }
 
     const data = (await oembedRes.json()) as OEmbedResponse;
-    const scores = computeFallbackScores(data.title, data.author_name);
-
     return NextResponse.json({
       videoId,
       title: data.title,
@@ -699,7 +420,6 @@ export async function POST(req: NextRequest) {
       channelUrl: data.author_url,
       thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
       watchUrl: canonicalUrl,
-      analysis: scores,
       apiSource: 'oembed-fallback' as const,
       note: 'Limited analysis — set YOUTUBE_API_KEY for comprehensive video analysis with engagement metrics, description analysis, and more.',
     });
