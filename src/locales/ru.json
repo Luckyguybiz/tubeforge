@@ -2858,7 +2858,7 @@
   "tools.ytdl.serverError": "Сервер вернул некорректный ответ. Попробуйте позже.",
   "tools.ytdl.serverTimeout": "Сервер не отвечает. Попробуйте ещё раз.",
   "tools.ytdl.sessionExpired": "Сессия истекла. Пожалуйста, обновите страницу.",
-  "tools.ytdl.subtitle": "Информация о YouTube-видео — заголовок, статистика, структура описания",
+  "tools.ytdl.subtitle": "Анализ YouTube-видео — просмотры, лайки, комментарии, теги и описание",
   "tools.ytdl.suggestions": "Рекомендации по оптимизации",
   "tools.ytdl.title": "Инспектор видео",
   "tools.ytdl.titleLength": "Длина заголовка",

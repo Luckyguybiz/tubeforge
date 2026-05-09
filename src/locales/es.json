@@ -2797,7 +2797,7 @@
   "tools.ytdl.serverError": "El servidor devolvió una respuesta inválida. Intenta más tarde.",
   "tools.ytdl.serverTimeout": "El servidor no responde. Intenta de nuevo.",
   "tools.ytdl.sessionExpired": "La sesión expiró. Actualiza la página.",
-  "tools.ytdl.subtitle": "Ver información de vídeos de YouTube — título, estadísticas, estructura",
+  "tools.ytdl.subtitle": "Analizar vídeos de YouTube — vistas, me gusta, comentarios, etiquetas y descripción",
   "tools.ytdl.suggestions": "Sugerencias de optimización",
   "tools.ytdl.title": "Inspector de vídeo",
   "tools.ytdl.titleLength": "Longitud del título",

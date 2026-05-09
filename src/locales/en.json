@@ -2859,7 +2859,7 @@
   "tools.ytdl.serverError": "Server returned invalid response. Try again later.",
   "tools.ytdl.serverTimeout": "Server not responding. Try again.",
   "tools.ytdl.sessionExpired": "Session expired. Please refresh the page.",
-  "tools.ytdl.subtitle": "View YouTube video info — title, stats, description structure",
+  "tools.ytdl.subtitle": "Analyze YouTube videos — views, likes, comments, tags & description",
   "tools.ytdl.suggestions": "Optimization Suggestions",
   "tools.ytdl.title": "Video Inspector",
   "tools.ytdl.titleLength": "Title Length",

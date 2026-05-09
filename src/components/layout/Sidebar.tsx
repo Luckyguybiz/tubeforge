@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, memo, useRef } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
@@ -811,17 +812,19 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
     const tourId = id === 'tools' ? 'tools-section' : id === 'billing' ? 'billing-section' : undefined;
 
     const btn = (
-      <button
+      <Link
         key={id}
+        href={`/${id}`}
+        prefetch
         className="tf-mobile-nav-item"
         aria-label={label}
         aria-current={isActive ? 'page' : undefined}
         data-tour={tourId}
         data-no-scale
-        onClick={() => navigate(id)}
         onMouseEnter={() => handleMouseEnter(id)}
         onMouseLeave={handleMouseLeave}
         style={{
+          textDecoration: 'none',
           position: 'relative',
           width: '100%',
           height: 40,
@@ -936,7 +939,7 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
             }}
           />
         )}
-      </button>
+      </Link>
     );
 
     return (
