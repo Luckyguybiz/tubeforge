@@ -1,562 +1,469 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { signIn } from 'next-auth/react';
-import { useThemeStore } from '@/stores/useThemeStore';
-import { useLocaleStore } from '@/stores/useLocaleStore';
-import { trpc } from '@/lib/trpc';
-import Link from 'next/link';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { ErrorFallback } from '@/components/ui/ErrorFallback';
-import { toast } from '@/stores/useNotificationStore';
-import { getRecentActivity, type ActivityEntry } from '@/lib/activity-log';
-import { ChannelAnalytics } from './ChannelAnalytics';
-import { DashboardUpgradeModal } from '@/components/ui/DashboardUpgradeModal';
+import { useState, useEffect, useCallback } from "react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { useThemeStore } from "@/stores/useThemeStore";
+import { useLocaleStore } from "@/stores/useLocaleStore";
+import { trpc } from "@/lib/trpc";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorFallback } from "@/components/ui/ErrorFallback";
+import { toast } from "@/stores/useNotificationStore";
+import { getRecentActivity, type ActivityEntry } from "@/lib/activity-log";
+import { ChannelAnalytics } from "./ChannelAnalytics";
+import { DashboardUpgradeModal } from "@/components/ui/DashboardUpgradeModal";
+import { cn } from "@/lib/utils";
+import {
+  Eye,
+  Users,
+  FolderOpen,
+  Sparkles,
+  Wand2,
+  Video,
+  Search,
+  Calendar,
+  Image as ImageIcon,
+  ArrowRight,
+  PlayCircle as Youtube,
+  Clock,
+  Zap,
+  ChevronRight,
+} from "lucide-react";
 
-/* ================================================================
-   NEON & LOCKED STATE CSS
-   ================================================================ */
 
-const NEON_CSS = `
-@keyframes tfNeonPulse {
-  0%, 100% { box-shadow: 0 0 8px var(--tf-neon, rgba(99,102,241,0.4)), 0 0 24px var(--tf-neon-soft, rgba(99,102,241,0.15)); }
-  50% { box-shadow: 0 0 16px var(--tf-neon, rgba(99,102,241,0.6)), 0 0 40px var(--tf-neon-soft, rgba(99,102,241,0.3)), 0 0 60px var(--tf-neon-dim, rgba(99,102,241,0.08)); }
+/** t with fallback: returns fallback if translation key is missing (returns key itself). */
+function tx(t: (k: string) => string, key: string, fallback: string): string {
+  const v = t(key);
+  return v === key ? fallback : v;
 }
-@keyframes tfLockFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-@keyframes tfBannerGlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-@keyframes tfBarGrow {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
-}
-.tf-neon-active {
-  animation: tfNeonPulse 3s ease-in-out infinite;
-  transition: transform 0.2s ease;
-}
-.tf-neon-active:hover { transform: translateY(-2px); }
-.tf-feat-card {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.tf-feat-card:not(.tf-feat-locked):hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-}
-.tf-feat-locked { cursor: pointer; }
-.tf-feat-locked:hover { transform: translateY(-2px); }
-.tf-lock-icon { animation: tfLockFloat 2s ease-in-out infinite; }
-.tf-banner-glow { background-size: 200% 200%; animation: tfBannerGlow 6s ease infinite; }
-`;
 
-/* ================================================================
-   FEATURE CARD DEFINITIONS
-   ================================================================ */
+/* ───────── Constants ───────── */
 
-const FEATURE_CARDS = [
+const PLAN_LIMITS = {
+  FREE: { projects: 3, ai: 3 },
+  PRO: { projects: 25, ai: 100 },
+  STUDIO: { projects: Infinity, ai: Infinity },
+} as const;
+
+interface FeatureCard {
+  key: string;
+  href: string;
+  titleKey: string;
+  descKey: string;
+  descFallback: string;
+  icon: React.ReactNode;
+  gradient: string;
+  badge?: string;
+  requiresYoutube?: boolean;
+}
+
+const FEATURES: FeatureCard[] = [
   {
-    key: 'aiThumbnails',
-    titleKey: 'dashboard.tool.aiThumbnails',
-    descKey: 'dashboard.tool.aiThumbnailsDesc',
-    href: '/ai-thumbnails',
-    from: '#6366f1', to: '#8b5cf6',
-    badge: 'NEW' as string | null,
-    requiresYoutube: false,
+    key: "aiThumbnails",
+    href: "/ai-thumbnails",
+    titleKey: "dashboard.tool.aiThumbnails",
+    descKey: "dashboard.tool.aiThumbnailsDesc",
+    descFallback: "Create viral YouTube thumbnails with AI",
+    icon: <Sparkles className="size-5" />,
+    gradient: "from-indigo-500 to-violet-500",
+    badge: "NEW",
   },
   {
-    key: 'videoEditor',
-    titleKey: 'dashboard.tool.videoEditor',
-    descKey: 'dashboard.tool.videoEditorNavDesc',
-    href: '/editor',
-    from: '#3b82f6', to: '#06b6d4',
-    badge: null as string | null,
-    requiresYoutube: false,
+    key: "videoEditor",
+    href: "/editor",
+    titleKey: "dashboard.tool.videoEditor",
+    descKey: "dashboard.tool.videoEditorDesc",
+    descFallback: "AI-powered video creation",
+    icon: <Video className="size-5" />,
+    gradient: "from-blue-500 to-cyan-500",
   },
   {
-    key: 'seoOptimizer',
-    titleKey: 'dashboard.tool.seoOptimizer',
-    descKey: 'dashboard.tool.seoOptimizerDesc',
-    href: '/preview?tab=seo',
-    from: '#10b981', to: '#34d399',
-    badge: null as string | null,
-    requiresYoutube: false,
+    key: "seoOptimizer",
+    href: "/preview?tab=seo",
+    titleKey: "dashboard.tool.seoOptimizer",
+    descKey: "dashboard.tool.seoOptimizerDesc",
+    descFallback: "Optimize titles, tags, and descriptions",
+    icon: <Search className="size-5" />,
+    gradient: "from-emerald-500 to-teal-500",
   },
   {
-    key: 'contentPlanner',
-    titleKey: 'dashboard.tool.contentPlanner',
-    descKey: 'dashboard.tool.publishPlanDesc',
-    href: '/preview?tab=planner',
-    from: '#f97316', to: '#ef4444',
-    badge: null as string | null,
-    requiresYoutube: false,
+    key: "contentPlanner",
+    href: "/preview?tab=planner",
+    titleKey: "dashboard.tool.contentPlanner",
+    descKey: "dashboard.tool.contentPlannerDesc",
+    descFallback: "Schedule and plan your content",
+    icon: <Calendar className="size-5" />,
+    gradient: "from-orange-500 to-pink-500",
   },
   {
-    key: 'designStudio',
-    titleKey: 'dashboard.tool.designStudio',
-    descKey: 'dashboard.tool.designStudioDesc',
-    href: '/thumbnails',
-    from: '#f59e0b', to: '#f97316',
-    badge: null as string | null,
-    requiresYoutube: false,
+    key: "designStudio",
+    href: "/thumbnails",
+    titleKey: "dashboard.tool.designStudio",
+    descKey: "dashboard.tool.designStudioDesc",
+    descFallback: "Canvas editor for graphics",
+    icon: <ImageIcon className="size-5" />,
+    gradient: "from-amber-500 to-orange-500",
+  },
+  {
+    key: "keywords",
+    href: "/keywords",
+    titleKey: "nav.keywords",
+    descKey: "dashboard.tool.keywordsDesc",
+    descFallback: "Discover trending search terms",
+    icon: <Wand2 className="size-5" />,
+    gradient: "from-violet-500 to-fuchsia-500",
   },
 ];
 
-const FEATURE_ICONS: Record<string, React.ReactNode> = {
-  analytics: (
-    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 11-6.2-8.6" /><path d="M21 3v6h-6" />
-    </svg>
-  ),
-  aiThumbnails: (
-    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l1.5 4.5H18l-3.5 2.5L16 15l-4-3-4 3 1.5-5L6 7.5h4.5z" />
-    </svg>
-  ),
-  videoEditor: (
-    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="5,3 19,12 5,21" />
-    </svg>
-  ),
-  seoOptimizer: (
-    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  ),
-  contentPlanner: (
-    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  ),
-  designStudio: (
-    <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-    </svg>
-  ),
-};
-
-const FREE_TOOL_META = [
-  { titleKey: 'dashboard.tool.titleGenerator', href: '/free-tools/title-generator' },
-  { titleKey: 'dashboard.tool.descriptionGenerator', href: '/free-tools/description-generator' },
-  { titleKey: 'dashboard.tool.tagGenerator', href: '/free-tools/tag-generator' },
-  { titleKey: 'dashboard.tool.scriptGenerator', href: '/free-tools/script-generator' },
-  { titleKey: 'dashboard.tool.channelNameGenerator', href: '/free-tools/channel-name-generator' },
-  { titleKey: 'dashboard.tool.videoIdeas', href: '/free-tools/video-ideas' },
-  { titleKey: 'dashboard.tool.characterCounter', href: '/free-tools/character-counter' },
-  { titleKey: 'dashboard.tool.moneyCalculator', href: '/tools/youtube-money-calculator' },
-  { titleKey: 'dashboard.tool.thumbnailChecker', href: '/tools/youtube-thumbnail-size' },
-];
-
-/* Mock bar heights for locked analytics preview */
-const MOCK_BARS = [55, 72, 48, 88, 64, 80, 52, 92, 68, 85, 44, 76, 60, 95];
-
-/* ================================================================
-   HELPERS
-   ================================================================ */
+/* ───────── Helpers ───────── */
 
 function formatNumber(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
-  return n.toLocaleString();
+  if (!isFinite(n)) return "∞";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
 
-function activityIcon(type: string, color: string) {
-  switch (type) {
-    case 'project_created':
-      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>);
-    case 'video_generated':
-      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21" /></svg>);
-    case 'project_exported':
-      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>);
-    default:
-      return (<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>);
-  }
-}
-
-function activityLabel(type: string, t: (key: string) => string): string {
-  const map: Record<string, string> = {
-    project_created: t('dashboard.activity.projectCreated'),
-    project_deleted: t('dashboard.activity.projectDeleted'),
-    project_renamed: t('dashboard.activity.projectRenamed'),
-    project_duplicated: t('dashboard.activity.projectDuplicated'),
-    video_generated: t('dashboard.activity.videoGenerated'),
-    project_exported: t('dashboard.activity.projectExported'),
-    project_imported: t('dashboard.activity.projectImported'),
-  };
-  return map[type] ?? type;
-}
-
-function timeAgoShort(ts: number, t: (key: string) => string): string {
+function timeAgo(iso: number | string, t: (k: string) => string): string {
+  const ts = typeof iso === "number" ? iso : new Date(iso).getTime();
   const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t('dashboard.time.justNow');
-  if (mins < 60) return t('dashboard.time.minutesAgo').replace('{n}', String(mins));
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return t('dashboard.time.hoursAgo').replace('{n}', String(hrs));
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return t('dashboard.time.daysAgo').replace('{n}', String(days));
-  return t('dashboard.time.monthsAgo').replace('{n}', String(Math.floor(days / 30)));
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d}${tx(t, "time.dShort", "d")}`;
+  if (h > 0) return `${h}${tx(t, "time.hShort", "h")}`;
+  if (m > 0) return `${m}${tx(t, "time.mShort", "m")}`;
+  return tx(t, "time.justNow", "now");
 }
 
-/* ================================================================
-   SUB-COMPONENTS
-   ================================================================ */
+/* ───────── Stat Tile ───────── */
 
-/* ── Frosted-glass lock overlay ── */
-function LockedOverlay({
-  C,
-  label,
-  onClick,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
+interface StatTileProps {
   label: string;
-  onClick: () => void;
-}) {
-  return (
-    <div
-      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'rgba(10, 10, 10, 0.72)',
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        borderRadius: 'inherit',
-        zIndex: 2,
-        cursor: 'pointer',
-      }}
-    >
-      <div className="tf-lock-icon" style={{
-        width: 48, height: 48, borderRadius: 14,
-        background: `linear-gradient(135deg, ${C.accent}25, ${C.purple}25)`,
-        border: `1px solid ${C.accent}40`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0110 0v4" />
-        </svg>
-      </div>
-      <span style={{
-        fontSize: 12, fontWeight: 700, color: C.accent,
-        letterSpacing: '.04em', textTransform: 'uppercase',
-      }}>
-        {label}
-      </span>
-    </div>
-  );
+  value: string | number;
+  hint?: string;
+  icon: React.ReactNode;
+  loading?: boolean;
+  href?: string;
 }
 
-/* ── Connection banner ── */
-function ConnectionBanner({
-  C,
-  t,
-  onConnect,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  t: (key: string) => string;
-  onConnect: () => void;
-}) {
-  return (
-    <div
-      className="tf-banner-glow tf-dash-connect-banner"
-      style={{
-        background: `linear-gradient(135deg, ${C.accent}12, ${C.purple}12, ${C.blue}12, ${C.accent}12)`,
-        border: `1px solid ${C.accent}30`,
-        borderRadius: 18,
-        padding: '28px 32px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 20,
-        marginBottom: 28,
-        flexWrap: 'wrap',
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 200 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 12,
-            background: `${C.accent}20`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29.94 29.94 0 001 12a29.94 29.94 0 00.46 5.58A2.78 2.78 0 003.4 19.6C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 001.94-2A29.94 29.94 0 0023 12a29.94 29.94 0 00-.46-5.58z" />
-              <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-            </svg>
-          </div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-            {t('dashboard.connectBanner.title')}
-          </h3>
-        </div>
-        <p style={{ fontSize: 13, color: C.sub, margin: '0 0 0 52px', lineHeight: 1.5 }}>
-          {t('dashboard.connectBanner.desc')}
-        </p>
+function StatTile({ label, value, hint, icon, loading, href }: StatTileProps) {
+  const inner = (
+    <div className="group relative rounded-2xl bg-card border border-border p-4 sm:p-5 transition-all hover:border-brand-500/40 hover:shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        <span className="text-muted-foreground/60 group-hover:text-brand-500 transition-colors">
+          {icon}
+        </span>
       </div>
-      <button
-        onClick={onConnect}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '12px 28px', borderRadius: 12,
-          background: `linear-gradient(135deg, ${C.accent}, ${C.purple})`,
-          color: '#fff', border: 'none', cursor: 'pointer',
-          fontSize: 14, fontWeight: 700,
-          transition: 'opacity 0.2s, transform 0.2s',
-          flexShrink: 0,
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'scale(1.02)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
+      {loading ? (
+        <Skeleton width={80} height={32} />
+      ) : (
+        <div className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-foreground">
+          {value}
+        </div>
+      )}
+      {hint && !loading && (
+        <div className="text-[11px] text-muted-foreground mt-1.5">{hint}</div>
+      )}
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 rounded-2xl"
       >
-        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fillOpacity=".9" />
-          <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fillOpacity=".7" />
-          <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fillOpacity=".5" />
-          <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fillOpacity=".6" />
-        </svg>
-        {t('dashboard.connectBanner.cta')}
-      </button>
-    </div>
-  );
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
 }
 
-/* ── Locked analytics preview (mock stats + chart) ── */
-function LockedAnalyticsPreview({
-  C,
-  connectLabel,
-  onConnect,
-}: {
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  connectLabel: string;
-  onConnect: () => void;
-}) {
-  return (
-    <div style={{
-      position: 'relative', borderRadius: 18, overflow: 'hidden',
-      marginBottom: 32, border: `1px solid ${C.border}`,
-    }}>
-      {/* Simulated analytics content behind the overlay */}
-      <div style={{ padding: 24, background: C.card }}>
-        {/* Mock quick stats */}
-        <div style={{
-          display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap',
-        }}>
-          {[
-            { label: 'Subscribers', value: '12.5K', color: '#3b82f6' },
-            { label: 'Views', value: '145K', color: '#10b981' },
-            { label: 'Videos', value: '89', color: '#f97316' },
-          ].map((stat) => (
-            <div key={stat.label} style={{
-              flex: '1 1 160px', padding: '18px 20px', borderRadius: 14,
-              background: C.surface, border: `1px solid ${C.border}`,
-            }}>
-              <div style={{
-                fontSize: 11, fontWeight: 600, color: C.dim,
-                textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10,
-              }}>
-                {stat.label}
-              </div>
-              <div style={{
-                fontSize: 26, fontWeight: 800, color: C.text,
-                letterSpacing: '-.03em', filter: 'blur(5px)', userSelect: 'none',
-              }}>
-                {stat.value}
-              </div>
-              <div style={{
-                marginTop: 10, height: 4, borderRadius: 2, background: C.border,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  width: '65%', height: '100%', borderRadius: 2,
-                  background: `linear-gradient(90deg, ${stat.color}, ${stat.color}99)`,
-                  filter: 'blur(2px)',
-                }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Mock chart */}
-        <div style={{
-          height: 180, borderRadius: 14, background: C.surface,
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          gap: 8, padding: '20px 24px', overflow: 'hidden',
-        }}>
-          {MOCK_BARS.map((h, i) => (
-            <div key={i} style={{
-              flex: 1, maxWidth: 24, height: `${h}%`,
-              borderRadius: '4px 4px 0 0',
-              background: `linear-gradient(180deg, ${C.accent}, ${C.purple}88)`,
-              opacity: 0.4,
-              filter: 'blur(2px)',
-              transformOrigin: 'bottom',
-              animation: `tfBarGrow 0.6s ease-out ${i * 0.05}s both`,
-            }} />
-          ))}
-        </div>
-      </div>
-      {/* Full overlay */}
-      <LockedOverlay C={C} label={connectLabel} onClick={onConnect} />
-    </div>
-  );
-}
+/* ───────── Quick Action Card ───────── */
 
-/* ── Feature grid card ── */
-function FeatureGridCard({
-  title,
-  desc,
-  href,
-  from,
-  to,
-  badge,
-  icon,
+function QuickActionCard({
+  feature,
+  t,
   locked,
   connectLabel,
-  C,
   onConnect,
 }: {
-  title: string;
-  desc: string;
-  href: string;
-  from: string;
-  to: string;
-  badge: string | null;
-  icon: React.ReactNode;
-  locked: boolean;
+  feature: FeatureCard;
+  t: (k: string) => string;
+  locked?: boolean;
   connectLabel: string;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
   onConnect: () => void;
 }) {
-  const inner = (
-    <div
-      className={`tf-feat-card ${locked ? 'tf-feat-locked' : ''}`}
-      style={{
-        position: 'relative',
-        borderRadius: 16,
-        overflow: 'hidden',
-        background: C.card,
-        border: `1px solid ${locked ? C.border : from + '30'}`,
-        height: '100%',
-      }}
-    >
-      {/* Gradient header */}
-      <div style={{
-        height: 110,
-        background: `linear-gradient(135deg, ${from}, ${to})`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        opacity: locked ? 0.5 : 1,
-      }}>
-        {icon}
-        {badge && (
-          <span style={{
-            position: 'absolute', top: 10, right: 10,
-            background: badge === 'PRO' ? '#6366f1' : badge === 'NEW' ? '#84cc16' : '#22c55e',
-            color: badge === 'PRO' ? '#fff' : '#000',
-            fontSize: 10, fontWeight: 700,
-            padding: '3px 8px', borderRadius: 6,
-          }}>
-            {badge}
-          </span>
-        )}
-      </div>
-      {/* Body */}
-      <div style={{ padding: '14px 16px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{title}</span>
-          {!locked && <span style={{ color: C.dim, fontSize: 16 }}>&rarr;</span>}
-        </div>
-        <div style={{ fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.4 }}>{desc}</div>
-      </div>
-      {/* Lock overlay */}
-      {locked && <LockedOverlay C={C} label={connectLabel} onClick={onConnect} />}
-    </div>
-  );
-
-  if (locked) {
-    return <div onClick={onConnect} style={{ cursor: 'pointer' }}>{inner}</div>;
-  }
-
-  return (
-    <Link href={href} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-      {inner}
-    </Link>
-  );
-}
-
-/* ── Free tool chip ── */
-function FreeToolChip({
-  title,
-  href,
-  C,
-}: {
-  title: string;
-  href: string;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-}) {
-  const [hovered, setHovered] = useState(false);
+  const handleClick = (e: React.MouseEvent) => {
+    if (locked) {
+      e.preventDefault();
+      onConnect();
+    }
+  };
 
   return (
     <Link
-      href={href}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flexShrink: 0,
-        scrollSnapAlign: 'start',
-        padding: '14px 20px',
-        borderRadius: 14,
-        background: hovered ? C.surface : C.card,
-        border: `1px solid ${hovered ? C.accent : C.border}`,
-        textDecoration: 'none',
-        transition: 'all .2s ease',
-        transform: hovered ? 'translateY(-2px)' : 'none',
-        boxShadow: hovered ? '0 6px 20px rgba(0,0,0,.15)' : 'none',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        whiteSpace: 'nowrap',
-      }}
+      href={locked ? "#" : feature.href}
+      onClick={handleClick}
+      className={cn(
+        "group relative rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200",
+        "hover:border-brand-500/40 hover:-translate-y-0.5 hover:shadow-lg",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+      )}
     >
-      <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{title}</span>
-      <span style={{ color: C.dim, fontSize: 14 }}>&rarr;</span>
+      <div className={cn("h-20 sm:h-24 bg-gradient-to-br relative", feature.gradient)}>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        <div className="absolute top-3 right-3 flex gap-1.5">
+          {feature.badge && (
+            <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-white text-black">
+              {feature.badge}
+            </span>
+          )}
+        </div>
+        <div className="absolute bottom-3 left-4 size-9 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+          {feature.icon}
+        </div>
+        {locked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-white px-3 py-1.5 rounded-md bg-black/50">
+              🔒 {connectLabel}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-foreground truncate">
+            {t(feature.titleKey)}
+          </h3>
+          <ArrowRight className="size-4 text-muted-foreground group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0" />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+          {tx(t, feature.descKey, feature.descFallback)}
+        </p>
+      </div>
     </Link>
   );
 }
 
-/* ================================================================
-   MAIN DASHBOARD COMPONENT
-   ================================================================ */
+/* ───────── Compact Connect Banner ───────── */
+
+function ConnectBanner({
+  onConnect,
+  t,
+}: {
+  onConnect: () => void;
+  t: (k: string) => string;
+}) {
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-brand-500/10 via-card to-card border border-brand-500/20 p-5 sm:p-6 mb-6 sm:mb-8">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center">
+        <div className="size-12 sm:size-14 rounded-xl bg-brand-500/15 flex items-center justify-center text-brand-500 shrink-0">
+          <Youtube className="size-7" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base sm:text-lg font-bold text-foreground">
+            {tx(t, "dashboard.connectChannel.title", "Connect your YouTube channel")}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+            {tx(t, "dashboard.connectChannel.desc", "Unlock channel analytics, smart content planning, and personalized AI recommendations.")}
+          </p>
+        </div>
+        <button
+          onClick={onConnect}
+          className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden>
+            <path
+              d="M16.51 8.18a8.65 8.65 0 0 0-.13-1.51H8.86v2.87h4.3a3.7 3.7 0 0 1-1.6 2.42v2.01h2.59a7.84 7.84 0 0 0 2.36-5.79z"
+              fill="#4285F4"
+            />
+            <path
+              d="M8.86 16.5a7.66 7.66 0 0 0 5.3-1.93l-2.59-2.01a4.86 4.86 0 0 1-7.22-2.55h-2.7v2.07A8.49 8.49 0 0 0 8.86 16.5z"
+              fill="#34A853"
+            />
+            <path
+              d="M4.35 10.01a4.95 4.95 0 0 1 0-3.02V4.93h-2.7a8.49 8.49 0 0 0 0 7.15l2.7-2.07z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M8.86 4.04a4.6 4.6 0 0 1 3.27 1.28l2.3-2.3A8.18 8.18 0 0 0 8.86.5a8.49 8.49 0 0 0-7.21 4.43l2.7 2.07a4.86 4.86 0 0 1 4.51-2.96z"
+              fill="#EA4335"
+            />
+          </svg>
+          {tx(t, "dashboard.locked.connect", "Connect channel")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Onboarding Steps ───────── */
+
+function OnboardingSteps({
+  onConnect,
+  isConnected,
+  t,
+}: {
+  onConnect: () => void;
+  isConnected: boolean;
+  t: (k: string) => string;
+}) {
+  const steps: Array<{
+    id: string;
+    title: string;
+    desc: string;
+    icon: React.ReactNode;
+    done?: boolean;
+    action: { label: string; href?: string; onClick?: () => void };
+  }> = [
+    {
+      id: "connect",
+      title: tx(t, "dashboard.onboarding.connect", "Connect your YouTube channel"),
+      desc:
+        tx(t, "dashboard.onboarding.connectDesc", "Pull in real channel stats and unlock personalized AI"),
+      icon: <Youtube className="size-5" />,
+      done: isConnected,
+      action: { label: tx(t, "dashboard.locked.connect", "Connect"), onClick: onConnect },
+    },
+    {
+      id: "thumbnail",
+      title: tx(t, "dashboard.onboarding.thumbnail", "Generate your first thumbnail"),
+      desc:
+        tx(t, "dashboard.onboarding.thumbnailDesc", "Try the AI-powered thumbnail generator. 3 free per month."),
+      icon: <Sparkles className="size-5" />,
+      action: { label: tx(t, "dashboard.onboarding.try", "Try it"), href: "/ai-thumbnails" },
+    },
+    {
+      id: "explore",
+      title: tx(t, "dashboard.onboarding.explore", "Explore all tools"),
+      desc:
+        tx(t, "dashboard.onboarding.exploreDesc", "SEO optimizer, content planner, design studio, keyword finder"),
+      icon: <Zap className="size-5" />,
+      action: { label: tx(t, "dashboard.onboarding.browse", "Browse"), href: "/tools" },
+    },
+  ];
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground mb-4">
+        {tx(t, "dashboard.onboarding.title", "Get started in 3 steps")}
+      </h2>
+      <div className="grid gap-3">
+        {steps.map((step) => (
+          <div
+            key={step.id}
+            className={cn(
+              "flex items-start sm:items-center gap-4 p-4 rounded-xl border bg-card transition-colors",
+              step.done
+                ? "border-emerald-500/25 opacity-70"
+                : "border-border hover:border-brand-500/30"
+            )}
+          >
+            <div
+              className={cn(
+                "size-9 rounded-lg flex items-center justify-center shrink-0",
+                step.done
+                  ? "bg-emerald-500/15 text-emerald-500"
+                  : "bg-brand-500/10 text-brand-500"
+              )}
+            >
+              {step.done ? "✓" : step.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-foreground">{step.title}</div>
+              <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                {step.desc}
+              </div>
+            </div>
+            {!step.done &&
+              (step.action.href ? (
+                <Link
+                  href={step.action.href}
+                  className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-card hover:bg-muted text-foreground text-xs font-semibold border border-border transition-colors whitespace-nowrap"
+                >
+                  {step.action.label} <ChevronRight className="size-3" />
+                </Link>
+              ) : (
+                <button
+                  onClick={step.action.onClick}
+                  className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold transition-colors whitespace-nowrap"
+                >
+                  {step.action.label} <ChevronRight className="size-3" />
+                </button>
+              ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Recent Activity ───────── */
+
+function RecentActivity({
+  entries,
+  t,
+}: {
+  entries: ActivityEntry[];
+  t: (k: string) => string;
+}) {
+  return (
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+          {tx(t, "dashboard.recentHistory", "Recent activity")}
+        </h2>
+        <Link
+          href="/preview"
+          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+        >
+          {tx(t, "dashboard.seeAll", "See all")} <ChevronRight className="size-3" />
+        </Link>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-2.5">
+        {entries.slice(0, 6).map((activity) => (
+          <div
+            key={activity.id}
+            className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors"
+          >
+            <div className="size-9 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0">
+              <Sparkles className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-foreground truncate">
+                {activity.label || tx(t, "dashboard.activity.generic", "Action")}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                <Clock className="size-3" />
+                {timeAgo(activity.timestamp, t)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Main Dashboard Component ───────── */
 
 export function Dashboard() {
-  const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const freeToolsScrollRef = useRef<HTMLDivElement>(null);
 
-  /* ── Recent activity ── */
   const [recentActivities, setRecentActivities] = useState<ActivityEntry[]>([]);
-  useEffect(() => { setRecentActivities(getRecentActivity(6)); }, []);
+  useEffect(() => {
+    setRecentActivities(getRecentActivity(6));
+  }, []);
 
-  /* ── tRPC queries ── */
   const profile = trpc.user.getProfile.useQuery();
-
-  /* ── Channel connection check ── */
-  // Primary source: channels already synced to DB (from profile query)
   const profileChannels = profile.data?.channels ?? [];
 
-  // Secondary: live sync from YouTube API.
-  // Only run if user already has channels in DB — avoids spurious 401s
-  // when user has not connected Google OAuth yet.
   const channelsQuery = trpc.youtube.getChannels.useQuery(undefined, {
     retry: 1,
     staleTime: 5 * 60 * 1000,
@@ -564,276 +471,228 @@ export function Dashboard() {
   });
 
   const apiChannels = channelsQuery.data ?? [];
-  // Connected if DB has channels OR API returned channels
-  const isConnected = profileChannels.length > 0 || (channelsQuery.isSuccess && apiChannels.length > 0);
-  const isCheckingConnection = profile.isLoading || (channelsQuery.isLoading && profileChannels.length === 0);
+  const isConnected =
+    profileChannels.length > 0 || (channelsQuery.isSuccess && apiChannels.length > 0);
+  const isCheckingConnection = profile.isLoading;
 
-  /* ── Refetch profile when channel sync succeeds (updates DB channels) ── */
-  const prevSyncSuccess = useRef(false);
-  useEffect(() => {
-    if (channelsQuery.isSuccess && apiChannels.length > 0 && !prevSyncSuccess.current) {
-      prevSyncSuccess.current = true;
-      profile.refetch();
-    }
-  }, [channelsQuery.isSuccess, apiChannels.length, profile]);
-
-  /* ── Show error toast when YouTube API fails ── */
-  useEffect(() => {
-    if (channelsQuery.isError && !isConnected) {
-      const msg = channelsQuery.error?.message || 'Failed to load YouTube channels';
-      toast.error(msg);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelsQuery.isError]);
-
-  /* ── Connect handler ── */
   const handleConnect = useCallback(() => {
-    signIn('google', { callbackUrl: '/dashboard' });
+    signIn("google", { callbackUrl: "/dashboard" });
   }, []);
 
-  /* ── Auto-trigger checkout from pricing CTA ── */
   const initCheckout = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data) => { if (data.url) window.location.href = data.url; },
+    onSuccess: (data) => {
+      if (data.url) window.location.href = data.url;
+    },
     onError: (err) => toast.error(err.message),
   });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const plan = params.get('initCheckout');
-    if (plan === 'PRO' || plan === 'STUDIO') {
-      window.history.replaceState({}, '', '/dashboard');
+    const plan = params.get("initCheckout");
+    if (plan === "PRO" || plan === "STUDIO") {
+      window.history.replaceState({}, "", "/dashboard");
       initCheckout.mutate({ plan });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ── Show toast on successful upgrade ── */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('upgraded') === 'true') {
-      toast.success(t('billing.upgradeSuccess'));
-      window.history.replaceState({}, '', '/dashboard');
+    if (params.get("upgraded") === "true") {
+      toast.success(tx(t, "billing.upgradeSuccess", "Upgraded successfully"));
+      window.history.replaceState({}, "", "/dashboard");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ── Horizontal wheel scroll for free tools ── */
-  const handleFreeToolsWheel = useCallback((e: WheelEvent) => {
-    if (!freeToolsScrollRef.current) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
-      freeToolsScrollRef.current.scrollLeft += e.deltaY;
-    }
-  }, []);
-
-  useEffect(() => {
-    const el = freeToolsScrollRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', handleFreeToolsWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleFreeToolsWheel);
-  }, [handleFreeToolsWheel]);
-
-  /* ── Error state ── */
   if (profile.isError) {
     const err = profile.error;
     return (
       <ErrorFallback
-        error={err instanceof Error ? err : new Error((err as { message?: string })?.message ?? String(err))}
+        error={
+          err instanceof Error
+            ? err
+            : new Error((err as { message?: string })?.message ?? String(err))
+        }
         reset={() => profile.refetch()}
       />
     );
   }
 
   const user = profile.data;
-  const connectLabel = t('dashboard.locked.connect');
+  const plan = (user?.plan ?? "FREE") as keyof typeof PLAN_LIMITS;
+  const planLimits = PLAN_LIMITS[plan];
+  const projectCount = user?._count?.projects ?? 0;
+  const aiUsage = user?.aiUsage ?? 0;
+  const planLabel =
+    ({
+      FREE: t("common.free"),
+      PRO: t("common.pro"),
+      STUDIO: t("common.studio"),
+    } as Record<string, string>)[plan] ?? plan;
+
+  const channel = profileChannels[0] ?? apiChannels[0];
+  const subscribers = channel?.subscribers ?? 0;
+  const totalViews = (channel as { totalViews?: number } | undefined)?.totalViews ?? 0;
 
   return (
-    <div className="tf-dash-container" style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box', overflow: 'hidden' }}>
-      <style>{NEON_CSS}</style>
-
-      {/* ── Upgrade popup for free users ── */}
-      {/* Upgrade popup disabled for testing */}
-
-      {/* ── Welcome header ── */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 className="tf-dash-heading" style={{
-          fontSize: 'clamp(18px, 4vw, 26px)', fontWeight: 600, margin: '0 0 4px',
-          letterSpacing: '-.02em', lineHeight: 1.2, color: C.text,
-        }}>
-          {profile.isLoading
-            ? <Skeleton width={260} height={34} />
-            : `${t('dashboard.hello')}, ${user?.name ?? t('dashboard.creator')}`
-          }
-        </h1>
-        <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.5, fontWeight: 400 }}>
-          {profile.isLoading
-            ? <Skeleton width={160} height={16} style={{ marginTop: 4 }} />
-            : t('dashboard.manageProjects')
-          }
-        </p>
-      </div>
-
-      {/* ── Connection banner (shown when not connected) ── */}
-      {!isConnected && !isCheckingConnection && (
-        <ConnectionBanner C={C} t={t} onConnect={handleConnect} />
-      )}
-      {isCheckingConnection && (
-        <Skeleton width="100%" height={100} style={{ borderRadius: 18, marginBottom: 28 }} />
-      )}
-
-      {/* ── Channel Analytics (when connected) with neon glow ── */}
-      {isConnected && (
-        <div style={{ position: 'relative', marginBottom: 32 }}>
-          {/* Neon glow backdrop */}
-          <div style={{
-            position: 'absolute', inset: -2,
-            borderRadius: 20,
-            background: `linear-gradient(135deg, ${C.accent}10, ${C.purple}10, ${C.blue}10)`,
-            filter: 'blur(24px)',
-            zIndex: 0,
-            pointerEvents: 'none',
-          }} />
-          <div
-            className="tf-neon-active"
-            style={{
-              position: 'relative', zIndex: 1,
-              borderRadius: 18,
-              border: `1px solid ${C.accent}25`,
-              padding: 2,
-              '--tf-neon': `${C.accent}50`,
-              '--tf-neon-soft': `${C.accent}20`,
-              '--tf-neon-dim': `${C.accent}08`,
-            } as React.CSSProperties}
-          >
-            <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-              <ChannelAnalytics />
-            </div>
-          </div>
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-4 sm:py-6 pb-24 sm:pb-12">
+      {/* Hero */}
+      <header className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground truncate">
+            {profile.isLoading ? (
+              <Skeleton width={260} height={32} />
+            ) : (
+              <>
+                {tx(t, "dashboard.welcomeBack", "Welcome back")}
+                {user?.name ? `, ${user.name.split(" ")[0]}` : ""}{" "}
+                <span className="inline-block">👋</span>
+              </>
+            )}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {profile.isLoading ? (
+              <Skeleton width={200} height={14} />
+            ) : isConnected ? (
+              tx(t, "dashboard.heroConnectedSub", "Here's what's happening with your channel")
+            ) : (
+              tx(t, "dashboard.heroSub", "Let's grow your channel today")
+            )}
+          </p>
         </div>
+        {!profile.isLoading && (
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className={cn(
+                "text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded-md",
+                plan === "STUDIO" && "bg-violet-500/15 text-violet-400",
+                plan === "PRO" && "bg-brand-500/15 text-brand-500",
+                plan === "FREE" && "bg-card border border-border text-muted-foreground"
+              )}
+            >
+              {planLabel}
+            </span>
+            {plan === "FREE" && (
+              <Link
+                href="/billing"
+                className="inline-flex items-center gap-1 h-8 px-3 rounded-md bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold transition-colors"
+              >
+                {tx(t, "usage.upgradePlan", "Upgrade")}
+              </Link>
+            )}
+          </div>
+        )}
+      </header>
+
+      {/* Stats */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <StatTile
+          label={tx(t, "dashboard.stat.subscribers", "Subscribers")}
+          value={isConnected ? formatNumber(subscribers) : "—"}
+          hint={
+            isConnected
+              ? channel?.title
+              : tx(t, "dashboard.stat.connectToSee", "Connect channel")
+          }
+          icon={<Users className="size-4" />}
+          loading={isCheckingConnection}
+        />
+        <StatTile
+          label={tx(t, "dashboard.stat.totalViews", "Total views")}
+          value={isConnected && totalViews > 0 ? formatNumber(totalViews) : "—"}
+          hint={
+            isConnected
+              ? tx(t, "dashboard.stat.allTime", "All time")
+              : tx(t, "dashboard.stat.connectToSee", "Connect channel")
+          }
+          icon={<Eye className="size-4" />}
+          loading={isCheckingConnection}
+        />
+        <StatTile
+          label={tx(t, "dashboard.stat.projects", "Projects")}
+          value={formatNumber(projectCount)}
+          hint={
+            planLimits.projects === Infinity
+              ? tx(t, "dashboard.stat.unlimited", "Unlimited")
+              : `${projectCount}/${planLimits.projects} ${
+                  tx(t, "dashboard.stat.used", "used")
+                }`
+          }
+          icon={<FolderOpen className="size-4" />}
+          loading={profile.isLoading}
+          href="/preview"
+        />
+        <StatTile
+          label={tx(t, "dashboard.stat.aiGenerations", "AI generations")}
+          value={formatNumber(aiUsage)}
+          hint={
+            planLimits.ai === Infinity
+              ? tx(t, "dashboard.stat.unlimited", "Unlimited")
+              : `${aiUsage}/${planLimits.ai} ${
+                  tx(t, "dashboard.stat.thisMonth", "this month")
+                }`
+          }
+          icon={<Sparkles className="size-4" />}
+          loading={profile.isLoading}
+          href="/ai-thumbnails"
+        />
+      </section>
+
+      {/* Connect banner OR Channel analytics */}
+      {isCheckingConnection ? (
+        <Skeleton
+          width="100%"
+          height={120}
+          style={{ borderRadius: 16, marginBottom: 24 }}
+        />
+      ) : isConnected ? (
+        <div className="mb-6 sm:mb-8 rounded-2xl border border-border bg-card overflow-hidden">
+          <ChannelAnalytics />
+        </div>
+      ) : (
+        <ConnectBanner onConnect={handleConnect} t={t} />
       )}
 
-      {/* ── Locked analytics preview — disabled for testing ── */}
-      {isCheckingConnection && (
-        <Skeleton width="100%" height={320} style={{ borderRadius: 18, marginBottom: 32 }} />
-      )}
-
-      {/* ── Feature grid: "Your Tools" ── */}
-      <div style={{ marginBottom: 36 }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginBottom: 18,
-        }}>
+      {/* Quick Actions */}
+      <section className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 style={{
-              fontSize: 22, fontWeight: 800, color: C.text,
-              margin: 0, letterSpacing: '-.02em', textTransform: 'uppercase',
-            }}>
-              {t('dashboard.yourTools')}
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+              {tx(t, "dashboard.yourTools", "Your tools")}
             </h2>
-            <p style={{ fontSize: 13, color: C.sub, margin: '4px 0 0' }}>
-              {t('dashboard.yourToolsDesc')}
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {tx(t, "dashboard.yourToolsDesc", "All the tools you need to grow your channel")}
             </p>
           </div>
-          <Link href="/tools" style={{
-            fontSize: 13, color: C.sub, textDecoration: 'none',
-            display: 'flex', alignItems: 'center', gap: 4,
-          }}>
-            {t('dashboard.seeAll')} <span>&rsaquo;</span>
+          <Link
+            href="/tools"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1 shrink-0"
+          >
+            {tx(t, "dashboard.seeAll", "See all")} <ChevronRight className="size-3" />
           </Link>
         </div>
-        <div className="tf-dash-feature-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
-          gap: 16,
-        }}>
-          {FEATURE_CARDS.map((feature) => (
-            <FeatureGridCard
-              key={feature.key}
-              title={t(feature.titleKey)}
-              desc={t(feature.descKey)}
-              href={feature.href}
-              from={feature.from}
-              to={feature.to}
-              badge={feature.badge}
-              icon={FEATURE_ICONS[feature.key]}
-              locked={feature.requiresYoutube && !isConnected && !isCheckingConnection}
-              connectLabel={connectLabel}
-              C={C}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {FEATURES.map((f) => (
+            <QuickActionCard
+              key={f.key}
+              feature={f}
+              t={t}
+              locked={f.requiresYoutube && !isConnected && !isCheckingConnection}
+              connectLabel={tx(t, "dashboard.locked.connect", "Connect")}
               onConnect={handleConnect}
             />
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ── Recent History (conditional) ─────────── */}
-      {recentActivities.length > 0 && (
-        <div style={{ marginBottom: 40 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 16,
-          }}>
-            <h2 style={{
-              fontSize: 22, fontWeight: 700, color: C.text,
-              margin: 0, letterSpacing: '-.02em',
-            }}>
-              {t('dashboard.recentHistory')}
-            </h2>
-          </div>
-          <div className="tf-history-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
-            gap: 10,
-          }}>
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  padding: '14px 16px',
-                  background: C.card,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 14,
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: C.surface,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {activityIcon(activity.type, C.accent)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 13, fontWeight: 600, color: C.text,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {activityLabel(activity.type, t)}
-                  </div>
-                  {activity.label && (
-                    <div style={{
-                      fontSize: 12, color: C.sub, marginTop: 2,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {activity.label}
-                    </div>
-                  )}
-                </div>
-                <span style={{
-                  fontSize: 11, color: C.dim, fontWeight: 500,
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}>
-                  {timeAgoShort(activity.timestamp, t)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Recent activity OR onboarding */}
+      {recentActivities.length > 0 ? (
+        <RecentActivity entries={recentActivities} t={t} />
+      ) : (
+        <OnboardingSteps onConnect={handleConnect} isConnected={isConnected} t={t} />
       )}
 
-      {/* ── Upgrade modal for new FREE users ──────── */}
       {user && <DashboardUpgradeModal userPlan={user.plan} />}
     </div>
   );
