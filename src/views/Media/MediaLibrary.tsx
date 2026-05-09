@@ -1,60 +1,94 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useRef } from 'react';
-import { useThemeStore } from '@/stores/useThemeStore';
-import { useLocaleStore } from '@/stores/useLocaleStore';
-import { trpc } from '@/lib/trpc';
-import { toast } from '@/stores/useNotificationStore';
-import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { useState, useCallback, useRef } from "react";
+import { useLocaleStore } from "@/stores/useLocaleStore";
+import { trpc } from "@/lib/trpc";
+import { toast } from "@/stores/useNotificationStore";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { cn } from "@/lib/utils";
+import {
+  Upload,
+  Search,
+  X,
+  Image as ImageIcon,
+  Video,
+  Music,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  HardDrive,
+  Trash2,
+  Plus,
+  Library,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
 
-type TabId = 'my' | 'stock';
-type FilterType = 'all' | 'image' | 'video' | 'audio';
+/* ── Translate-with-fallback ───────────────────────────── */
+function tx(t: (k: string) => string, key: string, fallback: string): string {
+  const v = t(key);
+  return v === key ? fallback : v;
+}
+
+type TabId = "my" | "stock";
+type FilterType = "all" | "image" | "video" | "audio";
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
 function formatDate(dateStr: string | Date): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
+function fileIcon(type: string) {
+  if (type === "video") return Video;
+  if (type === "audio") return Music;
+  if (type === "image") return ImageIcon;
+  return FileText;
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+
 export function MediaLibrary() {
-  const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const planInfo = usePlanLimits();
 
-  const [tab, setTab] = useState<TabId>('my');
-  const [search, setSearch] = useState('');
-  const [stockSearch, setStockSearch] = useState('');
-  const [stockQuery, setStockQuery] = useState('');
-  const [filterType, setFilterType] = useState<FilterType>('all');
+  const [tab, setTab] = useState<TabId>("my");
+  const [search, setSearch] = useState("");
+  const [stockSearch, setStockSearch] = useState("");
+  const [stockQuery, setStockQuery] = useState("");
+  const [filterType, setFilterType] = useState<FilterType>("all");
   const [page, setPage] = useState(1);
   const [stockPage, setStockPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /* ── Queries ──────────────────────────────────────── */
   const assets = trpc.media.list.useQuery(
     { search: search || undefined, type: filterType, page, limit: 30 },
-    { enabled: tab === 'my' },
+    { enabled: tab === "my" },
   );
 
   const storage = trpc.media.storageStats.useQuery(undefined, {
-    enabled: tab === 'my',
+    enabled: tab === "my",
   });
 
   const stockResults = trpc.stock.searchPhotos.useQuery(
     { query: stockQuery, page: stockPage, perPage: 20 },
-    { enabled: tab === 'stock' && stockQuery.length > 0 },
+    { enabled: tab === "stock" && stockQuery.length > 0 },
   );
 
   const createAsset = trpc.asset.create.useMutation({
     onSuccess: () => {
-      toast.success(t('media.uploadSuccess'));
+      toast.success(tx(t, "media.uploadSuccess", "Uploaded"));
       assets.refetch();
       storage.refetch();
     },
@@ -63,43 +97,43 @@ export function MediaLibrary() {
 
   const deleteAsset = trpc.asset.delete.useMutation({
     onSuccess: () => {
-      toast.success(t('media.deleteSuccess'));
+      toast.success(tx(t, "media.deleteSuccess", "Deleted"));
       assets.refetch();
       storage.refetch();
     },
     onError: (err) => toast.error(err.message),
   });
 
-  /* ── Handlers ─────────────────────────────────────── */
-  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json() as { url?: string; error?: string };
-
-      if (!res.ok || !data.url) {
-        toast.error(data.error || t('media.uploadError'));
-        return;
+  const handleUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = (await res.json()) as { url?: string; error?: string };
+        if (!res.ok || !data.url) {
+          toast.error(data.error || tx(t, "media.uploadError", "Upload failed"));
+          return;
+        }
+        createAsset.mutate({
+          url: data.url,
+          filename: file.name,
+          type: file.type.startsWith("image/")
+            ? "image"
+            : file.type.startsWith("video/")
+              ? "video"
+              : "image",
+          size: file.size,
+        });
+      } catch {
+        toast.error(tx(t, "media.uploadError", "Upload failed"));
       }
-
-      createAsset.mutate({
-        url: data.url,
-        filename: file.name,
-        type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'image',
-        size: file.size,
-      });
-    } catch {
-      toast.error(t('media.uploadError'));
-    }
-
-    // Reset input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [createAsset, t]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [createAsset, t],
+  );
 
   const handleStockSearch = useCallback(() => {
     if (stockSearch.trim()) {
@@ -108,420 +142,484 @@ export function MediaLibrary() {
     }
   }, [stockSearch]);
 
-  const handleAddStockToProject = useCallback((photoUrl: string, photographer: string) => {
-    toast.success(`${t('media.stockAdded')} (${photographer})`);
-    // In a real implementation, this would save the URL to the current project/scene
-    void photoUrl;
-  }, [t]);
-
-  /* ── Styles ───────────────────────────────────────── */
-  const cardStyle: React.CSSProperties = {
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 16,
-    padding: 20,
-  };
-
-  const tabBtnStyle = (active: boolean): React.CSSProperties => ({
-    padding: '8px 20px',
-    borderRadius: 10,
-    border: `1px solid ${active ? C.accent : C.border}`,
-    background: active ? `${C.accent}12` : 'transparent',
-    color: active ? C.accent : C.sub,
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'all .15s',
-  });
-
-  const filterBtnStyle = (active: boolean): React.CSSProperties => ({
-    padding: '5px 12px',
-    borderRadius: 8,
-    border: 'none',
-    background: active ? `${C.accent}15` : 'transparent',
-    color: active ? C.accent : C.dim,
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  });
+  const handleAddStockToProject = useCallback(
+    (photoUrl: string, photographer: string) => {
+      toast.success(`${tx(t, "media.stockAdded", "Added")} (${photographer})`);
+      void photoUrl;
+    },
+    [t],
+  );
 
   const storagePercent = storage.data
-    ? Math.min(100, Math.round((storage.data.usedBytes / storage.data.totalBytes) * 100))
+    ? Math.min(
+        100,
+        Math.round((storage.data.usedBytes / storage.data.totalBytes) * 100),
+      )
     : 0;
+  const storageColor =
+    storagePercent > 90
+      ? "from-rose-500 to-red-500"
+      : storagePercent > 70
+        ? "from-amber-500 to-orange-500"
+        : "from-brand-500 to-violet-500";
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 12px', boxSizing: 'border-box' }}>
-      {/* ── Header ──────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: C.text, letterSpacing: '-0.02em' }}>
-            {t('media.title')}
-          </h1>
-          <p style={{ fontSize: 13, color: C.sub, margin: '4px 0 0' }}>
-            {t('media.subtitle')}
-          </p>
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* ── Header ──────────────────────────────────────── */}
+      <header className="flex flex-col gap-3 pt-6 pb-4 sm:flex-row sm:items-center sm:justify-between sm:pt-8">
+        <div className="flex items-center gap-3">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-md shadow-brand-500/20">
+            <Library className="size-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {tx(t, "media.title", "Media Library")}
+            </h1>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              {tx(
+                t,
+                "media.subtitle",
+                "All your uploads, plus 4M+ free stock photos & videos.",
+              )}
+            </p>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-            style={{ display: 'none' }}
-            onChange={handleUpload}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={createAsset.isPending}
-            style={{
-              padding: '10px 20px', borderRadius: 10, border: 'none',
-              background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-              color: '#fff', fontSize: 13, fontWeight: 600,
-              cursor: createAsset.isPending ? 'wait' : 'pointer',
-              fontFamily: 'inherit', transition: 'all .15s',
-              opacity: createAsset.isPending ? 0.6 : 1,
-            }}
-          >
-            {createAsset.isPending ? t('media.uploading') : t('media.upload')}
-          </button>
-        </div>
-      </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/*"
+          className="hidden"
+          onChange={handleUpload}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={createAsset.isPending}
+          className={cn(
+            "inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-md shadow-brand-500/20 transition-transform",
+            createAsset.isPending ? "cursor-wait opacity-60" : "hover:scale-[1.02]",
+          )}
+        >
+          {createAsset.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Upload className="size-4" />
+          )}
+          {createAsset.isPending
+            ? tx(t, "media.uploading", "Uploading…")
+            : tx(t, "media.upload", "Upload")}
+        </button>
+      </header>
 
-      {/* ── Storage bar ─────────────────────────────── */}
-      {storage.data && (
-        <div style={{ ...cardStyle, marginBottom: 20, padding: '14px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: C.sub }}>
-              {t('media.storageUsed')}: {formatBytes(storage.data.usedBytes)} {t('media.of')} {formatBytes(storage.data.totalBytes)}
-            </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.dim }}>
-              {storage.data.fileCount} {t('media.files')}
+      {/* ── Storage card ─────────────────────────────── */}
+      {storage.data && tab === "my" && (
+        <section className="mb-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-brand-500/10 text-brand-500">
+                <HardDrive className="size-4" />
+              </span>
+              <div>
+                <div className="text-[13px] font-bold text-foreground">
+                  <span className="font-mono">{formatBytes(storage.data.usedBytes)}</span>{" "}
+                  <span className="text-muted-foreground">
+                    of {formatBytes(storage.data.totalBytes)} used
+                  </span>
+                </div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                  <span className="font-mono">{storage.data.fileCount}</span>{" "}
+                  {tx(t, "media.files", "files")}
+                </div>
+              </div>
+            </div>
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 font-mono text-[12px] font-bold",
+                storagePercent > 90
+                  ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                  : storagePercent > 70
+                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                    : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+              )}
+            >
+              {storagePercent}%
             </span>
           </div>
-          <div style={{ height: 6, borderRadius: 3, background: C.surface, overflow: 'hidden' }}>
-            <div style={{
-              width: `${storagePercent}%`,
-              height: '100%',
-              borderRadius: 3,
-              background: storagePercent > 90 ? C.accent : storagePercent > 70 ? C.orange : `linear-gradient(90deg, ${C.accent}, ${C.blue})`,
-              transition: 'width .4s ease',
-            }} />
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-500", storageColor)}
+              style={{ width: `${storagePercent}%` }}
+            />
           </div>
-        </div>
+        </section>
       )}
 
       {/* ── Tabs ────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <button style={tabBtnStyle(tab === 'my')} onClick={() => setTab('my')}>
-          {t('media.myFiles')}
-        </button>
-        <button style={tabBtnStyle(tab === 'stock')} onClick={() => setTab('stock')}>
-          {t('media.stockPhotos')}
-        </button>
-      </div>
+      <section className="mb-5">
+        <div className="inline-flex gap-1 rounded-xl border border-border bg-card p-1 shadow-sm">
+          <button
+            onClick={() => setTab("my")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[13px] font-semibold transition-all",
+              tab === "my"
+                ? "bg-foreground text-background shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <Library className="size-3.5" />
+            {tx(t, "media.myFiles", "My files")}
+          </button>
+          <button
+            onClick={() => setTab("stock")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[13px] font-semibold transition-all",
+              tab === "stock"
+                ? "bg-foreground text-background shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <ImageIcon className="size-3.5" />
+            {tx(t, "media.stockPhotos", "Stock photos")}
+          </button>
+        </div>
+      </section>
 
       {/* ── My Files Tab ────────────────────────────── */}
-      {tab === 'my' && (
+      {tab === "my" && (
         <>
-          {/* Search + filters */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder={t('media.searchPlaceholder')}
-              style={{
-                flex: 1, minWidth: 200, padding: '9px 14px', borderRadius: 10,
-                border: `1px solid ${C.border}`, background: C.surface,
-                color: C.text, fontSize: 13, fontFamily: 'inherit',
-                outline: 'none',
-              }}
-            />
-            <div style={{ display: 'flex', gap: 4 }}>
-              {(['all', 'image', 'video', 'audio'] as FilterType[]).map((f) => (
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-48">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder={tx(t, "media.searchPlaceholder", "Search files…")}
+                className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-[13px] outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+              />
+            </div>
+            <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
+              {(["all", "image", "video", "audio"] as FilterType[]).map((f) => (
                 <button
                   key={f}
-                  style={filterBtnStyle(filterType === f)}
-                  onClick={() => { setFilterType(f); setPage(1); }}
+                  onClick={() => {
+                    setFilterType(f);
+                    setPage(1);
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-lg px-3 py-1 text-[12px] font-semibold transition-colors",
+                    filterType === f
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
                 >
-                  {t(`media.filter.${f}`)}
+                  {f === "image" && <ImageIcon className="size-3" />}
+                  {f === "video" && <Video className="size-3" />}
+                  {f === "audio" && <Music className="size-3" />}
+                  {tx(t, `media.filter.${f}`, f.charAt(0).toUpperCase() + f.slice(1))}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Assets grid */}
           {assets.isLoading ? (
-            <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ ...cardStyle, padding: 0, height: 200, background: C.surface }} />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-[4/3] animate-pulse rounded-xl border border-border bg-muted"
+                />
               ))}
             </div>
           ) : assets.data && assets.data.items.length > 0 ? (
             <>
-              <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-                {assets.data.items.map((asset) => (
-                  <div
-                    key={asset.id}
-                    style={{
-                      background: C.card,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 12,
-                      overflow: 'hidden',
-                      transition: 'border-color .15s',
-                    }}
-                  >
-                    {/* Thumbnail */}
-                    <div style={{
-                      aspectRatio: '4/3',
-                      background: C.surface,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}>
-                      {asset.type === 'image' && asset.url ? (
-                        <img
-                          src={asset.url}
-                          alt={asset.filename}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span style={{ fontSize: 28, opacity: 0.2 }}>
-                          {asset.type === 'video' ? '\u{1F3AC}' : asset.type === 'audio' ? '\u{1F3B5}' : '\u{1F4C4}'}
-                        </span>
-                      )}
-                    </div>
-                    {/* Info */}
-                    <div style={{ padding: '10px 12px' }}>
-                      <div style={{
-                        fontSize: 12, fontWeight: 600, color: C.text,
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        marginBottom: 4,
-                      }}>
-                        {asset.filename}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 10, color: C.dim }}>
-                          {formatBytes(asset.size)} &middot; {formatDate(asset.createdAt)}
-                        </span>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {assets.data.items.map((asset) => {
+                  const FIcon = fileIcon(asset.type);
+                  return (
+                    <div
+                      key={asset.id}
+                      className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-brand-500/40 hover:shadow-md"
+                    >
+                      <div className="relative aspect-[4/3] bg-muted">
+                        {asset.type === "image" && asset.url ? (
+                          <img
+                            src={asset.url}
+                            alt={asset.filename}
+                            loading="lazy"
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center">
+                            <FIcon className="size-10 text-muted-foreground/40" />
+                          </div>
+                        )}
                         <button
                           onClick={() => {
-                            if (confirm(t('media.confirmDelete'))) {
+                            if (
+                              confirm(tx(t, "media.confirmDelete", "Delete this file?"))
+                            ) {
                               deleteAsset.mutate({ id: asset.id });
                             }
                           }}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            fontSize: 14, color: C.dim, padding: '2px 4px',
-                            fontFamily: 'inherit', transition: 'color .15s',
-                          }}
-                          title={t('media.delete')}
+                          className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur transition-opacity hover:bg-rose-500 group-hover:opacity-100"
+                          aria-label={tx(t, "media.delete", "Delete")}
                         >
-                          &#10005;
+                          <Trash2 className="size-3.5" />
                         </button>
                       </div>
+                      <div className="px-3 py-2.5">
+                        <div className="truncate text-[12px] font-semibold text-foreground">
+                          {asset.filename}
+                        </div>
+                        <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                          {formatBytes(asset.size)} · {formatDate(asset.createdAt)}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              {/* Pagination */}
               {assets.data.pages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-                  <button
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page <= 1}
-                    style={{
-                      padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`,
-                      background: 'transparent', color: page <= 1 ? C.dim : C.text,
-                      fontSize: 12, fontWeight: 600, cursor: page <= 1 ? 'not-allowed' : 'pointer',
-                      fontFamily: 'inherit', opacity: page <= 1 ? 0.5 : 1,
-                    }}
-                  >
-                    {t('media.prev')}
-                  </button>
-                  <span style={{ padding: '8px 12px', fontSize: 12, color: C.sub, fontWeight: 600 }}>
-                    {page} / {assets.data.pages}
-                  </span>
-                  <button
-                    onClick={() => setPage(Math.min(assets.data!.pages, page + 1))}
-                    disabled={page >= assets.data.pages}
-                    style={{
-                      padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`,
-                      background: 'transparent', color: page >= assets.data.pages ? C.dim : C.text,
-                      fontSize: 12, fontWeight: 600, cursor: page >= assets.data.pages ? 'not-allowed' : 'pointer',
-                      fontFamily: 'inherit', opacity: page >= assets.data.pages ? 0.5 : 1,
-                    }}
-                  >
-                    {t('media.next')}
-                  </button>
-                </div>
+                <Pagination
+                  page={page}
+                  pages={assets.data.pages}
+                  onPrev={() => setPage(Math.max(1, page - 1))}
+                  onNext={() => setPage(Math.min(assets.data!.pages, page + 1))}
+                  t={t}
+                />
               )}
             </>
           ) : (
-            <div style={{
-              ...cardStyle,
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              justifyContent: 'center', padding: '60px 20px', textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.2 }}>{'\u{1F4C1}'}</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                {search ? t('media.noResults') : t('media.empty')}
-              </div>
-              <div style={{ fontSize: 13, color: C.sub, maxWidth: 300 }}>
-                {search ? t('media.tryAnotherSearch') : t('media.emptyHint')}
-              </div>
-            </div>
+            <EmptyState
+              Icon={Library}
+              title={search ? tx(t, "media.noResults", "No matches") : tx(t, "media.empty", "No files yet")}
+              desc={
+                search
+                  ? tx(t, "media.tryAnotherSearch", "Try a different search.")
+                  : tx(t, "media.emptyHint", "Upload images, videos & audio to use in your projects.")
+              }
+              cta={
+                !search ? (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mt-4 inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-sm hover:scale-[1.02]"
+                  >
+                    <Plus className="size-4" />
+                    {tx(t, "media.uploadFirst", "Upload your first file")}
+                  </button>
+                ) : null
+              }
+            />
           )}
         </>
       )}
 
       {/* ── Stock Photos Tab ────────────────────────── */}
-      {tab === 'stock' && (
+      {tab === "stock" && (
         <>
-          {/* Search bar */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-            <input
-              type="text"
-              value={stockSearch}
-              onChange={(e) => setStockSearch(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleStockSearch(); }}
-              placeholder={t('media.stockSearchPlaceholder')}
-              style={{
-                flex: 1, padding: '10px 14px', borderRadius: 10,
-                border: `1px solid ${C.border}`, background: C.surface,
-                color: C.text, fontSize: 13, fontFamily: 'inherit',
-                outline: 'none',
-              }}
-            />
+          <div className="mb-3 flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={stockSearch}
+                onChange={(e) => setStockSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleStockSearch();
+                }}
+                placeholder={tx(
+                  t,
+                  "media.stockSearchPlaceholder",
+                  "Search 4M+ free photos (e.g. mountain, coffee, neon)…",
+                )}
+                className="h-11 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-[14px] outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+              />
+              {stockSearch && (
+                <button
+                  onClick={() => setStockSearch("")}
+                  className="absolute right-3 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground"
+                  aria-label="Clear"
+                >
+                  <X className="size-3" />
+                </button>
+              )}
+            </div>
             <button
               onClick={handleStockSearch}
-              style={{
-                padding: '10px 20px', borderRadius: 10, border: 'none',
-                background: C.accent, color: '#fff',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-5 text-[13px] font-bold text-white shadow-sm hover:scale-[1.02]"
             >
-              {t('media.search')}
+              <Search className="size-4" />
+              {tx(t, "media.search", "Search")}
             </button>
           </div>
 
-          {/* Attribution */}
-          <div style={{ fontSize: 11, color: C.dim, marginBottom: 16 }}>
-            {t('media.poweredByPexels')}
+          <div className="mb-4 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span>{tx(t, "media.poweredByPexels", "Powered by")}</span>
+            <a
+              href="https://pexels.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 font-bold text-foreground hover:text-brand-500"
+            >
+              Pexels
+              <ExternalLink className="size-2.5" />
+            </a>
           </div>
 
-          {/* Stock results */}
           {stockResults.isLoading ? (
-            <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ ...cardStyle, padding: 0, height: 200, background: C.surface }} />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-[4/3] animate-pulse rounded-xl border border-border bg-muted"
+                />
               ))}
             </div>
           ) : stockResults.data?.note ? (
-            <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 20px' }}>
-              <div style={{ fontSize: 14, color: C.sub }}>{stockResults.data.note}</div>
-            </div>
+            <EmptyState
+              Icon={Search}
+              title={stockResults.data.note}
+              desc=""
+            />
           ) : stockResults.data && stockResults.data.photos.length > 0 ? (
             <>
-              <div className="tf-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {stockResults.data.photos.map((photo) => (
                   <div
                     key={photo.id}
-                    style={{
-                      background: C.card,
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 12,
-                      overflow: 'hidden',
-                    }}
+                    className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-brand-500/40 hover:shadow-md"
                   >
-                    <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+                    <div className="aspect-[4/3] overflow-hidden bg-muted">
                       <img
                         src={photo.src.medium}
                         alt={photo.alt}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         loading="lazy"
+                        className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     </div>
-                    <div style={{ padding: '10px 12px' }}>
-                      <div style={{ fontSize: 11, color: C.dim, marginBottom: 6 }}>
-                        {t('media.photoBy')}{' '}
+                    <div className="px-3 py-2.5">
+                      <div className="truncate text-[10px] text-muted-foreground">
+                        {tx(t, "media.photoBy", "Photo by")}{" "}
                         <a
                           href={photo.photographerUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ color: C.accent, textDecoration: 'none' }}
+                          className="font-semibold text-foreground hover:text-brand-500"
                         >
                           {photo.photographer}
                         </a>
                       </div>
                       <button
                         onClick={() => handleAddStockToProject(photo.src.large, photo.photographer)}
-                        style={{
-                          width: '100%', padding: '7px 0', borderRadius: 8,
-                          border: `1px solid ${C.border}`, background: 'transparent',
-                          color: C.text, fontSize: 11, fontWeight: 600,
-                          cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                        }}
+                        className="mt-2 inline-flex h-7 w-full items-center justify-center gap-1 rounded-lg border border-border bg-background text-[11px] font-bold text-foreground transition-colors hover:bg-muted hover:border-brand-500/40"
                       >
-                        {t('media.addToProject')}
+                        <Plus className="size-3" />
+                        {tx(t, "media.addToProject", "Add to project")}
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Stock pagination */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}>
-                <button
-                  onClick={() => setStockPage(Math.max(1, stockPage - 1))}
-                  disabled={stockPage <= 1}
-                  style={{
-                    padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`,
-                    background: 'transparent', color: stockPage <= 1 ? C.dim : C.text,
-                    fontSize: 12, fontWeight: 600, cursor: stockPage <= 1 ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit', opacity: stockPage <= 1 ? 0.5 : 1,
-                  }}
-                >
-                  {t('media.prev')}
-                </button>
-                <span style={{ padding: '8px 12px', fontSize: 12, color: C.sub, fontWeight: 600 }}>
-                  {t('media.page')} {stockPage}
-                </span>
-                <button
-                  onClick={() => setStockPage(stockPage + 1)}
-                  style={{
-                    padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.border}`,
-                    background: 'transparent', color: C.text,
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {t('media.next')}
-                </button>
-              </div>
+              <Pagination
+                page={stockPage}
+                pages={stockPage + 1}
+                onPrev={() => setStockPage(Math.max(1, stockPage - 1))}
+                onNext={() => setStockPage(stockPage + 1)}
+                t={t}
+                infinite
+              />
             </>
           ) : stockQuery ? (
-            <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 20px' }}>
-              <div style={{ fontSize: 14, color: C.sub }}>{t('media.noStockResults')}</div>
-            </div>
+            <EmptyState
+              Icon={Search}
+              title={tx(t, "media.noStockResults", "No photos found")}
+              desc={tx(t, "media.tryAnotherSearch", "Try a different search.")}
+            />
           ) : (
-            <div style={{ ...cardStyle, textAlign: 'center', padding: '60px 20px' }}>
-              <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.2 }}>{'\u{1F50D}'}</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                {t('media.stockHint')}
-              </div>
-              <div style={{ fontSize: 13, color: C.sub }}>
-                {t('media.stockHintDesc')}
-              </div>
-            </div>
+            <EmptyState
+              Icon={ImageIcon}
+              title={tx(t, "media.stockHint", "Search free stock photos")}
+              desc={tx(
+                t,
+                "media.stockHintDesc",
+                "4M+ HD photos from Pexels — free for commercial use.",
+              )}
+            />
           )}
         </>
       )}
+
+      <div className="h-12" />
+    </div>
+  );
+}
+
+/* ── Pagination ─────────────────────────────────────── */
+function Pagination({
+  page,
+  pages,
+  onPrev,
+  onNext,
+  t,
+  infinite,
+}: {
+  page: number;
+  pages: number;
+  onPrev: () => void;
+  onNext: () => void;
+  t: (k: string) => string;
+  infinite?: boolean;
+}) {
+  return (
+    <div className="mt-6 flex items-center justify-center gap-3">
+      <button
+        onClick={onPrev}
+        disabled={page <= 1}
+        className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+        aria-label="Previous"
+      >
+        <ChevronLeft className="size-4" />
+      </button>
+      <span className="font-mono text-[12px] font-semibold text-muted-foreground">
+        {page} {!infinite && `/ ${pages}`}
+      </span>
+      <button
+        onClick={onNext}
+        disabled={!infinite && page >= pages}
+        className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+        aria-label="Next"
+      >
+        <ChevronRight className="size-4" />
+      </button>
+    </div>
+  );
+}
+
+/* ── EmptyState ─────────────────────────────────────── */
+function EmptyState({
+  Icon,
+  title,
+  desc,
+  cta,
+}: {
+  Icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+  cta?: React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+      <div className="mx-auto inline-flex size-12 items-center justify-center rounded-2xl bg-muted/60">
+        <Icon className="size-6 text-muted-foreground" />
+      </div>
+      <h3 className="mt-3 text-[15px] font-bold text-foreground">{title}</h3>
+      {desc && <p className="mt-1 text-[13px] text-muted-foreground">{desc}</p>}
+      {cta}
     </div>
   );
 }
