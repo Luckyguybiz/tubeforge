@@ -1,131 +1,161 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import { useThemeStore } from '@/stores/useThemeStore';
-import { useLocaleStore } from '@/stores/useLocaleStore';
-import { trpc } from '@/lib/trpc';
-import { toast } from '@/stores/useNotificationStore';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { pluralRu } from '@/lib/utils';
+import { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
+import { useLocaleStore } from "@/stores/useLocaleStore";
+import { trpc } from "@/lib/trpc";
+import { toast } from "@/stores/useNotificationStore";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/utils";
+import {
+  Users,
+  UserPlus,
+  Crown,
+  Shield,
+  Pencil,
+  Eye,
+  Mail,
+  X,
+  Trash2,
+  ChevronDown,
+  Activity,
+  Clock,
+  Loader2,
+  Plus,
+  AlertTriangle,
+  Sparkles,
+  Check,
+} from "lucide-react";
 
-/* ---- Role helpers ----------------------------------------- */
-
-function getTeamRoleLabels(t: (key: string) => string): Record<string, string> {
-  return {
-    OWNER: t('team.role.owner'),
-    ADMIN: t('team.role.admin'),
-    EDITOR: t('team.role.editor'),
-    VIEWER: t('team.role.viewer'),
-  };
+/* ── Translate-with-fallback ───────────────────────────── */
+function tx(t: (k: string) => string, key: string, fallback: string): string {
+  const v = t(key);
+  return v === key ? fallback : v;
 }
 
-function getRoleDescriptions(t: (key: string) => string): Record<string, string> {
-  return {
-    OWNER: t('team.roleDesc.owner'),
-    ADMIN: t('team.roleDesc.admin'),
-    EDITOR: t('team.roleDesc.editor'),
-    VIEWER: t('team.roleDesc.viewer'),
-  };
-}
+type Role = "OWNER" | "ADMIN" | "EDITOR" | "VIEWER";
+type InvitableRole = "ADMIN" | "EDITOR" | "VIEWER";
 
-const PLAN_LABELS: Record<string, string> = {
-  FREE: 'Free',
-  PRO: 'Pro',
-  STUDIO: 'Studio',
+/* ── Role visual config ────────────────────────────────── */
+const ROLE_CONFIG: Record<
+  Role,
+  {
+    label: string;
+    Icon: React.ComponentType<{ className?: string }>;
+    badgeBg: string;
+    badgeText: string;
+    desc: string;
+  }
+> = {
+  OWNER: {
+    label: "Owner",
+    Icon: Crown,
+    badgeBg: "bg-amber-500/15 border-amber-500/30",
+    badgeText: "text-amber-600 dark:text-amber-400",
+    desc: "Full access. Can delete the team.",
+  },
+  ADMIN: {
+    label: "Admin",
+    Icon: Shield,
+    badgeBg: "bg-violet-500/15 border-violet-500/30",
+    badgeText: "text-violet-600 dark:text-violet-400",
+    desc: "Manage members, settings & billing.",
+  },
+  EDITOR: {
+    label: "Editor",
+    Icon: Pencil,
+    badgeBg: "bg-blue-500/15 border-blue-500/30",
+    badgeText: "text-blue-600 dark:text-blue-400",
+    desc: "Create & edit projects. No member management.",
+  },
+  VIEWER: {
+    label: "Viewer",
+    Icon: Eye,
+    badgeBg: "bg-muted border-border",
+    badgeText: "text-muted-foreground",
+    desc: "Read-only access to all team projects.",
+  },
 };
 
-/* ---- Tooltip component ------------------------------------- */
-
-function RoleTooltip({
-  label,
-  description,
-  color,
-  icon,
-  C,
+/* ── Avatar with gradient fallback ─────────────────────── */
+function Avatar({
+  src,
+  name,
+  size = "md",
 }: {
-  label: string;
-  description: string;
-  color: string;
-  icon: string;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
+  src?: string | null;
+  name: string;
+  size?: "sm" | "md" | "lg";
 }) {
-  const [show, setShow] = useState(false);
+  const initial = name?.charAt(0).toUpperCase() || "?";
+  const sizes = { sm: "size-8 text-xs", md: "size-10 text-sm", lg: "size-12 text-base" };
+  const gradients = [
+    "from-brand-500 to-violet-500",
+    "from-rose-500 to-pink-500",
+    "from-sky-500 to-cyan-500",
+    "from-emerald-500 to-teal-500",
+    "from-amber-500 to-orange-500",
+  ];
+  // Stable hash for deterministic gradient
+  const idx =
+    name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % gradients.length;
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        loading="lazy"
+        className={cn("shrink-0 rounded-full border border-border object-cover", sizes[size])}
+      />
+    );
+  }
   return (
     <div
-      style={{ position: 'relative', display: 'inline-block' }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-    >
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          fontSize: 12,
-          fontWeight: 600,
-          color,
-          padding: '4px 10px',
-          borderRadius: 8,
-          background: `${color}12`,
-          border: `1px solid ${color}20`,
-          whiteSpace: 'nowrap',
-          cursor: 'help',
-        }}
-      >
-        <span style={{ fontSize: 10, lineHeight: 1 }}>{icon}</span>
-        {label}
-      </span>
-      {show && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            marginBottom: 6,
-            padding: '8px 12px',
-            background: C.card,
-            border: `1px solid ${C.border}`,
-            borderRadius: 8,
-            boxShadow: `0 4px 16px ${C.overlay}`,
-            fontSize: 12,
-            color: C.sub,
-            lineHeight: 1.4,
-            whiteSpace: 'normal',
-            width: 220,
-            zIndex: 100,
-            pointerEvents: 'none',
-          }}
-        >
-          <strong style={{ color: C.text, display: 'block', marginBottom: 2 }}>
-            {icon} {label}
-          </strong>
-          {description}
-        </div>
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-sm",
+        gradients[idx],
+        sizes[size],
       )}
+    >
+      {initial}
     </div>
   );
 }
 
-/* ---- Component --------------------------------------------- */
+/* ── Role pill ─────────────────────────────────────────── */
+function RolePill({ role }: { role: Role }) {
+  const cfg = ROLE_CONFIG[role];
+  const Icon = cfg.Icon;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
+        cfg.badgeBg,
+        cfg.badgeText,
+      )}
+    >
+      <Icon className="size-3" />
+      {cfg.label}
+    </span>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
 
 export function TeamPage() {
-  const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
   const locale = useLocaleStore((s) => s.locale);
-  const ROLE_LABELS = useMemo(() => getTeamRoleLabels(t), [t]);
-  const ROLE_DESCS = useMemo(() => getRoleDescriptions(t), [t]);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'ADMIN' | 'EDITOR' | 'VIEWER'>('EDITOR');
-  const [teamName, setTeamName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<InvitableRole>("EDITOR");
+  const [teamName, setTeamName] = useState("");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [confirmCancelInviteId, setConfirmCancelInviteId] = useState<string | null>(null);
-  const [showRoleInfo, setShowRoleInfo] = useState(false);
 
   const profile = trpc.user.getProfile.useQuery();
   const team = trpc.team.getTeam.useQuery(undefined, {
-    enabled: profile.data?.plan === 'STUDIO',
+    enabled: profile.data?.plan === "STUDIO",
   });
   const pendingInvites = trpc.team.getPendingInvites.useQuery(undefined, {
     enabled: !!team.data,
@@ -136,8 +166,8 @@ export function TeamPage() {
 
   const createTeam = trpc.team.create.useMutation({
     onSuccess: () => {
-      toast.success(t('team.teamCreated'));
-      setTeamName('');
+      toast.success(tx(t, "team.teamCreated", "Team created"));
+      setTeamName("");
       team.refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -145,8 +175,8 @@ export function TeamPage() {
 
   const invite = trpc.team.invite.useMutation({
     onSuccess: () => {
-      toast.success(t('team.inviteSent'));
-      setInviteEmail('');
+      toast.success(tx(t, "team.inviteSent", "Invite sent"));
+      setInviteEmail("");
       setShowInviteForm(false);
       team.refetch();
       pendingInvites.refetch();
@@ -157,7 +187,7 @@ export function TeamPage() {
 
   const removeMember = trpc.team.removeMember.useMutation({
     onSuccess: () => {
-      toast.success(t('team.memberRemoved'));
+      toast.success(tx(t, "team.memberRemoved", "Member removed"));
       setConfirmRemoveId(null);
       team.refetch();
       activityLog.refetch();
@@ -167,7 +197,7 @@ export function TeamPage() {
 
   const updateRole = trpc.team.updateRole.useMutation({
     onSuccess: () => {
-      toast.success(t('team.roleUpdated'));
+      toast.success(tx(t, "team.roleUpdated", "Role updated"));
       team.refetch();
       activityLog.refetch();
     },
@@ -176,7 +206,7 @@ export function TeamPage() {
 
   const cancelInvite = trpc.team.cancelInvite.useMutation({
     onSuccess: () => {
-      toast.success(t('team.inviteCancelled'));
+      toast.success(tx(t, "team.inviteCancelled", "Invite cancelled"));
       setConfirmCancelInviteId(null);
       pendingInvites.refetch();
       activityLog.refetch();
@@ -184,1362 +214,553 @@ export function TeamPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  /* Role-based colors */
-  const roleColor = useCallback(
-    (role: string) => {
-      const map: Record<string, string> = {
-        OWNER: C.orange,
-        ADMIN: C.purple,
-        EDITOR: C.blue,
-        VIEWER: C.dim,
-      };
-      return map[role] || C.sub;
-    },
-    [C],
-  );
-
-  /* Role badge icon */
-  const roleIcon = useCallback((role: string) => {
-    const map: Record<string, string> = {
-      OWNER: '\u2605',
-      ADMIN: '\u2666',
-      EDITOR: '\u270E',
-      VIEWER: '\u25CE',
-    };
-    return map[role] || '';
-  }, []);
-
-  /* Check if current user is owner */
   const isOwner = team.data?.ownerId === profile.data?.id;
   const isAdmin = team.data?.members?.some(
-    (m) => m.user.id === profile.data?.id && (m.role === 'OWNER' || m.role === 'ADMIN'),
+    (m) => m.user.id === profile.data?.id && (m.role === "OWNER" || m.role === "ADMIN"),
   );
+  const canManage = isOwner || isAdmin;
 
-  /* Locale helper */
   const formatDate = useCallback(
     (date: string | Date) => {
       const loc =
-        locale === 'ru' ? 'ru-RU' : locale === 'kk' ? 'kk-KZ' : locale === 'es' ? 'es-ES' : 'en-US';
+        locale === "ru"
+          ? "ru-RU"
+          : locale === "kk"
+            ? "kk-KZ"
+            : locale === "es"
+              ? "es-ES"
+              : "en-US";
       return new Date(date).toLocaleDateString(loc, {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
+        day: "numeric",
+        month: "short",
+        year: "numeric",
       });
     },
     [locale],
   );
 
-  const formatDateTime = useCallback(
-    (date: string | Date) => {
-      const loc =
-        locale === 'ru' ? 'ru-RU' : locale === 'kk' ? 'kk-KZ' : locale === 'es' ? 'es-ES' : 'en-US';
-      return new Date(date).toLocaleDateString(loc, {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    },
-    [locale],
-  );
+  const formatRelative = useCallback((date: string | Date) => {
+    const ts = typeof date === "string" ? new Date(date).getTime() : date.getTime();
+    const diff = (Date.now() - ts) / 1000;
+    if (diff < 60) return "just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return new Date(ts).toLocaleDateString();
+  }, []);
 
-  /* Shared styles */
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 14px',
-    background: C.surface,
-    border: `1px solid ${C.border}`,
-    borderRadius: 10,
-    color: C.text,
-    fontSize: 14,
-    fontFamily: 'inherit',
-    boxSizing: 'border-box',
-    outline: 'none',
-    transition: 'border-color 0.15s',
-  };
-
-  const btnPrimary: React.CSSProperties = {
-    padding: '10px 24px',
-    minHeight: 44,
-    borderRadius: 10,
-    border: 'none',
-    background: C.accent,
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    boxShadow: `0 2px 12px ${C.accent}22`,
-    transition: 'transform 0.1s, box-shadow 0.15s',
-    whiteSpace: 'nowrap',
-  };
-
-  const btnSecondary: React.CSSProperties = {
-    padding: '10px 20px',
-    minHeight: 44,
-    borderRadius: 10,
-    border: `1px solid ${C.border}`,
-    background: C.surface,
-    color: C.text,
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'border-color 0.15s, background 0.15s',
-    whiteSpace: 'nowrap',
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 14,
-  };
-
-  const sectionTitle: React.CSSProperties = {
-    fontSize: 13,
-    fontWeight: 600,
-    color: C.sub,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.04em',
-    marginBottom: 12,
-  };
-
-  /* ---- Loading state ---------------------------------------- */
-
+  /* ── Render: Loading ─────────────────────────────── */
   if (profile.isLoading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Skeleton width={200} height={28} />
-        <Skeleton width={300} height={14} />
-        <div style={{ marginTop: 8 }}>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} height={64} rounded style={{ marginBottom: 12 }} />
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+        <Skeleton width="40%" height={32} />
+        <div className="mt-3"><Skeleton width="60%" height={16} /></div>
+        <div className="mt-6 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} width="100%" height={64} rounded />
           ))}
         </div>
       </div>
     );
   }
 
-  /* ---- Plan restriction ------------------------------------- */
-
-  if (profile.data?.plan !== 'STUDIO') {
+  /* ── Render: STUDIO upsell ───────────────────────── */
+  if (profile.data?.plan !== "STUDIO") {
     return (
-      <div
-        className="tf-team-upgrade-prompt"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 480,
-          padding: '40px 24px',
-        }}
-      >
-        <div
-          style={{
-            width: 100,
-            height: 100,
-            borderRadius: 24,
-            background: `linear-gradient(135deg, ${C.purple}15, ${C.blue}15)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 24,
-          }}
-        >
-          <div
-            style={{
-              width: 68,
-              height: 68,
-              borderRadius: 18,
-              background: `linear-gradient(135deg, ${C.purple}22, ${C.blue}22)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 36,
-            }}
-          >
-            {'\uD83D\uDC65'}
+      <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:py-16">
+        <div className="text-center">
+          <div className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/20">
+            <Users className="size-7 text-white" />
           </div>
-        </div>
-
-        <h2
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 8,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {t('team.title')}
-        </h2>
-        <p
-          style={{
-            color: C.sub,
-            fontSize: 15,
-            lineHeight: 1.6,
-            textAlign: 'center',
-            maxWidth: 360,
-            marginBottom: 8,
-          }}
-        >
-          {t('team.studioRequired')}
-        </p>
-        <p
-          style={{
-            color: C.dim,
-            fontSize: 13,
-            marginBottom: 28,
-            textAlign: 'center',
-            maxWidth: 320,
-            lineHeight: 1.5,
-          }}
-        >
-          {t('team.studioDesc')}
-        </p>
-
-        <a
-          href="/settings"
-          style={{
-            padding: '12px 32px',
-            borderRadius: 10,
-            background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-            color: '#fff',
-            fontSize: 14,
-            fontWeight: 700,
-            textDecoration: 'none',
-            boxShadow: `0 4px 20px ${C.accent}33`,
-            transition: 'transform 0.1s, box-shadow 0.15s',
-          }}
-        >
-          {t('team.upgradeToStudio')}
-        </a>
-      </div>
-    );
-  }
-
-  /* ---- Empty state: create team ----------------------------- */
-
-  if (!team.data) {
-    return (
-      <div>
-        <h1
-          style={{
-            fontSize: 24,
-            fontWeight: 700,
-            marginBottom: 6,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {t('team.teamLabel')}
-        </h1>
-        <p
-          style={{
-            color: C.sub,
-            fontSize: 14,
-            marginBottom: 32,
-            lineHeight: 1.5,
-          }}
-        >
-          {t('team.createTeamDesc')}
-        </p>
-
-        <div
-          style={{
-            ...cardStyle,
-            padding: '28px 24px',
-            maxWidth: 440,
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 18,
-                background: `linear-gradient(135deg, ${C.blue}15, ${C.purple}15)`,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 32,
-                marginBottom: 12,
-              }}
-            >
-              {'\uD83C\uDFAC'}
-            </div>
-            <p
-              style={{
-                color: C.sub,
-                fontSize: 13,
-                lineHeight: 1.5,
-                margin: 0,
-              }}
-            >
-              {t('team.createTeamLong')}
-            </p>
-          </div>
-
-          <label
-            htmlFor="team-name"
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: C.sub,
-              display: 'block',
-              marginBottom: 6,
-            }}
-          >
-            {t('team.teamNameLabel')}
-          </label>
-          <input
-            id="team-name"
-            value={teamName}
-            onChange={(e) => setTeamName(e.target.value)}
-            placeholder={t('team.teamNamePlaceholder')}
-            maxLength={100}
-            aria-label={t('team.teamNameLabel')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && teamName.trim()) {
-                createTeam.mutate({ name: teamName.trim() });
-              }
-            }}
-            style={{
-              ...inputStyle,
-              marginBottom: 16,
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = C.borderActive)}
-            onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
-          />
-          <button
-            onClick={() => teamName.trim() && createTeam.mutate({ name: teamName.trim() })}
-            disabled={!teamName.trim() || createTeam.isPending}
-            style={{
-              ...btnPrimary,
-              width: '100%',
-              padding: '12px 24px',
-              fontSize: 14,
-              opacity: !teamName.trim() ? 0.5 : 1,
-            }}
-          >
-            {createTeam.isPending ? t('team.creating') : t('team.createTeam')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ---- Team exists: full view ------------------------------- */
-
-  const memberCount = team.data.members.length;
-  const projectCount = team.data._count.projects;
-  const pendingCount = pendingInvites.data?.length ?? 0;
-
-  return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 20px', boxSizing: 'border-box' as const }}>
-      {/* -- Header -------------------------------------------- */}
-      <div
-        className="tf-team-header"
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          marginBottom: 24,
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: 24,
-              fontWeight: 700,
-              margin: '0 0 6px',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {team.data.name}
+          <h1 className="mt-5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            {tx(t, "team.title", "Team Workspace")}
           </h1>
-          <p
-            style={{
-              color: C.sub,
-              fontSize: 13,
-              margin: 0,
-              lineHeight: 1.5,
-            }}
-          >
-            {pluralRu(memberCount, t('team.member.one'), t('team.member.few'), t('team.member.many'))}
-            {' \u00B7 '}
-            {pluralRu(projectCount, t('team.project.one'), t('team.project.few'), t('team.project.many'))}
+          <p className="mx-auto mt-3 max-w-md text-[15px] text-muted-foreground">
+            {tx(
+              t,
+              "team.studioOnly",
+              "Collaborate with your editors, animators & manager. Invite up to 10 members with role-based access.",
+            )}
           </p>
         </div>
-        <div className="tf-team-header-btns" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {/* Role info toggle */}
-          <button
-            onClick={() => setShowRoleInfo(!showRoleInfo)}
-            style={{
-              ...btnSecondary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 12,
-              minHeight: 40,
-              padding: '8px 14px',
-            }}
-            title={t('team.roleInfo')}
+
+        <div className="mt-8 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-card p-6">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+            Studio Plan
+          </div>
+          <ul className="mt-3 space-y-3">
+            {Object.entries(ROLE_CONFIG).map(([role, cfg]) => {
+              const Icon = cfg.Icon;
+              return (
+                <li key={role} className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      "flex size-8 shrink-0 items-center justify-center rounded-lg border",
+                      cfg.badgeBg,
+                      cfg.badgeText,
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </span>
+                  <div>
+                    <div className="text-[14px] font-semibold text-foreground">
+                      {cfg.label}
+                    </div>
+                    <p className="text-[12px] text-muted-foreground">{cfg.desc}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="mt-6 text-center">
+          <Link
+            href="/billing"
+            prefetch
+            className="inline-flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 text-[15px] font-bold text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-[1.02]"
           >
-            <span style={{ fontSize: 14, lineHeight: 1 }}>{'\u2139'}</span>
-            {t('team.roleInfo')}
+            <Crown className="size-4" />
+            {tx(t, "team.upgradeStudio", "Upgrade to Studio")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Render: Create team ─────────────────────────── */
+  if (!team.data) {
+    return (
+      <div className="mx-auto w-full max-w-md px-4 py-12">
+        <div className="text-center">
+          <div className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 shadow-lg shadow-brand-500/20">
+            <Users className="size-7 text-white" />
+          </div>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            {tx(t, "team.createTitle", "Create your team")}
+          </h1>
+          <p className="mt-2 text-[14px] text-muted-foreground">
+            {tx(t, "team.createDesc", "Pick a name. You can invite members after.")}
+          </p>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {tx(t, "team.teamName", "Team name")}
+          </label>
+          <input
+            type="text"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+            placeholder={tx(t, "team.teamNamePlaceholder", "My Production Team")}
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[14px] outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+          />
+          <button
+            onClick={() => createTeam.mutate({ name: teamName.trim() })}
+            disabled={!teamName.trim() || createTeam.isPending}
+            className={cn(
+              "mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 text-[14px] font-bold text-white shadow-md shadow-brand-500/20",
+              !teamName.trim() || createTeam.isPending
+                ? "cursor-not-allowed opacity-60"
+                : "hover:scale-[1.01]",
+            )}
+          >
+            {createTeam.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Plus className="size-4" />
+            )}
+            {createTeam.isPending
+              ? tx(t, "team.creating", "Creating…")
+              : tx(t, "team.createBtn", "Create team")}
           </button>
-          {isAdmin && (
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Render: Dashboard ───────────────────────────── */
+  const members = team.data.members ?? [];
+  const memberCount = members.length;
+  const maxMembers = 10;
+  const slotsLeft = Math.max(0, maxMembers - memberCount);
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      {/* ── Header ────────────────────────────────────── */}
+      <header className="pt-6 pb-4 sm:pt-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-md shadow-brand-500/20">
+              <Users className="size-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {team.data.name}
+              </h1>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                {memberCount}/{maxMembers} {tx(t, "team.members", "members")} ·{" "}
+                {tx(t, "team.created", "Created")} {formatDate(team.data.createdAt)}
+              </p>
+            </div>
+          </div>
+          {canManage && slotsLeft > 0 && (
             <button
-              onClick={() => setShowInviteForm(!showInviteForm)}
-              style={{
-                ...btnPrimary,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
+              onClick={() => setShowInviteForm((v) => !v)}
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-md shadow-brand-500/20 hover:scale-[1.02]"
             >
-              <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-              {t('team.inviteToTeam')}
+              <UserPlus className="size-4" />
+              {tx(t, "team.inviteBtn", "Invite member")}
             </button>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* -- Role permissions info card (collapsible) ----------- */}
-      {showRoleInfo && (
-        <div
-          style={{
-            ...cardStyle,
-            padding: 18,
-            marginBottom: 20,
-          }}
-        >
-          <div style={sectionTitle}>{t('team.roleInfo')}</div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-              gap: 12,
-            }}
-          >
-            {(['OWNER', 'ADMIN', 'EDITOR', 'VIEWER'] as const).map((role) => (
-              <div
-                key={role}
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: `${roleColor(role)}08`,
-                  border: `1px solid ${roleColor(role)}18`,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    marginBottom: 6,
-                  }}
-                >
-                  <span style={{ fontSize: 14, color: roleColor(role) }}>{roleIcon(role)}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: roleColor(role) }}>
-                    {ROLE_LABELS[role]}
-                  </span>
-                </div>
-                <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>
-                  {ROLE_DESCS[role]}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* -- Team overview card --------------------------------- */}
-      <div
-        className="tf-team-overview"
-        style={{
-          ...cardStyle,
-          padding: '18px 22px',
-          marginBottom: 20,
-          display: 'flex',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div
-          style={{
-            flex: '1 1 160px',
-            padding: '4px 20px 4px 0',
-            borderRight: `1px solid ${C.border}`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: C.dim,
-              marginBottom: 4,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            {t('team.tabTeam')}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>{team.data.name}</div>
-        </div>
-        <div
-          style={{
-            flex: '0 1 120px',
-            padding: '4px 20px',
-            borderRight: `1px solid ${C.border}`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: C.dim,
-              marginBottom: 4,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            {t('team.tabMembers')}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>{memberCount}</div>
-        </div>
-        <div
-          style={{
-            flex: '0 1 120px',
-            padding: '4px 20px',
-            borderRight: `1px solid ${C.border}`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: C.dim,
-              marginBottom: 4,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            {t('team.tabProjects')}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>{projectCount}</div>
-        </div>
-        <div
-          style={{
-            flex: '0 1 120px',
-            padding: '4px 0 4px 20px',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: C.dim,
-              marginBottom: 4,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            {t('team.tabPlan')}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
-                background: `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+      {/* ── Invite form ──────────────────────────────── */}
+      {showInviteForm && canManage && (
+        <section className="mt-2 rounded-2xl border-2 border-brand-500/30 bg-gradient-to-br from-brand-500/5 to-violet-500/5 p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-[14px] font-bold text-foreground">
+              <UserPlus className="size-4 text-brand-500" />
+              {tx(t, "team.inviteTitle", "Invite a teammate")}
+            </h3>
+            <button
+              onClick={() => setShowInviteForm(false)}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Close"
             >
-              {PLAN_LABELS[profile.data?.plan || 'FREE'] || profile.data?.plan}
-            </span>
+              <X className="size-4" />
+            </button>
           </div>
-        </div>
-      </div>
-
-      {/* -- Invite form (collapsible) -------------------------- */}
-      {showInviteForm && isAdmin && (
-        <div
-          className="tf-team-invite-form"
-          style={{
-            ...cardStyle,
-            padding: 18,
-            marginBottom: 20,
-          }}
-        >
-          <div style={sectionTitle}>{t('team.inviteMember')}</div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 10,
-              alignItems: 'flex-end',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ flex: '1 1 220px', minWidth: 180 }}>
-              <label
-                htmlFor="invite-email"
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: C.dim,
-                  display: 'block',
-                  marginBottom: 5,
-                }}
-              >
-                Email
-              </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_180px_auto]">
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
-                id="invite-email"
                 type="email"
+                placeholder={tx(t, "team.invitePlaceholder", "teammate@email.com")}
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="user@example.com"
-                aria-label={t('team.inviteEmailLabel')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && inviteEmail.trim()) {
-                    invite.mutate({ email: inviteEmail.trim(), role: inviteRole });
-                  }
-                }}
-                style={inputStyle}
-                onFocus={(e) => (e.currentTarget.style.borderColor = C.borderActive)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
+                className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-[13px] outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
               />
             </div>
-            <div style={{ flex: '0 0 140px' }}>
-              <label
-                htmlFor="invite-role"
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: C.dim,
-                  display: 'block',
-                  marginBottom: 5,
-                }}
-              >
-                {t('team.roleLabel')}
-              </label>
+            <div className="relative">
               <select
-                id="invite-role"
                 value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as 'ADMIN' | 'EDITOR' | 'VIEWER')}
-                aria-label={t('team.memberRole')}
-                style={{
-                  ...inputStyle,
-                  cursor: 'pointer',
-                  appearance: 'none' as const,
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237c7c96' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  paddingRight: 32,
-                }}
+                onChange={(e) => setInviteRole(e.target.value as InvitableRole)}
+                className="h-11 w-full appearance-none rounded-xl border border-border bg-background pl-3 pr-9 text-[13px] font-semibold text-foreground outline-none focus:border-brand-500/40"
               >
-                <option value="EDITOR">{t('team.role.editor')}</option>
-                <option value="ADMIN">{t('team.role.admin')}</option>
-                <option value="VIEWER">{t('team.role.viewer')}</option>
+                <option value="ADMIN">Admin — manage members</option>
+                <option value="EDITOR">Editor — create projects</option>
+                <option value="VIEWER">Viewer — read-only</option>
               </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() =>
-                  inviteEmail.trim() &&
-                  invite.mutate({ email: inviteEmail.trim(), role: inviteRole })
-                }
-                disabled={!inviteEmail.trim() || invite.isPending}
-                style={{
-                  ...btnPrimary,
-                  opacity: !inviteEmail.trim() ? 0.5 : 1,
-                }}
-              >
-                {invite.isPending ? t('team.sending') : t('team.invite')}
-              </button>
-              <button
-                onClick={() => {
-                  setShowInviteForm(false);
-                  setInviteEmail('');
-                }}
-                style={btnSecondary}
-              >
-                {t('team.cancel')}
-              </button>
-            </div>
+            <button
+              onClick={() =>
+                invite.mutate({
+                  email: inviteEmail.trim(),
+                  role: inviteRole,
+                })
+              }
+              disabled={!inviteEmail.trim() || invite.isPending}
+              className={cn(
+                "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-md shadow-brand-500/20",
+                !inviteEmail.trim() || invite.isPending
+                  ? "cursor-not-allowed opacity-60"
+                  : "hover:scale-[1.02]",
+              )}
+            >
+              {invite.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Mail className="size-4" />
+              )}
+              {invite.isPending
+                ? tx(t, "team.sending", "Sending…")
+                : tx(t, "team.send", "Send invite")}
+            </button>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* -- Members list --------------------------------------- */}
-      <div style={sectionTitle}>{t('team.membersLabel')}</div>
-      <div
-        className="tf-team-member-table"
-        style={{
-          ...cardStyle,
-          overflow: 'hidden',
-          marginBottom: 24,
-        }}
-      >
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          {/* Table header */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '10px 18px',
-              borderBottom: `1px solid ${C.border}`,
-              fontSize: 11,
-              fontWeight: 600,
-              color: C.dim,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              minWidth: 320,
-            }}
-          >
-            <div style={{ width: 36 }} />
-            <div style={{ flex: 1 }}>{t('team.memberCol')}</div>
-            <div style={{ width: 100, textAlign: 'center' }}>{t('team.roleCol')}</div>
-            <div style={{ width: 100, textAlign: 'center' }}>{t('team.joinDateCol')}</div>
-            {isOwner && <div style={{ width: 120, textAlign: 'right' }}>{t('team.actionsCol')}</div>}
-          </div>
-
-          {/* Member rows */}
-          {team.data.members.map((m, idx) => {
-            const isLast = idx === team.data!.members.length - 1;
-            const initials = (m.user.name || m.user.email || '?')
-              .split(/\s+/)
-              .map((w) => w[0])
-              .slice(0, 2)
-              .join('')
-              .toUpperCase();
-
-            const gradients = [
-              `linear-gradient(135deg, ${C.accent}, ${C.pink})`,
-              `linear-gradient(135deg, ${C.blue}, ${C.purple})`,
-              `linear-gradient(135deg, ${C.green}, ${C.cyan})`,
-              `linear-gradient(135deg, ${C.orange}, ${C.accent})`,
-              `linear-gradient(135deg, ${C.purple}, ${C.pink})`,
-            ];
-
-            const joinedDate = m.joinedAt ? formatDate(m.joinedAt) : '\u2014';
-
-            return (
-              <div
-                key={m.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 18px',
-                  borderBottom: isLast ? 'none' : `1px solid ${C.border}`,
-                  transition: 'background 0.1s',
-                  minWidth: 320,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = C.cardHover)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                {/* Avatar */}
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    background: m.user.image
-                      ? `url(${m.user.image}) center/cover`
-                      : gradients[idx % gradients.length],
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: '#fff',
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                  }}
-                >
-                  {m.user.image ? (
-                    <img
-                      src={m.user.image}
-                      alt=""
-                      loading="lazy"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    initials
-                  )}
-                </div>
-
-                {/* Name + email */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 500,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {m.user.name || '\u2014'}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: C.sub,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {m.user.email}
-                  </div>
-                </div>
-
-                {/* Role badge with tooltip */}
-                <div style={{ width: 100, textAlign: 'center' }}>
-                  <RoleTooltip
-                    label={ROLE_LABELS[m.role] || m.role}
-                    description={ROLE_DESCS[m.role] || ''}
-                    color={roleColor(m.role)}
-                    icon={roleIcon(m.role)}
-                    C={C}
-                  />
-                </div>
-
-                {/* Joined date */}
-                <div
-                  style={{
-                    width: 100,
-                    textAlign: 'center',
-                    fontSize: 12,
-                    color: C.sub,
-                  }}
-                >
-                  {joinedDate}
-                </div>
-
-                {/* Actions (owner only) */}
-                {isOwner && (
-                  <div style={{ width: 120, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                    {m.role !== 'OWNER' ? (
-                      <>
-                        <select
-                          value={m.role}
-                          onChange={(e) =>
-                            updateRole.mutate({
-                              memberId: m.id,
-                              role: e.target.value as 'ADMIN' | 'EDITOR' | 'VIEWER',
-                            })
-                          }
-                          aria-label={`${t('team.changeRoleFor')} ${m.user.name || m.user.email}`}
-                          style={{
-                            padding: '5px 8px',
-                            borderRadius: 8,
-                            border: `1px solid ${C.border}`,
-                            background: C.surface,
-                            color: C.text,
-                            fontSize: 11,
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            outline: 'none',
-                            transition: 'border-color 0.15s',
-                          }}
-                          onFocus={(e) => (e.currentTarget.style.borderColor = C.borderActive)}
-                          onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
-                        >
-                          <option value="EDITOR">{t('team.role.editor')}</option>
-                          <option value="ADMIN">{t('team.role.admin')}</option>
-                          <option value="VIEWER">{t('team.role.viewer')}</option>
-                        </select>
-
-                        {confirmRemoveId === m.id ? (
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button
-                              onClick={() => removeMember.mutate({ memberId: m.id })}
-                              title={t('team.confirmRemove')}
-                              aria-label={t('team.confirmRemove')}
-                              style={{
-                                padding: '5px 10px',
-                                borderRadius: 8,
-                                border: 'none',
-                                background: C.accent,
-                                color: '#fff',
-                                fontSize: 11,
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                              }}
-                            >
-                              {removeMember.isPending ? '...' : t('team.yes')}
-                            </button>
-                            <button
-                              onClick={() => setConfirmRemoveId(null)}
-                              title={t('team.cancelBtn')}
-                              aria-label={t('team.cancelRemove')}
-                              style={{
-                                padding: '5px 8px',
-                                borderRadius: 8,
-                                border: `1px solid ${C.border}`,
-                                background: 'transparent',
-                                color: C.sub,
-                                fontSize: 11,
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                              }}
-                            >
-                              {t('team.no')}
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setConfirmRemoveId(m.id)}
-                            title={`${t('team.remove')} ${m.user.name || m.user.email}`}
-                            aria-label={`${t('team.remove')} ${m.user.name || m.user.email}`}
-                            style={{
-                              padding: '5px 10px',
-                              borderRadius: 8,
-                              border: `1px solid ${C.border}`,
-                              background: 'transparent',
-                              color: C.accent,
-                              fontSize: 12,
-                              cursor: 'pointer',
-                              fontFamily: 'inherit',
-                              transition: 'background 0.15s, border-color 0.15s',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = `${C.accent}10`;
-                              e.currentTarget.style.borderColor = `${C.accent}40`;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'transparent';
-                              e.currentTarget.style.borderColor = C.border;
-                            }}
-                          >
-                            {'\u2715'}
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <span style={{ fontSize: 11, color: C.dim, padding: '5px 0' }}>
-                        {'\u2014'}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {team.data.members.length === 0 && (
-            <div
-              style={{
-                padding: '32px 18px',
-                textAlign: 'center',
-                color: C.sub,
-                fontSize: 13,
-              }}
-            >
-              {t('team.noMembers')}
+      {/* ── Main grid: Members + Activity ─────────────── */}
+      <div className="mt-5 grid gap-5 pb-16 lg:grid-cols-[1fr_320px]">
+        {/* ── LEFT: Members & Pending ──────────────── */}
+        <div className="space-y-5">
+          {/* Members section */}
+          <section className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <h2 className="flex items-center gap-2 text-[14px] font-bold text-foreground">
+                <Users className="size-4 text-muted-foreground" />
+                {tx(t, "team.activeMembers", "Active members")}
+                <span className="font-mono text-[12px] font-normal text-muted-foreground">
+                  {memberCount}
+                </span>
+              </h2>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* -- Pending invites ------------------------------------ */}
-      {isAdmin && (
-        <>
-          <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', gap: 8 }}>
-            {t('team.pendingInvites')}
-            {pendingCount > 0 && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  background: C.orange,
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: '0 6px',
-                }}
-              >
-                {pendingCount}
-              </span>
-            )}
-          </div>
-          <div
-            style={{
-              ...cardStyle,
-              overflow: 'hidden',
-              marginBottom: 24,
-            }}
-          >
-            {pendingCount === 0 ? (
-              <div
-                style={{
-                  padding: '24px 18px',
-                  textAlign: 'center',
-                  color: C.dim,
-                  fontSize: 13,
-                }}
-              >
-                {t('team.noPendingInvites')}
-              </div>
-            ) : (
-              pendingInvites.data!.map((inv, idx) => {
-                const isLast = idx === pendingInvites.data!.length - 1;
-                const initials = (inv.user.name || inv.user.email || '?')
-                  .split(/\s+/)
-                  .map((w) => w[0])
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase();
-
+            <ul className="divide-y divide-border">
+              {members.map((m) => {
+                const isMe = m.user.id === profile.data?.id;
+                const memberRole = m.role as Role;
                 return (
-                  <div
-                    key={inv.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '12px 18px',
-                      borderBottom: isLast ? 'none' : `1px solid ${C.border}`,
-                      transition: 'background 0.1s',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = C.cardHover)}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  <li
+                    key={m.id}
+                    className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/40"
                   >
-                    {/* Avatar */}
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: inv.user.image
-                          ? `url(${inv.user.image}) center/cover`
-                          : `linear-gradient(135deg, ${C.dim}40, ${C.dim}20)`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: C.sub,
-                        flexShrink: 0,
-                        overflow: 'hidden',
-                        opacity: 0.7,
-                      }}
-                    >
-                      {inv.user.image ? (
-                        <img
-                          src={inv.user.image}
-                          alt=""
-                          loading="lazy"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        initials
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 500,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {inv.user.name || inv.user.email || '\u2014'}
+                    <Avatar src={m.user.image ?? undefined} name={m.user.name ?? m.user.email ?? "?"} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-[14px] font-semibold text-foreground">
+                          {m.user.name ?? m.user.email ?? "Unknown"}
+                        </span>
+                        {isMe && (
+                          <span className="rounded-md bg-brand-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-500">
+                            You
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: 11, color: C.dim }}>
-                        {t('team.sentAt')}: {formatDate(inv.joinedAt)}
+                      <div className="truncate text-[12px] text-muted-foreground">
+                        {m.user.email}
                       </div>
                     </div>
-
-                    {/* Role */}
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: roleColor(inv.role),
-                        padding: '3px 8px',
-                        borderRadius: 6,
-                        background: `${roleColor(inv.role)}10`,
-                      }}
-                    >
-                      {ROLE_LABELS[inv.role] || inv.role}
-                    </span>
-
-                    {/* Pending badge */}
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: C.orange,
-                        padding: '3px 8px',
-                        borderRadius: 6,
-                        background: `${C.orange}12`,
-                        border: `1px solid ${C.orange}20`,
-                      }}
-                    >
-                      {t('team.invitePending')}
-                    </span>
-
-                    {/* Cancel button */}
-                    {confirmCancelInviteId === inv.id ? (
-                      <div style={{ display: 'flex', gap: 4 }}>
+                    <RolePill role={memberRole} />
+                    {canManage && memberRole !== "OWNER" && !isMe && (
+                      <div className="flex items-center gap-1">
                         <button
-                          onClick={() => cancelInvite.mutate({ memberId: inv.id })}
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: 6,
-                            border: 'none',
-                            background: C.accent,
-                            color: '#fff',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
+                          onClick={() => {
+                            const next = prompt(
+                              `Change role for ${m.user.name ?? m.user.email ?? "user"}\n\nADMIN / EDITOR / VIEWER`,
+                              memberRole,
+                            ) as InvitableRole | null;
+                            if (next && ["ADMIN", "EDITOR", "VIEWER"].includes(next)) {
+                              updateRole.mutate({ memberId: m.id, role: next });
+                            }
                           }}
+                          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="Change role"
                         >
-                          {cancelInvite.isPending ? '...' : t('team.yes')}
+                          <Pencil className="size-3.5" />
                         </button>
                         <button
-                          onClick={() => setConfirmCancelInviteId(null)}
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: 6,
-                            border: `1px solid ${C.border}`,
-                            background: 'transparent',
-                            color: C.sub,
-                            fontSize: 11,
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                          }}
+                          onClick={() => setConfirmRemoveId(m.id)}
+                          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500"
+                          title="Remove"
                         >
-                          {t('team.no')}
+                          <Trash2 className="size-3.5" />
                         </button>
                       </div>
-                    ) : (
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            {slotsLeft > 0 && !showInviteForm && canManage && (
+              <button
+                onClick={() => setShowInviteForm(true)}
+                className="flex w-full items-center gap-2 border-t border-border px-5 py-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-muted/40 hover:text-brand-500"
+              >
+                <Plus className="size-4" />
+                {tx(t, "team.addMore", "Add member")}{" "}
+                <span className="ml-auto font-mono text-[11px]">
+                  {slotsLeft} {tx(t, "team.slotsLeft", "slots left")}
+                </span>
+              </button>
+            )}
+          </section>
+
+          {/* Pending invites */}
+          {pendingInvites.data && pendingInvites.data.length > 0 && (
+            <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-amber-500/30 px-5 py-3">
+                <h2 className="flex items-center gap-2 text-[14px] font-bold text-foreground">
+                  <Clock className="size-4 text-amber-500" />
+                  {tx(t, "team.pendingInvites", "Pending invites")}
+                  <span className="font-mono text-[12px] font-normal text-muted-foreground">
+                    {pendingInvites.data.length}
+                  </span>
+                </h2>
+              </div>
+              <ul className="divide-y divide-amber-500/15">
+                {pendingInvites.data.map((inv) => (
+                  <li
+                    key={inv.id}
+                    className="flex items-center gap-3 px-5 py-3"
+                  >
+                    <div className="flex size-9 items-center justify-center rounded-full bg-amber-500/15">
+                      <Mail className="size-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-semibold text-foreground">
+                        {inv.user.email ?? inv.user.name ?? "Pending invite"}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {tx(t, "team.invitedAs", "Invited as")} {ROLE_CONFIG[inv.role as Role]?.label} ·{" "}
+                        {formatRelative(inv.joinedAt)}
+                      </div>
+                    </div>
+                    {canManage && (
                       <button
                         onClick={() => setConfirmCancelInviteId(inv.id)}
-                        title={t('team.cancelInvite')}
-                        aria-label={t('team.cancelInvite')}
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: 6,
-                          border: `1px solid ${C.border}`,
-                          background: 'transparent',
-                          color: C.sub,
-                          fontSize: 11,
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                          transition: 'background 0.15s',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = `${C.accent}10`)}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500"
+                        title="Cancel"
                       >
-                        {'\u2715'}
+                        <X className="size-3.5" />
                       </button>
                     )}
-                  </div>
-                );
-              })
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        {/* ── RIGHT: Activity log ──────────────────── */}
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <div className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="border-b border-border px-5 py-4">
+              <h2 className="flex items-center gap-2 text-[14px] font-bold text-foreground">
+                <Activity className="size-4 text-muted-foreground" />
+                {tx(t, "team.activity", "Activity")}
+              </h2>
+            </div>
+            {activityLog.isLoading ? (
+              <div className="space-y-3 px-5 py-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} width="100%" height={32} rounded />
+                ))}
+              </div>
+            ) : !activityLog.data || activityLog.data.length === 0 ? (
+              <div className="px-5 py-10 text-center text-[12px] text-muted-foreground">
+                {tx(t, "team.activityEmpty", "No activity yet.")}
+              </div>
+            ) : (
+              <ul className="space-y-1 p-2 max-h-[480px] overflow-y-auto">
+                {activityLog.data.slice(0, 30).map((log) => (
+                  <li
+                    key={log.id}
+                    className="flex items-start gap-2.5 rounded-lg px-3 py-2 hover:bg-muted/40"
+                  >
+                    <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-brand-500/60" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12px] leading-relaxed text-foreground">
+                        <span className="font-semibold">
+                          {log.actor?.name ?? log.actor?.email ?? "Someone"}
+                        </span>{" "}
+                        <span className="text-muted-foreground">
+                          {(log.action ?? "did something").replace(/_/g, " ").toLowerCase()}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                        {formatRelative(log.createdAt)}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
-        </>
-      )}
+        </aside>
+      </div>
 
-      {/* -- Shared projects ------------------------------------ */}
-      {projectCount > 0 && (
-        <>
-          <div style={sectionTitle}>{t('team.sharedProjects')}</div>
-          <div
-            style={{
-              ...cardStyle,
-              padding: 18,
-              marginBottom: 24,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                flexWrap: 'wrap',
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  background: `linear-gradient(135deg, ${C.green}20, ${C.cyan}20)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 22,
-                  flexShrink: 0,
-                }}
-              >
-                {'\uD83C\uDFAC'}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 600 }}>
-                  {pluralRu(
-                    projectCount,
-                    t('team.sharedProject.one'),
-                    t('team.sharedProject.few'),
-                    t('team.sharedProject.many'),
-                  )}
-                </div>
-                <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-                  {t('team.sharedProjectsDesc')}
-                </div>
-              </div>
-              <a
-                href="/dashboard"
-                style={{
-                  marginLeft: 'auto',
-                  ...btnSecondary,
-                  textDecoration: 'none',
-                  fontSize: 12,
-                  padding: '8px 16px',
-                }}
-              >
-                {t('team.openDashboard')}
-              </a>
-            </div>
-          </div>
-        </>
+      {/* ── Confirm remove member modal ──────────────── */}
+      {confirmRemoveId && (
+        <ConfirmModal
+          title={tx(t, "team.removeConfirmTitle", "Remove this member?")}
+          desc={tx(
+            t,
+            "team.removeConfirmDesc",
+            "They'll lose access to all team projects immediately.",
+          )}
+          confirmLabel={tx(t, "team.remove", "Remove")}
+          danger
+          onConfirm={() => removeMember.mutate({ memberId: confirmRemoveId })}
+          onCancel={() => setConfirmRemoveId(null)}
+          loading={removeMember.isPending}
+        />
       )}
-
-      {projectCount === 0 && (
-        <>
-          <div style={sectionTitle}>{t('team.sharedProjects')}</div>
-          <div
-            style={{
-              ...cardStyle,
-              padding: '32px 18px',
-              textAlign: 'center',
-              marginBottom: 24,
-            }}
-          >
-            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.4 }}>{'\uD83D\uDCC1'}</div>
-            <div style={{ color: C.sub, fontSize: 13, lineHeight: 1.5 }}>
-              {t('team.noSharedProjects')}
-            </div>
-          </div>
-        </>
+      {confirmCancelInviteId && (
+        <ConfirmModal
+          title={tx(t, "team.cancelInviteTitle", "Cancel this invite?")}
+          desc={tx(
+            t,
+            "team.cancelInviteDesc",
+            "They won't be able to join unless re-invited.",
+          )}
+          confirmLabel={tx(t, "team.confirmCancel", "Cancel invite")}
+          danger
+          onConfirm={() => cancelInvite.mutate({ memberId: confirmCancelInviteId })}
+          onCancel={() => setConfirmCancelInviteId(null)}
+          loading={cancelInvite.isPending}
+        />
       )}
+    </div>
+  );
+}
 
-      {/* -- Activity log --------------------------------------- */}
-      <div style={sectionTitle}>{t('team.activityLog')}</div>
+/* ── Confirm modal ─────────────────────────────────────── */
+function ConfirmModal({
+  title,
+  desc,
+  confirmLabel,
+  danger,
+  loading,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  desc: string;
+  confirmLabel: string;
+  danger?: boolean;
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={onCancel}
+    >
       <div
-        className="tf-team-activity"
-        style={{
-          ...cardStyle,
-          overflow: 'hidden',
-        }}
+        onClick={(e) => e.stopPropagation()}
+        className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
       >
-        {!activityLog.data || activityLog.data.length === 0 ? (
+        <div className="flex items-start gap-3">
           <div
-            style={{
-              padding: '24px 18px',
-              textAlign: 'center',
-              color: C.dim,
-              fontSize: 13,
-            }}
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-xl",
+              danger ? "bg-rose-500/15 text-rose-500" : "bg-brand-500/15 text-brand-500",
+            )}
           >
-            {t('team.noActivity')}
+            <AlertTriangle className="size-5" />
           </div>
-        ) : (
-          activityLog.data.map((entry, idx) => {
-            const isLast = idx === activityLog.data!.length - 1;
-            let meta: Record<string, string> = {};
-            try {
-              if (entry.meta) meta = JSON.parse(entry.meta);
-            } catch {
-              /* ignore */
-            }
-
-            const actionLabel =
-              t(`team.activity.${entry.action}`) !== `team.activity.${entry.action}`
-                ? t(`team.activity.${entry.action}`)
-                : entry.action;
-
-            // Build detail text from meta
-            let detail = '';
-            if (meta.email) detail = meta.email;
-            else if (meta.title) detail = meta.title;
-            else if (meta.name) detail = meta.name;
-            if (meta.from && meta.to) {
-              detail += ` (${ROLE_LABELS[meta.from] || meta.from} \u2192 ${ROLE_LABELS[meta.to] || meta.to})`;
-            }
-
-            // Action icon
-            const actionIcon: Record<string, string> = {
-              team_created: '\uD83C\uDF1F',
-              member_invited: '\uD83D\uDCE8',
-              member_removed: '\uD83D\uDEAB',
-              role_changed: '\uD83D\uDD04',
-              project_shared: '\uD83D\uDD17',
-              project_unshared: '\uD83D\uDD13',
-              invite_accepted: '\u2705',
-              invite_declined: '\u274C',
-              invite_cancelled: '\u23F9',
-            };
-
-            return (
-              <div
-                key={entry.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  padding: '10px 18px',
-                  borderBottom: isLast ? 'none' : `1px solid ${C.border}`,
-                  fontSize: 13,
-                }}
-              >
-                {/* Icon */}
-                <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>
-                  {actionIcon[entry.action] || '\u25CF'}
-                </span>
-
-                {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ lineHeight: 1.5 }}>
-                    <strong style={{ fontWeight: 600 }}>
-                      {entry.actor.name || entry.actor.email}
-                    </strong>{' '}
-                    <span style={{ color: C.sub }}>{actionLabel}</span>
-                    {detail && (
-                      <span style={{ color: C.text, fontWeight: 500 }}> {detail}</span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>
-                    {formatDateTime(entry.createdAt)}
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+          <div>
+            <h3 className="text-[15px] font-bold text-foreground">{title}</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground">{desc}</p>
+          </div>
+        </div>
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-muted"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className={cn(
+              "flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-bold text-white shadow-sm",
+              danger
+                ? "bg-rose-500 hover:bg-rose-600"
+                : "bg-gradient-to-r from-brand-500 to-violet-500",
+              loading && "cursor-wait opacity-60",
+            )}
+          >
+            {loading ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+            {confirmLabel}
+          </button>
+        </div>
       </div>
     </div>
   );
