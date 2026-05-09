@@ -177,6 +177,17 @@ export default function middleware(req: NextRequest) {
   // API-level rate limiting (per-user, per-endpoint) is enforced in tRPC/route handlers.
 
   // --- Stricter rate limiting for auth endpoints only (brute-force protection) ---
+  // Removed analytics features (YouTube ToS compliance — Apr 2026)
+  // /shorts-analytics, /tiktok-analytics, /analytics no longer exist.
+  // Redirect to home so legacy bookmarks don't hit auth-gated 404.
+  if (
+    pathname === "/shorts-analytics" ||
+    pathname === "/tiktok-analytics" ||
+    pathname === "/analytics"
+  ) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   // Exclude /api/auth/session from rate limit — session checks are frequent
   // and not a brute-force vector (they just read the JWT cookie).
   if (pathname.startsWith('/api/auth/') && pathname !== '/api/auth/session') {
