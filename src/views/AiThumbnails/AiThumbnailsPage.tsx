@@ -1,31 +1,41 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useLocaleStore } from '@/stores/useLocaleStore';
-import { usePlanLimits } from '@/hooks/usePlanLimits';
-import { useThemeStore } from '@/stores/useThemeStore';
-import { trpc } from '@/lib/trpc';
-import { toast } from '@/stores/useNotificationStore';
-import type { Locale } from '@/stores/useLocaleStore';
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useLocaleStore } from "@/stores/useLocaleStore";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useThemeStore } from "@/stores/useThemeStore";
+import { trpc } from "@/lib/trpc";
+import { toast } from "@/stores/useNotificationStore";
+import type { Locale } from "@/stores/useLocaleStore";
+import { cn } from "@/lib/utils";
+import {
+  Sparkles,
+  Mic,
+  ImageIcon,
+  Link as LinkIcon,
+  Settings2,
+  Lightbulb,
+  Download,
+  RefreshCw,
+  X,
+  Maximize2,
+  Lock,
+  Wand2,
+  ChevronDown,
+  Square,
+  Smartphone,
+  Monitor,
+  Loader2,
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
-/* ── Constants ──────────────────────────────────────────────────────── */
+/* ─────────────── Types & Constants ─────────────── */
 
-const ACCENT = '#6366f1';
-const ACCENT_DIM = 'rgba(99,102,241,0.1)';
-const ACCENT_GLOW = 'rgba(99,102,241,0.4)';
-
-type TabId = 'scratch' | 'swap';
-type FormatId = '16:9' | '9:16';
-type StyleId = 'realistic' | 'anime' | 'cinematic' | 'minimalist' | '3d' | 'popart';
-
-const STYLE_OPTIONS: StyleId[] = ['realistic', 'cinematic', 'anime', 'minimalist', '3d', 'popart'];
-
-const LOCALE_TO_SPEECH_LANG: Record<Locale, string> = {
-  en: 'en-US',
-  ru: 'ru-RU',
-  kk: 'kk-KZ',
-  es: 'es-ES',
-};
+type TabId = "scratch" | "swap";
+type FormatId = "16:9" | "9:16";
+type StyleId = "realistic" | "anime" | "cinematic" | "minimalist" | "3d" | "popart";
 
 interface GeneratedImage {
   id: string;
@@ -36,49 +46,53 @@ interface GeneratedImage {
   parentId?: string;
 }
 
-const COUNT_OPTIONS = [1, 2, 3] as const;
-const FORMAT_OPTIONS: { id: FormatId; label: string; pro: boolean }[] = [
-  { id: '16:9', label: '16:9', pro: false },
-  { id: '9:16', label: '9:16', pro: false },
+const STYLE_OPTIONS: { id: StyleId; gradient: string }[] = [
+  { id: "realistic", gradient: "from-slate-500 to-zinc-700" },
+  { id: "cinematic", gradient: "from-amber-500 to-rose-600" },
+  { id: "anime", gradient: "from-fuchsia-500 to-pink-600" },
+  { id: "minimalist", gradient: "from-slate-400 to-slate-600" },
+  { id: "3d", gradient: "from-cyan-500 to-blue-600" },
+  { id: "popart", gradient: "from-yellow-400 to-red-500" },
 ];
 
-/**
- * Niche-shaped starter chips shown when the textarea is empty. Removes
- * the blank-page paralysis on first visit AND reinforces the
- * "niche-aware AI" pitch from the landing — clicking a niche chip
- * pre-fills a prompt that already includes the visual style YouTube
- * creators in that niche use. Translations live in
- * `aithumbs.starter.*` keys.
- */
+const COUNT_OPTIONS = [1, 2, 3] as const;
+const FORMAT_OPTIONS: { id: FormatId; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "16:9", icon: Monitor },
+  { id: "9:16", icon: Smartphone },
+];
+
 const STARTER_PROMPT_KEYS = [
-  'aithumbs.starter.tutorial',
-  'aithumbs.starter.vlog',
-  'aithumbs.starter.gaming',
-  'aithumbs.starter.unboxing',
-  'aithumbs.starter.cooking',
-  'aithumbs.starter.fitness',
-  'aithumbs.starter.music',
-  'aithumbs.starter.education',
+  "aithumbs.starter.tutorial",
+  "aithumbs.starter.vlog",
+  "aithumbs.starter.gaming",
+  "aithumbs.starter.unboxing",
+  "aithumbs.starter.cooking",
+  "aithumbs.starter.fitness",
+  "aithumbs.starter.music",
+  "aithumbs.starter.education",
 ] as const;
 
-let _uid = 0;
-function uid() { return `ait_${Date.now()}_${++_uid}`; }
+const LOCALE_TO_SPEECH_LANG: Record<Locale, string> = {
+  en: "en-US",
+  ru: "ru-RU",
+  kk: "kk-KZ",
+  es: "es-ES",
+};
 
-/* ── YouTube URL helpers ────────────────────────────────────────────── */
+let _uid = 0;
+function uid() {
+  return `ait_${Date.now()}_${++_uid}`;
+}
 
 const YT_REGEX = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/;
-
 function extractVideoId(url: string): string | null {
   const m = url.match(YT_REGEX);
   return m ? m[1] : null;
 }
 
-/* ── Speech recognition type shim ───────────────────────────────────── */
-
 interface SpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } } };
 }
-
 interface SpeechRecognitionInstance {
   lang: string;
   continuous: boolean;
@@ -89,7 +103,6 @@ interface SpeechRecognitionInstance {
   start: () => void;
   stop: () => void;
 }
-
 function createRecognition(): SpeechRecognitionInstance | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const w = window as any;
@@ -98,94 +111,66 @@ function createRecognition(): SpeechRecognitionInstance | null {
   return new (SR as new () => SpeechRecognitionInstance)();
 }
 
-/* ── Progress stage helper ──────────────────────────────────────────── */
-
-function getProgressStage(p: number, t: (k: string) => string): string {
-  if (p < 20) return t('aithumbs.progress.analyzing');
-  if (p < 50) return t('aithumbs.progress.composing');
-  if (p < 80) return t('aithumbs.progress.creating');
-  if (p < 95) return t('aithumbs.progress.finalTouches');
-  return t('aithumbs.progress.done');
+/** Translate-with-fallback helper (matches Dashboard convention). */
+function tx(t: (k: string) => string, key: string, fallback: string): string {
+  const v = t(key);
+  return v === key ? fallback : v;
 }
 
-/* ── Section label ──────────────────────────────────────────────────── */
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  const theme = useThemeStore((s) => s.theme);
-  return (
-    <span style={{
-      display: 'block',
-      fontSize: 11,
-      fontWeight: 700,
-      color: theme.dim,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      marginBottom: 8,
-    }}>
-      {children}
-    </span>
-  );
-}
-
-/* ── Main Component ─────────────────────────────────────────────────── */
+/* ─────────────── Main Page ─────────────── */
 
 export function AiThumbnailsPage() {
   const t = useLocaleStore((s) => s.t);
   const locale = useLocaleStore((s) => s.locale);
-  const theme = useThemeStore((s) => s.theme);
   const { canUseAI, plan } = usePlanLimits();
 
-  /* ── State ──────────────────────────────────────── */
-  const [tab, setTab] = useState<TabId>('scratch');
-  const [prompt, setPrompt] = useState('');
-  const [style, setStyle] = useState<StyleId>('realistic');
+  /* ── State ── */
+  const [tab, setTab] = useState<TabId>("scratch");
+  const [prompt, setPrompt] = useState("");
+  const [style, setStyle] = useState<StyleId>("realistic");
   const [count, setCount] = useState<1 | 2 | 3>(1);
-  const [format, setFormat] = useState<FormatId>('16:9');
+  const [format, setFormat] = useState<FormatId>("16:9");
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [lastBatch, setLastBatch] = useState<GeneratedImage[]>([]);
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
-  /* AI Ideas */
   const [aiIdeas, setAiIdeas] = useState<string[]>([]);
-
-  /* Progress */
   const [progress, setProgress] = useState(0);
   const [imageRevealed, setImageRevealed] = useState(false);
   const pendingRevealRef = useRef<(() => void) | null>(null);
 
-  /* YouTube context */
-  const [ytUrl, setYtUrl] = useState('');
+  const [ytUrl, setYtUrl] = useState("");
   const [ytTitle, setYtTitle] = useState<string | null>(null);
   const [showYtModal, setShowYtModal] = useState(false);
-  const [ytModalInput, setYtModalInput] = useState('');
+  const [ytModalInput, setYtModalInput] = useState("");
 
-  /* Voice input */
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
-  /* Upload photo */
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /* Gallery modal */
-  const [showGallery, setShowGallery] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<GeneratedImage | null>(null);
 
   /* Responsive */
   useEffect(() => {
-    const check = () => {
-      const w = window.innerWidth;
-      setIsMobile(w < 768);
-      setIsTablet(w >= 768 && w < 1024);
-    };
+    const check = () => setIsMobile(window.innerWidth < 768);
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
-  /* ── tRPC mutations ─────────────────────────────── */
+  /* Auto-close mobile sheet when generating starts */
+  useEffect(() => {
+    if (mobileSheetOpen && progress > 0 && progress < 100) {
+      setMobileSheetOpen(false);
+    }
+  }, [mobileSheetOpen, progress]);
+
+  /* ── tRPC mutations ── */
   const generate = trpc.aiThumbnails.generate.useMutation({
     onMutate: () => {
       setProgress(0);
@@ -197,11 +182,11 @@ export function AiThumbnailsPage() {
           id: img.id || uid(),
           url: img.url,
           prompt: data.prompt,
-          style: data.style ?? 'realistic',
+          style: data.style ?? "realistic",
           revisedPrompt: img.revisedPrompt,
         }),
       );
-      toast.success(t('aithumbs.toast.success'));
+      toast.success(tx(t, "aithumbs.toast.success", "Thumbnails generated"));
       pendingRevealRef.current = () => {
         setSelectedImage(imgs[0] || null);
         setLastBatch(imgs);
@@ -212,7 +197,7 @@ export function AiThumbnailsPage() {
     },
     onError: (err) => {
       setProgress(0);
-      toast.error(err.message || t('aithumbs.toast.genFailed'));
+      toast.error(err.message || tx(t, "aithumbs.toast.genFailed", "Generation failed"));
     },
   });
 
@@ -225,11 +210,11 @@ export function AiThumbnailsPage() {
       const img: GeneratedImage = {
         id: data.id || uid(),
         url: data.url,
-        prompt: t('aithumbs.enhance'),
+        prompt: tx(t, "aithumbs.enhance", "Enhanced"),
         style: selectedImage?.style || style,
         parentId: selectedImage?.id,
       };
-      toast.success(t('aithumbs.toast.enhanced'));
+      toast.success(tx(t, "aithumbs.toast.enhanced", "Thumbnail enhanced"));
       pendingRevealRef.current = () => {
         setSelectedImage(img);
         setHistory((prev) => [img, ...prev].slice(0, 20));
@@ -239,24 +224,21 @@ export function AiThumbnailsPage() {
     },
     onError: (err) => {
       setProgress(0);
-      toast.error(err.message || t('aithumbs.toast.enhanceFailed'));
+      toast.error(err.message || tx(t, "aithumbs.toast.enhanceFailed", "Enhance failed"));
     },
   });
 
   const suggestIdeas = trpc.aiThumbnails.suggestIdeas.useMutation({
     onSuccess: (data) => {
-      if (data.ideas.length > 0) {
-        setAiIdeas(data.ideas);
-      } else {
-        toast.info(t('aithumbs.toast.noIdeas'));
-      }
+      if (data.ideas.length > 0) setAiIdeas(data.ideas);
+      else toast.info(tx(t, "aithumbs.toast.noIdeas", "No ideas yet, try a topic"));
     },
     onError: (err) => {
-      toast.error(err.message || t('aithumbs.toast.ideasFailed'));
+      toast.error(err.message || tx(t, "aithumbs.toast.ideasFailed", "Ideas failed"));
     },
   });
 
-  /* ── Progress simulation ─────────────────────────── */
+  /* ── Progress simulation ── */
   const isGenerating = generate.isPending || editMutation.isPending;
 
   useEffect(() => {
@@ -286,45 +268,44 @@ export function AiThumbnailsPage() {
     return () => clearInterval(interval);
   }, [isGenerating, progress]);
 
-  /* ── Handlers ───────────────────────────────────── */
-
+  /* ── Handlers ── */
   const handleGenerate = useCallback(() => {
     if (!prompt.trim() || generate.isPending) return;
     generate.mutate({
       prompt: prompt.trim(),
       style,
-      count: plan === 'FREE' && count > 1 ? 1 : count,
+      count: plan === "FREE" && count > 1 ? 1 : count,
       format,
       youtubeUrl: ytUrl || undefined,
       photoUrl: uploadedPhoto || undefined,
     });
-  }, [prompt, count, format, style, plan, generate, canUseAI, t, ytUrl, uploadedPhoto]);
+  }, [prompt, count, format, style, plan, generate, ytUrl, uploadedPhoto]);
 
   const handleRegenerate = useCallback(() => {
     if (!selectedImage || generate.isPending) return;
     generate.mutate({
       prompt: selectedImage.prompt,
-      style: selectedImage.style as StyleId || style,
+      style: (selectedImage.style as StyleId) || style,
       count: 1,
       format,
     });
-  }, [selectedImage, generate, canUseAI, t, format, style]);
+  }, [selectedImage, generate, format, style]);
 
   const handleDownload = useCallback(async (img: GeneratedImage) => {
     try {
       const res = await fetch(img.url);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const keywords = (img.prompt || 'thumbnail')
-        .replace(/[«»"'*\n]/g, '')
+      const keywords = (img.prompt || "thumbnail")
+        .replace(/[«»"'*\n]/g, "")
         .split(/[\s,.!?]+/)
-        .filter(w => w.length > 2 && w.length < 20)
+        .filter((w) => w.length > 2 && w.length < 20)
         .slice(0, 4)
-        .join('-')
+        .join("-")
         .toLowerCase()
-        .replace(/[^a-zа-яёA-ZА-ЯЁ0-9-]/g, '') || 'thumbnail';
+        .replace(/[^a-zа-яёA-ZА-ЯЁ0-9-]/g, "") || "thumbnail";
       const date = new Date().toISOString().slice(0, 10);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `tubeforge-${keywords}-${date}.png`;
       document.body.appendChild(a);
@@ -332,15 +313,17 @@ export function AiThumbnailsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      window.open(img.url, '_blank');
+      window.open(img.url, "_blank");
     }
   }, []);
 
-  /* ── YouTube URL fetch ──────────────────────────── */
   const handleYtUrl = useCallback(async (url: string) => {
     setYtUrl(url);
     const vid = extractVideoId(url);
-    if (!vid) { setYtTitle(null); return; }
+    if (!vid) {
+      setYtTitle(null);
+      return;
+    }
     try {
       const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vid}`);
       const data = await res.json();
@@ -350,7 +333,6 @@ export function AiThumbnailsPage() {
     }
   }, []);
 
-  /* ── Voice input ────────────────────────────────── */
   const toggleVoice = useCallback(() => {
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
@@ -358,14 +340,16 @@ export function AiThumbnailsPage() {
       return;
     }
     const recognition = createRecognition();
-    if (!recognition) { toast.error(t('aithumbs.toast.noSpeech')); return; }
-    const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', es: 'es-ES', kk: 'kk-KZ' };
-    recognition.lang = localeMap[useLocaleStore.getState().locale] || 'en-US';
+    if (!recognition) {
+      toast.error(tx(t, "aithumbs.toast.noSpeech", "Speech not available"));
+      return;
+    }
+    recognition.lang = LOCALE_TO_SPEECH_LANG[locale] || "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (e: SpeechRecognitionEvent) => {
       const transcript = e.results[0][0].transcript;
-      setPrompt((prev) => (prev ? prev + ' ' + transcript : transcript));
+      setPrompt((prev) => (prev ? prev + " " + transcript : transcript));
     };
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
@@ -374,982 +358,771 @@ export function AiThumbnailsPage() {
     setIsListening(true);
   }, [isListening, t, locale]);
 
-  /* ── Photo upload ───────────────────────────────── */
   const handlePhotoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => setUploadedPhoto(reader.result as string);
     reader.readAsDataURL(file);
-    e.target.value = '';
+    e.target.value = "";
   }, []);
 
-  /* ── AI Ideas ──────────────────────────────────── */
   const handleGetIdeas = useCallback(() => {
     if (suggestIdeas.isPending) return;
-    suggestIdeas.mutate({ topic: prompt.trim() || undefined, locale: locale as 'en' | 'ru' | 'kk' | 'es' });
+    suggestIdeas.mutate({
+      topic: prompt.trim() || undefined,
+      locale: locale as "en" | "ru" | "kk" | "es",
+    });
   }, [suggestIdeas, prompt, locale]);
 
-  /* ── Helpers ─────────────────────────────────────── */
   const isLoading = generate.isPending;
   const disabled = !prompt.trim() || isLoading;
   const progressPct = Math.round(progress);
 
-  /* ── Gallery query ── */
-  const galleryQuery = trpc.aiThumbnails.getGallery.useQuery(
-    { filter: 'all', limit: 30 },
-    { enabled: showGallery },
+  const starterChips = useMemo(
+    () => STARTER_PROMPT_KEYS.map((k) => ({ key: k, label: t(k) })),
+    [t],
   );
 
-  const leftPanelWidth = isMobile ? '100%' : isTablet ? 360 : 420;
+  /* ─────────────── Settings panel (left desktop / sheet mobile) ─────────────── */
+  const SettingsPanel = (
+    <div className="flex flex-col gap-5">
+      {/* Mode tabs */}
+      <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted">
+        {(["scratch", "swap"] as TabId[]).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setTab(mode)}
+            className={cn(
+              "h-9 rounded-lg text-sm font-semibold transition-all",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40",
+              tab === mode
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {mode === "scratch"
+              ? tx(t, "aithumbs.tab.scratch", "From Scratch")
+              : tx(t, "aithumbs.tab.swap", "Face Swap")}
+          </button>
+        ))}
+      </div>
 
-  /* ── Render ─────────────────────────────────────── */
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
-      height: '100%',
-      overflowY: isMobile ? 'auto' : 'hidden',
-      overflowX: 'hidden',
-      paddingBottom: isMobile ? 80 : 0,
-      boxSizing: 'border-box',
-      background: theme.bg,
-      color: theme.text,
-      fontFamily: 'inherit',
-    }}>
+      {/* Prompt */}
+      <div className="space-y-2">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+          <span>{tx(t, "aithumbs.describeIdea", "Describe your idea")} *</span>
+          <span className="font-mono text-muted-foreground/70">{prompt.length}/1000</span>
+        </label>
+        <div className="relative">
+          <textarea
+            ref={promptTextareaRef}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value.slice(0, 1000))}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                handleGenerate();
+              }
+            }}
+            placeholder={tx(
+              t,
+              "aithumbs.promptPlaceholder",
+              'Shocked guy looking at iPhone, neon background, big text "WOW"…',
+            )}
+            rows={4}
+            className={cn(
+              "w-full resize-y min-h-[120px] max-h-[280px] rounded-xl",
+              "bg-card border border-border px-3.5 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/60",
+              "focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-colors",
+            )}
+          />
+          {prompt && (
+            <button
+              type="button"
+              onClick={() => setPrompt("")}
+              aria-label={tx(t, "aithumbs.clearPrompt", "Clear prompt")}
+              className="absolute top-2 right-2 size-6 rounded-md bg-muted hover:bg-card border border-border text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </div>
 
-      {/* ═══ LEFT PANEL ═══ */}
-      <div style={{
-        width: leftPanelWidth,
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: isMobile ? 'visible' : 'auto',
-        borderRight: isMobile ? 'none' : `1px solid ${theme.border}`,
-        borderBottom: isMobile ? `1px solid ${theme.border}` : 'none',
-      }}>
-        {/* Inner card */}
-        <div style={{
-          margin: 16,
-          padding: 24,
-          borderRadius: 16,
-          border: `1px solid ${theme.border}`,
-          background: theme.card,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 20,
-          flex: 1,
-        }}>
-
-          {/* ── Header row ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: ACCENT_DIM,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-              </svg>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: theme.text, flex: 1 }}>
-              {t('aithumbs.title')}
-            </span>
-            {/* Credits pill */}
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '4px 10px', borderRadius: 20,
-              background: ACCENT_DIM,
-              border: `1px solid rgba(99,102,241,0.15)`,
-            }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
-              <span style={{ fontSize: 11, fontWeight: 700, color: ACCENT }}>∞</span>
-            </div>
-            {/* My Works */}
-            {!isMobile && (
+        {/* Niche chip strip (collapsible) */}
+        {!prompt && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {starterChips.slice(0, 6).map(({ key, label }) => (
               <button
-                onClick={() => setShowGallery(true)}
-                style={{
-                  padding: '5px 12px', borderRadius: 8,
-                  border: `1px solid ${theme.border}`, background: 'transparent',
-                  color: theme.dim, fontSize: 12, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
+                key={key}
+                type="button"
+                onClick={() => setPrompt(label)}
+                className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-card border border-border text-muted-foreground hover:text-foreground hover:border-brand-500/40 transition-colors"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                </svg>
-                {t('aithumbs.myWorks')}
+                {label}
               </button>
+            ))}
+          </div>
+        )}
+
+        {/* Toolbar row */}
+        <div className="flex items-center gap-1.5 pt-1">
+          <button
+            type="button"
+            onClick={toggleVoice}
+            aria-label={tx(t, "aithumbs.voice", "Voice input")}
+            className={cn(
+              "size-9 rounded-lg border transition-colors flex items-center justify-center",
+              isListening
+                ? "bg-brand-500 border-brand-500 text-white animate-pulse"
+                : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-brand-500/40",
+            )}
+          >
+            <Mic className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label={tx(t, "aithumbs.uploadPhoto", "Reference photo")}
+            className={cn(
+              "size-9 rounded-lg border transition-colors flex items-center justify-center",
+              uploadedPhoto
+                ? "bg-brand-500/15 border-brand-500/40 text-brand-500"
+                : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-brand-500/40",
+            )}
+          >
+            <ImageIcon className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setYtModalInput(ytUrl);
+              setShowYtModal(true);
+            }}
+            aria-label={tx(t, "aithumbs.youtubeUrl", "YouTube reference")}
+            className={cn(
+              "size-9 rounded-lg border transition-colors flex items-center justify-center",
+              ytTitle
+                ? "bg-red-500/15 border-red-500/40 text-red-500"
+                : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-brand-500/40",
+            )}
+          >
+            <LinkIcon className="size-4" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
+          <button
+            type="button"
+            onClick={handleGetIdeas}
+            disabled={suggestIdeas.isPending}
+            className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-card border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-brand-500/40 transition-colors disabled:opacity-50"
+          >
+            {suggestIdeas.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Lightbulb className="size-3.5" />
+            )}
+            {tx(t, "aithumbs.aiIdeas", "Ideas")}
+          </button>
+        </div>
+
+        {/* AI Ideas list */}
+        {aiIdeas.length > 0 && (
+          <div className="rounded-lg bg-card border border-border p-2 space-y-1">
+            {aiIdeas.map((idea, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setPrompt(idea);
+                  setAiIdeas([]);
+                }}
+                className="w-full text-left px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                {idea}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Reference indicators */}
+        {(ytTitle || uploadedPhoto) && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {ytTitle && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] bg-red-500/10 border border-red-500/30 text-red-400">
+                <LinkIcon className="size-3" />
+                <span className="truncate max-w-[200px]">{ytTitle}</span>
+                <button onClick={() => { setYtUrl(""); setYtTitle(""); }} aria-label="Remove" className="hover:text-red-300">
+                  <X className="size-3" />
+                </button>
+              </span>
+            )}
+            {uploadedPhoto && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] bg-brand-500/10 border border-brand-500/30 text-brand-400">
+                <ImageIcon className="size-3" />
+                {tx(t, "aithumbs.refPhoto", "Reference photo")}
+                <button onClick={() => setUploadedPhoto(null)} aria-label="Remove" className="hover:text-brand-300">
+                  <X className="size-3" />
+                </button>
+              </span>
             )}
           </div>
+        )}
+      </div>
 
-          {/* ── Mode tabs ── */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            {(['scratch', 'swap'] as const).map((m) => {
-              const isActive = tab === m;
+      {/* Style picker */}
+      <div className="space-y-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {tx(t, "aithumbs.style", "Style")}
+        </span>
+        <div className="grid grid-cols-3 gap-2">
+          {STYLE_OPTIONS.map((opt) => {
+            const active = style === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setStyle(opt.id)}
+                className={cn(
+                  "group relative h-16 rounded-xl overflow-hidden transition-all",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40",
+                  active
+                    ? "ring-2 ring-brand-500 shadow-lg"
+                    : "border border-border hover:border-brand-500/40 hover:-translate-y-0.5",
+                )}
+              >
+                <div className={cn("absolute inset-0 bg-gradient-to-br", opt.gradient, !active && "opacity-50 group-hover:opacity-80")} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <span className="absolute bottom-1.5 left-2 right-2 text-[11px] font-bold text-white capitalize tracking-tight">
+                  {opt.id === "3d" ? "3D" : opt.id === "popart" ? "Pop Art" : opt.id}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Format + Count */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {tx(t, "aithumbs.format", "Format")}
+          </span>
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-muted">
+            {FORMAT_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const active = format === opt.id;
               return (
                 <button
-                  key={m}
-                  onClick={() => setTab(m)}
-                  style={{
-                    flex: 1, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    borderRadius: 12,
-                    border: `1px solid ${isActive ? ACCENT + '66' : theme.border}`,
-                    background: isActive ? ACCENT_DIM : 'transparent',
-                    color: isActive ? theme.text : theme.dim,
-                    cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                    fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
-                  }}
-                >
-                  {m === 'scratch' ? (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={isActive ? ACCENT : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2l2.09 6.26L20.36 10l-6.27 2.09L12 18.36l-2.09-6.27L3.64 10l6.27-2.09L12 2z" />
-                    </svg>
-                  ) : (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={isActive ? ACCENT : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                      <path d="M16 3.13a4 4 0 010 7.75" />
-                    </svg>
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setFormat(opt.id)}
+                  className={cn(
+                    "h-9 rounded-md text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5",
+                    active
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
-                  {m === 'scratch' ? t('aithumbs.tab.scratch') : t('aithumbs.tab.swap')}
+                >
+                  <Icon className="size-3.5" />
+                  {opt.id}
                 </button>
               );
             })}
           </div>
-
-          {/* ── Face swap gallery (swap tab) ── */}
-          {tab === 'swap' && (
-            <div style={{
-              padding: 14, borderRadius: 12,
-              border: `1px solid ${theme.border}`,
-              background: theme.surface,
-            }}>
-              <SectionLabel>{t('aithumbs.myPhotos')}</SectionLabel>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {uploadedPhoto && (
-                  <div style={{ position: 'relative', width: 56, height: 56 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={uploadedPhoto} alt="Face" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${ACCENT}` }} />
-                    <button
-                      onClick={() => setUploadedPhoto(null)}
-                      style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 9, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                    </button>
-                  </div>
-                )}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    width: 56, height: 56, borderRadius: 10,
-                    border: `1px dashed ${theme.border}`,
-                    background: 'transparent', color: theme.dim,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s ease', padding: 0,
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                </button>
-              </div>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
-            </div>
-          )}
-
-          {/* ── Prompt section ── */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <SectionLabel>{t('aithumbs.prompt.label')} <span style={{ color: ACCENT }}>*</span></SectionLabel>
-              <span style={{ fontSize: 11, color: prompt.length > 900 ? '#ef4444' : theme.dim }}>
-                {prompt.length}/1000
-              </span>
-            </div>
-            <textarea
-              ref={promptTextareaRef}
-              value={prompt}
-              onChange={(e) => { if (e.target.value.length <= 1000) setPrompt(e.target.value); }}
-              placeholder={t('aithumbs.prompt.placeholder')}
-              rows={4}
-              style={{
-                width: '100%', minHeight: 120, padding: '12px 14px',
-                borderRadius: 12, border: `1px solid ${theme.border}`,
-                background: theme.surface, color: theme.text,
-                fontSize: 14, fontFamily: 'inherit', resize: 'vertical',
-                outline: 'none', transition: 'border-color 0.2s ease',
-                boxSizing: 'border-box', lineHeight: 1.6,
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = ACCENT + '60'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = theme.border; }}
-            />
-            <p style={{ margin: '6px 0 0', fontSize: 11, color: theme.dim, lineHeight: 1.5 }}>
-              {t('aithumbs.prompt.hint') || 'Опишите визуал: персонаж, фон, цвета, эмоции.'}
-            </p>
-
-            {/* Starter prompt chips — first-time inspiration. Visible only
-                while the textarea is empty so they don't clutter the UI
-                once the user starts typing. Click fills the prompt. */}
-            {prompt.length === 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 6,
-                  marginTop: 10,
-                  alignItems: 'center',
-                }}
-                aria-label={t('aithumbs.starter.tryOne')}
-              >
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: theme.dim,
-                    marginRight: 4,
-                    fontWeight: 500,
-                    letterSpacing: '0.02em',
-                  }}
-                >
-                  {t('aithumbs.starter.tryOne')}
-                </span>
-                {STARTER_PROMPT_KEYS.map((key) => {
-                  const phrase = t(key);
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => {
-                        setPrompt(phrase);
-                        // Focus textarea so the user can immediately edit /
-                        // extend the chip's prompt.
-                        requestAnimationFrame(() => {
-                          promptTextareaRef.current?.focus();
-                          // Move cursor to end (selection at end-of-input)
-                          const len = phrase.length;
-                          promptTextareaRef.current?.setSelectionRange(len, len);
-                        });
-                      }}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: 8,
-                        border: `1px solid rgba(99,102,241,0.22)`,
-                        background: ACCENT_DIM,
-                        color: ACCENT,
-                        fontSize: 11,
-                        fontFamily: 'inherit',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        outline: 'none',
-                        transition: 'all 0.15s ease',
-                        whiteSpace: 'nowrap',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(99,102,241,0.18)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = ACCENT_DIM;
-                      }}
-                    >
-                      {phrase}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Action icon buttons row */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <SmallIconBtn active={!!ytTitle} onClick={() => { setYtModalInput(''); setShowYtModal(true); }} title={t('aithumbs.ytUrl.title')}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
-                </svg>
-              </SmallIconBtn>
-              <SmallIconBtn active={!!uploadedPhoto} onClick={() => fileInputRef.current?.click()} title={t('aithumbs.upload.title')}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </SmallIconBtn>
-              {tab !== 'swap' && (
-                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} />
-              )}
-              <SmallIconBtn active={isListening} danger={isListening} onClick={toggleVoice} title={t('aithumbs.voice.title')}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
-                  <path d="M19 10v2a7 7 0 01-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
-                </svg>
-              </SmallIconBtn>
-            </div>
-          </div>
-
-          {/* YouTube title chip */}
-          {ytTitle && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 12px', borderRadius: 10,
-              background: ACCENT_DIM, border: `1px solid rgba(99,102,241,0.15)`,
-            }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round">
-                <path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z" />
-                <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-              </svg>
-              <span style={{ fontSize: 12, color: ACCENT, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {ytTitle}
-              </span>
-              <button
-                onClick={() => { setYtUrl(''); setYtTitle(null); }}
-                style={{ width: 18, height: 18, borderRadius: 9, border: 'none', background: 'transparent', color: theme.dim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-            </div>
-          )}
-
-          {/* ── "Need an idea?" button ── */}
-          <button
-            onClick={handleGetIdeas}
-            disabled={suggestIdeas.isPending}
-            style={{
-              width: '100%', height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              borderRadius: 10, border: `1px solid ${theme.border}`, background: 'transparent',
-              color: theme.sub, cursor: suggestIdeas.isPending ? 'wait' : 'pointer',
-              fontFamily: 'inherit', outline: 'none', transition: 'all 0.2s ease',
-              fontSize: 13, fontWeight: 600, opacity: suggestIdeas.isPending ? 0.6 : 1,
-            }}
-          >
-            {suggestIdeas.isPending ? (
-              <svg width="14" height="14" viewBox="0 0 14 14" style={{ animation: 'ait-spin 1s linear infinite', flexShrink: 0 }}>
-                <circle cx="7" cy="7" r="5" stroke={ACCENT} strokeWidth="1.5" fill="none" opacity="0.3" />
-                <path d="M7 2a5 5 0 013.54 1.46" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            )}
-            {suggestIdeas.isPending ? t('aithumbs.generatingIdeas') : t('aithumbs.suggestIdea')}
-          </button>
-
-          {/* AI idea chips */}
-          {aiIdeas.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {aiIdeas.map((idea, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setPrompt(idea); setAiIdeas([]); }}
-                  style={{
-                    padding: '7px 12px', borderRadius: 8,
-                    border: `1px solid rgba(99,102,241,0.2)`,
-                    background: ACCENT_DIM, color: theme.text,
-                    fontSize: 12, lineHeight: 1.4, textAlign: 'left',
-                    cursor: 'pointer', fontFamily: 'inherit', outline: 'none',
-                    transition: 'all 0.15s ease',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}
-                  title={idea}
-                >
-                  {idea.length > 80 ? idea.slice(0, 80) + '...' : idea}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* ── Divider ── */}
-          <div style={{ height: 1, background: theme.border }} />
-
-          {/* ── Quantity + Format in ONE row ── */}
-          <div style={{ display: 'flex', gap: 20 }}>
-            {/* Count */}
-            <div style={{ flex: 1 }}>
-              <SectionLabel>{t('aithumbs.section.count')}</SectionLabel>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {COUNT_OPTIONS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCount(c as 1 | 2 | 3)}
-                    style={{
-                      position: 'relative', flex: 1, height: 36, borderRadius: 8,
-                      border: `1px solid ${count === c ? ACCENT : theme.border}`,
-                      background: count === c ? ACCENT_DIM : 'transparent',
-                      color: count === c ? ACCENT : theme.sub,
-                      fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none', padding: 0,
-                    }}
-                  >
-                    {c}
-                    {c > 1 && plan === 'FREE' && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 4px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -4 }}>
-                        {t('aithumbs.proBadge')}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Format */}
-            <div style={{ flex: 1 }}>
-              <SectionLabel>{t('aithumbs.section.format')}</SectionLabel>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {FORMAT_OPTIONS.map((f) => (
-                  <button
-                    key={f.id}
-                    onClick={() => setFormat(f.id)}
-                    style={{
-                      position: 'relative', flex: 1, height: 36, borderRadius: 8,
-                      border: `1px solid ${format === f.id ? ACCENT : theme.border}`,
-                      background: format === f.id ? ACCENT_DIM : 'transparent',
-                      color: format === f.id ? ACCENT : theme.sub,
-                      fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
-                    }}
-                  >
-                    {f.id}
-                    {f.pro && plan === 'FREE' && (
-                      <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, background: ACCENT_DIM, padding: '1px 4px', borderRadius: 4, letterSpacing: 0.5, lineHeight: 1, position: 'absolute', top: -6, right: -4 }}>
-                        {t('aithumbs.proBadge')}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Style pills removed — not needed */}
-
-          {/* ── Credit cost (subtle) ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-            <span style={{ fontSize: 12, color: theme.dim, fontWeight: 500 }}>
-              {count > 1 && plan === 'FREE' ? 1 : count} {(count > 1 && plan === 'FREE' ? 1 : count) > 1 ? t('aithumbs.credits') : t('aithumbs.credit')}
-            </span>
-          </div>
-
-          {/* ── Generate CTA ── */}
-          <button
-            onClick={handleGenerate}
-            disabled={disabled}
-            aria-busy={isLoading || undefined}
-            style={{
-              width: '100%', height: 52, borderRadius: 14,
-              background: disabled ? theme.border : `linear-gradient(135deg, ${ACCENT}, #818cf8)`,
-              color: disabled ? theme.dim : '#fff',
-              fontSize: 15, fontWeight: 700, border: 'none',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: disabled ? 'none' : `0 4px 24px ${ACCENT_GLOW}`,
-              transition: 'all 0.2s ease', fontFamily: 'inherit', outline: 'none',
-            }}
-          >
-            {isLoading && (
-              <svg width="18" height="18" viewBox="0 0 18 18" style={{ animation: 'ait-spin 1s linear infinite' }}>
-                <circle cx="9" cy="9" r="7" stroke="rgba(255,255,255,.3)" strokeWidth="2" fill="none" />
-                <path d="M9 2a7 7 0 015.2 2.33" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-            )}
-            {isLoading ? t('aithumbs.generating') : t('aithumbs.createMagic')}
-          </button>
-
         </div>
-      </div>
-
-      {/* ═══ RIGHT PANEL ═══ */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: isMobile ? 'visible' : 'auto',
-        padding: isMobile ? '0 16px 16px' : '20px 24px',
-        minWidth: 0,
-        gap: 16,
-      }}>
-
-        {/* ── Preview badge + action buttons row ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '4px 12px', borderRadius: 20,
-            background: ACCENT_DIM, border: `1px solid rgba(99,102,241,0.15)`,
-            fontSize: 11, fontWeight: 700, color: ACCENT,
-            textTransform: 'uppercase', letterSpacing: '0.5px',
-          }}>
-            {t('aithumbs.preview')} {format}
+        <div className="space-y-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+            {tx(t, "aithumbs.count", "Count")}
+            {plan === "FREE" && count > 1 && (
+              <span className="text-[10px] text-amber-500 font-bold">PRO</span>
+            )}
           </span>
-          <div style={{ flex: 1 }} />
-          {selectedImage && !isGenerating && (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <ActionPill
-                label={t('aithumbs.action.download')}
-                icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>}
-                onClick={() => selectedImage && handleDownload(selectedImage)}
-                accent
-              />
-              <ActionPill
-                label={t('aithumbs.regenerate')}
-                icon={<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>}
-                onClick={handleRegenerate}
-              />
-            </div>
-          )}
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-muted">
+            {COUNT_OPTIONS.map((c) => {
+              const locked = plan === "FREE" && c > 1;
+              const active = count === c && !locked;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    if (locked) {
+                      toast.info(tx(t, "aithumbs.toast.upgradeForBatch", "Upgrade to Pro for batch generation"));
+                      return;
+                    }
+                    setCount(c);
+                  }}
+                  className={cn(
+                    "h-9 rounded-md text-xs font-mono font-semibold transition-all flex items-center justify-center relative",
+                    active
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                    locked && "opacity-50",
+                  )}
+                >
+                  {c}
+                  {locked && <Lock className="size-2.5 absolute top-1 right-1" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
-
-        {/* ── Preview area ── */}
-        <div style={{
-          width: '100%',
-          aspectRatio: format === '16:9' ? '16/9' : '9/16',
-          maxHeight: '65vh',
-          borderRadius: 16,
-          background: theme.card,
-          border: `1px solid ${theme.border}`,
-          overflow: 'hidden',
-          position: 'relative',
-          flexShrink: 0,
-        }}>
-          {isGenerating ? (
-            /* ═══ SCANNER ANIMATION ═══ */
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: theme.card,
-              overflow: 'hidden',
-            }}>
-              {/* Grid overlay */}
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 0,
-                backgroundImage: `
-                  linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)
-                `,
-                backgroundSize: '40px 40px',
-              }} />
-
-              {/* Glowing scanner bar */}
-              <div
-                className="ait-scanner-bar"
-                style={{
-                  position: 'absolute',
-                  top: 0, bottom: 0, width: 3,
-                  background: `linear-gradient(180deg, transparent, ${ACCENT}, ${ACCENT}, transparent)`,
-                  boxShadow: `0 0 40px 12px ${ACCENT_GLOW}, 0 0 80px 24px rgba(99,102,241,0.2)`,
-                  animation: format === '9:16' ? 'ait-scan-v 4s ease-in-out infinite' : 'ait-scan 4s ease-in-out infinite',
-                  zIndex: 2,
-                }}
-              />
-
-              {/* Center content */}
-              <div style={{ zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  fontSize: 72, fontWeight: 800, color: theme.text,
-                  textShadow: `0 0 40px ${ACCENT_GLOW}, 0 0 80px ${ACCENT_GLOW}`,
-                  lineHeight: 1, fontVariantNumeric: 'tabular-nums',
-                  letterSpacing: '-2px',
-                }}>
-                  {progressPct}%
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: theme.sub, textAlign: 'center' }}>
-                  {getProgressStage(progress, t)}
-                </div>
-              </div>
-            </div>
-          ) : selectedImage ? (
-            /* ═══ Generated result ═══ */
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.bg }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={selectedImage.url}
-                alt={selectedImage.prompt}
-                style={{
-                  width: '100%', height: '100%', objectFit: 'contain', display: 'block',
-                  filter: imageRevealed ? 'blur(0px)' : 'blur(20px)',
-                  transform: imageRevealed ? 'scale(1)' : 'scale(1.05)',
-                  transition: 'filter 0.8s ease-out, transform 0.8s ease-out',
-                }}
-                onLoad={() => setImageRevealed(true)}
-              />
-            </div>
-          ) : (
-            /* ═══ Empty placeholder ═══ */
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 14,
-              animation: 'ait-fadeIn 0.4s ease-out',
-            }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 14,
-                background: ACCENT_DIM,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: theme.sub, marginBottom: 4 }}>
-                  {t('aithumbs.empty.title')}
-                </div>
-                <div style={{ fontSize: 12, color: theme.dim, maxWidth: 280, lineHeight: 1.6 }}>
-                  {t('aithumbs.empty.description')}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ── Batch variants row ── */}
-        {lastBatch.length > 1 && !isGenerating && (
-          <div style={{ flexShrink: 0 }}>
-            <SectionLabel>{t('aithumbs.section.count')} ({lastBatch.length})</SectionLabel>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {lastBatch.map((img, idx) => {
-                const isActive = selectedImage?.id === img.id;
-                return (
-                  <button
-                    key={img.id}
-                    onClick={() => { setSelectedImage(img); setImageRevealed(true); }}
-                    style={{
-                      padding: 0, flex: 1, aspectRatio: format === '16:9' ? '16/9' : '9/16',
-                      maxHeight: 72,
-                      border: isActive ? `2px solid ${ACCENT}` : `1px solid ${theme.border}`,
-                      borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
-                      background: theme.surface, outline: 'none',
-                      transition: 'all 0.2s ease',
-                      boxShadow: isActive ? `0 0 10px ${ACCENT_GLOW}` : 'none',
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.url} alt={`Variant ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── History thumbnails ── */}
-        {history.length > 1 && !isGenerating && (
-          <div style={{ flexShrink: 0 }}>
-            <SectionLabel>{t('aithumbs.tab.history')} ({history.length})</SectionLabel>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {history.map((img) => {
-                const isActive = selectedImage?.id === img.id;
-                return (
-                  <button
-                    key={img.id}
-                    onClick={() => { setSelectedImage(img); setImageRevealed(true); }}
-                    style={{
-                      padding: 0, width: 80, height: 45, flexShrink: 0,
-                      border: isActive ? `2px solid ${ACCENT}` : `1px solid ${theme.border}`,
-                      borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
-                      background: theme.bg, outline: 'none', transition: 'all 0.2s ease',
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.url} alt={img.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Premium banner ── */}
-        {plan === 'FREE' && (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: 12, border: `1px solid rgba(99,102,241,0.2)`,
-            background: `linear-gradient(135deg, rgba(99,102,241,0.08), transparent)`,
-            display: 'flex', alignItems: 'center', gap: 16,
-            flexShrink: 0,
-          }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
-                {t('aithumbs.banner.title')}
-              </div>
-              <div style={{ fontSize: 12, color: theme.sub }}>
-                {t('aithumbs.banner.desc')}
-              </div>
-            </div>
-            <a
-              href="/billing"
-              style={{
-                padding: '8px 18px', borderRadius: 8,
-                background: ACCENT, color: '#fff',
-                fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                whiteSpace: 'nowrap', flexShrink: 0,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {t('aithumbs.banner.cta')}
-            </a>
-          </div>
-        )}
-
       </div>
 
-      {/* ═══ Gallery Modal ═══ */}
-      {showGallery && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 20,
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowGallery(false); }}
+      {/* Generate CTA */}
+      <button
+        type="button"
+        onClick={handleGenerate}
+        disabled={disabled}
+        className={cn(
+          "relative h-14 rounded-2xl font-semibold text-white text-base overflow-hidden transition-all",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          disabled
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
+            : "bg-gradient-to-r from-brand-500 via-violet-500 to-fuchsia-500 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]",
+        )}
+      >
+        {isLoading ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <Loader2 className="size-5 animate-spin" />
+            <span>{tx(t, "aithumbs.generating", "Generating…")} {progressPct}%</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center justify-center gap-2">
+            <Sparkles className="size-5" />
+            <span>{tx(t, "aithumbs.generate", "Generate")}</span>
+            {canUseAI && (
+              <span className="font-mono text-xs opacity-80 ml-2">⌘⏎</span>
+            )}
+          </span>
+        )}
+        {/* Shimmer */}
+        {!disabled && !isLoading && (
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] pointer-events-none" />
+        )}
+      </button>
+
+      {!canUseAI && (
+        <Link
+          href="/billing"
+          className="text-center text-xs text-amber-500 hover:text-amber-400 underline-offset-2 hover:underline transition-colors"
         >
-          <div style={{
-            width: '100%', maxWidth: 900, maxHeight: '80vh',
-            background: theme.surface, borderRadius: 20,
-            border: `1px solid ${theme.border}`,
-            overflow: 'hidden', display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', padding: '16px 20px',
-              borderBottom: `1px solid ${theme.border}`,
-            }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: theme.text, flex: 1 }}>
-                {t('aithumbs.myWorks')}
-              </span>
+          {tx(t, "aithumbs.outOfCredits", "Out of credits — upgrade to Pro")}
+        </Link>
+      )}
+
+      {/* History strip */}
+      {history.length > 0 && (
+        <div className="space-y-2 pt-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+            {tx(t, "aithumbs.tab.history", "Recent")} <span className="font-mono">{history.length}</span>
+          </span>
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+            {history.slice(0, 8).map((img) => (
               <button
-                onClick={() => setShowGallery(false)}
-                style={{
-                  width: 32, height: 32, borderRadius: 8, border: 'none',
-                  background: theme.border, color: theme.text,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                }}
+                key={img.id}
+                type="button"
+                onClick={() => setSelectedImage(img)}
+                className={cn(
+                  "shrink-0 size-14 rounded-lg overflow-hidden border-2 transition-all",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40",
+                  selectedImage?.id === img.id
+                    ? "border-brand-500"
+                    : "border-transparent hover:border-brand-500/40",
+                )}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt={img.prompt} className="w-full h-full object-cover" loading="lazy" />
               </button>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-              {galleryQuery.isLoading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: theme.sub }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" style={{ animation: 'ait-spin 1s linear infinite', marginRight: 8 }}>
-                    <circle cx="10" cy="10" r="8" stroke={ACCENT} strokeWidth="1.5" fill="none" opacity="0.3" />
-                    <path d="M10 2a8 8 0 015.66 2.34" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                  </svg>
-                  {t('aithumbs.gallery.loading')}
-                </div>
-              ) : galleryQuery.data?.items.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: theme.dim }}>
-                  {t('aithumbs.history.empty')}
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-                  {galleryQuery.data?.items.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedImage({ id: item.id, url: item.imageUrl, prompt: item.prompt, style: item.style || 'realistic' });
-                        setImageRevealed(true);
-                        setShowGallery(false);
-                      }}
-                      style={{
-                        padding: 0, width: '100%', aspectRatio: '16/9',
-                        border: `1px solid ${theme.border}`, borderRadius: 10, overflow: 'hidden',
-                        cursor: 'pointer', background: '#000', outline: 'none', transition: 'all 0.2s ease',
-                      }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.imageUrl} alt={item.prompt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
           </div>
         </div>
       )}
+    </div>
+  );
 
-      {/* ═══ YouTube URL Modal ═══ */}
-      {showYtModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
-          }}
-          onClick={() => setShowYtModal(false)}
-        >
-          <div
-            style={{
-              background: theme.card,
-              borderRadius: 16, padding: 28, width: 420, maxWidth: '90vw',
-              border: `1px solid ${theme.border}`,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 style={{ margin: '0 0 8px', color: theme.text, fontSize: 17, fontWeight: 700 }}>
-              {t('aithumbs.ytUrl.title')}
-            </h3>
-            <p style={{ margin: '0 0 16px', color: theme.sub, fontSize: 13 }}>
-              {t('aithumbs.ytUrl.prompt')}
-            </p>
-            <input
-              type="text"
-              value={ytModalInput}
-              onChange={e => setYtModalInput(e.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
-              style={{
-                width: '100%', padding: '12px 14px', borderRadius: 10,
-                border: `1px solid ${theme.border}`, background: theme.surface,
-                color: theme.text, fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                transition: 'border-color 0.2s ease',
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = ACCENT + '60'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = theme.border; }}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && ytModalInput.trim()) {
-                  handleYtUrl(ytModalInput.trim());
-                  setShowYtModal(false);
-                }
-              }}
-              autoFocus
+  /* ─────────────── Right pane: Preview ─────────────── */
+  const PreviewPane = (
+    <div className="flex-1 min-h-0 flex flex-col bg-background">
+      {/* Top bar (preview header) */}
+      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="size-4 text-brand-500 shrink-0" />
+          <h1 className="text-sm font-bold text-foreground truncate">
+            {tx(t, "aithumbs.title", "AI Thumbnails")}
+          </h1>
+          {selectedImage && lastBatch.length > 1 && (
+            <span className="text-xs text-muted-foreground font-mono ml-2">
+              {lastBatch.findIndex((i) => i.id === selectedImage.id) + 1}/{lastBatch.length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedImage && !isLoading && (
+            <>
+              <button
+                type="button"
+                onClick={handleRegenerate}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-card border border-border text-xs font-semibold text-foreground hover:border-brand-500/40 transition-colors"
+              >
+                <RefreshCw className="size-3.5" />
+                {tx(t, "aithumbs.regenerate", "Regenerate")}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDownload(selectedImage)}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold transition-colors"
+              >
+                <Download className="size-3.5" />
+                {tx(t, "aithumbs.download", "Download")}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
+        <div className="mx-auto max-w-5xl h-full flex flex-col">
+          {isLoading ? (
+            <LoadingFrame format={format} progressPct={progressPct} t={t} />
+          ) : selectedImage ? (
+            <ResultDisplay
+              image={selectedImage}
+              format={format}
+              batch={lastBatch}
+              onSelect={setSelectedImage}
+              onFullscreen={setFullscreenImage}
+              onDownload={handleDownload}
+              t={t}
+              imageRevealed={imageRevealed}
             />
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
+          ) : (
+            <EmptyState
+              format={format}
+              starterChips={starterChips.slice(0, 6)}
+              onChip={(p) => {
+                setPrompt(p);
+                if (isMobile) setMobileSheetOpen(true);
+                else promptTextareaRef.current?.focus();
+              }}
+              t={t}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ─────────────── Layout ─────────────── */
+  return (
+    <div className="relative flex flex-col md:flex-row h-[calc(100dvh-56px)] min-h-0 overflow-hidden bg-background text-foreground">
+      {/* Desktop: left settings panel */}
+      <aside className="hidden md:flex w-[380px] shrink-0 flex-col border-r border-border overflow-y-auto">
+        <div className="p-5">{SettingsPanel}</div>
+      </aside>
+
+      {/* Right: Preview */}
+      {PreviewPane}
+
+      {/* Mobile: floating settings button */}
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => setMobileSheetOpen(true)}
+          aria-label={tx(t, "aithumbs.openSettings", "Open settings")}
+          className="md:hidden fixed bottom-20 right-4 z-30 inline-flex items-center gap-2 h-12 px-4 rounded-full bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold shadow-lg transition-all"
+        >
+          <Settings2 className="size-4" />
+          {prompt ? tx(t, "aithumbs.editPrompt", "Edit") : tx(t, "aithumbs.compose", "Compose")}
+        </button>
+      )}
+
+      {/* Mobile bottom sheet */}
+      {isMobile && mobileSheetOpen && (
+        <>
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-[fadeIn_150ms_ease-out]"
+            onClick={() => setMobileSheetOpen(false)}
+          />
+          <div className="md:hidden fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-2xl bg-background border-t border-border overflow-y-auto pb-safe animate-[slideUp_250ms_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="sticky top-0 flex items-center justify-between px-5 py-3 bg-background border-b border-border">
+              <h2 className="text-sm font-bold text-foreground inline-flex items-center gap-2">
+                <Settings2 className="size-4" /> {tx(t, "aithumbs.settings", "Settings")}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setMobileSheetOpen(false)}
+                aria-label={tx(t, "common.close", "Close")}
+                className="size-8 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-5">
+              {SettingsPanel}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* YouTube URL modal */}
+      {showYtModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground inline-flex items-center gap-2">
+                <LinkIcon className="size-4 text-red-500" />
+                {tx(t, "aithumbs.youtubeUrlTitle", "YouTube reference URL")}
+              </h3>
               <button
                 onClick={() => setShowYtModal(false)}
-                style={{
-                  padding: '10px 20px', borderRadius: 10, border: `1px solid ${theme.border}`,
-                  background: 'transparent', color: theme.sub,
-                  cursor: 'pointer', fontSize: 14, fontFamily: 'inherit',
-                }}
-              >{t('common.cancel') || 'Отмена'}</button>
+                className="size-8 rounded-full bg-muted hover:bg-card text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {tx(
+                t,
+                "aithumbs.youtubeUrlHelp",
+                "Paste a public YouTube URL — we will use the title for context.",
+              )}
+            </p>
+            <input
+              type="url"
+              value={ytModalInput}
+              onChange={(e) => setYtModalInput(e.target.value)}
+              placeholder="https://youtube.com/watch?v=…"
+              className="w-full h-10 rounded-lg bg-background border border-border px-3 text-sm focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20"
+            />
+            <div className="flex justify-end gap-2">
               <button
-                onClick={() => { if (ytModalInput.trim()) { handleYtUrl(ytModalInput.trim()); setShowYtModal(false); } }}
-                style={{
-                  padding: '10px 20px', borderRadius: 10, border: 'none',
-                  background: ACCENT, color: '#fff', cursor: 'pointer',
-                  fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+                onClick={() => setShowYtModal(false)}
+                className="h-9 px-3 rounded-lg bg-card border border-border text-xs font-semibold text-foreground"
+              >
+                {tx(t, "common.cancel", "Cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  handleYtUrl(ytModalInput);
+                  setShowYtModal(false);
                 }}
-              >{t('common.add') || 'Добавить'}</button>
+                className="h-9 px-4 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold transition-colors"
+              >
+                {tx(t, "common.apply", "Apply")}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══ CSS Animations ═══ */}
+      {/* Fullscreen image modal */}
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_150ms]"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            aria-label="Close"
+            className="absolute top-4 right-4 size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center"
+          >
+            <X className="size-5" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={fullscreenImage.url}
+            alt={fullscreenImage.prompt}
+            className="max-w-full max-h-[90vh] object-contain rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Inline animations */}
       <style>{`
-        @keyframes ait-scan {
-          0% { left: 0%; }
-          50% { left: calc(100% - 3px); }
-          100% { left: 0%; }
-        }
-        @keyframes ait-scan-v {
-          0% { top: 0%; left: 0; right: 0; width: 100%; height: 3px; bottom: auto; }
-          50% { top: calc(100% - 3px); left: 0; right: 0; width: 100%; height: 3px; bottom: auto; }
-          100% { top: 0%; left: 0; right: 0; width: 100%; height: 3px; bottom: auto; }
-        }
-        @keyframes ait-spin {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes ait-fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .ait-scanner-bar {
-          top: 0;
-          bottom: 0;
-          width: 3px;
-        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
       `}</style>
     </div>
   );
 }
 
-/* ── Sub-components ─────────────────────────────────────────────────── */
+/* ─────────────── Sub-components ─────────────── */
 
-function SmallIconBtn({
-  active,
-  danger,
-  onClick,
-  title,
-  children,
+function EmptyState({
+  format,
+  starterChips,
+  onChip,
+  t,
 }: {
-  active: boolean;
-  danger?: boolean;
-  onClick: () => void;
-  title: string;
-  children: React.ReactNode;
+  format: FormatId;
+  starterChips: { key: string; label: string }[];
+  onChip: (prompt: string) => void;
+  t: (k: string) => string;
 }) {
-  const theme = useThemeStore((s) => s.theme);
-  const borderColor = danger ? '#ef4444' : active ? ACCENT + '66' : theme.border;
-  const bg = danger ? 'rgba(239,68,68,0.12)' : active ? ACCENT_DIM : 'transparent';
-  const color = danger ? '#ef4444' : active ? ACCENT : theme.dim;
+  const aspectClass = format === "16:9" ? "aspect-video" : "aspect-[9/16] max-w-xs mx-auto";
   return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        width: 40, height: 40, borderRadius: 10,
-        border: `1px solid ${borderColor}`, background: bg, color,
-        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'all 0.2s ease', padding: 0, flexShrink: 0,
-      }}
-    >
-      {children}
-    </button>
+    <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+      <div
+        className={cn(
+          "w-full rounded-2xl border-2 border-dashed border-border bg-card/40 flex flex-col items-center justify-center gap-4 p-8",
+          aspectClass,
+        )}
+      >
+        <div className="size-14 rounded-2xl bg-gradient-to-br from-brand-500/20 to-violet-500/20 flex items-center justify-center">
+          <Sparkles className="size-7 text-brand-500" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+            {tx(t, "aithumbs.empty.title", "Your thumbnail will appear here")}
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-md">
+            {tx(t, "aithumbs.empty.desc", "Describe your idea on the left, then hit Generate. AI takes ~10 seconds.")}
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-1.5 max-w-md pt-2">
+          {starterChips.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => onChip(chip.label)}
+              className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-card border border-border text-muted-foreground hover:text-foreground hover:border-brand-500/40 transition-colors"
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
-function ActionPill({
-  label,
-  icon,
-  onClick,
-  accent,
-  loading,
+function LoadingFrame({
+  format,
+  progressPct,
+  t,
 }: {
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-  accent?: boolean;
-  loading?: boolean;
+  format: FormatId;
+  progressPct: number;
+  t: (k: string) => string;
 }) {
-  const theme = useThemeStore((s) => s.theme);
+  const aspectClass = format === "16:9" ? "aspect-video" : "aspect-[9/16] max-w-xs mx-auto";
   return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '7px 16px', borderRadius: 8,
-        border: `1px solid ${accent ? ACCENT + '99' : theme.border}`,
-        background: accent ? ACCENT_DIM : 'transparent',
-        color: accent ? ACCENT : theme.sub,
-        fontSize: 12, fontWeight: 600,
-        cursor: loading ? 'wait' : 'pointer',
-        fontFamily: 'inherit', transition: 'all 0.2s ease', outline: 'none',
-        whiteSpace: 'nowrap', opacity: loading ? 0.6 : 1,
-      }}
-    >
-      {loading ? (
-        <svg width="12" height="12" viewBox="0 0 12 12" style={{ animation: 'ait-spin 1s linear infinite' }}>
-          <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3" />
-          <path d="M6 2a4 4 0 012.83 1.17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-        </svg>
-      ) : icon}
-      {label}
-    </button>
+    <div className="flex-1 flex flex-col items-center justify-center py-4">
+      <div
+        className={cn(
+          "relative w-full rounded-2xl bg-card border border-border overflow-hidden",
+          aspectClass,
+        )}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/10 via-violet-500/10 to-fuchsia-500/10 animate-pulse" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="size-10 animate-spin text-brand-500" />
+          <div className="font-mono text-2xl font-bold text-foreground tabular-nums">
+            {progressPct}%
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {tx(t, "aithumbs.generating", "Generating…")}
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div className="absolute bottom-0 inset-x-0 h-1 bg-muted">
+          <div
+            className="h-full bg-gradient-to-r from-brand-500 to-violet-500 transition-[width] duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultDisplay({
+  image,
+  format,
+  batch,
+  onSelect,
+  onFullscreen,
+  onDownload,
+  t,
+  imageRevealed,
+}: {
+  image: GeneratedImage;
+  format: FormatId;
+  batch: GeneratedImage[];
+  onSelect: (img: GeneratedImage) => void;
+  onFullscreen: (img: GeneratedImage) => void;
+  onDownload: (img: GeneratedImage) => void;
+  t: (k: string) => string;
+  imageRevealed: boolean;
+}) {
+  const aspectClass = format === "16:9" ? "aspect-video" : "aspect-[9/16] max-w-xs mx-auto";
+  return (
+    <div className="flex-1 flex flex-col gap-4 py-2">
+      {/* Hero image */}
+      <div className={cn("relative w-full rounded-2xl bg-card border border-border overflow-hidden group transition-opacity", aspectClass, imageRevealed ? "opacity-100" : "opacity-0")}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={image.url} alt={image.prompt} className="w-full h-full object-cover" />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 gap-2">
+          <button
+            type="button"
+            onClick={() => onFullscreen(image)}
+            className="self-end inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/10 backdrop-blur-md hover:bg-white/20 text-white text-xs font-semibold transition-colors"
+          >
+            <Maximize2 className="size-3.5" />
+            {tx(t, "aithumbs.fullscreen", "Fullscreen")}
+          </button>
+        </div>
+      </div>
+
+      {/* Variants strip (when batch > 1) */}
+      {batch.length > 1 && (
+        <div className="flex gap-2 justify-center">
+          {batch.map((img) => (
+            <button
+              key={img.id}
+              type="button"
+              onClick={() => onSelect(img)}
+              className={cn(
+                "shrink-0 w-20 h-12 rounded-lg overflow-hidden border-2 transition-all",
+                image.id === img.id ? "border-brand-500 scale-105" : "border-transparent opacity-60 hover:opacity-100",
+              )}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img.url} alt={img.prompt} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Prompt + meta */}
+      <div className="rounded-xl bg-card border border-border p-4 space-y-2">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {tx(t, "aithumbs.prompt", "Prompt")}
+        </div>
+        <p className="text-sm text-foreground leading-relaxed">{image.prompt}</p>
+        {image.revisedPrompt && (
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
+              <ChevronDown className="size-3" />
+              {tx(t, "aithumbs.revisedPrompt", "AI-expanded prompt")}
+            </summary>
+            <p className="mt-2 leading-relaxed pl-4 border-l-2 border-border">{image.revisedPrompt}</p>
+          </details>
+        )}
+      </div>
+    </div>
   );
 }
