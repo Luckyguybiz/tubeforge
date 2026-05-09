@@ -56,8 +56,8 @@ const TOOL_META: Record<string, { name: string; description: string }> = {
     description: 'Create realistic text message conversation screenshots for storytelling and content creation.',
   },
   'youtube-downloader': {
-    name: 'YouTube Downloader',
-    description: 'Download YouTube videos in multiple formats and resolutions. Save videos for offline editing and reference.',
+    name: 'Video Inspector',
+    description: 'View YouTube video info — title, statistics, tags, and description structure. Download thumbnails for inspiration.',
   },
   'tiktok-downloader': {
     name: 'TikTok Downloader',

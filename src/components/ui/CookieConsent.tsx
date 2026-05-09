@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState, useEffect, useCallback } from 'react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
@@ -139,9 +141,9 @@ export function CookieConsent() {
         {/* Main message */}
         <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 16, color: C.sub }}>
           {t('cookie.message')}{' '}
-          <a href="/privacy#faily-cookie" style={{ color: C.accent, textDecoration: 'underline' }}>
+          <Link href="/privacy#faily-cookie" prefetch style={{ color: C.accent, textDecoration: 'underline' }}>
             {t('cookie.learnMore')}
-          </a>
+          </Link>
         </p>
 
         {/* Customize panel */}

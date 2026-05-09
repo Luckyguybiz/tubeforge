@@ -2246,3 +2246,21 @@ img {
     max-height: 50vh;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Mobile responsive — applies SITE-WIDE (LandingNav, footer, etc.)
+ * Originally was only in src/app/page.tsx <style> — moved here so it
+ * works on /pricing, /privacy, /terms etc. that also render LandingNav.
+ * ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .desktop-nav { display: none !important; }
+  .mobile-menu-btn { display: block !important; }
+  .footer-grid { grid-template-columns: 1fr 1fr !important; }
+  .features-grid, .how-it-works-grid, .pricing-grid, .testimonials-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .tools-grid { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 480px) {
+  .footer-grid { grid-template-columns: 1fr !important; }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Link from 'next/link';
 
 /* ── Colors (dark-only, matching the server page) ─────────────────── */
 const C = {
@@ -200,9 +201,9 @@ export function ApiPlayground() {
         />
         <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>
           Generate a key in{' '}
-          <a href="/settings" style={{ color: C.blue, textDecoration: 'none' }}>
+          <Link href="/settings" prefetch style={{ color: C.blue, textDecoration: 'none' }}>
             Settings
-          </a>
+          </Link>
           . Your key is never stored or sent to third parties.
         </div>
       </div>
