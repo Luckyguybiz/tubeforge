@@ -1,27 +1,30 @@
-// This page intentionally uses hardcoded dark colors (not theme store)
-// because it renders without the app layout and should always be dark.
-'use client';
+// This page intentionally uses dark theme (renders without app layout).
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import {
+  Sparkles,
+  Users as UsersIcon,
+  TrendingUp,
+  Clock as ClockIcon,
+  ImageIcon,
+  Search,
+  Check,
+  ArrowRight,
+  ArrowLeft,
+  Crown,
+  Zap,
+  Rocket,
+  PartyPopper,
+} from "lucide-react";
 
-/* ── Constants ────────────────────────────────────────────────────── */
-
-const ACCENT = '#6366f1';
-const ACCENT_BG = 'rgba(99,102,241,0.08)';
-const BG = '#0a0a0a';
-const CARD_BG = '#1a1a1a';
-const CARD_BORDER = 'rgba(255,255,255,0.06)';
-const TEXT = '#ffffff';
-const SUB = 'rgba(255,255,255,0.5)';
-const DIM = 'rgba(255,255,255,0.45)';
+/* ── Constants ────────────────────────────────────────── */
 const TOTAL_QUIZ_STEPS = 4;
-const COUNTDOWN_SECONDS = 15 * 60; // 15 minutes
-const LS_QUIZ_KEY = 'tf-onboarding-quiz';
-const LS_DONE_KEY = 'tf-quiz-done';
-
-/* ── Types ────────────────────────────────────────────────────────── */
+const COUNTDOWN_SECONDS = 15 * 60;
+const LS_QUIZ_KEY = "tf-onboarding-quiz";
+const LS_DONE_KEY = "tf-quiz-done";
 
 interface QuizAnswers {
   usage?: string;
@@ -30,169 +33,101 @@ interface QuizAnswers {
   tools?: string[];
 }
 
-/* ── SVG Icons ────────────────────────────────────────────────────── */
-
-function SparkleIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
-        fill={ACCENT}
-        opacity="0.9"
-      />
-    </svg>
-  );
-}
-
-function PeopleIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="9" cy="7" r="3" stroke={ACCENT} strokeWidth="1.5" />
-      <path d="M3 19c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="17" cy="9" r="2.5" stroke={ACCENT} strokeWidth="1.5" opacity="0.6" />
-      <path d="M19 19c0-2.76-1.79-5-4-5" stroke={ACCENT} strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-    </svg>
-  );
-}
-
-function CheckboxIcon({ checked }: { checked: boolean }) {
-  if (checked) {
-    return (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="1" y="1" width="18" height="18" rx="4" fill={ACCENT} />
-        <path d="M6 10l2.5 2.5L14 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <rect x="1" y="1" width="18" height="18" rx="4" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function RadioIcon({ selected }: { selected: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="9" stroke={selected ? ACCENT : 'rgba(255,255,255,0.15)'} strokeWidth="1.5" />
-      {selected && <circle cx="10" cy="10" r="5" fill={ACCENT} />}
-    </svg>
-  );
-}
-
-/* ── Helper: format countdown ─────────────────────────────────────── */
-
 function formatCountdown(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-/* ── Main Component ───────────────────────────────────────────────── */
+function cls(...args: (string | false | undefined)[]) {
+  return args.filter(Boolean).join(" ");
+}
+
+/* ── Tool brand SVGs (anti-силиконность: real logos) ─── */
+const TOOL_BRANDS: Record<string, { color: string; mark: string }> = {
+  vidiq: { color: "#FF1B6B", mark: "vidIQ" },
+  tubebuddy: { color: "#3373DC", mark: "TB" },
+  canva: { color: "#00C4CC", mark: "C" },
+  capcut: { color: "#000000", mark: "✂" },
+  invideo: { color: "#0080FF", mark: "iV" },
+  none: { color: "#737373", mark: "○" },
+};
+
+function ToolMark({ id, selected }: { id: string; selected: boolean }) {
+  const brand = TOOL_BRANDS[id];
+  if (!brand) return null;
+  return (
+    <span
+      className={cls(
+        "flex size-9 shrink-0 items-center justify-center rounded-lg font-bold text-white text-[12px] transition-transform",
+        selected && "scale-110",
+      )}
+      style={{ background: brand.color }}
+      aria-hidden
+    >
+      {brand.mark}
+    </span>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const [step, setStep] = useState(0); // 0-3 = quiz, 4 = offer
+  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
-  const [slideDirection, setSlideDirection] = useState<'forward' | 'backward'>('forward');
+  const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Check if quiz already done, redirect to AI Thumbnails
+  /* Skip if already done */
   useEffect(() => {
     try {
-      if (localStorage.getItem(LS_DONE_KEY) === 'true') {
-        router.replace('/ai-thumbnails');
+      if (localStorage.getItem(LS_DONE_KEY) === "true") {
+        router.replace("/ai-thumbnails");
       }
-    } catch { /* localStorage unavailable */ }
+    } catch {}
   }, [router]);
 
-  // Load saved answers from localStorage
+  /* Restore saved answers */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_QUIZ_KEY);
-      if (saved) {
-        setAnswers(JSON.parse(saved));
-      }
-    } catch { /* localStorage unavailable */ }
+      if (saved) setAnswers(JSON.parse(saved));
+    } catch {}
   }, []);
 
-  // Save answers to localStorage whenever they change
+  /* Persist answers */
   useEffect(() => {
     try {
       localStorage.setItem(LS_QUIZ_KEY, JSON.stringify(answers));
-    } catch { /* localStorage unavailable */ }
+    } catch {}
   }, [answers]);
 
-  // Countdown timer for the offer step
+  /* Countdown timer */
   useEffect(() => {
-    if (step !== 4) return;
-    if (countdown <= 0) return;
+    if (step !== 4 || countdown <= 0) return;
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setCountdown((p) => (p <= 1 ? 0 : p - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [step, countdown]);
 
-  /* ── Navigation helpers ─────────────────────────────────────────── */
+  const goToStep = useCallback(
+    (nextStep: number, direction: "forward" | "backward") => {
+      setSlideDirection(direction);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setStep(nextStep);
+        setIsTransitioning(false);
+      }, 180);
+    },
+    [],
+  );
 
-  const goToStep = useCallback((nextStep: number, direction: 'forward' | 'backward') => {
-    setSlideDirection(direction);
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setStep(nextStep);
-      setIsTransitioning(false);
-    }, 200);
-  }, []);
-
-  const handleContinue = useCallback(() => {
-    if (step < TOTAL_QUIZ_STEPS - 1) {
-      goToStep(step + 1, 'forward');
-    } else {
-      // Quiz complete, show offer
-      goToStep(4, 'forward');
-    }
-  }, [step, goToStep]);
-
-  const handleBack = useCallback(() => {
-    if (step > 0) {
-      goToStep(step - 1, 'backward');
-    }
-  }, [step, goToStep]);
-
-  const handleSkip = useCallback(() => {
-    try {
-      localStorage.setItem(LS_DONE_KEY, 'true');
-    } catch { /* localStorage unavailable */ }
-    router.push('/ai-thumbnails');
-  }, [router]);
-
-  const handleClaimOffer = useCallback(() => {
-    try {
-      localStorage.setItem(LS_DONE_KEY, 'true');
-    } catch { /* localStorage unavailable */ }
-    router.push('/billing?plan=PRO&promo=WELCOME50');
-  }, [router]);
-
-  const handleSkipOffer = useCallback(() => {
-    try {
-      localStorage.setItem(LS_DONE_KEY, 'true');
-    } catch { /* localStorage unavailable */ }
-    router.push('/ai-thumbnails');
-  }, [router]);
-
-  /* ── Check if current step has a valid answer ───────────────────── */
-
-  const canContinue = (): boolean => {
+  const canContinue = useCallback((): boolean => {
     switch (step) {
       case 0: return !!answers.usage;
       case 1: return !!answers.goal;
@@ -200,612 +135,532 @@ export default function OnboardingPage() {
       case 3: return !!answers.tools && answers.tools.length > 0;
       default: return true;
     }
-  };
+  }, [step, answers]);
 
-  /* ── Progress bar width ─────────────────────────────────────────── */
+  const handleContinue = useCallback(() => {
+    if (!canContinue()) return;
+    if (step < TOTAL_QUIZ_STEPS - 1) goToStep(step + 1, "forward");
+    else if (step === TOTAL_QUIZ_STEPS - 1) goToStep(4, "forward");
+  }, [canContinue, step, goToStep]);
 
-  const progressWidth = step <= 3 ? ((step + 1) / TOTAL_QUIZ_STEPS) * 100 : 100;
+  const handleBack = useCallback(() => {
+    if (step > 0) goToStep(step - 1, "backward");
+  }, [step, goToStep]);
 
-  /* ── Shared styles ──────────────────────────────────────────────── */
+  const handleSkip = useCallback(() => {
+    try { localStorage.setItem(LS_DONE_KEY, "true"); } catch {}
+    router.replace("/ai-thumbnails");
+  }, [router]);
 
-  const cardStyle = (selected: boolean): React.CSSProperties => ({
-    background: selected ? ACCENT_BG : CARD_BG,
-    border: `1.5px solid ${selected ? ACCENT : CARD_BORDER}`,
-    borderRadius: 16,
-    padding: '24px 20px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    position: 'relative',
-    textAlign: 'left',
-  });
+  const handleClaimOffer = useCallback(() => {
+    try { localStorage.setItem(LS_DONE_KEY, "true"); } catch {}
+    router.replace("/billing?plan=pro");
+  }, [router]);
 
-  const pillStyle = (selected: boolean): React.CSSProperties => ({
-    background: selected ? ACCENT_BG : CARD_BG,
-    border: `1.5px solid ${selected ? ACCENT : CARD_BORDER}`,
-    borderRadius: 50,
-    padding: '14px 28px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: 500,
-    color: selected ? TEXT : SUB,
-    fontFamily: 'inherit',
-  });
+  const handleSkipOffer = useCallback(() => {
+    try { localStorage.setItem(LS_DONE_KEY, "true"); } catch {}
+    router.replace("/ai-thumbnails");
+  }, [router]);
 
-  const continueBtn: React.CSSProperties = {
-    width: '100%',
-    height: 48,
-    borderRadius: 12,
-    border: 'none',
-    background: canContinue()
-      ? `linear-gradient(135deg, ${ACCENT}, #8b5cf6)`
-      : 'rgba(255,255,255,0.06)',
-    color: canContinue() ? '#fff' : 'rgba(255,255,255,0.2)',
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: canContinue() ? 'pointer' : 'default',
-    fontFamily: 'inherit',
-    transition: 'all 0.2s ease',
-    marginTop: 32,
-  };
+  const progressPct = step <= 3 ? ((step + 1) / TOTAL_QUIZ_STEPS) * 100 : 100;
+  const isQuizStep = step <= 3;
 
-  /* ── Slide animation style ──────────────────────────────────────── */
-
-  const slideStyle: React.CSSProperties = {
-    opacity: isTransitioning ? 0 : 1,
-    transform: isTransitioning
-      ? `translateX(${slideDirection === 'forward' ? '30px' : '-30px'})`
-      : 'translateX(0)',
-    transition: 'all 0.2s ease',
-  };
-
-  /* ── Step Renderers ─────────────────────────────────────────────── */
-
-  const renderStep1 = () => (
-    <div style={slideStyle}>
-      <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-        How do you plan to use TubeForge?
-      </h1>
-      <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
-        This helps us personalize your experience
-      </p>
-
-      <div className="tf-onboarding-quiz-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {/* Personal use */}
-        <button
-          type="button"
-          style={cardStyle(answers.usage === 'personal')}
-          onClick={() => setAnswers((a) => ({ ...a, usage: 'personal' }))}
-        >
-          <div style={{ position: 'absolute', top: 16, right: 16 }}>
-            <RadioIcon selected={answers.usage === 'personal'} />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <SparkleIcon />
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
-            For personal use
-          </div>
-          <div style={{ fontSize: 14, color: SUB, lineHeight: 1.5 }}>
-            For individual creators who want to grow their YouTube channel
-          </div>
-        </button>
-
-        {/* Team */}
-        <button
-          type="button"
-          style={cardStyle(answers.usage === 'team')}
-          onClick={() => setAnswers((a) => ({ ...a, usage: 'team' }))}
-        >
-          <div style={{ position: 'absolute', top: 16, right: 16 }}>
-            <RadioIcon selected={answers.usage === 'team'} />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <PeopleIcon />
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
-            With my team
-          </div>
-          <div style={{ fontSize: 14, color: SUB, lineHeight: 1.5 }}>
-            For agencies and teams who collaborate on content at scale
-          </div>
-        </button>
-      </div>
-
-      <button
-        type="button"
-        style={continueBtn}
-        disabled={!canContinue()}
-        onClick={handleContinue}
-      >
-        Continue
-      </button>
-    </div>
+  /* ── Slide transition helpers ─────────────────────── */
+  const slideClass = cls(
+    "transition-all duration-200",
+    isTransitioning && (slideDirection === "forward" ? "opacity-0 translate-x-8" : "opacity-0 -translate-x-8"),
   );
 
-  const renderStep2 = () => {
-    const goals = [
-      { id: 'grow', label: 'Grow my channel', desc: 'Get more views, subscribers, and engagement' },
-      { id: 'save-time', label: 'Save time on editing', desc: 'Speed up video creation with AI tools' },
-      { id: 'thumbnails', label: 'Create better thumbnails', desc: 'Design click-worthy thumbnails that convert' },
-      { id: 'seo', label: 'Optimize SEO', desc: 'Rank higher in YouTube search results' },
-    ];
+  return (
+    <div className="relative flex min-h-dvh flex-col bg-[#0a0a0a] text-white">
+      {/* Decorative gradient backdrop */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-50"
+        style={{
+          background:
+            "radial-gradient(ellipse at top, rgba(99,102,241,0.18) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(168,85,247,0.10) 0%, transparent 60%)",
+        }}
+      />
 
-    return (
-      <div style={slideStyle}>
-        <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+      {/* ── Top bar: progress + skip ─────────────────────── */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-5 sm:px-10 sm:py-6">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 shadow-lg shadow-brand-500/30">
+            <span className="text-[12px] font-black text-white">TF</span>
+          </div>
+          <span className="text-[14px] font-bold tracking-tight">TubeForge</span>
+        </div>
+        {isQuizStep && (
+          <button
+            onClick={handleSkip}
+            className="text-[13px] font-medium text-white/40 transition-colors hover:text-white/70"
+          >
+            Skip onboarding
+          </button>
+        )}
+      </header>
+
+      {/* ── Progress bar ─────────────────────────────────── */}
+      {isQuizStep && (
+        <div className="relative z-10 mx-auto -mt-2 w-full max-w-2xl px-6 sm:px-10">
+          <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/50">
+            <span>Step {step + 1} of {TOTAL_QUIZ_STEPS}</span>
+            <span className="font-mono">{Math.round(progressPct)}%</span>
+          </div>
+          <div className="h-1 overflow-hidden rounded-full bg-white/8">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 via-violet-500 to-fuchsia-500 transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Main content ─────────────────────────────────── */}
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-2xl">
+          {step === 0 && (
+            <Step1Usage
+              value={answers.usage}
+              onChange={(v) => setAnswers((a) => ({ ...a, usage: v }))}
+              slideClass={slideClass}
+            />
+          )}
+          {step === 1 && (
+            <Step2Goal
+              value={answers.goal}
+              onChange={(v) => setAnswers((a) => ({ ...a, goal: v }))}
+              slideClass={slideClass}
+            />
+          )}
+          {step === 2 && (
+            <Step3Frequency
+              value={answers.frequency}
+              onChange={(v) => setAnswers((a) => ({ ...a, frequency: v }))}
+              slideClass={slideClass}
+            />
+          )}
+          {step === 3 && (
+            <Step4Tools
+              value={answers.tools ?? []}
+              onChange={(tools) => setAnswers((a) => ({ ...a, tools }))}
+              slideClass={slideClass}
+            />
+          )}
+          {step === 4 && (
+            <OfferStep
+              countdown={countdown}
+              onClaim={handleClaimOffer}
+              onSkip={handleSkipOffer}
+              slideClass={slideClass}
+            />
+          )}
+
+          {/* ── Navigation ────────────────────────────── */}
+          {isQuizStep && (
+            <div className="mt-8 flex items-center justify-between gap-3">
+              {step > 0 ? (
+                <button
+                  onClick={handleBack}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-[13px] font-semibold text-white/80 transition-colors hover:border-white/20 hover:bg-white/10"
+                >
+                  <ArrowLeft className="size-4" />
+                  Back
+                </button>
+              ) : (
+                <span />
+              )}
+              <button
+                onClick={handleContinue}
+                disabled={!canContinue()}
+                className={cls(
+                  "inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl px-6 text-[14px] font-bold transition-all sm:max-w-xs",
+                  canContinue()
+                    ? "bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-lg shadow-brand-500/30 hover:scale-[1.02]"
+                    : "cursor-not-allowed bg-white/5 text-white/30",
+                )}
+              >
+                {step === 3 ? "See my results" : "Continue"}
+                <ArrowRight className="size-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────
+   STEP 1: Usage
+   ──────────────────────────────────────────────────────── */
+function Step1Usage({
+  value,
+  onChange,
+  slideClass,
+}: {
+  value?: string;
+  onChange: (v: string) => void;
+  slideClass: string;
+}) {
+  const opts = [
+    { id: "personal", title: "For personal use", desc: "Solo creators growing their channel", Icon: Sparkles, gradient: "from-violet-500 to-fuchsia-500" },
+    { id: "team", title: "With my team", desc: "Agencies & teams collaborating at scale", Icon: UsersIcon, gradient: "from-blue-500 to-cyan-500" },
+  ];
+  return (
+    <div className={slideClass}>
+      <div className="text-center">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white/70">
+          <Sparkles className="size-3" />
+          Welcome
+        </div>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+          How do you plan to use TubeForge?
+        </h1>
+        <p className="mt-2 text-[14px] text-white/55 sm:text-base">
+          We&apos;ll personalize your experience.
+        </p>
+      </div>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        {opts.map((opt) => {
+          const Icon = opt.Icon;
+          const selected = value === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onChange(opt.id)}
+              className={cls(
+                "group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200",
+                selected
+                  ? "border-brand-500 bg-gradient-to-br from-brand-500/10 to-violet-500/10 shadow-md shadow-brand-500/20"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]",
+              )}
+            >
+              <div className={cls(
+                "flex size-11 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg",
+                opt.gradient,
+                selected ? "shadow-brand-500/30" : "shadow-black/30",
+              )}>
+                <Icon className="size-5 text-white" />
+              </div>
+              <h3 className="mt-3 text-[16px] font-bold">{opt.title}</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-white/55">{opt.desc}</p>
+              {selected && (
+                <span className="absolute top-3 right-3 flex size-5 items-center justify-center rounded-full bg-brand-500">
+                  <Check className="size-3 text-white" />
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────
+   STEP 2: Goal
+   ──────────────────────────────────────────────────────── */
+function Step2Goal({
+  value,
+  onChange,
+  slideClass,
+}: {
+  value?: string;
+  onChange: (v: string) => void;
+  slideClass: string;
+}) {
+  const goals = [
+    { id: "grow", title: "Grow my channel", desc: "More views, subs, engagement", Icon: TrendingUp, gradient: "from-emerald-500 to-cyan-500" },
+    { id: "save-time", title: "Save time on editing", desc: "AI tools speed up creation", Icon: ClockIcon, gradient: "from-amber-500 to-orange-500" },
+    { id: "thumbnails", title: "Better thumbnails", desc: "Click-worthy designs that convert", Icon: ImageIcon, gradient: "from-pink-500 to-rose-500" },
+    { id: "seo", title: "Optimize SEO", desc: "Rank higher in YouTube search", Icon: Search, gradient: "from-blue-500 to-indigo-500" },
+  ];
+  return (
+    <div className={slideClass}>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           What&apos;s your main goal?
         </h1>
-        <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
-          We&apos;ll tailor your dashboard and recommendations
+        <p className="mt-2 text-[14px] text-white/55 sm:text-base">
+          Pick one — you can change later.
         </p>
-
-        <div className="tf-onboarding-quiz-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {goals.map((g) => (
+      </div>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        {goals.map((g) => {
+          const Icon = g.Icon;
+          const selected = value === g.id;
+          return (
             <button
               key={g.id}
               type="button"
-              style={cardStyle(answers.goal === g.id)}
-              onClick={() => setAnswers((a) => ({ ...a, goal: g.id }))}
+              onClick={() => onChange(g.id)}
+              className={cls(
+                "group relative overflow-hidden rounded-2xl border p-5 text-left transition-all",
+                selected
+                  ? "border-brand-500 bg-gradient-to-br from-brand-500/10 to-violet-500/10 shadow-md shadow-brand-500/20"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]",
+              )}
             >
-              <div style={{ position: 'absolute', top: 16, right: 16 }}>
-                <RadioIcon selected={answers.goal === g.id} />
+              <div className={cls("flex size-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg shadow-black/30", g.gradient)}>
+                <Icon className="size-5 text-white" />
               </div>
-              <div style={{ fontSize: 17, fontWeight: 600, color: TEXT, marginBottom: 6 }}>
-                {g.label}
-              </div>
-              <div style={{ fontSize: 14, color: SUB, lineHeight: 1.5 }}>
-                {g.desc}
-              </div>
+              <h3 className="mt-3 text-[15px] font-bold">{g.title}</h3>
+              <p className="mt-1 text-[12px] leading-relaxed text-white/55">{g.desc}</p>
+              {selected && (
+                <span className="absolute top-3 right-3 flex size-5 items-center justify-center rounded-full bg-brand-500">
+                  <Check className="size-3 text-white" />
+                </span>
+              )}
             </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          style={continueBtn}
-          disabled={!canContinue()}
-          onClick={handleContinue}
-        >
-          Continue
-        </button>
+          );
+        })}
       </div>
-    );
-  };
+    </div>
+  );
+}
 
-  const renderStep3 = () => {
-    const frequencies = [
-      { id: '1-2', label: '1-2 videos' },
-      { id: '3-5', label: '3-5 videos' },
-      { id: '6-10', label: '6-10 videos' },
-      { id: '10+', label: '10+ videos' },
-    ];
-
-    return (
-      <div style={slideStyle}>
-        <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-          How many videos do you publish per month?
+/* ────────────────────────────────────────────────────────
+   STEP 3: Frequency
+   ──────────────────────────────────────────────────────── */
+function Step3Frequency({
+  value,
+  onChange,
+  slideClass,
+}: {
+  value?: string;
+  onChange: (v: string) => void;
+  slideClass: string;
+}) {
+  const freqs = [
+    { id: "1-2", label: "1–2 videos", subtitle: "Just starting" },
+    { id: "3-5", label: "3–5 videos", subtitle: "Regular creator" },
+    { id: "6-10", label: "6–10 videos", subtitle: "Power user" },
+    { id: "10+", label: "10+ videos", subtitle: "Pro production" },
+  ];
+  return (
+    <div className={slideClass}>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          How many videos per month?
         </h1>
-        <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
-          This helps us recommend the right plan for you
+        <p className="mt-2 text-[14px] text-white/55 sm:text-base">
+          We&apos;ll recommend the right plan.
         </p>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-          {frequencies.map((f) => (
+      </div>
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {freqs.map((f) => {
+          const selected = value === f.id;
+          return (
             <button
               key={f.id}
               type="button"
-              style={pillStyle(answers.frequency === f.id)}
-              onClick={() => setAnswers((a) => ({ ...a, frequency: f.id }))}
+              onClick={() => onChange(f.id)}
+              className={cls(
+                "relative rounded-2xl border px-4 py-5 text-center transition-all",
+                selected
+                  ? "border-brand-500 bg-gradient-to-br from-brand-500/15 to-violet-500/10 shadow-md shadow-brand-500/20"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]",
+              )}
             >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          style={continueBtn}
-          disabled={!canContinue()}
-          onClick={handleContinue}
-        >
-          Continue
-        </button>
-      </div>
-    );
-  };
-
-  const renderStep4 = () => {
-    const tools = [
-      { id: 'vidiq', label: 'vidIQ' },
-      { id: 'tubebuddy', label: 'TubeBuddy' },
-      { id: 'canva', label: 'Canva' },
-      { id: 'capcut', label: 'CapCut' },
-      { id: 'invideo', label: 'InVideo' },
-      { id: 'none', label: "None — I'm new!" },
-    ];
-
-    const selectedTools = answers.tools ?? [];
-
-    const toggleTool = (id: string) => {
-      setAnswers((a) => {
-        const current = a.tools ?? [];
-        if (id === 'none') {
-          // Selecting "None" clears all others
-          return { ...a, tools: current.includes('none') ? [] : ['none'] };
-        }
-        // Selecting a tool removes "None"
-        const withoutNone = current.filter((t) => t !== 'none');
-        if (withoutNone.includes(id)) {
-          return { ...a, tools: withoutNone.filter((t) => t !== id) };
-        }
-        return { ...a, tools: [...withoutNone, id] };
-      });
-    };
-
-    return (
-      <div style={slideStyle}>
-        <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-          What tools have you tried before?
-        </h1>
-        <p style={{ fontSize: 16, color: SUB, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.5 }}>
-          Select all that apply
-        </p>
-
-        <div className="tf-onboarding-tools-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          {tools.map((t) => {
-            const isSelected = selectedTools.includes(t.id);
-            return (
-              <button
-                key={t.id}
-                type="button"
-                style={{
-                  ...cardStyle(isSelected),
-                  padding: '16px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
-                onClick={() => toggleTool(t.id)}
-              >
-                <CheckboxIcon checked={isSelected} />
-                <span style={{ fontSize: 15, fontWeight: 500, color: isSelected ? TEXT : SUB }}>
-                  {t.label}
+              <div className={cls(
+                "font-mono text-2xl font-bold sm:text-3xl",
+                selected ? "text-white" : "text-white/85",
+              )}>
+                {f.label.split(" ")[0]}
+              </div>
+              <div className="mt-1 text-[11px] text-white/55">{f.subtitle}</div>
+              {selected && (
+                <span className="absolute top-2 right-2 flex size-4 items-center justify-center rounded-full bg-brand-500">
+                  <Check className="size-2.5 text-white" />
                 </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <button
-          type="button"
-          style={continueBtn}
-          disabled={!canContinue()}
-          onClick={handleContinue}
-        >
-          See my results
-        </button>
+              )}
+            </button>
+          );
+        })}
       </div>
-    );
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────
+   STEP 4: Tools
+   ──────────────────────────────────────────────────────── */
+function Step4Tools({
+  value,
+  onChange,
+  slideClass,
+}: {
+  value: string[];
+  onChange: (tools: string[]) => void;
+  slideClass: string;
+}) {
+  const tools = [
+    { id: "vidiq", label: "vidIQ" },
+    { id: "tubebuddy", label: "TubeBuddy" },
+    { id: "canva", label: "Canva" },
+    { id: "capcut", label: "CapCut" },
+    { id: "invideo", label: "InVideo" },
+    { id: "none", label: "None — I'm new!" },
+  ];
+  const toggleTool = (id: string) => {
+    if (id === "none") {
+      onChange(value.includes("none") ? [] : ["none"]);
+      return;
+    }
+    const withoutNone = value.filter((t) => t !== "none");
+    if (withoutNone.includes(id)) onChange(withoutNone.filter((t) => t !== id));
+    else onChange([...withoutNone, id]);
   };
-
-  /* ── Offer Page ─────────────────────────────────────────────────── */
-
-  const renderOffer = () => (
-    <div style={{ ...slideStyle, textAlign: 'center' }}>
-      {/* Celebration */}
-      <div style={{ fontSize: 56, marginBottom: 16 }} role="img" aria-label="celebration">
-        {'\uD83C\uDF89'}
+  return (
+    <div className={slideClass}>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          What tools have you tried?
+        </h1>
+        <p className="mt-2 text-[14px] text-white/55 sm:text-base">
+          Select all that apply — we&apos;ll show how TubeForge compares.
+        </p>
       </div>
-      <h1 className="tf-onboarding-heading" style={{ fontSize: 40, fontWeight: 700, color: TEXT, margin: '0 0 8px', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+      <div className="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {tools.map((tool) => {
+          const selected = value.includes(tool.id);
+          return (
+            <button
+              key={tool.id}
+              type="button"
+              onClick={() => toggleTool(tool.id)}
+              className={cls(
+                "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all",
+                selected
+                  ? "border-brand-500 bg-gradient-to-br from-brand-500/10 to-violet-500/10 shadow-sm shadow-brand-500/15"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]",
+              )}
+            >
+              <ToolMark id={tool.id} selected={selected} />
+              <span className="flex-1 text-[14px] font-semibold">{tool.label}</span>
+              <span
+                className={cls(
+                  "flex size-5 items-center justify-center rounded-md border-2 transition-colors",
+                  selected ? "border-brand-500 bg-brand-500" : "border-white/15 bg-transparent",
+                )}
+              >
+                {selected && <Check className="size-3 text-white" />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────
+   STEP 5: Offer
+   ──────────────────────────────────────────────────────── */
+function OfferStep({
+  countdown,
+  onClaim,
+  onSkip,
+  slideClass,
+}: {
+  countdown: number;
+  onClaim: () => void;
+  onSkip: () => void;
+  slideClass: string;
+}) {
+  const expired = countdown <= 0;
+  return (
+    <div className={cls(slideClass, "text-center")}>
+      <div className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-xl shadow-amber-500/30">
+        <PartyPopper className="size-7 text-white" />
+      </div>
+      <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
         Welcome to TubeForge!
       </h1>
-      <p style={{ fontSize: 16, color: SUB, margin: '0 0 32px', lineHeight: 1.5 }}>
-        Based on your answers, <strong style={{ color: TEXT }}>Pro plan</strong> is perfect for you
+      <p className="mt-2 text-[14px] text-white/60 sm:text-base">
+        Based on your answers,{" "}
+        <strong className="text-white">Pro plan</strong> is perfect for you.
       </p>
 
       {/* Offer card */}
-      <div
-        className="tf-onboarding-offer-card"
-        style={{
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))',
-          border: `1.5px solid ${ACCENT}`,
-          borderRadius: 20,
-          padding: '36px 32px',
-          maxWidth: 420,
-          margin: '0 auto 32px',
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            background: 'rgba(99,102,241,0.15)',
-            borderRadius: 50,
-            padding: '6px 16px',
-            fontSize: 13,
-            fontWeight: 700,
-            color: ACCENT,
-            letterSpacing: '0.05em',
-            marginBottom: 20,
-          }}
-        >
-          SPECIAL OFFER
+      <div className="mx-auto mt-8 max-w-md overflow-hidden rounded-3xl border-2 border-brand-500 bg-gradient-to-br from-brand-500/15 to-violet-500/10 p-6 shadow-2xl shadow-brand-500/30 sm:p-8">
+        {/* SPECIAL OFFER chip */}
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-400">
+          <Crown className="size-3" />
+          Limited offer
         </div>
 
-        <div style={{ fontSize: 22, fontWeight: 700, color: TEXT, marginBottom: 4 }}>
+        <div className="mt-4 text-[18px] font-bold sm:text-[20px]">
           50% off your first month
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
-          <span style={{ fontSize: 28, color: DIM, textDecoration: 'line-through', fontWeight: 500 }}>
-            $12
-          </span>
-          <span style={{ fontSize: 48, fontWeight: 800, color: TEXT, letterSpacing: '-0.03em' }}>
-            $6
-          </span>
-          <span style={{ fontSize: 16, color: SUB, alignSelf: 'flex-end', paddingBottom: 8 }}>
-            /month
-          </span>
+        <div className="mt-3 flex items-baseline justify-center gap-2">
+          <span className="font-mono text-2xl text-white/40 line-through">$12</span>
+          <span className="font-mono text-5xl font-black tracking-tight">$6</span>
+          <span className="text-[15px] text-white/60">/mo</span>
         </div>
 
-        <div style={{ fontSize: 15, color: SUB, marginBottom: 24 }}>
-          Save $6 today
+        <div className="mt-1 text-[13px] text-white/55">
+          Save $6 today. Cancel anytime.
         </div>
 
         {/* Countdown */}
-        {countdown > 0 && (
-          <div
-            className="tf-onboarding-countdown"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'rgba(255,255,255,0.06)',
-              borderRadius: 50,
-              padding: '8px 20px',
-              marginBottom: 24,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="7" stroke={SUB} strokeWidth="1.2" />
-              <path d="M8 4v4.5l3 1.5" stroke={SUB} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span style={{ fontSize: 14, color: SUB, fontWeight: 500 }}>
-              Offer expires in{' '}
-              <span style={{ color: TEXT, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-[13px]">
+          <ClockIcon className="size-3.5 text-white/60" />
+          {expired ? (
+            <span className="font-semibold text-rose-400">Offer expired</span>
+          ) : (
+            <>
+              <span className="text-white/60">Offer expires in</span>
+              <span className="font-mono font-bold text-white">
                 {formatCountdown(countdown)}
               </span>
-            </span>
-          </div>
-        )}
+            </>
+          )}
+        </div>
 
-        {countdown <= 0 && (
-          <div style={{ fontSize: 14, color: 'rgba(255,100,100,0.8)', marginBottom: 24 }}>
-            Offer expired
-          </div>
-        )}
+        {/* Features */}
+        <ul className="mt-5 space-y-2 text-left">
+          {[
+            "Unlimited AI thumbnails",
+            "Priority video generation",
+            "Advanced metadata + SEO",
+            "Premium support",
+          ].map((f) => (
+            <li key={f} className="flex items-start gap-2.5">
+              <Check className="mt-0.5 size-4 shrink-0 text-emerald-400" />
+              <span className="text-[13px] text-white/85">{f}</span>
+            </li>
+          ))}
+        </ul>
 
         <button
           type="button"
-          className="tf-onboarding-offer-cta"
-          onClick={handleClaimOffer}
-          disabled={countdown <= 0}
-          style={{
-            width: '100%',
-            height: 52,
-            borderRadius: 12,
-            border: 'none',
-            background: countdown > 0
-              ? `linear-gradient(135deg, ${ACCENT}, #8b5cf6)`
-              : 'rgba(255,255,255,0.06)',
-            color: countdown > 0 ? '#fff' : 'rgba(255,255,255,0.2)',
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: countdown > 0 ? 'pointer' : 'default',
-            fontFamily: 'inherit',
-            transition: 'all 0.2s ease',
-            boxShadow: countdown > 0 ? `0 4px 24px rgba(99,102,241,0.35)` : 'none',
-          }}
+          onClick={onClaim}
+          disabled={expired}
+          className={cls(
+            "mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-bold transition-all",
+            expired
+              ? "cursor-not-allowed bg-white/5 text-white/30"
+              : "bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-lg shadow-brand-500/30 hover:scale-[1.02]",
+          )}
         >
-          Claim 50% Off{countdown > 0 ? ' \u2192' : ''}
+          <Rocket className="size-4" />
+          {expired ? "Offer expired" : "Claim 50% off"}
+          {!expired && <ArrowRight className="size-4" />}
         </button>
       </div>
 
-      {/* Skip link */}
       <button
         type="button"
-        className="tf-onboarding-offer-skip"
-        onClick={handleSkipOffer}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: DIM,
-          fontSize: 14,
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          padding: '8px 16px',
-        }}
+        onClick={onSkip}
+        className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-white/40 transition-colors hover:text-white/70"
       >
-        Skip for now{' \u2192'}
+        Skip for now
+        <ArrowRight className="size-3.5" />
       </button>
-    </div>
-  );
-
-  /* ── Main Render ────────────────────────────────────────────────── */
-
-  const quizSteps = [renderStep1, renderStep2, renderStep3, renderStep4];
-  const isQuizStep = step <= 3;
-
-  return (
-    <div
-      ref={containerRef}
-      className="tf-onboarding-container"
-      style={{
-        minHeight: '100vh',
-        background: BG,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Instrument Sans', 'Helvetica Neue', sans-serif",
-        padding: '40px 20px',
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Progress bar at top */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: 'rgba(255,255,255,0.04)',
-          zIndex: 100,
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            width: `${progressWidth}%`,
-            background: `linear-gradient(90deg, ${ACCENT}, #8b5cf6)`,
-            transition: 'width 0.4s ease',
-            borderRadius: '0 2px 2px 0',
-          }}
-        />
-      </div>
-
-      {/* Logo */}
-      <div
-        className="tf-onboarding-logo"
-        style={{
-          position: 'fixed',
-          top: 24,
-          left: 28,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          zIndex: 100,
-        }}
-      >
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            background: ACCENT,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M8 5v14l11-7L8 5z" fill="#fff" />
-          </svg>
-        </div>
-        <span style={{ fontWeight: 700, fontSize: 16, color: TEXT, letterSpacing: '-0.02em' }}>
-          TubeForge
-        </span>
-      </div>
-
-      {/* Skip button (quiz steps only) */}
-      {isQuizStep && (
-        <button
-          type="button"
-          onClick={handleSkip}
-          className="tf-onboarding-skip"
-          style={{
-            position: 'fixed',
-            top: 28,
-            right: 28,
-            background: 'none',
-            border: 'none',
-            color: DIM,
-            fontSize: 14,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            zIndex: 100,
-            padding: '4px 8px',
-          }}
-        >
-          Skip
-        </button>
-      )}
-
-      {/* Content area */}
-      <div style={{ width: '100%', maxWidth: 640, margin: '0 auto' }}>
-        {isQuizStep ? quizSteps[step]() : renderOffer()}
-      </div>
-
-      {/* Step dots + back button (quiz steps only) */}
-      {isQuizStep && (
-        <div
-          className="tf-onboarding-dots"
-          style={{
-            position: 'fixed',
-            bottom: 32,
-            left: 0,
-            right: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 16,
-            zIndex: 100,
-          }}
-        >
-          {/* Back arrow */}
-          {step > 0 && (
-            <button
-              type="button"
-              onClick={handleBack}
-              className="tf-onboarding-back-btn"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 8,
-                width: 32,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: SUB,
-                position: 'absolute',
-                left: 28,
-              }}
-              aria-label="Go back"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M10 4L6 8L10 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          )}
-
-          {/* Dots */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            {Array.from({ length: TOTAL_QUIZ_STEPS }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: i === step ? 24 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: i === step
-                    ? ACCENT
-                    : i < step
-                      ? 'rgba(99,102,241,0.4)'
-                      : 'rgba(255,255,255,0.08)',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
