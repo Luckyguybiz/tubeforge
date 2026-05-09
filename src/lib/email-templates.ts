@@ -109,7 +109,7 @@ function welcomeTemplate(data: TemplateData): TemplateResult {
         <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
           <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
             <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
-            <span class="text-primary" style="color:#333;font-size:15px;">Analyze YouTube videos with SEO scores and metrics</span>
+            <span class="text-primary" style="color:#333;font-size:15px;">Look up YouTube videos — public info, stats, and tags</span>
           </td></tr>
           <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
             <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>
@@ -137,7 +137,7 @@ function welcomeTemplate(data: TemplateData): TemplateResult {
       <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
         <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
           <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">1</span>
-          <span class="text-primary" style="color:#333;font-size:15px;">Analyze YouTube videos with SEO scores and metrics</span>
+          <span class="text-primary" style="color:#333;font-size:15px;">Look up YouTube videos — public info, stats, and tags</span>
         </td></tr>
         <tr><td style="padding:12px 0;border-bottom:1px solid #eee;">
           <span style="display:inline-block;width:28px;height:28px;background:#6c5ce7;color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;margin-right:12px;">2</span>

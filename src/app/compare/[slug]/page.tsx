@@ -35,7 +35,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     features: [
       { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u2705 Yes' },
       { name: 'Multi-language support', tubeforge: '\u2705 Full support', competitor: '\u26A0\uFE0F Partial' },
-      { name: 'YouTube integration', tubeforge: '\u2705 Publishing + analytics', competitor: '\u26A0\uFE0F Export only' },
+      { name: 'YouTube integration', tubeforge: '\u2705 Publishing + channel dashboard', competitor: '\u26A0\uFE0F Export only' },
       { name: 'SEO optimization', tubeforge: '\u2705 Built-in AI SEO', competitor: '\u274C No' },
       { name: 'Free tools', tubeforge: '\u2705 6+ tools', competitor: '\u274C No' },
       { name: 'Team collaboration', tubeforge: '\u2705 Studio plan', competitor: '\u2705 Business plan' },
@@ -54,7 +54,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'InVideo supports direct export to more social platforms',
     ],
     faq: [
-      { q: 'Is TubeForge better than InVideo for YouTube?', a: 'TubeForge is purpose-built for YouTube creators with native SEO tools, YouTube analytics, and direct publishing. InVideo is a general video creation platform without YouTube-specific optimizations.' },
+      { q: 'Is TubeForge better than InVideo for YouTube?', a: 'TubeForge is purpose-built for YouTube creators with native SEO helpers, your own channel dashboard, and direct publishing. InVideo is a general video creation platform without YouTube-specific optimizations.' },
       { q: 'Does TubeForge have a free plan?', a: 'Yes, TubeForge offers a free plan with 3 projects, 5 AI generations per month, and 500 MB storage. InVideo starts at $25/mo for full features.' },
       { q: 'Can I switch from InVideo to TubeForge?', a: 'Yes. TubeForge supports importing your existing video projects and provides free tools to help you optimize your YouTube content during the transition.' },
     ],
@@ -64,7 +64,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     description: 'Comparison of TubeForge and CapCut — platforms for video content creation.',
     features: [
       { name: 'AI scene generation', tubeforge: '\u2705 Yes', competitor: '\u26A0\uFE0F Limited' },
-      { name: 'YouTube optimization', tubeforge: '\u2705 SEO + analytics', competitor: '\u274C No' },
+      { name: 'YouTube SEO helpers', tubeforge: '\u2705 SEO + channel dashboard', competitor: '\u274C No' },
       { name: 'Cloud editor', tubeforge: '\u2705 Web app', competitor: '\u2705 Web + mobile' },
       { name: 'Video downloads', tubeforge: '\u2705 YouTube, TikTok, etc.', competitor: '\u274C No' },
       { name: 'AI thumbnails', tubeforge: '\u2705 Yes', competitor: '\u26A0\uFE0F Limited' },
@@ -72,7 +72,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     ],
     pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $0/mo (Free)' },
     advantages: [
-      'YouTube specialization — SEO, analytics, publishing',
+      'YouTube specialization — SEO helpers and publishing',
       'AI generation of full videos from descriptions',
       'Built-in video downloader',
       'Referral program with 20% commission',
@@ -83,9 +83,9 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'CapCut is more popular for TikTok content creation',
     ],
     faq: [
-      { q: 'Is TubeForge better than CapCut for YouTube?', a: 'TubeForge is specifically designed for YouTube with built-in SEO, analytics, and publishing tools. CapCut is a general video editor that works well for short-form content but lacks YouTube-specific features.' },
+      { q: 'Is TubeForge better than CapCut for YouTube?', a: 'TubeForge is specifically designed for YouTube with built-in SEO helpers, channel dashboard for your channel, and publishing tools. CapCut is a general video editor that works well for short-form content but lacks YouTube-specific features.' },
       { q: 'Does CapCut have YouTube SEO tools?', a: 'No. CapCut focuses on video editing only. TubeForge includes AI-powered SEO optimization for titles, descriptions, tags, and thumbnails to help your videos rank higher.' },
-      { q: 'Which is better for YouTube Shorts — TubeForge or CapCut?', a: 'Both platforms can create Shorts, but TubeForge adds YouTube-specific analytics and SEO tools that help your Shorts get discovered, while CapCut focuses purely on the editing experience.' },
+      { q: 'Which is better for YouTube Shorts — TubeForge or CapCut?', a: 'Both platforms can create Shorts, but TubeForge adds YouTube-specific SEO helpers that help your Shorts get discovered, while CapCut focuses purely on the editing experience.' },
     ],
   },
   'tubeforge-vs-pictory': {
@@ -132,7 +132,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     advantages: [
       'Focus on YouTube creators, not corporate videos',
       'Free plan to get started',
-      'Built-in SEO and analytics',
+      'Built-in SEO and own-channel dashboard',
       'Significantly cheaper for individual creators',
     ],
     considerations: [
@@ -141,7 +141,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Synthesia is better suited for training and enterprise video',
     ],
     faq: [
-      { q: 'Is TubeForge better than Synthesia?', a: 'They serve different purposes. Synthesia specializes in AI avatar-based videos for corporate training. TubeForge is built for YouTube creators with SEO, analytics, and publishing tools.' },
+      { q: 'Is TubeForge better than Synthesia?', a: 'They serve different purposes. Synthesia specializes in AI avatar-based videos for corporate training. TubeForge is built for YouTube creators with SEO helpers, and publishing tools.' },
       { q: 'Does TubeForge have AI avatars like Synthesia?', a: 'No. TubeForge focuses on AI video generation from text prompts, scene-based editing, and YouTube-specific tools rather than avatar-based presentations.' },
       { q: 'Which is more affordable — TubeForge or Synthesia?', a: 'TubeForge is significantly cheaper. It starts free and Pro is $12/mo, while Synthesia starts at $22/mo with no free plan available.' },
     ],
@@ -170,7 +170,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Fliki is better for voiceover-heavy content creation',
     ],
     faq: [
-      { q: 'Is TubeForge better than Fliki?', a: 'TubeForge offers a broader YouTube-focused toolkit including SEO, analytics, and free tools, while Fliki specializes in text-to-speech video creation. TubeForge is also more affordable with a free plan.' },
+      { q: 'Is TubeForge better than Fliki?', a: 'TubeForge offers a broader YouTube-focused toolkit including SEO helpers and free tools, while Fliki specializes in text-to-speech video creation. TubeForge is also more affordable with a free plan.' },
       { q: 'Does Fliki have YouTube SEO tools?', a: 'No. Fliki focuses on text-to-video and text-to-speech. TubeForge includes built-in AI SEO tools for titles, descriptions, tags, and thumbnails.' },
       { q: 'Which has better multi-language support?', a: 'TubeForge supports 4 languages in both its interface and AI tools. Fliki is English-only for its interface, though it supports multiple languages for text-to-speech.' },
     ],
@@ -225,7 +225,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     ],
     pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $7.50/mo' },
     advantages: [
-      'Complete video creation suite, not just analytics',
+      'Complete video creation suite, not a third-party analytics dashboard',
       'AI thumbnail generation saves hours of design work',
       'Free tools for titles, descriptions, and tags',
       'Multi-language support for global creators',
@@ -236,8 +236,8 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'vidIQ provides competitor channel tracking and benchmarking',
     ],
     faq: [
-      { q: 'Is TubeForge better than vidIQ?', a: 'TubeForge offers video creation plus SEO tools, while vidIQ focuses solely on YouTube analytics and keyword research. If you need both content creation and optimization, TubeForge is the better all-in-one choice.' },
-      { q: 'Does vidIQ offer AI video creation?', a: 'No. vidIQ is an analytics and SEO tool only. TubeForge combines AI video creation, thumbnail generation, and editing with YouTube SEO tools in one platform.' },
+      { q: 'Is TubeForge better than vidIQ?', a: 'TubeForge offers video creation plus SEO helpers, while vidIQ focuses solely on third-party analytics and keyword research. If you need both content creation and optimization, TubeForge is the better all-in-one choice.' },
+      { q: 'Does vidIQ offer AI video creation?', a: 'No. vidIQ is an analytics and SEO tool only. TubeForge combines AI video creation, thumbnail generation, and editing with SEO helpers in one platform.' },
       { q: 'Can I use TubeForge and vidIQ together?', a: 'Yes, they can complement each other. However, TubeForge already includes AI-powered SEO tools that cover most of vidIQ\'s core features, so you may not need both.' },
     ],
   },
@@ -257,7 +257,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     ],
     pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $18/mo' },
     advantages: [
-      'YouTube-specific tools — SEO, analytics, publishing',
+      'YouTube-specific tools — SEO helpers and publishing',
       'AI thumbnail generation not available in VEED',
       'Generous free plan without watermarks',
       'Purpose-built for YouTube creators, not generic video editing',
@@ -268,7 +268,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'VEED has more social media templates for non-YouTube platforms',
     ],
     faq: [
-      { q: 'Is TubeForge better than VEED for YouTube?', a: 'TubeForge is purpose-built for YouTube with SEO, analytics, and AI thumbnails. VEED is a general-purpose online video editor without YouTube-specific optimization tools.' },
+      { q: 'Is TubeForge better than VEED for YouTube?', a: 'TubeForge is purpose-built for YouTube with SEO helpers and AI thumbnails. VEED is a general-purpose online video editor without YouTube-specific optimization tools.' },
       { q: 'Does VEED have YouTube SEO tools?', a: 'No. VEED focuses on video editing, subtitles, and screen recording. TubeForge includes built-in AI SEO for titles, descriptions, tags, and thumbnails.' },
       { q: 'Which has a better free plan — TubeForge or VEED?', a: 'TubeForge offers a more generous free plan without watermarks, while VEED\'s free tier adds a watermark to all exported videos.' },
     ],
@@ -283,7 +283,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
       { name: 'YouTube SEO tools', tubeforge: '\u2705 Built-in', competitor: '\u274C No' },
       { name: 'AI thumbnails', tubeforge: '\u2705 DALL-E powered', competitor: '\u274C No' },
       { name: 'Video editing', tubeforge: '\u2705 AI editor', competitor: '\u26A0\uFE0F Trim only' },
-      { name: 'Analytics', tubeforge: '\u2705 YouTube analytics', competitor: '\u274C No' },
+      { name: 'Analytics', tubeforge: '\u2705 channel dashboard', competitor: '\u274C No' },
       { name: 'Free plan', tubeforge: '\u2705 Yes', competitor: '\u2705 Limited' },
       { name: 'Multi-language interface', tubeforge: '\u2705 4 languages', competitor: '\u274C English only' },
       { name: 'Free tools suite', tubeforge: '\u2705 6+ tools', competitor: '\u274C No' },
@@ -291,7 +291,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $15/mo' },
     advantages: [
       'Full video creation suite, not limited to clipping',
-      'YouTube SEO and analytics for channel growth',
+      'YouTube SEO helpers for channel growth',
       'AI thumbnail generation for better click-through rates',
       'Free plan with no credit card required',
     ],
@@ -301,9 +301,9 @@ const COMPARISONS: Record<string, ComparisonData> = {
       'Opus Clip supports more platforms for direct clip publishing',
     ],
     faq: [
-      { q: 'Is TubeForge better than Opus Clip?', a: 'They serve different purposes. Opus Clip excels at extracting short clips from long videos. TubeForge is a full video creation platform with AI editing, SEO, analytics, and thumbnail generation.' },
+      { q: 'Is TubeForge better than Opus Clip?', a: 'They serve different purposes. Opus Clip excels at extracting short clips from long videos. TubeForge is a full video creation platform with AI editing, SEO helpers, and thumbnail generation.' },
       { q: 'Can TubeForge extract clips like Opus Clip?', a: 'TubeForge focuses on AI video creation from scratch rather than clip extraction. If you need both creation and clipping, TubeForge covers the creation side with its full editing suite.' },
-      { q: 'Which is better for growing a YouTube channel?', a: 'TubeForge offers a more complete growth toolkit with SEO optimization, analytics, thumbnail generation, and content creation. Opus Clip helps with repurposing existing content into Shorts.' },
+      { q: 'Which is better for growing a YouTube channel?', a: 'TubeForge offers a more complete growth toolkit with SEO optimization, channel dashboard, thumbnail generation, and content creation. Opus Clip helps with repurposing existing content into Shorts.' },
     ],
   },
   'tubeforge-vs-descript': {
@@ -323,7 +323,7 @@ const COMPARISONS: Record<string, ComparisonData> = {
     ],
     pricing: { tubeforge: 'from $0/mo (Free)', competitor: 'from $24/mo' },
     advantages: [
-      'YouTube-focused with built-in SEO and analytics',
+      'YouTube-focused with built-in SEO helpers and your own channel dashboard',
       'AI thumbnail generation for higher click-through rates',
       'Free tools suite for titles, descriptions, and tags',
       'Generous free plan — Descript starts at $24/mo for full features',

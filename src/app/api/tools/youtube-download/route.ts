@@ -179,8 +179,8 @@ export async function GET(req: NextRequest) {
 /* ══════════════════════════════════════════════════════════════════════
  * POST /api/tools/youtube-download
  *
- * Video Analyzer — returns SEO scores, engagement metrics, and
- * optimization suggestions for a YouTube video.
+ * Video Inspector — returns public YouTube Data API info (title, stats,
+ * public info for a YouTube video.
  *
  * Uses YouTube Data API v3 when YOUTUBE_API_KEY is available,
  * falls back to oEmbed-only analysis otherwise.
@@ -421,7 +421,7 @@ export async function POST(req: NextRequest) {
       thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
       watchUrl: canonicalUrl,
       apiSource: 'oembed-fallback' as const,
-      note: 'Limited analysis — set YOUTUBE_API_KEY for comprehensive video analysis with engagement metrics, description analysis, and more.',
+      note: 'Limited info — set YOUTUBE_API_KEY for the full public field set (statistics, description, tags).',
     });
   } catch (err) {
     const message =

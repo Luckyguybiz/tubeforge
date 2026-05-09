@@ -118,7 +118,7 @@ export default function Page() {
               <div style={{ textAlign: "center" }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "#06b6d4", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>2</div>
                 <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>AI Generates Metadata</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Get optimized titles, a full description, relevant tags, and an SEO score.</p>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Get a polished title, full description, and relevant tags ready to paste into YouTube Studio.</p>
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "#06b6d4", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>3</div>

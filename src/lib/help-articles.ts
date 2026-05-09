@@ -36,8 +36,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     id: 'analyze-videos',
     category: 'getting-started',
-    title: 'How to analyze YouTube videos',
-    content: `Go to the "Tools" section and select YouTube Video Analyzer. Paste the video URL and click "Analyze."\n\nYou will receive an SEO title score, engagement metrics, and optimization suggestions. You can watch the video right on the page through the embedded player.`,
+    title: 'How to look up a YouTube video',
+    content: `Go to the "Tools" section and select Video Inspector. Paste the video URL and click "Analyze."\n\nYou will see public video info: title, channel, stats, description, tags, and thumbnail. You can watch the video right on the page through the embedded player.`,
   },
 
   /* ── Billing ─────────────────────────────────────── */

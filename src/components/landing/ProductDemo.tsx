@@ -196,63 +196,6 @@ function SeoMockup() {
   );
 }
 
-function AnalyticsMockup() {
-  const barHeights = [45, 62, 38, 78, 55, 90, 72, 85, 60, 48, 95, 68];
-  const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return (
-    <div style={{ width: '100%', height: '100%', background: '#0e0e14', borderRadius: 14, overflow: 'hidden', padding: 20, display: 'flex', flexDirection: 'column' }}>
-      {/* Top stats row */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        {[
-          { label: 'Views', value: '12.4K', change: '+14%', color: '#22c55e' },
-          { label: 'Subs', value: '892', change: '+8%', color: '#22c55e' },
-          { label: 'CTR', value: '6.8%', change: '-0.3%', color: '#ef4444' },
-        ].map(s => (
-          <div key={s.label} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', marginBottom: 2 }}>{s.label}</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <div style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{s.value}</div>
-              <div style={{ fontSize: 8, color: s.color }}>{s.change}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {/* Chart area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Monthly Views</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {['Views', 'Subs'].map((t, i) => (
-              <div key={t} style={{
-                padding: '2px 8px', borderRadius: 4,
-                background: i === 0 ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-                fontSize: 8, color: i === 0 ? '#818cf8' : 'rgba(255,255,255,0.3)',
-              }}>{t}</div>
-            ))}
-          </div>
-        </div>
-        {/* Bars */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 4, paddingBottom: 16, position: 'relative' }}>
-          {/* Horizontal grid lines */}
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{ position: 'absolute', left: 0, right: 0, bottom: `${16 + (i * 33)}%`, height: 1, background: 'rgba(255,255,255,0.04)' }} />
-          ))}
-          {barHeights.map((h, i) => (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, position: 'relative', zIndex: 1 }}>
-              <div style={{
-                width: '80%', height: `${h}%`, borderRadius: 3,
-                background: i === barHeights.length - 3 ? 'linear-gradient(to top, #6366f1, #818cf8)' : 'rgba(99,102,241,0.25)',
-                transition: 'height 0.4s ease',
-              }} />
-              <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', position: 'absolute', bottom: 0 }}>{labels[i]}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function FreeToolsMockup() {
   const tools = [
     { name: 'Title Gen', icon: 'Tt', color: '#6366f1' },
@@ -302,7 +245,6 @@ const MOCKUP_MAP: Record<string, () => React.JSX.Element> = {
   thumbnails: ThumbnailsMockup,
   editor: EditorMockup,
   seo: SeoMockup,
-  analytics: AnalyticsMockup,
   free: FreeToolsMockup,
 };
 
@@ -314,7 +256,7 @@ const PRODUCTS = [
     label: 'AI Thumbnails',
     icon: '\u{1F3A8}',
     title: 'Create Viral Thumbnails with AI',
-    desc: 'Describe your idea, choose a style, and get professional YouTube thumbnails in seconds. Includes CTR score analysis and title suggestions.',
+    desc: 'Describe your idea, choose a style, and get professional YouTube thumbnails in seconds. Niche-aware presets and title brainstorming.',
     href: '/ai-thumbnails',
     mockup: 'thumbnails',
   },
@@ -332,18 +274,9 @@ const PRODUCTS = [
     label: 'SEO Tools',
     icon: '\u{1F50D}',
     title: 'Optimize Your YouTube SEO',
-    desc: "AI-powered title, description, and tag optimizer. Analyze any video's SEO score and get actionable improvement suggestions.",
+    desc: "AI-powered title, description, and tag rewriter. Paste your draft and get a polished version optimised for search.",
     href: '/preview?tab=seo',
     mockup: 'seo',
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: '\u{1F4CA}',
-    title: 'YouTube Shorts Analytics',
-    desc: 'Track your Shorts performance. View engagement metrics, trending content, and growth insights.',
-    href: '/analytics',
-    mockup: 'analytics',
   },
   {
     id: 'free-tools',

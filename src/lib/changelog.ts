@@ -20,8 +20,8 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: '2026-03-15',
-    title: 'YouTube Video Analyzer',
-    description: 'Launched YouTube Video Analyzer: SEO title scoring, engagement metrics, optimization suggestions. Embedded player.',
+    title: 'Video Inspector',
+    description: 'Launched Video Inspector: paste a YouTube URL to view title, channel, public stats, description, tags, and download the thumbnail.',
     type: 'improvement',
   },
   {
