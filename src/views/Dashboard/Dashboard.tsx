@@ -554,10 +554,13 @@ export function Dashboard() {
   // Primary source: channels already synced to DB (from profile query)
   const profileChannels = profile.data?.channels ?? [];
 
-  // Secondary: live sync from YouTube API (may fail if API is down/disabled)
+  // Secondary: live sync from YouTube API.
+  // Only run if user already has channels in DB — avoids spurious 401s
+  // when user has not connected Google OAuth yet.
   const channelsQuery = trpc.youtube.getChannels.useQuery(undefined, {
     retry: 1,
     staleTime: 5 * 60 * 1000,
+    enabled: profileChannels.length > 0,
   });
 
   const apiChannels = channelsQuery.data ?? [];
