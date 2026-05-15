@@ -26,8 +26,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 // ----- Animation constants ------------------------------------------------
 
-const IDLE_SPEED_Y = 0.22; // rad/s — full rotation every ~18s
-const IDLE_AMPLITUDE_X = 0.22; // ≈ ±10° wobble on X (depth tilt)
+const IDLE_SPEED_Y = 0.35; // rad/s — full rotation every ~18s
+const IDLE_AMPLITUDE_X = 0.18; // ≈ ±10° wobble on X (depth tilt)
 const IDLE_FREQUENCY_X = 0.32; // rad/s — wobble cycle every ~20s
 const POINTER_SENSITIVITY = 0.0075;
 const MOMENTUM_DAMPING = 0.94;
@@ -39,14 +39,14 @@ function CrystalMesh() {
   // Octahedron is a 6-vertex, 8-face polyhedron. Default radius 1 — we
   // scale slightly tall on Y to elongate the silhouette, which photographs
   // better than a uniform sphere-like shape.
-  const geometry = useMemo(() => new THREE.SphereGeometry(1.35, 96, 96), []);
+  const geometry = useMemo(() => new THREE.OctahedronGeometry(1.45, 0), []);
 
   return (
-    <mesh castShadow receiveShadow geometry={geometry}>
+    <mesh castShadow receiveShadow geometry={geometry} scale={[1, 1.25, 1]}>
       <meshPhysicalMaterial
         color="#a5b4fc"
         metalness={0.35}
-        roughness={0.08}
+        roughness={0.12}
         clearcoat={1}
         clearcoatRoughness={0.05}
         envMapIntensity={2.5}
@@ -54,7 +54,7 @@ function CrystalMesh() {
         ior={1.55}
         iridescence={1}
         iridescenceIOR={1.4}
-        iridescenceThicknessRange={[200, 720]}
+        iridescenceThicknessRange={[120, 480]}
         sheen={0.6}
         sheenColor="#c4b5fd"
         attenuationColor="#818cf8"
