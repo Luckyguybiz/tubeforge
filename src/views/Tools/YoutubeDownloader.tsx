@@ -77,14 +77,7 @@ function isValidYoutubeUrl(url: string): boolean {
   return /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?.*v=|shorts\/|embed\/|live\/)|youtu\.be\/)[\w-]+/.test(url.trim());
 }
 
-/* ── Helpers ───────────────────────────────────────────────────────── */
-
-function scoreColor(score: number): string {
-  if (score >= 80) return '#22c55e';
-  if (score >= 60) return '#f59e0b';
-  if (score >= 40) return '#f97316';
-  return '#ef4444';
-}
+/* ── Helpers (formatters only — no score/derived metrics) ─────────── */
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -94,91 +87,12 @@ function formatNumber(n: number): string {
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   } catch {
     return iso;
   }
 }
 
-/* ── Circular Score Gauge ──────────────────────────────────────────── */
-
-function CircularGauge({ score, label, size = 90 }: { score: number; label: string; size?: number }) {
-  const radius = (size - 10) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color = scoreColor(score);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <div style={{ position: 'relative', width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth={5}
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={5}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
-          />
-        </svg>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: size > 80 ? 22 : 18,
-            fontWeight: 800,
-            color,
-          }}
-        >
-          {score}
-        </div>
-      </div>
-      <span style={{ fontSize: 11, fontWeight: 600, color: '#86868b', textAlign: 'center', lineHeight: 1.2 }}>
-        {label}
-      </span>
-    </div>
-  );
-}
-
-/* ── Score Bar (used in fallback view) ─────────────────────────────── */
-
-function ScoreBar({ label, score, C }: { label: string; score: number; C: Theme }) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor(score) }}>{score}/100</span>
-      </div>
-      <div style={{ width: '100%', height: 8, borderRadius: 4, background: C.surface }}>
-        <div
-          style={{
-            width: `${score}%`,
-            height: '100%',
-            borderRadius: 4,
-            background: scoreColor(score),
-            transition: 'width 0.5s ease',
-          }}
-        />
-      </div>
-    </div>
-  );
-}
 
 /* ── Stat Card ─────────────────────────────────────────────────────── */
 

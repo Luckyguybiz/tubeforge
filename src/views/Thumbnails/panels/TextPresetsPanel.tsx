@@ -28,7 +28,7 @@ const TEXT_PRESETS: TextPreset[] = [
   { name: 'NEON GLOW', fontFamily: 'Montserrat', fontSize: 64, fontWeight: 800, color: '#00ff88', glow: { color: '#00ff88', blur: 20, spread: 5 }, category: 'popular' },
   { name: 'FIRE TEXT', fontFamily: 'Oswald', fontSize: 68, fontWeight: 700, color: '#ff4500', textGradient: { from: '#ff4500', to: '#ffd700', angle: 180 }, category: 'popular' },
   { name: 'CLEAN WHITE', fontFamily: 'Inter', fontSize: 48, fontWeight: 700, color: '#ffffff', letterSpacing: 2, category: 'popular' },
-  { name: 'YOUTUBE RED', fontFamily: 'Bebas Neue', fontSize: 80, fontWeight: 400, color: '#ff0000', textStroke: '#ffffff', textStrokeWidth: 2, category: 'popular' },
+  { name: 'CREATOR RED', fontFamily: 'Bebas Neue', fontSize: 80, fontWeight: 400, color: '#ff0000', textStroke: '#ffffff', textStrokeWidth: 2, category: 'popular' },
   { name: 'SHADOW TITLE', fontFamily: 'Montserrat', fontSize: 56, fontWeight: 800, color: '#ffffff', textShadow: '4px 4px 0px rgba(0,0,0,0.8)', category: 'popular' },
   { name: 'OUTLINE ONLY', fontFamily: 'Anton', fontSize: 72, fontWeight: 400, color: 'transparent', textStroke: '#ffffff', textStrokeWidth: 3, category: 'popular' },
   { name: 'GRADIENT PURPLE', fontFamily: 'Poppins', fontSize: 60, fontWeight: 700, color: '#8b5cf6', textGradient: { from: '#6366f1', to: '#ec4899', angle: 90 }, category: 'popular' },

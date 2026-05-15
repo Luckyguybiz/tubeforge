@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import YouTubePlayBadgeMount from './YouTubePlayBadgeMount';
+import BrandOrbShowcaseMount from "./BrandOrbShowcaseMount";
 
 /**
  * LandingHero — Server Component (no 'use client')
@@ -8,8 +8,8 @@ import YouTubePlayBadgeMount from './YouTubePlayBadgeMount';
  * CSS-only animations via @keyframes replace the old useState/useEffect
  * approach that held the LCP element at opacity:0 for 150ms+ after hydration.
  *
- * Layout: two-column on desktop (text left, interactive 3D play badge
- * right). On mobile the badge stacks above the text. The 3D bundle is
+ * Layout: two-column on desktop (text left, interactive 3D brand orb
+ * right). On mobile the orb stacks above the text. The 3D bundle is
  * lazy-loaded client-side so it never blocks the H1 LCP.
  */
 export function LandingHero() {
@@ -168,7 +168,7 @@ export function LandingHero() {
             Lazy-loaded so the 3D bundle never blocks LCP. Hint text is for
             first-time visitors who might miss that it's draggable. */}
         <div className="hero-badge-col" aria-hidden>
-          <YouTubePlayBadgeMount />
+          <BrandOrbShowcaseMount />
           <div className="hero-badge-hint">drag me</div>
         </div>
       </div>
