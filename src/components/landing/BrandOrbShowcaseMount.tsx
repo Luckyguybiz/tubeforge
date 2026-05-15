@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * Lazy mount for the brand orb. Same pattern as YouTubePlayBadgeMount —
- * the 3D bundle is already loaded for the hero badge, so this second
- * Canvas mounts cheaply (Three / Fiber / Drei are de-duped).
+ * Lazy mount for the iridescent camera orb used in the social-proof
+ * strip. Dynamic-import keeps the 3D bundle off the H1 LCP path.
  */
 import dynamic from 'next/dynamic';
 
