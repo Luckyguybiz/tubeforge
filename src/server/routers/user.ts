@@ -20,22 +20,34 @@ async function checkUserRate(userId: string) {
 
 export const userRouter = router({
   getProfile: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.user.findUnique({
-      where: { id: ctx.session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        plan: true,
-        role: true,
-        aiUsage: true,
-        onboardingDone: true,
-        createdAt: true,
-        channels: { select: { id: true, title: true, thumbnail: true, subscribers: true } },
-        _count: { select: { projects: true } },
-      },
-    });
+    const [user, googleAccount] = await Promise.all([
+      ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          plan: true,
+          role: true,
+          aiUsage: true,
+          onboardingDone: true,
+          createdAt: true,
+          channels: { select: { id: true, title: true, thumbnail: true, subscribers: true } },
+          _count: { select: { projects: true } },
+        },
+      }),
+      ctx.db.account.findFirst({
+        where: { userId: ctx.session.user.id, provider: "google" },
+        select: { scope: true },
+      }),
+    ]);
+    if (!user) return null;
+    // YouTube write access requires the youtube.upload scope grant.
+    // ChannelsTab in /settings uses this to decide between refetch (already
+    // consented) vs re-signIn (needs full consent flow).
+    const hasYouTubeScopes = !!googleAccount?.scope?.includes("youtube.upload");
+    return { ...user, hasYouTubeScopes };
   }),
 
 

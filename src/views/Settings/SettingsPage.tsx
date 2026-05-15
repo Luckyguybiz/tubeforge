@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useThemeStore, type ThemeMode } from "@/stores/useThemeStore";
 import { useLocaleStore, type Locale } from "@/stores/useLocaleStore";
 import { trpc } from "@/lib/trpc";
@@ -39,6 +39,8 @@ import {
   Globe,
   Sparkles,
   ChevronRight,
+  RefreshCw,
+  Link2,
 } from "lucide-react";
 
 /* ── Translate-with-fallback (Dashboard convention) ── */
@@ -455,6 +457,42 @@ function PlanTab({ t }: { t: (k: string) => string }) {
 function ChannelsTab({ t }: { t: (k: string) => string }) {
   const profile = trpc.user.getProfile.useQuery();
   const channels = profile.data?.channels ?? [];
+  const hasYouTubeScopes = profile.data?.hasYouTubeScopes ?? false;
+
+  // Real-time sync from YouTube Data API → upserts Channel rows in our DB.
+  // Only useful once the user has granted youtube.upload scope. When scopes
+  // are missing we trigger signIn('google') instead, which forces a fresh
+  // consent screen (prompt: 'consent' is already set in NextAuth config).
+  const syncChannels = trpc.youtube.getChannels.useQuery(undefined, {
+    enabled: false, // manual trigger only
+    retry: false,
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleConnect = useCallback(async () => {
+    if (!hasYouTubeScopes) {
+      // Re-auth flow: forces Google consent screen with full scope list.
+      // After redirect back to /settings#channels the new tokens cover youtube.upload.
+      await signIn("google", { callbackUrl: "/settings#channels" });
+      return;
+    }
+    // User already consented — just sync from YouTube API.
+    setIsSyncing(true);
+    try {
+      const res = await syncChannels.refetch();
+      if (res.error) {
+        toast.error(res.error.message || tx(t, "settings.youtubeChannels.syncError", "Sync failed"));
+      } else {
+        await profile.refetch();
+        toast.success(tx(t, "settings.youtubeChannels.syncedToast", "Channels synced"));
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(msg || tx(t, "settings.youtubeChannels.syncError", "Sync failed"));
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [hasYouTubeScopes, syncChannels, profile, t]);
 
   if (profile.isLoading) {
     return <Skeleton width="100%" height={200} style={{ borderRadius: 16 }} />;
@@ -464,7 +502,11 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
     <SettingsCard
       icon={<YoutubeIcon className="size-4 text-red-500" />}
       title={tx(t, "settings.youtubeChannels", "YouTube channels")}
-      description={tx(t, "settings.youtubeChannels.desc", "Connect your channels via Google OAuth to unlock channel insights")}
+      description={tx(
+        t,
+        "settings.youtubeChannels.desc",
+        "Connect your channels via Google OAuth to publish videos and read insights."
+      )}
     >
       {channels.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-border p-8 text-center">
@@ -475,43 +517,92 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
             {tx(t, "settings.youtubeChannels.empty", "No channels connected yet")}
           </h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-            {tx(t, "settings.youtubeChannels.emptyDesc", "Connect via Google to see your channel data inside TubeForge.")}
+            {hasYouTubeScopes
+              ? tx(
+                  t,
+                  "settings.youtubeChannels.emptyDescScoped",
+                  "You've granted access — click Sync to fetch your channels from YouTube."
+                )
+              : tx(
+                  t,
+                  "settings.youtubeChannels.emptyDesc",
+                  "Connect via Google to see your channel data inside TubeForge."
+                )}
           </p>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold transition-colors"
+          <button
+            type="button"
+            onClick={handleConnect}
+            disabled={isSyncing}
+            className={cn(
+              "inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-brand-500 text-white text-sm font-semibold transition-colors",
+              isSyncing ? "opacity-60 cursor-wait" : "hover:bg-brand-600"
+            )}
           >
-            {tx(t, "settings.youtubeChannels.connect", "Connect channel")}
-          </Link>
+            {isSyncing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : hasYouTubeScopes ? (
+              <RefreshCw className="size-4" />
+            ) : (
+              <Link2 className="size-4" />
+            )}
+            {isSyncing
+              ? tx(t, "settings.youtubeChannels.syncing", "Syncing…")
+              : hasYouTubeScopes
+                ? tx(t, "settings.youtubeChannels.sync", "Sync from YouTube")
+                : tx(t, "settings.youtubeChannels.connect", "Connect channel")}
+          </button>
         </div>
       ) : (
-        <div className="space-y-2.5">
-          {channels.map((ch) => (
-            <div key={ch.id} className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors">
-              {ch.thumbnail ? (
-                <img
-                  src={ch.thumbnail}
-                  alt={ch.title}
-                  className="size-12 rounded-full object-cover ring-2 ring-border shrink-0"
-                />
-              ) : (
-                <div className="size-12 rounded-full bg-red-500/15 flex items-center justify-center text-red-500 shrink-0">
-                  <YoutubeIcon className="size-5" />
-                </div>
+        <>
+          <div className="mb-3 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleConnect}
+              disabled={isSyncing}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-foreground transition-colors",
+                isSyncing ? "opacity-60 cursor-wait" : "hover:border-brand-500/40 hover:text-brand-500"
               )}
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-foreground truncate">{ch.title}</div>
-                <div className="text-xs text-muted-foreground font-mono">
-                  {ch.subscribers.toLocaleString()} {tx(t, "settings.youtubeChannels.subs", "subscribers")}
+              aria-label={tx(t, "settings.youtubeChannels.refresh", "Refresh channels")}
+            >
+              {isSyncing ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="size-3.5" />
+              )}
+              {isSyncing
+                ? tx(t, "settings.youtubeChannels.syncing", "Syncing…")
+                : tx(t, "settings.youtubeChannels.refresh", "Refresh")}
+            </button>
+          </div>
+          <div className="space-y-2.5">
+            {channels.map((ch) => (
+              <div key={ch.id} className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors">
+                {ch.thumbnail ? (
+                  <img
+                    src={ch.thumbnail}
+                    alt={ch.title}
+                    className="size-12 rounded-full object-cover ring-2 ring-border shrink-0"
+                  />
+                ) : (
+                  <div className="size-12 rounded-full bg-red-500/15 flex items-center justify-center text-red-500 shrink-0">
+                    <YoutubeIcon className="size-5" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-foreground truncate">{ch.title}</div>
+                  <div className="text-xs text-muted-foreground font-mono">
+                    {ch.subscribers.toLocaleString()} {tx(t, "settings.youtubeChannels.subs", "subscribers")}
+                  </div>
                 </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 shrink-0">
+                  <Check className="size-3" />
+                  {tx(t, "settings.youtubeChannels.synced", "Synced")}
+                </span>
               </div>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 shrink-0">
-                <Check className="size-3" />
-                {tx(t, "settings.youtubeChannels.synced", "Synced")}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </SettingsCard>
   );

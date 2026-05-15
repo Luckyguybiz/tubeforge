@@ -1,0 +1,490 @@
+"use client";
+
+import { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
+import { useLocaleStore } from "@/stores/useLocaleStore";
+import { cn } from "@/lib/utils";
+import {
+  Clock,
+  Rocket,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Calendar,
+  PlayCircle as YoutubeIcon,
+  ExternalLink,
+  RefreshCw,
+  Filter,
+  Plus,
+  Image as ImageIcon,
+  ArrowRight,
+} from "lucide-react";
+
+/* ── i18n with fallback ─────────────────────────────────────────────── */
+function tx(t: (k: string) => string, key: string, fallback: string): string {
+  const v = t(key);
+  return v === key ? fallback : v;
+}
+
+/* ── Job status types ───────────────────────────────────────────────── */
+type JobStatus = "all" | "queued" | "uploading" | "scheduled" | "completed" | "failed";
+
+interface JobEntry {
+  id: string;
+  title: string;
+  thumbnailUrl?: string;
+  channelTitle?: string;
+  channelThumbnail?: string;
+  status: Exclude<JobStatus, "all">;
+  uploadProgress?: number;       // 0-100 when uploading
+  scheduledAt?: string;          // ISO when scheduled
+  completedAt?: string;          // ISO when completed
+  createdAt: string;             // ISO
+  youtubeVideoId?: string;
+  youtubeUrl?: string;
+  errorMessage?: string;
+  webhookDelivered?: boolean;
+  webhookFailed?: boolean;
+}
+
+const STATUS_CONFIG: Record<
+  Exclude<JobStatus, "all">,
+  { label: string; dot: string; badge: string; text: string; Icon: React.ComponentType<{ className?: string }> }
+> = {
+  queued: {
+    label: "Queued",
+    dot: "bg-slate-400",
+    badge: "bg-slate-500/10 border-slate-500/20",
+    text: "text-slate-600 dark:text-slate-300",
+    Icon: Clock,
+  },
+  scheduled: {
+    label: "Scheduled",
+    dot: "bg-amber-500",
+    badge: "bg-amber-500/10 border-amber-500/20",
+    text: "text-amber-600 dark:text-amber-400",
+    Icon: Calendar,
+  },
+  uploading: {
+    label: "Uploading",
+    dot: "bg-blue-500",
+    badge: "bg-blue-500/10 border-blue-500/20",
+    text: "text-blue-600 dark:text-blue-400",
+    Icon: Loader2,
+  },
+  completed: {
+    label: "Completed",
+    dot: "bg-emerald-500",
+    badge: "bg-emerald-500/10 border-emerald-500/20",
+    text: "text-emerald-600 dark:text-emerald-400",
+    Icon: CheckCircle2,
+  },
+  failed: {
+    label: "Failed",
+    dot: "bg-rose-500",
+    badge: "bg-rose-500/10 border-rose-500/20",
+    text: "text-rose-600 dark:text-rose-400",
+    Icon: AlertCircle,
+  },
+};
+
+/* ── Read jobs from localStorage (Phase 1 stub) ──────────────────────
+   Phase 2 swaps this for trpc.uploadJobs.list. The shape JobEntry is the
+   same in both cases, so this component is forward-compatible.
+   ──────────────────────────────────────────────────────────────────── */
+function readJobsFromHistory(): JobEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("tf-publish-history");
+    if (!raw) return [];
+    const parsed: Array<{
+      title: string;
+      url: string;
+      publishedAt: string;
+      scheduled?: boolean;
+      thumbnailUrl?: string;
+    }> = JSON.parse(raw);
+    return parsed.map((p, i) => ({
+      id: `local-${i}-${p.publishedAt}`,
+      title: p.title,
+      thumbnailUrl: p.thumbnailUrl,
+      status: p.scheduled ? "scheduled" : "completed",
+      createdAt: p.publishedAt,
+      completedAt: p.scheduled ? undefined : p.publishedAt,
+      scheduledAt: p.scheduled ? p.publishedAt : undefined,
+      youtubeUrl: p.url,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/* ── Relative time formatter ─────────────────────────────────────────── */
+function relativeTime(iso: string): string {
+  const t = new Date(iso).getTime();
+  const diff = Date.now() - t;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  if (diff < 604_800_000) return `${Math.floor(diff / 86_400_000)}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+/* ── Date grouping for timeline ──────────────────────────────────────── */
+function dayKey(iso: string): string {
+  const d = new Date(iso);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function dayLabel(key: string, t: (k: string) => string): string {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  if (key === today) return tx(t, "publishJobs.today", "Today");
+  if (key === yesterday) return tx(t, "publishJobs.yesterday", "Yesterday");
+  return new Date(key).toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MAIN
+   ════════════════════════════════════════════════════════════════════ */
+
+export function JobsPage() {
+  const t = useLocaleStore((s) => s.t);
+  const [jobs, setJobs] = useState<JobEntry[]>([]);
+  const [activeFilter, setActiveFilter] = useState<JobStatus>("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setJobs(readJobsFromHistory());
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    setIsLoading(false);
+    // In Phase 2, replace this with a tRPC subscription / polling query
+    // for live job status updates. For Phase 1 we just refresh on mount.
+  }, [refresh]);
+
+  /* ── Filter + group ─────────────────────────────────────────────── */
+  const counts = useMemo(() => {
+    const c: Record<JobStatus, number> = {
+      all: jobs.length,
+      queued: 0,
+      uploading: 0,
+      scheduled: 0,
+      completed: 0,
+      failed: 0,
+    };
+    for (const j of jobs) c[j.status]++;
+    return c;
+  }, [jobs]);
+
+  const filteredJobs = useMemo(() => {
+    if (activeFilter === "all") return jobs;
+    return jobs.filter((j) => j.status === activeFilter);
+  }, [jobs, activeFilter]);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, JobEntry[]>();
+    // Order jobs: scheduled future first (asc), then completed by createdAt desc
+    const sorted = [...filteredJobs].sort((a, b) => {
+      if (a.status === "scheduled" && b.status !== "scheduled") return -1;
+      if (b.status === "scheduled" && a.status !== "scheduled") return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    for (const j of sorted) {
+      const k = dayKey(j.scheduledAt ?? j.createdAt);
+      const arr = map.get(k) ?? [];
+      arr.push(j);
+      map.set(k, arr);
+    }
+    return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  }, [filteredJobs]);
+
+  const filters: { key: JobStatus; label: string }[] = [
+    { key: "all", label: tx(t, "publishJobs.filter.all", "All") },
+    { key: "scheduled", label: tx(t, "publishJobs.filter.scheduled", "Scheduled") },
+    { key: "uploading", label: tx(t, "publishJobs.filter.uploading", "Uploading") },
+    { key: "queued", label: tx(t, "publishJobs.filter.queued", "Queued") },
+    { key: "completed", label: tx(t, "publishJobs.filter.completed", "Completed") },
+    { key: "failed", label: tx(t, "publishJobs.filter.failed", "Failed") },
+  ];
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <header className="pt-6 pb-4 sm:pt-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-md shadow-brand-500/20">
+              <Clock className="size-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {tx(t, "publishJobs.title", "Publishing jobs")}
+              </h1>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                {tx(
+                  t,
+                  "publishJobs.subtitle",
+                  "Track every video you've sent to YouTube — queued, scheduled, live or failed.",
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start">
+            <button
+              onClick={refresh}
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground transition-colors hover:border-brand-500/40 hover:text-brand-500"
+              aria-label="Refresh"
+            >
+              <RefreshCw className="size-4" />
+              {tx(t, "publishJobs.refresh", "Refresh")}
+            </button>
+            <Link
+              href="/publish"
+              prefetch
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-sm shadow-brand-500/20 transition-transform hover:scale-[1.02]"
+            >
+              <Plus className="size-4" />
+              {tx(t, "publishJobs.newJob", "New publish")}
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Filter chips */}
+      <section className="mb-5">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          {filters.map((f) => {
+            const active = activeFilter === f.key;
+            const count = counts[f.key];
+            const isStatus = f.key !== "all";
+            return (
+              <button
+                key={f.key}
+                onClick={() => setActiveFilter(f.key)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all",
+                  active
+                    ? "bg-foreground text-background shadow-sm"
+                    : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {isStatus && (
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      STATUS_CONFIG[f.key as Exclude<JobStatus, "all">].dot,
+                    )}
+                  />
+                )}
+                {f.label}
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 font-mono text-[10px]",
+                    active ? "bg-background/15 text-background" : "bg-muted-foreground/15 text-muted-foreground",
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-muted/30" />
+          ))}
+        </div>
+      ) : filteredJobs.length === 0 ? (
+        <EmptyState
+          activeFilter={activeFilter}
+          hasAnyJobs={jobs.length > 0}
+          t={t}
+        />
+      ) : (
+        <div className="space-y-6 pb-16">
+          {grouped.map(([day, dayJobs]) => (
+            <section key={day}>
+              <h2 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                {dayLabel(day, t)}
+              </h2>
+              <div className="space-y-2">
+                {dayJobs.map((job) => (
+                  <JobRow key={job.id} job={job} t={t} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SUB-COMPONENTS
+   ════════════════════════════════════════════════════════════════════ */
+
+function JobRow({ job, t }: { job: JobEntry; t: (k: string) => string }) {
+  const cfg = STATUS_CONFIG[job.status];
+  const Icon = cfg.Icon;
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-all hover:border-brand-500/30 hover:shadow-md">
+      {/* Thumbnail */}
+      <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
+        {job.thumbnailUrl ? (
+          <img src={job.thumbnailUrl} alt="" className="size-full object-cover" />
+        ) : (
+          <div className="flex size-full items-center justify-center">
+            <ImageIcon className="size-5 text-muted-foreground/40" />
+          </div>
+        )}
+        {job.status === "uploading" && typeof job.uploadProgress === "number" && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+            <div
+              className="h-full bg-blue-500 transition-all"
+              style={{ width: `${job.uploadProgress}%` }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Title + meta */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="line-clamp-1 text-[14px] font-semibold text-foreground">
+            {job.title || tx(t, "publishJobs.untitled", "Untitled")}
+          </h3>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          {job.channelTitle && (
+            <span className="inline-flex items-center gap-1">
+              {job.channelThumbnail ? (
+                <img src={job.channelThumbnail} alt={job.channelTitle} className="size-3.5 rounded-full" />
+              ) : (
+                <YoutubeIcon className="size-3 text-red-500" />
+              )}
+              <span className="truncate max-w-[200px]">{job.channelTitle}</span>
+            </span>
+          )}
+          {job.status === "scheduled" && job.scheduledAt && (
+            <span className="inline-flex items-center gap-1 font-mono">
+              <Calendar className="size-3" />
+              {new Date(job.scheduledAt).toLocaleString()}
+            </span>
+          )}
+          {job.completedAt && (
+            <span className="inline-flex items-center gap-1 font-mono">
+              <Clock className="size-3" />
+              {relativeTime(job.completedAt)}
+            </span>
+          )}
+          {job.errorMessage && (
+            <span className="inline-flex items-center gap-1 font-mono text-rose-500">
+              <AlertCircle className="size-3" />
+              {job.errorMessage.slice(0, 60)}
+            </span>
+          )}
+          {job.status === "completed" && job.webhookDelivered && (
+            <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              webhook ✓
+            </span>
+          )}
+          {job.webhookFailed && (
+            <span className="inline-flex items-center gap-1 rounded bg-rose-500/10 px-1.5 text-[10px] font-bold text-rose-500">
+              webhook ✗
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Status badge */}
+      <span
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+          cfg.badge,
+          cfg.text,
+        )}
+      >
+        <Icon className={cn("size-3", job.status === "uploading" && "animate-spin")} />
+        {cfg.label}
+      </span>
+
+      {/* Actions */}
+      <div className="flex shrink-0 items-center gap-1">
+        {job.status === "completed" && job.youtubeUrl && (
+          <a
+            href={job.youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-brand-500/40 hover:text-brand-500"
+            title={tx(t, "publishJobs.openYt", "Open on YouTube")}
+          >
+            <ExternalLink className="size-3.5" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({
+  activeFilter,
+  hasAnyJobs,
+  t,
+}: {
+  activeFilter: JobStatus;
+  hasAnyJobs: boolean;
+  t: (k: string) => string;
+}) {
+  if (hasAnyJobs && activeFilter !== "all") {
+    return (
+      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+        <Filter className="mx-auto size-7 text-muted-foreground/50" />
+        <h3 className="mt-3 text-[15px] font-bold text-foreground">
+          {tx(t, "publishJobs.empty.filteredTitle", "No jobs match this filter")}
+        </h3>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          {tx(t, "publishJobs.empty.filteredDesc", "Try a different status or clear the filter.")}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mx-auto max-w-lg rounded-2xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+      <div className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500/15 to-violet-500/15 text-brand-500">
+        <Rocket className="size-7" />
+      </div>
+      <h3 className="mt-4 text-[18px] font-bold text-foreground">
+        {tx(t, "publishJobs.empty.title", "No publishing jobs yet")}
+      </h3>
+      <p className="mt-2 max-w-xs mx-auto text-[13px] leading-relaxed text-muted-foreground">
+        {tx(
+          t,
+          "publishJobs.empty.desc",
+          "Publish your first video to YouTube. Schedule, set privacy, monitor progress — all in one place.",
+        )}
+      </p>
+      <Link
+        href="/publish"
+        prefetch
+        className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-5 text-[14px] font-bold text-white shadow-md shadow-brand-500/20 hover:scale-[1.02] transition-transform"
+      >
+        <Rocket className="size-4" />
+        {tx(t, "publishJobs.empty.cta", "Publish a video")}
+        <ArrowRight className="size-4" />
+      </Link>
+    </div>
+  );
+}

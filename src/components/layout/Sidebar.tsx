@@ -55,6 +55,12 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <circle cx="10" cy="10" r="5" stroke={c} strokeWidth=".5" opacity=".25" />
     </svg>
   ),
+  publish: (c) => (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M3 11L17 4L13 16L10 12L3 11Z" fill={c} opacity=".85" />
+      <path d="M10 12L13 16L17 4" stroke={c} strokeWidth="1.2" strokeLinejoin="round" opacity=".4" />
+    </svg>
+  ),
   team: (c) => (
     <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <circle cx="8" cy="6" r="3" fill={c} opacity=".85" />
@@ -243,7 +249,8 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'dashboard', label: t('nav.dashboard') },
         { id: 'ai-thumbnails', label: t('nav.aiThumbnails') },
         { id: 'editor', label: t('nav.editor') },
-        { id: 'preview', label: t('nav.publish') },
+        { id: 'preview', label: t('nav.preview') },
+        { id: 'publish', label: t('nav.publish') },
       ],
     },
     {
@@ -275,6 +282,7 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   'ai-thumbnails': ['accent', 'purple'],
   thumbnails: ['orange', 'pink'],
   preview: ['green', 'cyan'],
+  publish: ['accent', 'pink'],
   team: ['purple', 'pink'],
   settings: ['sub', 'dim'],
   billing: ['green', 'cyan'],
