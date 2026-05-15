@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useLocaleStore } from "@/stores/useLocaleStore";
+import { trpc } from "@/lib/trpc";
+import { toast } from "@/stores/useNotificationStore";
 import { cn } from "@/lib/utils";
 import {
   Clock,
@@ -155,20 +157,84 @@ function dayLabel(key: string, t: (k: string) => string): string {
 
 export function JobsPage() {
   const t = useLocaleStore((s) => s.t);
-  const [jobs, setJobs] = useState<JobEntry[]>([]);
   const [activeFilter, setActiveFilter] = useState<JobStatus>("all");
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Live data from server (Phase 2). Polls every 4s when any job is in
+  // active state (QUEUED/UPLOADING) so users see worker progress in
+  // real-time without manual refresh. Idle when nothing's active to
+  // avoid polling tax.
+  const jobsQuery = trpc.uploadJobs.list.useQuery(
+    { limit: 50 },
+    { refetchOnWindowFocus: true, refetchInterval: false },
+  );
+
+  // Map server UploadJob shape → JobEntry consumed by UI components.
+  // Server enum is uppercase (QUEUED), UI uses lowercase ("queued").
+  // scheduledAt presence on a QUEUED job → render as "scheduled".
+  const jobs: JobEntry[] = useMemo(() => {
+    const items = jobsQuery.data?.items ?? [];
+    return items.map((j) => {
+      const isScheduled = j.status === "QUEUED" && !!j.scheduledAt;
+      const lower = (s: string): Exclude<JobStatus, "all"> => {
+        const map: Record<string, Exclude<JobStatus, "all">> = {
+          QUEUED: "queued",
+          UPLOADING: "uploading",
+          COMPLETED: "completed",
+          FAILED: "failed",
+          CANCELLED: "failed", // surface cancelled under "failed" filter for simplicity
+        };
+        return map[s] ?? "queued";
+      };
+      return {
+        id: j.id,
+        title: j.title,
+        thumbnailUrl: j.thumbnailUrl ?? undefined,
+        channelTitle: j.channel?.title,
+        channelThumbnail: j.channel?.thumbnail ?? undefined,
+        status: isScheduled ? "scheduled" : lower(j.status),
+        uploadProgress: j.uploadProgress,
+        scheduledAt: j.scheduledAt ? new Date(j.scheduledAt).toISOString() : undefined,
+        completedAt: j.completedAt ? new Date(j.completedAt).toISOString() : undefined,
+        createdAt: new Date(j.createdAt).toISOString(),
+        youtubeVideoId: j.youtubeVideoId ?? undefined,
+        youtubeUrl: j.youtubeVideoId ? `https://youtube.com/watch?v=${j.youtubeVideoId}` : undefined,
+        errorMessage: j.errorMessage ?? undefined,
+        webhookDelivered: j.webhookDelivered,
+        webhookFailed: j.webhookFailed,
+      };
+    });
+  }, [jobsQuery.data]);
+
+  // Auto-poll every 4s while any job is active (QUEUED or UPLOADING).
+  // Stops polling once all jobs reach terminal state.
+  useEffect(() => {
+    const hasActive = jobs.some((j) => j.status === "queued" || j.status === "uploading");
+    if (!hasActive) return;
+    const id = setInterval(() => jobsQuery.refetch(), 4000);
+    return () => clearInterval(id);
+  }, [jobs, jobsQuery]);
+
+  const isLoading = jobsQuery.isLoading;
 
   const refresh = useCallback(() => {
-    setJobs(readJobsFromHistory());
-  }, []);
+    void jobsQuery.refetch();
+  }, [jobsQuery]);
 
-  useEffect(() => {
-    refresh();
-    setIsLoading(false);
-    // In Phase 2, replace this with a tRPC subscription / polling query
-    // for live job status updates. For Phase 1 we just refresh on mount.
-  }, [refresh]);
+  // Mutations for row actions
+  const cancelMut = trpc.uploadJobs.cancel.useMutation({
+    onSuccess: () => {
+      toast.success(tx(t, "publishJobs.cancelled", "Job cancelled"));
+      void jobsQuery.refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const retryMut = trpc.uploadJobs.retry.useMutation({
+    onSuccess: () => {
+      toast.success(tx(t, "publishJobs.retried", "Re-queued for retry"));
+      void jobsQuery.refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   /* ── Filter + group ─────────────────────────────────────────────── */
   const counts = useMemo(() => {
@@ -321,7 +387,15 @@ export function JobsPage() {
               </h2>
               <div className="space-y-2">
                 {dayJobs.map((job) => (
-                  <JobRow key={job.id} job={job} t={t} />
+                  <JobRow
+                    key={job.id}
+                    job={job}
+                    t={t}
+                    onCancel={() => cancelMut.mutate({ jobId: job.id })}
+                    onRetry={() => retryMut.mutate({ jobId: job.id })}
+                    isCancelling={cancelMut.isPending && cancelMut.variables?.jobId === job.id}
+                    isRetrying={retryMut.isPending && retryMut.variables?.jobId === job.id}
+                  />
                 ))}
               </div>
             </section>
@@ -336,7 +410,21 @@ export function JobsPage() {
    SUB-COMPONENTS
    ════════════════════════════════════════════════════════════════════ */
 
-function JobRow({ job, t }: { job: JobEntry; t: (k: string) => string }) {
+function JobRow({
+  job,
+  t,
+  onCancel,
+  onRetry,
+  isCancelling,
+  isRetrying,
+}: {
+  job: JobEntry;
+  t: (k: string) => string;
+  onCancel?: () => void;
+  onRetry?: () => void;
+  isCancelling?: boolean;
+  isRetrying?: boolean;
+}) {
   const cfg = STATUS_CONFIG[job.status];
   const Icon = cfg.Icon;
   return (
@@ -433,6 +521,28 @@ function JobRow({ job, t }: { job: JobEntry; t: (k: string) => string }) {
           >
             <ExternalLink className="size-3.5" />
           </a>
+        )}
+        {(job.status === "queued" || job.status === "scheduled") && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isCancelling}
+            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-rose-500/40 hover:text-rose-500 disabled:opacity-60"
+            title={tx(t, "publishJobs.cancel", "Cancel")}
+          >
+            {isCancelling ? <Loader2 className="size-3.5 animate-spin" /> : <AlertCircle className="size-3.5" />}
+          </button>
+        )}
+        {job.status === "failed" && onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            disabled={isRetrying}
+            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-brand-500/40 hover:text-brand-500 disabled:opacity-60"
+            title={tx(t, "publishJobs.retry", "Retry")}
+          >
+            {isRetrying ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+          </button>
         )}
       </div>
     </div>

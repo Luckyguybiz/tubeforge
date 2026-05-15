@@ -131,7 +131,10 @@ export function PublishPage() {
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const uploadVideo = trpc.youtube.uploadVideo.useMutation();
+  // Phase 2: create UploadJob in DB. Worker /api/cron/youtube-upload-processor
+  // picks it up within 60s, performs server-side PUT to YouTube, delivers
+  // webhooks on terminal status.
+  const createJob = trpc.uploadJobs.create.useMutation();
 
   /* Default channel when channels load */
   useEffect(() => {
@@ -256,45 +259,39 @@ export function PublishPage() {
 
     setPublishState("uploading");
     try {
-      const res = await uploadVideo.mutateAsync({
+      const res = await createJob.mutateAsync({
+        channelId: selectedChannel.id,
         title: title.trim(),
         description: description.trim() || undefined,
         tags: tags.length > 0 ? tags : undefined,
         videoUrl: videoUrl.trim(),
         thumbnailUrl: thumbnailUrl.trim() || undefined,
         privacyStatus: privacy,
-        publishAt,
+        scheduledAt: publishAt,
       });
 
-      // Phase 1: backend returns YouTube's resumable uploadUrl. We don't
-      // actually PUT bytes from the browser yet — Phase 2 worker will own
-      // server-side upload. For now we treat the metadataRes success as
-      // "video accepted, will appear on channel shortly" and let user
-      // verify via Publishing jobs page.
-      if (res.uploadUrl) {
-        setPublishState("success");
-        // We have a resumable session URL but no videoId until the Phase 2
-        // worker completes the upload. Channel-page link is the most useful
-        // landing target user has right now ("go check your channel").
-        const channelPageUrl = selectedChannel
-          ? `https://youtube.com/channel/${selectedChannel.id}`
-          : null;
-        setPublishedUrl(channelPageUrl);
-        savePublishHistory({
-          title: title.trim(),
-          url: channelPageUrl ?? "",
-          publishedAt: new Date().toISOString(),
-          scheduled: !!publishAt,
-          thumbnailUrl: thumbnailUrl.trim() || undefined,
-        });
-        toast.success(
-          publishAt
-            ? tx(t, "publish.toast.scheduled", "Scheduled successfully")
-            : tx(t, "publish.toast.queued", "Upload queued"),
-        );
-      } else {
-        throw new Error("No upload session returned");
-      }
+      // Job is queued; worker will fetch + PUT to YouTube within ~60s.
+      // Cache an entry for the local /publish/jobs strip (legacy
+      // localStorage path — Phase 2.5 swaps it for trpc.uploadJobs.list,
+      // but keeping savePublishHistory write is harmless and gives
+      // logged-out fallback).
+      setPublishState("success");
+      const channelPageUrl = selectedChannel
+        ? `https://youtube.com/channel/${selectedChannel.id}`
+        : null;
+      setPublishedUrl(channelPageUrl);
+      savePublishHistory({
+        title: title.trim(),
+        url: channelPageUrl ?? "",
+        publishedAt: new Date().toISOString(),
+        scheduled: !!publishAt,
+        thumbnailUrl: thumbnailUrl.trim() || undefined,
+      });
+      toast.success(
+        publishAt
+          ? tx(t, "publish.toast.scheduled", `Scheduled — job ${res.jobId.slice(0, 8)}…`)
+          : tx(t, "publish.toast.queued", `Queued — job ${res.jobId.slice(0, 8)}…`),
+      );
     } catch (e) {
       setPublishState("error");
       const msg = e instanceof Error ? e.message : String(e);
@@ -307,7 +304,7 @@ export function PublishPage() {
     scheduleEnabled,
     scheduleDate,
     scheduleTime,
-    uploadVideo,
+    createJob,
     title,
     description,
     tags,

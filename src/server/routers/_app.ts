@@ -24,6 +24,7 @@ import { keywordsRouter } from './keywords';
 import { toolHistoryRouter } from './toolHistory';
 import { contentPlannerRouter } from './contentPlanner';
 import { notificationRouter } from './notification';
+import { uploadJobsRouter } from './uploadJobs';
 export const appRouter = router({
   user: userRouter,
   project: projectRouter,
@@ -50,6 +51,7 @@ export const appRouter = router({
   toolHistory: toolHistoryRouter,
   contentPlanner: contentPlannerRouter,
   notification: notificationRouter,
+  uploadJobs: uploadJobsRouter,
 });
 
 export type AppRouter = typeof appRouter;

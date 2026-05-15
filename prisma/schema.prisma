@@ -83,6 +83,7 @@ model User {
   pushSubscriptions PushSubscription[]
   auditLogs        AuditLog[]
   notifications    Notification[]
+  uploadJobs       UploadJob[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -98,6 +99,8 @@ model Channel {
   subscribers Int      @default(0)
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploadJobs  UploadJob[]
+  externalUsers ExternalUser[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -376,18 +379,126 @@ model Comment {
 }
 
 model ApiKey {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name       String
-  keyHash    String    @unique
-  prefix     String
-  lastUsed   DateTime?
-  usageCount Int       @default(0)
-  createdAt  DateTime  @default(now())
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  keyHash         String    @unique
+  prefix          String
+  lastUsed        DateTime?
+  usageCount      Int       @default(0)
+  /// Quota system — uploads-per-month soft cap to prevent abuse.
+  /// Reset by /api/cron/cleanup nightly when quotaResetAt < now - 30d.
+  monthlyQuota    Int       @default(1000)
+  monthlyUsage    Int       @default(0)
+  quotaResetAt    DateTime  @default(now())
+  /// Revocation marker — middleware rejects calls when set.
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  uploadJobs      UploadJob[]
+  externalUsers   ExternalUser[]
 
   @@index([userId])
   @@index([keyHash])
+}
+
+/// External end-user belonging to an integrating organization.
+/// Lets API callers (e.g., Lucky Team) onboard their own users into
+/// TubeForge OAuth without exposing them as TubeForge accounts.
+/// Each external user can link one OAuth-granted YouTube channel.
+model ExternalUser {
+  id              String   @id @default(cuid())
+  apiKeyId        String
+  apiKey          ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  /// Opaque ID set by the integrating org (e.g., "maker_42"). Unique
+  /// per ApiKey so the same org can reuse the same maker ID without
+  /// risk of cross-org collision.
+  externalUserId  String
+  displayName     String?
+  /// FK to the standard NextAuth Account row holding youtube.upload
+  /// scoped tokens. Allows reuse of getYouTubeToken() helper.
+  oauthAccountId  String?
+  channelId       String?
+  channel         Channel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  uploadJobs      UploadJob[]
+  createdAt       DateTime @default(now())
+
+  @@unique([apiKeyId, externalUserId])
+  @@index([apiKeyId])
+  @@index([channelId])
+}
+
+enum UploadJobStatus {
+  QUEUED
+  UPLOADING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum UploadSource {
+  WEB_UI
+  API
+}
+
+/// Async upload job — populated when /preview or /api/v1/youtube/upload
+/// creates an upload request. Worker route /api/cron/youtube-upload-processor
+/// picks it up, performs server-side video fetch + PUT to YouTube,
+/// updates status, and calls deliverWebhooks() on terminal states.
+model UploadJob {
+  id                String          @id @default(cuid())
+
+  // Billing & identity
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeyId          String?
+  apiKey            ApiKey?         @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  externalUserId    String?
+  externalUser      ExternalUser?   @relation(fields: [externalUserId], references: [id], onDelete: SetNull)
+  source            UploadSource    @default(WEB_UI)
+
+  // Target
+  channelId         String
+  channel           Channel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  // Source video
+  videoUrl          String          @db.Text
+  thumbnailUrl      String?         @db.Text
+
+  // Metadata
+  title             String
+  description       String?         @db.Text
+  tags              String[]        @default([])
+  privacyStatus     String          @default("private")
+  scheduledAt       DateTime?
+
+  // State
+  status            UploadJobStatus @default(QUEUED)
+  youtubeVideoId    String?
+  errorMessage      String?         @db.Text
+  retryCount        Int             @default(0)
+  uploadProgress    Int             @default(0)
+
+  // Cached webhook delivery state for /jobs UI
+  webhookDelivered  Boolean         @default(false)
+  webhookFailed     Boolean         @default(false)
+
+  // Worker bookkeeping — `lockedBy` is a UUID-like worker identifier
+  // set during atomic claim. Prevents double-processing if multiple
+  // workers race.
+  lockedBy          String?
+  lockedAt          DateTime?
+
+  // Timestamps
+  createdAt         DateTime        @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+
+  @@index([userId, createdAt])
+  @@index([status, scheduledAt])
+  @@index([apiKeyId, createdAt])
+  @@index([channelId, createdAt])
+  @@index([externalUserId])
 }
 
 model WebhookEndpoint {

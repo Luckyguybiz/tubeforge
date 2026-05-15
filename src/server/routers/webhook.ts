@@ -10,7 +10,7 @@ import { db } from '@/server/db';
 
 const log = createLogger('webhook');
 
-export const WEBHOOK_EVENTS = ['video.completed', 'project.created'] as const;
+export const WEBHOOK_EVENTS = ['video.completed', 'project.created', 'job.queued', 'job.uploading', 'job.completed', 'job.failed', 'job.cancelled'] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 /** Delivery timeout in milliseconds */

@@ -44,6 +44,7 @@ function optionalInDev(name: string): string {
 export const env = {
   // Auth
   AUTH_SECRET: requireEnv('AUTH_SECRET'),
+  CRON_SECRET: process.env.CRON_SECRET ?? '',
   AUTH_GOOGLE_ID: requireEnv('AUTH_GOOGLE_ID'),
   AUTH_GOOGLE_SECRET: requireEnv('AUTH_GOOGLE_SECRET'),
 
