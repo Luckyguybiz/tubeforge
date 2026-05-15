@@ -10,7 +10,6 @@ import {
   StickyMobileCTA,
   ReferralCapture,
 } from "@/components/landing";
-import BrandOrbShowcaseMount from "@/components/landing/BrandOrbShowcaseMount";
 
 /* Lazy-load heavy below-fold client component to avoid blocking hero LCP */
 const ProductDemo = lazy(() =>
@@ -309,22 +308,7 @@ export default function LandingPage() {
       {/* ===== TRUSTED BY CREATORS (Social Proof) ===== */}
       <section style={{ padding: "72px 24px 56px", background: BG_PRIMARY, borderTop: `1px solid ${BORDER_SUBTLE}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
-          {/* Animated brand eye orb — iridescent eyeball that tracks the
-              cursor across the page. Square container so the canvas
-              aspect matches the sphere; floor glow stays bounded
-              inside the canvas. */}
-          <div
-            aria-hidden
-            style={{
-              width: 96,
-              height: 96,
-              margin: "0 auto 32px",
-              padding: 0,
-            }}
-          >
-            <BrandOrbShowcaseMount />
-          </div>
-          <p style={{ fontSize: 13, fontWeight: 500, color: TEXT_DIM, letterSpacing: "0.05em", textTransform: "uppercase", margin: "0 0 24px" }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: TEXT_DIM, letterSpacing: "0.05em", textTransform: "uppercase", margin: "0 0 24px" }}>
             Trusted by creators worldwide
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
