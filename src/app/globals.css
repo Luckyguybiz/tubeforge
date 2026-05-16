@@ -2406,6 +2406,16 @@ img {
   transform-origin: center;
 }
 
+/* Same spring entrance + ongoing soft breathing — used on the
+ * collapsed-sidebar pending-jobs dot so it stays visible. Chains the
+ * one-shot pop and an infinite gentle opacity pulse.                   */
+.tf-badge-pulse-chain {
+  animation:
+    tf-badge-pulse 480ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    tf-pulse-soft 1.8s ease-in-out 480ms infinite;
+  transform-origin: center;
+}
+
 /* Settings tab card hover lift — uniform interaction for channel cards,
  * api key rows, webhook entries. Border uses brand-500 (#6366f1) hex
  * fallback so the rule survives even if Tailwind tokens are renamed.    */
@@ -2454,6 +2464,7 @@ img {
   .tf-progress-shimmer,
   .tf-pulse-soft,
   .tf-badge-pulse,
+  .tf-badge-pulse-chain,
   .tf-expand-down,
   .tf-overlay-enter,
   .tf-modal-enter {
@@ -2463,3 +2474,67 @@ img {
     transition: none !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Mobile / touch primitives
+ *
+ * Global tap-highlight removed via -webkit-tap-highlight-color on
+ * `html` so iOS Safari doesn't flash gray on every tap. Focus/hover
+ * states + the tf-focusable ring already provide visible feedback.
+ *
+ * `tf-snap-x` — horizontal scroll-snap container used for filter
+ * chip strips on /publish/jobs. Each child snaps to its start edge,
+ * iOS momentum scroll preserved.
+ *
+ * `tf-scrollbar-hidden` — kills the native horizontal scrollbar on
+ * chip strips (still scrollable, looks cleaner on desktop).
+ *
+ * `tf-sticky-mobile-cta` — bottom-fixed CTA respects iPhone home
+ * indicator safe-area via env(safe-area-inset-bottom).
+ *
+ * Touch target size is handled at the component level via responsive
+ * Tailwind classes (size-10 on mobile, size-8 on desktop) rather than
+ * via a CSS expander pseudo-element, because some parents have
+ * overflow:hidden which would clip the expander.
+ * ────────────────────────────────────────────────────────────────── */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tf-snap-x {
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 1rem;
+  scroll-padding-right: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+.tf-snap-x > * {
+  scroll-snap-align: start;
+}
+
+/* Mobile sticky bottom bar — pads for iPhone home indicator.          */
+.tf-sticky-mobile-cta {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Hide native scrollbar but keep scrollability (touch + click+drag). */
+.tf-scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tf-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reveal the right edge of an overflow strip as a soft fade so users
+ * know there's more content to scroll. Applied alongside overflow-x.  */
+.tf-fade-edge-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+}
+@media (min-width: 640px) {
+  .tf-fade-edge-right {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+

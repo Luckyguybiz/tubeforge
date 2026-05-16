@@ -972,11 +972,12 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
         )}
 
         {/* Pending-jobs dot for Publish when collapsed (pure indicator).
-            Soft 1.8s breathing pulse so the user notices on small icon. */}
+            tf-badge-pulse-chain = one-shot spring entrance + infinite
+            soft pulse. Honors prefers-reduced-motion via globals.css. */}
         {id === 'publish' && collapsed && pendingCount > 0 && (
           <div
             key={`dot-${pendingCount}`}
-            className="tf-badge-pulse"
+            className="tf-badge-pulse-chain"
             aria-label={`${pendingCount} pending upload${pendingCount === 1 ? '' : 's'}`}
             style={{
               position: 'absolute',
@@ -988,7 +989,6 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
               background: 'linear-gradient(135deg, #6366f1, #a855f7)',
               border: `2px solid ${C.bg}`,
               boxShadow: '0 0 0 0 rgba(99,102,241,0.6)',
-              animation: 'tf-badge-pulse 480ms cubic-bezier(0.34, 1.56, 0.64, 1), tf-pulse-soft 1.8s ease-in-out 480ms infinite',
             }}
           />
         )}

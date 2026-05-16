@@ -554,14 +554,14 @@ export function PublishPage() {
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="tf-tag-in inline-flex items-center gap-1 rounded-md bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-500 transition-colors hover:bg-brand-500/20"
+                      className="tf-tag-in inline-flex items-center gap-1 rounded-md bg-brand-500/10 px-2 py-1 text-[12px] font-semibold text-brand-500 transition-colors hover:bg-brand-500/20 sm:py-0.5 sm:text-[11px]"
                     >
                       <Tag className="size-3" />
                       {tag}
                       <button
                         onClick={() => removeTag(tag)}
-                        className="ml-0.5 text-brand-500/70 transition-transform hover:rotate-90 hover:text-brand-500"
-                        aria-label="Remove tag"
+                        className="tf-focusable -mr-1 ml-0.5 flex size-5 items-center justify-center rounded text-brand-500/70 transition-transform hover:rotate-90 hover:text-brand-500"
+                        aria-label={`Remove tag ${tag}`}
                       >
                         <X className="size-3" />
                       </button>
@@ -717,8 +717,9 @@ export function PublishPage() {
             </label>
           </SectionCard>
 
-          {/* Publish CTA */}
-          <div className="sticky bottom-4 z-10">
+          {/* Publish CTA — sticky at bottom, respects iPhone home indicator
+              via the tf-sticky-mobile-cta utility (env safe-area-inset). */}
+          <div className="tf-sticky-mobile-cta sticky bottom-4 z-10">
             <button
               onClick={handlePublish}
               disabled={!canPublish}
@@ -912,15 +913,16 @@ function ChannelPicker({
         <YoutubeIcon className="size-3 text-red-500" />
         {tx(t, "publish.pickChannel", "Publish to channel")}
       </h3>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="tf-snap-x tf-scrollbar-hidden tf-fade-edge-right flex gap-2 overflow-x-auto pb-1">
         {channels.map((ch) => {
           const selected = selectedId === ch.id;
           return (
             <button
               key={ch.id}
               onClick={() => onSelect(ch.id)}
+              aria-pressed={selected}
               className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 transition-all duration-200 ease-out",
+                "tf-focusable flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 transition-all duration-200 ease-out",
                 selected
                   ? "border-brand-500 bg-brand-500/5 shadow-sm shadow-brand-500/10 scale-[1.01]"
                   : "border-border bg-background hover:border-brand-500/40 hover:-translate-y-px hover:shadow-sm",

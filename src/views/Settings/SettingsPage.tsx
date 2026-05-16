@@ -117,8 +117,9 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 lg:gap-8">
         {/* Tab nav (sidebar on desktop, top tabs on mobile) */}
         <nav className="md:sticky md:top-4 md:self-start">
-          {/* Mobile horizontal scroll tabs */}
-          <div className="md:hidden flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+          {/* Mobile horizontal scroll tabs — snap + edge-fade so the user
+              sees there's more to scroll. h-10 touch-friendly. */}
+          <div className="tf-snap-x tf-scrollbar-hidden tf-fade-edge-right -mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:hidden">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -127,11 +128,12 @@ export function SettingsPage() {
                   setActiveTab(tab.id);
                   window.history.replaceState(null, "", `#${tab.id}`);
                 }}
+                aria-pressed={activeTab === tab.id}
                 className={cn(
-                  "shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+                  "tf-focusable inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors",
                   activeTab === tab.id
-                    ? "bg-card border border-brand-500/40 text-foreground"
-                    : "text-muted-foreground hover:text-foreground border border-transparent",
+                    ? "border border-brand-500/40 bg-card text-foreground"
+                    : "border border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {tab.icon}
@@ -1242,68 +1244,75 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
                     : "border-border",
                 )}
               >
-                <div className="flex items-center gap-3 p-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-500 transition-transform duration-300 group-hover/wh:scale-110">
-                    <Webhook className="size-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-sm font-semibold text-foreground">{wh.url}</div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
-                      {wh.events.map((ev) => (
-                        <span
-                          key={ev}
-                          className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground transition-colors group-hover/wh:bg-muted-foreground/15"
-                        >
-                          {ev}
-                        </span>
-                      ))}
-                      {!wh.active && (
-                        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 font-bold text-rose-500">
-                          {tx(t, "settings.webhook.inactive", "INACTIVE")}
-                        </span>
-                      )}
+                {/* Mobile stacks: URL + events row on top, actions row below.
+                    Desktop keeps single horizontal row. */}
+                <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-500 transition-transform duration-300 group-hover/wh:scale-110">
+                      <Webhook className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-mono text-sm font-semibold text-foreground">{wh.url}</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
+                        {wh.events.map((ev) => (
+                          <span
+                            key={ev}
+                            className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground transition-colors group-hover/wh:bg-muted-foreground/15"
+                          >
+                            {ev}
+                          </span>
+                        ))}
+                        {!wh.active && (
+                          <span className="rounded bg-rose-500/15 px-1.5 py-0.5 font-bold text-rose-500">
+                            {tx(t, "settings.webhook.inactive", "INACTIVE")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(isExpanded ? null : wh.id)}
-                    className={cn(
-                      "tf-focusable inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
-                      isExpanded
-                        ? "bg-brand-500/10 text-brand-500"
-                        : "text-muted-foreground hover:bg-muted hover:text-brand-500",
-                    )}
-                    title={tx(t, "settings.webhook.activityHint", "Show recent delivery attempts")}
-                    aria-expanded={isExpanded}
-                  >
-                    <ChevronRight
+                  {/* Action buttons — h-9 on mobile (36px touch), tighter desktop */}
+                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(isExpanded ? null : wh.id)}
                       className={cn(
-                        "size-3 transition-transform duration-200 ease-out",
-                        isExpanded && "rotate-90",
+                        "tf-focusable inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-xs font-semibold transition-colors sm:h-auto sm:py-1",
+                        isExpanded
+                          ? "bg-brand-500/10 text-brand-500"
+                          : "text-muted-foreground hover:bg-muted hover:text-brand-500",
                       )}
-                    />
-                    {tx(t, "settings.webhook.activity", "Activity")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTestingId(wh.id);
-                      testHook.mutate({ id: wh.id });
-                    }}
-                    disabled={testHook.isPending && testingId === wh.id}
-                    className="tf-focusable inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-brand-500 transition-all hover:bg-brand-500/10 hover:text-brand-600 disabled:cursor-wait disabled:opacity-60"
-                    title={tx(t, "settings.webhook.testHint", "Send a synthetic job.completed event")}
-                  >
-                    {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover/wh:translate-x-0.5" />}
-                    {tx(t, "settings.webhook.test", "Test")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteId(wh.id)}
-                    className="tf-focusable rounded-md px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500"
-                  >
-                    {tx(t, "common.delete", "Delete")}
-                  </button>
+                      title={tx(t, "settings.webhook.activityHint", "Show recent delivery attempts")}
+                      aria-expanded={isExpanded}
+                    >
+                      <ChevronRight
+                        className={cn(
+                          "size-3 transition-transform duration-200 ease-out",
+                          isExpanded && "rotate-90",
+                        )}
+                      />
+                      {tx(t, "settings.webhook.activity", "Activity")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTestingId(wh.id);
+                        testHook.mutate({ id: wh.id });
+                      }}
+                      disabled={testHook.isPending && testingId === wh.id}
+                      className="tf-focusable group/test inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-xs font-semibold text-brand-500 transition-all hover:bg-brand-500/10 hover:text-brand-600 disabled:cursor-wait disabled:opacity-60 sm:h-auto sm:py-1"
+                      title={tx(t, "settings.webhook.testHint", "Send a synthetic job.completed event")}
+                    >
+                      {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform duration-200 group-hover/test:translate-x-0.5" />}
+                      {tx(t, "settings.webhook.test", "Test")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteId(wh.id)}
+                      className="tf-focusable inline-flex h-9 items-center rounded-md px-2.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500 sm:h-auto sm:py-1"
+                    >
+                      {tx(t, "common.delete", "Delete")}
+                    </button>
+                  </div>
                 </div>
                 {isExpanded && (
                   <div className="tf-expand-down">

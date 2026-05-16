@@ -351,9 +351,9 @@ export function JobsPage() {
         </div>
       </header>
 
-      {/* Filter chips */}
+      {/* Filter chips — mobile gets scroll-snap + edge-fade hint */}
       <section className="mb-5">
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+        <div className="tf-snap-x tf-scrollbar-hidden tf-fade-edge-right -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           {filters.map((f) => {
             const active = activeFilter === f.key;
             const count = counts[f.key];
@@ -368,7 +368,7 @@ export function JobsPage() {
                 onClick={() => setActiveFilter(f.key)}
                 aria-pressed={active}
                 className={cn(
-                  "tf-focusable group inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200 ease-out",
+                  "tf-focusable group inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold transition-all duration-200 ease-out sm:h-8 sm:py-1.5",
                   active
                     ? "bg-foreground text-background shadow-sm scale-[1.02]"
                     : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-px",
@@ -479,15 +479,15 @@ function JobRow({
   return (
     <div
       className={cn(
-        "group/row relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm transition-all duration-200 ease-out",
+        "group/row relative flex items-center gap-2.5 overflow-hidden rounded-2xl border bg-card p-2.5 shadow-sm transition-all duration-200 ease-out sm:gap-3 sm:p-3",
         "hover:-translate-y-0.5 hover:shadow-md hover:border-brand-500/30",
         highlighted
           ? "border-brand-500/60 shadow-md shadow-brand-500/15 tf-row-highlight"
           : "border-border",
       )}
     >
-      {/* Thumbnail */}
-      <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
+      {/* Thumbnail — smaller on mobile to leave room for title */}
+      <div className="relative aspect-video w-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:w-24">
         {job.thumbnailUrl ? (
           <img
             src={job.thumbnailUrl}
@@ -561,13 +561,15 @@ function JobRow({
         </div>
       </div>
 
-      {/* Status badge */}
+      {/* Status badge — icon-only with dot on mobile, full label on sm+ */}
       <span
         className={cn(
-          "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
+          "inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors sm:px-2 sm:py-0.5",
           cfg.badge,
           cfg.text,
         )}
+        aria-label={cfg.label}
+        title={cfg.label}
       >
         {isActive && (
           <span className="relative inline-flex size-1.5">
@@ -579,21 +581,21 @@ function JobRow({
           </span>
         )}
         <Icon className={cn("size-3", job.status === "uploading" && "animate-spin")} />
-        {cfg.label}
+        <span className="hidden sm:inline">{cfg.label}</span>
       </span>
 
-      {/* Actions */}
+      {/* Actions — size-10 on mobile (40px touch target), size-8 desktop */}
       <div className="flex shrink-0 items-center gap-1">
         {job.status === "completed" && job.youtubeUrl && (
           <a
             href={job.youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="tf-focusable inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-brand-500/40 hover:text-brand-500 hover:shadow-sm"
+            className="tf-focusable inline-flex size-10 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-brand-500/40 hover:text-brand-500 hover:shadow-sm sm:size-8"
             title={tx(t, "publishJobs.openYt", "Open on YouTube")}
             aria-label={tx(t, "publishJobs.openYt", "Open on YouTube")}
           >
-            <ExternalLink className="size-3.5" />
+            <ExternalLink className="size-4 sm:size-3.5" />
           </a>
         )}
         {(job.status === "queued" || job.status === "scheduled") && onCancel && (
@@ -601,11 +603,11 @@ function JobRow({
             type="button"
             onClick={onCancel}
             disabled={isCancelling}
-            className="tf-focusable inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-rose-500/40 hover:text-rose-500 disabled:cursor-wait disabled:opacity-60"
+            className="tf-focusable inline-flex size-10 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-rose-500/40 hover:text-rose-500 disabled:cursor-wait disabled:opacity-60 sm:size-8"
             title={tx(t, "publishJobs.cancel", "Cancel")}
             aria-label={tx(t, "publishJobs.cancel", "Cancel")}
           >
-            {isCancelling ? <Loader2 className="size-3.5 animate-spin" /> : <AlertCircle className="size-3.5" />}
+            {isCancelling ? <Loader2 className="size-4 animate-spin sm:size-3.5" /> : <AlertCircle className="size-4 sm:size-3.5" />}
           </button>
         )}
         {job.status === "failed" && onRetry && (
@@ -613,12 +615,12 @@ function JobRow({
             type="button"
             onClick={onRetry}
             disabled={isRetrying}
-            className="tf-focusable inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-brand-500/40 hover:rotate-180 hover:text-brand-500 disabled:cursor-wait disabled:opacity-60"
+            className="tf-focusable inline-flex size-10 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:rotate-180 hover:border-brand-500/40 hover:text-brand-500 disabled:cursor-wait disabled:opacity-60 sm:size-8"
             style={{ transitionDuration: "260ms" }}
             title={tx(t, "publishJobs.retry", "Retry")}
             aria-label={tx(t, "publishJobs.retry", "Retry")}
           >
-            {isRetrying ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+            {isRetrying ? <Loader2 className="size-4 animate-spin sm:size-3.5" /> : <RefreshCw className="size-4 sm:size-3.5" />}
           </button>
         )}
       </div>
