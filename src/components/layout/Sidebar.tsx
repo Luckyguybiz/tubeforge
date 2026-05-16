@@ -944,9 +944,13 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
           </span>
         )}
 
-        {/* Pending-jobs badge for Publish — counts QUEUED + UPLOADING. */}
+        {/* Pending-jobs badge for Publish — counts QUEUED + UPLOADING.
+            `key={pendingCount}` forces a remount so the tf-badge-pulse
+            animation re-fires on every count delta (0→1, 1→2, etc). */}
         {id === 'publish' && !collapsed && pendingCount > 0 && (
           <span
+            key={`badge-${pendingCount}`}
+            className="tf-badge-pulse"
             aria-label={`${pendingCount} pending upload${pendingCount === 1 ? '' : 's'}`}
             style={{
               fontSize: 10,
@@ -960,16 +964,19 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
               textAlign: 'center',
               fontFamily: 'ui-monospace, SFMono-Regular, monospace',
               fontVariantNumeric: 'tabular-nums',
-              boxShadow: '0 0 0 2px rgba(99,102,241,0.15)',
+              boxShadow: '0 0 0 2px rgba(99,102,241,0.15), 0 1px 4px rgba(99,102,241,0.3)',
             }}
           >
             {pendingCount > 99 ? '99+' : pendingCount}
           </span>
         )}
 
-        {/* Pending-jobs dot for Publish when collapsed (pure indicator). */}
+        {/* Pending-jobs dot for Publish when collapsed (pure indicator).
+            Soft 1.8s breathing pulse so the user notices on small icon. */}
         {id === 'publish' && collapsed && pendingCount > 0 && (
           <div
+            key={`dot-${pendingCount}`}
+            className="tf-badge-pulse"
             aria-label={`${pendingCount} pending upload${pendingCount === 1 ? '' : 's'}`}
             style={{
               position: 'absolute',
@@ -980,6 +987,8 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #6366f1, #a855f7)',
               border: `2px solid ${C.bg}`,
+              boxShadow: '0 0 0 0 rgba(99,102,241,0.6)',
+              animation: 'tf-badge-pulse 480ms cubic-bezier(0.34, 1.56, 0.64, 1), tf-pulse-soft 1.8s ease-in-out 480ms infinite',
             }}
           />
         )}

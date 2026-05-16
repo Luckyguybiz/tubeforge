@@ -580,27 +580,30 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
                 : tx(t, "settings.youtubeChannels.refresh", "Refresh")}
             </button>
           </div>
-          <div className="space-y-2.5">
+          <div className="tf-stagger-in space-y-2.5">
             {channels.map((ch) => (
-              <div key={ch.id} className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors">
+              <div
+                key={ch.id}
+                className="group/ch tf-settings-card flex items-center gap-4 rounded-xl border border-border bg-card p-3"
+              >
                 {ch.thumbnail ? (
                   <img
                     src={ch.thumbnail}
                     alt={ch.title}
-                    className="size-12 rounded-full object-cover ring-2 ring-border shrink-0"
+                    className="size-12 shrink-0 rounded-full object-cover ring-2 ring-border transition-all duration-300 group-hover/ch:ring-brand-500/40 group-hover/ch:scale-105"
                   />
                 ) : (
-                  <div className="size-12 rounded-full bg-red-500/15 flex items-center justify-center text-red-500 shrink-0">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-500 transition-transform duration-300 group-hover/ch:scale-105">
                     <YoutubeIcon className="size-5" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-foreground truncate">{ch.title}</div>
-                  <div className="text-xs text-muted-foreground font-mono">
+                  <div className="truncate text-sm font-semibold text-foreground">{ch.title}</div>
+                  <div className="font-mono text-xs text-muted-foreground">
                     {ch.subscribers.toLocaleString()} {tx(t, "settings.youtubeChannels.subs", "subscribers")}
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 shrink-0">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-500">
                   <Check className="size-3" />
                   {tx(t, "settings.youtubeChannels.synced", "Synced")}
                 </span>
@@ -885,19 +888,19 @@ function ApiKeysSection({ t }: { t: (k: string) => string }) {
       {keys.isLoading ? (
         <Skeleton width="100%" height={120} style={{ borderRadius: 12 }} />
       ) : keys.data && keys.data.length > 0 ? (
-        <div className="space-y-2">
+        <div className="tf-stagger-in space-y-2">
           {keys.data.map((k) => (
             <div
               key={k.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors"
+              className="group/key tf-settings-card flex items-center gap-3 rounded-xl border border-border bg-card p-3"
             >
-              <div className="size-9 shrink-0 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-500 transition-transform duration-300 group-hover/key:scale-110 group-hover/key:rotate-[-6deg]">
                 <Key className="size-4" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-foreground truncate">{k.label}</span>
-                  <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                  <span className="truncate text-sm font-bold text-foreground">{k.label}</span>
+                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
                     tf_…{k.last4}
                   </code>
                 </div>
@@ -922,7 +925,7 @@ function ApiKeysSection({ t }: { t: (k: string) => string }) {
               <button
                 type="button"
                 onClick={() => setRevokeId(k.id)}
-                className="text-xs font-semibold text-muted-foreground hover:text-rose-500 transition-colors"
+                className="tf-focusable rounded-md px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500"
               >
                 {tx(t, "settings.apiKey.revoke", "Revoke")}
               </button>
@@ -963,9 +966,13 @@ function ApiKeysSection({ t }: { t: (k: string) => string }) {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-gradient-to-r from-brand-500 to-violet-500 hover:scale-[1.01] text-white text-sm font-semibold transition-transform shadow-sm shadow-brand-500/20"
+        className="tf-focusable group/gen relative mt-4 inline-flex h-10 items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-sm font-semibold text-white shadow-sm shadow-brand-500/20 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:shadow-brand-500/30"
       >
-        <Plus className="size-4" />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 ease-out group-hover/gen:translate-x-full"
+        />
+        <Plus className="size-4 transition-transform duration-200 group-hover/gen:rotate-90" />
         {tx(t, "settings.apiKey.create", "Generate new key")}
       </button>
 
@@ -1222,36 +1229,36 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
       {webhooks.isLoading ? (
         <Skeleton width="100%" height={100} style={{ borderRadius: 12 }} />
       ) : webhooks.data && webhooks.data.length > 0 ? (
-        <div className="space-y-2">
+        <div className="tf-stagger-in space-y-2">
           {webhooks.data.map((wh) => {
             const isExpanded = expandedId === wh.id;
             return (
               <div
                 key={wh.id}
                 className={cn(
-                  "rounded-xl bg-card border transition-colors",
+                  "tf-settings-card group/wh rounded-xl border bg-card",
                   isExpanded
                     ? "border-brand-500/40 shadow-sm shadow-brand-500/10"
-                    : "border-border hover:border-brand-500/30",
+                    : "border-border",
                 )}
               >
                 <div className="flex items-center gap-3 p-3">
-                  <div className="size-9 shrink-0 rounded-lg bg-violet-500/15 flex items-center justify-center text-violet-500">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-500 transition-transform duration-300 group-hover/wh:scale-110">
                     <Webhook className="size-4" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-mono font-semibold text-foreground truncate">{wh.url}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-mono text-sm font-semibold text-foreground">{wh.url}</div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
                       {wh.events.map((ev) => (
                         <span
                           key={ev}
-                          className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground"
+                          className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground transition-colors group-hover/wh:bg-muted-foreground/15"
                         >
                           {ev}
                         </span>
                       ))}
                       {!wh.active && (
-                        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-500 font-bold">
+                        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 font-bold text-rose-500">
                           {tx(t, "settings.webhook.inactive", "INACTIVE")}
                         </span>
                       )}
@@ -1261,15 +1268,20 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : wh.id)}
                     className={cn(
-                      "text-xs font-semibold transition-colors inline-flex items-center gap-1",
+                      "tf-focusable inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors",
                       isExpanded
-                        ? "text-brand-500"
-                        : "text-muted-foreground hover:text-brand-500",
+                        ? "bg-brand-500/10 text-brand-500"
+                        : "text-muted-foreground hover:bg-muted hover:text-brand-500",
                     )}
                     title={tx(t, "settings.webhook.activityHint", "Show recent delivery attempts")}
                     aria-expanded={isExpanded}
                   >
-                    <ChevronRight className={cn("size-3 transition-transform", isExpanded && "rotate-90")} />
+                    <ChevronRight
+                      className={cn(
+                        "size-3 transition-transform duration-200 ease-out",
+                        isExpanded && "rotate-90",
+                      )}
+                    />
                     {tx(t, "settings.webhook.activity", "Activity")}
                   </button>
                   <button
@@ -1279,21 +1291,25 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
                       testHook.mutate({ id: wh.id });
                     }}
                     disabled={testHook.isPending && testingId === wh.id}
-                    className="text-xs font-semibold text-brand-500 hover:text-brand-600 disabled:opacity-60 inline-flex items-center gap-1"
+                    className="tf-focusable inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-brand-500 transition-all hover:bg-brand-500/10 hover:text-brand-600 disabled:cursor-wait disabled:opacity-60"
                     title={tx(t, "settings.webhook.testHint", "Send a synthetic job.completed event")}
                   >
-                    {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
+                    {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3 transition-transform group-hover/wh:translate-x-0.5" />}
                     {tx(t, "settings.webhook.test", "Test")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeleteId(wh.id)}
-                    className="text-xs font-semibold text-muted-foreground hover:text-rose-500"
+                    className="tf-focusable rounded-md px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500"
                   >
                     {tx(t, "common.delete", "Delete")}
                   </button>
                 </div>
-                {isExpanded && <WebhookActivityLog webhookId={wh.id} t={t} />}
+                {isExpanded && (
+                  <div className="tf-expand-down">
+                    <WebhookActivityLog webhookId={wh.id} t={t} />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1602,7 +1618,7 @@ function WebhookActivityLog({
           {tx(t, "settings.webhook.noDeliveries", "No delivery attempts yet — trigger one with Test or wait for a real event.")}
         </div>
       ) : (
-        <div className="space-y-1.5 max-h-72 overflow-y-auto">
+        <div className="tf-stagger-in max-h-72 space-y-1.5 overflow-y-auto pr-1">
           {activity.data.deliveries.map((d) => {
             const isSuccess = d.success;
             const statusColor = isSuccess
@@ -1617,11 +1633,11 @@ function WebhookActivityLog({
             return (
               <div
                 key={d.id}
-                className="flex items-center gap-2 rounded-lg bg-card border border-border px-2.5 py-1.5 text-[11px]"
+                className="group/d flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] transition-all hover:border-brand-500/30 hover:bg-card hover:shadow-sm"
               >
                 <span
                   className={cn(
-                    "shrink-0 inline-flex items-center justify-center rounded font-mono font-bold w-12 text-center px-1.5 py-0.5",
+                    "inline-flex w-12 shrink-0 items-center justify-center rounded px-1.5 py-0.5 text-center font-mono font-bold",
                     statusColor,
                   )}
                   title={d.errorMessage ?? undefined}
@@ -1630,11 +1646,11 @@ function WebhookActivityLog({
                 </span>
                 <code className="shrink-0 font-mono text-foreground">{d.event}</code>
                 {d.attempt > 1 && (
-                  <span className="shrink-0 rounded bg-muted px-1 py-0 text-muted-foreground font-mono">
+                  <span className="shrink-0 rounded bg-muted px-1 py-0 font-mono text-muted-foreground">
                     attempt #{d.attempt}
                   </span>
                 )}
-                <span className="flex-1 truncate text-muted-foreground font-mono text-[10px]">
+                <span className="flex-1 truncate font-mono text-[10px] text-muted-foreground">
                   {d.errorMessage
                     ? d.errorMessage.slice(0, 80)
                     : d.responseBody
@@ -1649,10 +1665,11 @@ function WebhookActivityLog({
                     type="button"
                     onClick={() => retry.mutate({ deliveryId: d.id })}
                     disabled={isRetrying}
-                    className="shrink-0 text-brand-500 hover:text-brand-600 disabled:opacity-60 inline-flex items-center"
+                    className="tf-focusable inline-flex shrink-0 items-center rounded p-1 text-brand-500 transition-all hover:bg-brand-500/10 hover:text-brand-600 disabled:cursor-wait disabled:opacity-60"
                     title={tx(t, "settings.webhook.retryHint", "Re-send this delivery")}
+                    aria-label={tx(t, "settings.webhook.retryHint", "Re-send this delivery")}
                   >
-                    {isRetrying ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
+                    {isRetrying ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3 transition-transform duration-300 group-hover/d:rotate-180" />}
                   </button>
                 )}
               </div>
@@ -1667,20 +1684,20 @@ function WebhookActivityLog({
 function ModalShell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm tf-overlay-enter"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        className="tf-modal-enter relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="tf-focusable absolute right-3 top-3 flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-all hover:rotate-90 hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" />
         </button>

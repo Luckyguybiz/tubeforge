@@ -358,13 +358,17 @@ export function JobsPage() {
             const active = activeFilter === f.key;
             const count = counts[f.key];
             const isStatus = f.key !== "all";
-            const dotPulse = active && (f.key === "uploading" || f.key === "queued");
+            // Ping the dot only when the filter targets a status that
+            // ACTUALLY has live items right now — not just because the
+            // user clicked the filter. Avoids fake "uploading" signal.
+            const dotPulse = isStatus && count > 0 && (f.key === "uploading" || f.key === "queued");
             return (
               <button
                 key={f.key}
                 onClick={() => setActiveFilter(f.key)}
+                aria-pressed={active}
                 className={cn(
-                  "group inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200 ease-out",
+                  "tf-focusable group inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200 ease-out",
                   active
                     ? "bg-foreground text-background shadow-sm scale-[1.02]"
                     : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-px",
@@ -416,7 +420,7 @@ export function JobsPage() {
           t={t}
         />
       ) : (
-        <div key={activeFilter} className="tf-content-reveal space-y-6 pb-16">
+        <div key={activeFilter} className="space-y-6 pb-16">
           {grouped.map(([day, dayJobs], gi) => (
             <section
               key={day}
@@ -585,8 +589,9 @@ function JobRow({
             href={job.youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-brand-500/40 hover:text-brand-500"
+            className="tf-focusable inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-brand-500/40 hover:text-brand-500 hover:shadow-sm"
             title={tx(t, "publishJobs.openYt", "Open on YouTube")}
+            aria-label={tx(t, "publishJobs.openYt", "Open on YouTube")}
           >
             <ExternalLink className="size-3.5" />
           </a>
@@ -596,8 +601,9 @@ function JobRow({
             type="button"
             onClick={onCancel}
             disabled={isCancelling}
-            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-rose-500/40 hover:text-rose-500 disabled:opacity-60"
+            className="tf-focusable inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-rose-500/40 hover:text-rose-500 disabled:cursor-wait disabled:opacity-60"
             title={tx(t, "publishJobs.cancel", "Cancel")}
+            aria-label={tx(t, "publishJobs.cancel", "Cancel")}
           >
             {isCancelling ? <Loader2 className="size-3.5 animate-spin" /> : <AlertCircle className="size-3.5" />}
           </button>
@@ -607,8 +613,10 @@ function JobRow({
             type="button"
             onClick={onRetry}
             disabled={isRetrying}
-            className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-brand-500/40 hover:text-brand-500 disabled:opacity-60"
+            className="tf-focusable inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:border-brand-500/40 hover:rotate-180 hover:text-brand-500 disabled:cursor-wait disabled:opacity-60"
+            style={{ transitionDuration: "260ms" }}
             title={tx(t, "publishJobs.retry", "Retry")}
+            aria-label={tx(t, "publishJobs.retry", "Retry")}
           >
             {isRetrying ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
           </button>

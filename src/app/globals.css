@@ -304,14 +304,24 @@ input:focus, textarea:focus, select:focus {
 .tf-stagger-in > * {
   animation: tf-stagger-in 0.3s cubic-bezier(0.2, 0.8, 0.4, 1) both;
 }
-.tf-stagger-in > *:nth-child(1) { animation-delay: 0s; }
-.tf-stagger-in > *:nth-child(2) { animation-delay: 0.04s; }
-.tf-stagger-in > *:nth-child(3) { animation-delay: 0.08s; }
-.tf-stagger-in > *:nth-child(4) { animation-delay: 0.12s; }
-.tf-stagger-in > *:nth-child(5) { animation-delay: 0.16s; }
-.tf-stagger-in > *:nth-child(6) { animation-delay: 0.20s; }
-.tf-stagger-in > *:nth-child(7) { animation-delay: 0.24s; }
-.tf-stagger-in > *:nth-child(8) { animation-delay: 0.28s; }
+.tf-stagger-in > *:nth-child(1)  { animation-delay: 0s;    }
+.tf-stagger-in > *:nth-child(2)  { animation-delay: 0.04s; }
+.tf-stagger-in > *:nth-child(3)  { animation-delay: 0.08s; }
+.tf-stagger-in > *:nth-child(4)  { animation-delay: 0.12s; }
+.tf-stagger-in > *:nth-child(5)  { animation-delay: 0.16s; }
+.tf-stagger-in > *:nth-child(6)  { animation-delay: 0.20s; }
+.tf-stagger-in > *:nth-child(7)  { animation-delay: 0.24s; }
+.tf-stagger-in > *:nth-child(8)  { animation-delay: 0.28s; }
+.tf-stagger-in > *:nth-child(9)  { animation-delay: 0.32s; }
+.tf-stagger-in > *:nth-child(10) { animation-delay: 0.36s; }
+.tf-stagger-in > *:nth-child(11) { animation-delay: 0.40s; }
+.tf-stagger-in > *:nth-child(12) { animation-delay: 0.44s; }
+.tf-stagger-in > *:nth-child(13) { animation-delay: 0.48s; }
+.tf-stagger-in > *:nth-child(14) { animation-delay: 0.52s; }
+.tf-stagger-in > *:nth-child(15) { animation-delay: 0.56s; }
+.tf-stagger-in > *:nth-child(16) { animation-delay: 0.60s; }
+/* Children 17+ fall back to the base rule (no per-index delay) so they
+ * still animate, just synchronously — caps the cascade duration. */
 
 /* ── Active nav indicator slide ────────────── */
 @keyframes tf-indicator-in {
@@ -384,6 +394,23 @@ input:focus, textarea:focus, select:focus {
 @keyframes tf-modal-in {
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Modal/overlay entrance for flexbox-centered layouts (does not depend
+ * on a translate origin — purely opacity + scale + slight rise).        */
+@keyframes tf-overlay-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes tf-modal-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1);      }
+}
+.tf-overlay-enter {
+  animation: tf-overlay-enter 200ms ease-out both;
+}
+.tf-modal-enter {
+  animation: tf-modal-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ── Scroll reveal (IntersectionObserver) ──── */
@@ -2331,14 +2358,17 @@ img {
 }
 
 /* Job row highlight — newly-created job from /publish gets a glowing
- * ring pulse for ~5s to draw the eye in the timeline.                   */
+ * ring pulse that beats 3 times over ~5s to draw the eye, then settles.
+ * Inside one 1.6s cycle: pulse out (0-30%), hold (30-50%), fade
+ * (50-100%) so the rhythm feels deliberate rather than mechanical.    */
 @keyframes tf-row-highlight {
   0%   { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.55); }
-  60%  { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0.05); }
-  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  30%  { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0.12); }
+  50%  { box-shadow: 0 0 0 8px  rgba(99, 102, 241, 0.05); }
+  100% { box-shadow: 0 0 0 0    rgba(99, 102, 241, 0);    }
 }
 .tf-row-highlight {
-  animation: tf-row-highlight 2.2s ease-out 1, tf-row-highlight 2.2s ease-out 2.4s 1;
+  animation: tf-row-highlight 1.6s ease-out 3;
 }
 
 /* Upload progress shimmer — the gradient progress bar pans rightward
@@ -2362,6 +2392,55 @@ img {
   animation: tf-pulse-soft 1.6s ease-in-out infinite;
 }
 
+/* Sidebar pendingCount badge — pulses once when count transitions
+ * from 0 to ≥1 (a job was just queued). React re-mounts the badge via
+ * `key` prop so the animation re-fires on each delta.                   */
+@keyframes tf-badge-pulse {
+  0%   { transform: scale(0.6); opacity: 0; }
+  50%  { transform: scale(1.25); opacity: 1; }
+  80%  { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.tf-badge-pulse {
+  animation: tf-badge-pulse 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+/* Settings tab card hover lift — uniform interaction for channel cards,
+ * api key rows, webhook entries. Border uses brand-500 (#6366f1) hex
+ * fallback so the rule survives even if Tailwind tokens are renamed.    */
+.tf-settings-card {
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+.tf-settings-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 18px -8px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Activity log expand — smooth height + opacity reveal. Tailwind has
+ * no built-in max-height transition with auto, so we use a generous
+ * max-height that fits real content + fade.                             */
+@keyframes tf-expand-down {
+  0%   { opacity: 0; transform: translateY(-4px); max-height: 0;     }
+  100% { opacity: 1; transform: translateY(0);    max-height: 800px; }
+}
+.tf-expand-down {
+  animation: tf-expand-down 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  overflow: hidden;
+}
+
+/* Focus-visible ring helper — applied to small icon-only action buttons
+ * (cancel/retry, tag remove, filter chip). Keyboard-only users get a
+ * clear brand-tinted ring; mouse users see nothing extra.               */
+.tf-focusable:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-background, hsl(var(--background, 0 0% 100%))),
+    0 0 0 4px rgba(99, 102, 241, 0.55);
+  border-radius: inherit;
+}
+
 /* Respect reduced-motion preference — animations collapse to a single
  * static frame so vestibular-sensitive users get the layout without
  * the motion.                                                           */
@@ -2373,7 +2452,14 @@ img {
   .tf-success-pop,
   .tf-row-highlight,
   .tf-progress-shimmer,
-  .tf-pulse-soft {
+  .tf-pulse-soft,
+  .tf-badge-pulse,
+  .tf-expand-down,
+  .tf-overlay-enter,
+  .tf-modal-enter {
     animation: none !important;
+  }
+  .tf-settings-card {
+    transition: none !important;
   }
 }
