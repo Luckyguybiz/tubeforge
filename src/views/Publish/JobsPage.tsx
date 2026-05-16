@@ -300,8 +300,27 @@ export function JobsPage() {
     { key: "failed", label: tx(t, "publishJobs.filter.failed", "Failed") },
   ];
 
+  // Build a short summary string for screen readers. Updates when counts
+  // change, so SR users hear "2 uploading, 1 scheduled, 12 completed"
+  // rather than nothing as jobs progress through the worker.
+  const a11ySummary = useMemo(() => {
+    const parts: string[] = [];
+    if (counts.uploading) parts.push(`${counts.uploading} uploading`);
+    if (counts.queued) parts.push(`${counts.queued} queued`);
+    if (counts.scheduled) parts.push(`${counts.scheduled} scheduled`);
+    if (counts.completed) parts.push(`${counts.completed} completed`);
+    if (counts.failed) parts.push(`${counts.failed} failed`);
+    return parts.join(", ");
+  }, [counts]);
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      {/* SR-only live region. Polite (not assertive) so it doesn't
+          interrupt a current announcement. Re-announces only when the
+          summary string changes — i.e., on real status transitions. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {a11ySummary}
+      </div>
       {/* Header */}
       <header className="pt-6 pb-4 sm:pt-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -324,17 +343,20 @@ export function JobsPage() {
           </div>
           <div className="flex items-center gap-2 self-start">
             <button
+              type="button"
               onClick={refresh}
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground transition-colors hover:border-brand-500/40 hover:text-brand-500"
+              disabled={jobsQuery.isFetching}
+              aria-busy={jobsQuery.isFetching}
+              className="tf-focusable inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground transition-colors hover:border-brand-500/40 hover:text-brand-500 disabled:cursor-wait disabled:opacity-60"
               aria-label="Refresh"
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw className={cn("size-4", jobsQuery.isFetching && "animate-spin")} />
               {tx(t, "publishJobs.refresh", "Refresh")}
             </button>
             <Link
               href="/publish"
               prefetch
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-sm shadow-brand-500/20 transition-transform hover:scale-[1.02]"
+              className="tf-focusable inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 text-[13px] font-bold text-white shadow-sm shadow-brand-500/20 transition-all hover:scale-[1.02] hover:shadow-md hover:shadow-brand-500/30"
             >
               <Plus className="size-4" />
               {tx(t, "publishJobs.newJob", "New publish")}
