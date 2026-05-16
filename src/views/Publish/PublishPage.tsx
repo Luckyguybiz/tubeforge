@@ -524,8 +524,9 @@ export function PublishPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value.slice(0, 100))}
+                  maxLength={100}
                   placeholder={tx(t, "publish.titlePlaceholder", "How I built a 6-figure YouTube channel in 2026")}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-4 text-[14px] font-medium text-foreground outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-4 text-[14px] font-medium text-foreground outline-none transition-shadow focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
                 />
               </div>
 
@@ -538,9 +539,10 @@ export function PublishPage() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value.slice(0, 5000))}
+                  maxLength={5000}
                   placeholder={tx(t, "publish.descPlaceholder", "What's this video about? Add timestamps, links, hashtags.")}
                   rows={5}
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 font-mono text-[13px] text-foreground outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 font-mono text-[13px] text-foreground outline-none transition-shadow focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
                 />
               </div>
 
@@ -570,7 +572,8 @@ export function PublishPage() {
                   <input
                     type="text"
                     value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
+                    onChange={(e) => setTagInput(e.target.value.slice(0, 30))}
+                    maxLength={30}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === ",") {
                         e.preventDefault();
@@ -580,7 +583,9 @@ export function PublishPage() {
                       }
                     }}
                     placeholder={tags.length === 0 ? tx(t, "publish.tagsPlaceholder", "type tag and Enter…") : ""}
-                    className="flex-1 min-w-[100px] bg-transparent py-1 text-[13px] outline-none placeholder:text-muted-foreground"
+                    aria-label={tx(t, "publish.field.tags", "Tags")}
+                    disabled={tags.length >= 30}
+                    className="flex-1 min-w-[100px] bg-transparent py-1 text-[13px] outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
                   />
                 </div>
               </div>

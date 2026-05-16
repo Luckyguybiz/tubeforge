@@ -1061,9 +1061,16 @@ function ApiKeysSection({ t }: { t: (k: string) => string }) {
 
       {/* Reveal modal (shown once) */}
       {revealedKey && (
-        <ModalShell onClose={() => setRevealedKey(null)}>
+        <ModalShell
+          onClose={() => {
+            // Block backdrop / Escape close when the user hasn't copied
+            // yet — the key is one-time-shown and we don't want a
+            // misclick to wipe it. Once copied, dismissal is fine.
+            if (copiedKey) setRevealedKey(null);
+          }}
+        >
           <div className="flex items-start gap-3">
-            <div className="size-10 shrink-0 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-500">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-500">
               <Check className="size-5" />
             </div>
             <div>
@@ -1079,30 +1086,31 @@ function ApiKeysSection({ t }: { t: (k: string) => string }) {
               </p>
             </div>
           </div>
-          <div className="mt-4 px-3 py-2.5 rounded-lg bg-muted border border-border font-mono text-[12px] break-all">
+          <div className="mt-4 rounded-lg border border-border bg-muted px-3 py-2.5 font-mono text-[12px] break-all select-all">
             {revealedKey.key}
           </div>
           <div className="mt-3 flex items-center justify-between gap-2">
             <span className="text-[11px] text-muted-foreground">
               {tx(t, "settings.apiKey.label", "Label")}:{" "}
-              <span className="text-foreground font-semibold">{revealedKey.label}</span>
+              <span className="font-semibold text-foreground">{revealedKey.label}</span>
             </span>
             <button
               type="button"
               onClick={() => copyKey(revealedKey.key)}
               className={cn(
-                "inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold transition-colors",
+                "tf-focusable inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all",
                 copiedKey
-                  ? "bg-emerald-500 text-white"
-                  : "bg-brand-500 hover:bg-brand-600 text-white",
+                  ? "bg-emerald-500 text-white tf-check-pop"
+                  : "bg-brand-500 text-white hover:bg-brand-600 hover:scale-[1.02]",
               )}
+              aria-label={copiedKey ? "Copied to clipboard" : "Copy API key to clipboard"}
             >
               {copiedKey ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
               {copiedKey ? tx(t, "common.copied", "Copied") : tx(t, "common.copy", "Copy")}
             </button>
           </div>
-          <div className="mt-4 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
-            <AlertTriangle className="inline size-3.5 mr-1 mb-0.5" />
+          <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="mb-0.5 mr-1 inline size-3.5" />
             {tx(
               t,
               "settings.apiKey.warning",
@@ -1112,9 +1120,18 @@ function ApiKeysSection({ t }: { t: (k: string) => string }) {
           <button
             type="button"
             onClick={() => setRevealedKey(null)}
-            className="mt-5 w-full h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted"
+            disabled={!copiedKey}
+            className={cn(
+              "tf-focusable mt-5 h-10 w-full rounded-lg text-sm font-semibold transition-all",
+              copiedKey
+                ? "border border-border bg-card text-foreground hover:bg-muted"
+                : "cursor-not-allowed border border-dashed border-border bg-muted/40 text-muted-foreground",
+            )}
+            title={!copiedKey ? tx(t, "settings.apiKey.copyFirst", "Copy the key first") : undefined}
           >
-            {tx(t, "common.gotIt", "Got it, I've saved it")}
+            {copiedKey
+              ? tx(t, "common.gotIt", "Got it, I've saved it")
+              : tx(t, "settings.apiKey.copyFirst", "Copy the key first")}
           </button>
         </ModalShell>
       )}
@@ -1211,6 +1228,11 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
   const testHook = trpc.webhook.test.useMutation({
     onSuccess: () => {
       toast.success(tx(t, "settings.webhook.tested", "Test event sent"));
+      // Auto-expand the activity log for the tested webhook so the
+      // user sees the delivery row appear within a few seconds — the
+      // 10s poll inside WebhookActivityLog picks it up. Far more
+      // satisfying than just a generic toast.
+      if (testingId) setExpandedId(testingId);
       setTestingId(null);
     },
     onError: (err) => {
