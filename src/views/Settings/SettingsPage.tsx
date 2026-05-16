@@ -41,6 +41,11 @@ import {
   ChevronRight,
   RefreshCw,
   Link2,
+  Copy,
+  Plus,
+  X,
+  Webhook,
+  Send,
 } from "lucide-react";
 
 /* ── Translate-with-fallback (Dashboard convention) ── */
@@ -774,24 +779,15 @@ function AppearanceTab({ t }: { t: (k: string) => string }) {
 function IntegrationsTab({ t }: { t: (k: string) => string }) {
   return (
     <>
+      <ApiKeysSection t={t} />
+      <WebhooksSection t={t} />
+
       <SettingsCard
         icon={<Zap className="size-4" />}
-        title={tx(t, "settings.integrations", "Integrations")}
-        description={tx(t, "settings.integrations.desc", "Power-user tools — API keys, VPN, and more")}
+        title={tx(t, "settings.integrations.more", "More integrations")}
+        description={tx(t, "settings.integrations.moreDesc", "VPN, AI voice cloning, white-label embedding")}
       >
         <div className="grid sm:grid-cols-2 gap-3">
-          <IntegrationCard
-            icon={
-              <div className="size-9 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500">
-                <Key className="size-4" />
-              </div>
-            }
-            title={tx(t, "settings.apiKeys", "API access")}
-            description={tx(t, "settings.apiKeys.desc", "Generate API keys for programmatic access (Studio plan)")}
-            action={tx(t, "settings.apiKeys.manage", "Manage keys")}
-            href="/admin#api"
-            badge={tx(t, "settings.studioOnly", "Studio")}
-          />
           <IntegrationCard
             icon={
               <div className="size-9 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-500">
@@ -830,6 +826,704 @@ function IntegrationsTab({ t }: { t: (k: string) => string }) {
         </div>
       </SettingsCard>
     </>
+  );
+}
+
+/* ─────────────── API Keys section ─────────────── */
+
+function ApiKeysSection({ t }: { t: (k: string) => string }) {
+  const keys = trpc.apikey.list.useQuery();
+  const usage = trpc.apikey.usage.useQuery();
+  const [creating, setCreating] = useState(false);
+  const [newKeyLabel, setNewKeyLabel] = useState("");
+  const [revealedKey, setRevealedKey] = useState<{ key: string; label: string } | null>(null);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState(false);
+
+  const generate = trpc.apikey.generate.useMutation({
+    onSuccess: (data) => {
+      setRevealedKey({ key: data.key, label: data.label });
+      setNewKeyLabel("");
+      setCreating(false);
+      void keys.refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const revoke = trpc.apikey.revoke.useMutation({
+    onSuccess: () => {
+      toast.success(tx(t, "settings.apiKey.revoked", "API key revoked"));
+      setRevokeId(null);
+      void keys.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const copyKey = async (key: string) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopiedKey(true);
+      setTimeout(() => setCopiedKey(false), 2000);
+    } catch {
+      /* fallback skipped */
+    }
+  };
+
+  return (
+    <SettingsCard
+      icon={<Key className="size-4 text-emerald-500" />}
+      title={tx(t, "settings.apiKeys.title", "API keys")}
+      description={tx(
+        t,
+        "settings.apiKeys.desc2",
+        "Generate keys to call the TubeForge Publishing API (POST /api/v1/youtube/upload) — auto-post videos to YouTube from any project.",
+      )}
+    >
+      {/* List */}
+      {keys.isLoading ? (
+        <Skeleton width="100%" height={120} style={{ borderRadius: 12 }} />
+      ) : keys.data && keys.data.length > 0 ? (
+        <div className="space-y-2">
+          {keys.data.map((k) => (
+            <div
+              key={k.id}
+              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors"
+            >
+              <div className="size-9 shrink-0 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500">
+                <Key className="size-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground truncate">{k.label}</span>
+                  <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                    tf_…{k.last4}
+                  </code>
+                </div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                  <span className="font-mono">
+                    {k.usageCount.toLocaleString()} {tx(t, "settings.apiKey.uses", "uses")}
+                  </span>
+                  {k.lastUsed ? (
+                    <span>
+                      {tx(t, "settings.apiKey.lastUsed", "last used")}{" "}
+                      <span className="font-mono">{new Date(k.lastUsed).toLocaleDateString()}</span>
+                    </span>
+                  ) : (
+                    <span className="italic">{tx(t, "settings.apiKey.neverUsed", "never used")}</span>
+                  )}
+                  <span>
+                    {tx(t, "settings.apiKey.created", "created")}{" "}
+                    <span className="font-mono">{new Date(k.createdAt).toLocaleDateString()}</span>
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevokeId(k.id)}
+                className="text-xs font-semibold text-muted-foreground hover:text-rose-500 transition-colors"
+              >
+                {tx(t, "settings.apiKey.revoke", "Revoke")}
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border-2 border-dashed border-border p-6 text-center">
+          <div className="size-12 mx-auto rounded-xl bg-emerald-500/10 flex items-center justify-center mb-3">
+            <Key className="size-5 text-emerald-500" />
+          </div>
+          <h3 className="text-sm font-bold text-foreground mb-1">
+            {tx(t, "settings.apiKey.emptyTitle", "No API keys yet")}
+          </h3>
+          <p className="text-xs text-muted-foreground mb-4 max-w-xs mx-auto">
+            {tx(
+              t,
+              "settings.apiKey.emptyDesc",
+              "Create your first key to start uploading videos via the REST API. Keys are revocable any time.",
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Usage stat */}
+      {usage.data && (
+        <div className="mt-3 px-3 py-2 rounded-lg bg-muted/40 border border-border flex items-center justify-between text-[11px]">
+          <span className="text-muted-foreground">
+            {tx(t, "settings.apiKey.usageThisMonth", "API requests this month")}
+          </span>
+          <span className="font-mono font-bold text-foreground">
+            {usage.data.count.toLocaleString()}
+          </span>
+        </div>
+      )}
+
+      {/* Generate button */}
+      <button
+        type="button"
+        onClick={() => setCreating(true)}
+        className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-gradient-to-r from-brand-500 to-violet-500 hover:scale-[1.01] text-white text-sm font-semibold transition-transform shadow-sm shadow-brand-500/20"
+      >
+        <Plus className="size-4" />
+        {tx(t, "settings.apiKey.create", "Generate new key")}
+      </button>
+
+      {/* Docs link */}
+      <div className="mt-3 text-[11px] text-muted-foreground">
+        <Link href="/docs/api" prefetch className="text-brand-500 hover:text-brand-600 inline-flex items-center gap-1">
+          {tx(t, "settings.apiKey.docs", "Read API docs →")}
+        </Link>
+      </div>
+
+      {/* Generation modal */}
+      {creating && (
+        <ModalShell onClose={() => !generate.isPending && setCreating(false)}>
+          <h3 className="text-lg font-bold text-foreground">
+            {tx(t, "settings.apiKey.modalTitle", "Generate API key")}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {tx(
+              t,
+              "settings.apiKey.modalDesc",
+              "Give the key a label so you remember what uses it (e.g. 'production server' or 'webflow integration').",
+            )}
+          </p>
+          <label className="mt-4 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {tx(t, "settings.apiKey.labelField", "Label")}
+            </span>
+            <input
+              type="text"
+              value={newKeyLabel}
+              onChange={(e) => setNewKeyLabel(e.target.value.slice(0, 50))}
+              placeholder={tx(t, "settings.apiKey.labelPlaceholder", "Production server")}
+              maxLength={50}
+              className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-4 text-[14px] text-foreground outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+              autoFocus
+            />
+            <span className="mt-1 block text-[10px] font-mono text-muted-foreground">
+              {newKeyLabel.length}/50
+            </span>
+          </label>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setCreating(false)}
+              disabled={generate.isPending}
+              className="px-4 h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            >
+              {tx(t, "common.cancel", "Cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => generate.mutate({ label: newKeyLabel.trim() || undefined })}
+              disabled={generate.isPending}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-gradient-to-r from-brand-500 to-violet-500 text-white text-sm font-bold shadow-sm shadow-brand-500/20",
+                generate.isPending ? "cursor-wait opacity-60" : "hover:scale-[1.02] transition-transform",
+              )}
+            >
+              {generate.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              {generate.isPending
+                ? tx(t, "settings.apiKey.generating", "Generating…")
+                : tx(t, "settings.apiKey.generate", "Generate")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Reveal modal (shown once) */}
+      {revealedKey && (
+        <ModalShell onClose={() => setRevealedKey(null)}>
+          <div className="flex items-start gap-3">
+            <div className="size-10 shrink-0 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-500">
+              <Check className="size-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">
+                {tx(t, "settings.apiKey.revealTitle", "Your API key")}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tx(
+                  t,
+                  "settings.apiKey.revealDesc",
+                  "Copy this now — you won't see it again. If you lose it, generate a new key.",
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 px-3 py-2.5 rounded-lg bg-muted border border-border font-mono text-[12px] break-all">
+            {revealedKey.key}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              {tx(t, "settings.apiKey.label", "Label")}:{" "}
+              <span className="text-foreground font-semibold">{revealedKey.label}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => copyKey(revealedKey.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold transition-colors",
+                copiedKey
+                  ? "bg-emerald-500 text-white"
+                  : "bg-brand-500 hover:bg-brand-600 text-white",
+              )}
+            >
+              {copiedKey ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copiedKey ? tx(t, "common.copied", "Copied") : tx(t, "common.copy", "Copy")}
+            </button>
+          </div>
+          <div className="mt-4 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="inline size-3.5 mr-1 mb-0.5" />
+            {tx(
+              t,
+              "settings.apiKey.warning",
+              "Treat this key like a password. Anyone with it can upload to your YouTube channels.",
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setRevealedKey(null)}
+            className="mt-5 w-full h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted"
+          >
+            {tx(t, "common.gotIt", "Got it, I've saved it")}
+          </button>
+        </ModalShell>
+      )}
+
+      {/* Revoke confirm */}
+      {revokeId && (
+        <ModalShell onClose={() => !revoke.isPending && setRevokeId(null)}>
+          <div className="flex items-start gap-3">
+            <div className="size-10 shrink-0 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-500">
+              <AlertTriangle className="size-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">
+                {tx(t, "settings.apiKey.revokeConfirmTitle", "Revoke this API key?")}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tx(
+                  t,
+                  "settings.apiKey.revokeConfirmDesc",
+                  "All requests using this key will start failing immediately with 401. This cannot be undone.",
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setRevokeId(null)}
+              disabled={revoke.isPending}
+              className="px-4 h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            >
+              {tx(t, "common.cancel", "Cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => revoke.mutate({ id: revokeId })}
+              disabled={revoke.isPending}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold",
+                revoke.isPending && "cursor-wait opacity-60",
+              )}
+            >
+              {revoke.isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              {tx(t, "settings.apiKey.revoke", "Revoke")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+    </SettingsCard>
+  );
+}
+
+/* ─────────────── Webhooks section ─────────────── */
+
+const WEBHOOK_EVENT_OPTIONS = [
+  { id: "job.completed", label: "Upload completed", color: "emerald" },
+  { id: "job.failed", label: "Upload failed", color: "rose" },
+  { id: "job.uploading", label: "Upload started", color: "blue" },
+  { id: "job.cancelled", label: "Upload cancelled", color: "amber" },
+  { id: "video.completed", label: "Video processing done", color: "emerald" },
+] as const;
+
+function WebhooksSection({ t }: { t: (k: string) => string }) {
+  const webhooks = trpc.webhook.list.useQuery();
+  const [creating, setCreating] = useState(false);
+  const [newUrl, setNewUrl] = useState("");
+  const [newEvents, setNewEvents] = useState<string[]>(["job.completed", "job.failed"]);
+  const [revealedSecret, setRevealedSecret] = useState<{ url: string; secret: string } | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [copiedSecret, setCopiedSecret] = useState(false);
+
+  const register = trpc.webhook.register.useMutation({
+    onSuccess: (data) => {
+      setRevealedSecret({ url: data.url, secret: data.secret });
+      setNewUrl("");
+      setNewEvents(["job.completed", "job.failed"]);
+      setCreating(false);
+      void webhooks.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteHook = trpc.webhook.delete.useMutation({
+    onSuccess: () => {
+      toast.success(tx(t, "settings.webhook.deleted", "Webhook deleted"));
+      setDeleteId(null);
+      void webhooks.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const testHook = trpc.webhook.test.useMutation({
+    onSuccess: () => {
+      toast.success(tx(t, "settings.webhook.tested", "Test event sent"));
+      setTestingId(null);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+      setTestingId(null);
+    },
+  });
+
+  const toggleEvent = (id: string) => {
+    setNewEvents((prev) =>
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
+    );
+  };
+
+  const copySecret = async (s: string) => {
+    try {
+      await navigator.clipboard.writeText(s);
+      setCopiedSecret(true);
+      setTimeout(() => setCopiedSecret(false), 2000);
+    } catch {
+      /* fallback skipped */
+    }
+  };
+
+  return (
+    <SettingsCard
+      icon={<Webhook className="size-4 text-violet-500" />}
+      title={tx(t, "settings.webhooks.title", "Webhooks")}
+      description={tx(
+        t,
+        "settings.webhooks.desc",
+        "Receive HMAC-signed HTTP POST notifications when upload jobs complete, fail, or change status.",
+      )}
+    >
+      {webhooks.isLoading ? (
+        <Skeleton width="100%" height={100} style={{ borderRadius: 12 }} />
+      ) : webhooks.data && webhooks.data.length > 0 ? (
+        <div className="space-y-2">
+          {webhooks.data.map((wh) => (
+            <div
+              key={wh.id}
+              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors"
+            >
+              <div className="size-9 shrink-0 rounded-lg bg-violet-500/15 flex items-center justify-center text-violet-500">
+                <Webhook className="size-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-mono font-semibold text-foreground truncate">{wh.url}</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
+                  {wh.events.map((ev) => (
+                    <span
+                      key={ev}
+                      className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground"
+                    >
+                      {ev}
+                    </span>
+                  ))}
+                  {!wh.active && (
+                    <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-500 font-bold">
+                      {tx(t, "settings.webhook.inactive", "INACTIVE")}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setTestingId(wh.id);
+                  testHook.mutate({ id: wh.id });
+                }}
+                disabled={testHook.isPending && testingId === wh.id}
+                className="text-xs font-semibold text-brand-500 hover:text-brand-600 disabled:opacity-60 inline-flex items-center gap-1"
+                title={tx(t, "settings.webhook.testHint", "Send a synthetic job.completed event")}
+              >
+                {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
+                {tx(t, "settings.webhook.test", "Test")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteId(wh.id)}
+                className="text-xs font-semibold text-muted-foreground hover:text-rose-500"
+              >
+                {tx(t, "common.delete", "Delete")}
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border-2 border-dashed border-border p-6 text-center">
+          <div className="size-12 mx-auto rounded-xl bg-violet-500/10 flex items-center justify-center mb-3">
+            <Webhook className="size-5 text-violet-500" />
+          </div>
+          <h3 className="text-sm font-bold text-foreground mb-1">
+            {tx(t, "settings.webhook.emptyTitle", "No webhooks yet")}
+          </h3>
+          <p className="text-xs text-muted-foreground mb-4 max-w-sm mx-auto">
+            {tx(
+              t,
+              "settings.webhook.emptyDesc",
+              "Add a webhook URL to receive notifications when your uploads complete. Each delivery is HMAC-SHA256 signed.",
+            )}
+          </p>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setCreating(true)}
+        className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:scale-[1.01] text-white text-sm font-semibold transition-transform shadow-sm shadow-violet-500/20"
+      >
+        <Plus className="size-4" />
+        {tx(t, "settings.webhook.add", "Add webhook")}
+      </button>
+
+      {/* Add modal */}
+      {creating && (
+        <ModalShell onClose={() => !register.isPending && setCreating(false)}>
+          <h3 className="text-lg font-bold text-foreground">
+            {tx(t, "settings.webhook.addTitle", "Add webhook")}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {tx(
+              t,
+              "settings.webhook.addDesc",
+              "Your endpoint will receive HTTP POST with JSON body and X-Forge-Signature header (HMAC-SHA256).",
+            )}
+          </p>
+          <label className="mt-4 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {tx(t, "settings.webhook.url", "Endpoint URL")}
+            </span>
+            <input
+              type="url"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              placeholder="https://your-app.com/webhooks/tubeforge"
+              className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-4 font-mono text-[12px] text-foreground outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
+              autoFocus
+            />
+          </label>
+          <div className="mt-4">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {tx(t, "settings.webhook.events", "Events to subscribe")}
+            </span>
+            <div className="mt-2 grid grid-cols-1 gap-1">
+              {WEBHOOK_EVENT_OPTIONS.map((ev) => {
+                const selected = newEvents.includes(ev.id);
+                return (
+                  <label
+                    key={ev.id}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-colors",
+                      selected
+                        ? "border-brand-500/40 bg-brand-500/5"
+                        : "border-border bg-background hover:border-brand-500/30",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleEvent(ev.id)}
+                      className="size-4 rounded border-border accent-brand-500"
+                    />
+                    <code className="font-mono text-[12px] font-semibold text-foreground">{ev.id}</code>
+                    <span className="text-[11px] text-muted-foreground">— {ev.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setCreating(false)}
+              disabled={register.isPending}
+              className="px-4 h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            >
+              {tx(t, "common.cancel", "Cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!newUrl.trim()) {
+                  toast.error(tx(t, "settings.webhook.urlRequired", "URL is required"));
+                  return;
+                }
+                if (newEvents.length === 0) {
+                  toast.error(tx(t, "settings.webhook.eventsRequired", "Select at least one event"));
+                  return;
+                }
+                register.mutate({
+                  url: newUrl.trim(),
+                  events: newEvents as Parameters<typeof register.mutate>[0]["events"],
+                });
+              }}
+              disabled={register.isPending || !newUrl.trim() || newEvents.length === 0}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-sm font-bold shadow-sm",
+                register.isPending && "cursor-wait opacity-60",
+              )}
+            >
+              {register.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              {register.isPending
+                ? tx(t, "settings.webhook.adding", "Adding…")
+                : tx(t, "settings.webhook.create", "Create webhook")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Secret reveal */}
+      {revealedSecret && (
+        <ModalShell onClose={() => setRevealedSecret(null)}>
+          <div className="flex items-start gap-3">
+            <div className="size-10 shrink-0 rounded-xl bg-violet-500/15 flex items-center justify-center text-violet-500">
+              <Check className="size-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">
+                {tx(t, "settings.webhook.revealTitle", "Webhook signing secret")}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tx(
+                  t,
+                  "settings.webhook.revealDesc",
+                  "Verify incoming requests with this secret + HMAC-SHA256 over the raw body. Stored hashed — you won't see it again.",
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 text-[11px] text-muted-foreground">
+            {tx(t, "settings.webhook.url", "Endpoint")}:
+          </div>
+          <code className="mt-1 block px-3 py-2 rounded-lg bg-muted border border-border font-mono text-[11px] break-all">
+            {revealedSecret.url}
+          </code>
+          <div className="mt-3 text-[11px] text-muted-foreground">
+            {tx(t, "settings.webhook.secret", "Signing secret")}:
+          </div>
+          <code className="mt-1 block px-3 py-2 rounded-lg bg-muted border border-border font-mono text-[12px] break-all">
+            {revealedSecret.secret}
+          </code>
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => copySecret(revealedSecret.secret)}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold transition-colors",
+                copiedSecret
+                  ? "bg-emerald-500 text-white"
+                  : "bg-brand-500 hover:bg-brand-600 text-white",
+              )}
+            >
+              {copiedSecret ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copiedSecret ? tx(t, "common.copied", "Copied") : tx(t, "settings.webhook.copySecret", "Copy secret")}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRevealedSecret(null)}
+            className="mt-5 w-full h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted"
+          >
+            {tx(t, "common.gotIt", "Got it, I've saved it")}
+          </button>
+        </ModalShell>
+      )}
+
+      {/* Delete confirm */}
+      {deleteId && (
+        <ModalShell onClose={() => !deleteHook.isPending && setDeleteId(null)}>
+          <div className="flex items-start gap-3">
+            <div className="size-10 shrink-0 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-500">
+              <AlertTriangle className="size-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">
+                {tx(t, "settings.webhook.deleteConfirmTitle", "Delete this webhook?")}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tx(
+                  t,
+                  "settings.webhook.deleteConfirmDesc",
+                  "Future events will not be delivered to this URL. Cannot be undone.",
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setDeleteId(null)}
+              disabled={deleteHook.isPending}
+              className="px-4 h-10 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            >
+              {tx(t, "common.cancel", "Cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => deleteHook.mutate({ id: deleteId })}
+              disabled={deleteHook.isPending}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold",
+                deleteHook.isPending && "cursor-wait opacity-60",
+              )}
+            >
+              {deleteHook.isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              {tx(t, "common.delete", "Delete")}
+            </button>
+          </div>
+        </ModalShell>
+      )}
+    </SettingsCard>
+  );
+}
+
+/* ─────────────── Modal shell (reusable) ─────────────── */
+
+function ModalShell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <X className="size-4" />
+        </button>
+        {children}
+      </div>
+    </div>
   );
 }
 

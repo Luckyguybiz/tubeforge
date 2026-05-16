@@ -255,4 +255,33 @@ export const webhookRouter = router({
       await ctx.db.webhookEndpoint.delete({ where: { id: input.id } });
       return { success: true };
     }),
+
+  /**
+   * Test webhook — fires a dummy job.completed payload to the registered URL.
+   * Lets users verify their endpoint receives + verifies HMAC signature
+   * without having to create a real upload job first.
+   */
+  test: protectedProcedure
+    .input(z.object({ id: z.string().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRate(ctx.session.user.id);
+
+      const endpoint = await ctx.db.webhookEndpoint.findFirst({
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: { id: true },
+      });
+      if (!endpoint) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Webhook not found." });
+      }
+
+      // Fire-and-forget delivery with a synthetic payload
+      deliverWebhooks(ctx.session.user.id, "job.completed", {
+        jobId: "test-job-" + Math.random().toString(36).slice(2, 10),
+        youtubeVideoId: "dQw4w9WgXcQ",
+        channelId: "UC_test_channel",
+        title: "TubeForge webhook test",
+        test: true,
+      });
+      return { sent: true };
+    }),
 });
