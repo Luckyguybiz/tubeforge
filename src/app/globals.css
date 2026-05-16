@@ -2430,13 +2430,17 @@ img {
 
 /* Activity log expand — smooth height + opacity reveal. Tailwind has
  * no built-in max-height transition with auto, so we use a generous
- * max-height that fits real content + fade.                             */
+ * max-height during the entrance and let the element revert to its
+ * natural (unconstrained) max-height when the animation finishes.
+ * fill-mode is intentionally `none` so a content block taller than
+ * 800px after expand doesn't get permanently clipped. The internal
+ * scroll (max-h-72 on the deliveries list) handles tall content.    */
 @keyframes tf-expand-down {
   0%   { opacity: 0; transform: translateY(-4px); max-height: 0;     }
-  100% { opacity: 1; transform: translateY(0);    max-height: 800px; }
+  100% { opacity: 1; transform: translateY(0);    max-height: 1200px; }
 }
 .tf-expand-down {
-  animation: tf-expand-down 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tf-expand-down 280ms cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
 
@@ -2502,7 +2506,10 @@ html, body {
 }
 
 .tf-snap-x {
-  scroll-snap-type: x mandatory;
+  /* proximity, not mandatory — user keeps free-scroll feel but the
+   * strip will gently align to a chip start if released near one.
+   * Mandatory caused jarring on short strips of 4-6 chips. */
+  scroll-snap-type: x proximity;
   scroll-padding-left: 1rem;
   scroll-padding-right: 1rem;
   -webkit-overflow-scrolling: touch;

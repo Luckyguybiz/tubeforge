@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLocaleStore } from "@/stores/useLocaleStore";
@@ -172,13 +172,28 @@ export function JobsPage() {
     return () => clearTimeout(ttl);
   }, [highlightJobId]);
 
-  // Live data from server (Phase 2). Polls every 4s when any job is in
-  // active state (QUEUED/UPLOADING) so users see worker progress in
-  // real-time without manual refresh. Idle when nothing's active to
-  // avoid polling tax.
+  // Live data from server. Polls every 4s when any job is in active
+  // state (QUEUED/UPLOADING) so users see worker progress in real-time
+  // without manual refresh. Idle when nothing's active to avoid
+  // polling tax.
+  //
+  // Implemented via TanStack Query's native `refetchInterval` rather
+  // than a manual setInterval — the latter recreates the timer on
+  // every render (TRPC's query object is a new reference each render),
+  // which churned the timer 100s of times per minute. Native interval
+  // tears down cleanly when the query unmounts or `enabled` flips.
   const jobsQuery = trpc.uploadJobs.list.useQuery(
     { limit: 50 },
-    { refetchOnWindowFocus: true, refetchInterval: false },
+    {
+      refetchOnWindowFocus: true,
+      refetchInterval: (query) => {
+        const items = query.state.data?.items ?? [];
+        const hasActive = items.some(
+          (j: { status: string }) => j.status === "QUEUED" || j.status === "UPLOADING",
+        );
+        return hasActive ? 4_000 : false;
+      },
+    },
   );
 
   // Map server UploadJob shape → JobEntry consumed by UI components.
@@ -217,29 +232,6 @@ export function JobsPage() {
       };
     });
   }, [jobsQuery.data]);
-
-  // Auto-poll every 4s while any job is active (QUEUED or UPLOADING).
-  // Stops polling once all jobs reach terminal state.
-  //
-  // We stash the "has any active job" flag in a ref so the interval is
-  // created once per active→inactive transition, not on every refetch
-  // (which mutates `jobs`). The interval callback reads the latest
-  // flag via the ref each tick.
-  const hasActiveRef = useRef(false);
-  hasActiveRef.current = useMemo(
-    () => jobs.some((j) => j.status === "queued" || j.status === "uploading"),
-    [jobs],
-  );
-  useEffect(() => {
-    if (!hasActiveRef.current) return;
-    const id = setInterval(() => {
-      if (hasActiveRef.current) void jobsQuery.refetch();
-    }, 4_000);
-    return () => clearInterval(id);
-    // Re-arm only when the active/inactive boundary flips. `hasActiveRef.current`
-    // is read inside the effect, but we need a dependency that mirrors its
-    // value so React tears the interval down when no jobs are active.
-  }, [hasActiveRef.current, jobsQuery]);
 
   const isLoading = jobsQuery.isLoading;
 
@@ -408,9 +400,12 @@ export function JobsPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-muted/30" />
+        <div className="tf-stagger-in space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-2xl border border-border bg-muted/30"
+            />
           ))}
         </div>
       ) : filteredJobs.length === 0 ? (
