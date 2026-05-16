@@ -378,6 +378,15 @@ export function JobsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 self-start">
+            <Link
+              href="/publish/calendar"
+              prefetch
+              title={tx(t, "publishJobs.calendarView", "Switch to calendar view")}
+              className="tf-focusable inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground transition-colors hover:border-brand-500/40 hover:text-brand-500"
+            >
+              <Calendar className="size-4" />
+              <span className="hidden sm:inline">{tx(t, "publishJobs.calendar", "Calendar")}</span>
+            </Link>
             <button
               type="button"
               onClick={refresh}
@@ -387,7 +396,7 @@ export function JobsPage() {
               aria-label="Refresh"
             >
               <RefreshCw className={cn("size-4", jobsQuery.isFetching && "animate-spin")} />
-              {tx(t, "publishJobs.refresh", "Refresh")}
+              <span className="hidden sm:inline">{tx(t, "publishJobs.refresh", "Refresh")}</span>
             </button>
             <Link
               href="/publish"

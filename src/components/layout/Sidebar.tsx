@@ -252,6 +252,7 @@ function getNavGroups(t: (key: string) => string): NavGroup[] {
         { id: 'editor', label: t('nav.editor') },
         { id: 'preview', label: t('nav.preview') },
         { id: 'publish', label: t('nav.publish') },
+        { id: 'publish/calendar', label: t('nav.publishCalendar') },
       ],
     },
     {

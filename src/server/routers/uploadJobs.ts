@@ -214,4 +214,61 @@ export const uploadJobsRouter = router({
     });
     return { count };
   }),
+
+  /**
+   * Calendar view feed: returns jobs whose effective-day falls in the
+   * [from, to) range. Effective-day = scheduledAt if set (future post),
+   * else createdAt (for the row to still appear on the day it was
+   * filed). Used by /publish/calendar to populate the month grid.
+   *
+   * Returns a compact shape (no payload, no signature) so the client
+   * can fetch 100s of cells without bloating the wire.
+   */
+  byMonth: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().datetime(),
+        to: z.string().datetime(),
+        channelId: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const from = new Date(input.from);
+      const to = new Date(input.to);
+      const items = await ctx.db.uploadJob.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          ...(input.channelId ? { channelId: input.channelId } : {}),
+          OR: [
+            { scheduledAt: { gte: from, lt: to } },
+            // For non-scheduled rows, anchor by createdAt within the
+            // same window so an UPLOADING/COMPLETED job appears on its
+            // creation day.
+            { AND: [{ scheduledAt: null }, { createdAt: { gte: from, lt: to } }] },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          thumbnailUrl: true,
+          status: true,
+          uploadProgress: true,
+          youtubeVideoId: true,
+          scheduledAt: true,
+          createdAt: true,
+          completedAt: true,
+          channelId: true,
+          channel: { select: { title: true, thumbnail: true } },
+        },
+        orderBy: [
+          // Scheduled-future first within a day (alphabetical isn't
+          // helpful; chronological is). For non-scheduled, fall back
+          // to createdAt asc.
+          { scheduledAt: 'asc' },
+          { createdAt: 'asc' },
+        ],
+        take: 500,
+      });
+      return { items };
+    }),
 });
