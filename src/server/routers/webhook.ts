@@ -16,8 +16,13 @@ export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 /** Delivery timeout in milliseconds */
 const DELIVERY_TIMEOUT_MS = 5_000;
 
-/** Number of retries on delivery failure */
-const MAX_RETRIES = 1;
+/** Number of retries on delivery failure (total attempts = MAX_RETRIES + 1) */
+const MAX_RETRIES = 2;
+
+/** Exponential backoff schedule between retry attempts (ms).
+ *  Indexed by attempt-just-completed: backoff[0] = wait before attempt 2.
+ *  No backoff after the final attempt (we give up). */
+const RETRY_BACKOFF_MS = [2_000, 5_000];
 
 /** Mutation rate limit */
 async function checkRate(userId: string) {
@@ -112,6 +117,14 @@ async function deliverToEndpoint(
       .catch((e) => log.error('Failed to log delivery', { error: e instanceof Error ? e.message : String(e) }));
 
     if (success) return true;
+
+    // Exponential backoff before next retry — give a flaky endpoint time
+    // to recover instead of hammering it with N+1 requests in <1s.
+    // Skip backoff after the final attempt.
+    if (attempt < MAX_RETRIES) {
+      const delayMs = RETRY_BACKOFF_MS[attempt] ?? 5_000;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
   }
 
   return false;

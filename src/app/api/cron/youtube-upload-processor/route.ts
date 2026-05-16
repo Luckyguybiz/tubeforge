@@ -366,7 +366,7 @@ async function uploadChunked(opts: {
         lastError = e instanceof Error ? e.message : String(e);
       }
       if (attempt < CHUNK_MAX_RETRIES) {
-        // Exponential backoff: 1s, 3s, 7s
+        // Backoff schedule: 2s, 3s, 5s (formula: 2^attempt + 1 seconds)
         await new Promise((r) => setTimeout(r, (2 ** attempt) * 1000 + 1000));
       }
     }

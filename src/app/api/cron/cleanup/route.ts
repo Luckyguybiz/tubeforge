@@ -12,6 +12,7 @@ const log = createLogger('cron-cleanup');
  * Purges:
  *   - ProcessedEvent rows older than 90 days (Stripe idempotency keys)
  *   - AuditLog rows older than 365 days
+ *   - WebhookDelivery rows older than 30 days (per-attempt activity log)
  *
  * Usage with cron (run daily at 3 AM):
  *   0 3 * * * curl -sH "Authorization: Bearer $CRON_SECRET" https://tubeforge.co/api/cron/cleanup > /dev/null
@@ -45,6 +46,21 @@ export async function POST(request: Request) {
     } catch {
       // AuditLog table may not exist yet
       results.auditLogs = 0;
+    }
+
+    // Purge WebhookDelivery rows older than 30 days.
+    // Each attempt creates a row with the full payload + response body,
+    // so a high-volume customer can balloon this table quickly.
+    // 30 days is the standard observability window for delivery debugging.
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    try {
+      const deletedDeliveries = await db.webhookDelivery.deleteMany({
+        where: { createdAt: { lt: thirtyDaysAgo } },
+      });
+      results.webhookDeliveries = deletedDeliveries.count;
+    } catch {
+      // WebhookDelivery table may not exist yet (pre-migration deploys)
+      results.webhookDeliveries = 0;
     }
   } catch (err) {
     log.error('Cleanup cron failed', {
