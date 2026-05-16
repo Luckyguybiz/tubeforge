@@ -983,7 +983,18 @@ function YouTubePreview({
       {/* Thumbnail */}
       <div className="relative aspect-video bg-muted">
         {previewThumb ? (
-          <img src={previewThumb} alt="" className="size-full object-cover" />
+          <img
+            src={previewThumb}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              // Bad thumbnail URL → swap to empty state. parentElement
+              // has the placeholder div already styled.
+              e.currentTarget.style.display = "none";
+            }}
+            className="size-full object-cover"
+          />
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageIcon className="size-8 text-muted-foreground/30" />

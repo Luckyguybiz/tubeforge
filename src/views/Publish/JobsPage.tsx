@@ -487,13 +487,26 @@ function JobRow({
           <img
             src={job.thumbnailUrl}
             alt=""
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              // Thumbnail 404'd (video deleted/privatized) — hide the img
+              // so the placeholder ImageIcon sibling shows through. The
+              // empty bg-muted container stays the same size, no layout
+              // shift.
+              e.currentTarget.style.display = "none";
+              const ph = e.currentTarget.nextElementSibling as HTMLElement | null;
+              if (ph) ph.style.display = "flex";
+            }}
             className="size-full object-cover transition-transform duration-300 group-hover/row:scale-105"
           />
-        ) : (
-          <div className="flex size-full items-center justify-center">
-            <ImageIcon className="size-5 text-muted-foreground/40" />
-          </div>
-        )}
+        ) : null}
+        <div
+          className="flex size-full items-center justify-center"
+          style={{ display: job.thumbnailUrl ? "none" : "flex" }}
+        >
+          <ImageIcon className="size-5 text-muted-foreground/40" />
+        </div>{job.thumbnailUrl ? null : null}
         {job.status === "uploading" && typeof job.uploadProgress === "number" && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
             <div
@@ -518,7 +531,14 @@ function JobRow({
           {job.channelTitle && (
             <span className="inline-flex items-center gap-1">
               {job.channelThumbnail ? (
-                <img src={job.channelThumbnail} alt={job.channelTitle} className="size-3.5 rounded-full" />
+                <img
+                  src={job.channelThumbnail}
+                  alt={job.channelTitle}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                  className="size-3.5 rounded-full"
+                />
               ) : (
                 <YoutubeIcon className="size-3 text-red-500" />
               )}

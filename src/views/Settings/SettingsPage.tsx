@@ -246,6 +246,10 @@ function ProfileTab({ session, t }: { session: ReturnType<typeof useSession>["da
             <img
               src={user.image}
               alt={user?.name || "User"}
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+              onError={(e) => (e.currentTarget.style.display = "none")}
               className="size-20 rounded-full object-cover ring-4 ring-border"
             />
           ) : (
@@ -592,13 +596,26 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
                   <img
                     src={ch.thumbnail}
                     alt={ch.title}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      // Avatar 404'd (Google/YouTube CDN sometimes rotates
+                      // image hashes) — fall back to the YouTube icon
+                      // placeholder via the sibling div.
+                      e.currentTarget.style.display = "none";
+                      const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (sib) sib.style.display = "flex";
+                    }}
                     className="size-12 shrink-0 rounded-full object-cover ring-2 ring-border transition-all duration-300 group-hover/ch:ring-brand-500/40 group-hover/ch:scale-105"
                   />
-                ) : (
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-500 transition-transform duration-300 group-hover/ch:scale-105">
-                    <YoutubeIcon className="size-5" />
-                  </div>
-                )}
+                ) : null}
+                <div
+                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-500 transition-transform duration-300 group-hover/ch:scale-105"
+                  style={{ display: ch.thumbnail ? "none" : "flex" }}
+                >
+                  <YoutubeIcon className="size-5" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="truncate text-sm font-semibold text-foreground">{ch.title}</div>
                   <div className="font-mono text-xs text-muted-foreground">
