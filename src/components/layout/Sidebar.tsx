@@ -7,6 +7,7 @@ import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { Z_INDEX } from '@/lib/constants';
+import { trpc } from '@/lib/trpc';
 
 const COLLAPSE_PAGES = ['thumbnails'];
 
@@ -722,6 +723,16 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  // Pending upload jobs counter — drives the badge on the Publish nav item.
+  // Auto-refetches every 15s while session is active so users see queue
+  // status updating in the background without manual refresh.
+  const pendingJobs = trpc.uploadJobs.pendingCount.useQuery(undefined, {
+    enabled: !!session?.user,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
+  });
+  const pendingCount = pendingJobs.data?.count ?? 0;
+
   // Close profile dropdown on outside click
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -931,6 +942,46 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
           >
             NEW
           </span>
+        )}
+
+        {/* Pending-jobs badge for Publish — counts QUEUED + UPLOADING. */}
+        {id === 'publish' && !collapsed && pendingCount > 0 && (
+          <span
+            aria-label={`${pendingCount} pending upload${pendingCount === 1 ? '' : 's'}`}
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: '#fff',
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              padding: '2px 7px',
+              borderRadius: 999,
+              marginLeft: 'auto',
+              minWidth: 18,
+              textAlign: 'center',
+              fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+              fontVariantNumeric: 'tabular-nums',
+              boxShadow: '0 0 0 2px rgba(99,102,241,0.15)',
+            }}
+          >
+            {pendingCount > 99 ? '99+' : pendingCount}
+          </span>
+        )}
+
+        {/* Pending-jobs dot for Publish when collapsed (pure indicator). */}
+        {id === 'publish' && collapsed && pendingCount > 0 && (
+          <div
+            aria-label={`${pendingCount} pending upload${pendingCount === 1 ? '' : 's'}`}
+            style={{
+              position: 'absolute',
+              top: 5,
+              right: 5,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              border: `2px solid ${C.bg}`,
+            }}
+          />
         )}
 
         {/* Active dot for collapsed state */}
