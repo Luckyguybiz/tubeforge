@@ -239,20 +239,56 @@ export function JobsPage() {
     void jobsQuery.refetch();
   }, [jobsQuery]);
 
-  // Mutations for row actions
+  // Mutations for row actions — both use optimistic UI: the cache is
+  // patched the moment the user clicks (status flips locally), the
+  // server roundtrip happens in the background, and we roll back if
+  // it fails. Makes Cancel/Retry feel instant on slow networks.
+  const utils = trpc.useUtils();
   const cancelMut = trpc.uploadJobs.cancel.useMutation({
-    onSuccess: () => {
-      toast.success(tx(t, "publishJobs.cancelled", "Job cancelled"));
-      void jobsQuery.refetch();
+    onMutate: async ({ jobId }) => {
+      await utils.uploadJobs.list.cancel();
+      const prev = utils.uploadJobs.list.getData({ limit: 50 });
+      utils.uploadJobs.list.setData({ limit: 50 }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.map((j) =>
+            j.id === jobId ? { ...j, status: "CANCELLED" as const } : j,
+          ),
+        };
+      });
+      return { prev };
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e, _vars, ctx) => {
+      if (ctx?.prev) utils.uploadJobs.list.setData({ limit: 50 }, ctx.prev);
+      toast.error(e.message);
+    },
+    onSuccess: () => toast.success(tx(t, "publishJobs.cancelled", "Job cancelled")),
+    onSettled: () => utils.uploadJobs.list.invalidate(),
   });
   const retryMut = trpc.uploadJobs.retry.useMutation({
-    onSuccess: () => {
-      toast.success(tx(t, "publishJobs.retried", "Re-queued for retry"));
-      void jobsQuery.refetch();
+    onMutate: async ({ jobId }) => {
+      await utils.uploadJobs.list.cancel();
+      const prev = utils.uploadJobs.list.getData({ limit: 50 });
+      utils.uploadJobs.list.setData({ limit: 50 }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.map((j) =>
+            j.id === jobId
+              ? { ...j, status: "QUEUED" as const, errorMessage: null }
+              : j,
+          ),
+        };
+      });
+      return { prev };
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e, _vars, ctx) => {
+      if (ctx?.prev) utils.uploadJobs.list.setData({ limit: 50 }, ctx.prev);
+      toast.error(e.message);
+    },
+    onSuccess: () => toast.success(tx(t, "publishJobs.retried", "Re-queued for retry")),
+    onSettled: () => utils.uploadJobs.list.invalidate(),
   });
 
   /* ── Filter + group ─────────────────────────────────────────────── */

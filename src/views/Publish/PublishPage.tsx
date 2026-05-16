@@ -121,6 +121,20 @@ export function PublishPage() {
   const [publishState, setPublishState] = useState<PublishState>("idle");
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [lastJobId, setLastJobId] = useState<string | null>(null);
+
+  // Live URL validity for visual field state. Empty = neutral, non-empty
+  // and `new URL()` fails = invalid (rose border), valid otherwise.
+  // We re-derive on every render; URL parsing is cheap.
+  const videoUrlState: "neutral" | "valid" | "invalid" = useMemo(() => {
+    const v = videoUrl.trim();
+    if (!v) return "neutral";
+    try {
+      new URL(v);
+      return "valid";
+    } catch {
+      return "invalid";
+    }
+  }, [videoUrl]);
   // Clear stale error-reset timeouts so submitting again before the 4s
   // delay doesn't kick the state to idle right after the user clicks.
   const errorResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -323,21 +337,37 @@ export function PublishPage() {
     t,
   ]);
 
+  // "Publish another" — preserves description/tags/privacy/audience
+  // settings so the user can do a similar upload without re-typing
+  // boilerplate. Only the per-video fields (title, video URL, custom
+  // thumbnail) and submit state get cleared. The /publish/jobs link
+  // is still one click away if they want a fresh sheet.
   const handleReset = useCallback(() => {
     setTitle("");
-    setDescription("");
-    setTags([]);
-    setTagInput("");
     setVideoUrl("");
     setThumbnailUrl("");
-    setPrivacy("private");
-    setScheduleEnabled(false);
-    setScheduleDate("");
-    setScheduleTime("");
-    setMadeForKids(false);
     setPublishState("idle");
     setPublishedUrl(null);
+    setLastJobId(null);
+    // intentionally NOT cleared: description, tags, privacy,
+    // scheduleEnabled/date/time, madeForKids, channelId
   }, []);
+
+  // Keyboard shortcut: Cmd+Enter (mac) / Ctrl+Enter (win/linux) submits
+  // when the form is publishable. Standard "send" shortcut across
+  // Slack/Gmail/Linear/Notion etc.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (canPublish) {
+          e.preventDefault();
+          void handlePublish();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canPublish, handlePublish]);
 
   /* ════════════════════════════════════════════════════════════════
      RENDER
@@ -490,13 +520,36 @@ export function PublishPage() {
             title={tx(t, "publish.step.source", "Source")}
             description={tx(t, "publish.step.sourceDesc", "Paste a direct video URL (MP4/MOV/WebM)")}
           >
-            <input
-              type="url"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://cdn.example.com/video.mp4"
-              className="h-11 w-full rounded-xl border border-border bg-background px-4 font-mono text-[13px] text-foreground outline-none focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]"
-            />
+            <div className="relative">
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://cdn.example.com/video.mp4"
+                aria-invalid={videoUrlState === "invalid"}
+                className={cn(
+                  "h-11 w-full rounded-xl border bg-background px-4 pr-10 font-mono text-[13px] text-foreground outline-none transition-shadow",
+                  videoUrlState === "invalid"
+                    ? "border-rose-500/50 focus:border-rose-500 focus:shadow-[0_0_0_3px_rgba(244,63,94,0.18)]"
+                    : videoUrlState === "valid"
+                      ? "border-emerald-500/40 focus:border-emerald-500/60 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.18)]"
+                      : "border-border focus:border-brand-500/40 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.18)]",
+                )}
+              />
+              {/* Inline state icon — appears in the trailing pad-right. */}
+              {videoUrlState === "valid" && (
+                <CheckCircle2
+                  className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-emerald-500"
+                  aria-hidden
+                />
+              )}
+              {videoUrlState === "invalid" && (
+                <AlertCircle
+                  className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-rose-500"
+                  aria-hidden
+                />
+              )}
+            </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
               {tx(
                 t,
@@ -575,7 +628,11 @@ export function PublishPage() {
                     onChange={(e) => setTagInput(e.target.value.slice(0, 30))}
                     maxLength={30}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === ",") {
+                      // Cmd/Ctrl+Enter is reserved for the publish
+                      // shortcut at window level — don't capture it
+                      // here as "add tag" or we'd both add a tag AND
+                      // submit the form.
+                      if ((e.key === "Enter" || e.key === ",") && !(e.metaKey || e.ctrlKey)) {
                         e.preventDefault();
                         addTag();
                       } else if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
@@ -762,6 +819,17 @@ export function PublishPage() {
                 scheduleEnabled && scheduleDate && scheduleTime
                   ? tx(t, "publish.cta.schedule", "Schedule for ") + `${scheduleDate} ${scheduleTime}`
                   : tx(t, "publish.cta.now", "Publish now")
+              )}
+              {/* Subtle keyboard hint for power users. Only appears when
+                  the form is in a publishable state on desktop sizes — it
+                  would crowd the 56px button on mobile. */}
+              {canPublish && publishState === "idle" && (
+                <kbd
+                  aria-hidden
+                  className="ml-2 hidden items-center gap-0.5 rounded-md border border-white/30 bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white/80 sm:inline-flex"
+                >
+                  ⌘ ↵
+                </kbd>
               )}
             </button>
           </div>
