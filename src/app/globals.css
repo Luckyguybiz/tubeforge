@@ -2264,3 +2264,116 @@ img {
 @media (max-width: 480px) {
   .footer-grid { grid-template-columns: 1fr !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Publish / Jobs animation primitives
+ *
+ * Used by PublishPage + JobsPage. All keyframes respect reduced-motion
+ * via the @media (prefers-reduced-motion: reduce) block at the end.
+ * ────────────────────────────────────────────────────────────────── */
+
+/* CTA glow pulse — applied to the primary Publish-now button when the
+ * form is valid. Subtle "ready to fire" indication.                     */
+@keyframes tf-cta-glow {
+  0%, 100% {
+    box-shadow: 0 10px 20px -4px rgba(99, 102, 241, 0.35),
+                0 0 0 0 rgba(168, 85, 247, 0.0);
+  }
+  50% {
+    box-shadow: 0 12px 24px -3px rgba(99, 102, 241, 0.50),
+                0 0 0 4px rgba(168, 85, 247, 0.18);
+  }
+}
+.tf-cta-glow {
+  animation: tf-cta-glow 3.2s ease-in-out infinite;
+}
+
+/* Hero icon float — gentle vertical breathing for the gradient-tile
+ * icon at the top of /publish.                                         */
+@keyframes tf-hero-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+.tf-hero-float {
+  animation: tf-hero-float 4s ease-in-out infinite;
+}
+
+/* Tag chip entrance — when the user types a tag + Enter, the chip
+ * snaps in with a small scale-spring.                                   */
+@keyframes tf-tag-in {
+  0%   { opacity: 0; transform: scale(0.6) translateY(2px); }
+  60%  { opacity: 1; transform: scale(1.06) translateY(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.tf-tag-in {
+  animation: tf-tag-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: left center;
+}
+
+/* Check-pop — the green checkmark on success card + selected channel
+ * pill. Subtle spring-bounce so the state change is felt.               */
+@keyframes tf-check-pop {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  60%  { opacity: 1; transform: scale(1.18) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.tf-check-pop {
+  animation: tf-check-pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Success card pop-in — emerald success banner slides + fades up.       */
+@keyframes tf-success-pop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tf-success-pop {
+  animation: tf-success-pop 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Job row highlight — newly-created job from /publish gets a glowing
+ * ring pulse for ~5s to draw the eye in the timeline.                   */
+@keyframes tf-row-highlight {
+  0%   { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.55); }
+  60%  { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0.05); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+.tf-row-highlight {
+  animation: tf-row-highlight 2.2s ease-out 1, tf-row-highlight 2.2s ease-out 2.4s 1;
+}
+
+/* Upload progress shimmer — the gradient progress bar pans rightward
+ * while the upload is active so the bar feels alive even when offset
+ * doesn't change for a few seconds (chunk-in-flight period).            */
+@keyframes tf-progress-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: 0    0; }
+}
+.tf-progress-shimmer {
+  animation: tf-progress-shimmer 1.4s linear infinite;
+}
+
+/* Soft inset pulse — thumbnail of active (queued/uploading) jobs gets
+ * a blue ring that breathes.                                            */
+@keyframes tf-pulse-soft {
+  0%, 100% { opacity: 0.30; }
+  50%      { opacity: 0.85; }
+}
+.tf-pulse-soft {
+  animation: tf-pulse-soft 1.6s ease-in-out infinite;
+}
+
+/* Respect reduced-motion preference — animations collapse to a single
+ * static frame so vestibular-sensitive users get the layout without
+ * the motion.                                                           */
+@media (prefers-reduced-motion: reduce) {
+  .tf-cta-glow,
+  .tf-hero-float,
+  .tf-tag-in,
+  .tf-check-pop,
+  .tf-success-pop,
+  .tf-row-highlight,
+  .tf-progress-shimmer,
+  .tf-pulse-soft {
+    animation: none !important;
+  }
+}

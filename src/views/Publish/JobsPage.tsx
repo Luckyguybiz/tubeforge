@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useLocaleStore } from "@/stores/useLocaleStore";
 import { trpc } from "@/lib/trpc";
 import { toast } from "@/stores/useNotificationStore";
@@ -159,6 +160,18 @@ export function JobsPage() {
   const t = useLocaleStore((s) => s.t);
   const [activeFilter, setActiveFilter] = useState<JobStatus>("all");
 
+  // Read ?highlight=<jobId> query param so a freshly-created job (after
+  // /publish redirect) gets a ring-pulse for ~5s to draw the eye.
+  const searchParams = useSearchParams();
+  const highlightJobId = searchParams.get("highlight");
+  const [activeHighlight, setActiveHighlight] = useState<string | null>(highlightJobId);
+  useEffect(() => {
+    if (!highlightJobId) return;
+    setActiveHighlight(highlightJobId);
+    const ttl = setTimeout(() => setActiveHighlight(null), 5_000);
+    return () => clearTimeout(ttl);
+  }, [highlightJobId]);
+
   // Live data from server (Phase 2). Polls every 4s when any job is in
   // active state (QUEUED/UPLOADING) so users see worker progress in
   // real-time without manual refresh. Idle when nothing's active to
@@ -207,12 +220,26 @@ export function JobsPage() {
 
   // Auto-poll every 4s while any job is active (QUEUED or UPLOADING).
   // Stops polling once all jobs reach terminal state.
+  //
+  // We stash the "has any active job" flag in a ref so the interval is
+  // created once per active→inactive transition, not on every refetch
+  // (which mutates `jobs`). The interval callback reads the latest
+  // flag via the ref each tick.
+  const hasActiveRef = useRef(false);
+  hasActiveRef.current = useMemo(
+    () => jobs.some((j) => j.status === "queued" || j.status === "uploading"),
+    [jobs],
+  );
   useEffect(() => {
-    const hasActive = jobs.some((j) => j.status === "queued" || j.status === "uploading");
-    if (!hasActive) return;
-    const id = setInterval(() => jobsQuery.refetch(), 4000);
+    if (!hasActiveRef.current) return;
+    const id = setInterval(() => {
+      if (hasActiveRef.current) void jobsQuery.refetch();
+    }, 4_000);
     return () => clearInterval(id);
-  }, [jobs, jobsQuery]);
+    // Re-arm only when the active/inactive boundary flips. `hasActiveRef.current`
+    // is read inside the effect, but we need a dependency that mirrors its
+    // value so React tears the interval down when no jobs are active.
+  }, [hasActiveRef.current, jobsQuery]);
 
   const isLoading = jobsQuery.isLoading;
 
@@ -331,29 +358,39 @@ export function JobsPage() {
             const active = activeFilter === f.key;
             const count = counts[f.key];
             const isStatus = f.key !== "all";
+            const dotPulse = active && (f.key === "uploading" || f.key === "queued");
             return (
               <button
                 key={f.key}
                 onClick={() => setActiveFilter(f.key)}
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all",
+                  "group inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200 ease-out",
                   active
-                    ? "bg-foreground text-background shadow-sm"
-                    : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "bg-foreground text-background shadow-sm scale-[1.02]"
+                    : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-px",
                 )}
               >
                 {isStatus && (
                   <span
                     className={cn(
-                      "size-1.5 rounded-full",
+                      "relative size-1.5 rounded-full transition-colors",
                       STATUS_CONFIG[f.key as Exclude<JobStatus, "all">].dot,
                     )}
-                  />
+                  >
+                    {dotPulse && (
+                      <span
+                        className={cn(
+                          "absolute inset-0 -m-0.5 rounded-full opacity-60 animate-ping",
+                          STATUS_CONFIG[f.key as Exclude<JobStatus, "all">].dot,
+                        )}
+                      />
+                    )}
+                  </span>
                 )}
                 {f.label}
                 <span
                   className={cn(
-                    "rounded-full px-1.5 font-mono text-[10px]",
+                    "rounded-full px-1.5 font-mono text-[10px] transition-colors",
                     active ? "bg-background/15 text-background" : "bg-muted-foreground/15 text-muted-foreground",
                   )}
                 >
@@ -379,18 +416,23 @@ export function JobsPage() {
           t={t}
         />
       ) : (
-        <div className="space-y-6 pb-16">
-          {grouped.map(([day, dayJobs]) => (
-            <section key={day}>
+        <div key={activeFilter} className="tf-content-reveal space-y-6 pb-16">
+          {grouped.map(([day, dayJobs], gi) => (
+            <section
+              key={day}
+              style={{ animationDelay: `${gi * 40}ms` }}
+              className="tf-content-reveal"
+            >
               <h2 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {dayLabel(day, t)}
               </h2>
-              <div className="space-y-2">
+              <div className="tf-stagger-in space-y-2">
                 {dayJobs.map((job) => (
                   <JobRow
                     key={job.id}
                     job={job}
                     t={t}
+                    highlighted={activeHighlight === job.id}
                     onCancel={() => cancelMut.mutate({ jobId: job.id })}
                     onRetry={() => retryMut.mutate({ jobId: job.id })}
                     isCancelling={cancelMut.isPending && cancelMut.variables?.jobId === job.id}
@@ -413,6 +455,7 @@ export function JobsPage() {
 function JobRow({
   job,
   t,
+  highlighted,
   onCancel,
   onRetry,
   isCancelling,
@@ -420,6 +463,7 @@ function JobRow({
 }: {
   job: JobEntry;
   t: (k: string) => string;
+  highlighted?: boolean;
   onCancel?: () => void;
   onRetry?: () => void;
   isCancelling?: boolean;
@@ -427,12 +471,25 @@ function JobRow({
 }) {
   const cfg = STATUS_CONFIG[job.status];
   const Icon = cfg.Icon;
+  const isActive = job.status === "uploading" || job.status === "queued";
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-all hover:border-brand-500/30 hover:shadow-md">
+    <div
+      className={cn(
+        "group/row relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm transition-all duration-200 ease-out",
+        "hover:-translate-y-0.5 hover:shadow-md hover:border-brand-500/30",
+        highlighted
+          ? "border-brand-500/60 shadow-md shadow-brand-500/15 tf-row-highlight"
+          : "border-border",
+      )}
+    >
       {/* Thumbnail */}
       <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
         {job.thumbnailUrl ? (
-          <img src={job.thumbnailUrl} alt="" className="size-full object-cover" />
+          <img
+            src={job.thumbnailUrl}
+            alt=""
+            className="size-full object-cover transition-transform duration-300 group-hover/row:scale-105"
+          />
         ) : (
           <div className="flex size-full items-center justify-center">
             <ImageIcon className="size-5 text-muted-foreground/40" />
@@ -441,10 +498,13 @@ function JobRow({
         {job.status === "uploading" && typeof job.uploadProgress === "number" && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
             <div
-              className="h-full bg-blue-500 transition-all"
+              className="relative h-full bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500 bg-[length:200%_100%] transition-[width] duration-500 ease-out tf-progress-shimmer"
               style={{ width: `${job.uploadProgress}%` }}
             />
           </div>
+        )}
+        {isActive && (
+          <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-blue-500/30 tf-pulse-soft" />
         )}
       </div>
 
@@ -500,11 +560,20 @@ function JobRow({
       {/* Status badge */}
       <span
         className={cn(
-          "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+          "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors",
           cfg.badge,
           cfg.text,
         )}
       >
+        {isActive && (
+          <span className="relative inline-flex size-1.5">
+            <span
+              className={cn("absolute inset-0 rounded-full opacity-75 animate-ping", cfg.dot)}
+              aria-hidden
+            />
+            <span className={cn("relative size-1.5 rounded-full", cfg.dot)} aria-hidden />
+          </span>
+        )}
         <Icon className={cn("size-3", job.status === "uploading" && "animate-spin")} />
         {cfg.label}
       </span>

@@ -120,6 +120,13 @@ export function PublishPage() {
   /* ── Submission state ───────────────────────────────────────────── */
   const [publishState, setPublishState] = useState<PublishState>("idle");
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [lastJobId, setLastJobId] = useState<string | null>(null);
+  // Clear stale error-reset timeouts so submitting again before the 4s
+  // delay doesn't kick the state to idle right after the user clicks.
+  const errorResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (errorResetRef.current) clearTimeout(errorResetRef.current);
+  }, []);
 
   /* ── Data ───────────────────────────────────────────────────────── */
   const profile = trpc.user.getProfile.useQuery();
@@ -276,6 +283,7 @@ export function PublishPage() {
       // but keeping savePublishHistory write is harmless and gives
       // logged-out fallback).
       setPublishState("success");
+      setLastJobId(res.jobId);
       const channelPageUrl = selectedChannel
         ? `https://youtube.com/channel/${selectedChannel.id}`
         : null;
@@ -296,7 +304,8 @@ export function PublishPage() {
       setPublishState("error");
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(msg || tx(t, "publish.toast.error", "Upload failed"));
-      setTimeout(() => setPublishState("idle"), 4000);
+      if (errorResetRef.current) clearTimeout(errorResetRef.current);
+      errorResetRef.current = setTimeout(() => setPublishState("idle"), 4_000);
     }
   }, [
     canPublish,
@@ -435,8 +444,9 @@ export function PublishPage() {
       <header className="pt-6 pb-4 sm:pt-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-md shadow-brand-500/20">
+            <div className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-md shadow-brand-500/20 tf-hero-float">
               <Rocket className="size-5" />
+              <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/0 via-white/15 to-white/0 opacity-0 transition-opacity duration-300 hover:opacity-100" />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -471,8 +481,8 @@ export function PublishPage() {
 
       {/* 2-pane content */}
       <div className="grid gap-6 pb-16 lg:grid-cols-[1fr_400px]">
-        {/* LEFT: Form */}
-        <div className="space-y-5">
+        {/* LEFT: Form (stagger entrance for the section cards) */}
+        <div className="tf-stagger-in space-y-5">
           {/* Step 1: Source */}
           <SectionCard
             stepNum={1}
@@ -544,13 +554,13 @@ export function PublishPage() {
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 rounded-md bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-500"
+                      className="tf-tag-in inline-flex items-center gap-1 rounded-md bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-500 transition-colors hover:bg-brand-500/20"
                     >
                       <Tag className="size-3" />
                       {tag}
                       <button
                         onClick={() => removeTag(tag)}
-                        className="ml-0.5 text-brand-500/70 hover:text-brand-500"
+                        className="ml-0.5 text-brand-500/70 transition-transform hover:rotate-90 hover:text-brand-500"
                         aria-label="Remove tag"
                       >
                         <X className="size-3" />
@@ -713,13 +723,22 @@ export function PublishPage() {
               onClick={handlePublish}
               disabled={!canPublish}
               className={cn(
-                "inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-bold text-white shadow-lg shadow-brand-500/30 transition-all",
+                "group/cta relative inline-flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl text-[15px] font-bold text-white shadow-lg shadow-brand-500/30 transition-all duration-200",
                 canPublish
-                  ? "bg-gradient-to-r from-brand-500 via-violet-500 to-fuchsia-500 hover:scale-[1.01]"
+                  ? "bg-gradient-to-r from-brand-500 via-violet-500 to-fuchsia-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-brand-500/40 tf-cta-glow"
                   : "bg-muted text-muted-foreground cursor-not-allowed",
                 publishState !== "idle" && "cursor-wait",
+                publishState === "success" && "bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-500 shadow-emerald-500/30",
+                publishState === "error" && "bg-gradient-to-r from-rose-500 via-rose-500 to-orange-500 shadow-rose-500/30",
               )}
             >
+              {/* Animated shine sweep when actionable */}
+              {canPublish && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover/cta:translate-x-full"
+                />
+              )}
               {publishState === "uploading" || publishState === "publishing" ? (
                 <Loader2 className="size-5 animate-spin" />
               ) : publishState === "success" ? (
@@ -757,12 +776,12 @@ export function PublishPage() {
           {/* Pre-flight checks */}
           <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <h3 className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              <Sparkles className="size-3" />
+              <Sparkles className="size-3 text-brand-500" />
               {tx(t, "publish.preflightTitle", "Pre-flight checks")}
             </h3>
-            <ul className="space-y-1.5">
+            <ul className="tf-stagger-in space-y-1.5">
               {checks.map((check, i) => (
-                <li key={i} className="flex items-start gap-2 text-[12px]">
+                <li key={`${check.severity}-${check.label}-${i}`} className="flex items-start gap-2 text-[12px]">
                   {check.severity === "ok" ? (
                     <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
                   ) : check.severity === "warn" ? (
@@ -785,9 +804,9 @@ export function PublishPage() {
 
           {/* Success state with YouTube link */}
           {publishState === "success" && (
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 shadow-sm">
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 shadow-sm tf-success-pop">
               <div className="flex items-start gap-3">
-                <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
+                <CheckCircle2 className="size-5 shrink-0 text-emerald-500 tf-check-pop" />
                 <div className="flex-1">
                   <div className="text-[14px] font-bold text-foreground">
                     {scheduleEnabled
@@ -803,9 +822,9 @@ export function PublishPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Link
-                      href="/publish/jobs"
+                      href={lastJobId ? `/publish/jobs?highlight=${lastJobId}` : "/publish/jobs"}
                       prefetch
-                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-500 px-3 text-[12px] font-bold text-white hover:bg-brand-600"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-500 px-3 text-[12px] font-bold text-white transition-all hover:bg-brand-600 hover:scale-[1.02] hover:shadow-md hover:shadow-brand-500/30"
                     >
                       <Clock className="size-3.5" />
                       {tx(t, "publish.success.viewJobs", "View jobs")}
@@ -901,10 +920,10 @@ function ChannelPicker({
               key={ch.id}
               onClick={() => onSelect(ch.id)}
               className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 transition-all",
+                "flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 transition-all duration-200 ease-out",
                 selected
-                  ? "border-brand-500 bg-brand-500/5 shadow-sm shadow-brand-500/10"
-                  : "border-border bg-background hover:border-brand-500/40",
+                  ? "border-brand-500 bg-brand-500/5 shadow-sm shadow-brand-500/10 scale-[1.01]"
+                  : "border-border bg-background hover:border-brand-500/40 hover:-translate-y-px hover:shadow-sm",
               )}
             >
               {ch.thumbnail ? (
@@ -924,7 +943,7 @@ function ChannelPicker({
                   {ch.subscribers.toLocaleString()} subs
                 </div>
               </div>
-              {selected && <CheckCircle2 className="ml-1 size-4 text-brand-500" />}
+              {selected && <CheckCircle2 className="ml-1 size-4 text-brand-500 tf-check-pop" />}
             </button>
           );
         })}
