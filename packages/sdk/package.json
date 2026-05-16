@@ -1,0 +1,56 @@
+{
+  "name": "@tubeforge/sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for TubeForge Publishing API — auto-post videos to YouTube with scheduling, webhooks, and multi-tenant support.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "tubeforge",
+    "youtube",
+    "youtube-api",
+    "video-upload",
+    "scheduler",
+    "auto-post",
+    "webhooks",
+    "publishing"
+  ],
+  "author": "TubeForge",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Luckyguybiz/tubeforge-sdk.git"
+  },
+  "homepage": "https://tubeforge.co/docs/api",
+  "bugs": {
+    "url": "mailto:support@tubeforge.co"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.19",
+    "tsup": "^8.3.0",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.0"
+  }
+}
