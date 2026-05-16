@@ -1299,6 +1299,8 @@
   "nav.metadata": "Metadata",
   "nav.preview": "Preview",
   "nav.publish": "Publish",
+  "nav.publishAutopilot": "Autopilot",
+  "nav.publishCalendar": "Calendar",
   "nav.referral": "Referrals",
   "nav.seoOptimizer": "SEO Optimizer",
   "nav.settings": "Settings",
