@@ -37,6 +37,7 @@ export function signPayload(secret: string, payload: string): string {
  * Returns true on success, false on failure.
  */
 async function deliverToEndpoint(
+  endpointId: string,
   url: string,
   secret: string,
   event: string,
@@ -47,9 +48,15 @@ async function deliverToEndpoint(
     'Content-Type': 'application/json',
     'X-TubeForge-Event': event,
     'X-TubeForge-Signature': `sha256=${signature}`,
+    'X-Forge-Signature': signature, // SDK-friendly alias
   };
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    let statusCode: number | null = null;
+    let responseBody: string | null = null;
+    let errorMessage: string | null = null;
+    let success = false;
+
     try {
       const res = await fetch(url, {
         method: 'POST',
@@ -57,25 +64,54 @@ async function deliverToEndpoint(
         body,
         signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
       });
-
-      if (res.ok) {
-        return true;
+      statusCode = res.status;
+      // Read first 2 KB of response body for debugging
+      try {
+        const txt = await res.text();
+        responseBody = txt.slice(0, 2048);
+      } catch {
+        /* unreadable body */
       }
+      success = res.ok;
 
-      log.warn('Webhook delivery non-OK response', {
-        url,
-        event,
-        status: res.status,
-        attempt: attempt + 1,
-      });
+      if (!success) {
+        log.warn('Webhook delivery non-OK response', {
+          url,
+          event,
+          status: res.status,
+          attempt: attempt + 1,
+        });
+      }
     } catch (err) {
+      errorMessage = err instanceof Error ? err.message : String(err);
       log.warn('Webhook delivery failed', {
         url,
         event,
         attempt: attempt + 1,
-        error: err instanceof Error ? err.message : String(err),
+        error: errorMessage,
       });
     }
+
+    // Persist the attempt for observability — fire-and-forget so the
+    // caller never blocks on DB.
+    db.webhookDelivery
+      .create({
+        data: {
+          webhookId: endpointId,
+          event,
+          payload: body,
+          signature,
+          statusCode,
+          responseBody,
+          attempt: attempt + 1,
+          success,
+          errorMessage,
+          deliveredAt: success ? new Date() : null,
+        },
+      })
+      .catch((e) => log.error('Failed to log delivery', { error: e instanceof Error ? e.message : String(e) }));
+
+    if (success) return true;
   }
 
   return false;
@@ -122,7 +158,7 @@ async function deliverWebhooksAsync(
 
     const results = await Promise.allSettled(
       endpoints.map(async (ep) => {
-        const ok = await deliverToEndpoint(ep.url, ep.secret, event, body);
+        const ok = await deliverToEndpoint(ep.id, ep.url, ep.secret, event, body);
         if (ok) {
           log.info('Webhook delivered', { endpointId: ep.id, event, url: ep.url });
         } else {
@@ -283,5 +319,101 @@ export const webhookRouter = router({
         test: true,
       });
       return { sent: true };
+    }),
+
+  /**
+   * Recent delivery log for one webhook endpoint. Returns up to 50 most-
+   * recent attempts (success + failure). UI shows status code, latency,
+   * truncated response body, and a per-row retry button for failures.
+   */
+  deliveries: protectedProcedure
+    .input(z.object({ webhookId: z.string().min(1).max(100), limit: z.number().min(1).max(100).default(50) }))
+    .query(async ({ ctx, input }) => {
+      // Verify ownership
+      const hook = await ctx.db.webhookEndpoint.findFirst({
+        where: { id: input.webhookId, userId: ctx.session.user.id },
+        select: { id: true, url: true, secret: false }, // never return secret
+      });
+      if (!hook) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Webhook not found.' });
+      }
+      const deliveries = await ctx.db.webhookDelivery.findMany({
+        where: { webhookId: input.webhookId },
+        orderBy: { createdAt: 'desc' },
+        take: input.limit,
+        select: {
+          id: true,
+          event: true,
+          statusCode: true,
+          responseBody: true,
+          attempt: true,
+          success: true,
+          errorMessage: true,
+          deliveredAt: true,
+          createdAt: true,
+        },
+      });
+      // Compute summary stats from the same window
+      const total = deliveries.length;
+      const succeeded = deliveries.filter((d) => d.success).length;
+      const successRate = total > 0 ? Math.round((succeeded / total) * 1000) / 10 : null;
+      return {
+        webhookUrl: hook.url,
+        deliveries,
+        stats: {
+          total,
+          succeeded,
+          failed: total - succeeded,
+          successRate, // null when no deliveries, else 0–100 float
+        },
+      };
+    }),
+
+  /**
+   * Re-attempt delivery of a previously failed event. Reuses the stored
+   * payload byte-for-byte so the HMAC signature remains valid; creates a
+   * new WebhookDelivery row recording this retry attempt.
+   *
+   * Idempotent — successful deliveries can also be re-sent (useful for
+   * "I missed the event, replay it"). UI calls this only on failures
+   * but the procedure accepts both.
+   */
+  retry: protectedProcedure
+    .input(z.object({ deliveryId: z.string().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      await checkRate(ctx.session.user.id);
+
+      const delivery = await ctx.db.webhookDelivery.findUnique({
+        where: { id: input.deliveryId },
+        select: {
+          id: true,
+          event: true,
+          payload: true,
+          webhook: {
+            select: { id: true, userId: true, url: true, secret: true, active: true },
+          },
+        },
+      });
+      if (!delivery || delivery.webhook.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Delivery not found.' });
+      }
+      if (!delivery.webhook.active) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Webhook is inactive — re-activate it before retrying.',
+        });
+      }
+
+      // Synchronous delivery so the UI can show the result inline.
+      // (deliverToEndpoint writes a new WebhookDelivery row for this retry.)
+      const ok = await deliverToEndpoint(
+        delivery.webhook.id,
+        delivery.webhook.url,
+        delivery.webhook.secret,
+        delivery.event,
+        delivery.payload,
+      );
+
+      return { success: ok };
     }),
 });

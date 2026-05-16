@@ -502,16 +502,48 @@ model UploadJob {
 }
 
 model WebhookEndpoint {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  url       String
-  events    String[]
-  secret    String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url        String
+  events     String[]
+  secret     String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  deliveries WebhookDelivery[]
 
   @@index([userId])
+}
+
+/// Per-delivery log for webhook observability. Each attempt to POST a
+/// signed payload to a WebhookEndpoint creates a row here, success or
+/// failure. UI in Settings → Integrations → Webhooks reads from this
+/// to show recent activity + per-delivery retry button.
+///
+/// Capped at ~100 rows per webhook by a daily cleanup sweep.
+model WebhookDelivery {
+  id           String          @id @default(cuid())
+  webhookId    String
+  webhook      WebhookEndpoint @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event        String
+  /// Full JSON payload that was sent. Stored verbatim so retry can
+  /// re-send the exact same bytes — preserves HMAC determinism.
+  payload      String          @db.Text
+  signature    String
+  /// HTTP status returned by the receiving endpoint. NULL when the
+  /// request failed at the network layer (timeout / DNS / TCP reset).
+  statusCode   Int?
+  /// First 2 KB of response body — useful for debugging "what did my
+  /// endpoint say". Truncated to bound storage.
+  responseBody String?         @db.Text
+  attempt      Int             @default(1)
+  success      Boolean         @default(false)
+  errorMessage String?         @db.Text
+  deliveredAt  DateTime?
+  createdAt    DateTime        @default(now())
+
+  @@index([webhookId, createdAt])
+  @@index([webhookId, success])
 }
 
 model PushSubscription {

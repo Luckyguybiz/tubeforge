@@ -1160,6 +1160,7 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [copiedSecret, setCopiedSecret] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const register = trpc.webhook.register.useMutation({
     onSuccess: (data) => {
@@ -1222,54 +1223,80 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
         <Skeleton width="100%" height={100} style={{ borderRadius: 12 }} />
       ) : webhooks.data && webhooks.data.length > 0 ? (
         <div className="space-y-2">
-          {webhooks.data.map((wh) => (
-            <div
-              key={wh.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-brand-500/30 transition-colors"
-            >
-              <div className="size-9 shrink-0 rounded-lg bg-violet-500/15 flex items-center justify-center text-violet-500">
-                <Webhook className="size-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-mono font-semibold text-foreground truncate">{wh.url}</div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
-                  {wh.events.map((ev) => (
-                    <span
-                      key={ev}
-                      className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground"
-                    >
-                      {ev}
-                    </span>
-                  ))}
-                  {!wh.active && (
-                    <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-500 font-bold">
-                      {tx(t, "settings.webhook.inactive", "INACTIVE")}
-                    </span>
-                  )}
+          {webhooks.data.map((wh) => {
+            const isExpanded = expandedId === wh.id;
+            return (
+              <div
+                key={wh.id}
+                className={cn(
+                  "rounded-xl bg-card border transition-colors",
+                  isExpanded
+                    ? "border-brand-500/40 shadow-sm shadow-brand-500/10"
+                    : "border-border hover:border-brand-500/30",
+                )}
+              >
+                <div className="flex items-center gap-3 p-3">
+                  <div className="size-9 shrink-0 rounded-lg bg-violet-500/15 flex items-center justify-center text-violet-500">
+                    <Webhook className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-mono font-semibold text-foreground truncate">{wh.url}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
+                      {wh.events.map((ev) => (
+                        <span
+                          key={ev}
+                          className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground"
+                        >
+                          {ev}
+                        </span>
+                      ))}
+                      {!wh.active && (
+                        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-500 font-bold">
+                          {tx(t, "settings.webhook.inactive", "INACTIVE")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : wh.id)}
+                    className={cn(
+                      "text-xs font-semibold transition-colors inline-flex items-center gap-1",
+                      isExpanded
+                        ? "text-brand-500"
+                        : "text-muted-foreground hover:text-brand-500",
+                    )}
+                    title={tx(t, "settings.webhook.activityHint", "Show recent delivery attempts")}
+                    aria-expanded={isExpanded}
+                  >
+                    <ChevronRight className={cn("size-3 transition-transform", isExpanded && "rotate-90")} />
+                    {tx(t, "settings.webhook.activity", "Activity")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestingId(wh.id);
+                      testHook.mutate({ id: wh.id });
+                    }}
+                    disabled={testHook.isPending && testingId === wh.id}
+                    className="text-xs font-semibold text-brand-500 hover:text-brand-600 disabled:opacity-60 inline-flex items-center gap-1"
+                    title={tx(t, "settings.webhook.testHint", "Send a synthetic job.completed event")}
+                  >
+                    {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
+                    {tx(t, "settings.webhook.test", "Test")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteId(wh.id)}
+                    className="text-xs font-semibold text-muted-foreground hover:text-rose-500"
+                  >
+                    {tx(t, "common.delete", "Delete")}
+                  </button>
                 </div>
+                {isExpanded && <WebhookActivityLog webhookId={wh.id} t={t} />}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setTestingId(wh.id);
-                  testHook.mutate({ id: wh.id });
-                }}
-                disabled={testHook.isPending && testingId === wh.id}
-                className="text-xs font-semibold text-brand-500 hover:text-brand-600 disabled:opacity-60 inline-flex items-center gap-1"
-                title={tx(t, "settings.webhook.testHint", "Send a synthetic job.completed event")}
-              >
-                {testHook.isPending && testingId === wh.id ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
-                {tx(t, "settings.webhook.test", "Test")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeleteId(wh.id)}
-                className="text-xs font-semibold text-muted-foreground hover:text-rose-500"
-              >
-                {tx(t, "common.delete", "Delete")}
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="rounded-xl border-2 border-dashed border-border p-6 text-center">
@@ -1500,6 +1527,142 @@ function WebhooksSection({ t }: { t: (k: string) => string }) {
 }
 
 /* ─────────────── Modal shell (reusable) ─────────────── */
+
+/* ─────────────── Webhook Activity Log ─────────────── */
+
+function WebhookActivityLog({
+  webhookId,
+  t,
+}: {
+  webhookId: string;
+  t: (k: string) => string;
+}) {
+  const activity = trpc.webhook.deliveries.useQuery(
+    { webhookId, limit: 20 },
+    {
+      refetchInterval: 10_000, // poll every 10s while expanded
+      refetchOnWindowFocus: true,
+    },
+  );
+
+  const retry = trpc.webhook.retry.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(tx(t, "settings.webhook.retried", "Re-delivered successfully"));
+      } else {
+        toast.error(tx(t, "settings.webhook.retryFailed", "Retry attempt failed — check endpoint"));
+      }
+      void activity.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const formatTime = (iso: string | Date | null) => {
+    if (!iso) return "—";
+    const d = typeof iso === "string" ? new Date(iso) : iso;
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return `${Math.floor(diff)}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return d.toLocaleDateString();
+  };
+
+  return (
+    <div className="border-t border-border px-3 pt-3 pb-3 bg-muted/20 rounded-b-xl">
+      {/* Stats */}
+      {activity.data && activity.data.stats.total > 0 && (
+        <div className="mb-3 flex items-center gap-3 text-[11px]">
+          <span className="text-muted-foreground">
+            {tx(t, "settings.webhook.successRate", "Success rate")}:
+          </span>
+          <span
+            className={cn(
+              "font-mono font-bold",
+              (activity.data.stats.successRate ?? 0) >= 95
+                ? "text-emerald-500"
+                : (activity.data.stats.successRate ?? 0) >= 70
+                  ? "text-amber-500"
+                  : "text-rose-500",
+            )}
+          >
+            {activity.data.stats.successRate?.toFixed(1) ?? "—"}%
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="font-mono text-muted-foreground">
+            {activity.data.stats.succeeded}/{activity.data.stats.total}{" "}
+            {tx(t, "settings.webhook.delivered", "delivered")}
+          </span>
+        </div>
+      )}
+
+      {activity.isLoading ? (
+        <Skeleton width="100%" height={80} style={{ borderRadius: 8 }} />
+      ) : !activity.data || activity.data.deliveries.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border py-4 text-center text-[11px] text-muted-foreground">
+          {tx(t, "settings.webhook.noDeliveries", "No delivery attempts yet — trigger one with Test or wait for a real event.")}
+        </div>
+      ) : (
+        <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          {activity.data.deliveries.map((d) => {
+            const isSuccess = d.success;
+            const statusColor = isSuccess
+              ? "bg-emerald-500/15 text-emerald-500"
+              : d.statusCode == null
+                ? "bg-amber-500/15 text-amber-600"
+                : d.statusCode >= 500
+                  ? "bg-rose-500/15 text-rose-500"
+                  : "bg-amber-500/15 text-amber-600";
+            const isRetrying = retry.isPending && retry.variables?.deliveryId === d.id;
+
+            return (
+              <div
+                key={d.id}
+                className="flex items-center gap-2 rounded-lg bg-card border border-border px-2.5 py-1.5 text-[11px]"
+              >
+                <span
+                  className={cn(
+                    "shrink-0 inline-flex items-center justify-center rounded font-mono font-bold w-12 text-center px-1.5 py-0.5",
+                    statusColor,
+                  )}
+                  title={d.errorMessage ?? undefined}
+                >
+                  {d.statusCode ?? (isSuccess ? "OK" : "ERR")}
+                </span>
+                <code className="shrink-0 font-mono text-foreground">{d.event}</code>
+                {d.attempt > 1 && (
+                  <span className="shrink-0 rounded bg-muted px-1 py-0 text-muted-foreground font-mono">
+                    attempt #{d.attempt}
+                  </span>
+                )}
+                <span className="flex-1 truncate text-muted-foreground font-mono text-[10px]">
+                  {d.errorMessage
+                    ? d.errorMessage.slice(0, 80)
+                    : d.responseBody
+                      ? d.responseBody.slice(0, 80)
+                      : ""}
+                </span>
+                <span className="shrink-0 font-mono text-muted-foreground">
+                  {formatTime(d.createdAt)}
+                </span>
+                {!isSuccess && (
+                  <button
+                    type="button"
+                    onClick={() => retry.mutate({ deliveryId: d.id })}
+                    disabled={isRetrying}
+                    className="shrink-0 text-brand-500 hover:text-brand-600 disabled:opacity-60 inline-flex items-center"
+                    title={tx(t, "settings.webhook.retryHint", "Re-send this delivery")}
+                  >
+                    {isRetrying ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ModalShell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
