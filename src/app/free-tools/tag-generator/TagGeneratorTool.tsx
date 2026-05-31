@@ -68,7 +68,7 @@ export function TagGeneratorTool() {
       {/* Input */}
       <div
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: "28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -81,7 +81,7 @@ export function TagGeneratorTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
           }}
         >
@@ -102,8 +102,8 @@ export function TagGeneratorTool() {
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
             outline: "none",
-            background: "#1a1a1a",
-            color: "#ffffff",
+            background: "var(--bg-tertiary)",
+            color: "var(--fg-primary)",
             fontFamily: "inherit",
             transition: "border-color 0.2s ease",
             boxSizing: "border-box",
@@ -174,7 +174,7 @@ export function TagGeneratorTool() {
               marginBottom: 16,
             }}
           >
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: 0 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-primary)", margin: 0 }}>
               Generated Tags ({tags.length})
             </h3>
             <button
@@ -226,7 +226,7 @@ export function TagGeneratorTool() {
               </button>
             ))}
           </div>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>
+          <p style={{ fontSize: 13, color: "var(--fg-secondary)", marginTop: 12 }}>
             Click any tag to copy it individually.
           </p>
         </div>

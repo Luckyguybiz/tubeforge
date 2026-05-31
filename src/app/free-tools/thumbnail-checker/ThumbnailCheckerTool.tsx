@@ -347,7 +347,7 @@ export function ThumbnailCheckerTool() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: imageUrl ? "16px" : "48px 28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -377,7 +377,7 @@ export function ThumbnailCheckerTool() {
                 objectFit: "contain",
               }}
             />
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 12, marginBottom: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--fg-secondary)", marginTop: 12, marginBottom: 0 }}>
               Click or drag to replace the image
             </p>
           </div>
@@ -401,14 +401,14 @@ export function ThumbnailCheckerTool() {
             <p
               style={{
                 fontSize: 17,
-                color: "#ffffff",
+                color: "var(--fg-primary)",
                 fontWeight: 500,
                 margin: "0 0 8px",
               }}
             >
               Drop your thumbnail here or click to upload
             </p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>
+            <p style={{ fontSize: 14, color: "var(--fg-secondary)", margin: 0 }}>
               JPG, PNG, or GIF. Recommended: 1280x720px (16:9)
             </p>
           </div>
@@ -421,11 +421,11 @@ export function ThumbnailCheckerTool() {
           style={{
             marginTop: 24,
             padding: "20px",
-            background: "#111111",
+            background: "var(--bg-secondary)",
             borderRadius: 12,
             textAlign: "center",
             fontSize: 15,
-            color: "rgba(255,255,255,0.5)",
+            color: "var(--fg-secondary)",
           }}
         >
           Analyzing your thumbnail...
@@ -438,7 +438,7 @@ export function ThumbnailCheckerTool() {
           {/* Overall score */}
           <div
             style={{
-              background: "#0a0a0a",
+              background: "var(--bg-primary)",
               borderRadius: 18,
               padding: "28px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -451,7 +451,7 @@ export function ThumbnailCheckerTool() {
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--fg-secondary)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
                 marginBottom: 8,
@@ -475,7 +475,7 @@ export function ThumbnailCheckerTool() {
             >
               {analysis.overall}
             </div>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+            <div style={{ fontSize: 15, color: "var(--fg-secondary)", marginTop: 4 }}>
               {analysis.overall >= 80
                 ? "Great thumbnail! Ready for publishing."
                 : analysis.overall >= 60
@@ -496,7 +496,7 @@ export function ThumbnailCheckerTool() {
               <div
                 key={cat.key}
                 style={{
-                  background: "#0a0a0a",
+                  background: "var(--bg-primary)",
                   borderRadius: 14,
                   padding: "20px",
                   boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
@@ -511,7 +511,7 @@ export function ThumbnailCheckerTool() {
                     marginBottom: 8,
                   }}
                 >
-                  <span style={{ fontSize: 15, fontWeight: 600, color: "#ffffff" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-primary)" }}>
                     {cat.categoryLabel}
                   </span>
                   <span
@@ -536,7 +536,7 @@ export function ThumbnailCheckerTool() {
                 <p
                   style={{
                     fontSize: 14,
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--fg-secondary)",
                     lineHeight: 1.5,
                     margin: "10px 0 0",
                   }}

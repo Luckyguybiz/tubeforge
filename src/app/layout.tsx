@@ -128,11 +128,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Prevent flash of wrong theme: read persisted mode before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=JSON.parse(localStorage.getItem('tubeforge-theme')||'{}');var m=s.state&&s.state.mode||'dark';var d=m==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches:m==='dark';document.documentElement.style.colorScheme=d?'dark':'light';document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.style.background=d?'#0a0a0a':'#f5f5f7'}catch(e){}})()`
+            __html: `(function(){try{var s=JSON.parse(localStorage.getItem('tubeforge-theme')||'{}');var m=s.state&&s.state.mode||'dark';var d=m==='system'?window.matchMedia('(prefers-color-scheme:dark)').matches:m==='dark';document.documentElement.style.colorScheme=d?'dark':'light';document.documentElement.setAttribute('data-theme',d?'dark':'light');document.documentElement.style.background=d?'#0a0a0a':'#f5f5f7';if(document.body){document.body.style.backgroundColor=d?'#0a0a0a':'#f5f5f7';document.body.style.color=d?'#ffffff':'#1a1a1a';}}catch(e){}})()`
           }}
         />
       </head>
-      <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`} style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, var(--font-sans), sans-serif", backgroundColor: '#0a0a0a', color: '#ffffff' }}>
+      <body className={`${instrumentSans.variable} ${jetbrainsMono.variable} font-sans antialiased`} style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, var(--font-sans), sans-serif", backgroundColor: 'var(--bg-primary)', color: 'var(--fg-primary)' }}>
         <Analytics />
         <WebVitals />
         <Providers><TooltipProvider delayDuration={150}>{children}<Toaster /></TooltipProvider></Providers>

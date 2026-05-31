@@ -65,14 +65,14 @@ export function ShortsDimensionsTool() {
       {/* Upload / Preview */}
       <div
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: "28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
           border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: "0 0 16px" }}>
+        <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-primary)", margin: "0 0 16px" }}>
           Preview your image as a YouTube Short
         </h3>
 
@@ -88,7 +88,7 @@ export function ShortsDimensionsTool() {
               textAlign: "center",
               cursor: "pointer",
               transition: "all 0.2s ease",
-              background: "#1a1a1a",
+              background: "var(--bg-tertiary)",
             }}
           >
             <svg
@@ -106,7 +106,7 @@ export function ShortsDimensionsTool() {
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", margin: "0 0 4px" }}>
+            <p style={{ fontSize: 15, color: "var(--fg-secondary)", margin: "0 0 4px" }}>
               Drop an image here or click to upload
             </p>
             <p style={{ fontSize: 13, color: "#aeaeb2", margin: 0 }}>
@@ -179,8 +179,8 @@ export function ShortsDimensionsTool() {
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: "#fff" }}>@yourchannel</div>
-                    <div style={{ fontSize: 8, color: "rgba(255,255,255,0.7)" }}>Video caption here...</div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: "var(--fg-primary)" }}>@yourchannel</div>
+                    <div style={{ fontSize: 8, color: "var(--fg-secondary)" }}>Video caption here...</div>
                   </div>
                 </div>
               </div>
@@ -194,13 +194,13 @@ export function ShortsDimensionsTool() {
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "10px 14px",
-                  background: "#1a1a1a",
+                  background: "var(--bg-tertiary)",
                   borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>File</span>
-                <span style={{ fontSize: 14, color: "#ffffff", fontWeight: 500 }}>{fileName}</span>
+                <span style={{ fontSize: 14, color: "var(--fg-secondary)" }}>File</span>
+                <span style={{ fontSize: 14, color: "var(--fg-primary)", fontWeight: 500 }}>{fileName}</span>
               </div>
               {imageDimensions && (
                 <>
@@ -210,13 +210,13 @@ export function ShortsDimensionsTool() {
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: "10px 14px",
-                      background: "#1a1a1a",
+                      background: "var(--bg-tertiary)",
                       borderRadius: 10,
                       border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Dimensions</span>
-                    <span style={{ fontSize: 14, color: "#ffffff", fontWeight: 500 }}>
+                    <span style={{ fontSize: 14, color: "var(--fg-secondary)" }}>Dimensions</span>
+                    <span style={{ fontSize: 14, color: "var(--fg-primary)", fontWeight: 500 }}>
                       {imageDimensions.width} x {imageDimensions.height}
                     </span>
                   </div>
@@ -231,7 +231,7 @@ export function ShortsDimensionsTool() {
                       border: `1px solid ${isCorrectRatio ? "rgba(52,199,89,0.2)" : "rgba(255,149,0,0.2)"}`,
                     }}
                   >
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Aspect ratio</span>
+                    <span style={{ fontSize: 14, color: "var(--fg-secondary)" }}>Aspect ratio</span>
                     <span
                       style={{
                         fontSize: 14,
@@ -254,7 +254,7 @@ export function ShortsDimensionsTool() {
                       border: `1px solid ${isCorrectResolution ? "rgba(52,199,89,0.2)" : "rgba(255,149,0,0.2)"}`,
                     }}
                   >
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Resolution</span>
+                    <span style={{ fontSize: 14, color: "var(--fg-secondary)" }}>Resolution</span>
                     <span
                       style={{
                         fontSize: 14,

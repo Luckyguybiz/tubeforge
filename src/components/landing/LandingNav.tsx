@@ -71,7 +71,7 @@ export function LandingNav() {
           >
             TF
           </div>
-          <span style={{ fontSize: 17, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>TubeForge</span>
+          <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--fg-primary)', letterSpacing: '-0.01em' }}>TubeForge</span>
         </Link>
 
         {/* Desktop nav */}
@@ -85,7 +85,7 @@ export function LandingNav() {
                 href={link.href}
                 style={{
                   textDecoration: 'none',
-                  color: 'rgba(255,255,255,0.5)',
+                  color: 'var(--fg-secondary)',
                   fontSize: 12,
                   fontWeight: 400,
                   transition: 'color 0.3s ease',
@@ -106,7 +106,7 @@ export function LandingNav() {
             href="/login"
             style={{
               textDecoration: 'none',
-              color: 'rgba(255,255,255,0.5)',
+              color: 'var(--fg-secondary)',
               fontSize: 12,
               fontWeight: 400,
               transition: 'color 0.3s ease',
@@ -180,14 +180,14 @@ export function LandingNav() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 17, fontWeight: 400, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                style={{ textDecoration: 'none', color: 'var(--fg-secondary)', fontSize: 17, fontWeight: 400, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
               >
                 {link.label}
               </Tag>
             );
           })}
           <div style={{ paddingTop: 12, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 17, fontWeight: 400, padding: '10px 0' }}>Log In</Link>
+            <Link href="/login" onClick={() => setMobileOpen(false)} style={{ textDecoration: 'none', color: 'var(--fg-secondary)', fontSize: 17, fontWeight: 400, padding: '10px 0' }}>Log In</Link>
             <Link
               href="/register"
               onClick={() => setMobileOpen(false)}

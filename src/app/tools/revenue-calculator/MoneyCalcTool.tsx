@@ -67,7 +67,7 @@ export function MoneyCalcTool() {
   const [customCpm, setCustomCpm] = useState<number | null>(null);
 
   const cpm = customCpm !== null ? customCpm : CPM_PRESETS[cpmPreset].value;
-  // YouTube takes 45% cut
+  // Default 45% platform share (variable by platform/tier)
   const creatorShare = 0.55;
   const dailyEarnings = (dailyViews * cpm * creatorShare) / 1000;
   const monthlyEarnings = dailyEarnings * 30;
@@ -78,7 +78,7 @@ export function MoneyCalcTool() {
       {/* Input Card */}
       <div
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: "28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -92,7 +92,7 @@ export function MoneyCalcTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
           }}
         >
@@ -131,15 +131,15 @@ export function MoneyCalcTool() {
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 10,
               outline: "none",
-              background: "#1a1a1a",
-              color: "#ffffff",
+              background: "var(--bg-tertiary)",
+              color: "var(--fg-primary)",
               fontFamily: "inherit",
               textAlign: "right",
               boxSizing: "border-box",
             }}
           />
         </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: "var(--fg-secondary)", marginBottom: 20 }}>
           {formatViews(dailyViews)} views per day
         </div>
 
@@ -149,7 +149,7 @@ export function MoneyCalcTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
           }}
         >
@@ -182,7 +182,7 @@ export function MoneyCalcTool() {
             >
               <div>{preset.label}</div>
               <div style={{ fontSize: 17, marginTop: 2 }}>${preset.value.toFixed(2)}</div>
-              <div style={{ fontSize: 11, fontWeight: 400, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 400, color: "var(--fg-secondary)", marginTop: 2 }}>
                 {preset.desc}
               </div>
             </button>
@@ -191,7 +191,7 @@ export function MoneyCalcTool() {
 
         {/* Custom CPM */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>or custom:</span>
+          <span style={{ fontSize: 13, color: "var(--fg-secondary)" }}>or custom:</span>
           <div style={{ position: "relative", width: 100 }}>
             <span
               style={{
@@ -200,7 +200,7 @@ export function MoneyCalcTool() {
                 top: "50%",
                 transform: "translateY(-50%)",
                 fontSize: 15,
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--fg-secondary)",
                 pointerEvents: "none",
               }}
             >
@@ -224,8 +224,8 @@ export function MoneyCalcTool() {
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 8,
                 outline: "none",
-                background: "#1a1a1a",
-                color: "#ffffff",
+                background: "var(--bg-tertiary)",
+                color: "var(--fg-primary)",
                 fontFamily: "inherit",
                 boxSizing: "border-box",
               }}
@@ -251,7 +251,7 @@ export function MoneyCalcTool() {
             <div
               key={item.label}
               style={{
-                background: "#0a0a0a",
+                background: "var(--bg-primary)",
                 borderRadius: 18,
                 padding: "24px 16px",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -263,7 +263,7 @@ export function MoneyCalcTool() {
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "rgba(255,255,255,0.5)",
+                  color: "var(--fg-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                   marginBottom: 8,
@@ -290,19 +290,19 @@ export function MoneyCalcTool() {
         <div
           style={{
             marginTop: 16,
-            background: "#111111",
+            background: "var(--bg-secondary)",
             borderRadius: 14,
             padding: "20px",
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-primary)", marginBottom: 12 }}>
             Calculation breakdown
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {[
               { label: "Daily views", value: formatViews(dailyViews) },
               { label: "CPM (cost per 1,000 views)", value: `$${cpm.toFixed(2)}` },
-              { label: "YouTube cut (45%)", value: `-$${((dailyViews * cpm * 0.45) / 1000).toFixed(2)}/day` },
+              { label: "Platform share (45%)", value: `-$${((dailyViews * cpm * 0.45) / 1000).toFixed(2)}/day` },
               { label: "Creator share (55%)", value: formatCurrency(dailyEarnings) + "/day" },
             ].map((row) => (
               <div
@@ -314,13 +314,13 @@ export function MoneyCalcTool() {
                   fontSize: 14,
                 }}
               >
-                <span style={{ color: "rgba(255,255,255,0.5)" }}>{row.label}</span>
-                <span style={{ fontWeight: 600, color: "#ffffff" }}>{row.value}</span>
+                <span style={{ color: "var(--fg-secondary)" }}>{row.label}</span>
+                <span style={{ fontWeight: 600, color: "var(--fg-primary)" }}>{row.value}</span>
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>
-            Estimates are approximate. Actual earnings depend on niche, audience location, ad types, engagement, and YouTube Premium revenue.
+          <p style={{ fontSize: 12, color: "var(--fg-secondary)", marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>
+            Estimates are approximate. Actual earnings depend on niche, audience location, ad types, engagement, and platform premium subscriptions.
           </p>
         </div>
       </div>

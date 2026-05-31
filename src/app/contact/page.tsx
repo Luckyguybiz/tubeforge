@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { LandingNav } from '@/components/landing';
+import { Eyebrow, Display, Lead } from '@/components/ds';
 
 const SUBJECTS = [
   'Technical Support',
@@ -12,7 +14,7 @@ const SUBJECTS = [
 ] as const;
 
 const RESPONSE_TIMES = [
-  { plan: 'FREE', time: '48 hours', color: 'rgba(255,255,255,0.5)' },
+  { plan: 'FREE', time: '48 hours', color: 'var(--fg-secondary)' },
   { plan: 'PRO', time: '24 hours', color: '#007aff' },
   { plan: 'STUDIO', time: '4 hours', color: '#af52de' },
 ];
@@ -83,10 +85,10 @@ export default function ContactPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '14px 16px',
-    background: '#111111',
+    background: 'var(--bg-secondary)',
     border: '1px solid transparent',
     borderRadius: 12,
-    color: '#ffffff',
+    color: 'var(--fg-primary)',
     fontSize: 15,
     outline: 'none',
     boxSizing: 'border-box',
@@ -99,7 +101,7 @@ export default function ContactPage() {
     display: 'block',
     fontSize: 13,
     fontWeight: 600,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'var(--fg-secondary)',
     marginBottom: 8,
   };
 
@@ -107,80 +109,18 @@ export default function ContactPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#0a0a0a',
-        color: '#ffffff',
+        background: 'var(--bg-primary)',
+        color: 'var(--fg-primary)',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
       }}
     >
-      {/* Header */}
-      <header
-        style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Link
-          href="/"
-          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}
-        >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 12,
-            }}
-          >
-            TF
-          </div>
-          <span style={{ fontSize: 17, fontWeight: 600, color: '#ffffff' }}>TubeForge</span>
-        </Link>
-        <Link
-          href="/"
-          style={{
-            textDecoration: 'none',
-            color: '#6366f1',
-            fontSize: 14,
-            fontWeight: 500,
-          }}
-        >
-          &larr; Home
-        </Link>
-      </header>
+      <LandingNav />
 
       <div className="contact-container" style={{ maxWidth: 980, margin: '0 auto', padding: '56px 24px 80px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <h1
-            style={{
-              fontSize: 'clamp(28px, 6vw, 40px)',
-              fontWeight: 600,
-              margin: 0,
-              letterSpacing: '-0.02em',
-              color: '#ffffff',
-            }}
-          >
-            Contact Us
-          </h1>
-          <p
-            style={{
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 17,
-              textAlign: 'center',
-              marginTop: 12,
-              lineHeight: 1.5,
-            }}
-          >
-            We&apos;re always happy to help. Fill out the form or send us an email.
-          </p>
+        <div style={{ textAlign: 'center', marginBottom: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <Eyebrow>Contact</Eyebrow>
+          <Display as="h1" style={{ maxWidth: 640 }}>Contact us</Display>
+          <Lead style={{ maxWidth: 520 }}>We&apos;re always happy to help. Fill out the form or send us an email.</Lead>
         </div>
 
         <div
@@ -220,20 +160,20 @@ export default function ContactPage() {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0, color: '#ffffff' }}>
+              <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0, color: 'var(--fg-primary)' }}>
                 Message Sent
               </h2>
-              <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6, maxWidth: 400 }}>
+              <p style={{ fontSize: 16, color: 'var(--fg-secondary)', margin: 0, lineHeight: 1.6, maxWidth: 400 }}>
                 Thank you for reaching out. We&apos;ll respond within 24 hours.
-                Check your inbox at <strong style={{ color: '#ffffff' }}>{submittedEmail}</strong> for our reply.
+                Check your inbox at <strong style={{ color: 'var(--fg-primary)' }}>{submittedEmail}</strong> for our reply.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
                 style={{
                   marginTop: 8,
                   padding: '12px 28px',
-                  background: '#111111',
-                  color: '#ffffff',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--fg-primary)',
                   border: 'none',
                   borderRadius: 12,
                   fontSize: 15,
@@ -379,17 +319,17 @@ export default function ContactPage() {
             {/* Email */}
             <div
               style={{
-                background: '#111111',
+                background: 'var(--bg-secondary)',
                 borderRadius: 16,
                 padding: '28px 24px',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#ffffff' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: 'var(--fg-primary)' }}>
                 Contact Info
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 500 }}>
+                  <div style={{ fontSize: 12, color: 'var(--fg-secondary)', marginBottom: 4, fontWeight: 500 }}>
                     Email
                   </div>
                   <a
@@ -400,7 +340,7 @@ export default function ContactPage() {
                   </a>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 500 }}>
+                  <div style={{ fontSize: 12, color: 'var(--fg-secondary)', marginBottom: 4, fontWeight: 500 }}>
                     Telegram
                   </div>
                   <a
@@ -418,18 +358,18 @@ export default function ContactPage() {
             {/* Office hours */}
             <div
               style={{
-                background: '#111111',
+                background: 'var(--bg-secondary)',
                 borderRadius: 16,
                 padding: '28px 24px',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 10, color: '#ffffff' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 10, color: 'var(--fg-primary)' }}>
                 Office Hours
               </div>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 15, color: 'var(--fg-secondary)', margin: 0, lineHeight: 1.6 }}>
                 Mon — Fri, 9:00 AM — 6:00 PM UTC
               </p>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '10px 0 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: 'var(--fg-secondary)', margin: '10px 0 0', lineHeight: 1.5 }}>
                 On weekends and holidays, we process requests with a delay. For urgent matters, reach out via Telegram.
               </p>
             </div>
@@ -437,12 +377,12 @@ export default function ContactPage() {
             {/* Response times */}
             <div
               style={{
-                background: '#111111',
+                background: 'var(--bg-secondary)',
                 borderRadius: 16,
                 padding: '28px 24px',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18, color: '#ffffff' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18, color: 'var(--fg-primary)' }}>
                 Response Time
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -467,7 +407,7 @@ export default function ContactPage() {
                     >
                       {rt.plan}
                     </span>
-                    <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+                    <span style={{ fontSize: 14, color: 'var(--fg-secondary)', fontWeight: 500 }}>
                       up to {rt.time}
                     </span>
                   </div>
@@ -478,16 +418,16 @@ export default function ContactPage() {
             {/* Help center link */}
             <div
               style={{
-                background: '#111111',
+                background: 'var(--bg-secondary)',
                 borderRadius: 16,
                 padding: '28px 24px',
                 textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: '#ffffff' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: 'var(--fg-primary)' }}>
                 Quick Answers
               </div>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
+              <p style={{ fontSize: 14, color: 'var(--fg-secondary)', marginBottom: 16 }}>
                 The answer might already be in the help center
               </p>
               <Link
@@ -495,10 +435,10 @@ export default function ContactPage() {
                 style={{
                   display: 'inline-block',
                   padding: '12px 24px',
-                  background: '#0a0a0a',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'var(--bg-primary)',
+                  border: '1px solid var(--border-subtle, rgba(128,128,128,0.14))',
                   borderRadius: 12,
-                  color: '#ffffff',
+                  color: 'var(--fg-primary)',
                   fontSize: 14,
                   fontWeight: 600,
                   textDecoration: 'none',

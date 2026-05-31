@@ -62,7 +62,7 @@ export function DescGenTool() {
       {/* Input */}
       <div
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: "28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -75,7 +75,7 @@ export function DescGenTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
           }}
         >
@@ -95,8 +95,8 @@ export function DescGenTool() {
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
             outline: "none",
-            background: "#1a1a1a",
-            color: "#ffffff",
+            background: "var(--bg-tertiary)",
+            color: "var(--fg-primary)",
             fontFamily: "inherit",
             transition: "border-color 0.2s ease",
             boxSizing: "border-box",
@@ -109,12 +109,12 @@ export function DescGenTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
             marginTop: 16,
           }}
         >
-          Keywords <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.5)" }}>(optional)</span>
+          Keywords <span style={{ fontWeight: 400, color: "var(--fg-secondary)" }}>(optional)</span>
         </label>
         <input
           id="keywords"
@@ -133,8 +133,8 @@ export function DescGenTool() {
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
             outline: "none",
-            background: "#1a1a1a",
-            color: "#ffffff",
+            background: "var(--bg-tertiary)",
+            color: "var(--fg-primary)",
             fontFamily: "inherit",
             transition: "border-color 0.2s ease",
             boxSizing: "border-box",
@@ -206,7 +206,7 @@ export function DescGenTool() {
               marginBottom: 12,
             }}
           >
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: 0 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-primary)", margin: 0 }}>
               Generated Description
             </h3>
             <button
@@ -230,12 +230,12 @@ export function DescGenTool() {
           <div
             style={{
               padding: "20px",
-              background: "#1a1a1a",
+              background: "var(--bg-tertiary)",
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.06)",
               whiteSpace: "pre-wrap",
               fontSize: 15,
-              color: "#ffffff",
+              color: "var(--fg-primary)",
               lineHeight: 1.7,
               fontFamily: "inherit",
               maxHeight: 600,

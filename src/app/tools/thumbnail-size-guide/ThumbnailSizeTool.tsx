@@ -159,7 +159,7 @@ export function ThumbnailSizeTool() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: imageInfo ? "16px" : "48px 28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -189,7 +189,7 @@ export function ThumbnailSizeTool() {
                 objectFit: "contain",
               }}
             />
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 12, marginBottom: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--fg-secondary)", marginTop: 12, marginBottom: 0 }}>
               Click or drag to replace
             </p>
           </div>
@@ -213,14 +213,14 @@ export function ThumbnailSizeTool() {
             <p
               style={{
                 fontSize: 17,
-                color: "#ffffff",
+                color: "var(--fg-primary)",
                 fontWeight: 500,
                 margin: "0 0 8px",
               }}
             >
               Drop your thumbnail here or click to upload
             </p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>
+            <p style={{ fontSize: 14, color: "var(--fg-secondary)", margin: 0 }}>
               JPG, PNG, GIF, or BMP
             </p>
           </div>
@@ -248,16 +248,16 @@ export function ThumbnailSizeTool() {
               <div
                 key={item.label}
                 style={{
-                  background: "#111111",
+                  background: "var(--bg-secondary)",
                   borderRadius: 12,
                   padding: "12px 20px",
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 12, color: "var(--fg-secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   {item.label}
                 </div>
-                <div style={{ fontSize: 19, fontWeight: 600, color: "#ffffff", marginTop: 4 }}>
+                <div style={{ fontSize: 19, fontWeight: 600, color: "var(--fg-primary)", marginTop: 4 }}>
                   {item.value}
                 </div>
               </div>
@@ -270,7 +270,7 @@ export function ThumbnailSizeTool() {
               <div
                 key={i}
                 style={{
-                  background: "#0a0a0a",
+                  background: "var(--bg-primary)",
                   borderRadius: 14,
                   padding: "16px 20px",
                   boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
@@ -285,12 +285,12 @@ export function ThumbnailSizeTool() {
                     marginBottom: 6,
                   }}
                 >
-                  <span style={{ fontSize: 15, fontWeight: 600, color: "#ffffff" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-primary)" }}>
                     {check.label}
                   </span>
                   <StatusBadge status={check.status} />
                 </div>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.5, margin: 0 }}>
+                <p style={{ fontSize: 14, color: "var(--fg-secondary)", lineHeight: 1.5, margin: 0 }}>
                   {check.detail}
                 </p>
               </div>
@@ -299,13 +299,13 @@ export function ThumbnailSizeTool() {
 
           {/* YouTube preview */}
           <div style={{ marginTop: 24 }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", marginBottom: 16 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-primary)", marginBottom: 16 }}>
               Preview in YouTube layouts
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Search result preview */}
               <div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 13, color: "var(--fg-secondary)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Search result (246px)
                 </div>
                 <div
@@ -313,7 +313,7 @@ export function ThumbnailSizeTool() {
                     display: "flex",
                     gap: 12,
                     padding: 16,
-                    background: "#1a1a1a",
+                    background: "var(--bg-tertiary)",
                     borderRadius: 12,
                     border: "1px solid rgba(255,255,255,0.06)",
                   }}
@@ -332,10 +332,10 @@ export function ThumbnailSizeTool() {
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-primary)", lineHeight: 1.4 }}>
                       Your Video Title Here
                     </div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: "var(--fg-secondary)", marginTop: 4 }}>
                       Channel Name &middot; 10K views &middot; 2 days ago
                     </div>
                   </div>
@@ -344,14 +344,14 @@ export function ThumbnailSizeTool() {
 
               {/* Mobile feed preview */}
               <div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 13, color: "var(--fg-secondary)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Mobile feed (full width)
                 </div>
                 <div
                   style={{
                     maxWidth: 360,
                     padding: 12,
-                    background: "#1a1a1a",
+                    background: "var(--bg-tertiary)",
                     borderRadius: 12,
                     border: "1px solid rgba(255,255,255,0.06)",
                   }}
@@ -379,10 +379,10 @@ export function ThumbnailSizeTool() {
                       }}
                     />
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", lineHeight: 1.3 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-primary)", lineHeight: 1.3 }}>
                         Your Video Title Here
                       </div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "var(--fg-secondary)", marginTop: 2 }}>
                         Channel Name &middot; 10K views &middot; 2 days ago
                       </div>
                     </div>
@@ -392,7 +392,7 @@ export function ThumbnailSizeTool() {
 
               {/* Suggested sidebar preview */}
               <div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 13, color: "var(--fg-secondary)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Suggested sidebar (168px)
                 </div>
                 <div
@@ -400,7 +400,7 @@ export function ThumbnailSizeTool() {
                     display: "flex",
                     gap: 10,
                     padding: 12,
-                    background: "#1a1a1a",
+                    background: "var(--bg-tertiary)",
                     borderRadius: 12,
                     border: "1px solid rgba(255,255,255,0.06)",
                   }}
@@ -419,13 +419,13 @@ export function ThumbnailSizeTool() {
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-primary)", lineHeight: 1.3 }}>
                       Your Video Title Here
                     </div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: "var(--fg-secondary)", marginTop: 2 }}>
                       Channel Name
                     </div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                    <div style={{ fontSize: 11, color: "var(--fg-secondary)" }}>
                       10K views &middot; 2 days ago
                     </div>
                   </div>

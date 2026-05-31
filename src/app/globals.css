@@ -2545,3 +2545,8 @@ html, body {
   }
 }
 
+
+/* ── Design System — Apple-like interaction polish ─────────────── */
+.tf-ds-cta:hover { transform: translateY(-1px); opacity: 0.95; }
+.tf-ds-cta:active { transform: translateY(0); }
+.tf-ds-cta:focus-visible { outline: 2px solid var(--color-brand-500, #6366f1); outline-offset: 3px; }

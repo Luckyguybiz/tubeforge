@@ -62,6 +62,24 @@ const icons: Record<string, (color: string, accent?: string) => React.ReactNode>
       <path d="M10 12L13 16L17 4" stroke={c} strokeWidth="1.2" strokeLinejoin="round" opacity=".4" />
     </svg>
   ),
+  'publish/calendar': (c) => (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="4.5" width="14" height="13" rx="2" stroke={c} strokeWidth="1.4" opacity=".85" />
+      <line x1="3" y1="8.5" x2="17" y2="8.5" stroke={c} strokeWidth="1.4" opacity=".7" />
+      <line x1="7" y1="2.5" x2="7" y2="6" stroke={c} strokeWidth="1.4" strokeLinecap="round" opacity=".85" />
+      <line x1="13" y1="2.5" x2="13" y2="6" stroke={c} strokeWidth="1.4" strokeLinecap="round" opacity=".85" />
+      <circle cx="7" cy="12" r="1.2" fill={c} opacity=".7" />
+      <circle cx="10" cy="12" r="1.2" fill={c} opacity=".4" />
+      <circle cx="13" cy="12" r="1.2" fill={c} opacity=".7" />
+    </svg>
+  ),
+  'publish/autopilot': (c) => (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="7.5" stroke={c} strokeWidth="1.4" opacity=".85" />
+      <path d="M13.2 6.8L11.4 11.4L6.8 13.2L8.6 8.6L13.2 6.8Z" fill={c} opacity=".85" />
+      <circle cx="10" cy="10" r="1.2" fill={c} opacity=".4" />
+    </svg>
+  ),
   team: (c) => (
     <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none">
       <circle cx="8" cy="6" r="3" fill={c} opacity=".85" />
@@ -286,6 +304,8 @@ const ICON_GRADIENTS: Record<string, [string, string]> = {
   thumbnails: ['orange', 'pink'],
   preview: ['green', 'cyan'],
   publish: ['accent', 'pink'],
+  'publish/calendar': ['blue', 'cyan'],
+  'publish/autopilot': ['cyan', 'green'],
   team: ['purple', 'pink'],
   settings: ['sub', 'dim'],
   billing: ['green', 'cyan'],
@@ -707,7 +727,14 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
-  const current = pathname.split('/').filter(Boolean)[0] || 'dashboard';
+  // BugHunt 2026-05-19: Was `pathname.split('/').filter(Boolean)[0]` — only first segment.
+  // Broke active state for nested nav items like 'publish/calendar' (matched parent 'publish' only).
+  // Now: full path joined by '/', plus separate `currentRoot` for collapse logic.
+  const segments = pathname.split('/').filter(Boolean);
+  const currentRoot = segments[0] || 'dashboard';
+  const currentPath = segments.length > 0 ? segments.join('/') : 'dashboard';
+  // Legacy alias — many places still reference `current` as the root segment for redirects/collapse.
+  const current = currentRoot;
 
   const shouldAutoCollapse = defaultCollapsed || COLLAPSE_PAGES.includes(current);
   const [collapsed, setCollapsed] = useState(() => {
@@ -819,7 +846,9 @@ export const Sidebar = memo(function Sidebar({ defaultCollapsed }: { defaultColl
   /* ── Nav button renderer ────────────────────────────── */
   const renderNavBtn = (item: NavItemDef) => {
     const { id, label } = item;
-    const isActive = current === id;
+    // Active when id matches exact path (e.g. 'publish/calendar' on /publish/calendar)
+    // OR id is parent prefix (e.g. 'publish' active when on /publish/calendar — gives section context)
+    const isActive = currentPath === id || currentPath.startsWith(id + '/');
     const isHovered = hoveredId === id;
     const showTooltip = collapsed && tooltipId === id;
 

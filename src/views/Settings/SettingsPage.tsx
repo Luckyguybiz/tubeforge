@@ -470,6 +470,28 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
   const channels = profile.data?.channels ?? [];
   const hasYouTubeScopes = profile.data?.hasYouTubeScopes ?? false;
 
+  // III.D.2.3.1.a/b compliance — disconnect channel revokes Google OAuth + deletes local data
+  const disconnectMutation = trpc.youtube.disconnectChannel.useMutation({
+    onSuccess: (data) => {
+      toast.success(
+        data.revokedAtGoogle
+          ? `Disconnected ${data.channelTitle}. Access revoked at Google.`
+          : `Disconnected ${data.channelTitle}.`
+      );
+      profile.refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to disconnect channel");
+    },
+  });
+  const handleDisconnect = (channelId: string, channelTitle: string) => {
+    if (typeof window !== "undefined" && window.confirm(
+      `Disconnect ${channelTitle}?\n\nThis will revoke TubeForge's access via Google and delete all upload jobs for this channel. This cannot be undone.`
+    )) {
+      disconnectMutation.mutate({ channelId });
+    }
+  };
+
   // Real-time sync from YouTube Data API → upserts Channel rows in our DB.
   // Only useful once the user has granted youtube.upload scope. When scopes
   // are missing we trigger signIn('google') instead, which forces a fresh
@@ -482,6 +504,21 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
 
   const handleConnect = useCallback(async () => {
     if (!hasYouTubeScopes) {
+      // III.E.3.4 compliance — explicit pre-OAuth consent screen explaining
+      // what TubeForge will access before redirecting to Google's consent flow.
+      if (typeof window !== "undefined") {
+        const consent = window.confirm(
+          "Connect YouTube channel\n\n" +
+            "TubeForge will access your YouTube channel to:\n" +
+            "  (1) read public channel info (name, subscriber count)\n" +
+            "  (2) upload videos you schedule via TubeForge\n" +
+            "  (3) check upload status of those videos\n\n" +
+            "TubeForge will not modify existing videos, comments, or settings without your explicit instruction. " +
+            "Non-statistical data is retained for max 30 days. You can disconnect any channel anytime in Settings.\n\n" +
+            "Continue to Google for sign-in?"
+        );
+        if (!consent) return;
+      }
       // Re-auth flow: forces Google consent screen with full scope list.
       // After redirect back to /settings#channels the new tokens cover youtube.upload.
       await signIn("google", { callbackUrl: "/settings#channels" });
@@ -626,6 +663,15 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
                   <Check className="size-3" />
                   {tx(t, "settings.youtubeChannels.synced", "Synced")}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => handleDisconnect(ch.id, ch.title)}
+                  disabled={disconnectMutation.isPending}
+                  className="ml-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-red-500 transition-colors hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={`Disconnect ${ch.title}`}
+                >
+                  {disconnectMutation.isPending ? "Disconnecting…" : "Disconnect"}
+                </button>
               </div>
             ))}
           </div>

@@ -2,16 +2,17 @@ import type { Metadata } from "next";
 import { LandingNav, FaqAccordion } from "@/components/landing";
 import Link from "next/link";
 import { ShortsDimensionsTool } from "./ShortsDimensionsTool";
+import { Container, Section, Eyebrow, Display, Headline, Lead, Caption, CenteredHeader, CTA } from "@/components/ds";
 
 /* -- SEO Metadata ------------------------------------------------- */
 
 export const metadata: Metadata = {
-  title: "YouTube Shorts Size & Dimensions Guide 2026 — Resolution, Length",
+  title: "Vertical Video (Shorts) Dimensions Guide 2026 — Resolution, Length",
   description:
     "Complete YouTube Shorts dimensions guide: 1080x1920 pixels, 9:16 aspect ratio, max 60 seconds. Upload an image to preview how it looks as a Short. Free tool.",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "YouTube Shorts Size & Dimensions Guide 2026",
+    title: "Vertical Video (Shorts) Dimensions Guide 2026",
     description:
       "Everything you need to know about YouTube Shorts dimensions: resolution, aspect ratio, file size, and length. Interactive preview tool included.",
     type: "website",
@@ -123,7 +124,7 @@ const SPECS = [
 
 export default function ShortsDimensionsPage() {
   return (
-    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
+    <div style={{ background: "var(--bg-primary)", color: "var(--fg-primary)", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
@@ -135,125 +136,45 @@ export default function ShortsDimensionsPage() {
       <LandingNav />
 
       {/* Hero */}
-      <section style={{ paddingTop: 120, textAlign: "center", padding: "120px 24px 48px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <Link
-            href="/free-tools"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              color: "#6366f1",
-              fontSize: 13,
-              fontWeight: 500,
-              textDecoration: "none",
-              marginBottom: 24,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            All Free Tools
-          </Link>
-          <h1
-            style={{
-              fontSize: "clamp(36px, 5vw, 56px)",
-              fontWeight: 600,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.08,
-              margin: "0 0 16px",
-              color: "#ffffff",
-            }}
-          >
-            YouTube Shorts Dimensions.
-          </h1>
-          <p
-            style={{
-              fontSize: 19,
-              color: "rgba(255,255,255,0.5)",
-              maxWidth: 520,
-              margin: "0 auto",
-              lineHeight: 1.5,
-              fontWeight: 400,
-            }}
-          >
-            Complete 2026 guide to YouTube Shorts size, resolution, aspect ratio, and length. Plus an interactive preview tool.
-          </p>
-        </div>
-      </section>
+      <Section style={{ paddingTop: "clamp(56px, 9vw, 96px)", paddingBottom: 0 }}>
+        <Container width="narrow">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 20 }}>
+            <Link href="/free-tools" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--color-brand-500, #6366f1)", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+              All free tools
+            </Link>
+            <Eyebrow>Free tool · No signup</Eyebrow>
+            <Display as="h1" style={{ maxWidth: 720 }}>YouTube Shorts Dimensions</Display>
+            <Lead style={{ maxWidth: 560 }}>Complete 2026 guide to YouTube Shorts size, resolution, aspect ratio, and length. Plus an interactive preview tool.</Lead>
+          </div>
+        </Container>
+      </Section>
 
-      {/* Specs Grid */}
-      <section style={{ padding: "0 24px 60px" }}>
-        <div
-          style={{
-            maxWidth: 680,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 12,
-          }}
-          className="shorts-specs-grid"
-        >
-          {SPECS.map((spec) => (
-            <div
-              key={spec.label}
-              style={{
-                background: "#1a1a1a",
-                borderRadius: 14,
-                padding: "20px",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>
-                {spec.label}
+      {/* Specs */}
+      <Section tight style={{ paddingTop: "clamp(32px, 5vw, 44px)", paddingBottom: 0 }}>
+        <Container width="narrow">
+          <div className="shorts-specs-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            {SPECS.map((spec) => (
+              <div key={spec.label} style={{ background: "var(--bg-secondary)", borderRadius: 14, padding: 20, border: "1px solid var(--border-subtle, rgba(128,128,128,0.14))" }}>
+                <div style={{ fontSize: 13, color: "var(--fg-secondary)", marginBottom: 4 }}>{spec.label}</div>
+                <div style={{ fontSize: 21, fontWeight: 600, color: "var(--fg-primary)", marginBottom: 2 }}>{spec.value}</div>
+                <div style={{ fontSize: 13, color: "var(--fg-tertiary, var(--fg-secondary))" }}>{spec.note}</div>
               </div>
-              <div style={{ fontSize: 21, fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>
-                {spec.value}
-              </div>
-              <div style={{ fontSize: 13, color: "#aeaeb2" }}>
-                {spec.note}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </Container>
+      </Section>
 
-      {/* Interactive Preview Tool */}
-      <section style={{ padding: "0 24px 80px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <ShortsDimensionsTool />
-        </div>
-      </section>
+      {/* Tool */}
+      <Section tight style={{ paddingTop: "clamp(32px, 5vw, 44px)" }}>
+        <Container width="narrow"><ShortsDimensionsTool /></Container>
+      </Section>
 
-      {/* How to Create Section */}
-      <section style={{ padding: "80px 24px", background: "#111111" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <h2
-            style={{
-              fontSize: "clamp(28px, 4vw, 40px)",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.1,
-              margin: "0 0 12px",
-              color: "#ffffff",
-              textAlign: "center",
-            }}
-          >
-            How to create Shorts with correct dimensions.
-          </h2>
-          <p
-            style={{
-              fontSize: 19,
-              color: "rgba(255,255,255,0.5)",
-              textAlign: "center",
-              margin: "0 auto 48px",
-              maxWidth: 420,
-              lineHeight: 1.5,
-            }}
-          >
-            Five simple steps to get it right.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* How to create */}
+      <Section>
+        <Container width="narrow">
+          <CenteredHeader headline="How to create Shorts with correct dimensions" lead="Five simple steps to get it right." />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 48 }}>
             {[
               { step: 1, title: "Set camera to 9:16", desc: "Use portrait mode on your phone or set your video editor to 9:16 vertical aspect ratio." },
               { step: 2, title: "Set resolution to 1080x1920", desc: "Full HD vertical is the recommended resolution. Higher is supported but increases file size without visible benefit on mobile." },
@@ -261,127 +182,41 @@ export default function ShortsDimensionsPage() {
               { step: 4, title: "Export as MP4 (H.264)", desc: "Use H.264 encoding at 8-12 Mbps bitrate for the best quality-to-size ratio." },
               { step: 5, title: "Add #Shorts to title or description", desc: "Include #Shorts in your video title or description so YouTube recognizes it as a Short." },
             ].map((item) => (
-              <div
-                key={item.step}
-                style={{
-                  display: "flex",
-                  gap: 16,
-                  padding: "20px 24px",
-                  background: "#0a0a0a",
-                  borderRadius: 14,
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: "rgba(99,102,241,0.1)",
-                    color: "#6366f1",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 15,
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}
-                >
-                  {item.step}
-                </div>
+              <div key={item.step} style={{ display: "flex", gap: 16, padding: "20px 24px", background: "var(--bg-secondary)", borderRadius: 14, border: "1px solid var(--border-subtle, rgba(128,128,128,0.14))" }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(99,102,241,0.12)", color: "var(--color-brand-500, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 600, flexShrink: 0 }}>{item.step}</div>
                 <div>
-                  <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: "0 0 4px" }}>
-                    {item.title}
-                  </h3>
-                  <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.6 }}>
-                    {item.desc}
-                  </p>
+                  <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-primary)", margin: "0 0 4px" }}>{item.title}</h3>
+                  <p style={{ fontSize: 15, color: "var(--fg-secondary)", margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* FAQ */}
-      <section style={{ padding: "80px 24px", background: "#0a0a0a" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <h2
-            style={{
-              fontSize: "clamp(28px, 4vw, 40px)",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.1,
-              margin: "0 0 12px",
-              color: "#ffffff",
-              textAlign: "center",
-            }}
-          >
-            Frequently asked questions.
-          </h2>
-          <p
-            style={{
-              fontSize: 19,
-              color: "rgba(255,255,255,0.5)",
-              textAlign: "center",
-              margin: "0 auto 48px",
-              maxWidth: 420,
-              lineHeight: 1.5,
-            }}
-          >
-            Everything about YouTube Shorts dimensions.
-          </p>
-          <FaqAccordion items={FAQ_ITEMS} />
-        </div>
-      </section>
+      <Section alt>
+        <Container width="narrow">
+          <CenteredHeader eyebrow="FAQ" headline="Frequently asked questions" lead="Everything about YouTube Shorts dimensions" />
+          <div style={{ marginTop: 48 }}>
+            <FaqAccordion items={FAQ_ITEMS} />
+          </div>
+        </Container>
+      </Section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#111111" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <h2
-            style={{
-              fontSize: "clamp(28px, 4vw, 40px)",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              color: "#ffffff",
-              margin: "0 0 12px",
-              lineHeight: 1.1,
-            }}
-          >
-            Create Shorts with TubeForge.
-          </h2>
-          <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", margin: "0 0 32px", lineHeight: 1.5 }}>
-            AI-powered video editor with automatic Shorts formatting, captions, and publishing.
-          </p>
-          <Link
-            href="/register"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "#6366f1",
-              color: "#fff",
-              fontSize: 17,
-              fontWeight: 400,
-              padding: "12px 28px",
-              borderRadius: 980,
-              textDecoration: "none",
-              border: "none",
-              transition: "all 0.3s ease",
-              minHeight: 48,
-            }}
-          >
-            Start Free
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
-        </div>
-      </section>
+      <Section>
+        <Container width="narrow">
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+            <Headline>Create Shorts with TubeForge</Headline>
+            <Lead style={{ maxWidth: 480 }}>AI-powered video editor with automatic Shorts formatting, captions, and publishing.</Lead>
+            <div style={{ marginTop: 6 }}><CTA href="/register">Start free</CTA></div>
+          </div>
+        </Container>
+      </Section>
 
-      {/* Footer */}
-      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{"\u00A9"} 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ borderTop: "1px solid var(--border-subtle, rgba(128,128,128,0.12))", padding: 32, textAlign: "center" }}>
+        <Caption>{"\u00A9"} 2026 TubeForge. All rights reserved.</Caption>
       </footer>
 
       <style>{`

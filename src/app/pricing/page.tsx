@@ -65,8 +65,8 @@ export default function PricingPage() {
   return (
     <div
       style={{
-        background: "#0a0a0a",
-        color: "#ffffff",
+        background: "var(--bg-primary)",
+        color: "var(--fg-primary)",
         minHeight: "100vh",
         fontFamily:
           "var(--font-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif",

@@ -280,4 +280,106 @@ export const youtubeRouter = router({
         message: input.publishAt ? 'Publishing scheduled' : 'Upload started',
       };
     }),
+
+  /**
+   * III.D.2.3.1.a/b compliance — easy revoke UI.
+   * Revokes the user's Google OAuth grant at oauth2.googleapis.com/revoke
+   * (best-effort), then deletes local Channel + linked UploadJobs.
+   * ExternalUser rows referencing this channel are NOT cascade-deleted —
+   * their channelId is cleared so future re-connect can re-link.
+   *
+   * BugHunt fixes 2026-05-19:
+   *  - Check res.ok before claiming revoke succeeded (BUG #2)
+   *  - Skip in-flight UPLOADING jobs from cascade delete to avoid worker race (BUG #3)
+   *  - Write AuditLog entry for compliance audit trail (BUG #4)
+   */
+  disconnectChannel: protectedProcedure
+    .input(z.object({ channelId: channelIdSchema }))
+    .mutation(async ({ ctx, input }) => {
+      // 1. Verify ownership
+      const channel = await ctx.db.channel.findFirst({
+        where: { id: input.channelId, userId: ctx.session.user.id },
+        select: { id: true, title: true },
+      });
+      if (!channel) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Channel not found or not owned by you' });
+      }
+
+      // 2. Reject if there are active uploads in flight (BUG #3 fix — race with worker).
+      // Worker's atomic claim is via lockedBy/lockedAt set during UPLOADING state. Deleting
+      // a UploadJob row mid-flight causes worker to fail and possibly leave orphan YT video.
+      // Safer: require user to cancel/wait, or just exclude UPLOADING from delete and let
+      // the worker complete naturally (orphan UploadJob will be cleaned up by retention cron).
+      const activeUploads = await ctx.db.uploadJob.count({
+        where: { channelId: input.channelId, status: 'UPLOADING' },
+      });
+      if (activeUploads > 0) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: `Cannot disconnect: ${activeUploads} upload(s) currently in progress. Wait a moment and try again.`,
+        });
+      }
+
+      // 3. Revoke at Google (best-effort — don't block local cleanup if it fails)
+      // Note: revoking the Google Account token affects ALL channels associated
+      // with that Google account. Only revoke if this is the user's only channel
+      // linked to that account.
+      const channelCount = await ctx.db.channel.count({ where: { userId: ctx.session.user.id } });
+      let revokedAtGoogle = false;
+      if (channelCount === 1) {
+        const account = await ctx.db.account.findFirst({
+          where: { userId: ctx.session.user.id, provider: 'google' },
+          select: { access_token: true, refresh_token: true },
+        });
+        const tokenToRevoke = account?.refresh_token || account?.access_token;
+        if (tokenToRevoke) {
+          try {
+            const revokeRes = await fetchWithTimeout(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(tokenToRevoke)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            }, 5000);
+            // BUG #2 fix: actually check response status. Google returns 200 on success,
+            // 400 with {error:'invalid_token'} if token already expired/revoked (which is
+            // still effectively "revoked"), and 5xx on Google-side issues.
+            if (revokeRes.ok || revokeRes.status === 400) {
+              revokedAtGoogle = true;
+            } else {
+              console.warn('[disconnectChannel] Google revoke non-OK:', revokeRes.status);
+            }
+          } catch (e) {
+            console.warn('[disconnectChannel] Google revoke threw:', e);
+          }
+        }
+      }
+
+      // 4. Delete local data — exclude any uploads still UPLOADING (defensive though we
+      // checked above; user could trigger race in worst case).
+      await ctx.db.$transaction([
+        ctx.db.uploadJob.deleteMany({
+          where: { channelId: input.channelId, status: { not: 'UPLOADING' } },
+        }),
+        ctx.db.externalUser.updateMany({ where: { channelId: input.channelId }, data: { channelId: null } }),
+        ctx.db.channel.delete({ where: { id: input.channelId } }),
+      ]);
+
+      // 5. BUG #4 fix: AuditLog entry for compliance trail (III.E.4.7 + general security hygiene)
+      await ctx.db.auditLog.create({
+        data: {
+          userId: ctx.session.user.id,
+          action: 'channel.disconnected',
+          target: input.channelId,
+          metadata: {
+            channelTitle: channel.title,
+            revokedAtGoogle,
+            wasOnlyChannel: channelCount === 1,
+          },
+        },
+      }).catch((e) => {
+        // AuditLog failure shouldn't block the actual disconnect — log and continue
+        console.warn('[disconnectChannel] AuditLog write failed:', e);
+      });
+
+      return { ok: true, revokedAtGoogle, channelTitle: channel.title };
+    }),
+
 });

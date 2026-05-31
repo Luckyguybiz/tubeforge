@@ -34,6 +34,7 @@ import { useLocaleStore } from "@/stores/useLocaleStore";
 import { trpc } from "@/lib/trpc";
 import { toast } from "@/stores/useNotificationStore";
 import { cn } from "@/lib/utils";
+import { YouTubeAttribution } from "@/components/YouTubeAttribution";
 import {
   Zap,
   Activity,
@@ -282,6 +283,7 @@ export function AutopilotPage() {
                   "Health, cadence and recommendations for your YouTube publishing flow.",
                 )}
               </p>
+              <div className="mt-1.5"><YouTubeAttribution /></div>
             </div>
           </div>
           <div className="flex items-center gap-2 self-start">

@@ -44,7 +44,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <span style={{ fontSize: 17, fontWeight: 600, color: '#ffffff' }}>{item.q}</span>
+              <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--fg-primary)' }}>{item.q}</span>
               <svg
                 width="18"
                 height="18"
@@ -71,7 +71,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 padding: isOpen ? '0 0 20px' : '0 0 0',
               }}
             >
-              <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: 0 }}>{item.a}</p>
+              <p style={{ fontSize: 17, color: 'var(--fg-secondary)', lineHeight: 1.6, margin: 0 }}>{item.a}</p>
             </div>
           </div>
         );

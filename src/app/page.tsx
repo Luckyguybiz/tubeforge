@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LandingNav,
   LandingHero,
@@ -84,6 +85,36 @@ const KEY_FEATURE_ICONS: Record<string, React.JSX.Element> = {
   ),
 };
 
+const PUBLISHING_PLATFORM_FEATURES = [
+  {
+    icon: "calendar",
+    title: "Schedule & auto-publish",
+    desc: "Drop your videos into a calendar, set publish times, and TubeForge uploads them to your YouTube channel on time. Built-in retry, chunked upload for large files, and per-channel pacing.",
+    href: "/publish",
+    cta: "See the publish flow",
+  },
+  {
+    icon: "autopilot",
+    title: "Autopilot & health monitor",
+    desc: "A heatmap of your best posting hours, nudges when something needs attention, and four autopilot levels — from manual approval to fully automated. Step away with confidence.",
+    href: "/publish/autopilot",
+    cta: "Open autopilot",
+  },
+];
+
+const PUBLISHING_PLATFORM_ICONS: Record<string, React.JSX.Element> = {
+  calendar: (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  autopilot: (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </svg>
+  ),
+};
+
 const HOW_IT_WORKS = [
   {
     step: "1",
@@ -109,8 +140,8 @@ const FREE_TOOLS = [
   { title: "Thumbnail Checker", desc: "Preview how your thumbnail looks everywhere", href: "/free-tools/thumbnail-checker", icon: "image" },
   { title: "Script Generator", desc: "AI scripts for any video topic or niche", href: "/free-tools/script-generator", icon: "edit" },
   { title: "Video Ideas", desc: "Never run out of content ideas again", href: "/free-tools/video-ideas", icon: "bulb" },
-  { title: "YouTube Title Generator", desc: "SEO titles optimized for search and CTR", href: "/tools/youtube-title-generator", icon: "search" },
-  { title: "YouTube Tag Generator", desc: "Discover high-volume tags for any topic", href: "/tools/youtube-tag-generator", icon: "hash" },
+  { title: "AI Title Generator", desc: "SEO titles optimized for search and CTR", href: "/tools/ai-title-generator", icon: "search" },
+  { title: "AI Tag Generator", desc: "Discover high-volume tags for any topic", href: "/tools/ai-tag-generator", icon: "hash" },
 ];
 
 const FREE_TOOL_ICONS: Record<string, React.JSX.Element> = {
@@ -224,6 +255,10 @@ const FAQ_ITEMS = [
     q: "Is my data safe?",
     a: "Yes. Our servers are located in the EU and all data is encrypted in transit and at rest. We comply with GDPR and CCPA.",
   },
+  {
+    q: "Does TubeForge also publish my videos to YouTube?",
+    a: "Yes. Connect your YouTube channel once, drop videos into the calendar with publish times, and TubeForge handles the upload, scheduling, and status tracking on your behalf. Free plan includes 3 publishes per month; Pro 100; Studio unlimited.",
+  },
 ];
 
 /* -- JSON-LD Structured Data -------------------------------------- */
@@ -243,7 +278,7 @@ const PAGE_JSON_LD = {
     offerCount: "3",
   },
   description:
-    "AI-powered video creation platform for YouTube creators",
+    "AI-powered thumbnail design and publishing platform for YouTube creators — generate niche-aware thumbnails, schedule uploads, and monitor channel health on autopilot.",
 };
 
 const ORGANIZATION_JSON_LD = {
@@ -257,7 +292,7 @@ const ORGANIZATION_JSON_LD = {
     "https://t.me/tubeforge",
     "https://twitter.com/tubeforge",
   ],
-  description: "AI-powered video creation platform for YouTube creators",
+  description: "AI-powered thumbnail design and publishing platform for YouTube creators",
 };
 
 const FAQ_JSON_LD = {
@@ -274,13 +309,13 @@ const FAQ_JSON_LD = {
 };
 
 /* -- Dark color palette ------------------------------------------- */
-const BG_PRIMARY = "#0a0a0a";
-const BG_ALT = "#111111";
-const CARD_BG = "#1a1a1a";
-const TEXT_PRIMARY = "#ffffff";
-const TEXT_MUTED = "rgba(255,255,255,0.5)";
-const TEXT_DIM = "rgba(255,255,255,0.45)";
-const BORDER_SUBTLE = "rgba(255,255,255,0.06)";
+const BG_PRIMARY = "var(--bg-primary)";
+const BG_ALT = "var(--bg-secondary)";
+const CARD_BG = "var(--bg-tertiary)";
+const TEXT_PRIMARY = "var(--fg-primary)";
+const TEXT_MUTED = "var(--fg-secondary)";
+const TEXT_DIM = "var(--fg-tertiary)";
+const BORDER_SUBTLE = "var(--border-subtle)";
 const ACCENT = "#6366f1";
 
 /* -- Page (React Server Component) -------------------------------- */
@@ -342,6 +377,20 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ===== BUILT FOR CREATORS (lifestyle imagery) ===== */}
+      <section style={{ padding: "80px 24px", background: BG_ALT }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 48, alignItems: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: ACCENT, margin: 0 }}>For creators</p>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.12, color: TEXT_PRIMARY, margin: 0 }}>Made for the people behind the camera</h2>
+            <p style={{ fontSize: 18, color: TEXT_MUTED, lineHeight: 1.6, margin: 0, maxWidth: 480 }}>You handle the ideas, the filming, the story. TubeForge handles the thumbnails, the metadata, and the upload &mdash; so you spend less time wrestling with tools and more time making what your audience came for.</p>
+          </div>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", borderRadius: 24, overflow: "hidden", border: `1px solid ${BORDER_SUBTLE}`, boxShadow: "0 20px 60px rgba(0,0,0,0.12)" }}>
+            <Image src="https://images.pexels.com/photos/4145190/pexels-photo-4145190.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="A creator working at a sunlit desk, planning content" fill sizes="(max-width: 900px) 100vw, 540px" style={{ objectFit: "cover" }} />
+          </div>
+        </div>
+      </section>
+
       {/* ===== KEY FEATURES (3 Cards) ===== */}
       <section
         id="features"
@@ -361,6 +410,53 @@ export default function LandingPage() {
               <div key={i} className="tf-reveal tf-feature-card" style={{ background: CARD_BG, borderRadius: 14, padding: "36px 28px", transition: "all 0.3s ease", cursor: "default", border: `1px solid ${BORDER_SUBTLE}`, display: "flex", flexDirection: "column" }}>
                 <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
                   {KEY_FEATURE_ICONS[feature.icon]}
+                </div>
+                <h3 style={{ fontSize: 19, fontWeight: 600, color: TEXT_PRIMARY, margin: "0 0 8px" }}>{feature.title}</h3>
+                <p style={{ fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, margin: "0 0 20px", flex: 1 }}>{feature.desc}</p>
+                <Link
+                  href={feature.href}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    color: ACCENT,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    textDecoration: "none",
+                    transition: "gap 0.2s ease",
+                  }}
+                >
+                  {feature.cta}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== PUBLISHING PLATFORM (autopost / autopilot / API) ===== */}
+      <section
+        id="publishing"
+        style={{ padding: "80px 24px", background: BG_PRIMARY, borderTop: `1px solid ${BORDER_SUBTLE}` }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div className="tf-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
+            <p style={{ fontSize: 13, fontWeight: 500, color: ACCENT, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 12px" }}>
+              Publishing Platform
+            </p>
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 12px", color: TEXT_PRIMARY }}>
+              Beyond the thumbnail — ship the video too.
+            </h2>
+            <p style={{ fontSize: 18, color: TEXT_MUTED, maxWidth: 620, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
+              Schedule uploads, monitor channel health on autopilot, or plug your own product into our publishing API. Built for solo creators and teams alike.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, maxWidth: 780, margin: "0 auto" }} className="features-grid">
+            {PUBLISHING_PLATFORM_FEATURES.map((feature, i) => (
+              <div key={i} className="tf-reveal tf-feature-card" style={{ background: CARD_BG, borderRadius: 14, padding: "36px 28px", transition: "all 0.3s ease", cursor: "default", border: `1px solid ${BORDER_SUBTLE}`, display: "flex", flexDirection: "column" }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  {PUBLISHING_PLATFORM_ICONS[feature.icon]}
                 </div>
                 <h3 style={{ fontSize: 19, fontWeight: 600, color: TEXT_PRIMARY, margin: "0 0 8px" }}>{feature.title}</h3>
                 <p style={{ fontSize: 15, color: TEXT_MUTED, lineHeight: 1.6, margin: "0 0 20px", flex: 1 }}>{feature.desc}</p>

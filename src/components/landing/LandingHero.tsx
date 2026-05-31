@@ -23,7 +23,7 @@ export function LandingHero() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '120px 24px 80px',
-        background: '#0a0a0a',
+        background: 'var(--bg-primary)',
         overflow: 'hidden',
       }}
     >
@@ -60,7 +60,7 @@ export function LandingHero() {
               lineHeight: 1.05,
               letterSpacing: '-0.025em',
               margin: '0 0 20px',
-              color: '#ffffff',
+              color: 'var(--fg-primary)',
             }}
           >
             AI Thumbnails
@@ -73,7 +73,7 @@ export function LandingHero() {
             className="hero-subtitle"
             style={{
               fontSize: 'clamp(15px, 4vw, 18px)',
-              color: 'rgba(255,255,255,0.55)',
+              color: 'var(--fg-secondary)',
               lineHeight: 1.5,
               maxWidth: 540,
               margin: '0 0 32px',
@@ -124,7 +124,7 @@ export function LandingHero() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                color: 'rgba(255,255,255,0.5)',
+                color: 'var(--fg-secondary)',
                 fontSize: 17,
                 fontWeight: 400,
                 padding: '12px 28px',
@@ -158,7 +158,7 @@ export function LandingHero() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>{label}</span>
+                <span style={{ fontSize: 13, color: 'var(--fg-secondary)', fontWeight: 400 }}>{label}</span>
               </div>
             ))}
           </div>

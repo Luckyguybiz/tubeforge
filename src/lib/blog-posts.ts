@@ -254,7 +254,7 @@ const ORIGINAL_POSTS: BlogPost[] = [
     category: 'Monetization',
     tags: ['monetization', 'youtube partner program', 'earnings', 'sponsors'],
     content: `<h2>When Does YouTube Start Making Money?</h2>
-<p>Many aspiring creators ask: "How much can you earn on YouTube?" Use the <a href="/tools/youtube-money-calculator" style="color: #3a7bfd">YouTube Money Calculator</a> to estimate earnings for any channel. The answer depends on your niche, audience, and monetization strategy. In 2026, the average income for a channel with 100,000 subscribers ranges from $500 to $5,000 per month from ads alone. But ads are just one source of income.</p>
+<p>Many aspiring creators ask: "How much can you earn on YouTube?" Use the <a href="/tools/revenue-calculator" style="color: #3a7bfd">Revenue Calculator</a> to estimate earnings for any channel. The answer depends on your niche, audience, and monetization strategy. In 2026, the average income for a channel with 100,000 subscribers ranges from $500 to $5,000 per month from ads alone. But ads are just one source of income.</p>
 
 <h2>Step 1: Joining the YouTube Partner Program (YPP)</h2>
 <p>Requirements for joining the YouTube Partner Program in 2026:</p>

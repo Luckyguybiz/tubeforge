@@ -122,7 +122,7 @@ export function PricingSection() {
           <p
             style={{
               fontSize: 18,
-              color: "rgba(255,255,255,0.45)",
+              color: "var(--fg-tertiary)",
               maxWidth: 480,
               margin: "0 auto 32px",
               lineHeight: 1.6,
@@ -137,7 +137,7 @@ export function PricingSection() {
               display: "inline-flex",
               alignItems: "center",
               gap: 16,
-              background: "rgba(255,255,255,0.04)",
+              background: "var(--bg-secondary)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 50,
               padding: "6px 8px",
@@ -145,6 +145,8 @@ export function PricingSection() {
           >
             <button
               onClick={() => setIsAnnual(false)}
+              aria-pressed={!isAnnual}
+              aria-label="Monthly billing"
               style={{
                 padding: "8px 24px",
                 borderRadius: 50,
@@ -156,7 +158,7 @@ export function PricingSection() {
                 background: !isAnnual
                   ? "linear-gradient(135deg, #6366f1, #4f46e5)"
                   : "transparent",
-                color: !isAnnual ? "#fff" : "rgba(255,255,255,0.5)",
+                color: !isAnnual ? "#fff" : "var(--fg-secondary, rgba(255,255,255,0.5))",
                 boxShadow: !isAnnual
                   ? "0 2px 12px rgba(99,102,241,0.3)"
                   : "none",
@@ -166,6 +168,8 @@ export function PricingSection() {
             </button>
             <button
               onClick={() => setIsAnnual(true)}
+              aria-pressed={isAnnual}
+              aria-label="Annual billing"
               style={{
                 padding: "8px 24px",
                 borderRadius: 50,
@@ -177,7 +181,7 @@ export function PricingSection() {
                 background: isAnnual
                   ? "linear-gradient(135deg, #6366f1, #4f46e5)"
                   : "transparent",
-                color: isAnnual ? "#fff" : "rgba(255,255,255,0.5)",
+                color: isAnnual ? "#fff" : "var(--fg-secondary, rgba(255,255,255,0.5))",
                 boxShadow: isAnnual
                   ? "0 2px 12px rgba(99,102,241,0.3)"
                   : "none",
@@ -270,7 +274,7 @@ export function PricingSection() {
                 style={{
                   fontSize: 16,
                   fontWeight: 700,
-                  color: "#ffffff",
+                  color: "var(--fg-primary)",
                   marginBottom: 4,
                 }}
               >
@@ -297,7 +301,7 @@ export function PricingSection() {
                   style={{
                     fontSize: 48,
                     fontWeight: 800,
-                    color: "#ffffff",
+                    color: "var(--fg-primary)",
                     letterSpacing: "-0.03em",
                     lineHeight: 1,
                     transition: "all 0.3s ease",
@@ -346,7 +350,7 @@ export function PricingSection() {
                       alignItems: "center",
                       gap: 10,
                       fontSize: 14,
-                      color: "rgba(255,255,255,0.6)",
+                      color: "var(--fg-secondary)",
                     }}
                   >
                     <svg

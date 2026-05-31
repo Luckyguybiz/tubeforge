@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { LandingNav, FaqAccordion } from "@/components/landing";
-import Link from "next/link";
+import {
+  Container, Section, Eyebrow, Display, Headline, Lead, Body, Caption, CenteredHeader, CTA, Card,
+} from "@/components/ds";
 
 export const metadata: Metadata = {
   title: "Content Planner — Calendar, Ideas & Scheduling",
-  description: "Plan, schedule, and organize content with visual calendar, ideas bank, and multi-platform support.",
+  description:
+    "Plan, schedule, and organize your content with a visual calendar, ideas bank, templates, and cross-platform scheduling. Never miss a publish date.",
   robots: { index: true, follow: true },
   openGraph: {
     title: "Content Planner — Calendar, Ideas & Scheduling",
-    description: "Plan, schedule, and organize content with visual calendar, ideas bank, and multi-platform support.",
+    description: "Plan, schedule, and organize content with a visual calendar, ideas bank, and multi-platform support.",
     type: "website",
+    locale: "en_US",
     url: "https://tubeforge.co/features/content-planner",
     images: [{ url: "/api/og", width: 1200, height: 630 }],
   },
@@ -17,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Content Planner — Calendar, Ideas & Scheduling",
-    description: "Plan, schedule, and organize content with visual calendar, ideas bank, and multi-platform support.",
+    description: "Plan, schedule, and organize content with a visual calendar, ideas bank, and multi-platform support.",
   },
 };
 
@@ -27,164 +32,142 @@ const FAQ_ITEMS = [
   { q: "Can my team use it?", a: "Studio plan supports up to 10 team members with role-based access." },
   { q: "Does it integrate with YouTube?", a: "Yes! Connect your channel to schedule and auto-publish." },
   { q: "Can I import existing plans?", a: "Yes, import from CSV, Google Sheets, or Notion." },
-  { q: "Does AI suggest ideas?", a: "Yes! Based on your niche, past performance, and trends." }
+  { q: "Does AI suggest ideas?", a: "Yes! Based on your niche, past performance, and trends." },
 ];
+
+const FEATURES = [
+  { title: "Visual Calendar", desc: "Drag-and-drop content calendar. See your entire month at a glance, color-coded by platform." },
+  { title: "Ideas Bank", desc: "Save, organize, and rate content ideas. AI suggests fresh ideas based on trends." },
+  { title: "Templates", desc: "Reusable templates for thumbnails, titles, descriptions, and scripts to move faster." },
+  { title: "Production Pipeline", desc: "Track every video from idea to script to film to edit to publish, and spot bottlenecks." },
+  { title: "Analytics Integration", desc: "See which planned content performed best and optimize your future schedules." },
+  { title: "Multi-Platform", desc: "Plan for YouTube, Shorts, TikTok, Instagram, and more in one unified calendar." },
+];
+
+const STEPS = [
+  { n: 1, title: "Set Your Schedule", desc: "Define publishing frequency and preferred days. Your calendar fills with ready-to-use slots." },
+  { n: 2, title: "Fill Your Pipeline", desc: "Add ideas from your bank, assign them to slots, and track production progress." },
+  { n: 3, title: "Execute & Publish", desc: "Follow your plan, mark each step complete, and use scheduling to auto-publish." },
+];
+
+const STATS = [
+  { v: "3×", l: "More consistency" },
+  { v: "5 hrs", l: "Saved per week" },
+  { v: "100+", l: "Templates" },
+  { v: "5+", l: "Platforms" },
+];
+
+const HERO_IMG = "https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=1600";
 
 export default function Page() {
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#fff" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", color: "var(--fg-primary)" }}>
       <LandingNav />
 
       {/* Hero */}
-      <section style={{ padding: "80px 24px 48px", textAlign: "center" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 980, border: "1px solid rgba(255,255,255,0.1)", marginBottom: 20, fontSize: 12, color: "#6366f1", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366f1" }} />
-            Calendar · Templates
+      <Section style={{ paddingTop: "clamp(56px, 9vw, 96px)", paddingBottom: 0 }}>
+        <Container width="default">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 22 }}>
+            <Eyebrow>Planning · Calendar</Eyebrow>
+            <Display as="h1" style={{ maxWidth: 880 }}>
+              Plan your content like a pro creator
+            </Display>
+            <Lead style={{ maxWidth: 600 }}>
+              Visual calendar, ideas bank, templates, and cross-platform scheduling &mdash; so you never miss a publish date again.
+            </Lead>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginTop: 4 }}>
+              <CTA href="/register">Start planning free</CTA>
+              <CTA href="#how-it-works" variant="secondary">See how it works</CTA>
+            </div>
           </div>
-          <h1 style={{ fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px" }}>
-            Plan Your Content Like a{" "}
-            <span style={{ background: "linear-gradient(135deg, #6366f1, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Pro Creator</span>
-          </h1>
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.7)", maxWidth: 600, margin: "0 auto 28px", lineHeight: 1.6 }}>
-            Visual calendar, ideas bank, templates, and cross-platform scheduling. Never miss a publish date.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#6366f1", color: "#fff", fontSize: 15, fontWeight: 500, padding: "12px 24px", borderRadius: 980, textDecoration: "none" }}>
-              Start Planning Free
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-            </Link>
-            <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", fontSize: 15, fontWeight: 500, padding: "12px 24px", borderRadius: 980, textDecoration: "none", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}>
-              See How It Works
-            </a>
+        </Container>
+        <Container width="wide" style={{ marginTop: "clamp(40px, 7vw, 72px)" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 24, overflow: "hidden", border: "1px solid var(--border-subtle, rgba(128,128,128,0.12))", boxShadow: "var(--shadow-xl)" }}>
+            <Image src={HERO_IMG} alt="Creator planning content on a calendar at a desk" fill sizes="(max-width: 1200px) 100vw, 1200px" style={{ objectFit: "cover" }} priority />
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Problem */}
-      <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 580, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", margin: "0 0 12px", color: "#fff" }}>Consistency Is the Hardest Part</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Most creators fail because of inconsistency, not bad content. Our planner makes staying consistent effortless.</p>
-        </div>
-      </section>
+      <Section tight>
+        <Container width="narrow">
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
+            <Headline>Consistency is the hardest part</Headline>
+            <Lead>
+              Most creators fail because of inconsistency, not bad content. A clear plan turns scattered ideas into a steady publishing rhythm, making it effortless to show up week after week.
+            </Lead>
+          </div>
+        </Container>
+      </Section>
 
       {/* Features */}
-      <section style={{ padding: "60px 24px", background: "#111111" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 8px", color: "#fff" }}>Everything you need</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", textAlign: "center", margin: "0 0 40px" }}>Content Planner</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-            
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Visual Calendar</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Drag-and-drop content calendar. See your entire month at a glance. Color-coded by platform.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Ideas Bank</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Save, organize, and rate content ideas. AI suggests ideas based on trends.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Templates</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Reusable templates for thumbnails, titles, descriptions, and scripts.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Production Pipeline</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Track each video: idea → script → film → edit → publish. See bottlenecks.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Analytics Integration</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>See which planned content performed best. Optimize future schedules.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Multi-Platform</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Plan for YouTube, Shorts, TikTok, Instagram, and more in one calendar.</p>
-              </div>
+      <Section alt>
+        <Container width="wide">
+          <CenteredHeader eyebrow="Capabilities" headline="Everything you need" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginTop: 56 }}>
+            {FEATURES.map((f) => (
+              <Card key={f.title} style={{ background: "var(--bg-primary)" }}>
+                <h3 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg-primary)", margin: "0 0 8px" }}>{f.title}</h3>
+                <Body style={{ fontSize: 15 }}>{f.desc}</Body>
+              </Card>
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
-      {/* How It Works */}
-      <section id="how-it-works" style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 40px", color: "#fff" }}>How it works</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32 }}>
-            
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#6366f1", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>1</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Set Your Schedule</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Define publishing frequency and preferred days. Calendar fills with slots.</p>
+      {/* How it works */}
+      <Section id="how-it-works">
+        <Container width="default">
+          <CenteredHeader eyebrow="Workflow" headline="From schedule to publish in three steps" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40, marginTop: 56 }}>
+            {STEPS.map((s) => (
+              <div key={s.n} style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 999, background: "var(--bg-secondary)", border: "1px solid var(--border-default, rgba(128,128,128,0.18))", color: "var(--color-brand-500, #6366f1)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 600 }}>{s.n}</div>
+                <h3 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg-primary)", margin: 0 }}>{s.title}</h3>
+                <Body style={{ fontSize: 15, maxWidth: 280 }}>{s.desc}</Body>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#6366f1", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>2</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Fill Your Pipeline</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Add ideas from your bank, assign to slots, track production progress.</p>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#6366f1", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>3</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Execute & Publish</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Follow your plan, mark complete, use scheduling to auto-publish.</p>
-              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Stats */}
-      <section style={{ padding: "60px 24px", background: "#111111" }}>
-        <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Results that speak</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>3x More</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Consistency</div>
+      <Section alt tight>
+        <Container width="default">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 24 }}>
+            {STATS.map((s) => (
+              <div key={s.l} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg-primary)", lineHeight: 1 }}>{s.v}</div>
+                <Caption style={{ display: "block", marginTop: 8 }}>{s.l}</Caption>
               </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>50+</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Ideas Saved</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>5 hrs/week</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Time Saved</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>5+</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Platforms</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>100+</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Templates</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginBottom: 2 }}>Up to 10</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Team Members</div>
-              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* FAQ */}
-      <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Frequently asked questions</h2>
-          <FaqAccordion items={FAQ_ITEMS} />
-        </div>
-      </section>
+      <Section>
+        <Container width="default">
+          <CenteredHeader eyebrow="FAQ" headline="Frequently asked questions" />
+          <div style={{ marginTop: 48 }}>
+            <FaqAccordion items={FAQ_ITEMS} />
+          </div>
+        </Container>
+      </Section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px", textAlign: "center", background: "#111111" }}>
-        <div style={{ maxWidth: 580, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 600, letterSpacing: "-0.02em", color: "#fff", margin: "0 0 12px" }}>Plan, Create, Publish — Repeat</h2>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", margin: "0 0 28px", lineHeight: 1.6 }}>Your entire content workflow in one place. Start free.</p>
-          <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#6366f1", color: "#fff", fontSize: 16, fontWeight: 500, padding: "12px 28px", borderRadius: 980, textDecoration: "none" }}>
-            Start Free
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-          </Link>
-        </div>
-      </section>
+      <Section alt>
+        <Container width="narrow">
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+            <Headline>Plan, create, publish &mdash; repeat</Headline>
+            <Lead style={{ maxWidth: 480 }}>Your entire content workflow in one place. Free to start.</Lead>
+            <div style={{ marginTop: 6 }}><CTA href="/register">Start free</CTA></div>
+          </div>
+        </Container>
+      </Section>
 
-      <footer style={{ background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>&copy; 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ borderTop: "1px solid var(--border-subtle, rgba(128,128,128,0.12))", padding: 32, textAlign: "center" }}>
+        <Caption>{"©"} 2026 TubeForge. All rights reserved.</Caption>
       </footer>
     </div>
   );

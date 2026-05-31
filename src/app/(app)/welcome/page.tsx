@@ -159,7 +159,7 @@ function WelcomeInner() {
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <span style={{ color: C.dim, display: 'flex', alignItems: 'center' }}>
+              <span aria-hidden="true" style={{ color: C.dim, display: 'flex', alignItems: 'center' }}>
                 <ChevronIcon />
               </span>
             )}
@@ -214,9 +214,9 @@ function WelcomeInner() {
       </button>
 
       <div style={{ marginTop: 16 }}>
-        <button type="button" style={linkStyle}>
+        <Link href="/billing" style={linkStyle}>
           {t('welcome.viewReceipt')}
-        </button>
+        </Link>
       </div>
     </div>
   );

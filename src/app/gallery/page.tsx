@@ -48,7 +48,7 @@ export default function GalleryPage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--fg-primary)' }}>
       {/* Header */}
       <header style={{
         padding: '16px 24px',
@@ -129,7 +129,7 @@ export default function GalleryPage() {
               style={{
                 display: 'inline-block',
                 padding: '10px 24px', borderRadius: 10,
-                background: C.accent, color: '#fff',
+                background: C.accent, color: 'var(--fg-primary)',
                 fontSize: 14, fontWeight: 700, textDecoration: 'none',
               }}
             >
@@ -190,7 +190,7 @@ export default function GalleryPage() {
                         position: 'absolute', top: 8, right: 8,
                         display: 'flex', alignItems: 'center', gap: 4,
                         padding: '3px 8px', borderRadius: 6,
-                        background: 'rgba(0,0,0,.6)', color: '#fff',
+                        background: 'rgba(0,0,0,.6)', color: 'var(--fg-primary)',
                         fontSize: 12, fontWeight: 600,
                       }}>
                         <IconHeart size={12} color="#ef4444" />
@@ -216,7 +216,7 @@ export default function GalleryPage() {
                         ) : (
                           <div style={{
                             width: 20, height: 20, borderRadius: '50%',
-                            background: C.accent, color: '#fff',
+                            background: C.accent, color: 'var(--fg-primary)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: 10, fontWeight: 700,
                           }}>

@@ -14,6 +14,7 @@
     "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@auth/prisma-adapter": "^2.11.1",
     "@capacitor/app": "^8.0.1",
     "@capacitor/browser": "^8.0.2",
@@ -73,7 +74,9 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.74.0",
     "react-i18next": "^16.5.5",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.7.0",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.9.4",
     "sonner": "^2.0.7",
     "stripe": "^20.4.0",

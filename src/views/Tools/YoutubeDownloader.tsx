@@ -38,10 +38,6 @@ interface FullAnalysisResult {
   description: string;
   tags: string[];
   isShorts: boolean;
-  metrics: {
-    likeRate: number;
-    commentRate: number;
-  };
   structure: {
     hasTimestamps: boolean;
     hasLinks: boolean;
@@ -115,7 +111,7 @@ function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
           width: 36,
           height: 36,
           borderRadius: 10,
-          background: '#f5f5f7',
+          background: 'var(--bg-tertiary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -125,7 +121,7 @@ function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
         {icon}
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 18, fontWeight: 700, color: '#1d1d1f' }}>{value}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--fg-primary)' }}>{value}</div>
         <div style={{ fontSize: 11, color: '#86868b', fontWeight: 500 }}>{label}</div>
         {sub && <div style={{ fontSize: 10, color: '#a1a1aa', fontWeight: 500, marginTop: 1 }}>{sub}</div>}
       </div>
@@ -182,7 +178,7 @@ function AnalysisSkeleton() {
   );
 
   return (
-    <div style={{ padding: 20, borderRadius: 16, background: '#f5f5f7', marginBottom: 24 }}>
+    <div style={{ padding: 20, borderRadius: 16, background: 'var(--bg-tertiary)', marginBottom: 24 }}>
       {/* Gauge skeleton */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 24, flexWrap: 'wrap' }}>
         {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -474,7 +470,7 @@ export function YoutubeDownloader() {
             display: 'flex',
             alignItems: 'center',
             height: 44,
-            background: '#f5f5f7',
+            background: 'var(--bg-tertiary)',
             border: urlError ? '1px solid #ef4444' : 'none',
             borderRadius: 10,
             padding: '0 16px',
@@ -567,7 +563,7 @@ export function YoutubeDownloader() {
             borderRadius: 10,
             border: 'none',
             background: pasteHover ? '#e8e8ed' : '#f5f5f7',
-            color: '#1d1d1f',
+            color: 'var(--fg-primary)',
             cursor: 'pointer',
             fontSize: 13,
             fontWeight: 600,
@@ -635,7 +631,7 @@ export function YoutubeDownloader() {
             padding: 16,
             borderRadius: 16,
             border: 'none',
-            background: '#f5f5f7',
+            background: 'var(--bg-tertiary)',
             marginBottom: 24,
             flexWrap: 'wrap',
           }}
@@ -810,7 +806,7 @@ export function YoutubeDownloader() {
             padding: 16,
             borderRadius: 16,
             border: 'none',
-            background: '#f5f5f7',
+            background: 'var(--bg-tertiary)',
             marginBottom: 24,
             flexWrap: 'wrap',
           }}
@@ -850,13 +846,11 @@ export function YoutubeDownloader() {
               icon={likesIcon}
               label="Likes"
               value={formatNumber(analysis.statistics.likes)}
-              sub={`${analysis.metrics.likeRate}% rate`}
             />
             <StatCard
               icon={commentsIcon}
               label="Comments"
               value={formatNumber(analysis.statistics.comments)}
-              sub={`${analysis.metrics.commentRate}% rate`}
             />
           </div>
 
@@ -865,16 +859,16 @@ export function YoutubeDownloader() {
             style={{
               padding: 20,
               borderRadius: 16,
-              background: '#f5f5f7',
+              background: 'var(--bg-tertiary)',
               marginBottom: 16,
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg-primary)', marginBottom: 12 }}>
               Description Analysis
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: '#86868b' }}>Length</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1d1d1f' }}>{analysis.structure.descriptionLength} chars</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-primary)' }}>{analysis.structure.descriptionLength} chars</span>
             </div>
             <CheckItem checked={analysis.structure.hasTimestamps} label="Has timestamps" />
             <CheckItem checked={analysis.structure.hasLinks} label="Has links" />
@@ -888,11 +882,11 @@ export function YoutubeDownloader() {
               style={{
                 padding: 20,
                 borderRadius: 16,
-                background: '#f5f5f7',
+                background: 'var(--bg-tertiary)',
                 marginBottom: 16,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg-primary)', marginBottom: 12 }}>
                 Tags ({analysis.tags.length})
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -932,7 +926,7 @@ export function YoutubeDownloader() {
             padding: 20,
             borderRadius: 16,
             border: 'none',
-            background: '#f5f5f7',
+            background: 'var(--bg-tertiary)',
             marginBottom: 24,
           }}
         >

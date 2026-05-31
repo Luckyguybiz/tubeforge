@@ -346,10 +346,10 @@ export async function POST(req: NextRequest) {
 
       // Compliance (YouTube ToS, Policy III.E.4h): only API-direct fields.
       // Description structure analysis is factual (timestamps/links/hashtags/CTA presence).
-      // Like rate & comment rate are mathematical % of API-provided counts (not derived).
+      // 2026-05-19 (V.3 compliance): removed likeRate/commentRate derivations
+      // proactively per Niki's V.2 offer. III.E.4.h does not allow derived metrics
+      // from API data even via trivial arithmetic. Display now shows raw counts only.
       const descResult = computeDescriptionScore(snippet.description);
-      const likeRate = views > 0 ? Number(((likes / views) * 100).toFixed(2)) : 0;
-      const commentRate = views > 0 ? Number(((comments / views) * 100).toFixed(2)) : 0;
 
       const category = snippet.categoryId ? (CATEGORY_MAP[snippet.categoryId] ?? 'Unknown') : 'Unknown';
       const language = snippet.defaultAudioLanguage ?? snippet.defaultLanguage ?? 'unknown';
@@ -372,10 +372,6 @@ export async function POST(req: NextRequest) {
         description: snippet.description.slice(0, 500),
         tags: snippet.tags ?? [],
         isShorts,
-        metrics: {
-          likeRate,
-          commentRate,
-        },
         structure: {
           hasTimestamps: descResult.hasTimestamps,
           hasLinks: descResult.hasLinks,

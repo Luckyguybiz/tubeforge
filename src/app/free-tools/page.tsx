@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingNav } from "@/components/landing";
+import { Container, Section, Eyebrow, Display, Headline, Lead, Caption, CTA } from "@/components/ds";
 
 /* -- SEO Metadata ------------------------------------------------- */
 
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 
 const TOOLS = [
   {
-    title: "YouTube Title Generator",
+    title: "AI Title Generator",
     description: "Generate 10 click-worthy, SEO-optimized title variations for any video topic using AI.",
     href: "/free-tools/title-generator",
     gradient: ["#6366f1", "#8b5cf6"],
@@ -43,7 +44,7 @@ const TOOLS = [
     ),
   },
   {
-    title: "YouTube Description Generator",
+    title: "AI Description Generator",
     description: "Create SEO-optimized video descriptions with timestamps, hashtags, and links sections.",
     href: "/free-tools/description-generator",
     gradient: ["#3b82f6", "#06b6d4"],
@@ -58,7 +59,7 @@ const TOOLS = [
     ),
   },
   {
-    title: "YouTube Tag Generator",
+    title: "AI Tag Generator",
     description: "Get 25 relevant, SEO-friendly tags mixing broad and long-tail keywords for maximum reach.",
     href: "/free-tools/tag-generator",
     gradient: ["#10b981", "#34d399"],
@@ -164,7 +165,7 @@ const JSON_LD = {
 
 export default function FreeToolsPage() {
   return (
-    <div style={{ background: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}>
+    <div style={{ background: "var(--bg-primary)", color: "var(--fg-primary)", minHeight: "100vh" }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -172,50 +173,15 @@ export default function FreeToolsPage() {
       <LandingNav />
 
       {/* Hero */}
-      <section style={{ paddingTop: 120, paddingBottom: 80, textAlign: "center", padding: "120px 24px 80px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "rgba(99,102,241,0.1)",
-              color: "#6366f1",
-              fontSize: 13,
-              fontWeight: 600,
-              padding: "6px 14px",
-              borderRadius: 980,
-              marginBottom: 24,
-            }}
-          >
-            100% Free
+      <Section style={{ paddingTop: "clamp(56px, 9vw, 96px)", paddingBottom: "clamp(40px, 6vw, 64px)" }}>
+        <Container width="narrow">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 20 }}>
+            <Eyebrow>100% Free · No signup</Eyebrow>
+            <Display as="h1" style={{ maxWidth: 720 }}>Free YouTube tools</Display>
+            <Lead style={{ maxWidth: 560 }}>9 AI-powered tools to help you create better titles, descriptions, tags, scripts, channel names, and more. No signup required.</Lead>
           </div>
-          <h1
-            style={{
-              fontSize: "clamp(36px, 5vw, 56px)",
-              fontWeight: 600,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.08,
-              margin: "0 0 16px",
-              color: "#ffffff",
-            }}
-          >
-            Free YouTube Tools.
-          </h1>
-          <p
-            style={{
-              fontSize: 19,
-              color: "rgba(255,255,255,0.5)",
-              maxWidth: 520,
-              margin: "0 auto",
-              lineHeight: 1.5,
-              fontWeight: 400,
-            }}
-          >
-            9 AI-powered tools to help you create better titles, descriptions, tags, scripts, channel names, and more. No signup required.
-          </p>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Tools Grid */}
       <section style={{ padding: "0 24px 100px" }}>
@@ -235,12 +201,12 @@ export default function FreeToolsPage() {
               href={tool.href}
               className="free-tool-card"
               style={{
-                background: "#141414",
+                background: "var(--bg-secondary)",
                 borderRadius: 14,
                 textDecoration: "none",
                 color: "inherit",
                 transition: "all 0.3s ease",
-                border: "1px solid rgba(255,255,255,0.06)",
+                border: "1px solid var(--border-subtle, rgba(128,128,128,0.14))",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
@@ -259,7 +225,7 @@ export default function FreeToolsPage() {
                 }}
               >
                 <div style={{ position: "absolute", width: 60, height: 60, borderRadius: "50%", background: "rgba(255,255,255,0.06)", top: -15, right: -5 }} className="tf-float-shape" />
-                <div style={{ position: "absolute", width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.04)", bottom: -8, left: "20%" }} className="tf-float-shape-rev" />
+                <div style={{ position: "absolute", width: 30, height: 30, borderRadius: "50%", background: "var(--bg-secondary)", bottom: -8, left: "20%" }} className="tf-float-shape-rev" />
                 <div style={{ position: "relative", zIndex: 0 }}>{tool.icon}</div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -284,7 +250,7 @@ export default function FreeToolsPage() {
                   style={{
                     fontSize: 18,
                     fontWeight: 600,
-                    color: "#ffffff",
+                    color: "var(--fg-primary)",
                     margin: "0 0 6px",
                   }}
                 >
@@ -293,7 +259,7 @@ export default function FreeToolsPage() {
                 <p
                   style={{
                     fontSize: 14,
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--fg-secondary)",
                     lineHeight: 1.55,
                     margin: 0,
                   }}
@@ -323,68 +289,19 @@ export default function FreeToolsPage() {
       </section>
 
       {/* CTA */}
-      <section
-        style={{
-          padding: "80px 24px 100px",
-          textAlign: "center",
-          background: "#111111",
-        }}
-      >
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <h2
-            style={{
-              fontSize: "clamp(28px, 4vw, 40px)",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              color: "#ffffff",
-              margin: "0 0 12px",
-              lineHeight: 1.1,
-            }}
-          >
-            Want unlimited access?
-          </h2>
-          <p
-            style={{
-              fontSize: 19,
-              color: "rgba(255,255,255,0.5)",
-              margin: "0 0 32px",
-              lineHeight: 1.5,
-            }}
-          >
-            Sign up for TubeForge to unlock unlimited generations, advanced AI tools, and more.
-          </p>
-          <Link
-            href="/register"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "#6366f1",
-              color: "#fff",
-              fontSize: 17,
-              fontWeight: 400,
-              padding: "12px 28px",
-              borderRadius: 980,
-              textDecoration: "none",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              minHeight: 48,
-            }}
-          >
-            Start Free
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
-        </div>
-      </section>
+      <Section alt>
+        <Container width="narrow">
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+            <Headline>Want unlimited access?</Headline>
+            <Lead style={{ maxWidth: 480 }}>Sign up for TubeForge to unlock unlimited generations, advanced AI tools, and more.</Lead>
+            <div style={{ marginTop: 6 }}><CTA href="/register">Start free</CTA></div>
+          </div>
+        </Container>
+      </Section>
 
       {/* Footer */}
-      <footer style={{ background: "#111111", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "24px", textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-          {"\u00A9"} 2026 TubeForge. All rights reserved.
-        </span>
+      <footer style={{ borderTop: "1px solid var(--border-subtle, rgba(128,128,128,0.12))", padding: 32, textAlign: "center" }}>
+        <Caption>{"\u00A9"} 2026 TubeForge. All rights reserved.</Caption>
       </footer>
 
       <style>{`

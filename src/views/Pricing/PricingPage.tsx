@@ -123,7 +123,7 @@ function CrossIcon() {
 
 function CellContent({ value }: { value: CellValue }) {
   if (typeof value === "boolean") return value ? <CheckIcon /> : <CrossIcon />;
-  return <span style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}>{value}</span>;
+  return <span style={{ fontSize: 14, color: "var(--fg-secondary)" }}>{value}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -151,7 +151,7 @@ export default function PricingPage() {
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
               margin: "0 0 16px",
-              color: "#ffffff",
+              color: "var(--fg-primary)",
             }}
           >
             {t("pricing.title")}
@@ -159,7 +159,7 @@ export default function PricingPage() {
           <p
             style={{
               fontSize: "clamp(15px, 4vw, 19px)",
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--fg-tertiary, var(--fg-secondary))",
               maxWidth: 480,
               margin: "0 auto 32px",
               lineHeight: 1.5,
@@ -175,8 +175,8 @@ export default function PricingPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 0,
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "var(--bg-secondary)",
+              border: "1px solid var(--border-subtle, rgba(128,128,128,0.14))",
               borderRadius: 50,
               padding: "5px 6px",
             }}
@@ -192,7 +192,7 @@ export default function PricingPage() {
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 background: !isAnnual ? "linear-gradient(135deg, #6366f1, #4f46e5)" : "transparent",
-                color: !isAnnual ? "#fff" : "rgba(255,255,255,0.5)",
+                color: !isAnnual ? "#fff" : "var(--fg-tertiary, var(--fg-secondary))",
                 boxShadow: !isAnnual ? "0 2px 12px rgba(99,102,241,0.3)" : "none",
               }}
             >
@@ -209,7 +209,7 @@ export default function PricingPage() {
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 background: isAnnual ? "linear-gradient(135deg, #6366f1, #4f46e5)" : "transparent",
-                color: isAnnual ? "#fff" : "rgba(255,255,255,0.5)",
+                color: isAnnual ? "#fff" : "var(--fg-tertiary, var(--fg-secondary))",
                 boxShadow: isAnnual ? "0 2px 12px rgba(99,102,241,0.3)" : "none",
                 display: "flex",
                 alignItems: "center",
@@ -250,15 +250,15 @@ export default function PricingPage() {
                 key={plan.name}
                 className="tf-pricing-card"
                 style={{
-                  background: plan.popular ? "rgba(99,102,241,0.06)" : "#0a0a0a",
+                  background: plan.popular ? "rgba(99,102,241,0.06)" : "var(--bg-secondary)",
                   borderRadius: 20,
                   padding: "36px 28px",
-                  border: plan.popular ? "2px solid rgba(99,102,241,0.4)" : "1px solid rgba(255,255,255,0.06)",
+                  border: plan.popular ? "2px solid rgba(99,102,241,0.4)" : "1px solid var(--border-subtle, rgba(128,128,128,0.14))",
                   position: "relative",
                   transition: "all 0.4s cubic-bezier(.4,0,.2,1)",
                   display: "flex",
                   flexDirection: "column",
-                  boxShadow: plan.popular ? "0 0 40px rgba(99,102,241,0.12)" : "0 4px 24px rgba(0,0,0,0.3)",
+                  boxShadow: plan.popular ? "0 0 40px rgba(99,102,241,0.12)" : "0 4px 24px rgba(0,0,0,0.12)",
                   overflow: "hidden",
                 }}
               >
@@ -295,10 +295,10 @@ export default function PricingPage() {
                   </span>
                 )}
 
-                <div style={{ fontSize: 19, fontWeight: 600, color: "#ffffff", marginBottom: 4 }}>
+                <div style={{ fontSize: 19, fontWeight: 600, color: "var(--fg-primary)", marginBottom: 4 }}>
                   {plan.name}
                 </div>
-                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
+                <div style={{ fontSize: 14, color: "var(--fg-tertiary, var(--fg-secondary))", marginBottom: 24 }}>
                   {t(plan.name === "Free" ? "pricing.freeDesc" : plan.name === "Pro" ? "pricing.proDesc" : "pricing.studioDesc")}
                 </div>
 
@@ -308,7 +308,7 @@ export default function PricingPage() {
                     style={{
                       fontSize: 44,
                       fontWeight: 700,
-                      color: "#ffffff",
+                      color: "var(--fg-primary)",
                       letterSpacing: "-0.02em",
                       lineHeight: 1,
                       transition: "all 0.3s ease",
@@ -317,13 +317,13 @@ export default function PricingPage() {
                     {displayPrice}
                   </span>
                   {period && (
-                    <span style={{ fontSize: 17, color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>
+                    <span style={{ fontSize: 17, color: "var(--fg-tertiary, var(--fg-secondary))", fontWeight: 400 }}>
                       {period}
                     </span>
                   )}
                 </div>
                 {monthlyEquiv && (
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 28 }}>
+                  <div style={{ fontSize: 13, color: "var(--fg-tertiary, var(--fg-secondary))", marginBottom: 28 }}>
                     {t("pricing.billedAnnually").replace("{price}", monthlyEquiv)}
                   </div>
                 )}
@@ -341,7 +341,7 @@ export default function PricingPage() {
                   }}
                 >
                   {plan.featureKeys.map((key) => (
-                    <li key={key} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14, color: "#ffffff" }}>
+                    <li key={key} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14, color: "var(--fg-primary)" }}>
                       <svg
                         width="16"
                         height="16"
@@ -429,10 +429,10 @@ export default function PricingPage() {
             <polyline points="9 12 11 14 15 10" />
           </svg>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-primary)", marginBottom: 2 }}>
               {t("pricing.guarantee")}
             </div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
+            <div style={{ fontSize: 13, color: "var(--fg-tertiary, var(--fg-secondary))", lineHeight: 1.4 }}>
               {t("pricing.guaranteeDesc")}
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function PricingPage() {
       </section>
 
       {/* Feature Comparison Table */}
-      <section style={{ padding: "80px 24px", background: "rgba(255,255,255,0.02)" }}>
+      <section style={{ padding: "80px 24px", background: "var(--bg-secondary)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <h2
@@ -450,12 +450,12 @@ export default function PricingPage() {
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
                 margin: "0 0 12px",
-                color: "#ffffff",
+                color: "var(--fg-primary)",
               }}
             >
               {t("pricing.compareTitle")}
             </h2>
-            <p style={{ fontSize: 17, color: "rgba(255,255,255,0.5)", maxWidth: 420, margin: "0 auto", lineHeight: 1.5 }}>
+            <p style={{ fontSize: 17, color: "var(--fg-tertiary, var(--fg-secondary))", maxWidth: 420, margin: "0 auto", lineHeight: 1.5 }}>
               {t("pricing.compareSubtitle")}
             </p>
           </div>
@@ -470,8 +470,8 @@ export default function PricingPage() {
             >
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", padding: "16px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, width: "34%" }} />
-                  <th style={{ textAlign: "center", padding: "16px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", fontSize: 15, fontWeight: 700, width: "22%" }}>
+                  <th style={{ textAlign: "left", padding: "16px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", color: "var(--fg-tertiary, var(--fg-secondary))", fontSize: 13, fontWeight: 600, width: "34%" }} />
+                  <th style={{ textAlign: "center", padding: "16px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", color: "var(--fg-secondary)", fontSize: 15, fontWeight: 700, width: "22%" }}>
                     Free
                   </th>
                   <th
@@ -489,7 +489,7 @@ export default function PricingPage() {
                   >
                     Pro
                   </th>
-                  <th style={{ textAlign: "center", padding: "16px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", fontSize: 15, fontWeight: 700, width: "22%" }}>
+                  <th style={{ textAlign: "center", padding: "16px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", color: "var(--fg-secondary)", fontSize: 15, fontWeight: 700, width: "22%" }}>
                     Studio
                   </th>
                 </tr>
@@ -497,16 +497,16 @@ export default function PricingPage() {
               <tbody>
                 {COMPARE_ROWS.map((row, i) => (
                   <tr key={i}>
-                    <td style={{ padding: "14px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: 14, color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>
+                    <td style={{ padding: "14px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", fontSize: 14, color: "var(--fg-secondary)", fontWeight: 500 }}>
                       {t(row.labelKey)}
                     </td>
-                    <td style={{ padding: "14px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)", textAlign: "center" }}>
+                    <td style={{ padding: "14px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", textAlign: "center" }}>
                       <CellContent value={row.free} />
                     </td>
-                    <td style={{ padding: "14px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)", textAlign: "center", background: "rgba(99,102,241,0.04)" }}>
+                    <td style={{ padding: "14px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", textAlign: "center", background: "rgba(99,102,241,0.04)" }}>
                       <CellContent value={row.pro} />
                     </td>
-                    <td style={{ padding: "14px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)", textAlign: "center" }}>
+                    <td style={{ padding: "14px 12px", borderBottom: "1px solid var(--border-subtle, rgba(128,128,128,0.14))", textAlign: "center" }}>
                       <CellContent value={row.studio} />
                     </td>
                   </tr>
@@ -518,7 +518,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing FAQ */}
-      <section style={{ padding: "80px 24px", background: "#111111" }}>
+      <section style={{ padding: "80px 24px", background: "var(--bg-secondary)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <h2
@@ -528,12 +528,12 @@ export default function PricingPage() {
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
                 margin: "0 0 12px",
-                color: "#ffffff",
+                color: "var(--fg-primary)",
               }}
             >
               {t("pricing.faqTitle")}
             </h2>
-            <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", maxWidth: 420, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
+            <p style={{ fontSize: 19, color: "var(--fg-tertiary, var(--fg-secondary))", maxWidth: 420, margin: "0 auto", lineHeight: 1.5, fontWeight: 400 }}>
               {t("pricing.faqSubtitle")}
             </p>
           </div>
@@ -542,21 +542,21 @@ export default function PricingPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "#0a0a0a" }}>
+      <section style={{ padding: "80px 24px 100px", textAlign: "center", background: "var(--bg-primary)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <h2
             style={{
               fontSize: "clamp(28px, 4vw, 40px)",
               fontWeight: 700,
               letterSpacing: "-0.02em",
-              color: "#ffffff",
+              color: "var(--fg-primary)",
               margin: "0 0 12px",
               lineHeight: 1.1,
             }}
           >
             {t("pricing.ctaTitle")}
           </h2>
-          <p style={{ fontSize: 19, color: "rgba(255,255,255,0.5)", margin: "0 0 36px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 19, color: "var(--fg-tertiary, var(--fg-secondary))", margin: "0 0 36px", lineHeight: 1.5 }}>
             {t("pricing.ctaSubtitle")}
           </p>
           <Link
@@ -590,8 +590,8 @@ export default function PricingPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#111111", padding: "32px 24px" }}>
-        <div style={{ maxWidth: 980, margin: "0 auto", textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+      <footer style={{ background: "var(--bg-secondary)", padding: "32px 24px" }}>
+        <div style={{ maxWidth: 980, margin: "0 auto", textAlign: "center", fontSize: 13, color: "var(--fg-tertiary, var(--fg-secondary))" }}>
           {"\u00A9"} 2026 TubeForge. All rights reserved.
         </div>
       </footer>
@@ -599,7 +599,7 @@ export default function PricingPage() {
       <style>{`
         .tf-pricing-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.4) !important;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.12) !important;
         }
         .tf-cta-primary:hover {
           filter: brightness(1.15);

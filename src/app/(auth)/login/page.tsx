@@ -508,6 +508,20 @@ function LoginContent() {
       <p className="mt-4 max-w-[360px] text-center text-xs leading-relaxed text-muted-foreground/70">
         {t('auth.login.consent')}
       </p>
+
+      <a
+        href="https://www.youtube.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="YouTube"
+        className="mt-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <svg width="20" height="14" viewBox="0 0 24 17" fill="none" aria-hidden="true">
+          <path d="M23.5 2.7c-.3-1-1.1-1.8-2.1-2.1C19.6 0 12 0 12 0S4.4 0 2.6.6C1.6.9.8 1.7.5 2.7 0 4.5 0 8.3 0 8.3s0 3.8.5 5.6c.3 1 1.1 1.8 2.1 2.1C4.4 16.5 12 16.5 12 16.5s7.6 0 9.4-.5c1-.3 1.8-1.1 2.1-2.1.5-1.8.5-5.6.5-5.6s0-3.8-.5-5.6z" fill="#FF0000"/>
+          <path d="M9.6 11.9V4.7l6.3 3.6-6.3 3.6z" fill="#fff"/>
+        </svg>
+        <span>Powered by YouTube</span>
+      </a>
     </main>
   );
 }
@@ -570,8 +584,21 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-dvh items-center justify-center bg-background">
+        <main className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-background">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-foreground" />
+          <a
+            href="https://www.youtube.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="YouTube"
+            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <svg width="20" height="14" viewBox="0 0 24 17" fill="none" aria-hidden="true">
+              <path d="M23.5 2.7c-.3-1-1.1-1.8-2.1-2.1C19.6 0 12 0 12 0S4.4 0 2.6.6C1.6.9.8 1.7.5 2.7 0 4.5 0 8.3 0 8.3s0 3.8.5 5.6c.3 1 1.1 1.8 2.1 2.1C4.4 16.5 12 16.5 12 16.5s7.6 0 9.4-.5c1-.3 1.8-1.1 2.1-2.1.5-1.8.5-5.6.5-5.6s0-3.8-.5-5.6z" fill="#FF0000"/>
+              <path d="M9.6 11.9V4.7l6.3 3.6-6.3 3.6z" fill="#fff"/>
+            </svg>
+            <span>Powered by YouTube</span>
+          </a>
         </main>
       }
     >

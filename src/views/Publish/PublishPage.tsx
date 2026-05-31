@@ -116,6 +116,8 @@ export function PublishPage() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [madeForKids, setMadeForKids] = useState(false);
+  // ToS §9.1 compliance — user must explicitly certify content complies with YouTube ToS
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   /* ── Submission state ───────────────────────────────────────────── */
   const [publishState, setPublishState] = useState<PublishState>("idle");
@@ -268,7 +270,7 @@ export function PublishPage() {
   }, [channelId, videoUrl, title, description, tags, scheduleEnabled, scheduleDate, scheduleTime, t]);
 
   const blockers = checks.filter((c) => c.severity === "blocker");
-  const canPublish = blockers.length === 0 && publishState === "idle";
+  const canPublish = blockers.length === 0 && publishState === "idle" && agreedToTerms;
 
   /* ── Publish ────────────────────────────────────────────────────── */
   const handlePublish = useCallback(async () => {
@@ -349,6 +351,10 @@ export function PublishPage() {
     setPublishState("idle");
     setPublishedUrl(null);
     setLastJobId(null);
+    // BUG #7 fix 2026-05-19 (BugHunt): reset §9.1 certification on form reset.
+    // Each NEW video requires its own per-click certification per ToS §9.1.
+    // (Error retry path at line ~324 intentionally does NOT reset — same video, same cert.)
+    setAgreedToTerms(false);
     // intentionally NOT cleared: description, tags, privacy,
     // scheduleEnabled/date/time, madeForKids, channelId
   }, []);
@@ -778,6 +784,22 @@ export function PublishPage() {
               </div>
             </label>
           </SectionCard>
+
+          {/* ToS §9.1 — user-attested compliance certification */}
+          <label className="flex items-start gap-2 text-[13px] text-muted-foreground leading-relaxed mb-3 px-1">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border bg-muted accent-brand-500"
+              aria-label="Certify content complies with YouTube Terms of Service"
+            />
+            <span>
+              By clicking Publish, I certify that this video complies with the{" "}
+              <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-500 underline">YouTube Terms of Service</a>
+              {" "}and Community Guidelines.
+            </span>
+          </label>
 
           {/* Publish CTA — sticky at bottom, respects iPhone home indicator
               via the tf-sticky-mobile-cta utility (env safe-area-inset). */}

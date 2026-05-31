@@ -19,7 +19,7 @@ export default function TermsPage() {
             ['opisanie-servisa', 'Service Description'],
             ['registratsiya', 'Registration & Account'],
             ['podpiski', 'Subscriptions & Payments'],
-            ['youtube-tos', 'YouTube Terms of Service'],
+            ['youtube-tos', 'YouTube API Services'],
             ['dopustimoe-ispolzovanie', 'Acceptable Use'],
             ['intellektualnaya-sobstvennost', 'Intellectual Property'],
             ['ogranichenie-otvetstvennosti', 'Limitation of Liability'],
@@ -43,7 +43,7 @@ export default function TermsPage() {
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">
           TubeForge (hereinafter &mdash; &ldquo;Service&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is an AI-powered platform for YouTube creators,
           providing tools for content creation, thumbnail generation, metadata optimization,
-          video editing, and channel analytics. The Service is available at{' '}
+          video editing, and publishing automation. The Service is available at{' '}
           <a href="https://tubeforge.co" className="text-brand-500">tubeforge.co</a>.
         </p>
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">
@@ -121,17 +121,30 @@ export default function TermsPage() {
 
       {/* 3a */}
       <div className="mb-9">
-        <h2 id="youtube-tos" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">3a. YouTube Terms of Service</h2>
+        <h2 id="youtube-tos" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">3a. YouTube API Services</h2>
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">
-          By using TubeForge&apos;s YouTube features (analytics, channel management, video tools), you agree
-          to the{' '}
+          TubeForge is an API Client of YouTube API Services. By using TubeForge&apos;s
+          YouTube features (channel connections, analytics, publishing, video tools), you
+          acknowledge and agree to be bound by the{' '}
           <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-500">
             YouTube Terms of Service
-          </a>.
-          Your use of YouTube data is also subject to the{' '}
+          </a>{' '}
+          and the{' '}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-500">
             Google Privacy Policy
+          </a>, in addition to these Terms.
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
+          You may revoke TubeForge&apos;s access to your YouTube data at any time via the{' '}
+          <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" className="text-brand-500">
+            Google security settings page
+          </a>{' '}
+          or at{' '}
+          <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-brand-500">
+            myaccount.google.com/permissions
           </a>.
+          For details on how we store, process, and delete YouTube data, see our{' '}
+          <a href="/privacy#youtube-api" className="text-brand-500">Privacy Policy &mdash; YouTube API Services section</a>.
         </p>
       </div>
 
@@ -194,7 +207,7 @@ export default function TermsPage() {
         <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
           <li>Uninterrupted and error-free operation of the Service</li>
           <li>Specific results from using AI tools</li>
-          <li>Growth in metrics or monetization of your YouTube channel</li>
+          <li>Growth in audience reach or revenue of your YouTube channel</li>
           <li>Data safety in case of force majeure</li>
         </ul>
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">

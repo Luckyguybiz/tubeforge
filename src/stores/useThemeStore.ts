@@ -27,6 +27,29 @@ function resolveIsDark(mode: ThemeMode): boolean {
   return mode === 'dark';
 }
 
+/**
+ * Sync resolved theme to DOM attributes + body inline style.
+ *
+ * BugHunt 2026-05-19: Theme toggle previously only updated JS state (zustand
+ * store) — useThemeStore.theme. But Tailwind classes like `text-foreground`
+ * and `bg-card` resolve via CSS vars defined in globals.css under
+ * `[data-theme="light"]` selector. Without this DOM sync, JS state and
+ * CSS vars desynced after every toggle → headings became invisible on light
+ * theme (text-foreground stayed dark-mode-white).
+ *
+ * Also writes body inline bg/color for FOUC-free initial paint (matches
+ * the inline script in src/app/layout.tsx that runs before hydration).
+ */
+function syncThemeToDOM(isDark: boolean): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  if (document.body) {
+    document.body.style.backgroundColor = isDark ? '#0a0a0a' : '#f5f5f7';
+    document.body.style.color = isDark ? '#ffffff' : '#1a1a1a';
+  }
+}
+
 const CYCLE: ThemeMode[] = ['dark', 'light', 'system'];
 
 export const useThemeStore = create<ThemeState>()(
@@ -37,6 +60,7 @@ export const useThemeStore = create<ThemeState>()(
       theme: dark,
       setMode: (mode) => {
         const resolved = resolveIsDark(mode);
+        syncThemeToDOM(resolved);
         set({ mode, isDark: resolved, theme: resolved ? dark : light });
       },
       toggle: () => {
@@ -44,6 +68,7 @@ export const useThemeStore = create<ThemeState>()(
         const idx = CYCLE.indexOf(current);
         const next = CYCLE[(idx + 1) % CYCLE.length]!;
         const resolved = resolveIsDark(next);
+        syncThemeToDOM(resolved);
         set({ mode: next, isDark: resolved, theme: resolved ? dark : light });
       },
     }),
@@ -53,6 +78,7 @@ export const useThemeStore = create<ThemeState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           const resolved = resolveIsDark(state.mode);
+          syncThemeToDOM(resolved);
           state.isDark = resolved;
           state.theme = resolved ? dark : light;
         }
@@ -68,6 +94,7 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
     const { mode } = useThemeStore.getState();
     if (mode === 'system') {
       const resolved = getSystemPrefersDark();
+      syncThemeToDOM(resolved);
       useThemeStore.setState({
         isDark: resolved,
         theme: resolved ? dark : light,

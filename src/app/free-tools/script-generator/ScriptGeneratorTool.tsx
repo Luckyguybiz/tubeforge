@@ -80,8 +80,8 @@ export function ScriptGeneratorTool() {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 12,
     outline: "none",
-    background: "#1a1a1a",
-    color: "#ffffff",
+    background: "var(--bg-tertiary)",
+    color: "var(--fg-primary)",
     fontFamily: "inherit",
     transition: "border-color 0.2s ease",
     boxSizing: "border-box",
@@ -98,7 +98,7 @@ export function ScriptGeneratorTool() {
       {/* Input */}
       <div
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: "28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -111,7 +111,7 @@ export function ScriptGeneratorTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
           }}
         >
@@ -131,8 +131,8 @@ export function ScriptGeneratorTool() {
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
             outline: "none",
-            background: "#1a1a1a",
-            color: "#ffffff",
+            background: "var(--bg-tertiary)",
+            color: "var(--fg-primary)",
             fontFamily: "inherit",
             transition: "border-color 0.2s ease",
             boxSizing: "border-box",
@@ -147,7 +147,7 @@ export function ScriptGeneratorTool() {
                 display: "block",
                 fontSize: 14,
                 fontWeight: 600,
-                color: "#ffffff",
+                color: "var(--fg-primary)",
                 marginBottom: 8,
               }}
             >
@@ -166,7 +166,7 @@ export function ScriptGeneratorTool() {
                 display: "block",
                 fontSize: 14,
                 fontWeight: 600,
-                color: "#ffffff",
+                color: "var(--fg-primary)",
                 marginBottom: 8,
               }}
             >
@@ -245,7 +245,7 @@ export function ScriptGeneratorTool() {
               marginBottom: 12,
             }}
           >
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#ffffff", margin: 0 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--fg-primary)", margin: 0 }}>
               Generated Script
             </h3>
             <button
@@ -269,12 +269,12 @@ export function ScriptGeneratorTool() {
           <div
             style={{
               padding: "20px",
-              background: "#1a1a1a",
+              background: "var(--bg-tertiary)",
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.06)",
               whiteSpace: "pre-wrap",
               fontSize: 15,
-              color: "#ffffff",
+              color: "var(--fg-primary)",
               lineHeight: 1.7,
               fontFamily: "inherit",
               maxHeight: 700,

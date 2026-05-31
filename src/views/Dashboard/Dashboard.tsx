@@ -7,6 +7,7 @@ import { useThemeStore } from "@/stores/useThemeStore";
 import { useLocaleStore } from "@/stores/useLocaleStore";
 import { trpc } from "@/lib/trpc";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { YouTubeAttribution } from "@/components/YouTubeAttribution";
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { toast } from "@/stores/useNotificationStore";
 import { getRecentActivity, type ActivityEntry } from "@/lib/activity-log";
@@ -560,6 +561,9 @@ export function Dashboard() {
               tx(t, "dashboard.heroSub", "Let's grow your channel today")
             )}
           </p>
+          {isConnected && (
+            <div className="mt-2"><YouTubeAttribution /></div>
+          )}
         </div>
         {!profile.isLoading && (
           <div className="flex items-center gap-2 shrink-0">

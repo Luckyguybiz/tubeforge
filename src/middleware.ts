@@ -188,6 +188,21 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
+  // Renamed tool URLs (May 2026 — compliance: drop "YouTube X" branded slugs)
+  // 301 permanent redirects preserve SEO ranking on rename.
+  const TOOL_REDIRECTS: Record<string, string> = {
+    "/tools/youtube-money-calculator": "/tools/revenue-calculator",
+    "/tools/youtube-title-generator": "/tools/ai-title-generator",
+    "/tools/youtube-tag-generator": "/tools/ai-tag-generator",
+    "/tools/youtube-description-generator": "/tools/ai-description-generator",
+    "/tools/youtube-thumbnail-size": "/tools/thumbnail-size-guide",
+    "/tools/youtube-downloader": "/tools/video-inspector",
+  };
+  const redirectTo = TOOL_REDIRECTS[pathname];
+  if (redirectTo) {
+    return NextResponse.redirect(new URL(redirectTo, req.url), 301);
+  }
+
   // Exclude /api/auth/session from rate limit — session checks are frequent
   // and not a brute-force vector (they just read the JWT cookie).
   if (pathname.startsWith('/api/auth/') && pathname !== '/api/auth/session') {

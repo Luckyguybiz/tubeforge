@@ -276,7 +276,7 @@ function ReferralContent() {
             {tx(t, "referral.subheadingEnd", "of their subscription — every month, forever.")}
           </p>
 
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { label: "Min payout", value: "$50" },
               { label: "Top earners", value: "$500+/mo" },

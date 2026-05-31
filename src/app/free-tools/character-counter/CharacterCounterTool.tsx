@@ -95,7 +95,7 @@ export function CharacterCounterTool() {
           <div
             key={field.id}
             style={{
-              background: "#0a0a0a",
+              background: "var(--bg-primary)",
               borderRadius: 18,
               padding: "28px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -116,7 +116,7 @@ export function CharacterCounterTool() {
                   display: "block",
                   fontSize: 14,
                   fontWeight: 600,
-                  color: "#ffffff",
+                  color: "var(--fg-primary)",
                 }}
               >
                 {field.label}
@@ -149,8 +149,8 @@ export function CharacterCounterTool() {
                   border: `1px solid ${current > field.maxChars ? "#ff3b30" : "rgba(255,255,255,0.08)"}`,
                   borderRadius: 12,
                   outline: "none",
-                  background: "#1a1a1a",
-                  color: "#ffffff",
+                  background: "var(--bg-tertiary)",
+                  color: "var(--fg-primary)",
                   fontFamily: "inherit",
                   transition: "border-color 0.2s ease",
                   boxSizing: "border-box",
@@ -172,8 +172,8 @@ export function CharacterCounterTool() {
                   border: `1px solid ${current > field.maxChars ? "#ff3b30" : "rgba(255,255,255,0.08)"}`,
                   borderRadius: 12,
                   outline: "none",
-                  background: "#1a1a1a",
-                  color: "#ffffff",
+                  background: "var(--bg-tertiary)",
+                  color: "var(--fg-primary)",
                   fontFamily: "inherit",
                   transition: "border-color 0.2s ease",
                   boxSizing: "border-box",
@@ -211,7 +211,7 @@ export function CharacterCounterTool() {
                 marginTop: 8,
               }}
             >
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+              <span style={{ fontSize: 13, color: "var(--fg-secondary)" }}>
                 {current} / {field.maxChars} characters
               </span>
               <span
@@ -233,7 +233,7 @@ export function CharacterCounterTool() {
                 background: "rgba(0,113,227,0.04)",
                 borderRadius: 10,
                 fontSize: 13,
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--fg-secondary)",
                 lineHeight: 1.5,
               }}
             >
@@ -269,7 +269,7 @@ export function CharacterCounterTool() {
                 background: item.color,
               }}
             />
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{item.label}</span>
+            <span style={{ fontSize: 13, color: "var(--fg-secondary)" }}>{item.label}</span>
           </div>
         ))}
       </div>

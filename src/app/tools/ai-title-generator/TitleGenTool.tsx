@@ -68,7 +68,7 @@ export function TitleGenTool() {
       {/* Input */}
       <div
         style={{
-          background: "#0a0a0a",
+          background: "var(--bg-primary)",
           borderRadius: 18,
           padding: "28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
@@ -81,7 +81,7 @@ export function TitleGenTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
           }}
         >
@@ -104,8 +104,8 @@ export function TitleGenTool() {
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 12,
             outline: "none",
-            background: "#1a1a1a",
-            color: "#ffffff",
+            background: "var(--bg-tertiary)",
+            color: "var(--fg-primary)",
             fontFamily: "inherit",
             transition: "border-color 0.2s ease",
             boxSizing: "border-box",
@@ -118,7 +118,7 @@ export function TitleGenTool() {
             display: "block",
             fontSize: 14,
             fontWeight: 600,
-            color: "#ffffff",
+            color: "var(--fg-primary)",
             marginBottom: 8,
             marginTop: 16,
           }}
@@ -211,7 +211,7 @@ export function TitleGenTool() {
             style={{
               fontSize: 17,
               fontWeight: 600,
-              color: "#ffffff",
+              color: "var(--fg-primary)",
               marginBottom: 16,
             }}
           >
@@ -227,7 +227,7 @@ export function TitleGenTool() {
                   justifyContent: "space-between",
                   gap: 12,
                   padding: "14px 16px",
-                  background: "#1a1a1a",
+                  background: "var(--bg-tertiary)",
                   borderRadius: 12,
                   border: "1px solid rgba(255,255,255,0.06)",
                   transition: "all 0.2s ease",
@@ -236,7 +236,7 @@ export function TitleGenTool() {
                 <span
                   style={{
                     fontSize: 15,
-                    color: "#ffffff",
+                    color: "var(--fg-primary)",
                     lineHeight: 1.5,
                     flex: 1,
                   }}

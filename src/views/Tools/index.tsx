@@ -23,7 +23,7 @@ const tools: Record<string, () => Promise<{ [key: string]: React.ComponentType }
   'subtitle-remover': () => import('./SubtitleRemover'),
   'reddit-video': () => import('./RedditVideoGenerator'),
   'fake-texts': () => import('./FakeTextsGenerator'),
-  'youtube-downloader': () => import('./YoutubeDownloader'),
+  'video-inspector': () => import('./YoutubeDownloader'),
   'tiktok-downloader': () => import('./TiktokDownloader'),
   'audio-balancer': () => import('./AudioBalancer'),
   'video-compressor': () => import('./VideoCompressor'),
@@ -52,7 +52,7 @@ const COMPONENT_NAMES: Record<string, string> = {
   'subtitle-remover': 'SubtitleRemover',
   'reddit-video': 'RedditVideoGenerator',
   'fake-texts': 'FakeTextsGenerator',
-  'youtube-downloader': 'YoutubeDownloader',
+  'video-inspector': 'YoutubeDownloader',
   'tiktok-downloader': 'TiktokDownloader',
   'audio-balancer': 'AudioBalancer',
   'video-compressor': 'VideoCompressor',
@@ -103,7 +103,7 @@ export const TOOL_IDS = Object.keys(tools);
  */
 export const AVAILABLE_TOOL_IDS = new Set([
   'cut-crop',
-  'youtube-downloader',
+  'video-inspector',
   'video-compressor',
   'mp3-converter',
   'content-planner',

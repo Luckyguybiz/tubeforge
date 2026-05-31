@@ -114,7 +114,7 @@ export function DashboardMockup() {
                 marginBottom: 24,
               }}
             >
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--fg-primary)" }}>
                 Dashboard
               </div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -171,7 +171,7 @@ export function DashboardMockup() {
                     style={{
                       fontSize: 22,
                       fontWeight: 700,
-                      color: "#fff",
+                      color: "var(--fg-primary)",
                       marginBottom: 4,
                     }}
                   >
@@ -187,7 +187,7 @@ export function DashboardMockup() {
             {/* Chart area */}
             <div
               style={{
-                background: "rgba(255,255,255,0.02)",
+                background: "var(--bg-tertiary)",
                 border: "1px solid rgba(255,255,255,0.06)",
                 borderRadius: 12,
                 padding: 16,

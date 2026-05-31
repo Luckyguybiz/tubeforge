@@ -95,7 +95,8 @@ export default function PrivacyPage() {
       <div className="mb-9">
         <h2 id="youtube-api" className="text-xl font-bold mb-3 tracking-tight scroll-mt-24">2a. YouTube API Services</h2>
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">
-          TubeForge uses YouTube API Services. By using TubeForge, you agree to the{' '}
+          TubeForge is an API Client of YouTube API Services. By using TubeForge, you agree
+          to be bound by the{' '}
           <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-brand-500">
             YouTube Terms of Service
           </a>.
@@ -106,18 +107,72 @@ export default function PrivacyPage() {
             Google Privacy Policy
           </a>.
         </p>
+
         <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">YouTube data we collect and process:</p>
         <ul className="text-sm leading-loose text-muted-foreground pl-6 my-3 list-disc">
           <li>Channel name and profile information</li>
           <li>Subscriber count</li>
           <li>Video statistics (views, likes, comments)</li>
           <li>Upload capabilities and channel status</li>
+          <li>OAuth access tokens and refresh tokens (encrypted at rest)</li>
         </ul>
+
+        <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">Per-user data scoping:</p>
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">
-          You may revoke TubeForge&apos;s access to your YouTube data at any time via the{' '}
+          YouTube API data is processed and displayed only within the authenticated session
+          of the user who connected the YouTube account. TubeForge does not aggregate, combine,
+          or display YouTube data across different users. No cross-user dashboards, leaderboards,
+          or comparative analytics involving YouTube data are exposed publicly or to other users.
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
+          TubeForge does not aggregate YouTube API data with data obtained from other platforms,
+          third-party analytics services, or non-YouTube sources without your explicit consent.
+          YouTube API data is kept logically separated from any data originating outside the
+          YouTube API Services.
+        </p>
+
+        <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">Storage and refresh tokens:</p>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
+          YouTube OAuth access tokens and refresh tokens are stored encrypted at rest (AES-256)
+          and used solely to access YouTube API Services on your behalf. Tokens are refreshed
+          automatically while your account remains connected. When you disconnect your YouTube
+          account or delete your TubeForge account, all stored tokens and YouTube-derived data
+          are revoked and deleted from our systems within 30 days, except where retention is
+          required by applicable law.
+        </p>
+
+        <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">Derived metrics and AI processing:</p>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
+          TubeForge generates derived metrics from YouTube API data, including engagement scores,
+          posting-time recommendations, AI-generated thumbnails, titles, descriptions, and tags.
+          These derived metrics are visible only to the channel owner within the authenticated
+          dashboard. Derived metrics are not exported via public APIs, sold, shared with third
+          parties for advertising, or used to train generally available machine learning models.
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
+          To generate AI features (thumbnails, copy, recommendations), YouTube channel metadata
+          (titles, descriptions, statistics) may be transmitted to our AI sub-processors,{' '}
+          <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-brand-500">OpenAI</a>{' '}
+          and{' '}
+          <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-500">Anthropic</a>,
+          under their respective enterprise data-processing agreements. AI providers do not retain
+          your YouTube data beyond what is required to process the request, and your data is not
+          used to train their general models.
+        </p>
+
+        <p className="text-sm leading-relaxed text-foreground font-semibold mb-3">Revoking access:</p>
+        <p className="text-sm leading-relaxed text-muted-foreground mb-3">
+          You may revoke TubeForge&apos;s access to your YouTube data at any time. The fastest
+          way is via &ldquo;Settings&rdquo; &rarr; &ldquo;Connected Accounts&rdquo; &rarr; &ldquo;Disconnect YouTube&rdquo;
+          inside TubeForge. You can also revoke access directly via the{' '}
           <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" className="text-brand-500">
             Google security settings page
+          </a>{' '}
+          or at{' '}
+          <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-brand-500">
+            myaccount.google.com/permissions
           </a>.
+          Upon revocation, all YouTube-derived data is deleted within 30 days.
         </p>
       </div>
 
@@ -176,8 +231,19 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong className="text-foreground font-semibold">OpenAI</strong> &mdash; AI content generation (thumbnails, texts, recommendations).
-            Your content may be processed through OpenAI&apos;s API. We do not send personal data to OpenAI,
-            only project content for generation.
+            Your content may be processed through OpenAI&apos;s API under an enterprise
+            data-processing agreement. OpenAI does not retain your data beyond request
+            processing and does not use it to train its general models.
+          </li>
+          <li>
+            <strong className="text-foreground font-semibold">Anthropic</strong> &mdash; AI assistant (Atlas) and AI-derived metrics from
+            YouTube channel data. Channel metadata may be transmitted to Anthropic&apos;s
+            Claude API under an enterprise data-processing agreement. Anthropic does not
+            retain your data beyond request processing and does not use it to train its
+            general models. See{' '}
+            <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-500">
+              Anthropic Privacy Policy
+            </a>.
           </li>
           <li>
             <strong className="text-foreground font-semibold">Resend</strong> &mdash; sending transactional emails

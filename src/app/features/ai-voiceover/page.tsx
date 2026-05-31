@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { LandingNav, FaqAccordion } from "@/components/landing";
-import Link from "next/link";
+import {
+  Container, Section, Eyebrow, Display, Headline, Lead, Body, Caption, CenteredHeader, CTA, Card,
+} from "@/components/ds";
 
 export const metadata: Metadata = {
   title: "AI Voiceover Generator — 50+ Voices, 30+ Languages",
-  description: "Create professional voiceovers instantly with 50+ AI narrators. Multilingual support, studio-quality output.",
+  description:
+    "Create professional voiceovers instantly with 50+ AI narrators. Multilingual support, studio-quality output — no recording studio required.",
   robots: { index: true, follow: true },
   openGraph: {
     title: "AI Voiceover Generator — 50+ Voices, 30+ Languages",
     description: "Create professional voiceovers instantly with 50+ AI narrators. Multilingual support, studio-quality output.",
     type: "website",
+    locale: "en_US",
     url: "https://tubeforge.co/features/ai-voiceover",
     images: [{ url: "/api/og", width: 1200, height: 630 }],
   },
@@ -27,164 +32,142 @@ const FAQ_ITEMS = [
   { q: "How many languages are supported?", a: "We support 30+ languages including English, Spanish, French, German, Portuguese, Japanese, Korean, Chinese, and more." },
   { q: "Can I preview voices before generating?", a: "Yes! Every voice has a sample preview. Listen before you commit." },
   { q: "Is there a character limit?", a: "Free: 1,000 characters per generation. Pro: 10,000. Studio: 50,000." },
-  { q: "Can I clone my own voice?", a: "Voice cloning is coming soon! Currently we offer 50+ pre-built AI voices." }
+  { q: "Can I clone my own voice?", a: "Voice cloning is coming soon! Currently we offer 50+ pre-built AI voices." },
 ];
+
+const FEATURES = [
+  { title: "50+ AI Voices", desc: "Male, female, young, old, authoritative, friendly — find the perfect voice for your content." },
+  { title: "30+ Languages", desc: "Generate voiceovers in English, Spanish, French, German, Japanese, Korean, and 25+ more." },
+  { title: "Instant Generation", desc: "Type your script, click generate. Get broadcast-quality audio in under 10 seconds." },
+  { title: "Emotion & Tone", desc: "Adjust speaking style: excited, calm, professional, casual, dramatic, or whispered." },
+  { title: "SSML Support", desc: "Fine-tune pronunciation, pauses, emphasis, and speed with advanced SSML markup." },
+  { title: "Audio Export", desc: "Export as MP3, WAV, or OGG. Perfect quality for any platform or editing software." },
+];
+
+const STEPS = [
+  { n: 1, title: "Write Your Script", desc: "Type or paste your narration text. The AI handles punctuation and pacing." },
+  { n: 2, title: "Choose Voice & Style", desc: "Pick from 50+ voices, set the language, and adjust emotion and tone." },
+  { n: 3, title: "Generate & Download", desc: "Click generate and download your voiceover for videos or podcasts." },
+];
+
+const STATS = [
+  { v: "50+", l: "Voice library" },
+  { v: "30+", l: "Languages" },
+  { v: "10s", l: "Generation speed" },
+  { v: "95%", l: "Savings vs voice actor" },
+];
+
+const HERO_IMG = "https://images.pexels.com/photos/6953876/pexels-photo-6953876.jpeg?auto=compress&cs=tinysrgb&w=1600";
 
 export default function Page() {
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#fff" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", color: "var(--fg-primary)" }}>
       <LandingNav />
 
       {/* Hero */}
-      <section style={{ padding: "80px 24px 48px", textAlign: "center" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 980, border: "1px solid rgba(255,255,255,0.1)", marginBottom: 20, fontSize: 12, color: "#10b981", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
-            50+ Voices · AI
+      <Section style={{ paddingTop: "clamp(56px, 9vw, 96px)", paddingBottom: 0 }}>
+        <Container width="default">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 22 }}>
+            <Eyebrow>AI Voiceover · 50+ Voices</Eyebrow>
+            <Display as="h1" style={{ maxWidth: 880 }}>
+              Professional voiceovers in seconds
+            </Display>
+            <Lead style={{ maxWidth: 600 }}>
+              Generate natural-sounding narration with 50+ AI voices across 30+ languages. No recording studio, no voice actor &mdash; just your script and AI.
+            </Lead>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginTop: 4 }}>
+              <CTA href="/register">Try voiceover free</CTA>
+              <CTA href="#how-it-works" variant="secondary">See how it works</CTA>
+            </div>
           </div>
-          <h1 style={{ fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px" }}>
-            Professional Voiceovers in{" "}
-            <span style={{ background: "linear-gradient(135deg, #10b981, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>50+ Voices</span>
-          </h1>
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.7)", maxWidth: 600, margin: "0 auto 28px", lineHeight: 1.6 }}>
-            Generate natural-sounding voiceovers in seconds. Choose from 50+ AI narrators across 30+ languages.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#10b981", color: "#fff", fontSize: 15, fontWeight: 500, padding: "12px 24px", borderRadius: 980, textDecoration: "none" }}>
-              Try Voiceover Free
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-            </Link>
-            <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", fontSize: 15, fontWeight: 500, padding: "12px 24px", borderRadius: 980, textDecoration: "none", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}>
-              See How It Works
-            </a>
+        </Container>
+        <Container width="wide" style={{ marginTop: "clamp(40px, 7vw, 72px)" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 24, overflow: "hidden", border: "1px solid var(--border-subtle, rgba(128,128,128,0.12))", boxShadow: "var(--shadow-xl)" }}>
+            <Image src={HERO_IMG} alt="Creator recording audio with a studio microphone" fill sizes="(max-width: 1200px) 100vw, 1200px" style={{ objectFit: "cover" }} priority />
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Problem */}
-      <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 580, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", margin: "0 0 12px", color: "#fff" }}>Quality Voiceover Without the Recording Studio</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Professional voiceover artists are expensive and slow. AI voiceovers give you broadcast-quality narration instantly.</p>
-        </div>
-      </section>
+      <Section tight>
+        <Container width="narrow">
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
+            <Headline>Quality voiceover without the recording studio</Headline>
+            <Lead>
+              Professional voiceover artists are expensive and slow. AI voiceovers give you broadcast-quality narration instantly &mdash; in any language, in any tone, on your schedule.
+            </Lead>
+          </div>
+        </Container>
+      </Section>
 
       {/* Features */}
-      <section style={{ padding: "60px 24px", background: "#111111" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 8px", color: "#fff" }}>Everything you need</h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", textAlign: "center", margin: "0 0 40px" }}>AI Voiceover Generator</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-            
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>50+ AI Voices</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Male, female, young, old, authoritative, friendly — find the perfect voice for your content.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>30+ Languages</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Generate voiceovers in English, Spanish, French, German, Japanese, Korean, and 25+ more.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Instant Generation</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Type your script, click generate. Get broadcast-quality audio in under 10 seconds.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Emotion & Tone</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Adjust speaking style: excited, calm, professional, casual, dramatic, or whispered.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>SSML Support</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Fine-tune pronunciation, pauses, emphasis, and speed with advanced SSML markup.</p>
-              </div>
-              <div style={{ borderRadius: 12, padding: 20, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Audio Export</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Export as MP3, WAV, or OGG. Perfect quality for any platform or editing software.</p>
-              </div>
+      <Section alt>
+        <Container width="wide">
+          <CenteredHeader eyebrow="Capabilities" headline="Everything you need" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginTop: 56 }}>
+            {FEATURES.map((f) => (
+              <Card key={f.title} style={{ background: "var(--bg-primary)" }}>
+                <h3 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg-primary)", margin: "0 0 8px" }}>{f.title}</h3>
+                <Body style={{ fontSize: 15 }}>{f.desc}</Body>
+              </Card>
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
-      {/* How It Works */}
-      <section id="how-it-works" style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 40px", color: "#fff" }}>How it works</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32 }}>
-            
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#10b981", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>1</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Write Your Script</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Type or paste your narration text. The AI handles punctuation and pacing.</p>
+      {/* How it works */}
+      <Section id="how-it-works">
+        <Container width="default">
+          <CenteredHeader eyebrow="Workflow" headline="From script to audio in three steps" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40, marginTop: 56 }}>
+            {STEPS.map((s) => (
+              <div key={s.n} style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 999, background: "var(--bg-secondary)", border: "1px solid var(--border-default, rgba(128,128,128,0.18))", color: "var(--color-brand-500, #6366f1)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 600 }}>{s.n}</div>
+                <h3 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg-primary)", margin: 0 }}>{s.title}</h3>
+                <Body style={{ fontSize: 15, maxWidth: 280 }}>{s.desc}</Body>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#10b981", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>2</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Choose Voice & Style</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Pick from 50+ voices, set the language, and adjust emotion/tone.</p>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#10b981", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, marginBottom: 10 }}>3</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Generate & Download</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>Click generate and download your voiceover for videos or podcasts.</p>
-              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Stats */}
-      <section style={{ padding: "60px 24px", background: "#111111" }}>
-        <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Results that speak</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#10b981", marginBottom: 2 }}>50+</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Voice Library</div>
+      <Section alt tight>
+        <Container width="default">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 24 }}>
+            {STATS.map((s) => (
+              <div key={s.l} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg-primary)", lineHeight: 1 }}>{s.v}</div>
+                <Caption style={{ display: "block", marginTop: 8 }}>{s.l}</Caption>
               </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#10b981", marginBottom: 2 }}>30+</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Languages</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#10b981", marginBottom: 2 }}>‹ 10 Sec</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Speed</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#10b981", marginBottom: 2 }}>Studio Grade</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Quality</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#10b981", marginBottom: 2 }}>95% Savings</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>vs Voice Actor</div>
-              </div>
-              <div style={{ textAlign: "center", padding: 16, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#10b981", marginBottom: 2 }}>Unlimited</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Iterations</div>
-              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* FAQ */}
-      <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 600, letterSpacing: "-0.02em", textAlign: "center", margin: "0 0 32px", color: "#fff" }}>Frequently asked questions</h2>
-          <FaqAccordion items={FAQ_ITEMS} />
-        </div>
-      </section>
+      <Section>
+        <Container width="default">
+          <CenteredHeader eyebrow="FAQ" headline="Frequently asked questions" />
+          <div style={{ marginTop: 48 }}>
+            <FaqAccordion items={FAQ_ITEMS} />
+          </div>
+        </Container>
+      </Section>
 
       {/* CTA */}
-      <section style={{ padding: "80px 24px", textAlign: "center", background: "#111111" }}>
-        <div style={{ maxWidth: 580, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 600, letterSpacing: "-0.02em", color: "#fff", margin: "0 0 12px" }}>Give Your Videos a Professional Voice</h2>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", margin: "0 0 28px", lineHeight: 1.6 }}>50+ AI narrators. 30+ languages. Generate your first voiceover free.</p>
-          <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#10b981", color: "#fff", fontSize: 16, fontWeight: 500, padding: "12px 28px", borderRadius: 980, textDecoration: "none" }}>
-            Start Free
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-          </Link>
-        </div>
-      </section>
+      <Section alt>
+        <Container width="narrow">
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+            <Headline>Give your videos a professional voice</Headline>
+            <Lead style={{ maxWidth: 480 }}>50+ AI narrators. 30+ languages. Generate your first voiceover free.</Lead>
+            <div style={{ marginTop: 6 }}><CTA href="/register">Start free</CTA></div>
+          </div>
+        </Container>
+      </Section>
 
-      <footer style={{ background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 24, textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>&copy; 2026 TubeForge. All rights reserved.</span>
+      <footer style={{ borderTop: "1px solid var(--border-subtle, rgba(128,128,128,0.12))", padding: 32, textAlign: "center" }}>
+        <Caption>{"©"} 2026 TubeForge. All rights reserved.</Caption>
       </footer>
     </div>
   );

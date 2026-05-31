@@ -55,7 +55,7 @@ export function AnalyzerMockup() {
         <div style={{ padding: 24 }}>
           {/* Title */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--fg-primary)", marginBottom: 4 }}>
               YouTube Video Analyzer
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
@@ -79,7 +79,7 @@ export function AnalyzerMockup() {
                 border: "1px solid rgba(99,102,241,0.3)",
                 background: "rgba(99,102,241,0.05)",
                 fontSize: 13,
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--fg-secondary)",
                 fontFamily: "monospace",
               }}
             >
@@ -235,7 +235,7 @@ export function AnalyzerMockup() {
                     >
                       <path d="M12 2L2 7l10 5 10-5-10-5z" />
                     </svg>
-                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+                    <span style={{ fontSize: 13, color: "var(--fg-secondary)" }}>
                       {title}
                     </span>
                   </div>
