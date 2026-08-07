@@ -8,6 +8,7 @@ import { useLocaleStore } from "@/stores/useLocaleStore";
 import { trpc } from "@/lib/trpc";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { YouTubeAttribution } from "@/components/YouTubeAttribution";
+import { YouTubeMark } from "@/components/YouTubeMark";
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { toast } from "@/stores/useNotificationStore";
 import { getRecentActivity, type ActivityEntry } from "@/lib/activity-log";
@@ -25,7 +26,7 @@ import {
   Calendar,
   Image as ImageIcon,
   ArrowRight,
-  PlayCircle as Youtube,
+  Link2,
   Clock,
   Zap,
   ChevronRight,
@@ -264,8 +265,11 @@ function ConnectBanner({
   return (
     <div className="rounded-2xl bg-gradient-to-br from-brand-500/10 via-card to-card border border-brand-500/20 p-5 sm:p-6 mb-6 sm:mb-8">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center">
-        <div className="size-12 sm:size-14 rounded-xl bg-brand-500/15 flex items-center justify-center text-brand-500 shrink-0">
-          <Youtube className="size-7" />
+        {/* Official YouTube mark on a light surface, per the Branding
+            Guidelines — never tinted to the brand palette, never below
+            20dp high. <YouTubeMark> enforces both. */}
+        <div className="size-12 sm:size-14 rounded-xl bg-white border border-border flex items-center justify-center shrink-0">
+          <YouTubeMark height={28} />
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-base sm:text-lg font-bold text-foreground">
@@ -328,7 +332,9 @@ function OnboardingSteps({
       title: tx(t, "dashboard.onboarding.connect", "Connect your YouTube channel"),
       desc:
         tx(t, "dashboard.onboarding.connectDesc", "Pull in real channel stats and unlock personalized AI"),
-      icon: <Youtube className="size-5" />,
+      // Neutral connector glyph, not a play button — a play-shaped icon
+      // in a YouTube context reads as an unofficial YouTube logo (III.F.2.a).
+      icon: <Link2 className="size-5" />,
       done: isConnected,
       action: { label: tx(t, "dashboard.locked.connect", "Connect"), onClick: onConnect },
     },

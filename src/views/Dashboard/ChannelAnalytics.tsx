@@ -1,27 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { signIn } from 'next-auth/react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useLocaleStore } from '@/stores/useLocaleStore';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCountUp } from '@/hooks/useCountUp';
-
-/* ── Lazy-load recharts ─────────────────────────────── */
-let rechartsCache: typeof import('recharts') | null = null;
-
-function useRecharts() {
-  const [mod, setMod] = useState(rechartsCache);
-  useEffect(() => {
-    if (rechartsCache) return;
-    import('recharts').then((m) => {
-      rechartsCache = m;
-      setMod(m);
-    });
-  }, []);
-  return mod;
-}
+import { YouTubeAttribution } from '@/components/YouTubeAttribution';
 
 /* ── Helpers ─────────────────────────────────────────── */
 
@@ -31,40 +17,20 @@ function formatNumber(n: number): string {
   return n.toLocaleString();
 }
 
-/* ── Tab definitions ─────────────────────────────────── */
-const TAB_KEYS = ['all', 'optimization', 'research', 'analytics', 'achievements'] as const;
-type Tab = (typeof TAB_KEYS)[number];
-
-/* ── Mock keyword data (backend placeholder) ─────────── */
-function generateTrendData() {
-  const data: { date: string; volume: number }[] = [];
-  const now = Date.now();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now - i * 86400000);
-    data.push({
-      date: `${d.getMonth() + 1}/${d.getDate()}`,
-      volume: Math.floor(800 + Math.random() * 600 + (29 - i) * 15),
-    });
-  }
-  return data;
-}
-
-const MOCK_KEYWORD = {
-  keyword: 'youtube automation 2026',
-  searches: 14800,
-  growth: 153,
-  vph: 2400,
-  trend: generateTrendData(),
-  isPro: false, // Unlocked for testing
-};
-
-const MOCK_COMPETITORS = [
-  { name: 'vidIQ', subscribers: '1.2M', avatar: null },
-  { name: 'TubeBuddy', subscribers: '890K', avatar: null },
-  { name: 'Creator Insider', subscribers: '2.1M', avatar: null },
-  { name: 'Think Media', subscribers: '3.4M', avatar: null },
-  { name: 'Channel Makers', subscribers: '720K', avatar: null },
-];
+/*
+ * Removed: the "Trending keyword" and "Competitors" placeholder cards.
+ *
+ * They rendered hardcoded search-volume / growth / views-per-hour figures
+ * with a Math.random() trend line, plus invented subscriber counts for
+ * named third-party YouTube channels. Neither number exists in the
+ * YouTube API, and both sat next to real API data — exactly the
+ * "independently calculated or derived metrics that replace or provide
+ * new data that isn't available via YouTube's API services" that
+ * Developer Policy III.E.4.h prohibits.
+ *
+ * This screen now shows only figures returned by the YouTube Data API
+ * and YouTube Analytics API, attributed to YouTube.
+ */
 
 /* ── Channel selector dropdown ───────────────────────── */
 function ChannelSelector({
@@ -212,165 +178,11 @@ function StatWidget({
   );
 }
 
-/* ── Trending keyword card ───────────────────────────── */
-function TrendingKeywordCard({
-  data,
-  C,
-  recharts,
-  t,
-}: {
-  data: typeof MOCK_KEYWORD;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  recharts: typeof import('recharts') | null;
-  t: (key: string) => string;
-}) {
-  return (
-    <div style={{
-      borderRadius: 16, background: C.card, border: `1px solid ${C.border}`,
-      overflow: 'hidden',
-    }}>
-      {/* Header */}
-      <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{data.keyword}</span>
-            {data.isPro && (
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                padding: '3px 10px', borderRadius: 6,
-                background: `${C.accent}20`, color: C.accent,
-                fontSize: 11, fontWeight: 700, cursor: 'pointer',
-              }}>
-                <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                {t('channel.unlock')}
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: C.sub }}>
-              {formatNumber(data.searches)} {t('channel.searches')}
-            </span>
-            <span style={{
-              fontSize: 12, fontWeight: 600, color: C.green,
-              padding: '2px 8px', borderRadius: 6, background: `${C.green}15`,
-            }}>
-              +{data.growth}%
-            </span>
-          </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', fontWeight: 600 }}>VPH</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: C.blue, letterSpacing: '-.02em' }}>
-            {formatNumber(data.vph)}
-          </div>
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div style={{ padding: '0 16px 16px', height: 200 }}>
-        {recharts ? (
-          <recharts.ResponsiveContainer width="100%" height="100%">
-            <recharts.LineChart data={data.trend} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-              <recharts.CartesianGrid strokeDasharray="3 3" stroke={C.border} />
-              <recharts.XAxis
-                dataKey="date"
-                tick={{ fill: C.dim, fontSize: 10 }}
-                stroke={C.border}
-                interval="preserveStartEnd"
-              />
-              <recharts.YAxis
-                tick={{ fill: C.dim, fontSize: 10 }}
-                stroke={C.border}
-                width={40}
-              />
-              <recharts.Tooltip
-                contentStyle={{
-                  background: C.card, border: `1px solid ${C.border}`,
-                  borderRadius: 10, fontSize: 12,
-                }}
-                labelStyle={{ color: C.sub }}
-                itemStyle={{ color: C.text }}
-              />
-              <recharts.Line
-                type="monotone"
-                dataKey="volume"
-                stroke={C.blue}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: C.blue }}
-              />
-            </recharts.LineChart>
-          </recharts.ResponsiveContainer>
-        ) : (
-          <Skeleton width="100%" height="100%" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Competitors card ────────────────────────────────── */
-function CompetitorsCard({
-  competitors,
-  C,
-  t,
-}: {
-  competitors: typeof MOCK_COMPETITORS;
-  C: ReturnType<typeof useThemeStore.getState>['theme'];
-  t: (key: string) => string;
-}) {
-  return (
-    <div style={{
-      borderRadius: 16, background: C.card, border: `1px solid ${C.border}`,
-      padding: '20px 24px',
-    }}>
-      <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>
-        {t('channel.suggestedCompetitors')}
-      </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {competitors.map((comp) => (
-          <div
-            key={comp.name}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 14px', borderRadius: 12,
-              background: C.surface, transition: 'background .15s',
-            }}
-          >
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${C.accent}, ${C.blue})`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0,
-            }}>
-              {comp.name.charAt(0)}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{comp.name}</div>
-              <div style={{ fontSize: 11, color: C.sub }}>{comp.subscribers} {t('channel.subscribersLabel')}</div>
-            </div>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ── Main export ─────────────────────────────────────── */
 export function ChannelAnalytics() {
   const C = useThemeStore((s) => s.theme);
   const t = useLocaleStore((s) => s.t);
-  const recharts = useRecharts();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>('all');
 
   /* ── Fetch channels ── */
   const channelsQuery = trpc.youtube.getChannels.useQuery(undefined, {
@@ -590,36 +402,10 @@ export function ChannelAnalytics() {
         />
       </div>
 
-      {/* ── Filter tabs ── */}
-      <div style={{
-        display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4,
-        scrollbarWidth: 'none', msOverflowStyle: 'none',
-      }}>
-        {TAB_KEYS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '8px 18px', borderRadius: 10, border: 'none',
-              cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              whiteSpace: 'nowrap', transition: 'all .2s',
-              background: activeTab === tab ? C.accent : C.surface,
-              color: activeTab === tab ? '#fff' : C.sub,
-            }}
-          >
-            {t(`channel.tab.${tab}`)}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Content based on tab ── */}
-      {(activeTab === 'all' || activeTab === 'research') && (
-        <TrendingKeywordCard data={MOCK_KEYWORD} C={C} recharts={recharts} t={t} />
-      )}
-
-      {(activeTab === 'all' || activeTab === 'analytics') && (
-        <CompetitorsCard competitors={MOCK_COMPETITORS} C={C} t={t} />
-      )}
+      {/* III.F.2.1 — the channel list and the subscriber / view figures
+          above come from the YouTube Data API and YouTube Analytics API,
+          so the source is attributed with the YouTube Brand Features. */}
+      <YouTubeAttribution />
     </div>
   );
 }

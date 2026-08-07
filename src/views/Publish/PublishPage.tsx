@@ -8,8 +8,9 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "@/stores/useNotificationStore";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
+import { YouTubeMark } from "@/components/YouTubeMark";
+import { YouTubeAttribution } from "@/components/YouTubeAttribution";
 import {
-  PlayCircle as YoutubeIcon,
   Sparkles,
   Globe,
   Link2,
@@ -426,8 +427,8 @@ export function PublishPage() {
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
-              <YoutubeIcon className="size-5" />
+            <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-white">
+              <YouTubeMark height={22} />
             </div>
             <div className="flex-1">
               <h3 className="text-[15px] font-bold text-foreground">
@@ -1005,7 +1006,6 @@ function ChannelPicker({
   return (
     <section className="mb-5 rounded-2xl border border-border bg-card p-3 shadow-sm">
       <h3 className="mb-2 flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-        <YoutubeIcon className="size-3 text-red-500" />
         {tx(t, "publish.pickChannel", "Publish to channel")}
       </h3>
       <div className="tf-snap-x tf-scrollbar-hidden tf-fade-edge-right flex gap-2 overflow-x-auto pb-1">
@@ -1030,8 +1030,8 @@ function ChannelPicker({
                   className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"
                 />
               ) : (
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-500">
-                  <YoutubeIcon className="size-4" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold uppercase text-muted-foreground" aria-hidden>
+                  {ch.title.trim().charAt(0) || "?"}
                 </div>
               )}
               <div className="text-left">
@@ -1045,6 +1045,10 @@ function ChannelPicker({
           );
         })}
       </div>
+      {/* III.F.2.1 — the channel names, avatars and subscriber counts in
+          this picker are YouTube Data API content, so the source is
+          attributed with the YouTube Brand Features. */}
+      <div className="mt-2 px-1"><YouTubeAttribution /></div>
     </section>
   );
 }
@@ -1117,8 +1121,8 @@ function YouTubePreview({
                 className="size-7 rounded-full object-cover"
               />
             ) : (
-              <div className="flex size-7 items-center justify-center rounded-full bg-red-500/15 text-red-500">
-                <YoutubeIcon className="size-3.5" />
+              <div className="flex size-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold uppercase text-muted-foreground" aria-hidden>
+                {channel.title.trim().charAt(0) || "?"}
               </div>
             )}
             <div className="flex-1 min-w-0">

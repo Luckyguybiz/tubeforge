@@ -11,6 +11,8 @@ import { toast } from "@/stores/useNotificationStore";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 import { getPlanLimits } from "@/lib/constants";
+import { YouTubeMark } from "@/components/YouTubeMark";
+import { YouTubeAttribution } from "@/components/YouTubeAttribution";
 import {
   User,
   CreditCard,
@@ -18,7 +20,7 @@ import {
   Palette,
   Plug,
   Shield,
-  PlayCircle as YoutubeIcon,
+  Radio,
   Check,
   AlertTriangle,
   Loader2,
@@ -67,7 +69,9 @@ interface TabDef {
 const TABS: TabDef[] = [
   { id: "profile",       labelKey: "settings.tab.profile",       fallback: "Profile",       icon: <User className="size-4" /> },
   { id: "plan",          labelKey: "settings.tab.plan",          fallback: "Plan",          icon: <CreditCard className="size-4" /> },
-  { id: "channels",      labelKey: "settings.tab.channels",      fallback: "Channels",      icon: <YoutubeIcon className="size-4" /> },
+  // Neutral 16px glyph: the tab chrome is below the 20dp floor the YouTube
+  // Branding Guidelines set for the brand mark, so no YouTube logo here.
+  { id: "channels",      labelKey: "settings.tab.channels",      fallback: "Channels",      icon: <Radio className="size-4" /> },
   { id: "notifications", labelKey: "settings.tab.notifications", fallback: "Notifications", icon: <Bell className="size-4" /> },
   { id: "appearance",    labelKey: "settings.tab.appearance",    fallback: "Appearance",    icon: <Palette className="size-4" /> },
   { id: "integrations",  labelKey: "settings.tab.integrations",  fallback: "Integrations",  icon: <Plug className="size-4" /> },
@@ -548,7 +552,7 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
 
   return (
     <SettingsCard
-      icon={<YoutubeIcon className="size-4 text-red-500" />}
+      icon={<YouTubeMark height={20} />}
       title={tx(t, "settings.youtubeChannels", "YouTube channels")}
       description={tx(
         t,
@@ -558,8 +562,8 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
     >
       {channels.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-border p-8 text-center">
-          <div className="size-12 mx-auto rounded-xl bg-red-500/10 flex items-center justify-center mb-3">
-            <YoutubeIcon className="size-6 text-red-500" />
+          <div className="size-12 mx-auto rounded-xl bg-white border border-border flex items-center justify-center mb-3">
+            <YouTubeMark height={24} />
           </div>
           <h3 className="text-base font-bold text-foreground mb-1">
             {tx(t, "settings.youtubeChannels.empty", "No channels connected yet")}
@@ -638,7 +642,7 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       // Avatar 404'd (Google/YouTube CDN sometimes rotates
-                      // image hashes) — fall back to the YouTube icon
+                      // image hashes) — fall back to the neutral initial
                       // placeholder via the sibling div.
                       e.currentTarget.style.display = "none";
                       const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
@@ -647,11 +651,15 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
                     className="size-12 shrink-0 rounded-full object-cover ring-2 ring-border transition-all duration-300 group-hover/ch:ring-brand-500/40 group-hover/ch:scale-105"
                   />
                 ) : null}
+                {/* Neutral initial, not a red play glyph — a red play mark
+                    standing in for a channel avatar reads as an unofficial
+                    YouTube logo (Branding Guidelines / III.F.2.a). */}
                 <div
-                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-red-500 transition-transform duration-300 group-hover/ch:scale-105"
+                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold uppercase text-muted-foreground transition-transform duration-300 group-hover/ch:scale-105"
                   style={{ display: ch.thumbnail ? "none" : "flex" }}
+                  aria-hidden
                 >
-                  <YoutubeIcon className="size-5" />
+                  {ch.title.trim().charAt(0) || "?"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="truncate text-sm font-semibold text-foreground">{ch.title}</div>
@@ -675,6 +683,10 @@ function ChannelsTab({ t }: { t: (k: string) => string }) {
               </div>
             ))}
           </div>
+          {/* III.F.2.1 — channel titles, avatars and subscriber counts on
+              this list come from the YouTube Data API, so the source is
+              attributed with the YouTube Brand Features. */}
+          <div className="mt-4"><YouTubeAttribution /></div>
         </>
       )}
     </SettingsCard>

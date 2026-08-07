@@ -3201,5 +3201,6 @@
   "whatsnew.v140.1": "Estudio de diseño con editor de lienzo",
   "whatsnew.v140.2": "Herramienta convertidora de MP4 a GIF",
   "whatsnew.v140.3": "Atajos de teclado mejorados en todas las herramientas",
-  "whatsnew.v140.4": "Optimizaciones de rendimiento y corrección de errores"
+  "whatsnew.v140.4": "Optimizaciones de rendimiento y corrección de errores",
+  "auth.login.subtitlePassword": "Inicia sesión con tu email y contraseña."
 }

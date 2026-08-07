@@ -3248,5 +3248,6 @@
   "whatsnew.v140.1": "Design Studio with canvas editor",
   "whatsnew.v140.2": "MP4 to GIF converter tool",
   "whatsnew.v140.3": "Enhanced keyboard shortcuts across all tools",
-  "whatsnew.v140.4": "Performance optimizations and bug fixes"
+  "whatsnew.v140.4": "Performance optimizations and bug fixes",
+  "auth.login.subtitlePassword": "Sign in with your email and password."
 }

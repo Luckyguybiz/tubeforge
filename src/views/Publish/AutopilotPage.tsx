@@ -26,6 +26,14 @@
  * All views are read-only against UploadJob data. The autopilot
  * level + schedule rules persist client-side as localStorage tokens
  * for now — server persistence happens in Phase 2 of this feature.
+ *
+ * COMPLIANCE (YouTube API Services Developer Policies III.E.4.h):
+ * every number on this page is computed from the user's own UploadJob
+ * rows inside TubeForge. No YouTube API response reaches this screen.
+ * Because of that the page must NOT carry a "Data from YouTube"
+ * attribution and must not display YouTube Brand Features — doing so
+ * would present TubeForge's own figures as independently calculated
+ * YouTube metrics. The copy states the source explicitly instead.
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -34,7 +42,6 @@ import { useLocaleStore } from "@/stores/useLocaleStore";
 import { trpc } from "@/lib/trpc";
 import { toast } from "@/stores/useNotificationStore";
 import { cn } from "@/lib/utils";
-import { YouTubeAttribution } from "@/components/YouTubeAttribution";
 import {
   Zap,
   Activity,
@@ -169,7 +176,7 @@ export function AutopilotPage() {
         body: tx(
           t,
           "autopilot.rec.coverage.body",
-          `Only ${health.breakdown.coverage}% of the last 14 days had a scheduled or queued post. Aim for daily content to keep the YouTube algorithm warm.`,
+          `Only ${health.breakdown.coverage}% of the last 14 days had a post scheduled or queued in TubeForge. A steadier cadence keeps your own upload queue predictable.`,
         ),
         Icon: Calendar,
       });
@@ -280,10 +287,9 @@ export function AutopilotPage() {
                 {tx(
                   t,
                   "autopilot.subtitle",
-                  "Health, cadence and recommendations for your YouTube publishing flow.",
+                  "Delivery health and cadence for the uploads you queued in TubeForge.",
                 )}
               </p>
-              <div className="mt-1.5"><YouTubeAttribution /></div>
             </div>
           </div>
           <div className="flex items-center gap-2 self-start">
@@ -311,7 +317,7 @@ export function AutopilotPage() {
         <section className="tf-content-reveal rounded-2xl border border-border bg-card p-5 shadow-sm md:col-span-1">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             <Heart className="size-3 text-rose-500" />
-            {tx(t, "autopilot.healthTitle", "Health score")}
+            {tx(t, "autopilot.healthTitle", "TubeForge delivery health")}
           </div>
           <div className="mt-3 flex items-end gap-3">
             <span className={cn(
@@ -329,6 +335,18 @@ export function AutopilotPage() {
             <HealthBar label={tx(t, "autopilot.health.coverage", "Coverage (14d)")} value={health.breakdown.coverage} tone="brand" />
             <HealthBar label={tx(t, "autopilot.health.reliability", "Reliability")} value={health.breakdown.reliability} tone="violet" />
           </div>
+          {/* III.E.4.h — these three bars are computed by TubeForge from the
+              user's own UploadJob rows (queued / completed / failed in our
+              worker). None of it comes from, replaces, or extends YouTube
+              API data, and the page states that plainly so it cannot read
+              as an independently derived YouTube metric. */}
+          <p className="mt-4 border-t border-border pt-3 text-[11px] leading-snug text-muted-foreground">
+            {tx(
+              t,
+              "autopilot.healthDisclaimer",
+              "Calculated by TubeForge from the upload jobs you queued in this app. These are not YouTube metrics and are not derived from YouTube data.",
+            )}
+          </p>
         </section>
 
         {/* Recent runs */}
@@ -393,7 +411,7 @@ export function AutopilotPage() {
           </span>
         </div>
         <p className="mt-1 text-[12px] text-muted-foreground">
-          {tx(t, "autopilot.heatmapDesc", "When you typically schedule or upload — hour × weekday density.")}
+          {tx(t, "autopilot.heatmapDesc", "When you typically schedule or upload in TubeForge — hour × weekday density.")}
         </p>
         <div className="mt-4 overflow-x-auto">
           <div className="inline-block min-w-full">
