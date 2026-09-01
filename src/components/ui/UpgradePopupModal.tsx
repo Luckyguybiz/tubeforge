@@ -26,7 +26,6 @@ const FEATURES: FeatureRow[] = [
   { label: 'Video Scoring', free: false, pro: true },
   { label: 'Keyword Research', free: false, pro: true },
   { label: 'Outliers', free: false, pro: true },
-  { label: 'Browser Extension', free: false, pro: true },
 ];
 
 function getDeadline(): number {

@@ -63,10 +63,6 @@ const TOOL_META: Record<string, { name: string; description: string }> = {
     name: 'Video Inspector',
     description: 'View YouTube video info — title, statistics, tags, and description structure. Download thumbnails for inspiration.',
   },
-  'tiktok-downloader': {
-    name: 'TikTok Downloader',
-    description: 'Download TikTok videos without watermarks in high quality for cross-platform content repurposing.',
-  },
   'audio-balancer': {
     name: 'Audio Balancer',
     description: 'Balance audio levels across your video tracks. Normalize volume, reduce peaks, and ensure consistent audio quality.',

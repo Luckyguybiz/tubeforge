@@ -65,7 +65,6 @@ const FEATURES: { name: string; free: boolean; pro: boolean }[] = [
   { name: 'Video Scoring', free: false, pro: true },
   { name: 'Keyword Research', free: false, pro: true },
   { name: 'Outliers', free: false, pro: true },
-  { name: 'Browser Extension', free: true, pro: true },
 ];
 
 /* ── Component ─────────────────────────────────────────── */
@@ -159,6 +158,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
       {/* Backdrop */}
       <div
         onClick={dismiss}
+        data-testid="modal-overlay"
         style={{
           position: 'fixed',
           inset: 0,
@@ -247,6 +247,7 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
               <button
                 key={opt}
                 onClick={() => setInterval(opt)}
+                aria-pressed={interval === opt}
                 style={{
                   padding: '8px 20px',
                   borderRadius: 8,
@@ -371,14 +372,14 @@ export function DashboardUpgradeModal({ userPlan }: DashboardUpgradeModalProps) 
               <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
                 {feat.name}
               </span>
-              <span style={{ textAlign: 'center', fontSize: 14 }}>
+              <span style={{ textAlign: 'center', fontSize: 14 }} data-check={feat.free ? 'true' : 'false'}>
                 {feat.free ? (
                   <span style={{ color: '#10b981' }}>&#x2713;</span>
                 ) : (
                   <span style={{ color: 'rgba(255,255,255,0.15)' }}>&#x2014;</span>
                 )}
               </span>
-              <span style={{ textAlign: 'center', fontSize: 14 }}>
+              <span style={{ textAlign: 'center', fontSize: 14 }} data-check={feat.pro ? 'true' : 'false'}>
                 <span style={{ color: '#10b981' }}>&#x2713;</span>
               </span>
             </div>

@@ -12,7 +12,6 @@ import { assetRouter } from './asset';
 import { folderRouter } from './folder';
 import { referralRouter } from './referral';
 import { analyticsRouter } from './analytics';
-import { vpnRouter } from './vpn';
 import { apikeyRouter } from './apikey';
 import { webhookRouter } from './webhook';
 import { mediaRouter } from './media';
@@ -39,7 +38,6 @@ export const appRouter = router({
   folder: folderRouter,
   referral: referralRouter,
   analytics: analyticsRouter,
-  vpn: vpnRouter,
   apikey: apikeyRouter,
   webhook: webhookRouter,
   media: mediaRouter,

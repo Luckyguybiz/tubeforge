@@ -163,7 +163,7 @@ npx prisma migrate deploy
 npx prisma db pull --print
 ```
 
-Confirm the `ProcessedEvent` table exists (used for webhook idempotency) along with `User.stripeId`, `User.plan`, `Payout`, and `VpnPeer` tables.
+Confirm the `ProcessedEvent` table exists (used for webhook idempotency) along with `User.stripeId`, `User.plan`, `Payout` tables (`VpnPeer` remains in the schema but is unused).
 
 ### 5.3 Backups
 
@@ -286,32 +286,12 @@ DELETE FROM "ProcessedEvent" WHERE "createdAt" < NOW() - INTERVAL '30 days';
 
 ---
 
-## 8. Chrome Extension Submission
+## 8. Chrome Extension (retired)
 
-The Chrome extension lives in the `extension/` directory (if present; otherwise built separately).
-
-### 8.1 Pre-submission Checklist
-
-- [ ] Update `manifest.json` version number
-- [ ] Ensure `permissions` are minimal (only what the extension actually needs)
-- [ ] Verify the extension works with the production domain (`tubeforge.co`)
-- [ ] Create promotional images: 440x280 (small tile), 920x680 (large tile), 1280x800 (marquee)
-- [ ] Write a clear store listing description
-
-### 8.2 Submit to Chrome Web Store
-
-1. Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
-2. Pay the one-time $5 developer registration fee (if not already done).
-3. Click **New Item** and upload a `.zip` of the extension directory.
-4. Fill in listing details, screenshots, and privacy practices.
-5. Submit for review (typically 1-3 business days).
-
-### 8.3 Post-publication
-
-- Pin the published extension URL in your site footer / download page.
-- Monitor reviews and crash reports in the developer dashboard.
-
----
+The Chrome extension was removed from the repository on 2026-09-02 (see
+`YOUTUBE_API_COMPLIANCE.md` §8). If a listing still exists in the Chrome Web
+Store Developer Dashboard, unpublish it and remove any links to it from the
+site.
 
 ## 9. Error Monitoring (Sentry)
 

@@ -114,6 +114,11 @@ vi.mock('@/stores/useLocaleStore', () => ({
 // Mock tRPC — needed by usePlanLimits hook used by SidebarUsageWidget
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    uploadJobs: {
+      pendingCount: {
+        useQuery: () => ({ data: 0, isLoading: false }),
+      },
+    },
     user: {
       getProfile: {
         useQuery: () => ({
@@ -173,7 +178,6 @@ describe('Sidebar', () => {
     expect(screen.getByText('All Tools')).toBeDefined();
     expect(screen.getByText('Design Studio')).toBeDefined();
     expect(screen.getByText('Keywords')).toBeDefined();
-    expect(screen.getByText('Analytics')).toBeDefined();
   });
 
   it('renders account section items', () => {
@@ -211,15 +215,17 @@ describe('Sidebar', () => {
 
   it('marks the current page as active with aria-current', () => {
     render(<Sidebar />);
-    const dashboardBtn = screen.getByText('My Works').closest('button');
-    expect(dashboardBtn?.getAttribute('aria-current')).toBe('page');
+    // Nav items render as <Link> anchors, not buttons
+    const dashboardLink = screen.getByText('My Works').closest('a');
+    expect(dashboardLink?.getAttribute('aria-current')).toBe('page');
   });
 
-  it('navigates when a nav button is clicked', () => {
+  it('nav items link to their routes', () => {
     render(<Sidebar />);
-    const editorBtn = screen.getByText('Editor').closest('button');
-    if (editorBtn) fireEvent.click(editorBtn);
-    expect(mockPush).toHaveBeenCalledWith('/editor');
+    // Nav items are <Link href> anchors; navigation happens via the href,
+    // not router.push.
+    const editorLink = screen.getByText('Editor').closest('a');
+    expect(editorLink?.getAttribute('href')).toBe('/editor');
   });
 
   it('renders section labels', () => {

@@ -16,10 +16,16 @@ const eslintConfig = [
     },
   },
 
-  // General rule overrides
+  // General rule overrides — scoped to the same files as eslint-config-next's
+  // plugin block, otherwise ESLint 9 fails on *.cjs files where the
+  // react-hooks plugin is not registered.
   {
+    files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
     rules: {
       '@next/next/no-img-element': 'off',
+      // Marketing copy uses plain apostrophes/quotes in JSX text; escaping them
+      // adds noise without fixing anything real.
+      'react/no-unescaped-entities': 'off',
       // Disable React Compiler rules (experimental, causes false positives)
       'react-hooks/rules-of-hooks': 'warn',
       'react-hooks/preserve-manual-memoization': 'off',
@@ -27,6 +33,14 @@ const eslintConfig = [
       'react-hooks/purity': 'off',
       'react-hooks/refs': 'off',
       'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+
+  // Do not report stale eslint-disable comments as warnings (they inflate
+  // the warning count without pointing at code problems).
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off',
     },
   },
 

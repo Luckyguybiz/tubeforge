@@ -36,7 +36,6 @@ import {
   Languages,
   Key,
   Zap,
-  Globe,
   Sparkles,
   ChevronRight,
   RefreshCw,
@@ -853,20 +852,9 @@ function IntegrationsTab({ t }: { t: (k: string) => string }) {
       <SettingsCard
         icon={<Zap className="size-4" />}
         title={tx(t, "settings.integrations.more", "More integrations")}
-        description={tx(t, "settings.integrations.moreDesc", "VPN, AI voice cloning, white-label embedding")}
+        description={tx(t, "settings.integrations.moreDesc", "AI voice cloning, white-label embedding")}
       >
         <div className="grid sm:grid-cols-2 gap-3">
-          <IntegrationCard
-            icon={
-              <div className="size-9 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-500">
-                <Globe className="size-4" />
-              </div>
-            }
-            title={tx(t, "settings.vpn", "Built-in VPN")}
-            description={tx(t, "settings.vpn.desc", "WireGuard config for region-restricted YouTube features")}
-            action={tx(t, "settings.vpn.config", "Get config")}
-            href="/vpn"
-          />
           <IntegrationCard
             icon={
               <div className="size-9 rounded-lg bg-rose-500/15 flex items-center justify-center text-rose-500">

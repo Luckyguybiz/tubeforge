@@ -256,7 +256,7 @@ export function YoutubeDownloader() {
 
     try {
       const res = await fetch(
-        `/api/tools/youtube-download?url=${encodeURIComponent(videoUrl)}`,
+        `/api/tools/video-inspector?url=${encodeURIComponent(videoUrl)}`,
         { signal: controller.signal },
       );
 
@@ -369,7 +369,7 @@ export function YoutubeDownloader() {
     }, 30_000);
 
     try {
-      const res = await fetch('/api/tools/youtube-download', {
+      const res = await fetch('/api/tools/video-inspector', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoId: videoInfo.videoId }),

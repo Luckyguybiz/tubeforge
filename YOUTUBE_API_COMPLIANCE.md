@@ -87,6 +87,29 @@ YouTube API data is NEVER combined with data from TikTok, Instagram, VK Clips, T
 
 Promo codes (e.g., `SHORTS2026`) provide discount on TubeForge subscription tiers only. They do NOT grant extended access to YouTube API data, longer retention windows, or additional API quota.
 
+## 8. Removed surfaces (September 2026)
+
+To keep the API Client strictly within the approved use case (creator tools
+for the user's own channel: thumbnails, publishing, own-channel statistics)
+and to remove any surface that could be read as accessing YouTube content
+outside of YouTube API Services (Policy III.E.6), the following were removed
+from the codebase on 2026-09-02:
+
+- **Chrome extension** (`chrome-extension/`) — a video downloader that used a
+  third-party service (Cobalt). Retired; the Web Store listing must be
+  unpublished.
+- **TikTok downloader** (`/api/tools/tiktok-download`, `/tools/tiktok-downloader`)
+  — third-party download service; also removed so that no "downloader"
+  surface exists under the TubeForge brand.
+- **VPN** (`/vpn`, `vpn` tRPC router, WireGuard helpers, VPN plan feature,
+  Stripe downgrade hooks) — unrelated to the approved use case.
+- `/api/tools/youtube-download` renamed to `/api/tools/video-inspector`.
+  The endpoint only ever called the YouTube Data API (`videos.list`) and
+  the public oEmbed endpoint; the old path name was misleading.
+
+The `VpnPeer` database table is intentionally left in place (no schema drop
+in this change); it is no longer read or written by the application.
+
 ## Contact
 
 For YouTube API compliance questions: support@tubeforge.co

@@ -72,7 +72,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/tools/subtitle-remover', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/tools/reddit-video', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/tools/fake-texts', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },
-    { path: '/tools/tiktok-downloader', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/tools/audio-balancer', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/tools/voice-changer', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/tools/face-swap', lastModified: '2026-03-22', changeFrequency: 'monthly', priority: 0.6 },

@@ -266,8 +266,8 @@ describeIfAvailable('DashboardUpgradeModal', () => {
       // Advance far into the future (48 hours)
       act(() => { vi.advanceTimersByTime(48 * 60 * 60 * 1000); });
 
-      const timerEl = screen.getByTestId?.('countdown-timer')
-        ?? document.querySelector('[data-testid="countdown-timer"]');
+      // The promo block (and its timer) is hidden once the countdown expires.
+      const timerEl = screen.queryByTestId('countdown-timer');
       const text = timerEl?.textContent ?? '';
 
       // Should not contain negative numbers
@@ -363,7 +363,6 @@ describeIfAvailable('DashboardUpgradeModal', () => {
       'Video Scoring',
       'Keyword Research',
       'Outliers',
-      'Browser Extension',
     ];
 
     it('renders all required features in comparison', () => {
