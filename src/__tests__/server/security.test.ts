@@ -436,7 +436,7 @@ describe('Security invariants', () => {
       const caller = createCaller(db, makeSession());
       const result = await caller.checkAI();
       expect(result.allowed).toBe(true);
-      expect(result.remaining).toBe(5);
+      expect(result.remaining).toBe(AI_LIMITS.FREE);
     });
   });
 

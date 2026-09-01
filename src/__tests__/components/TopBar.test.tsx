@@ -64,6 +64,24 @@ vi.mock('@/stores/useMobileMenuStore', () => ({
     }),
 }));
 
+vi.mock('@/hooks/useNotificationSync', () => ({
+  useNotificationSync: () => undefined,
+}));
+
+vi.mock('@/lib/trpc', () => {
+  const mutation = () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false });
+  return {
+    trpc: {
+      notification: {
+        markRead: { useMutation: mutation },
+        markAllRead: { useMutation: mutation },
+        clearAll: { useMutation: mutation },
+        list: { useQuery: () => ({ data: { items: [] } }) },
+      },
+    },
+  };
+});
+
 vi.mock('@/lib/constants', () => ({
   NAV: [
     { id: 'dashboard', label: 'Dashboard' },
