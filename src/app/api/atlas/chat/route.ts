@@ -39,6 +39,7 @@ import {
   type AtlasStreamEvent,
 } from '@/server/atlas/sse';
 import type Anthropic from '@anthropic-ai/sdk';
+import type { Session } from 'next-auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
 async function* runAtlasTurn(opts: {
   client: ReturnType<typeof getAnthropicClient>;
   userId: string;
-  session: NonNullable<Awaited<ReturnType<typeof auth>>>;
+  session: Session;
   conversationId: string;
   userMessageId: string;
   messages: Anthropic.MessageParam[];
