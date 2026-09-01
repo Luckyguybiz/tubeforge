@@ -14,10 +14,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 /* ── Mock modules ──────────────────────────────────────────────── */
 
 const mockSendEmail = vi.fn().mockResolvedValue({});
-const mockRemovePeer = vi.fn();
 
 vi.mock('@/lib/email', () => ({ sendEmail: (...args: unknown[]) => mockSendEmail(...args) }));
-vi.mock('@/lib/wireguard', () => ({ removePeerFromServer: (...args: unknown[]) => mockRemovePeer(...args) }));
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({
     info: vi.fn(),
@@ -184,9 +182,6 @@ function makeDb(): MockDb {
     },
     payout: {
       create: vi.fn().mockResolvedValue({ id: 'payout-1' }),
-    },
-    vpnPeer: {
-      findUnique: vi.fn().mockResolvedValue(null),
     },
     $transaction: vi.fn(async (ops: any[]) => Promise.all(ops)),
   };

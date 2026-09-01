@@ -363,7 +363,6 @@ describeIfAvailable('DashboardUpgradeModal', () => {
       'Video Scoring',
       'Keyword Research',
       'Outliers',
-      'Browser Extension',
     ];
 
     it('renders all required features in comparison', () => {

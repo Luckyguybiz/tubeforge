@@ -26,7 +26,6 @@ import {
   Clapperboard,
   ImageOff,
   Volume2,
-  Download,
   RefreshCw,
   Sliders,
   Zap,
@@ -375,21 +374,6 @@ function getTools(t: (key: string) => string): ToolDef[] {
       badge: "FREE",
       gradient: "from-rose-500 to-indigo-500",
       Icon: Search,
-    },
-    {
-      id: "tiktok-downloader",
-      name: "TikTok Downloader",
-      subtitle: tx(t, "toolshub.tool.tiktok-downloader.subtitle", "No watermark · HD"),
-      description: tx(
-        t,
-        "toolshub.tool.tiktok-downloader.description",
-        "Download TikTok videos in HD without watermark for analysis.",
-      ),
-      category: "downloaders",
-      route: "/tools/tiktok-downloader",
-      available: false,
-      gradient: "from-indigo-700 to-indigo-500",
-      Icon: Download,
     },
 
     /* ── Free Tools ────────────────────────────────────── */

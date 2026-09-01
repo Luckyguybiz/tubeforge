@@ -27,7 +27,6 @@ const PLANS_MONTHLY = [
     features: [
       "Unlimited downloads",
       "All AI tools",
-      "VPN for YouTube",
       "Unlimited thumbnails",
       "A/B thumbnail testing",
       "50 GB storage",

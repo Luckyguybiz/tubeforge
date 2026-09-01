@@ -240,7 +240,6 @@ export default function middleware(req: NextRequest) {
     '/contact',
     '/help',
     '/compare',
-    '/vpn',
     '/free-tools',
     '/api/free-tools',
     '/api/auth',

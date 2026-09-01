@@ -44,7 +44,7 @@ const PRICING_JSON_LD = {
     featureList: "7 AI Video Models, AI Thumbnails, Image-to-Video, SEO Metadata, YouTube Upload, Team Collaboration",
     offers: [
       { "@type": "Offer", name: "Free", price: "0", priceCurrency: "USD", description: "50 AI generations/month, 3 projects, 500MB storage" },
-      { "@type": "Offer", name: "Pro", price: "12", priceCurrency: "USD", billingIncrement: 1, unitCode: "MON", description: "500 AI generations/month, 25 projects, 5GB storage, VPN" },
+      { "@type": "Offer", name: "Pro", price: "12", priceCurrency: "USD", billingIncrement: 1, unitCode: "MON", description: "500 AI generations/month, 25 projects, 5GB storage" },
       { "@type": "Offer", name: "Studio", price: "30", priceCurrency: "USD", billingIncrement: 1, unitCode: "MON", description: "2000 AI generations/month, unlimited projects, 50GB, team up to 10" },
     ],
   },

@@ -65,7 +65,6 @@ const FEATURES: { name: string; free: boolean; pro: boolean }[] = [
   { name: 'Video Scoring', free: false, pro: true },
   { name: 'Keyword Research', free: false, pro: true },
   { name: 'Outliers', free: false, pro: true },
-  { name: 'Browser Extension', free: true, pro: true },
 ];
 
 /* ── Component ─────────────────────────────────────────── */

@@ -92,7 +92,7 @@ function formatDuration(totalSeconds: number): string {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
- * GET /api/tools/youtube-download?url=<youtube_url>
+ * GET /api/tools/video-inspector?url=<youtube_url>
  *
  * Returns video metadata fetched via YouTube's free oEmbed endpoint.
  * ══════════════════════════════════════════════════════════════════════ */
@@ -177,7 +177,7 @@ export async function GET(req: NextRequest) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
- * POST /api/tools/youtube-download
+ * POST /api/tools/video-inspector
  *
  * Video Inspector — returns public YouTube Data API info (title, stats,
  * public info for a YouTube video.

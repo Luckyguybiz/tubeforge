@@ -234,16 +234,6 @@ function getTools(t: (key: string) => string): ToolDef[] {
     badge: 'FREE',
     gradient: ['#ef4444', '#6366f1'],
   },
-  {
-    id: 'tiktok-downloader',
-    name: 'TikTok Downloader',
-    subtitle: t('toolshub.tool.tiktok-downloader.subtitle'),
-    description: t('toolshub.tool.tiktok-downloader.description'),
-    category: 'downloaders',
-    route: '/tools/tiktok-downloader',
-    available: false,
-    gradient: ['#3730a3', '#6366f1'],
-  },
 
   /* ── Free Tools ────────────────────────────────────── */
   {
@@ -561,11 +551,6 @@ const TOOL_ICONS: Record<string, (color: string) => React.ReactNode> = {
   'youtube-downloader': (c) => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
-    </svg>
-  ),
-  'tiktok-downloader': (c) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 12a4 4 0 104 4V4c1.5 2 4 3 6 3" />
     </svg>
   ),
   'audio-balancer': (c) => (
