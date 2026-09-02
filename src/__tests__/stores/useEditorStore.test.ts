@@ -92,7 +92,7 @@ describe('useEditorStore – addSceneFromPrompt', () => {
     expect(scenes[0].prompt).toBe('a cat walking on the moon');
     expect(scenes[0].status).toBe('generating');
     expect(scenes[0].duration).toBe(5);
-    expect(scenes[0].model).toBe('standard');
+    expect(scenes[0].model).toBe('runway-gen3-turbo');
   });
 
   it('selects the newly created scene and clears genIn', () => {

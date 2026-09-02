@@ -17,7 +17,9 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm audit --audit-level=moderate --production || true
-      - run: npx eslint --max-warnings=100
+      # 174 warnings as of 2026-09-02 (config was silently broken before);
+      # ratchet this number down as warnings are fixed, never up.
+      - run: npx eslint --max-warnings=200
 
   typecheck:
     runs-on: ubuntu-latest

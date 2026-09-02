@@ -313,7 +313,7 @@ describe('UpgradePopupModal', () => {
   /* ── 7. Feature comparison table ───────────────────────── */
 
   describe('Feature comparison table', () => {
-    it('renders all 5 feature rows', () => {
+    it('renders all 4 feature rows', () => {
       renderModal('FREE');
       act(() => { vi.advanceTimersByTime(900); });
 
@@ -321,7 +321,6 @@ describe('UpgradePopupModal', () => {
       expect(screen.getByText('Video Scoring')).toBeDefined();
       expect(screen.getByText('Keyword Research')).toBeDefined();
       expect(screen.getByText('Outliers')).toBeDefined();
-      expect(screen.getByText('Browser Extension')).toBeDefined();
     });
 
     it('renders Free and Pro column headers', () => {

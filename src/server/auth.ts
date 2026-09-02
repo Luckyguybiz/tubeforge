@@ -18,6 +18,7 @@ import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { consumeCode, normalizeEmail } from '@/lib/email-code';
 import { verifyPassword } from '@/lib/password';
+import { baseOAuthScopes } from '@/lib/youtube/token';
 
 // Capture last auth error for diagnostics
 let _lastAuthError: unknown = null;
@@ -35,14 +36,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: env.AUTH_GOOGLE_SECRET,
       authorization: {
         params: {
-          scope: [
-            'openid',
-            'email',
-            'profile',
-            'https://www.googleapis.com/auth/youtube.readonly',
-            'https://www.googleapis.com/auth/yt-analytics.readonly',
-            'https://www.googleapis.com/auth/youtube.upload',
-          ].join(' '),
+          // readonly + analytics.readonly + upload; youtube.force-ssl is
+          // added only when YOUTUBE_MANAGE_SCOPE=1 (see lib/youtube/token).
+          scope: baseOAuthScopes().join(' '),
           access_type: 'offline',
           prompt: 'consent',
         },

@@ -84,7 +84,7 @@ export function DashboardMockup() {
             >
               TubeForge
             </div>
-            {["Dashboard", "Videos", "Thumbnails", "AI Tools", "Analytics", "VPN", "Settings"].map(
+            {["Dashboard", "Videos", "Thumbnails", "AI Tools", "Analytics", "Settings"].map(
               (item, i) => (
                 <div
                   key={i}

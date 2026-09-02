@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authenticateApiRequest } from '@/lib/api-auth';
 import { env } from '@/lib/env';
 import { db } from '@/server/db';
+import { manageScopeEnabled, YOUTUBE_MANAGE_SCOPE } from '@/lib/youtube/token';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -93,6 +94,9 @@ export async function POST(req: Request) {
       'profile',
       'https://www.googleapis.com/auth/youtube.readonly',
       'https://www.googleapis.com/auth/youtube.upload',
+      // Title/description edits + comment replies via MCP need force-ssl;
+      // only requested when the scope is enabled on the consent screen.
+      ...(manageScopeEnabled() ? [YOUTUBE_MANAGE_SCOPE] : []),
     ].join(' '),
   );
   oauth.searchParams.set('access_type', 'offline');

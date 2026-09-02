@@ -87,6 +87,62 @@ YouTube API data is NEVER combined with data from TikTok, Instagram, VK Clips, T
 
 Promo codes (e.g., `SHORTS2026`) provide discount on TubeForge subscription tiers only. They do NOT grant extended access to YouTube API data, longer retention windows, or additional API quota.
 
+## 8. Removed surfaces (September 2026)
+
+To keep the API Client strictly within the approved use case (creator tools
+for the user's own channel: thumbnails, publishing, own-channel statistics)
+and to remove any surface that could be read as accessing YouTube content
+outside of YouTube API Services (Policy III.E.6), the following were removed
+from the codebase on 2026-09-02:
+
+- **Chrome extension** (`chrome-extension/`) — a video downloader that used a
+  third-party service (Cobalt). Retired; the Web Store listing must be
+  unpublished.
+- **TikTok downloader** (`/api/tools/tiktok-download`, `/tools/tiktok-downloader`)
+  — third-party download service; also removed so that no "downloader"
+  surface exists under the TubeForge brand.
+- **VPN** (`/vpn`, `vpn` tRPC router, WireGuard helpers, VPN plan feature,
+  Stripe downgrade hooks) — unrelated to the approved use case.
+- `/api/tools/youtube-download` renamed to `/api/tools/video-inspector`.
+  The endpoint only ever called the YouTube Data API (`videos.list`) and
+  the public oEmbed endpoint; the old path name was misleading.
+
+The `VpnPeer` database table is intentionally left in place (no schema drop
+in this change); it is no longer read or written by the application.
+
+## 9. MCP server (September 2026)
+
+`/api/mcp` exposes the existing creator tools to AI assistants over the Model
+Context Protocol. It is the same API Client (project 78786866479), the same
+OAuth tokens and the same use case: **tools for the user's own channel**.
+
+- **Scope.** Every request is authenticated with a TubeForge API key and can
+  only reach channels connected to that key (the key owner's channels and
+  channels their end-users connected through the Publishing API OAuth flow,
+  §Phase 3b). There is no way to address a channel outside that set.
+- **No aggregation (III.E.2).** Tools read one channel at a time, using that
+  channel owner's OAuth token. Nothing is combined across content owners.
+- **No derived metrics (III.E.4.h).** Tool results contain raw Data API fields
+  (`statistics.*`, `snippet.*`, `status.*`, `contentDetails.duration`) and raw
+  YouTube Analytics API report rows. No scores, projections or benchmarks.
+- **Retention (III.E.4.a–g).** The MCP layer stores nothing new. It reads the
+  existing `Channel` rows (30-day cleanup cron, §3) and `UploadJob` rows the
+  user created. Analytics windows are capped at 28 days.
+- **Writes are user-approved.** `tubeforge_update_videos` and
+  `tubeforge_reply_comments` return a preview with `confirm=false` and only
+  change data on YouTube when called again with `confirm=true`, after the
+  assistant has shown the preview to the user.
+- **Quota.** Reads use `playlistItems.list` / `videos.list` /
+  `commentThreads.list` (1 unit each). `search.list` is not used. Writes use
+  `videos.update`, `comments.insert`, `thumbnails.set` (50 units each). Each
+  result reports `quotaUnits`.
+- **Scopes.** Read tools and upload scheduling work with the scopes already
+  approved (`youtube.readonly`, `yt-analytics.readonly`, `youtube.upload`).
+  Editing metadata and replying to comments require `youtube.force-ssl`; it is
+  requested only when `YOUTUBE_MANAGE_SCOPE=1` is set after the scope has been
+  added to the consent screen, and the tools return `insufficient_scope`
+  otherwise.
+
 ## Contact
 
 For YouTube API compliance questions: support@tubeforge.co

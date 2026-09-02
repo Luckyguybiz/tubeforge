@@ -27,15 +27,26 @@ export interface ApiAuthContext {
 }
 
 /**
+ * MCP clients (Claude, Cursor, ChatGPT) send credentials as
+ * `Authorization: Bearer tf_…`. Accept that as an alias of X-Forge-Key.
+ * Only TubeForge keys are accepted — anything not starting with `tf_`
+ * is ignored so unrelated bearer tokens never reach the key lookup.
+ */
+export function extractBearerKey(authorization: string | null): string | null {
+  if (!authorization) return null;
+  const m = /^Bearer\s+(tf_[A-Za-z0-9]+)\s*$/i.exec(authorization);
+  return m ? m[1] : null;
+}
+
+/**
  * Resolve the X-Forge-Key header to an ApiAuthContext, or return a
  * NextResponse to short-circuit the request with proper JSON error.
  */
 export async function authenticateApiRequest(req: Request): Promise<ApiAuthContext | NextResponse> {
-  const header =
-    req.headers.get('x-forge-key') ?? req.headers.get('X-Forge-Key');
+  const header = req.headers.get('x-forge-key') ?? extractBearerKey(req.headers.get('authorization'));
   if (!header) {
     return NextResponse.json(
-      { error: { code: 'missing_api_key', message: 'X-Forge-Key header is required' } },
+      { error: { code: 'missing_api_key', message: 'X-Forge-Key header (or Authorization: Bearer tf_…) is required' } },
       { status: 401 },
     );
   }

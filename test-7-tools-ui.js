@@ -31,7 +31,6 @@ const ALL_TOOLS = [
   'subtitle-remover',
   'reddit-video',
   'fake-texts',
-  'tiktok-downloader',
   'audio-balancer',
   'background-remover',
   'voice-changer',
