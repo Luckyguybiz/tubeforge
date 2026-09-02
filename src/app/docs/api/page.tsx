@@ -203,6 +203,21 @@ X-Forge-Signature: <hmac-sha256(body, webhook_secret)>`}
           />
         </Section>
 
+        {/* MCP */}
+        <Section title="MCP server (Claude, Cursor, ChatGPT)" anchor="mcp">
+          <p className="text-[14px] text-white/75">
+            The same API key also unlocks the TubeForge MCP server at{" "}
+            <Code>https://tubeforge.co/api/mcp</Code>: list videos, read stats,
+            bulk-retitle with a before/after preview, answer comments and
+            schedule uploads from any MCP client. Setup guide:{" "}
+            <a href="/docs/mcp" className="text-brand-400 hover:text-brand-300 underline">/docs/mcp</a>.
+          </p>
+          <Pre>
+            {`claude mcp add --transport http tubeforge https://tubeforge.co/api/mcp \\
+  --header "Authorization: Bearer tf_YOUR_KEY"`}
+          </Pre>
+        </Section>
+
         {/* SDK preview */}
         <Section title="TypeScript SDK (preview)" anchor="sdk">
           <p className="text-[14px] text-white/75">

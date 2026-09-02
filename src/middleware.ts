@@ -245,6 +245,7 @@ export default function middleware(req: NextRequest) {
     '/api/auth',
     '/api/cron',
     '/api/v1',
+    '/api/mcp',
     '/docs',
     '/api/stripe/webhook',
     '/api/webhooks',
