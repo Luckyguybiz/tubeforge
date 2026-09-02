@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/status', lastModified: '2026-03-20', changeFrequency: 'daily', priority: 0.6 },
     { path: '/gallery', lastModified: '2026-03-20', changeFrequency: 'weekly', priority: 0.7 },
     { path: '/api-docs', lastModified: '2026-03-20', changeFrequency: 'monthly', priority: 0.6 },
+    { path: '/docs/mcp', lastModified: '2026-09-02', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/privacy', lastModified: '2026-03-01', changeFrequency: 'yearly', priority: 0.3 },
     { path: '/terms', lastModified: '2026-03-01', changeFrequency: 'yearly', priority: 0.3 },
     { path: '/security', lastModified: '2026-03-01', changeFrequency: 'yearly', priority: 0.3 },
