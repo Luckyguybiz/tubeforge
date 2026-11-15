@@ -7,6 +7,8 @@ import { API_ENDPOINTS } from '@/lib/constants';
 import { deliverWebhooks } from '@/server/routers/webhook';
 import type { Prisma, PrismaClient, UploadJob } from '@prisma/client';
 import crypto from 'crypto';
+import { openLocalMedia, removeMediaByUrl } from '@/lib/autopost/media';
+import { AUTOPOST_REF, classifyError } from '@/lib/autopost/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes — chunked upload may take a while
@@ -58,17 +60,25 @@ const MAX_RETRIES = 3;
 const FETCH_TIMEOUT_MS = 30_000;
 const UPLOAD_TIMEOUT_MS = 180_000; // 3 minutes for the PUT
 
-async function getYouTubeToken(userId: string, db: PrismaClient): Promise<string> {
-  const account = await db.account.findFirst({
-    where: { userId, provider: 'google' },
-    select: { id: true, access_token: true, refresh_token: true, expires_at: true },
-    orderBy: { expires_at: 'desc' },
-  });
+async function getYouTubeToken(userId: string, db: PrismaClient, channelId?: string): Promise<string> {
+  const select = { id: true, access_token: true, refresh_token: true, expires_at: true } as const;
+  // A channel connected through /api/v1/auth/youtube/start has its own
+  // Google account row keyed by the channel id: with several channels per
+  // user, the upload must use the token of the target channel.
+  const account =
+    (channelId
+      ? await db.account.findFirst({ where: { userId, provider: 'google', providerAccountId: channelId }, select })
+      : null) ??
+    (await db.account.findFirst({
+      where: { userId, provider: 'google' },
+      select,
+      orderBy: { expires_at: 'desc' },
+    }));
   if (!account?.access_token) {
     throw new Error('YouTube account not connected');
   }
-  // Refresh if expired
-  if (account.expires_at && account.expires_at * 1000 < Date.now() && account.refresh_token) {
+  // Refresh if expired (or about to, so a long upload does not start with a dying token)
+  if (account.expires_at && account.expires_at * 1000 < Date.now() + 60_000 && account.refresh_token) {
     const res = await fetch(API_ENDPOINTS.GOOGLE_OAUTH_TOKEN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -111,11 +121,22 @@ interface YouTubeUploadResponse {
 
 async function processJob(job: UploadJob): Promise<{ ok: true; videoId: string } | { ok: false; error: string; retriable: boolean }> {
   try {
-    const token = await getYouTubeToken(job.userId, db);
+    // Videos of the autopost app live on our media disk: check the file
+    // before a YouTube upload session is opened.
+    const local = await openLocalMedia(job.videoUrl);
+    if (local === 'missing') {
+      return { ok: false, error: 'Source video fetch failed: the media file is missing', retriable: false };
+    }
+
+    const token = await getYouTubeToken(job.userId, db, job.channelId);
 
     // Step 1: POST metadata → get YouTube's resumable session URL
     const status: Record<string, string | boolean> = { privacyStatus: job.privacyStatus };
-    if (job.scheduledAt) {
+    if (job.consumerRef === AUTOPOST_REF) {
+      // The app uploads at the slot time itself: the video goes out with the
+      // visibility the person chose. A publishAt in the past is rejected by
+      // YouTube, so it is never sent for these jobs.
+    } else if (job.scheduledAt) {
       status.privacyStatus = 'private'; // YouTube requirement for scheduled
       status.publishAt = job.scheduledAt.toISOString();
     }
@@ -151,26 +172,34 @@ async function processJob(job: UploadJob): Promise<{ ok: true; videoId: string }
     }
 
     // Step 2: Probe source for size (HEAD), then fetch (GET)
-    const headRes = await fetchWithTimeout(job.videoUrl, { method: 'HEAD' }, FETCH_TIMEOUT_MS).catch(() => null);
     let knownSize: number | null = null;
     let contentType = 'video/*';
-    if (headRes && headRes.ok) {
-      const cl = headRes.headers.get('content-length');
-      knownSize = cl ? parseInt(cl, 10) : null;
-      contentType = headRes.headers.get('content-type') ?? contentType;
-    }
+    let sourceBody: ReadableStream<Uint8Array> | null;
+    if (local) {
+      knownSize = local.size;
+      contentType = local.contentType;
+      sourceBody = local.open();
+    } else {
+      const headRes = await fetchWithTimeout(job.videoUrl, { method: 'HEAD' }, FETCH_TIMEOUT_MS).catch(() => null);
+      if (headRes && headRes.ok) {
+        const cl = headRes.headers.get('content-length');
+        knownSize = cl ? parseInt(cl, 10) : null;
+        contentType = headRes.headers.get('content-type') ?? contentType;
+      }
 
-    const videoRes = await fetchWithTimeout(job.videoUrl, { method: 'GET' }, UPLOAD_TIMEOUT_MS);
-    if (!videoRes.ok) {
-      return { ok: false, error: `Source video fetch failed: HTTP ${videoRes.status}`, retriable: videoRes.status >= 500 };
-    }
-    // If HEAD didn't yield size, try Content-Length from GET response
-    if (knownSize === null) {
-      const cl = videoRes.headers.get('content-length');
-      if (cl) knownSize = parseInt(cl, 10);
-    }
-    if (!videoRes.headers.get('content-type') && contentType === 'video/*') {
-      contentType = videoRes.headers.get('content-type') ?? contentType;
+      const videoRes = await fetchWithTimeout(job.videoUrl, { method: 'GET' }, UPLOAD_TIMEOUT_MS);
+      if (!videoRes.ok) {
+        return { ok: false, error: `Source video fetch failed: HTTP ${videoRes.status}`, retriable: videoRes.status >= 500 };
+      }
+      // If HEAD didn't yield size, try Content-Length from GET response
+      if (knownSize === null) {
+        const cl = videoRes.headers.get('content-length');
+        if (cl) knownSize = parseInt(cl, 10);
+      }
+      if (!videoRes.headers.get('content-type') && contentType === 'video/*') {
+        contentType = videoRes.headers.get('content-type') ?? contentType;
+      }
+      sourceBody = videoRes.body;
     }
 
     // Decide path: single PUT for small known-size, chunked for large/unknown.
@@ -188,7 +217,7 @@ async function processJob(job: UploadJob): Promise<{ ok: true; videoId: string }
             'Content-Type': contentType,
             'Content-Length': String(knownSize),
           },
-          body: videoRes.body ?? undefined,
+          body: sourceBody ?? undefined,
           // @ts-expect-error — duplex is required for streaming bodies in Node 18+
           duplex: 'half',
         },
@@ -213,12 +242,12 @@ async function processJob(job: UploadJob): Promise<{ ok: true; videoId: string }
     // networks because each 8MB chunk is its own request with its own timeout.
     // YouTube returns 308 Resume Incomplete after each non-final chunk, and
     // the final chunk yields 200/201 with the video metadata.
-    if (!videoRes.body) {
+    if (!sourceBody) {
       return { ok: false, error: 'Source response has no body to stream', retriable: false };
     }
     const result = await uploadChunked({
       uploadUrl,
-      sourceStream: videoRes.body,
+      sourceStream: sourceBody,
       contentType,
       totalSize: knownSize, // may be null — pass through
       onProgress: async (offset) => {
@@ -441,7 +470,8 @@ async function handleRequest(request: Request) {
     where: {
       status: 'QUEUED',
       OR: [
-        { scheduledAt: null },
+        // Jobs of the autopost app without a time wait in the channel stock.
+        { scheduledAt: null, OR: [{ consumerRef: null }, { consumerRef: { not: AUTOPOST_REF } }] },
         { scheduledAt: { lte: new Date() } },
       ],
     },
@@ -491,6 +521,8 @@ async function handleRequest(request: Request) {
           },
         });
         // Fire-and-forget webhook delivery
+        // The app keeps its videos only until YouTube has them.
+        if (job.consumerRef === AUTOPOST_REF) void removeMediaByUrl(job.videoUrl);
         deliverWebhooks(job.userId, 'job.completed', {
           jobId: job.id,
           youtubeVideoId: result.videoId,
@@ -513,6 +545,12 @@ async function handleRequest(request: Request) {
             ...(isRetriable ? {} : { completedAt: new Date() }),
           },
         });
+        if (!isRetriable && job.consumerRef === AUTOPOST_REF && classifyError(result.error) === 'auth') {
+          // The app shows the channel as disconnected until it is connected again.
+          await db.autopostChannel
+            .updateMany({ where: { channelId: job.channelId }, data: { connectionLostAt: new Date() } })
+            .catch(() => undefined);
+        }
         if (!isRetriable) {
           // Permanent failure — capture to Sentry for ops alerting.
           // Retriable failures are NOT sent (would be noisy — single

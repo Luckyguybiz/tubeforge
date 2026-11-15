@@ -901,10 +901,67 @@ function emailVerificationTemplate(data: TemplateData): TemplateResult {
 }
 
 // ---------------------------------------------------------------------------
+// Autopost mobile app («Автопостинг» / Auto Post Scheduler)
+// ---------------------------------------------------------------------------
+
+function autopostSignInCodeTemplate(data: TemplateData): TemplateResult {
+  const isRu = String(data.locale || 'en') === 'ru';
+  const code = String(data.code || '');
+  const ttlMinutes = Number(data.ttlMinutes || 15);
+  const subject = isRu ? `Код для входа в Автопостинг: ${code}` : `Your Auto Post Scheduler sign-in code: ${code}`;
+  const heading = isRu ? 'Код для входа' : 'Your sign-in code';
+  const intro = isRu
+    ? 'Введите этот код в приложении «Автопостинг», чтобы войти:'
+    : 'Enter this code in the Auto Post Scheduler app to sign in:';
+  const expiry = isRu
+    ? `Код действует ${ttlMinutes} минут и срабатывает один раз.`
+    : `This code is valid for ${ttlMinutes} minutes and works only once.`;
+  const ignoreNote = isRu
+    ? 'Если вы не входили в приложение, просто удалите письмо. Без доступа к вашей почте войти никто не сможет.'
+    : 'If you did not try to sign in, just delete this email. Nobody can sign in without access to your inbox.';
+  const codeBlock = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;">
+    <tr><td style="background:#eef2ff;border-radius:12px;padding:20px 32px;">
+      <div style="font-family:'SF Mono','Menlo','Consolas',monospace;font-size:36px;font-weight:700;letter-spacing:8px;color:#1e3a8a;text-align:center;">${code}</div>
+    </td></tr>
+  </table>`;
+  return {
+    subject,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;text-align:center;">${heading}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 8px;text-align:center;">${intro}</p>
+      ${codeBlock}
+      <p class="text-secondary" style="color:#888;font-size:14px;line-height:1.5;margin:0 0 12px;text-align:center;">${expiry}</p>
+      <p class="text-secondary" style="color:#888;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center;">${ignoreNote}</p>
+    `, isRu ? 'ru' : 'en'),
+  };
+}
+
+function autopostAccountDeletedTemplate(data: TemplateData): TemplateResult {
+  const isRu = String(data.locale || 'en') === 'ru';
+  const channels = Number(data.channels || 0);
+  const subject = isRu ? 'Аккаунт в Автопостинге удалён' : 'Your Auto Post Scheduler account was deleted';
+  const heading = isRu ? 'Аккаунт удалён' : 'Account deleted';
+  const body = isRu
+    ? `Мы удалили ваш аккаунт, расписание и загруженные ролики. Доступ приложения к каналам YouTube (${channels}) отозван в Google. Ролики, которые уже вышли, остались на YouTube.`
+    : `We deleted your account, schedule and uploaded videos. The app access to your YouTube channels (${channels}) was revoked at Google. Videos that were already published stay on YouTube.`;
+  const note = isRu
+    ? 'Если это сделали не вы, ответьте на это письмо.'
+    : 'If this was not you, reply to this email.';
+  return {
+    subject,
+    html: layout(`
+      <h1 class="text-primary" style="margin:0 0 16px;font-size:24px;color:#333;text-align:center;">${heading}</h1>
+      <p class="text-primary" style="color:#555;font-size:16px;line-height:1.6;margin:0 0 16px;text-align:center;">${body}</p>
+      <p class="text-secondary" style="color:#888;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center;">${note}</p>
+    `, isRu ? 'ru' : 'en'),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed' | 'contact-form' | 'email-verification';
+export type EmailTemplate = 'welcome' | 'payment-receipt' | 'plan-change' | 'referral-commission' | 'day-three' | 'day-seven' | 'reengagement-day3' | 'reengagement-day7' | 'reengagement-day14' | 'team-invite' | 'plan-change-confirmation' | 'comment-mention' | 'payment-failed' | 'contact-form' | 'email-verification' | 'autopost-sign-in-code' | 'autopost-account-deleted';
 
 const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> = {
   'welcome': welcomeTemplate,
@@ -922,6 +979,8 @@ const templates: Record<EmailTemplate, (data: TemplateData) => TemplateResult> =
   'payment-failed': paymentFailedTemplate,
   'contact-form': contactFormTemplate,
   'email-verification': emailVerificationTemplate,
+  'autopost-sign-in-code': autopostSignInCodeTemplate,
+  'autopost-account-deleted': autopostAccountDeletedTemplate,
 };
 
 export function getTemplate(template: EmailTemplate, data: TemplateData): TemplateResult {

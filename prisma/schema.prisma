@@ -105,6 +105,7 @@ model Channel {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   uploadJobs  UploadJob[]
   externalUsers ExternalUser[]
+  autopost    AutopostChannel?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -645,4 +646,29 @@ model AtlasUsageDaily {
 
   @@id([userId, date])
   @@index([date])
+}
+
+/// Autopost mobile app («Автопостинг»): publishing rules and state of a
+/// channel managed from the phone. Jobs of the app (UploadJob.consumerRef
+/// = 'autopost-app') are planned into these slots by src/lib/autopost.
+/// A job of the app with status QUEUED and scheduledAt NULL waits in the
+/// channel stock; the upload worker skips such jobs.
+model AutopostChannel {
+  channelId        String    @id
+  channel          Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  /// Local wall-clock slot times 'HH:mm' in `timezone`, ascending.
+  slotTimes        String[]  @default(["12:00", "18:00"])
+  /// 0 = Monday ... 6 = Sunday.
+  weekdays         Int[]     @default([0, 1, 2, 3, 4, 5, 6])
+  postsPerDay      Int       @default(2)
+  minGapMinutes    Int       @default(120)
+  /// IANA time zone of the slots, e.g. 'Asia/Almaty'.
+  timezone         String    @default("UTC")
+  autopostEnabled  Boolean   @default(true)
+  pausedUntil      DateTime?
+  /// Set by the upload worker when Google rejects the channel token,
+  /// cleared when the channel is connected again.
+  connectionLostAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }

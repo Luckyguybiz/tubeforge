@@ -303,5 +303,6 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/tools/video-translate|api/tools/mp4-to-gif).*)'],
+  // Large uploads skip the middleware: it would buffer the body (proxyClientMaxBodySize).
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/tools/video-translate|api/tools/mp4-to-gif|api/v1/mobile/uploads).*)'],
 };

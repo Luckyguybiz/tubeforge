@@ -1,6 +1,7 @@
 import { handlers, getLastAuthError } from '@/server/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { createLogger } from '@/lib/logger';
+import { STATE_PREFIX as CONNECT_STATE_PREFIX, handleConnectCallback } from '@/lib/autopost/youtube-connect';
 
 const log = createLogger('auth-route');
 
@@ -72,6 +73,13 @@ async function wrappedHandler(req: NextRequest, method: 'GET' | 'POST') {
 }
 
 export async function GET(req: NextRequest) {
+  // The YouTube connect flow of /api/v1/auth/youtube/start returns through
+  // this registered Google redirect URI. Its state carries our own prefix and
+  // HMAC; NextAuth never issues such a state, so its sign-in is unaffected.
+  const url = new URL(req.url);
+  if (url.pathname === '/api/auth/callback/google' && url.searchParams.get('state')?.startsWith(CONNECT_STATE_PREFIX)) {
+    return handleConnectCallback(req);
+  }
   return wrappedHandler(req, 'GET');
 }
 
