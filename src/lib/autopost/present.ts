@@ -43,6 +43,8 @@ export interface MobileChannel {
   stockCount: number;
   scheduledCount: number;
   failedCount: number;
+  /** Videos moved to a later slot because of the YouTube daily limit. */
+  quotaWaiting: number;
   published7d: number;
   nextPublishAt: string | null;
   lastPublishedAt: string | null;
@@ -112,7 +114,7 @@ export async function listMobileChannels(userId: string, now = new Date()): Prom
   if (channels.length === 0) return [];
   const ids = channels.map((c) => c.id);
 
-  const [accounts, loginAccounts, byStatus, stock, next, last, recent] = await Promise.all([
+  const [accounts, loginAccounts, byStatus, stock, next, last, recent, quota] = await Promise.all([
     db.account.findMany({
       where: { userId, provider: 'google', providerAccountId: { in: ids } },
       select: { providerAccountId: true, refresh_token: true },
@@ -135,6 +137,16 @@ export async function listMobileChannels(userId: string, now = new Date()): Prom
       where: { channelId: { in: ids }, status: 'COMPLETED', completedAt: { gte: new Date(now.getTime() - 7 * DAY) } },
       _count: { _all: true },
     }),
+    db.uploadJob.groupBy({
+      by: ['channelId'],
+      where: {
+        channelId: { in: ids },
+        consumerRef: AUTOPOST_REF,
+        status: 'QUEUED',
+        metadata: { path: ['autopost', 'slotReason'], equals: 'quota_moved' },
+      },
+      _count: { _all: true },
+    }),
   ]);
 
   const tokens = new Map(accounts.map((a) => [a.providerAccountId, !!a.refresh_token]));
@@ -153,6 +165,7 @@ export async function listMobileChannels(userId: string, now = new Date()): Prom
         stockCount,
         scheduledCount: count(c.id, 'QUEUED') - stockCount,
         failedCount: count(c.id, 'FAILED'),
+        quotaWaiting: quota.find((r) => r.channelId === c.id)?._count._all ?? 0,
         published7d: recent.find((r) => r.channelId === c.id)?._count._all ?? 0,
         nextPublishAt: next.find((r) => r.channelId === c.id)?._min.scheduledAt ?? null,
         lastPublishedAt: last.find((r) => r.channelId === c.id)?._max.completedAt ?? null,
@@ -170,6 +183,7 @@ export function presentChannel(
     stockCount: number;
     scheduledCount: number;
     failedCount: number;
+    quotaWaiting: number;
     published7d: number;
     nextPublishAt: Date | null;
     lastPublishedAt: Date | null;
@@ -190,6 +204,7 @@ export function presentChannel(
     stockCount: x.stockCount,
     scheduledCount: Math.max(0, x.scheduledCount),
     failedCount: x.failedCount,
+    quotaWaiting: x.quotaWaiting,
     published7d: x.published7d,
     nextPublishAt: x.nextPublishAt?.toISOString() ?? null,
     lastPublishedAt: x.lastPublishedAt?.toISOString() ?? null,

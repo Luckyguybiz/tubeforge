@@ -9,7 +9,7 @@
  */
 import type { AutopostChannel, Prisma, UploadJob } from '@prisma/client';
 import { db } from '@/server/db';
-import { DAY, MINUTE, safeTimeZone } from './time';
+import { DAY, MINUTE, localDayStart, safeTimeZone } from './time';
 import { checkManualTime, nextFreeSlots, usedOnDay, type ManualTimeProblem, type Rules, type SlotContext, type SlotReason } from './slots';
 
 export const AUTOPOST_REF = 'autopost-app';
@@ -36,7 +36,7 @@ export interface AutopostMeta {
   ext?: string;
   size?: number;
   durationSec?: number | null;
-  slotReason?: SlotReason | 'manual' | 'now' | null;
+  slotReason?: SlotReason | 'manual' | 'now' | 'quota_moved' | null;
 }
 
 export function metaOf(job: Pick<UploadJob, 'metadata'>): AutopostMeta {
@@ -510,6 +510,51 @@ export async function afterReconnect(channelId: string, now = new Date()): Promi
     data: { status: 'QUEUED', scheduledAt: null, errorMessage: null, retryCount: 0, completedAt: null, startedAt: null },
   });
   await placeInOrder(s, auth, now);
+}
+
+// ───────── YouTube daily limit ─────────
+
+/** YouTube API quotas reset at midnight Pacific Time. */
+export const QUOTA_TIMEZONE = 'America/Los_Angeles';
+/** After this many deferrals the video is marked failed instead of moved again. */
+export const MAX_QUOTA_DEFERRALS = 10;
+
+/** The daily project or channel limit, as opposed to a short burst limit (429). */
+export function isDailyQuotaError(message: string | null | undefined): boolean {
+  return /quotaExceeded|dailyLimitExceeded|uploadLimitExceeded/i.test(message ?? '');
+}
+
+export function nextQuotaReset(now = new Date()): Date {
+  return localDayStart(now, QUOTA_TIMEZONE, 1).start;
+}
+
+/**
+ * The upload hit the YouTube daily limit: the video of the app moves to the
+ * first free slot after the limit resets instead of failing, so «загрузится
+ * сам» in the app stays true. Returns false when the job is not ours or was
+ * deferred too many times (the caller then fails it as usual).
+ */
+export async function deferForQuota(job: UploadJob, error: string, now = new Date()): Promise<boolean> {
+  if (job.consumerRef !== AUTOPOST_REF || job.retryCount >= MAX_QUOTA_DEFERRALS) return false;
+  const s = await ensureSettings(job.channelId);
+  const ctx = await slotContext(s, now, [job.id]);
+  const [slot] = s.autopostEnabled ? nextFreeSlots(ctx, nextQuotaReset(now), 1) : [];
+  await db.uploadJob.update({
+    where: { id: job.id },
+    data: {
+      status: 'QUEUED',
+      scheduledAt: slot ? slot.at : null,
+      errorMessage: error.slice(0, 1000),
+      retryCount: job.retryCount + 1,
+      uploadProgress: 0,
+      startedAt: null,
+      completedAt: null,
+      lockedBy: null,
+      lockedAt: null,
+      metadata: withMeta(job, { slotReason: 'quota_moved' }),
+    },
+  });
+  return true;
 }
 
 // ───────── errors ─────────

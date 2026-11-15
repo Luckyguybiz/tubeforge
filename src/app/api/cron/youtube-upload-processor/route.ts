@@ -8,7 +8,7 @@ import { deliverWebhooks } from '@/server/routers/webhook';
 import type { Prisma, PrismaClient, UploadJob } from '@prisma/client';
 import crypto from 'crypto';
 import { openLocalMedia, removeMediaByUrl } from '@/lib/autopost/media';
-import { AUTOPOST_REF, classifyError } from '@/lib/autopost/service';
+import { AUTOPOST_REF, classifyError, deferForQuota, isDailyQuotaError } from '@/lib/autopost/service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes — chunked upload may take a while
@@ -531,6 +531,15 @@ async function handleRequest(request: Request) {
         });
         return { id: job.id, status: 'completed' as const, videoId: result.videoId };
       } else {
+        // YouTube daily limit (project or channel): videos of the autopost app
+        // wait for the reset in the next free slot instead of failing.
+        if (
+          job.consumerRef === AUTOPOST_REF &&
+          isDailyQuotaError(result.error) &&
+          (await deferForQuota(job, result.error).catch(() => false))
+        ) {
+          return { id: job.id, status: 'requeued' as const, error: result.error };
+        }
         const nextRetryCount = job.retryCount + 1;
         const isRetriable = result.retriable && nextRetryCount < MAX_RETRIES;
         await db.uploadJob.update({
